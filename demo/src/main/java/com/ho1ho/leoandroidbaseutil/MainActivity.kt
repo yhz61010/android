@@ -1,7 +1,6 @@
 package com.ho1ho.leoandroidbaseutil
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -12,6 +11,7 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.leoandroidbaseutil.ui.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.ui.DeviceInfoActivity
@@ -22,34 +22,59 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        CLog.w(ITAG, "=====> onCreate <=====")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         gridView.adapter = ColorBaseAdapter(this)
     }
 
+    override fun onStop() {
+        CLog.w(ITAG, "=====> onStop <=====")
+        CLog.flushLog(false)
+        super.onStop()
+    }
+
     override fun onDestroy() {
+        CLog.w(ITAG, "=====> onDestroy <=====")
+        // We want to test changing device orientation, the onDestroy() may be called.
+        // So we do not close log temporarily.
         // Check LogActivity onDestroy() comments
-        CLog.closeLog()
+//        CLog.closeLog()
         super.onDestroy()
+        // In some cases, if you use saved some parameters in Application, when app exits,
+        // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
 //        AppUtil.exitApp(this)
     }
 
     class ColorBaseAdapter(private val ctx: Activity) : BaseAdapter() {
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val inflater = parent?.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            val view = inflater.inflate(R.layout.grid_item, null)
+        internal class ViewHolder {
+            lateinit var textView: TextView
+            lateinit var cardView: CardView
+        }
 
-            val cardView = view.findViewById<CardView>(R.id.cardView)
-            val tv = view.findViewById<TextView>(R.id.name)
-            tv.text = featureList[position].first
-            cardView.setCardBackgroundColor(color[color.indices.random()])
-            cardView.setOnClickListener {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val viewHolder: ViewHolder
+            val noneConvertView: View
+
+            if (convertView == null) {
+                noneConvertView = LayoutInflater.from(parent?.context).inflate(R.layout.grid_item, parent, false)
+                viewHolder = ViewHolder()
+                viewHolder.cardView = noneConvertView.findViewById(R.id.cardView)
+                viewHolder.textView = noneConvertView.findViewById(R.id.name)
+                noneConvertView.tag = viewHolder
+            } else {
+                noneConvertView = convertView
+                viewHolder = noneConvertView.tag as ViewHolder
+            }
+            viewHolder.textView.text = featureList[position].first
+            viewHolder.cardView.setCardBackgroundColor(color[color.indices.random()])
+            viewHolder.cardView.setOnClickListener {
                 val intent = Intent(ctx, featureList[position].second)
                 intent.putExtra("title", featureList[position].first)
                 ctx.startActivity(intent)
             }
-            return view
+            return noneConvertView
         }
 
         override fun getItem(position: Int): Any {

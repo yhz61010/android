@@ -15,11 +15,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.Camera2LiveActivity"></activity>
+        <activity android:name=".ui.Camera2LiveActivity" />
         <activity android:name=".ui.NetworkMonitorActivity" />
         <activity android:name=".ui.LogActivity" />
         <activity android:name=".ui.DeviceInfoActivity" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

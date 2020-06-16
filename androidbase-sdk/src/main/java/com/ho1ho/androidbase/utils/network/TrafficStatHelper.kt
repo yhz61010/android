@@ -79,7 +79,7 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
      * Total traffic
      */
     @Suppress("unused")
-    val trafficInfo: Long = receiveTraffic + sendTraffic
+    val totalTraffic: Long = receiveTraffic + sendTraffic
 
     /**
      * Get sent bytes

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- https://developer.android.com/reference/android/support/v4/content/FileProvider -->
+<paths>
+
+    <root-path
+        name="root_path"
+        path="/" />
+
+    <!--
+    Represents files in the root of your app's external media area.
+    The root path of this subdirectory is the same as the value returned by the first result of
+    Context.getExternalMediaDirs().
+    Note: this directory is only available on API 21+ devices.
+    -->
+    <external-media-path
+        name="my_external_media_path"
+        path="media/" />
+
+    <!--
+    Represents files in the root of the external storage area.
+    The root path of this subdirectory is the same as the value returned by
+    Environment.getExternalStorageDirectory().
+    -->
+    <external-path
+        name="my_external_path"
+        path="path/" />
+
+    <!--
+    Represents files in the root of your app's external storage area.
+    The root path of this subdirectory is the same as the value returned by
+    Context#getExternalFilesDir(String) Context.getExternalFilesDir(null).
+    -->
+    <external-files-path
+        name="my_external_file"
+        path="file/" />
+
+    <!--
+    Represents files in the cache subdirectory of your app's internal storage area.
+    The root path of this subdirectory is the same as the value returned by
+    getCacheDir().
+    -->
+    <cache-path
+        name="my_cache_path_img"
+        path="images/" />
+
+    <!--
+    Represents files in the root of your app's external cache area.
+    The root path of this subdirectory is the same as the value returned by
+    Context.getExternalCacheDir().
+    -->
+    <external-cache-path
+        name="my_external_cache_path"
+        path="cache/" />
+
+    <!--
+    Represents files in the files/ subdirectory of your app's internal storage area.
+    This subdirectory is the same as the value returned by
+    Context.getFilesDir().
+    -->
+    <files-path
+        name="my_file_path_image"
+        path="images/" />
+
+</paths>

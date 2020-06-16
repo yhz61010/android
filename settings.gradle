@@ -1,0 +1,5 @@
+rootProject.name='LeoAndroidBaseUtil'
+include ':demo'
+include ':screencapture-sdk'
+include ':basenetty-sdk'
+include ':androidbase'

@@ -34,7 +34,7 @@ dependencies {
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
     api group: 'io.netty', name: 'netty-all', version: '4.1.50.Final'
-    api project(':androidbase')
+    api project(':androidbase-sdk')
 
 //    implementation 'org.greenrobot:eventbus:3.1.1'
 }

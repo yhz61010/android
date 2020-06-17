@@ -1,18 +1,17 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 
-class LogActivity : AppCompatActivity() {
+class LogActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log)
-        title = intent.getStringExtra("title")
 
         // CLog is the wrapper of Xlog
         // Before using it, you must initialize it by calling CLog.init(ctx) in Application

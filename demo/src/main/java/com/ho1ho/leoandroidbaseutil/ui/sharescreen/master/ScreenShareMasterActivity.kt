@@ -40,6 +40,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     override fun onUpdate(data: Any) {
                         val dataArray = data as ByteArray
                         webSocket?.let { ws ->
+                            if (ws.isClosed || ws.isClosing) {
+                                CLog.i(ITAG, "WebSocket is not available. Do nothing.")
+                                return
+                            }
                             CLog.i(ITAG, "Data length=${dataArray.size}")
                             runOnUiThread {
                                 txtInfo.text = "Data length=${dataArray.size}"
@@ -144,6 +148,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         override fun onClose(webSocket: WebSocket?, i: Int, s: String?, b: Boolean) {
             CLog.w(ITAG, "onClose")
+            runOnUiThread { toggleButton.isChecked = false }
         }
 
         override fun onMessage(webSocket: WebSocket?, s: String?) {
@@ -151,6 +156,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         }
 
         override fun onError(webSocket: WebSocket?, e: Exception?) {
+            e?.printStackTrace()
             CLog.e(ITAG, "onError")
         }
     }
@@ -161,7 +167,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun stopServer() {
+        webSocket?.close()
+        webSocket = null
         webSocketServer?.stop()
+        webSocketServer = null
     }
 }
 

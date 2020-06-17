@@ -119,8 +119,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
-//        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+//        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
         h264Encoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         outputFormat = h264Encoder?.outputFormat // option B
         h264Encoder?.setCallback(mediaCodecCallback)

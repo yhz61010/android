@@ -70,27 +70,31 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
 
         switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchFlash() }
-    }
 
-    public override fun onResume() {
         AndPermission.with(this)
             .runtime()
             .permission(Permission.CAMERA)
             .onGranted {
                 Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-                camera2Component.initDebugOutput()
-                camera2Component.encoderType = if (
-                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-                else DataProcessFactory.ENCODER_TYPE_NORMAL
-                camera2Component.openCameraAndGetData(previousLensFacing) // LENS_FACING_FRONT LENS_FACING_BACK
+                permissionGranted()
             }
-            .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show() }
+            .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
             .start()
+    }
 
+    public override fun onResume() {
         super.onResume()
+    }
+
+    private fun permissionGranted() {
+        camera2Component.initDebugOutput()
+        camera2Component.encoderType = if (
+            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+        ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+        else DataProcessFactory.ENCODER_TYPE_NORMAL
+        camera2Component.openCameraAndGetData(previousLensFacing) // LENS_FACING_FRONT LENS_FACING_BACK
     }
 
     override fun onPause() {

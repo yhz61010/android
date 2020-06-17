@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.ho1ho.leoandroidbaseutil">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,8 +16,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.ScreenShareClientActivity" />
-        <activity android:name=".ui.ScreenShareMasterActivity" />
+        <activity android:name=".ui.sharescreen.client.ScreenShareClientActivity" />
+        <activity android:name=".ui.sharescreen.master.ScreenShareMasterActivity" />
         <activity android:name=".ui.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
         <activity android:name=".ui.Camera2LiveActivity" />
         <activity android:name=".ui.NetworkMonitorActivity" />
@@ -29,6 +30,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".ui.sharescreen.master.MediaProjectionService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"
+            tools:targetApi="q" />
+
     </application>
 
 </manifest>

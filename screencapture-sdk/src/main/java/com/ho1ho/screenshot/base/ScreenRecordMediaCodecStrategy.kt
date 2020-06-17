@@ -43,13 +43,17 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+            try {
 //            CLog.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
-            val outputBuffer = codec.getOutputBuffer(outputBufferId)
-            // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-            // bufferFormat is equivalent to member variable outputFormat
-            // outputBuffer is ready to be processed or rendered.
-            outputBuffer?.let { onSendAvcFrame(it, info.flags, info.size) }
-            codec.releaseOutputBuffer(outputBufferId, false)
+                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+                // bufferFormat is equivalent to member variable outputFormat
+                // outputBuffer is ready to be processed or rendered.
+                outputBuffer?.let { onSendAvcFrame(it, info.flags, info.size) }
+                codec.releaseOutputBuffer(outputBufferId, false)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

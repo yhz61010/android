@@ -81,6 +81,8 @@ class MainActivity : AppCompatActivity() {
             Pair("Log", LogActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
             Pair("Camera2", Camera2LiveActivity::class.java),
+            Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
+            Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("SaveInstanceState", SaveInstanceStateActivity::class.java)
         )
 

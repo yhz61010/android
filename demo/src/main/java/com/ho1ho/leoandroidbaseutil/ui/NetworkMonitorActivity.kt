@@ -1,9 +1,9 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.utils.network.NetworkMonitor
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 
 /**
  * Author: Michael Leo
@@ -15,7 +15,7 @@ import com.ho1ho.leoandroidbaseutil.R
  * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
  * ```
  */
-class NetworkMonitorActivity : AppCompatActivity() {
+class NetworkMonitorActivity : BaseDemonstrationActivity() {
 
     private lateinit var networkMonitor: NetworkMonitor
 

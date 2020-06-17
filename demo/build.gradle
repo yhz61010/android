@@ -141,5 +141,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
 //    implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'com.yanzhenjie:permission:2.0.3'
+
     implementation project(':camera2live-sdk')
+    implementation project(':screencapture-sdk')
+    implementation project(':basenetty-sdk')
 }

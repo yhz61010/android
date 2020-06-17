@@ -15,9 +15,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.ScreenShareClientActivity"></activity>
-        <activity android:name=".ui.ScreenShareMasterActivity" /> <!-- android:configChanges="orientation|screenSize" -->
-        <activity android:name=".ui.SaveInstanceStateActivity" />
+        <activity android:name=".ui.ScreenShareClientActivity" />
+        <activity android:name=".ui.ScreenShareMasterActivity" />
+        <activity android:name=".ui.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
         <activity android:name=".ui.Camera2LiveActivity" />
         <activity android:name=".ui.NetworkMonitorActivity" />
         <activity android:name=".ui.LogActivity" />

@@ -99,7 +99,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                             DeviceUtil.getDensity(this@ScreenShareMasterActivity)
                         )
                         setting.fps = 20F
-                        setting.bitrate = setting.width * setting.height * 2
+                        setting.bitrate = setting.width * setting.height
                         // !!! Attention !!!
                         // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
                         setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR

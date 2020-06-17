@@ -44,6 +44,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * }
  */
 class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) : ActivityLifecycleCallbacks {
+    @Suppress("WeakerAccess")
     var isForeground = false
         private set
 
@@ -78,10 +79,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         mCheckRunnable?.let { mHandler.removeCallbacks(mCheckRunnable!!) }
 
         if (wasBackground) {
-            CLog.i(
-                TAG,
-                "Went FG"
-            )
+            CLog.i(TAG, "Went FG")
             mListeners.forEach {
                 try {
                     it.onBecameForeground()
@@ -105,25 +103,16 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         mHandler.postDelayed(Runnable {
             if (isForeground && mPaused) {
                 isForeground = false
-                CLog.i(
-                    TAG,
-                    "Went BG"
-                )
+                CLog.i(TAG, "Went BG")
                 mListeners.forEach {
                     try {
                         it.onBecameBackground()
                     } catch (e: Exception) {
-                        CLog.e(
-                            TAG,
-                            "onBecameBackground threw exception! msg=${e.message}"
-                        )
+                        CLog.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
                     }
                 }
             } else {
-                CLog.i(
-                    TAG,
-                    "Still BG"
-                )
+                CLog.i(TAG, "Still BG")
             }
         }.also { mCheckRunnable = it }, becameBackgroundDelay)
     }
@@ -131,7 +120,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {
         try {
-            CLog.w(TAG, "=====> onActivityDestroyed($activity) <=====")
+            CLog.i(TAG, "=====> onActivityDestroyed($activity) <=====")
         } catch (e: Exception) {
             CLog.e(TAG, "onActivityDestroyed error=${e.message}")
         }

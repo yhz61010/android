@@ -215,7 +215,7 @@ class MediaProjectionService : Service() {
     }
 
     fun stopScreenShare() {
-        CLog.e(ITAG, "stopScreenShare")
+        CLog.w(ITAG, "stopScreenShare")
         if (outputH264File) {
             try {
                 videoH264Os.flush()

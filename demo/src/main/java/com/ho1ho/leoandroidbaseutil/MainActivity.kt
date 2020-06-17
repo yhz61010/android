@@ -11,36 +11,21 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.CLog
-import com.ho1ho.leoandroidbaseutil.ui.Camera2LiveActivity
-import com.ho1ho.leoandroidbaseutil.ui.DeviceInfoActivity
-import com.ho1ho.leoandroidbaseutil.ui.LogActivity
-import com.ho1ho.leoandroidbaseutil.ui.NetworkMonitorActivity
+import com.ho1ho.leoandroidbaseutil.ui.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        CLog.w(ITAG, "=====> onCreate <=====")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         gridView.adapter = ColorBaseAdapter(this)
     }
 
-    override fun onStop() {
-        CLog.w(ITAG, "=====> onStop <=====")
-        CLog.flushLog(false)
-        super.onStop()
-    }
-
     override fun onDestroy() {
-        CLog.w(ITAG, "=====> onDestroy <=====")
-        // We want to test changing device orientation, the onDestroy() may be called.
-        // So we do not close log temporarily.
-        // Check LogActivity onDestroy() comments
-//        CLog.closeLog()
+        CLog.closeLog()
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
@@ -95,28 +80,29 @@ class MainActivity : AppCompatActivity() {
             Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("Log", LogActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
-            Pair("Camera2", Camera2LiveActivity::class.java)
+            Pair("Camera2", Camera2LiveActivity::class.java),
+            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java)
         )
 
         private val color = arrayOf(
-            Color.parseColor("#EF9A9A"),
-            Color.parseColor("#CE93D8"),
-            Color.parseColor("#9FA8DA"),
-            Color.parseColor("#B39DDB"),
-            Color.parseColor("#81D4FA"),
             Color.parseColor("#80CBC4"),
-            Color.parseColor("#F48FB1"),
-            Color.parseColor("#90CAF9"),
             Color.parseColor("#80DEEA"),
-            Color.parseColor("#C5E1A5"),
-            Color.parseColor("#E6EE9C"),
-            Color.parseColor("#FFE082"),
-            Color.parseColor("#FFCC80"),
+            Color.parseColor("#81D4FA"),
+            Color.parseColor("#90CAF9"),
+            Color.parseColor("#9FA8DA"),
             Color.parseColor("#A5D6A7"),
+            Color.parseColor("#B0BEC5"),
+            Color.parseColor("#B39DDB"),
             Color.parseColor("#BCAAA4"),
-            Color.parseColor("#FFF59D"),
+            Color.parseColor("#C5E1A5"),
+            Color.parseColor("#CE93D8"),
+            Color.parseColor("#E6EE9C"),
+            Color.parseColor("#EF9A9A"),
+            Color.parseColor("#F48FB1"),
             Color.parseColor("#FFAB91"),
-            Color.parseColor("#B0BEC5")
+            Color.parseColor("#FFCC80"),
+            Color.parseColor("#FFE082"),
+            Color.parseColor("#FFF59D")
         )
     }
 }

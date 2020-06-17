@@ -153,7 +153,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onClose(i: Int, s: String, b: Boolean) {
-            CLog.d(ITAG, "onClose    ")
+            CLog.d(ITAG, "onClose")
+            runOnUiThread { toggleButton.isChecked = false }
         }
 
         override fun onError(e: Exception) {
@@ -175,5 +176,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     private fun disconnect() {
         webSocketClient?.closeBlocking()
+        webSocketClient?.close()
     }
 }

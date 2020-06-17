@@ -7,17 +7,17 @@ import android.os.Bundle
 import android.view.WindowManager
 import android.widget.CompoundButton
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.Camera2Component
 import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_camera2_live.*
 
-class Camera2LiveActivity : AppCompatActivity() {
+class Camera2LiveActivity : BaseDemonstrationActivity() {
     private lateinit var camera2Component: Camera2Component
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
 
@@ -26,7 +26,6 @@ class Camera2LiveActivity : AppCompatActivity() {
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 //        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_camera2_live)
-        title = intent.getStringExtra("title")
 
         CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
             .forEach { CLog.e(TAG, "H264 Encoder: ${it.name}") }

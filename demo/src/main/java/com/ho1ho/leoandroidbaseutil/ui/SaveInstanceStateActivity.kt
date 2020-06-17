@@ -2,17 +2,16 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.content.res.Configuration
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 
-class SaveInstanceStateActivity : AppCompatActivity() {
+class SaveInstanceStateActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         CLog.w(ITAG, "=====> onCreate <=====")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_save_instance_state)
-        title = intent.getStringExtra("title")
     }
 
     /**

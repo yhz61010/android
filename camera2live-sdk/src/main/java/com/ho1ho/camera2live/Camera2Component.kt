@@ -428,6 +428,11 @@ class Camera2Component private constructor(var builder: Builder) {
                     characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
                 CLog.w(TAG, "mCameraSupportedFpsRanges=${mCameraSupportedFpsRanges.contentToString()}")
 
+                val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
+                CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
+                val highSpeedVideoSizes = configMap.highSpeedVideoSizes
+                CLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
+
                 // Generally, if the device is in portrait(Surface.ROTATION_0),
                 // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
                 val deviceRotation = builder.context.windowManager.defaultDisplay.rotation
@@ -539,7 +544,7 @@ class Camera2Component private constructor(var builder: Builder) {
             for (surface in surfaceList) {
                 mPreviewRequestBuilder!!.addTarget(surface)
             }
-            mCameraDevice!!.createCaptureSession(
+            mCameraDevice!!.createCaptureSession( // createCaptureSession // createConstrainedHighSpeedCaptureSession
                 surfaceList,
                 object : CameraCaptureSession.StateCallback() {
                     // Create capture session

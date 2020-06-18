@@ -107,6 +107,9 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         private const val TAG = "Camera2LiveActivity"
 
         @Suppress("unused")
+        private val CAMERA_SIZE_EXTRA = intArrayOf(1080, 1920)
+
+        @Suppress("unused")
         private val CAMERA_SIZE_HIGH = intArrayOf(720, 1280)
 
         @Suppress("unused")

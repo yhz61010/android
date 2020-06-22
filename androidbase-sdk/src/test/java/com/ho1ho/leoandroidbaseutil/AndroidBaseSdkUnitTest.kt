@@ -14,11 +14,14 @@ import org.powermock.modules.junit4.PowerMockRunner
 
 @RunWith(PowerMockRunner::class)
 @PrepareForTest(Log::class)
-class UnitTest {
+class AndroidBaseSdkUnitTest {
     @Test
     fun getIpsByName() {
         var ips = InternetUtil.getIpsByName("ho1ho.com").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
+
+        ips = InternetUtil.getIpsByName("lib.ho1ho.com").toTypedArray()
+        assertArrayEquals(arrayOf("36.248.208.251"), ips)
 
         ips = InternetUtil.getIpsByName("ho1 ho.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)

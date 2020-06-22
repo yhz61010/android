@@ -92,7 +92,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
     }
 
     // look at this in the next section
-    suspend fun post(url: String) = coroutineScope {
+    suspend fun post(url: String) = withContext(Dispatchers.IO) {
         delay(2000)
         "Model post/BookName[$url]-Thread[${Thread.currentThread().name}]"
     }

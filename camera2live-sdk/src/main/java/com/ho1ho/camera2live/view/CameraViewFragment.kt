@@ -30,7 +30,6 @@ class CameraViewFragment : Fragment() {
     private lateinit var switchFlashBtn: ToggleButton
     private lateinit var camera2Component: Camera2Component
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
-    private lateinit var surfaceView: CameraSurfaceView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,7 +51,6 @@ class CameraViewFragment : Fragment() {
         // BITRATE_MODE_CBR: 113.630kB/s
         val desiredSize = CAMERA_SIZE_HIGH
         val camera2ComponentBuilder = Camera2Component(this).Builder(desiredSize[0], desiredSize[1])
-        camera2ComponentBuilder.cameraSurfaceView = v.findViewById(R.id.cameraSurfaceView)
 //        camera2ComponentBuilder.previewInFullscreen = true
         camera2ComponentBuilder.quality = Camera2Component.BITRATE_NORMAL
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
@@ -61,7 +59,8 @@ class CameraViewFragment : Fragment() {
         camera2ComponentBuilder.iFrameInterval = 1
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         camera2Component = camera2ComponentBuilder.build()
-        camera2Component.setDebugOutputH264(true)
+        camera2Component.cameraSurfaceView = v.findViewById(R.id.cameraSurfaceView)
+        camera2Component.outputH264ForDebug = true
         camera2Component.setEncodeListener(object : EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
                 Log.d(TAG, "Get encoded video data length=" + h264Data.size)
@@ -78,8 +77,7 @@ class CameraViewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        surfaceView = view.findViewById(R.id.cameraSurfaceView)
-        surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+        camera2Component.cameraSurfaceView?.holder?.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 // To ensure that size is set, initialize camera in the view's thread
                 view.post {

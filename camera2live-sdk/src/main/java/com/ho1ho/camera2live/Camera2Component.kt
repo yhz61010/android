@@ -42,6 +42,7 @@ import kotlin.math.min
  */
 @Suppress("unused")
 class Camera2Component(private val context: Fragment) {
+    var cameraSurfaceView: CameraSurfaceView? = null
 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
@@ -65,8 +66,7 @@ class Camera2Component(private val context: Fragment) {
         var desiredVideoHeight = desiredVideoHeight
             private set
 
-        var cameraSurfaceView: CameraSurfaceView? = null
-
+        //        var cameraSurfaceView: CameraSurfaceView? = null
         //        var previewInFullscreen: Boolean = false
         var quality: Float = BITRATE_NORMAL
         var cameraFps: Range<Int> = CAMERA_FPS_NORMAL
@@ -74,7 +74,7 @@ class Camera2Component(private val context: Fragment) {
         var iFrameInterval: Int = CameraEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
         var bitrateMode: Int = CameraEncoder.DEFAULT_BITRATE_MODE
 
-        fun textureView(cameraTextureView: CameraSurfaceView) = apply { this.cameraSurfaceView = cameraTextureView }
+//        fun textureView(cameraTextureView: CameraSurfaceView) = apply { this.cameraSurfaceView = cameraTextureView }
 
         //        fun previewInFullscreen(previewInFullscreen: Boolean) = apply { this.previewInFullscreen = previewInFullscreen }
         fun quality(quality: Float) = apply { this.quality = quality }
@@ -110,8 +110,8 @@ class Camera2Component(private val context: Fragment) {
     }
     private var cameraDevice: CameraDevice? = null             // Current camera device
     private var captureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
-    lateinit var selectedSizeFromCamera: Size                  // Get the optimized size from camera supported size
-    var previewSize: Size? = null                              // Camera preview size as well as the output video size
+    private lateinit var selectedSizeFromCamera: Size          // Get the optimized size from camera supported size
+    private var previewSize: Size? = null                      // Camera preview size as well as the output video size
     private lateinit var imageReader: ImageReader              // The real-time data from Camera
     private var previewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
     private var previewRequest: CaptureRequest? = null         // The capture request obtained from mPreviewRequestBuilder
@@ -128,8 +128,13 @@ class Camera2Component(private val context: Fragment) {
     private val imageReaderHandler = Handler(imageReaderThread.looper)
 
     // ===== Debug code =======================
-    private var outputH264ForDebug = false
-    private var outputYuvForDebug = false
+    var outputH264ForDebug = false
+
+    /**
+     * Notice that, if you do allow to output YUV, **ONLY** the YUV file will be outputted.
+     * The H264 file will not be created no matter what you set for [outputH264ForDebug]
+     */
+    var outputYuvForDebug = false
     private var videoYuvOsForDebug: BufferedOutputStream? = null
     private var videoH264OsForDebug: BufferedOutputStream? = null
     private var baseOutputFolderForDebug: String? = null
@@ -305,7 +310,7 @@ class Camera2Component(private val context: Fragment) {
     private fun openCamera(lensFacing: Int) {
         try {
             initializeCamera(lensFacing)
-            builder.cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
+            cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
 
             // Try to acquire camera permit in 2500ms.
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -456,7 +461,7 @@ class Camera2Component(private val context: Fragment) {
             val surfaceList: MutableList<Surface> = ArrayList()
             surfaceList.add(imageReader.surface)
             // Get the surface for output
-            builder.cameraSurfaceView?.holder?.let {
+            cameraSurfaceView?.holder?.let {
                 surfaceList.add(it.surface)
             }
 
@@ -656,22 +661,6 @@ class Camera2Component(private val context: Fragment) {
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
-    }
-
-    @Suppress("unused")
-    fun setDebugOutputH264(outputH264: Boolean) {
-        outputH264ForDebug = outputH264
-    }
-
-    /**
-     * Notice that, if you do allow to output YUV. ONLY the YUV file will be outputted.
-     * The H264 file will not be created no matter what you set for setDebugOutputH264()
-     *
-     * @param outputYuv Whether to output YUV
-     */
-    @Suppress("unused")
-    fun setDebugOutputYuv(outputYuv: Boolean) {
-        outputYuvForDebug = outputYuv
     }
 
 // ============================================

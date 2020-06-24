@@ -15,6 +15,9 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
 
     private var aspectRatio = 0f
 
+    /**
+     * **Attention**: The parameter values are the camera orientation. NOT the device orientation.
+     */
     fun setDimension(width: Int, height: Int) {
         require(!(width < 0 || height < 0)) { "Size cannot be negative." }
         aspectRatio = width.toFloat() / height.toFloat()

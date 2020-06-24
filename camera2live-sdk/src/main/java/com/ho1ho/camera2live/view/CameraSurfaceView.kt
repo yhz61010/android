@@ -12,6 +12,7 @@ import kotlin.math.roundToInt
  */
 class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyle: Int = 0) :
     SurfaceView(context, attrs, defStyle) {
+
     private var aspectRatio = 0f
 
     fun setDimension(width: Int, height: Int) {
@@ -37,7 +38,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             // Performs center-crop transformation of the camera frames
             val newWidth: Int
             val newHeight: Int
-            val actualRatio = if (width > height) 1f / aspectRatio else aspectRatio
+            val actualRatio = if (width > height) aspectRatio else 1f / aspectRatio
             if (width < height * actualRatio) {
                 newHeight = height
                 newWidth = (height * actualRatio).roundToInt()
@@ -54,6 +55,6 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
     }
 
     companion object {
-        private const val TAG = "CameraTextureView"
+        private const val TAG = "CameraSurfaceView"
     }
 }

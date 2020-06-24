@@ -110,8 +110,8 @@ class Camera2Component(private val context: Fragment) {
     }
     private var cameraDevice: CameraDevice? = null             // Current camera device
     private var captureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
-    private lateinit var selectedSizeFromCamera: Size          // Get the optimized size from camera supported size
-    var previewSize: Size? = null                      // Camera preview size as well as the output video size
+    lateinit var selectedSizeFromCamera: Size                  // Get the optimized size from camera supported size
+    var previewSize: Size? = null                              // Camera preview size as well as the output video size
     private lateinit var imageReader: ImageReader              // The real-time data from Camera
     private var previewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
     private var previewRequest: CaptureRequest? = null         // The capture request obtained from mPreviewRequestBuilder
@@ -254,7 +254,7 @@ class Camera2Component(private val context: Fragment) {
         // SurfaceTexture listener.
         if (builder.cameraSurfaceView != null) {
             CLog.w(TAG, "With CameraTextureView")
-            openCamera(lensFacing)
+            openCamera()
         }
 
         // Clockwise orientation: 0, 90, 180, 270
@@ -305,7 +305,7 @@ class Camera2Component(private val context: Fragment) {
      *  3. Open camera using CameraManager
      */
     @SuppressLint("MissingPermission")
-    private fun openCamera(lensFacing: Int) {
+    private fun openCamera() {
         try {
             // Try to acquire camera permit in 2500ms.
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -588,7 +588,7 @@ class Camera2Component(private val context: Fragment) {
         closeCamera()
         this.lensFacing = lensFacing
         initializeCamera(lensFacing)
-        openCamera(lensFacing)
+        openCamera()
         lensSwitchListener?.onSwitch(lensFacing)
     }
 

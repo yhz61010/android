@@ -83,8 +83,6 @@ class CameraViewFragment : Fragment() {
         surfaceView = view.findViewById(R.id.cameraSurfaceView)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                surfaceView.setDimension(camera2Component.selectedSizeFromCamera!!.width, camera2Component.selectedSizeFromCamera!!.height)
-
                 // To ensure that size is set, initialize camera in the view's thread
                 view.post {
                     camera2Component.initDebugOutput()

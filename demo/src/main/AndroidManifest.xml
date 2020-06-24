@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:name=".CustomApplication"
@@ -16,6 +18,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".ui.CoroutineActivity" />
+        <activity android:name=".ui.AudioActivity" />
         <activity android:name=".ui.sharescreen.client.ScreenShareClientActivity" />
         <activity android:name=".ui.sharescreen.master.ScreenShareMasterActivity" />
         <activity android:name=".ui.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
@@ -37,7 +41,6 @@
             android:exported="false"
             android:foregroundServiceType="mediaProjection"
             tools:targetApi="q" />
-
     </application>
 
 </manifest>

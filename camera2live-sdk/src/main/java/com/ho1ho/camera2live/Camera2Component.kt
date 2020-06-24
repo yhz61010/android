@@ -26,7 +26,7 @@ import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.codec.CameraEncoder
 import com.ho1ho.camera2live.extensions.fail
 import com.ho1ho.camera2live.listeners.CallbackListener
-import com.ho1ho.camera2live.view.CameraSurfaceView
+import com.ho1ho.camera2live.view.base.CameraSurfaceView
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream

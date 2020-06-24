@@ -3,7 +3,6 @@ package com.ho1ho.camera2live
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
-import android.graphics.SurfaceTexture
 import android.hardware.SensorManager
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraMetadata.LENS_FACING_BACK
@@ -16,9 +15,10 @@ import android.util.Range
 import android.util.Size
 import android.view.OrientationEventListener
 import android.view.Surface
-import android.view.TextureView.SurfaceTextureListener
+import android.view.SurfaceHolder
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.camera2live.base.DataProcessContext
@@ -26,13 +26,15 @@ import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.codec.CameraEncoder
 import com.ho1ho.camera2live.extensions.fail
 import com.ho1ho.camera2live.listeners.CallbackListener
-import com.ho1ho.camera2live.view.CameraTextureView
+import com.ho1ho.camera2live.view.CameraSurfaceView
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -42,8 +44,14 @@ import java.util.concurrent.TimeUnit
 class Camera2Component(private val context: Fragment) {
 
     // Camera2 API supported the MAX width and height
-    private val cameraSupportedMaxPreviewWidth: Int by lazy { DeviceUtil.getResolution(context.requireContext()).x }
-    private val cameraSupportedMaxPreviewHeight: Int by lazy { DeviceUtil.getResolution(context.requireContext()).y }
+    private val cameraSupportedMaxPreviewWidth: Int by lazy {
+        val screenSize = DeviceUtil.getResolution(context.requireContext())
+        max(screenSize.x, screenSize.y)
+    }
+    private val cameraSupportedMaxPreviewHeight: Int by lazy {
+        val screenSize = DeviceUtil.getResolution(context.requireContext())
+        min(screenSize.x, screenSize.y)
+    }
 
     private lateinit var builder: Builder
 
@@ -57,16 +65,18 @@ class Camera2Component(private val context: Fragment) {
         var desiredVideoHeight = desiredVideoHeight
             private set
 
-        var cameraTextureView: CameraTextureView? = null
-        var previewInFullscreen: Boolean = false
+        var cameraSurfaceView: CameraSurfaceView? = null
+
+        //        var previewInFullscreen: Boolean = false
         var quality: Float = BITRATE_NORMAL
         var cameraFps: Range<Int> = CAMERA_FPS_NORMAL
         var videoFps: Int = VIDEO_FPS_FREQUENCY_HIGH
         var iFrameInterval: Int = CameraEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
         var bitrateMode: Int = CameraEncoder.DEFAULT_BITRATE_MODE
 
-        fun textureView(cameraTextureView: CameraTextureView) = apply { this.cameraTextureView = cameraTextureView }
-        fun previewInFullscreen(previewInFullscreen: Boolean) = apply { this.previewInFullscreen = previewInFullscreen }
+        fun textureView(cameraTextureView: CameraSurfaceView) = apply { this.cameraSurfaceView = cameraTextureView }
+
+        //        fun previewInFullscreen(previewInFullscreen: Boolean) = apply { this.previewInFullscreen = previewInFullscreen }
         fun quality(quality: Float) = apply { this.quality = quality }
         fun cameraFps(cameraFps: Range<Int>) = apply { this.cameraFps = cameraFps }
         fun videoFps(videoFps: Int) = apply { this.videoFps = videoFps }
@@ -100,8 +110,8 @@ class Camera2Component(private val context: Fragment) {
     }
     private var cameraDevice: CameraDevice? = null             // Current camera device
     private var captureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
-    private var selectedSizeFromCamera: Size? = null           // Get the optimized size from camera supported size
-    private var previewSize: Size? = null                      // Camera preview size as well as the output video size
+    private lateinit var selectedSizeFromCamera: Size          // Get the optimized size from camera supported size
+    var previewSize: Size? = null                      // Camera preview size as well as the output video size
     private lateinit var imageReader: ImageReader              // The real-time data from Camera
     private var previewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
     private var previewRequest: CaptureRequest? = null         // The capture request obtained from mPreviewRequestBuilder
@@ -175,58 +185,15 @@ class Camera2Component(private val context: Fragment) {
             }
         }
     }
-    private val surfaceTextureListener: SurfaceTextureListener = object : SurfaceTextureListener {
-        override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
-            CLog.i(TAG, "onSurfaceTextureAvailable width=$width, height=$height")
-            openCamera(lensFacing)
-        }
 
-        override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) {}
-        override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {
-            return true
-        }
-
-        override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {}
-    }
-
-    /**
-     * Get the proper camera supported size.
-     *
-     * @param choices      Camera supported size list
-     * @param screenWidth  Screen width
-     * @param screenHeight Screen height
-     * @return The proper camera supported size
-     */
-    private fun chooseProperSize(
-        choices: Array<Size>,
-        screenWidth: Int,
-        screenHeight: Int,
-        swappedDimensions: Boolean
-    ): Size {
-        val bigEnough: MutableList<Size> = ArrayList()
-        val stringBuilder = StringBuilder()
-        if (swappedDimensions) { // Portrait
-            for (option in choices) {
-                val str = "[" + option.width + ", " + option.height + "]"
-                stringBuilder.append(str)
-                if (option.height != screenWidth || option.width > screenHeight) continue
-                bigEnough.add(option)
-            }
-        } else { // Landscape
-            for (option in choices) {
-                val str = "[" + option.width + ", " + option.height + "]"
-                stringBuilder.append(str)
-                if (option.width != screenHeight || option.height > screenWidth) continue
-                bigEnough.add(option)
-            }
-        }
-        CLog.i(TAG, "chooseProperSize: $stringBuilder")
-        return if (bigEnough.size > 0) {
-            Collections.max(bigEnough, CompareSizesByArea())
-        } else {
-            CLog.e(TAG, "Couldn't find any suitable preview size")
-            choices[choices.size / 2]
-        }
+    fun initializeCamera(lensFacing: Int) {
+        // Config camera output
+        configCameraOutput(lensFacing)
+        initCameraEncoder(
+            previewSize!!.width, previewSize!!.height,
+            (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
+            builder.videoFps, builder.iFrameInterval, builder.bitrateMode
+        )
     }
 
     /**
@@ -285,17 +252,8 @@ class Camera2Component(private val context: Fragment) {
         // and back again in a short time or make screen off then on), the onSurfaceTextureAvailable callback
         // will not be called. So we just need to openCamera directly. Otherwise, we need to wait for the
         // SurfaceTexture listener.
-        if (builder.cameraTextureView != null) {
+        if (builder.cameraSurfaceView != null) {
             CLog.w(TAG, "With CameraTextureView")
-            if (builder.cameraTextureView!!.isAvailable) {
-                CLog.i(TAG, "Camera is ready.")
-                openCamera(lensFacing)
-            } else {
-                CLog.w(TAG, "Camera is NOT ready.")
-                builder.cameraTextureView!!.surfaceTextureListener = surfaceTextureListener
-            }
-        } else {
-            CLog.w(TAG, "Without CameraTextureView")
             openCamera(lensFacing)
         }
 
@@ -348,13 +306,6 @@ class Camera2Component(private val context: Fragment) {
      */
     @SuppressLint("MissingPermission")
     private fun openCamera(lensFacing: Int) {
-        // Config camera output
-        configCameraOutput(lensFacing)
-        initCameraEncoder(
-            previewSize!!.width, previewSize!!.height,
-            (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
-            builder.videoFps, builder.iFrameInterval, builder.bitrateMode
-        )
         try {
             // Try to acquire camera permit in 2500ms.
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -416,7 +367,7 @@ class Camera2Component(private val context: Fragment) {
 
                 // Get camera supported fps. It will be used to create CaptureRequest
                 cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-                CLog.w(TAG, "mCameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
+                CLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
 
                 val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
                 CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
@@ -459,27 +410,19 @@ class Camera2Component(private val context: Fragment) {
                 // Calculate ImageReader input preview size from supported size list by camera.
                 // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
                 // Attention: The returned value is in camera orientation. NOT in device orientation.
-                selectedSizeFromCamera = chooseProperSize(
-                    configMap.getOutputSizes(SurfaceTexture::class.java),
-                    cameraWidth, cameraHeight, swapDimension
-                )
-
+                selectedSizeFromCamera = getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
                 // Take care of the result value. It's in camera orientation.
-                CLog.w(
-                    TAG,
-                    "mSelectedSizeFromCamera width=${selectedSizeFromCamera!!.width} height=${selectedSizeFromCamera!!.height}"
-                )
-
-                // Swap the mSelectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
+                CLog.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
+                // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
                 previewSize =
-                    if (swapDimension) Size(selectedSizeFromCamera!!.height, selectedSizeFromCamera!!.width) else {
+                    if (swapDimension) Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width) else {
                         selectedSizeFromCamera
                     }
-                CLog.w(TAG, "mPreviewSize width=${previewSize!!.width} height=${previewSize!!.height}")
+                CLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
 
                 // If you do not set CameraTextureView dimension, it will be in full screen by default.
-                if (builder.cameraTextureView != null && !builder.previewInFullscreen) {
-                    builder.cameraTextureView!!.setDimension(previewSize!!.width, previewSize!!.height)
+                if (builder.cameraSurfaceView != null/* && !builder.previewInFullscreen*/) {
+                    builder.cameraSurfaceView!!.setDimension(previewSize!!.width, previewSize!!.height)
                 }
 
                 // The input camera size must be camera supported size.
@@ -487,8 +430,8 @@ class Camera2Component(private val context: Fragment) {
                 // The first and second parameters must be supported camera size NOT preview size.
                 // That means width is greater then height by default.
                 imageReader = ImageReader.newInstance(
-                    selectedSizeFromCamera!!.width,
-                    selectedSizeFromCamera!!.height,
+                    selectedSizeFromCamera.width,
+                    selectedSizeFromCamera.height,
                     ImageFormat.YUV_420_888 /*ImageFormat.JPEG*/,
                     IMAGE_BUFFER_SIZE
                 )
@@ -515,14 +458,9 @@ class Camera2Component(private val context: Fragment) {
         try {
             val surfaceList: MutableList<Surface> = ArrayList()
             surfaceList.add(imageReader.surface)
-            if (builder.cameraTextureView != null) {
-                val texture: SurfaceTexture? = builder.cameraTextureView!!.surfaceTexture
-                texture?.setDefaultBufferSize(selectedSizeFromCamera!!.width, selectedSizeFromCamera!!.height)
-                // Get the surface for output
-                texture?.let {
-                    val surface = Surface(it)
-                    surfaceList.add(surface)
-                }
+            // Get the surface for output
+            builder.cameraSurfaceView!!.holder?.let {
+                surfaceList.add(it.surface)
             }
 
             // Create CaptureRequest
@@ -649,6 +587,7 @@ class Camera2Component(private val context: Fragment) {
 //        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
         closeCamera()
         this.lensFacing = lensFacing
+        initializeCamera(lensFacing)
         openCamera(lensFacing)
         lensSwitchListener?.onSwitch(lensFacing)
     }

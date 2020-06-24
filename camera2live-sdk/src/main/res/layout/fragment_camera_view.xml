@@ -6,8 +6,8 @@
     android:background="@android:color/black"
     tools:context=".view.CameraViewFragment">
 
-    <com.ho1ho.camera2live.view.CameraTextureView
-        android:id="@+id/texture"
+    <com.ho1ho.camera2live.view.CameraSurfaceView
+        android:id="@+id/cameraSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

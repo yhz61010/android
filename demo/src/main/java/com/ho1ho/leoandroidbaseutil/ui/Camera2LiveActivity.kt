@@ -7,15 +7,14 @@ import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.view.BackPressedListener
-import com.ho1ho.camera2live.view.CameraViewFragment
+import com.ho1ho.camera2live.view.CameraPhotoFragment
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 
 class Camera2LiveActivity : BaseDemonstrationActivity() {
-    private val cameraViewFragment = CameraViewFragment()
+    private val cameraViewFragment = CameraPhotoFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.hideNavigationBar(this)
@@ -30,11 +29,11 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
         CLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
-        cameraViewFragment.backPressListener = object : BackPressedListener {
-            override fun onBackPressed() {
-                this@Camera2LiveActivity.onBackPressed()
-            }
-        }
+//        cameraViewFragment.backPressListener = object : BackPressedListener {
+//            override fun onBackPressed() {
+//                this@Camera2LiveActivity.onBackPressed()
+//            }
+//        }
 
         AndPermission.with(this)
             .runtime()

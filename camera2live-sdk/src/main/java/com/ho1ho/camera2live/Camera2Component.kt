@@ -307,6 +307,8 @@ class Camera2Component(private val context: Fragment) {
     @SuppressLint("MissingPermission")
     private fun openCamera() {
         try {
+            builder.cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
+
             // Try to acquire camera permit in 2500ms.
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock camera opening.")
@@ -459,7 +461,7 @@ class Camera2Component(private val context: Fragment) {
             val surfaceList: MutableList<Surface> = ArrayList()
             surfaceList.add(imageReader.surface)
             // Get the surface for output
-            builder.cameraSurfaceView!!.holder?.let {
+            builder.cameraSurfaceView?.holder?.let {
                 surfaceList.add(it.surface)
             }
 

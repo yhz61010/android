@@ -6,6 +6,7 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
@@ -14,7 +15,6 @@ import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.BuildConfig
 import com.ho1ho.camera2live.Camera2Component
 import com.ho1ho.camera2live.Camera2Component.EncodeDataUpdateListener
 import com.ho1ho.camera2live.Camera2Component.LensSwitchListener
@@ -30,6 +30,7 @@ class CameraViewFragment : Fragment() {
     private lateinit var switchFlashBtn: ToggleButton
     private lateinit var camera2Component: Camera2Component
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
+    private lateinit var surfaceView: CameraSurfaceView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,7 +43,7 @@ class CameraViewFragment : Fragment() {
         switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
         switchFlashBtn = v.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchFlash() }
-        val desiredSize = CAMERA_SIZE_NORMAL
+        val desiredSize = CAMERA_SIZE_HIGH
 
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
@@ -52,18 +53,17 @@ class CameraViewFragment : Fragment() {
         // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
         // BITRATE_MODE_CBR: 113.630kB/s
         val camera2ComponentBuilder = Camera2Component(this).Builder(desiredSize[0], desiredSize[1])
-        camera2ComponentBuilder.cameraTextureView = v.findViewById(R.id.texture)
-        camera2ComponentBuilder.previewInFullscreen = true
+        camera2ComponentBuilder.cameraSurfaceView = v.findViewById(R.id.cameraSurfaceView)
+//        camera2ComponentBuilder.previewInFullscreen = true
         camera2ComponentBuilder.quality = Camera2Component.BITRATE_NORMAL
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-        camera2ComponentBuilder.cameraFps = Camera2Component.CAMERA_FPS_NORMAL
+        camera2ComponentBuilder.cameraFps = Camera2Component.CAMERA_FPS_VERY_HIGH
         camera2ComponentBuilder.videoFps = Camera2Component.VIDEO_FPS_FREQUENCY_HIGH
         camera2ComponentBuilder.iFrameInterval = 1
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         camera2Component = camera2ComponentBuilder.build()
-        if (BuildConfig.DEBUG) {
-            camera2Component.setDebugOutputH264(true)
-        }
+        camera2Component.setDebugOutputH264(true)
+        camera2Component.initializeCamera(previousLensFacing)
         camera2Component.setEncodeListener(object : EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
                 Log.d(TAG, "Get encoded video data length=" + h264Data.size)
@@ -78,16 +78,33 @@ class CameraViewFragment : Fragment() {
         return v
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        surfaceView = view.findViewById(R.id.cameraSurfaceView)
+        surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                surfaceView.setDimension(camera2Component.previewSize!!.width, camera2Component.previewSize!!.height)
+
+                // To ensure that size is set, initialize camera in the view's thread
+                view.post {
+                    camera2Component.initDebugOutput()
+                    camera2Component.encoderType = if (
+                        CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+                        || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+                        || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+                    ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+                    else DataProcessFactory.ENCODER_TYPE_NORMAL
+                    camera2Component.openCameraAndGetData(previousLensFacing) // LENS_FACING_FRONT LENS_FACING_BACK
+                }
+            }
+
+            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+            override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
+        })
+    }
+
     override fun onResume() {
         CLog.i(TAG, "CameraViewFragment onResume")
-        camera2Component.initDebugOutput()
-        camera2Component.encoderType = if (
-            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-        ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-        else DataProcessFactory.ENCODER_TYPE_NORMAL
-        camera2Component.openCameraAndGetData(previousLensFacing) // LENS_FACING_FRONT LENS_FACING_BACK
         super.onResume()
     }
 

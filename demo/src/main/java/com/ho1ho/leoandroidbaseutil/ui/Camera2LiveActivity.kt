@@ -4,6 +4,7 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
+import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.CameraViewFragment
@@ -16,9 +17,10 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     private val cameraViewFragment = CameraViewFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppUtil.hideNavigationBar(this)
+        AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-//        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_camera2_live)
 
         CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)

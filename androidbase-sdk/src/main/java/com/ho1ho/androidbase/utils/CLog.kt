@@ -26,7 +26,7 @@ object CLog {
             Xlog.AppednerModeAsync,
             File(context.filesDir, "x-cache-dir").absolutePath,
             logDir.absolutePath,
-            "main", 0, if (DEBUG_MODE) "" else context.packageName
+            "main", 5, if (DEBUG_MODE) "" else context.packageName
         )
         Xlog.setConsoleLogOpen(DEBUG_MODE)
         Log.setLogImp(Xlog())

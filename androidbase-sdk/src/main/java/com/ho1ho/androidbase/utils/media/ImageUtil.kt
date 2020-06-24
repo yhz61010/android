@@ -31,7 +31,7 @@ object ImageUtil {
      */
     fun compressBitmap(bitmap: Bitmap, sampleSize: Int = 1): Bitmap {
         val compressedBmpOS = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
         val opt = BitmapFactory.Options()
         opt.inSampleSize = sampleSize
         return BitmapFactory.decodeByteArray(compressedBmpOS.toByteArray(), 0, compressedBmpOS.size(), opt)

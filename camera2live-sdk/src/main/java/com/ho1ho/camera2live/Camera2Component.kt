@@ -110,7 +110,7 @@ class Camera2Component(private val context: Fragment) {
     }
     private var cameraDevice: CameraDevice? = null             // Current camera device
     private var captureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
-    private lateinit var selectedSizeFromCamera: Size          // Get the optimized size from camera supported size
+    lateinit var selectedSizeFromCamera: Size          // Get the optimized size from camera supported size
     private var previewSize: Size? = null                      // Camera preview size as well as the output video size
     private lateinit var imageReader: ImageReader              // The real-time data from Camera
     private var previewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
@@ -191,7 +191,7 @@ class Camera2Component(private val context: Fragment) {
         }
     }
 
-    private fun initializeCamera(lensFacing: Int) {
+    fun initializeCamera(lensFacing: Int) {
         // Config camera output
         configCameraOutput(lensFacing)
         initCameraEncoder(
@@ -257,7 +257,7 @@ class Camera2Component(private val context: Fragment) {
         // and back again in a short time or make screen off then on), the onSurfaceTextureAvailable callback
         // will not be called. So we just need to openCamera directly. Otherwise, we need to wait for the
         // SurfaceTexture listener.
-        openCamera(lensFacing)
+        openCamera()
 
         // Clockwise orientation: 0, 90, 180, 270
         // 0: Normal portrait
@@ -307,9 +307,8 @@ class Camera2Component(private val context: Fragment) {
      *  3. Open camera using CameraManager
      */
     @SuppressLint("MissingPermission")
-    private fun openCamera(lensFacing: Int) {
+    private fun openCamera() {
         try {
-            initializeCamera(lensFacing)
             cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
 
             // Try to acquire camera permit in 2500ms.
@@ -591,7 +590,8 @@ class Camera2Component(private val context: Fragment) {
 //        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
         closeCamera()
         this.lensFacing = lensFacing
-        openCamera(lensFacing)
+        initializeCamera(lensFacing)
+        openCamera()
         lensSwitchListener?.onSwitch(lensFacing)
     }
 

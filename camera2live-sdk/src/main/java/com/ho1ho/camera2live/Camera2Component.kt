@@ -1,7 +1,6 @@
 package com.ho1ho.camera2live
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
@@ -19,6 +18,7 @@ import android.view.OrientationEventListener
 import android.view.Surface
 import android.view.TextureView.SurfaceTextureListener
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.camera2live.base.DataProcessContext
@@ -33,18 +33,25 @@ import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Author: Michael Leo
  * Date: 20-3-25 上午11:22
  */
-class Camera2Component private constructor(var builder: Builder) {
+@Suppress("unused")
+class Camera2Component(private val context: Fragment) {
 
-    class Builder(ctx: Activity, desiredVideoWidth: Int, desiredVideoHeight: Int) {
-        var context = ctx
-            private set
+    // Camera2 API supported the MAX width and height
+    private val cameraSupportedMaxPreviewWidth: Int by lazy { DeviceUtil.getResolution(context.requireContext()).x }
+    private val cameraSupportedMaxPreviewHeight: Int by lazy { DeviceUtil.getResolution(context.requireContext()).y }
+
+    private lateinit var builder: Builder
+
+    private constructor(context: Fragment, builder: Builder) : this(context) {
+        this.builder = builder
+    }
+
+    inner class Builder(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         var desiredVideoWidth = desiredVideoWidth
             private set
         var desiredVideoHeight = desiredVideoHeight
@@ -58,121 +65,108 @@ class Camera2Component private constructor(var builder: Builder) {
         var iFrameInterval: Int = CameraEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
         var bitrateMode: Int = CameraEncoder.DEFAULT_BITRATE_MODE
 
-        @Suppress("unused")
         fun textureView(cameraTextureView: CameraTextureView) = apply { this.cameraTextureView = cameraTextureView }
-
-        @Suppress("unused")
         fun previewInFullscreen(previewInFullscreen: Boolean) = apply { this.previewInFullscreen = previewInFullscreen }
-
-        @Suppress("unused")
         fun quality(quality: Float) = apply { this.quality = quality }
-
-        @Suppress("unused")
         fun cameraFps(cameraFps: Range<Int>) = apply { this.cameraFps = cameraFps }
-
-        @Suppress("unused")
         fun videoFps(videoFps: Int) = apply { this.videoFps = videoFps }
-
-        @Suppress("unused")
         fun iFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
-
-        @Suppress("unused")
         fun bitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
-
-        @Suppress("unused")
-        fun build() = Camera2Component(this)
+        fun build() = Camera2Component(context, this)
     }
 
-    private var mDebugOutputH264 = false
-    private var mDebugOutputYuv = false
-
-    // Camera2 API supported the MAX width and height
-    private val mCameraSupportedMaxPreviewWidth: Int
-    private val mCameraSupportedMaxPreviewHeight: Int
-    private var mCameraEncoder: CameraEncoder? = null
-    private var mEncodeListener: EncodeDataUpdateListener? = null
-    private var mLensSwitchListener: LensSwitchListener? = null
-    private var mSupportFlash = false   // Support flash
-    private var mTorchOn = false        // Flash continuously on
+    private var cameraEncoder: CameraEncoder? = null
+    private var encodeListener: EncodeDataUpdateListener? = null
+    private var lensSwitchListener: LensSwitchListener? = null
+    private var supportFlash = false   // Support flash
+    private var torchOn = false        // Flash continuously on
 
     // The context to process data
-    private var mDataProcessContext: DataProcessContext =
+    private var dataProcessContext: DataProcessContext =
         DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_NORMAL)!!
     var encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
         set(value) {
-            mDataProcessContext = DataProcessFactory.getConcreteObject(value)
-                ?: fail("unsupported encoding type=$value")
+            dataProcessContext = DataProcessFactory.getConcreteObject(value) ?: fail("unsupported encoding type=$value")
         }
-
-    init {
-        val screenSize = DeviceUtil.getResolution(builder.context)
-        mCameraSupportedMaxPreviewWidth = max(screenSize.x, screenSize.y)
-        mCameraSupportedMaxPreviewHeight = min(screenSize.x, screenSize.y)
-    }
     // ============================
 
-    private lateinit var mCameraId: String                      // Current using CameraId
-    private var mLensFacing = LENS_FACING_BACK              // Lens facing. LENS_FACING_FRONT=0, LENS_FACING_BACK=1 = 0
-    private var mCameraManager: CameraManager? = null           // The camera manager
-    private var mCameraDevice: CameraDevice? = null             // Current camera device
-    private var mCaptureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
-    private var mSelectedSizeFromCamera: Size? = null           // Get the optimized size from camera supported size
-    private var mPreviewSize: Size? = null                      // Camera preview size as well as the output video size
-    private var mImageReader: ImageReader? = null               // The real-time data from Camera
-    private var mPreviewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
-    private var mPreviewRequest: CaptureRequest? =
-        null         // The capture request obtained from mPreviewRequestBuilder
-    private var mOrientationListener: OrientationEventListener? = null // Device orientation listener
-    private var mCameraThread: HandlerThread? = null            // Camera working thread
-    private var mCameraHandler: Handler? = null                 // Camera working handler used by mCameraThread
-    private val mCameraOpenCloseLock = Semaphore(1)      // The semaphore for camera status
-    private lateinit var mCameraSupportedFpsRanges: Array<Range<Int>>    // Camera supported FPS range
+    private lateinit var cameraId: String                      // Current using CameraId
+    private var lensFacing = LENS_FACING_BACK              // Lens facing. LENS_FACING_FRONT=0, LENS_FACING_BACK=1 = 0
+
+    // The camera manager
+    private val cameraManager: CameraManager by lazy {
+        val context = context.requireContext().applicationContext
+        context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    }
+    private var cameraDevice: CameraDevice? = null             // Current camera device
+    private var captureSession: CameraCaptureSession? = null   // The configured capture session for a CameraDevice
+    private var selectedSizeFromCamera: Size? = null           // Get the optimized size from camera supported size
+    private var previewSize: Size? = null                      // Camera preview size as well as the output video size
+    private lateinit var imageReader: ImageReader              // The real-time data from Camera
+    private var previewRequestBuilder: CaptureRequest.Builder? = null  // The builder for capture requests
+    private var previewRequest: CaptureRequest? = null         // The capture request obtained from mPreviewRequestBuilder
+    private var orientationListener: OrientationEventListener? = null // Device orientation listener
+    private var cameraThread = HandlerThread("camera-background").apply { start() }    // Camera working thread
+    private var cameraHandler = Handler(cameraThread.looper)            // Camera working handler used by mCameraThread
+    private val cameraOpenCloseLock = Semaphore(1)               // The semaphore for camera status
+    private lateinit var cameraSupportedFpsRanges: Array<Range<Int>>    // Camera supported FPS range
+
+    /** [HandlerThread] where all buffer reading operations run */
+    private val imageReaderThread = HandlerThread("imageReaderThread").apply { start() }
+
+    /** [Handler] corresponding to [imageReaderThread] */
+    private val imageReaderHandler = Handler(imageReaderThread.looper)
 
     // ===== Debug code =======================
-    private var mVideoYuvOs: BufferedOutputStream? = null
-    private var mVideoH264Os: BufferedOutputStream? = null
-    private var mBaseOutputFolder: String? = null
+    private var outputH264ForDebug = false
+    private var outputYuvForDebug = false
+    private var videoYuvOsForDebug: BufferedOutputStream? = null
+    private var videoH264OsForDebug: BufferedOutputStream? = null
+    private var baseOutputFolderForDebug: String? = null
     // =========================================
 
     // Camera status callback
-    private val mStateCallback: CameraDevice.StateCallback = object : CameraDevice.StateCallback() {
+    private val stateCallback: CameraDevice.StateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(cameraDevice: CameraDevice) {
-            mCameraOpenCloseLock.release()  // 1. Release a permit in semaphore
-            mCameraDevice = cameraDevice    // 2. Current opening camera
-            createCameraPreviewSession()    // 3. Create camera preview session
+            CLog.w(TAG, "stateCallback onOpened")
+            cameraOpenCloseLock.release()                       // 1. Release a permit in semaphore
+            this@Camera2Component.cameraDevice = cameraDevice   // 2. Current opening camera
+            createCameraPreviewSession()                        // 3. Create camera preview session
         }
 
         override fun onDisconnected(cameraDevice: CameraDevice) {
-            mCameraOpenCloseLock.release()  // 1. Release a permit in semaphore
-            cameraDevice.close()            // 2. Close camera
-            mCameraDevice = null            // 3. Empty camera device
+            CLog.w(TAG, "stateCallback onDisconnected")
+            cameraOpenCloseLock.release()               // 1. Release a permit in semaphore
+            cameraDevice.close()                        // 2. Close camera
+            this@Camera2Component.cameraDevice = null   // 3. Empty camera device
+            context.requireActivity().finish()
         }
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
-            mCameraOpenCloseLock.release()  // 1. Release a permit in semaphore
-            cameraDevice.close()            // 2. Close camera
-            mCameraDevice = null            // 3. Empty camera device
-            builder.context.finish()        // 4. Finish current activity
+            CLog.w(TAG, "stateCallback onError")
+            cameraOpenCloseLock.release()               // 1. Release a permit in semaphore
+            cameraDevice.close()                        // 2. Close camera
+            this@Camera2Component.cameraDevice = null   // 3. Empty camera device
+            context.requireActivity().finish()
         }
     }
 
-    private val mOnImageAvailableListener = OnImageAvailableListener { reader ->
-        val image = reader.acquireLatestImage()
-        if (image == null || mCameraHandler == null) return@OnImageAvailableListener
+    private val onImageAvailableForRecordingListener = OnImageAvailableListener { reader ->
+        val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
 
-        mCameraHandler!!.post {
+        cameraHandler.post {
             try {
                 val width = image.width
                 val height = image.height
                 CLog.v(TAG, "Image width=$width height=$height")
 
-                if (mDebugOutputYuv) {
-                    mVideoYuvOs?.write(mDataProcessContext.doProcess(image, mLensFacing))
+                if (outputYuvForDebug) {
+                    videoYuvOsForDebug?.write(dataProcessContext.doProcess(image, lensFacing))
                     return@post
                 }
 
-                val rotatedYuv420Data = mDataProcessContext.doProcess(image, mLensFacing)
-                mCameraEncoder?.offerDataIntoQueue(rotatedYuv420Data)
+                val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing)
+                cameraEncoder?.offerDataIntoQueue(rotatedYuv420Data)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -181,10 +175,10 @@ class Camera2Component private constructor(var builder: Builder) {
             }
         }
     }
-    private val mSurfaceTextureListener: SurfaceTextureListener = object : SurfaceTextureListener {
+    private val surfaceTextureListener: SurfaceTextureListener = object : SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
             CLog.i(TAG, "onSurfaceTextureAvailable width=$width, height=$height")
-            openCamera(mLensFacing)
+            openCamera(lensFacing)
         }
 
         override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) {}
@@ -240,21 +234,21 @@ class Camera2Component private constructor(var builder: Builder) {
      */
     fun initDebugOutput() {
         try {
-            if (mDebugOutputH264 || mDebugOutputYuv) {
-                mBaseOutputFolder =
-                    builder.context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
-                val folder = File(mBaseOutputFolder!!)
+            if (outputH264ForDebug || outputYuvForDebug) {
+                baseOutputFolderForDebug =
+                    context.requireContext().getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
+                val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
-                    CLog.d(TAG, "$mBaseOutputFolder=$mkdirStatus")
+                    CLog.d(TAG, "$baseOutputFolderForDebug=$mkdirStatus")
                 }
-                if (mDebugOutputYuv) {
-                    val videoYuvFile = File(mBaseOutputFolder, "camera.yuv")
-                    mVideoYuvOs = BufferedOutputStream(FileOutputStream(videoYuvFile))
+                if (outputYuvForDebug) {
+                    val videoYuvFile = File(baseOutputFolderForDebug, "camera.yuv")
+                    videoYuvOsForDebug = BufferedOutputStream(FileOutputStream(videoYuvFile))
                 }
-                if (!mDebugOutputYuv && mDebugOutputH264) {
-                    val videoH264File = File(mBaseOutputFolder, "camera.h264")
-                    mVideoH264Os = BufferedOutputStream(FileOutputStream(videoH264File))
+                if (!outputYuvForDebug && outputH264ForDebug) {
+                    val videoH264File = File(baseOutputFolderForDebug, "camera.h264")
+                    videoH264OsForDebug = BufferedOutputStream(FileOutputStream(videoH264File))
                 }
             }
         } catch (e: Exception) {
@@ -267,15 +261,15 @@ class Camera2Component private constructor(var builder: Builder) {
      */
     fun closeDebugOutput() {
         try {
-            if (mDebugOutputYuv) {
+            if (outputYuvForDebug) {
                 CLog.i(TAG, "release videoYuvOs")
-                mVideoYuvOs?.flush()
-                mVideoYuvOs?.close()
+                videoYuvOsForDebug?.flush()
+                videoYuvOsForDebug?.close()
             }
-            if (mDebugOutputH264) {
+            if (outputH264ForDebug) {
                 CLog.i(TAG, "release videoH264Os")
-                mVideoH264Os?.flush()
-                mVideoH264Os?.close()
+                videoH264OsForDebug?.flush()
+                videoH264OsForDebug?.close()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -285,8 +279,7 @@ class Camera2Component private constructor(var builder: Builder) {
     fun openCameraAndGetData(lensFacing: Int) {
         CLog.w(TAG, "encodingType=$encoderType")
 
-        mLensFacing = lensFacing
-        startCameraThread()
+        this.lensFacing = lensFacing
 
         // If current CameraTextureView is still available(For instance, you move app to background
         // and back again in a short time or make screen off then on), the onSurfaceTextureAvailable callback
@@ -299,7 +292,7 @@ class Camera2Component private constructor(var builder: Builder) {
                 openCamera(lensFacing)
             } else {
                 CLog.w(TAG, "Camera is NOT ready.")
-                builder.cameraTextureView!!.surfaceTextureListener = mSurfaceTextureListener
+                builder.cameraTextureView!!.surfaceTextureListener = surfaceTextureListener
             }
         } else {
             CLog.w(TAG, "Without CameraTextureView")
@@ -308,8 +301,8 @@ class Camera2Component private constructor(var builder: Builder) {
 
         // Clockwise orientation: 0, 90, 180, 270
         // 0: Normal portrait
-        mOrientationListener = object : OrientationEventListener(
-            builder.context,
+        orientationListener = object : OrientationEventListener(
+            context.requireContext(),
             SensorManager.SENSOR_DELAY_NORMAL
         ) {
             override fun onOrientationChanged(pOrientation: Int) {
@@ -323,10 +316,10 @@ class Camera2Component private constructor(var builder: Builder) {
 //                CLog.v(TAG, "mRotateDegree: $orientation")
             }
         }
-        if (mOrientationListener!!.canDetectOrientation()) {
-            mOrientationListener!!.enable()
+        if (orientationListener!!.canDetectOrientation()) {
+            orientationListener!!.enable()
         } else {
-            mOrientationListener!!.disable()
+            orientationListener!!.disable()
         }
     }
 
@@ -335,11 +328,11 @@ class Camera2Component private constructor(var builder: Builder) {
             closeCamera()
             stopCameraThread()
             CLog.i(TAG, "yuv2H264Encoder.release()")
-            mCameraEncoder?.release()
-            mOrientationListener?.disable()
+            cameraEncoder?.release()
+            orientationListener?.disable()
 
-            mCameraEncoder = null
-            mOrientationListener = null
+            cameraEncoder = null
+            orientationListener = null
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -358,17 +351,16 @@ class Camera2Component private constructor(var builder: Builder) {
         // Config camera output
         configCameraOutput(lensFacing)
         initCameraEncoder(
-            mPreviewSize!!.width, mPreviewSize!!.height,
-            (mPreviewSize!!.width * mPreviewSize!!.height * builder.quality).toInt(),
+            previewSize!!.width, previewSize!!.height,
+            (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
             builder.videoFps, builder.iFrameInterval, builder.bitrateMode
         )
-        mCameraManager = builder.context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             // Try to acquire camera permit in 2500ms.
-            if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+            if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock camera opening.")
             }
-            mCameraManager?.openCamera(mCameraId, mStateCallback, mCameraHandler)
+            cameraManager.openCamera(cameraId, stateCallback, cameraHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: InterruptedException) {
@@ -384,12 +376,12 @@ class Camera2Component private constructor(var builder: Builder) {
         iFrameInterval: Int,
         bitrateMode: Int
     ) {
-        mCameraEncoder = CameraEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
-        checkNotNull(mCameraEncoder) { "CameraEncoder can not be null" }.setDataUpdateCallback(object :
+        cameraEncoder = CameraEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
+        checkNotNull(cameraEncoder) { "CameraEncoder can not be null" }.setDataUpdateCallback(object :
             CallbackListener {
             override fun onCallback(h264Data: ByteArray) {
-                mEncodeListener?.onUpdate(h264Data)
-                if (mDebugOutputH264) mVideoH264Os?.write(h264Data)
+                encodeListener?.onUpdate(h264Data)
+                if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
             }
         })
     }
@@ -405,11 +397,10 @@ class Camera2Component private constructor(var builder: Builder) {
      *  6. Create ImageReader
      */
     private fun configCameraOutput(lensFacing: Int) {
-        val manager = builder.context.getSystemService(Context.CAMERA_SERVICE) as CameraManager?
         try {
             // Iterate all camera list
-            for (cameraId in checkNotNull(manager) { "CameraManager can not be null" }.cameraIdList) {
-                val characteristics = manager.getCameraCharacteristics(cameraId)
+            for (cameraId in cameraManager.cameraIdList) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
                 val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
                 if (facing != null && facing != lensFacing) {
                     continue
@@ -417,16 +408,15 @@ class Camera2Component private constructor(var builder: Builder) {
                 val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: continue
                 val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
                 CLog.w(TAG, "isFlashSupported=$isFlashSupported")
-                this.mSupportFlash = isFlashSupported ?: false
+                this.supportFlash = isFlashSupported ?: false
 
                 // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
                 val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
                 CLog.w(TAG, "hardwareLevel=$hardwareLevel")
 
                 // Get camera supported fps. It will be used to create CaptureRequest
-                mCameraSupportedFpsRanges =
-                    characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-                CLog.w(TAG, "mCameraSupportedFpsRanges=${mCameraSupportedFpsRanges.contentToString()}")
+                cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+                CLog.w(TAG, "mCameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
 
                 val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
                 CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
@@ -435,7 +425,7 @@ class Camera2Component private constructor(var builder: Builder) {
 
                 // Generally, if the device is in portrait(Surface.ROTATION_0),
                 // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
-                val deviceRotation = builder.context.windowManager.defaultDisplay.rotation
+                val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
                 val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
                 var swapDimension = false
                 CLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
@@ -462,14 +452,14 @@ class Camera2Component private constructor(var builder: Builder) {
                     cameraWidth = builder.desiredVideoWidth
                     cameraHeight = builder.desiredVideoHeight
                 }
-                if (cameraWidth > mCameraSupportedMaxPreviewHeight) cameraWidth = mCameraSupportedMaxPreviewHeight
-                if (cameraHeight > mCameraSupportedMaxPreviewWidth) cameraHeight = mCameraSupportedMaxPreviewWidth
+                if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
+                if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
                 CLog.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
                 // Calculate ImageReader input preview size from supported size list by camera.
                 // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
                 // Attention: The returned value is in camera orientation. NOT in device orientation.
-                mSelectedSizeFromCamera = chooseProperSize(
+                selectedSizeFromCamera = chooseProperSize(
                     configMap.getOutputSizes(SurfaceTexture::class.java),
                     cameraWidth, cameraHeight, swapDimension
                 )
@@ -477,33 +467,33 @@ class Camera2Component private constructor(var builder: Builder) {
                 // Take care of the result value. It's in camera orientation.
                 CLog.w(
                     TAG,
-                    "mSelectedSizeFromCamera width=${mSelectedSizeFromCamera!!.width} height=${mSelectedSizeFromCamera!!.height}"
+                    "mSelectedSizeFromCamera width=${selectedSizeFromCamera!!.width} height=${selectedSizeFromCamera!!.height}"
                 )
 
                 // Swap the mSelectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
-                mPreviewSize =
-                    if (swapDimension) Size(mSelectedSizeFromCamera!!.height, mSelectedSizeFromCamera!!.width) else {
-                        mSelectedSizeFromCamera
+                previewSize =
+                    if (swapDimension) Size(selectedSizeFromCamera!!.height, selectedSizeFromCamera!!.width) else {
+                        selectedSizeFromCamera
                     }
-                CLog.w(TAG, "mPreviewSize width=${mPreviewSize!!.width} height=${mPreviewSize!!.height}")
+                CLog.w(TAG, "mPreviewSize width=${previewSize!!.width} height=${previewSize!!.height}")
 
                 // If you do not set CameraTextureView dimension, it will be in full screen by default.
                 if (builder.cameraTextureView != null && !builder.previewInFullscreen) {
-                    builder.cameraTextureView!!.setDimension(mPreviewSize!!.width, mPreviewSize!!.height)
+                    builder.cameraTextureView!!.setDimension(previewSize!!.width, previewSize!!.height)
                 }
 
                 // The input camera size must be camera supported size.
                 // Otherwise, the video will be distorted.
                 // The first and second parameters must be supported camera size NOT preview size.
                 // That means width is greater then height by default.
-                mImageReader = ImageReader.newInstance(
-                    mSelectedSizeFromCamera!!.width,
-                    mSelectedSizeFromCamera!!.height,
+                imageReader = ImageReader.newInstance(
+                    selectedSizeFromCamera!!.width,
+                    selectedSizeFromCamera!!.height,
                     ImageFormat.YUV_420_888 /*ImageFormat.JPEG*/,
-                    2
+                    IMAGE_BUFFER_SIZE
                 )
-                mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, mCameraHandler)
-                mCameraId = cameraId
+                imageReader.setOnImageAvailableListener(onImageAvailableForRecordingListener, cameraHandler)
+                this.cameraId = cameraId
                 return
             }
         } catch (e: CameraAccessException) {
@@ -524,10 +514,10 @@ class Camera2Component private constructor(var builder: Builder) {
     private fun createCameraPreviewSession() {
         try {
             val surfaceList: MutableList<Surface> = ArrayList()
-            surfaceList.add(mImageReader!!.surface)
+            surfaceList.add(imageReader.surface)
             if (builder.cameraTextureView != null) {
                 val texture: SurfaceTexture? = builder.cameraTextureView!!.surfaceTexture
-                texture?.setDefaultBufferSize(mSelectedSizeFromCamera!!.width, mSelectedSizeFromCamera!!.height)
+                texture?.setDefaultBufferSize(selectedSizeFromCamera!!.width, selectedSizeFromCamera!!.height)
                 // Get the surface for output
                 texture?.let {
                     val surface = Surface(it)
@@ -540,48 +530,44 @@ class Camera2Component private constructor(var builder: Builder) {
             // CameraDevice.TEMPLATE_PREVIEW
             // CameraDevice.TEMPLATE_STILL_CAPTURE
             // CameraDevice.TEMPLATE_RECORD
-            mPreviewRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+            previewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
             for (surface in surfaceList) {
-                mPreviewRequestBuilder!!.addTarget(surface)
+                previewRequestBuilder!!.addTarget(surface)
             }
-            mCameraDevice!!.createCaptureSession( // createCaptureSession // createConstrainedHighSpeedCaptureSession
+            cameraDevice!!.createCaptureSession( // createCaptureSession // createConstrainedHighSpeedCaptureSession
                 surfaceList,
                 object : CameraCaptureSession.StateCallback() {
                     // Create capture session
                     override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                         // When camera is closed, return directly.
-                        if (null == mCameraDevice) {
+                        if (null == cameraDevice) {
                             return
                         }
-                        mCaptureSession = cameraCaptureSession
+                        captureSession = cameraCaptureSession
                         try {
                             // AWB
 //                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
 //                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
 
                             // Auto focus
-                            mPreviewRequestBuilder!!.set(
-                                CaptureRequest.CONTROL_AF_MODE,
-                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
-                            )
+                            previewRequestBuilder!!.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
                             // Auto exposure. The flash will be open automatically in dark.
-                            mPreviewRequestBuilder!!.set(
-                                CaptureRequest.CONTROL_AE_MODE,
-                                CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
-                            )
+                            previewRequestBuilder!!.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
 
-//                                int rotation=getWindowManager().getDefaultDisplay().getRotation();
-//                                mPreviewRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
+//                            if (builder.templateType == TEMPLATE_TYPE_PHOTO) {
+//                                val rotation: Int = context.requireActivity().windowManager.defaultDisplay.rotation
+//                                mPreviewRequestBuilder!!.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS[rotation])
+//                            }
 
                             // Set camera fps according to mCameraSupportedFpsRanges[mCameraSupportedFpsRanges.length-1]
                             CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
-                            mPreviewRequestBuilder!!.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-                            mPreviewRequest = mPreviewRequestBuilder!!.build()
+                            previewRequestBuilder!!.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+                            previewRequest = previewRequestBuilder!!.build()
                             // Request endlessly repeating capture of images by this capture session.
                             // With this method, the camera device will continually capture images
                             // using the settings in the provided CaptureRequest,
-                            // at the maximum rate possible.
-                            mCaptureSession!!.setRepeatingRequest(mPreviewRequest!!, null, mCameraHandler)
+                            // at the maximum rate possible until the session is torn down or session.stopRepeating() is called
+                            captureSession!!.setRepeatingRequest(previewRequest!!, null, cameraHandler)
                         } catch (e: CameraAccessException) {
                             e.printStackTrace()
                         }
@@ -590,9 +576,9 @@ class Camera2Component private constructor(var builder: Builder) {
                     override fun onConfigureFailed(
                         cameraCaptureSession: CameraCaptureSession
                     ) {
-                        Toast.makeText(builder.context, "createCaptureSession Failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context.requireActivity(), "createCaptureSession Failed", Toast.LENGTH_SHORT).show()
                     }
-                }, null
+                }, cameraHandler
             )
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -602,41 +588,27 @@ class Camera2Component private constructor(var builder: Builder) {
     private fun closeCamera() {
         CLog.i(TAG, "closeCamera()")
         try {
-            mCameraOpenCloseLock.acquire()
+            cameraOpenCloseLock.acquire()
 
-            mCaptureSession?.close()
-            mCaptureSession = null
+            captureSession?.close()
+            captureSession = null
 
-            mCameraDevice?.close()
-            mImageReader?.close()
+            cameraDevice?.close()
+            imageReader.close()
 
-            mCameraDevice = null
-            mImageReader = null
+            cameraDevice = null
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera closing.", e)
         } finally {
-            mCameraOpenCloseLock.release()
+            cameraOpenCloseLock.release()
         }
-    }
-
-    private fun startCameraThread() {
-        mCameraThread = HandlerThread("camera-background")
-        mCameraThread!!.start()
-        mCameraHandler = Handler(mCameraThread!!.looper)
     }
 
     private fun stopCameraThread() {
         CLog.i(TAG, "stopCameraThread()")
         try {
-            if (mCameraThread != null) {
-                mCameraThread!!.quitSafely()
-                mCameraThread!!.join()
-                mCameraThread = null
-            }
-            if (mCameraHandler != null) {
-                mCameraHandler!!.removeCallbacksAndMessages(null)
-                mCameraHandler = null
-            }
+            cameraHandler.removeCallbacksAndMessages(null)
+            cameraThread.quitSafely()
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }
@@ -661,32 +633,32 @@ class Camera2Component private constructor(var builder: Builder) {
     }
 
     fun setEncodeListener(listener: EncodeDataUpdateListener) {
-        mEncodeListener = listener
+        encodeListener = listener
     }
 
     fun setLensSwitchListener(listener: LensSwitchListener) {
-        mLensSwitchListener = listener
+        lensSwitchListener = listener
     }
 
     @Suppress("unchecked")
     fun switchCamera(lensFacing: Int) {
-        if (mCameraDevice == null) {
+        if (cameraDevice == null) {
             throw IllegalAccessError("You must call openCameraAndGetData(lensFacing: Int) first.")
         }
 
 //        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
         closeCamera()
-        mLensFacing = lensFacing
+        this.lensFacing = lensFacing
         openCamera(lensFacing)
-        mLensSwitchListener?.onSwitch(lensFacing)
+        lensSwitchListener?.onSwitch(lensFacing)
     }
 
     fun switchCamera() {
-        if (mCameraDevice == null) {
+        if (cameraDevice == null) {
             throw IllegalAccessError("You must call openCameraAndGetData(lensFacing: Int) first.")
         }
 
-        if (mLensFacing == LENS_FACING_BACK) {
+        if (lensFacing == LENS_FACING_BACK) {
             switchToFrontCamera()
         } else {
             switchToBackCamera()
@@ -695,7 +667,7 @@ class Camera2Component private constructor(var builder: Builder) {
 
     @Suppress("unchecked")
     fun switchToBackCamera() {
-        if (mCameraDevice == null) {
+        if (cameraDevice == null) {
             throw IllegalAccessError("You must call openCameraAndGetData(lensFacing: Int) first.")
         }
 
@@ -704,7 +676,7 @@ class Camera2Component private constructor(var builder: Builder) {
 
     @Suppress("unchecked")
     fun switchToFrontCamera() {
-        if (mCameraDevice == null) {
+        if (cameraDevice == null) {
             throw IllegalAccessError("You must call openCameraAndGetData(lensFacing: Int) first.")
         }
 
@@ -713,32 +685,32 @@ class Camera2Component private constructor(var builder: Builder) {
 
     fun switchFlash() {
         try {
-            if (LENS_FACING_BACK == mLensFacing && mSupportFlash) {
-                if (mTorchOn) {
-                    mTorchOn = false
+            if (LENS_FACING_BACK == lensFacing && supportFlash) {
+                if (torchOn) {
+                    torchOn = false
 
                     // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
                     // Otherwise the flash will not be off.
-                    mPreviewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-                    mPreviewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
+                    previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+                    previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
                     //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
-                    mPreviewRequest = mPreviewRequestBuilder?.build()
-                    mCaptureSession?.setRepeatingRequest(mPreviewRequest!!, null, mCameraHandler)
+                    previewRequest = previewRequestBuilder?.build()
+                    captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
 
 //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //                        mCameraManager.setTorchMode(mCameraId, false);
 //                    }
                     CLog.w(TAG, "Flash OFF")
                 } else {
-                    mTorchOn = true
+                    torchOn = true
 
                     // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
                     // Otherwise the flash will not be on.
-                    mPreviewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-                    mPreviewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
+                    previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+                    previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
                     //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
-                    mPreviewRequest = mPreviewRequestBuilder?.build()
-                    mCaptureSession?.setRepeatingRequest(mPreviewRequest!!, null, mCameraHandler)
+                    previewRequest = previewRequestBuilder?.build()
+                    captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
 
 //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //                        mCameraManager.setTorchMode(mCameraId, true);
@@ -753,7 +725,7 @@ class Camera2Component private constructor(var builder: Builder) {
 
     @Suppress("unused")
     fun setDebugOutputH264(outputH264: Boolean) {
-        mDebugOutputH264 = outputH264
+        outputH264ForDebug = outputH264
     }
 
     /**
@@ -764,62 +736,51 @@ class Camera2Component private constructor(var builder: Builder) {
      */
     @Suppress("unused")
     fun setDebugOutputYuv(outputYuv: Boolean) {
-        mDebugOutputYuv = outputYuv
+        outputYuvForDebug = outputYuv
     }
+
+// ============================================
 
     companion object {
         private const val TAG = "Camera2Component"
 
-        @Suppress("unused")
+        /** Maximum number of images that will be held in the reader's buffer */
+        private const val IMAGE_BUFFER_SIZE: Int = 3
+
+        val ORIENTATIONS = mapOf(
+            Surface.ROTATION_0 to 90,
+            Surface.ROTATION_90 to 0,
+            Surface.ROTATION_180 to 270,
+            Surface.ROTATION_270 to 180
+        )
+
+        const val TEMPLATE_TYPE_RECORD = 1
+        const val TEMPLATE_TYPE_PHOTO = 2
+
         const val BITRATE_INSANE_HIGH = 8f
-
-        @Suppress("unused")
         const val BITRATE_EXTREME_HIGH = 5f
-
-        @Suppress("unused")
         const val BITRATE_VERY_HIGH = 3f
-
-        @Suppress("unused")
         const val BITRATE_HIGH = 2f
-
-        @Suppress("unused")
         const val BITRATE_NORMAL = 1f
-
-        @Suppress("unused")
         const val BITRATE_LOW = 0.75f
-
-        @Suppress("unused")
         const val BITRATE_VERY_LOW = 0.5f
 
-        @Suppress("unused")
         @JvmField
         val CAMERA_FPS_VERY_HIGH = Range(30, 30)    // [30, 30]
 
-        @Suppress("unused")
         @JvmField
         val CAMERA_FPS_HIGH = Range(24, 24)         // [24, 24]
 
-        @Suppress("unused")
         @JvmField
         val CAMERA_FPS_NORMAL = Range(20, 20)       // [20, 20]
 
-        @Suppress("unused")
         @JvmField
         val CAMERA_FPS_LOW = Range(15, 15)          // [15, 15]
 
-        @Suppress("unused")
         const val VIDEO_FPS_VERY_HIGH = 25
-
-        @Suppress("unused")
         const val VIDEO_FPS_FREQUENCY_HIGH = 20
-
-        @Suppress("unused")
         const val VIDEO_FPS_FREQUENCY_NORMAL = 15
-
-        @Suppress("unused")
         const val VIDEO_FPS_FREQUENCY_LOW = 10
-
-        @Suppress("unused")
         const val VIDEO_FPS_FREQUENCY_VERY_LOW = 5
     }
 }

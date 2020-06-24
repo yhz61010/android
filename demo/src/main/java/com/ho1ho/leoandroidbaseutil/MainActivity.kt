@@ -85,7 +85,9 @@ class MainActivity : AppCompatActivity() {
             Pair("Camera2", Camera2LiveActivity::class.java),
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
-            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java)
+            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
+            Pair("Audio", AudioActivity::class.java),
+            Pair("Coroutine", CoroutineActivity::class.java)
         )
 
         private val color = arrayOf(

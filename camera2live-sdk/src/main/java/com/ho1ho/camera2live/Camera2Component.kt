@@ -625,39 +625,45 @@ class Camera2Component(private val context: Fragment) {
         switchCamera(LENS_FACING_FRONT)
     }
 
+    fun turnOnFlash() {
+        // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
+        // Otherwise the flash will not be on.
+        previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+        previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
+        //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
+        previewRequest = previewRequestBuilder?.build()
+        captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
+
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                        mCameraManager.setTorchMode(mCameraId, true);
+//                    }
+        CLog.w(TAG, "Flash ON")
+    }
+
+    fun turnOffFlash() {
+        // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
+        // Otherwise the flash will not be off.
+        previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+        previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
+        //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
+        previewRequest = previewRequestBuilder?.build()
+        captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
+
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                        mCameraManager.setTorchMode(mCameraId, false);
+//                    }
+        CLog.w(TAG, "Flash OFF")
+    }
+
     fun switchFlash() {
         try {
             if (LENS_FACING_BACK == lensFacing && supportFlash) {
                 if (torchOn) {
                     torchOn = false
-
-                    // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
-                    // Otherwise the flash will not be off.
-                    previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-                    previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
-                    //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
-                    previewRequest = previewRequestBuilder?.build()
-                    captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
-
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                        mCameraManager.setTorchMode(mCameraId, false);
-//                    }
-                    CLog.w(TAG, "Flash OFF")
+                    turnOffFlash()
                 } else {
                     torchOn = true
-
-                    // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
-                    // Otherwise the flash will not be on.
-                    previewRequestBuilder?.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-                    previewRequestBuilder?.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
-                    //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
-                    previewRequest = previewRequestBuilder?.build()
-                    captureSession?.setRepeatingRequest(previewRequest!!, null, cameraHandler)
-
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                        mCameraManager.setTorchMode(mCameraId, true);
-//                    }
-                    CLog.w(TAG, "Flash ON")
+                    turnOnFlash()
                 }
             }
         } catch (e: CameraAccessException) {

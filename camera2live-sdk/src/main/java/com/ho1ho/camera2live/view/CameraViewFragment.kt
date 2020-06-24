@@ -45,7 +45,9 @@ class CameraViewFragment : Fragment() {
         switchBtn = v.findViewById(R.id.switchFacing)
         switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
         switchFlashBtn = v.findViewById(R.id.switchFlashBtn)
-        switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchFlash() }
+        switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+            if (isChecked) camera2Component.turnOnFlash() else camera2Component.turnOffFlash()
+        }
 
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
@@ -73,6 +75,12 @@ class CameraViewFragment : Fragment() {
         camera2Component.setLensSwitchListener(object : LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
                 Log.w(TAG, "lensFacing=$lensFacing")
+                if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
+                    switchFlashBtn.isChecked = false
+                    switchFlashBtn.visibility = View.GONE
+                } else {
+                    switchFlashBtn.visibility = View.VISIBLE
+                }
                 previousLensFacing = lensFacing
             }
         })

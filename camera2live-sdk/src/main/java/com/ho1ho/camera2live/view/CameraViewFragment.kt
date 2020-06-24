@@ -41,7 +41,13 @@ class CameraViewFragment : Fragment() {
             activity?.supportFragmentManager?.popBackStackImmediate();
             backPressListener?.onBackPressed()
         }
-        v.findViewById<ImageView>(R.id.ivShot).setOnClickListener {}
+        v.findViewById<ImageView>(R.id.ivShot).setOnClickListener {
+            // Disable click listener to prevent multiple requests simultaneously in flight
+            it.isEnabled = false
+
+            // Re-enable click listener after photo is taken
+            it.post { it.isEnabled = true }
+        }
         switchBtn = v.findViewById(R.id.switchFacing)
         switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
         switchFlashBtn = v.findViewById(R.id.switchFlashBtn)

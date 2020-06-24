@@ -30,13 +30,17 @@ class CameraViewFragment : Fragment() {
     private lateinit var switchFlashBtn: ToggleButton
     private lateinit var camera2Component: Camera2Component
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
+    var backPressListener: BackPressedListener? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val v = inflater.inflate(R.layout.fragment_camera_view, container, false)
-        v.findViewById<ImageView>(R.id.ivBack).setOnClickListener { activity?.supportFragmentManager?.popBackStackImmediate() }
+        v.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
+            activity?.supportFragmentManager?.popBackStackImmediate();
+            backPressListener?.onBackPressed()
+        }
         v.findViewById<ImageView>(R.id.ivShot).setOnClickListener {}
         switchBtn = v.findViewById(R.id.switchFacing)
         switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
@@ -121,4 +125,8 @@ class CameraViewFragment : Fragment() {
         private val CAMERA_SIZE_NORMAL = intArrayOf(720, 960)
         private val CAMERA_SIZE_LOW = intArrayOf(480, 640)
     }
+}
+
+interface BackPressedListener {
+    fun onBackPressed()
 }

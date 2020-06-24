@@ -1,4 +1,4 @@
-package com.ho1ho.camera2live.view
+package com.ho1ho.camera2live.view.base
 
 import android.content.Context
 import android.util.AttributeSet

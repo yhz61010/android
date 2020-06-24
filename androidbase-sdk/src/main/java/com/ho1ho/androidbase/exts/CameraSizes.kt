@@ -89,3 +89,13 @@ fun <T> getPreviewOutputSize(
     // Then, get the largest output size that is smaller or equal than our max size
     return validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }.size
 }
+
+fun <T> getPreviewOutputSize(
+    display: Display,
+    characteristics: CameraCharacteristics,
+    targetClass: Class<T>,
+    format: Int? = null
+): Size {
+    val screenSize = getDisplaySmartSize(display)
+    return getPreviewOutputSize(Size(screenSize.short, screenSize.long), characteristics, targetClass, format)
+}

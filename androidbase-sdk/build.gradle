@@ -45,6 +45,8 @@ dependencies {
     testImplementation "org.powermock:powermock-core:$rootProject.ext.powermockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
+    // EXIF Interface
+    api 'androidx.exifinterface:exifinterface:1.2.0'
     api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.7.2'
     api group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.2.11'
     api group: 'io.reactivex.rxjava2', name: 'rxandroid', version: '2.1.1'

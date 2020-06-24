@@ -1,6 +1,7 @@
 package com.ho1ho.camera2live.view
 
 import android.annotation.SuppressLint
+import android.hardware.camera2.CameraMetadata
 import android.media.MediaActionSound
 import android.os.Bundle
 import android.util.Log
@@ -50,7 +51,7 @@ class CameraPhotoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         overlay = view.findViewById(R.id.overlay)
         viewFinder = view.findViewById(R.id.cameraSurfaceView)
-        camera2Helper = Camera2Helper(this, viewFinder, overlay)
+        camera2Helper = Camera2Helper(this, CameraMetadata.LENS_FACING_BACK, viewFinder, overlay)
 
         viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit

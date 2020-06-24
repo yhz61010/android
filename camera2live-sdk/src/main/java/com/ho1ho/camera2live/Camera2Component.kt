@@ -534,7 +534,9 @@ class Camera2Component(private val context: Fragment) {
             captureSession = null
 
             cameraDevice?.close()
-            imageReader.close()
+            if (::imageReader.isInitialized) {
+                imageReader.close()
+            }
 
             cameraDevice = null
         } catch (e: InterruptedException) {

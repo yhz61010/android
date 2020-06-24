@@ -18,6 +18,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.computeExifOrientation
+import com.ho1ho.androidbase.exts.fail
 import com.ho1ho.camera2live.view.CameraPhotoFragment
 import com.ho1ho.camera2live.view.base.CameraSurfaceView
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +40,13 @@ import kotlin.coroutines.suspendCoroutine
  * Author: Michael Leo
  * Date: 20-6-24 下午5:05
  */
-class Camera2Helper(private val context: Fragment, private val cameraSurfaceView: CameraSurfaceView, private val overlay: View) {
+class Camera2Helper(
+    private val context: Fragment,
+    private val lensFacing: Int,
+    private val cameraSurfaceView: CameraSurfaceView,
+    private val overlay: View
+) {
+    private val cameraId: String by lazy { if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1" }
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
@@ -49,8 +56,7 @@ class Camera2Helper(private val context: Fragment, private val cameraSurfaceView
 
     /** [CameraCharacteristics] corresponding to the provided Camera ID */
     val characteristics: CameraCharacteristics by lazy {
-        // FIXME CameraId
-        cameraManager.getCameraCharacteristics("0")
+        cameraManager.getCameraCharacteristics(cameraId)
     }
 
     /** Readers used as buffers for camera still shots */
@@ -96,14 +102,12 @@ class Camera2Helper(private val context: Fragment, private val cameraSurfaceView
      */
     fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
         // Open the selected camera
-        // FIXME CameraId
-        camera = openCamera(cameraManager, "0", cameraHandler)
+        camera = openCamera(cameraManager, cameraId, cameraHandler)
 
         // Initialize an image reader which will be used to capture still photos
         val size = characteristics.get(
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
-        )!!
-            .getOutputSizes(ImageFormat.JPEG).maxBy { it.height * it.width }!!
+        )!!.getOutputSizes(ImageFormat.JPEG).maxBy { it.height * it.width }!!
         imageReader = ImageReader.newInstance(
             size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE
         )
@@ -115,7 +119,7 @@ class Camera2Helper(private val context: Fragment, private val cameraSurfaceView
         session = createCaptureSession(camera, targets, cameraHandler)
 
         val captureRequest = camera.createCaptureRequest(
-            CameraDevice.TEMPLATE_PREVIEW
+            CameraDevice.TEMPLATE_STILL_CAPTURE
         ).apply { addTarget(cameraSurfaceView.holder.surface) }
 
         // This will keep sending the capture request as frequently as possible until the
@@ -183,9 +187,8 @@ class Camera2Helper(private val context: Fragment, private val cameraSurfaceView
      * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
      * from the single capture, and outputs a [CombinedCaptureResult] object.
      */
-    suspend fun takePhoto():
-            CombinedCaptureResult = suspendCoroutine { cont ->
-
+    suspend fun takePhoto(): CombinedCaptureResult = suspendCoroutine { cont ->
+        if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         // Flush any images left in the image reader
         @Suppress("ControlFlowWithEmptyBody")
         while (imageReader.acquireNextImage() != null) {
@@ -235,7 +238,6 @@ class Camera2Helper(private val context: Fragment, private val cameraSurfaceView
                     while (true) {
                         // Dequeue images while timestamps don't match
                         val image = imageQueue.take()
-                        // TODO(owahltinez): b/142011420
                         // if (image.timestamp != resultTimestamp) continue
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                             image.format != ImageFormat.DEPTH_JPEG &&

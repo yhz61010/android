@@ -422,11 +422,6 @@ class Camera2Component(private val context: Fragment) {
                     }
                 CLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
 
-                // If you do not set CameraTextureView dimension, it will be in full screen by default.
-                if (builder.cameraSurfaceView != null/* && !builder.previewInFullscreen*/) {
-                    builder.cameraSurfaceView!!.setDimension(previewSize!!.width, previewSize!!.height)
-                }
-
                 // The input camera size must be camera supported size.
                 // Otherwise, the video will be distorted.
                 // The first and second parameters must be supported camera size NOT preview size.

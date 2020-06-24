@@ -81,10 +81,7 @@ class CameraViewFragment : Fragment() {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 with(camera2Component) {
                     initializeCamera(previousLensFacing)
-                    cameraSurfaceView?.setDimension(
-                        selectedSizeFromCamera.width,
-                        selectedSizeFromCamera.height
-                    )
+                    cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
                     initDebugOutput()
                     encoderType = if (
                         CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
@@ -95,7 +92,8 @@ class CameraViewFragment : Fragment() {
                 }
                 // To ensure that size is set, open camera in the view's thread
                 view.post {
-                    camera2Component.openCameraAndGetData(previousLensFacing) // LENS_FACING_FRONT LENS_FACING_BACK
+                    // LENS_FACING_FRONT LENS_FACING_BACK
+                    camera2Component.openCameraAndGetData(previousLensFacing)
                 }
             }
 

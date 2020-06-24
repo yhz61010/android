@@ -9,6 +9,9 @@ import kotlinx.coroutines.*
 import kotlin.system.measureTimeMillis
 
 class CoroutineActivity : BaseDemonstrationActivity() {
+
+    val mainScope = MainScope()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_coroutine)
@@ -49,7 +52,56 @@ class CoroutineActivity : BaseDemonstrationActivity() {
             CLog.e(ITAG, "measureTimeMillis cost=$time")
         }
 
+        cs.launch { // 运行在父协程的上下文中，即 runBlocking 主协程
+            CLog.e(ITAG, "main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+        }
+        cs.launch(Dispatchers.Unconfined) { // 不受限的——将工作在主线程中
+            CLog.e(ITAG, "Unconfined            : I'm working in thread ${Thread.currentThread().name}")
+        }
+        cs.launch(Dispatchers.Default) { // 将会获取默认调度器
+            CLog.e(ITAG, "Default               : I'm working in thread ${Thread.currentThread().name}")
+        }
+        cs.launch(newSingleThreadContext("MyOwnThread")) { // 将使它获得一个新的线程
+            CLog.e(ITAG, "newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+        }
+        cs.launch(Dispatchers.Default + CoroutineName("-test")) { coroutineName() }
+
+        mainScope.launch {
+            coroutineName()
+        }
+
+        doSomething()
+
         CLog.e(ITAG, "Main done")
+    }
+
+    override fun onDestroy() {
+        mainScope.cancel()
+        super.onDestroy()
+    }
+
+    fun doSomething() {
+        // 在示例中启动了 10 个协程，且每个都工作了不同的时长
+        repeat(10) { i ->
+            mainScope.launch {
+                delay((i + 1) * 200L) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
+                CLog.e(ITAG, "Coroutine $i is done|${Thread.currentThread().name}")
+            }
+        }
+    }
+
+    private suspend fun coroutineName() = coroutineScope {
+        val v1 = async(CoroutineName("v1coroutine")) {
+            delay(500)
+            CLog.e(ITAG, "Computing v1 | ${Thread.currentThread().name}")
+            252
+        }
+        val v2 = async(CoroutineName("v2coroutine")) {
+            delay(1000)
+            CLog.e(ITAG, "Computing v2 | ${Thread.currentThread().name}")
+            6
+        }
+        CLog.e(ITAG, "The answer for v1 / v2 = ${v1.await() / v2.await()}")
     }
 
     private fun normalMethod() {

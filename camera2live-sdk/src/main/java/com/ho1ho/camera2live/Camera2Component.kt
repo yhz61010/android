@@ -186,7 +186,7 @@ class Camera2Component(private val context: Fragment) {
         }
     }
 
-    fun initializeCamera(lensFacing: Int) {
+    private fun initializeCamera(lensFacing: Int) {
         // Config camera output
         configCameraOutput(lensFacing)
         initCameraEncoder(
@@ -252,10 +252,7 @@ class Camera2Component(private val context: Fragment) {
         // and back again in a short time or make screen off then on), the onSurfaceTextureAvailable callback
         // will not be called. So we just need to openCamera directly. Otherwise, we need to wait for the
         // SurfaceTexture listener.
-        if (builder.cameraSurfaceView != null) {
-            CLog.w(TAG, "With CameraTextureView")
-            openCamera()
-        }
+        openCamera(lensFacing)
 
         // Clockwise orientation: 0, 90, 180, 270
         // 0: Normal portrait
@@ -305,8 +302,9 @@ class Camera2Component(private val context: Fragment) {
      *  3. Open camera using CameraManager
      */
     @SuppressLint("MissingPermission")
-    private fun openCamera() {
+    private fun openCamera(lensFacing: Int) {
         try {
+            initializeCamera(lensFacing)
             builder.cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
 
             // Try to acquire camera permit in 2500ms.
@@ -409,6 +407,8 @@ class Camera2Component(private val context: Fragment) {
                 if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
                 CLog.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
+                val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
+                CLog.w(TAG, "allCameraSupportSize: ${allCameraSupportSize?.contentToString()}")
                 // Calculate ImageReader input preview size from supported size list by camera.
                 // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
                 // Attention: The returned value is in camera orientation. NOT in device orientation.
@@ -584,8 +584,7 @@ class Camera2Component(private val context: Fragment) {
 //        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
         closeCamera()
         this.lensFacing = lensFacing
-        initializeCamera(lensFacing)
-        openCamera()
+        openCamera(lensFacing)
         lensSwitchListener?.onSwitch(lensFacing)
     }
 

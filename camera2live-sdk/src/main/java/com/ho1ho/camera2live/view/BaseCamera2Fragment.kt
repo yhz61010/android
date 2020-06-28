@@ -117,6 +117,16 @@ abstract class BaseCamera2Fragment : Fragment() {
                 Log.d(TAG, "Orientation changed: $orientation")
             })
         }
+
+        ivShotRecord.setOnClickListener {
+            // Disable click listener to prevent multiple requests simultaneously in flight
+            it.isEnabled = false
+            // Perform I/O heavy operations in a different scope
+            lifecycleScope.launch(Dispatchers.IO) {
+                // Re-enable click listener after photo is taken
+                it.post { it.isEnabled = true }
+            }
+        }
     }
 
     abstract suspend fun onClickShutter()

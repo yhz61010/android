@@ -29,6 +29,9 @@ import kotlinx.coroutines.launch
  */
 class CameraPhotoFragment : Fragment() {
 
+    private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
+    private lateinit var switchCameraBtn: ToggleButton
+
     private lateinit var camera2Helper: CameraPhotoFragmentHelper
 
     private lateinit var switchFlashBtn: ToggleButton
@@ -64,6 +67,21 @@ class CameraPhotoFragment : Fragment() {
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
         }
+        switchCameraBtn = view.findViewById(R.id.switchFacing)
+        switchCameraBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Helper.switchCamera() }
+
+        camera2Helper.setLensSwitchListener(object : CameraPhotoFragmentHelper.LensSwitchListener {
+            override fun onSwitch(lensFacing: Int) {
+                Log.w(TAG, "lensFacing=$lensFacing")
+                if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
+                    switchFlashBtn.isChecked = false
+                    switchFlashBtn.visibility = View.GONE
+                } else {
+                    switchFlashBtn.visibility = View.VISIBLE
+                }
+                previousLensFacing = lensFacing
+            }
+        })
 
         cameraView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit

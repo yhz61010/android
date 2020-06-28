@@ -55,7 +55,7 @@
             android:layout_height="42dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="24dp"
+            android:layout_marginLeft="32dp"
             android:background="@drawable/toggle_facing_selector"
             android:textOff=""
             android:textOn="" />
@@ -66,6 +66,15 @@
             android:layout_height="64dp"
             android:layout_centerInParent="true"
             android:background="@drawable/ic_shutter" />
+
+        <ImageView
+            android:id="@+id/ivShotRecord"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginRight="32dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_shutter_record" />
     </RelativeLayout>
 
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.ho1ho.camera2live.view
+package com.ho1ho.camera2live
 
 import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
@@ -15,10 +15,8 @@ import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.Camera2Component
 import com.ho1ho.camera2live.Camera2Component.EncodeDataUpdateListener
 import com.ho1ho.camera2live.Camera2Component.LensSwitchListener
-import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.base.DataProcessFactory
 
 /**
@@ -26,7 +24,7 @@ import com.ho1ho.camera2live.base.DataProcessFactory
  * Date: 20-6-23 下午3:34
  */
 class CameraViewFragment : Fragment() {
-    private lateinit var switchBtn: ToggleButton
+    private lateinit var switchCameraBtn: ToggleButton
     private lateinit var switchFlashBtn: ToggleButton
     private lateinit var camera2Component: Camera2Component
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
@@ -38,7 +36,7 @@ class CameraViewFragment : Fragment() {
     ): View? {
         val v = inflater.inflate(R.layout.fragment_camera_view, container, false)
         v.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
-            activity?.supportFragmentManager?.popBackStackImmediate();
+            activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()
         }
         v.findViewById<ImageView>(R.id.ivShot).setOnClickListener {
@@ -48,8 +46,8 @@ class CameraViewFragment : Fragment() {
             // Re-enable click listener after photo is taken
             it.post { it.isEnabled = true }
         }
-        switchBtn = v.findViewById(R.id.switchFacing)
-        switchBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
+        switchCameraBtn = v.findViewById(R.id.switchFacing)
+        switchCameraBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
         switchFlashBtn = v.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Component.turnOnFlash() else camera2Component.turnOffFlash()

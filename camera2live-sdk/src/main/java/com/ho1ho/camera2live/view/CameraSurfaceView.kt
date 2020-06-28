@@ -1,4 +1,4 @@
-package com.ho1ho.camera2live.view.base
+package com.ho1ho.camera2live.view
 
 import android.content.Context
 import android.util.AttributeSet
@@ -31,10 +31,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val height = MeasureSpec.getSize(heightMeasureSpec)
-        CLog.d(
-            TAG,
-            "onMeasure width=$width height=$height aspectRatio=$aspectRatio"
-        )
+        CLog.d(TAG, "onMeasure width=$width height=$height aspectRatio=$aspectRatio")
         if (0f == aspectRatio) {
             setMeasuredDimension(width, height)
         } else {
@@ -49,10 +46,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                 newWidth = width
                 newHeight = (width / actualRatio).roundToInt()
             }
-            CLog.d(
-                TAG,
-                "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio"
-            )
+            CLog.d(TAG, "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio")
             setMeasuredDimension(newWidth, newHeight)
         }
     }

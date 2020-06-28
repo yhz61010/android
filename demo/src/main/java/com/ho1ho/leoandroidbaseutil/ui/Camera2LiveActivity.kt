@@ -7,7 +7,8 @@ import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.view.CameraPhotoFragment
+import com.ho1ho.camera2live.BackPressedListener
+import com.ho1ho.camera2live.CameraPhotoFragment
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
@@ -29,11 +30,11 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
         CLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
-//        cameraViewFragment.backPressListener = object : BackPressedListener {
-//            override fun onBackPressed() {
-//                this@Camera2LiveActivity.onBackPressed()
-//            }
-//        }
+        cameraViewFragment.backPressListener = object : BackPressedListener {
+            override fun onBackPressed() {
+                this@Camera2LiveActivity.onBackPressed()
+            }
+        }
 
         AndPermission.with(this)
             .runtime()

@@ -265,11 +265,17 @@ class CameraPhotoFragmentHelper(
                             imageQueue.take().close()
                         }
 
+                        val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
+                        val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+
                         // Compute EXIF orientation metadata
                         val rotation = (context as CameraPhotoFragment).relativeOrientation.value ?: 0
-                        val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) ==
-                                CameraCharacteristics.LENS_FACING_FRONT
-                        val exifOrientation = computeExifOrientation(rotation, mirrored)
+                        val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
+                        val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
+                        Log.d(
+                            TAG,
+                            "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
+                        )
 
                         // Build the result and resume progress
                         cont.resume(CombinedCaptureResult(image, result, exifOrientation, imageReader.imageFormat))
@@ -284,7 +290,7 @@ class CameraPhotoFragmentHelper(
     // ===========================================================
     fun turnOnFlash() {
         if (!::camera.isInitialized || !::session.isInitialized) {
-            throw IllegalAccessError("You must initialize camera or session first.")
+            throw IllegalAccessError("You must initialize camera and session first.")
         }
 
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -303,7 +309,7 @@ class CameraPhotoFragmentHelper(
 
     fun turnOffFlash() {
         if (!::camera.isInitialized || !::session.isInitialized) {
-            throw IllegalAccessError("You must initialize camera or session first.")
+            throw IllegalAccessError("You must initialize camera and session first.")
         }
 
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -364,7 +370,7 @@ class CameraPhotoFragmentHelper(
         lensSwitchListener?.onSwitch(lensFacing)
     }
 
-    private fun closeCamera() {
+    fun closeCamera() {
         CLog.i(TAG, "closeCamera()")
 
         try {
@@ -438,7 +444,9 @@ class CameraPhotoFragmentHelper(
     }
 
     fun release() {
+        cameraHandler.removeCallbacksAndMessages(null)
         cameraThread.quitSafely()
+        imageReaderHandler.removeCallbacksAndMessages(null)
         imageReaderThread.quitSafely()
     }
 
@@ -471,7 +479,7 @@ class CameraPhotoFragmentHelper(
          * @return [File] created.
          */
         private fun createFile(context: Context, extension: String): File {
-            val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+            val sdf = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
             return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${sdf.format(Date())}.$extension")
         }
     }

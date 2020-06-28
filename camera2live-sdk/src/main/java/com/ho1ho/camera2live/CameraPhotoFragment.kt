@@ -154,6 +154,7 @@ class CameraPhotoFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        camera2Helper.closeCamera()
         camera2Helper.release()
     }
 

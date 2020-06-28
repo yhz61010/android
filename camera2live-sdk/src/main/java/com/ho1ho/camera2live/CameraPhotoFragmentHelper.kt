@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.computeExifOrientation
 import com.ho1ho.androidbase.exts.fail
+import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.camera2live.view.CameraSurfaceView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,11 +43,12 @@ import kotlin.coroutines.suspendCoroutine
  */
 class CameraPhotoFragmentHelper(
     private val context: Fragment,
-    private val lensFacing: Int,
+    private var lensFacing: Int,
     private val cameraSurfaceView: CameraSurfaceView,
     private val overlay: View
 ) {
-    private val cameraId: String by lazy { if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1" }
+    private lateinit var cameraId: String
+    private var lensSwitchListener: LensSwitchListener? = null
 
     private lateinit var captureRequestBuilder: CaptureRequest.Builder
 
@@ -57,8 +59,15 @@ class CameraPhotoFragmentHelper(
     }
 
     /** [CameraCharacteristics] corresponding to the provided Camera ID */
-    val characteristics: CameraCharacteristics by lazy {
-        cameraManager.getCameraCharacteristics(cameraId)
+    lateinit var characteristics: CameraCharacteristics
+
+    init {
+        initializeParameters()
+    }
+
+    private fun initializeParameters() {
+        cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
+        characteristics = cameraManager.getCameraCharacteristics(cameraId)
     }
 
     /** Readers used as buffers for camera still shots */
@@ -103,6 +112,8 @@ class CameraPhotoFragmentHelper(
      * - Sets up the still image capture listeners
      */
     fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
+        initializeParameters()
+
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
@@ -272,6 +283,10 @@ class CameraPhotoFragmentHelper(
 
     // ===========================================================
     fun turnOnFlash() {
+        if (!::camera.isInitialized || !::session.isInitialized) {
+            throw IllegalAccessError("You must initialize camera or session first.")
+        }
+
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be on.
         captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
@@ -287,6 +302,10 @@ class CameraPhotoFragmentHelper(
     }
 
     fun turnOffFlash() {
+        if (!::camera.isInitialized || !::session.isInitialized) {
+            throw IllegalAccessError("You must initialize camera or session first.")
+        }
+
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be off.
         captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
@@ -299,6 +318,70 @@ class CameraPhotoFragmentHelper(
 //                        mCameraManager.setTorchMode(mCameraId, false);
 //                    }
         Log.w(TAG, "Flash OFF")
+    }
+
+    // ===========================================================
+    fun switchCamera() {
+        if (!::camera.isInitialized) {
+            throw IllegalAccessError("You must initialize camera first.")
+        }
+
+        if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
+            switchToFrontCamera()
+        } else {
+            switchToBackCamera()
+        }
+    }
+
+    @Suppress("unchecked")
+    fun switchToBackCamera() {
+        if (!::camera.isInitialized) {
+            throw IllegalAccessError("You must initialize camera first.")
+        }
+
+        switchCamera(CameraMetadata.LENS_FACING_BACK)
+    }
+
+    @Suppress("unchecked")
+    fun switchToFrontCamera() {
+        if (!::camera.isInitialized) {
+            throw IllegalAccessError("You must initialize camera first.")
+        }
+
+        switchCamera(CameraMetadata.LENS_FACING_FRONT)
+    }
+
+    @Suppress("unchecked")
+    fun switchCamera(lensFacing: Int) {
+        if (!::camera.isInitialized) {
+            throw IllegalAccessError("You must initialize camera first.")
+        }
+
+//        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
+        closeCamera()
+        this.lensFacing = lensFacing
+        initializeCamera()
+        lensSwitchListener?.onSwitch(lensFacing)
+    }
+
+    private fun closeCamera() {
+        CLog.i(TAG, "closeCamera()")
+
+        try {
+            if (::session.isInitialized) session.close()
+            if (::camera.isInitialized) camera.close()
+            if (::imageReader.isInitialized) imageReader.close()
+        } catch (e: InterruptedException) {
+            Log.e(TAG, "Interrupted while trying to lock camera closing.", e)
+        }
+    }
+
+    interface LensSwitchListener {
+        fun onSwitch(lensFacing: Int)
+    }
+
+    fun setLensSwitchListener(listener: LensSwitchListener) {
+        lensSwitchListener = listener
     }
     // ===========================================================
 

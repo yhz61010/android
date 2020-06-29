@@ -1,4 +1,4 @@
-package com.ho1ho.camera2live
+package com.ho1ho.leoandroidbaseutil.ui.camera2.record
 
 import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
@@ -15,15 +15,16 @@ import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.Camera2Component.EncodeDataUpdateListener
-import com.ho1ho.camera2live.Camera2Component.LensSwitchListener
+import com.ho1ho.camera2live.Camera2Component
+import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.base.DataProcessFactory
+import com.ho1ho.camera2live.view.BackPressedListener
 
 /**
  * Author: Michael Leo
- * Date: 20-6-23 下午3:34
+ * Date: 20-6-29 上午9:50
  */
-class CameraViewFragment : Fragment() {
+class Camera2RecordFragment : Fragment() {
     private lateinit var switchCameraBtn: ToggleButton
     private lateinit var switchFlashBtn: ToggleButton
     private lateinit var camera2Component: Camera2Component
@@ -71,12 +72,12 @@ class CameraViewFragment : Fragment() {
         camera2Component = camera2ComponentBuilder.build()
         camera2Component.cameraSurfaceView = v.findViewById(R.id.cameraSurfaceView)
         camera2Component.outputH264ForDebug = true
-        camera2Component.setEncodeListener(object : EncodeDataUpdateListener {
+        camera2Component.setEncodeListener(object : Camera2Component.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
                 Log.d(TAG, "Get encoded video data length=" + h264Data.size)
             }
         })
-        camera2Component.setLensSwitchListener(object : LensSwitchListener {
+        camera2Component.setLensSwitchListener(object : Camera2Component.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
                 Log.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
@@ -119,26 +120,22 @@ class CameraViewFragment : Fragment() {
     }
 
     override fun onResume() {
-        CLog.i(TAG, "CameraViewFragment onResume")
+        CLog.i(TAG, "CameraRecordFragment onResume")
         super.onResume()
     }
 
     override fun onPause() {
-        CLog.i(TAG, "CameraViewFragment onPause")
+        CLog.i(TAG, "CameraRecordFragment onPause")
         camera2Component.closeDebugOutput()
         camera2Component.closeCameraAndStopRecord()
         super.onPause()
     }
 
     companion object {
-        private const val TAG = "MainActivity"
+        private val TAG = Camera2RecordFragment::class.java.simpleName
         private val CAMERA_SIZE_EXTRA = intArrayOf(1080, 1920)
         private val CAMERA_SIZE_HIGH = intArrayOf(720, 1280)
         private val CAMERA_SIZE_NORMAL = intArrayOf(720, 960)
         private val CAMERA_SIZE_LOW = intArrayOf(480, 640)
     }
-}
-
-interface BackPressedListener {
-    fun onBackPressed()
 }

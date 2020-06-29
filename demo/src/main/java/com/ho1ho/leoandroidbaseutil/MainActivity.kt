@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.leoandroidbaseutil.ui.*
+import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareMasterActivity
 import kotlinx.android.synthetic.main.activity_main.*

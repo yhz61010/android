@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
-import com.ho1ho.camera2live.BackPressedListener
 import com.ho1ho.camera2live.CameraPhotoFragmentHelper
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.utils.OrientationLiveData
@@ -145,4 +144,8 @@ abstract class BaseCamera2Fragment : Fragment() {
     companion object {
         private val TAG = BaseCamera2Fragment::class.java.simpleName
     }
+}
+
+interface BackPressedListener {
+    fun onBackPressed()
 }

@@ -1,4 +1,4 @@
-package com.ho1ho.camera2live
+package com.ho1ho.leoandroidbaseutil.ui.camera2.photo
 
 import android.util.Log
 import androidx.exifinterface.media.ExifInterface
@@ -8,7 +8,7 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Author: Michael Leo
  * Date: 20-6-24 下午4:18
  */
-class CameraPhotoFragment : BaseCamera2Fragment() {
+class Camera2PhotoFragment : BaseCamera2Fragment() {
     override suspend fun onClickShutter() {
         camera2Helper.takePhoto().use { result ->
             Log.d(TAG, "Result received: $result")
@@ -41,6 +41,6 @@ class CameraPhotoFragment : BaseCamera2Fragment() {
     }
 
     companion object {
-        private val TAG = CameraPhotoFragment::class.java.simpleName
+        private val TAG = Camera2PhotoFragment::class.java.simpleName
     }
 }

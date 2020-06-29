@@ -13,7 +13,6 @@
 bin/
 gen/
 out/
-release/
 
 # Gradle files
 .gradle/
@@ -42,16 +41,12 @@ captures/
 .idea/assetWizardSettings.xml
 .idea/dictionaries
 .idea/libraries
-# Android Studio 3 in .gitignore file.
 .idea/caches
-.idea/modules.xml
-# Comment next line if keeping position of elements in Navigation Editor is relevant for you
-.idea/navEditor.xml
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
-*.jks
-*.keystore
+#*.jks
+#*.keystore
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
@@ -80,6 +75,6 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
-/src/main/jni/
-/.cxx/
-/src/main/obj/local/armeabi-v7a/
+/debug.keystore
+/screencapture-sdk/src/main/java/example/sszpf/x264/
+/screencapture-sdk/src/main/libs/armeabi-v7a/

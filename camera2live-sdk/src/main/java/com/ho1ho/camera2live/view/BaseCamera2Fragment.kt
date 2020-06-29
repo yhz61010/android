@@ -5,7 +5,6 @@ import android.hardware.camera2.CameraMetadata
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
@@ -14,7 +13,6 @@ import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.utils.OrientationLiveData
@@ -26,7 +24,8 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 20-6-28 下午5:36
  */
-abstract class BaseCamera2Fragment(private val isRecording: Boolean) : Fragment() {
+abstract class BaseCamera2Fragment : Fragment() {
+    var inRecordMode: Boolean = false
     protected var previousLensFacing = CameraMetadata.LENS_FACING_BACK
     private lateinit var switchCameraBtn: ToggleButton
     protected lateinit var switchFlashBtn: ToggleButton
@@ -52,7 +51,7 @@ abstract class BaseCamera2Fragment(private val isRecording: Boolean) : Fragment(
             backPressListener?.onBackPressed()
         }
         cameraView = view.findViewById(R.id.cameraSurfaceView)
-        camera2Helper = Camera2ComponentHelper(this, isRecording, CameraMetadata.LENS_FACING_BACK, view)
+        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK, view)
         switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
@@ -73,21 +72,6 @@ abstract class BaseCamera2Fragment(private val isRecording: Boolean) : Fragment(
             }
         })
 
-        cameraView.holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
-            override fun surfaceCreated(holder: SurfaceHolder) {
-                // Selects appropriate preview size and configures view finder
-                val previewSize = getPreviewOutputSize(cameraView.display, camera2Helper.characteristics, SurfaceHolder::class.java)
-                Log.d(TAG, "View finder size: ${cameraView.width} x ${cameraView.height}")
-                Log.d(TAG, "Selected preview size: $previewSize")
-                cameraView.setDimension(previewSize.width, previewSize.height)
-
-                // To ensure that size is set, initialize camera in the view's thread
-                view.post { camera2Helper.initializeCamera(isRecording) }
-            }
-        })
-
         // Listen to the capture button
         ivShot.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
@@ -103,12 +87,12 @@ abstract class BaseCamera2Fragment(private val isRecording: Boolean) : Fragment(
 
         ivShotRecord.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
-            it.isEnabled = false
+//            it.isEnabled = false
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
                 // Re-enable click listener after recording is taken
-                it.post { it.isEnabled = true }
+//                it.post { it.isEnabled = true }
             }
         }
 

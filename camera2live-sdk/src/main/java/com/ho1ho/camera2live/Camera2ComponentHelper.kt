@@ -51,11 +51,9 @@ import kotlin.math.min
  * Date: 20-6-24 下午5:05
  */
 class Camera2ComponentHelper(
-    private val context: Fragment,
-    private val isRecording: Boolean,
-    private var lensFacing: Int,
-    private val cameraView: View
+    private val context: Fragment, private var lensFacing: Int, private val cameraView: View
 ) {
+    private var inRecordMode = false
     private var supportFlash = false   // Support flash
     private var torchOn = false        // Flash continuously on
 
@@ -75,8 +73,22 @@ class Camera2ComponentHelper(
 
     // FIXME Recording
     /////// Recording - Start ///////////////////////////////////////////////////////////
-    // FIXME
-    private lateinit var builder: Camera2Component.Builder
+    private lateinit var builder: Builder
+
+    inner class Builder(desiredVideoWidth: Int, desiredVideoHeight: Int) {
+        var desiredVideoWidth = desiredVideoWidth
+            private set
+        var desiredVideoHeight = desiredVideoHeight
+            private set
+        var quality: Float = BITRATE_NORMAL
+        var cameraFps: Range<Int> = CAMERA_FPS_NORMAL
+        var videoFps: Int = VIDEO_FPS_FREQUENCY_HIGH
+        var iFrameInterval: Int = CameraEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
+        var bitrateMode: Int = CameraEncoder.DEFAULT_BITRATE_MODE
+        fun build() {
+            builder = this
+        }
+    }
 
     // The context to process data
     private var dataProcessContext: DataProcessContext =
@@ -181,49 +193,6 @@ class Camera2ComponentHelper(
         }
     }
 
-    // ===== Debug code =======================
-    var outputH264ForDebug = false
-
-    /**
-     * Notice that, if you do allow to output YUV, **ONLY** the YUV file will be outputted.
-     * The H264 file will not be created no matter what you set for [outputH264ForDebug]
-     */
-    var outputYuvForDebug = false
-    private var videoYuvOsForDebug: BufferedOutputStream? = null
-    private var videoH264OsForDebug: BufferedOutputStream? = null
-    private var baseOutputFolderForDebug: String? = null
-    // =========================================
-    /////// Recording - End ///////////////////////////////////////////////////////////
-
-    init {
-        initializeParameters()
-    }
-
-    private fun initializeParameters() {
-        cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
-        characteristics = cameraManager.getCameraCharacteristics(cameraId)
-
-        val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-        val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
-        CLog.w(TAG, "isFlashSupported=$isFlashSupported")
-        this.supportFlash = isFlashSupported ?: false
-
-        // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
-        val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-        CLog.w(TAG, "hardwareLevel=$hardwareLevel")
-
-        // Get camera supported fps. It will be used to create CaptureRequest
-        cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-        CLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
-
-        val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-        CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
-        val highSpeedVideoSizes = configMap.highSpeedVideoSizes
-        CLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
-
-    }
-
-    // FIXME Recording
     private fun initializeRecordingParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
@@ -276,6 +245,48 @@ class Camera2ComponentHelper(
         CLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
     }
 
+    // ===== Debug code =======================
+    var outputH264ForDebug = false
+
+    /**
+     * Notice that, if you do allow to output YUV, **ONLY** the YUV file will be outputted.
+     * The H264 file will not be created no matter what you set for [outputH264ForDebug]
+     */
+    var outputYuvForDebug = false
+    private var videoYuvOsForDebug: BufferedOutputStream? = null
+    private var videoH264OsForDebug: BufferedOutputStream? = null
+    private var baseOutputFolderForDebug: String? = null
+    // =========================================
+    /////// Recording - End ///////////////////////////////////////////////////////////
+
+    init {
+        initializeParameters()
+    }
+
+    private fun initializeParameters() {
+        cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
+        characteristics = cameraManager.getCameraCharacteristics(cameraId)
+
+        val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+        val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+        CLog.w(TAG, "isFlashSupported=$isFlashSupported")
+        this.supportFlash = isFlashSupported ?: false
+
+        // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
+        val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+        CLog.w(TAG, "hardwareLevel=$hardwareLevel")
+
+        // Get camera supported fps. It will be used to create CaptureRequest
+        cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+        CLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
+
+        val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
+        CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
+        val highSpeedVideoSizes = configMap.highSpeedVideoSizes
+        CLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
+
+    }
+
     /** Readers used as buffers for camera still shots */
     private lateinit var imageReader: ImageReader
 
@@ -321,13 +332,22 @@ class Camera2ComponentHelper(
      * - Starts the preview by dispatching a repeating capture request
      * - Sets up the still image capture listeners
      */
-    fun initializeCamera(isRecording: Boolean) = context.lifecycleScope.launch(Dispatchers.Main) {
+    fun initializeCamera(inRecordMode: Boolean) = context.lifecycleScope.launch(Dispatchers.Main) {
+        this@Camera2ComponentHelper.inRecordMode = inRecordMode
         initializeParameters()
+        if (inRecordMode) {
+            initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
+            initCameraEncoder(
+                previewSize!!.width, previewSize!!.height,
+                (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
+                builder.videoFps, builder.iFrameInterval, builder.bitrateMode
+            )
+        }
 
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
-        imageReader = if (isRecording) {
+        imageReader = if (inRecordMode) {
             ImageReader.newInstance(
                 selectedSizeFromCamera.width,
                 selectedSizeFromCamera.height,
@@ -340,6 +360,9 @@ class Camera2ComponentHelper(
                 .maxBy { it.height * it.width }!!
             ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
         }
+        if (inRecordMode) {
+            startRecording()
+        }
 
         val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
 
@@ -349,7 +372,7 @@ class Camera2ComponentHelper(
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
 
-        captureRequestBuilder = if (isRecording) {
+        captureRequestBuilder = if (inRecordMode) {
             camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply { addTarget(imageReader.surface) }
         } else {
             camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(cameraSurfaceView.holder.surface) }
@@ -364,11 +387,10 @@ class Camera2ComponentHelper(
         // Auto exposure. The flash will be open automatically in dark.
         captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
 
-        if (isRecording) {
+        if (inRecordMode) {
             // Set camera fps according to mCameraSupportedFpsRanges[mCameraSupportedFpsRanges.length-1]
-//        CLog.w(TAG, "Camera FPS=${builder.cameraFps}") // your specified recording fps
-            // FIXME specifed your camera fps
-            captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, CAMERA_FPS_NORMAL) // builder.cameraFps
+            CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+            captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
         }
 
         // This will keep sending the capture request as frequently as possible until the
@@ -433,7 +455,12 @@ class Camera2ComponentHelper(
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
 
         imageReader.setOnImageAvailableListener({ reader ->
-            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+//            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+            val image: Image? = reader.acquireLatestImage()
+            if (image == null) {
+                CLog.w(TAG, "Recording: image is null")
+                return@setOnImageAvailableListener
+            }
             cameraHandler.post {
                 try {
                     val width = image.width
@@ -446,7 +473,7 @@ class Camera2ComponentHelper(
                     }
 
                     val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing)
-                    cameraEncoder?.offerDataIntoQueue(rotatedYuv420Data)
+                    cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
 
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -645,10 +672,9 @@ class Camera2ComponentHelper(
             throw IllegalAccessError("You must initialize camera first.")
         }
 
-//        Toast.makeText(mContext, "switchCamera=" + lensFacing, Toast.LENGTH_SHORT).show();
         closeCamera()
         this.lensFacing = lensFacing
-        initializeCamera(isRecording)
+        initializeCamera(inRecordMode)
         lensSwitchListener?.onSwitch(lensFacing)
     }
 

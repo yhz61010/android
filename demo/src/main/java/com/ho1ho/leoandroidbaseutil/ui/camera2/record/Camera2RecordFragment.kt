@@ -18,7 +18,7 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Author: Michael Leo
  * Date: 20-6-29 上午9:50
  */
-class Camera2RecordFragment : BaseCamera2Fragment() {
+class Camera2RecordFragment : BaseCamera2Fragment(true) {
     private lateinit var camera2Component: Camera2Component
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -74,7 +74,7 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
                     else DataProcessFactory.ENCODER_TYPE_NORMAL
                 }
                 // LENS_FACING_FRONT LENS_FACING_BACK
-                camera2Component.openCameraAndGetData(previousLensFacing)
+//                camera2Component.openCameraAndGetData(previousLensFacing)
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
@@ -87,7 +87,7 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
     }
 
     override suspend fun onRecordButtonClick() {
-
+        camera2Helper.startRecording()
     }
 
     override fun onResume() {

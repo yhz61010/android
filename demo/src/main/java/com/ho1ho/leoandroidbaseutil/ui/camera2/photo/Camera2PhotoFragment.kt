@@ -8,7 +8,7 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Author: Michael Leo
  * Date: 20-6-24 下午4:18
  */
-class Camera2PhotoFragment : BaseCamera2Fragment() {
+class Camera2PhotoFragment : BaseCamera2Fragment(false) {
     override suspend fun onTakePhotoButtonClick() {
         camera2Helper.takePhoto().use { result ->
             Log.d(TAG, "Result received: $result")

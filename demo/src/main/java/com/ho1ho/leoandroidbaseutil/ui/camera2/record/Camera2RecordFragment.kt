@@ -69,7 +69,6 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
 
                 // Selects appropriate preview size and configures view finder
                 val previewSize = getPreviewOutputSize(cameraView.display, camera2Helper.characteristics, SurfaceHolder::class.java)
-                Log.d(TAG, "View finder size: ${cameraView.width} x ${cameraView.height}")
                 Log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread

@@ -4,4 +4,4 @@
     android:id="@+id/cameraFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.Camera2LiveActivity" />
+    tools:context=".ui.camera2.Camera2LiveActivity" />

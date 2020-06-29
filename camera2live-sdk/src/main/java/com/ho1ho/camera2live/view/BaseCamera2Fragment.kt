@@ -46,11 +46,8 @@ abstract class BaseCamera2Fragment : Fragment() {
     /** Live data listener for changes in the device orientation relative to the camera */
     lateinit var relativeOrientation: OrientationLiveData
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_camera_view, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.fragment_camera_view, container, false)
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -104,8 +101,19 @@ abstract class BaseCamera2Fragment : Fragment() {
 
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
-                onClickShutter()
+                onTakePhotoButtonClick()
                 // Re-enable click listener after photo is taken
+                it.post { it.isEnabled = true }
+            }
+        }
+
+        ivShotRecord.setOnClickListener {
+            // Disable click listener to prevent multiple requests simultaneously in flight
+            it.isEnabled = false
+            // Perform I/O heavy operations in a different scope
+            lifecycleScope.launch(Dispatchers.IO) {
+                onRecordButtonClick()
+                // Re-enable click listener after recording is taken
                 it.post { it.isEnabled = true }
             }
         }
@@ -116,19 +124,10 @@ abstract class BaseCamera2Fragment : Fragment() {
                 Log.d(TAG, "Orientation changed: $orientation")
             })
         }
-
-        ivShotRecord.setOnClickListener {
-            // Disable click listener to prevent multiple requests simultaneously in flight
-            it.isEnabled = false
-            // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
-                // Re-enable click listener after photo is taken
-                it.post { it.isEnabled = true }
-            }
-        }
     }
 
-    abstract suspend fun onClickShutter()
+    abstract suspend fun onTakePhotoButtonClick()
+    abstract suspend fun onRecordButtonClick()
 
     override fun onStop() {
         super.onStop()
@@ -143,6 +142,11 @@ abstract class BaseCamera2Fragment : Fragment() {
 
     companion object {
         private val TAG = BaseCamera2Fragment::class.java.simpleName
+
+        val CAMERA_SIZE_EXTRA = intArrayOf(1080, 1920)
+        val CAMERA_SIZE_HIGH = intArrayOf(720, 1280)
+        val CAMERA_SIZE_NORMAL = intArrayOf(720, 960)
+        val CAMERA_SIZE_LOW = intArrayOf(480, 640)
     }
 }
 

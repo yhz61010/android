@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
-import com.ho1ho.camera2live.CameraPhotoFragmentHelper
+import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.utils.OrientationLiveData
 import kotlinx.android.synthetic.main.fragment_camera_view.*
@@ -26,17 +26,12 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 20-6-28 下午5:36
  */
-abstract class BaseCamera2Fragment : Fragment() {
+abstract class BaseCamera2Fragment(private val isRecording: Boolean) : Fragment() {
     protected var previousLensFacing = CameraMetadata.LENS_FACING_BACK
     private lateinit var switchCameraBtn: ToggleButton
     protected lateinit var switchFlashBtn: ToggleButton
 
-    protected lateinit var camera2Helper: CameraPhotoFragmentHelper
-
-    /**
-     * Overlay on top of the camera preview
-     */
-    private lateinit var overlay: View
+    protected lateinit var camera2Helper: Camera2ComponentHelper
 
     var backPressListener: BackPressedListener? = null
 
@@ -56,9 +51,8 @@ abstract class BaseCamera2Fragment : Fragment() {
             activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()
         }
-        overlay = view.findViewById(R.id.overlay)
         cameraView = view.findViewById(R.id.cameraSurfaceView)
-        camera2Helper = CameraPhotoFragmentHelper(this, CameraMetadata.LENS_FACING_BACK, cameraView, overlay)
+        camera2Helper = Camera2ComponentHelper(this, isRecording, CameraMetadata.LENS_FACING_BACK, view)
         switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
@@ -66,7 +60,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         switchCameraBtn = view.findViewById(R.id.switchFacing)
         switchCameraBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Helper.switchCamera() }
 
-        camera2Helper.setLensSwitchListener(object : CameraPhotoFragmentHelper.LensSwitchListener {
+        camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
                 Log.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
@@ -90,7 +84,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                 cameraView.setDimension(previewSize.width, previewSize.height)
 
                 // To ensure that size is set, initialize camera in the view's thread
-                view.post { camera2Helper.initializeCamera() }
+                view.post { camera2Helper.initializeCamera(isRecording) }
             }
         })
 
@@ -131,12 +125,11 @@ abstract class BaseCamera2Fragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        camera2Helper.stop()
+        camera2Helper.closeCamera()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        camera2Helper.closeCamera()
         camera2Helper.release()
     }
 

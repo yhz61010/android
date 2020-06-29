@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.computeExifOrientation
 import com.ho1ho.androidbase.exts.fail
 import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.camera2live.view.BaseCamera2Fragment
 import com.ho1ho.camera2live.view.CameraSurfaceView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -269,7 +270,7 @@ class CameraPhotoFragmentHelper(
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
                         // Compute EXIF orientation metadata
-                        val rotation = (context as CameraPhotoFragment).relativeOrientation.value ?: 0
+                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                         val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
                         Log.d(

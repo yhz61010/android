@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
  * Date: 20-6-28 下午5:36
  */
 abstract class BaseCamera2Fragment : Fragment() {
-    var inRecordMode: Boolean = false
     protected var previousLensFacing = CameraMetadata.LENS_FACING_BACK
     private lateinit var switchCameraBtn: ToggleButton
     protected lateinit var switchFlashBtn: ToggleButton

@@ -284,7 +284,6 @@ class Camera2ComponentHelper(
         CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
         val highSpeedVideoSizes = configMap.highSpeedVideoSizes
         CLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
-
     }
 
     /** Readers used as buffers for camera still shots */
@@ -373,7 +372,8 @@ class Camera2ComponentHelper(
         session = createCaptureSession(camera, targets, cameraHandler)
 
         captureRequestBuilder = if (inRecordMode) {
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply { addTarget(imageReader.surface) }
+            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                .apply { addTarget(imageReader.surface);addTarget(cameraSurfaceView.holder.surface) }
         } else {
             camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(cameraSurfaceView.holder.surface) }
         }

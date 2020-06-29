@@ -5,54 +5,24 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import android.view.View
-import android.view.ViewGroup
-import android.widget.CompoundButton
-import android.widget.ImageView
-import android.widget.ToggleButton
-import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.Camera2Component
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.base.DataProcessFactory
-import com.ho1ho.camera2live.view.BackPressedListener
+import com.ho1ho.camera2live.view.BaseCamera2Fragment
 
 /**
  * Author: Michael Leo
  * Date: 20-6-29 上午9:50
  */
-class Camera2RecordFragment : Fragment() {
-    private lateinit var switchCameraBtn: ToggleButton
-    private lateinit var switchFlashBtn: ToggleButton
+class Camera2RecordFragment : BaseCamera2Fragment() {
     private lateinit var camera2Component: Camera2Component
-    private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
-    var backPressListener: BackPressedListener? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val v = inflater.inflate(R.layout.fragment_camera_view, container, false)
-        v.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
-            activity?.supportFragmentManager?.popBackStackImmediate()
-            backPressListener?.onBackPressed()
-        }
-        v.findViewById<ImageView>(R.id.ivShot).setOnClickListener {
-            // Disable click listener to prevent multiple requests simultaneously in flight
-            it.isEnabled = false
-
-            // Re-enable click listener after photo is taken
-            it.post { it.isEnabled = true }
-        }
-        switchCameraBtn = v.findViewById(R.id.switchFacing)
-        switchCameraBtn.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean -> camera2Component.switchCamera() }
-        switchFlashBtn = v.findViewById(R.id.switchFlashBtn)
-        switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
-            if (isChecked) camera2Component.turnOnFlash() else camera2Component.turnOffFlash()
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
@@ -70,7 +40,7 @@ class Camera2RecordFragment : Fragment() {
         camera2ComponentBuilder.iFrameInterval = 1
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         camera2Component = camera2ComponentBuilder.build()
-        camera2Component.cameraSurfaceView = v.findViewById(R.id.cameraSurfaceView)
+        camera2Component.cameraSurfaceView = view.findViewById(R.id.cameraSurfaceView)
         camera2Component.outputH264ForDebug = true
         camera2Component.setEncodeListener(object : Camera2Component.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
@@ -89,11 +59,7 @@ class Camera2RecordFragment : Fragment() {
                 previousLensFacing = lensFacing
             }
         })
-        return v
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         camera2Component.cameraSurfaceView?.holder?.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 with(camera2Component) {
@@ -107,11 +73,8 @@ class Camera2RecordFragment : Fragment() {
                     ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
                     else DataProcessFactory.ENCODER_TYPE_NORMAL
                 }
-                // To ensure that size is set, open camera in the view's thread
-                view.post {
-                    // LENS_FACING_FRONT LENS_FACING_BACK
-                    camera2Component.openCameraAndGetData(previousLensFacing)
-                }
+                // LENS_FACING_FRONT LENS_FACING_BACK
+                camera2Component.openCameraAndGetData(previousLensFacing)
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
@@ -119,13 +82,21 @@ class Camera2RecordFragment : Fragment() {
         })
     }
 
+    override suspend fun onTakePhotoButtonClick() {
+        throw IllegalAccessError("onTakePhotoButtonClick() method should not be called.")
+    }
+
+    override suspend fun onRecordButtonClick() {
+
+    }
+
     override fun onResume() {
-        CLog.i(TAG, "CameraRecordFragment onResume")
+        CLog.i(TAG, "Camera2RecordFragment onResume")
         super.onResume()
     }
 
     override fun onPause() {
-        CLog.i(TAG, "CameraRecordFragment onPause")
+        CLog.i(TAG, "Camera2RecordFragment onPause")
         camera2Component.closeDebugOutput()
         camera2Component.closeCameraAndStopRecord()
         super.onPause()
@@ -133,9 +104,5 @@ class Camera2RecordFragment : Fragment() {
 
     companion object {
         private val TAG = Camera2RecordFragment::class.java.simpleName
-        private val CAMERA_SIZE_EXTRA = intArrayOf(1080, 1920)
-        private val CAMERA_SIZE_HIGH = intArrayOf(720, 1280)
-        private val CAMERA_SIZE_NORMAL = intArrayOf(720, 960)
-        private val CAMERA_SIZE_LOW = intArrayOf(480, 640)
     }
 }

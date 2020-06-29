@@ -9,7 +9,7 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Date: 20-6-24 下午4:18
  */
 class Camera2PhotoFragment : BaseCamera2Fragment() {
-    override suspend fun onClickShutter() {
+    override suspend fun onTakePhotoButtonClick() {
         camera2Helper.takePhoto().use { result ->
             Log.d(TAG, "Result received: $result")
 
@@ -38,6 +38,10 @@ class Camera2PhotoFragment : BaseCamera2Fragment() {
 //                        )
 //                    }
         }
+    }
+
+    override suspend fun onRecordButtonClick() {
+        throw IllegalAccessError("onRecordButtonClick() method should not be called.")
     }
 
     companion object {

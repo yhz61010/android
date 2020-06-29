@@ -7,10 +7,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.View
+import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
-import com.ho1ho.camera2live.Camera2Component
-import com.ho1ho.camera2live.R
+import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.view.BaseCamera2Fragment
 
@@ -18,9 +18,7 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Author: Michael Leo
  * Date: 20-6-29 上午9:50
  */
-class Camera2RecordFragment : BaseCamera2Fragment(true) {
-    private lateinit var camera2Component: Camera2Component
-
+class Camera2RecordFragment : BaseCamera2Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -31,23 +29,22 @@ class Camera2RecordFragment : BaseCamera2Fragment(true) {
         // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
         // BITRATE_MODE_CBR: 113.630kB/s
         val desiredSize = CAMERA_SIZE_HIGH
-        val camera2ComponentBuilder = Camera2Component(this).Builder(desiredSize[0], desiredSize[1])
+        val camera2ComponentBuilder = camera2Helper.Builder(desiredSize[0], desiredSize[1])
 //        camera2ComponentBuilder.previewInFullscreen = true
-        camera2ComponentBuilder.quality = Camera2Component.BITRATE_NORMAL
+        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_NORMAL
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-        camera2ComponentBuilder.cameraFps = Camera2Component.CAMERA_FPS_VERY_HIGH
-        camera2ComponentBuilder.videoFps = Camera2Component.VIDEO_FPS_FREQUENCY_HIGH
+        camera2ComponentBuilder.cameraFps = Camera2ComponentHelper.CAMERA_FPS_VERY_HIGH
+        camera2ComponentBuilder.videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_HIGH
         camera2ComponentBuilder.iFrameInterval = 1
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        camera2Component = camera2ComponentBuilder.build()
-        camera2Component.cameraSurfaceView = view.findViewById(R.id.cameraSurfaceView)
-        camera2Component.outputH264ForDebug = true
-        camera2Component.setEncodeListener(object : Camera2Component.EncodeDataUpdateListener {
+        camera2ComponentBuilder.build()
+        camera2Helper.outputH264ForDebug = true
+        camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
                 Log.d(TAG, "Get encoded video data length=" + h264Data.size)
             }
         })
-        camera2Component.setLensSwitchListener(object : Camera2Component.LensSwitchListener {
+        camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
                 Log.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
@@ -60,21 +57,23 @@ class Camera2RecordFragment : BaseCamera2Fragment(true) {
             }
         })
 
-        camera2Component.cameraSurfaceView?.holder?.addCallback(object : SurfaceHolder.Callback {
+        cameraView.holder?.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                with(camera2Component) {
-                    initializeCamera(previousLensFacing)
-                    cameraSurfaceView?.setDimension(selectedSizeFromCamera.width, selectedSizeFromCamera.height)
-                    initDebugOutput()
-                    encoderType = if (
-                        CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-                        || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-                        || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-                    ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-                    else DataProcessFactory.ENCODER_TYPE_NORMAL
-                }
-                // LENS_FACING_FRONT LENS_FACING_BACK
-//                camera2Component.openCameraAndGetData(previousLensFacing)
+                camera2Helper.initDebugOutput()
+                camera2Helper.encoderType = if (
+                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+                else DataProcessFactory.ENCODER_TYPE_NORMAL
+
+                // Selects appropriate preview size and configures view finder
+                val previewSize = getPreviewOutputSize(cameraView.display, camera2Helper.characteristics, SurfaceHolder::class.java)
+                Log.d(TAG, "View finder size: ${cameraView.width} x ${cameraView.height}")
+                Log.d(TAG, "Selected preview size: $previewSize")
+                cameraView.setDimension(previewSize.width, previewSize.height)
+                // To ensure that size is set, initialize camera in the view's thread
+                view.post { camera2Helper.initializeCamera(true) }
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
@@ -87,6 +86,7 @@ class Camera2RecordFragment : BaseCamera2Fragment(true) {
     }
 
     override suspend fun onRecordButtonClick() {
+        CLog.w(TAG, "onRecordButtonClick")
         camera2Helper.startRecording()
     }
 
@@ -97,8 +97,7 @@ class Camera2RecordFragment : BaseCamera2Fragment(true) {
 
     override fun onPause() {
         CLog.i(TAG, "Camera2RecordFragment onPause")
-        camera2Component.closeDebugOutput()
-        camera2Component.closeCameraAndStopRecord()
+        camera2Helper.closeDebugOutput()
         super.onPause()
     }
 

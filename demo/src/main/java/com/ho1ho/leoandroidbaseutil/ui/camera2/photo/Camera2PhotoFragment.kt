@@ -66,6 +66,10 @@ class Camera2PhotoFragment : BaseCamera2Fragment() {
         throw IllegalAccessError("onRecordButtonClick() method should not be called.")
     }
 
+    override suspend fun onStopRecordButtonClick() {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         private val TAG = Camera2PhotoFragment::class.java.simpleName
     }

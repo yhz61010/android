@@ -75,6 +75,19 @@ class Camera2ComponentHelper(
 
     // FIXME Recording
     /////// Recording - Start ///////////////////////////////////////////////////////////
+    private var recordDuration: Int = 0
+    private var isRecording = false
+
+    @SuppressLint("SetTextI18n")
+    private var recordTimerRunnable = Runnable {
+        if (!isRecording) return@Runnable
+        val duration = recordDuration++
+        val second = duration % 60
+        val minute = duration / 60 % 60
+        val hour = duration / 3600 % 60
+        cameraView.findViewById<TextView>(R.id.txtRecordTime).text = "%02d:%02d:%02d".format(hour, minute, second)
+        accumulateRecordTime()
+    }
     private lateinit var builder: Builder
 
     inner class Builder(desiredVideoWidth: Int, desiredVideoHeight: Int) {
@@ -128,7 +141,6 @@ class Camera2ComponentHelper(
         session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
             // Add the preview and recording surface targets
             addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-            // FIXME
             addTarget(imageReader.surface)
             CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
             // Sets user requested FPS for all targets
@@ -403,10 +415,6 @@ class Camera2ComponentHelper(
                 .maxBy { it.height * it.width }!!
             ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
         }
-        // FIXME How can I use this?
-//        if (inRecordMode) {
-//            startRecording()
-//        }
 
         val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
 
@@ -474,12 +482,32 @@ class Camera2ComponentHelper(
         }, handler)
     }
 
-    suspend fun startRecording(): CombinedCaptureResult = suspendCoroutine { /*cont ->*/
+    fun stopRecording() {
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        isRecording = false
+        cameraView.post {
+            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
+            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).stop()
+            cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.VISIBLE
+            cameraView.findViewById<View>(R.id.ivShot).visibility = View.VISIBLE
+            cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
+            cameraView.findViewById<View>(R.id.switchFacing).visibility = View.VISIBLE
+        }
+        cameraView.removeCallbacks(recordTimerRunnable)
+        recordDuration = 0
+        session.stopRepeating()
+        imageReader.close()
+        MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
+    }
+
+    fun startRecording() {
+        if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        isRecording = true
         cameraView.post {
             cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
             cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
             cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.VISIBLE
+            cameraView.findViewById<View>(R.id.switchFacing).visibility = View.GONE
         }
 
         session.setRepeatingRequest(recordRequest, null, cameraHandler)
@@ -522,18 +550,8 @@ class Camera2ComponentHelper(
         MediaActionSound().play(MediaActionSound.START_VIDEO_RECORDING)
     }
 
-    private var recordDuration: Int = 0
-
-    @SuppressLint("SetTextI18n")
     private fun accumulateRecordTime() {
-        cameraView.postDelayed({
-            val duration = recordDuration++
-            val second = duration % 60
-            val minute = duration / 60 % 60
-            val hour = duration / 3600 % 60
-            cameraView.findViewById<TextView>(R.id.txtRecordTime).text = "%02d:%02d:%02d".format(hour, minute, second)
-            accumulateRecordTime()
-        }, 1000)
+        cameraView.postDelayed(recordTimerRunnable, 1000)
     }
 
     /**

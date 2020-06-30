@@ -871,16 +871,6 @@ class Camera2ComponentHelper(
         /** Maximum time allowed to wait for the result of an image capture */
         private const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
 
-        /** Helper data class used to hold capture metadata with their associated image */
-        data class CombinedCaptureResult(
-            val image: Image,
-            val metadata: CaptureResult,
-            val orientation: Int,
-            val format: Int
-        ) : Closeable {
-            override fun close() = image.close()
-        }
-
         /**
          * **Attention:** This method is Debug ONLY
          *
@@ -932,4 +922,13 @@ class Camera2ComponentHelper(
         // ===== Camera Recording - End ============================================
     }
 
+    /** Helper data class used to hold capture metadata with their associated image */
+    data class CombinedCaptureResult(
+        val image: Image,
+        val metadata: CaptureResult,
+        val orientation: Int,
+        val format: Int
+    ) : Closeable {
+        override fun close() = image.close()
+    }
 }

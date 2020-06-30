@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.ImageFormat
+import android.graphics.drawable.AnimationDrawable
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
@@ -18,6 +19,7 @@ import android.util.Size
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -504,6 +506,19 @@ class Camera2ComponentHelper(
                 }
             }
         }, cameraHandler)
+
+        cameraView.post {
+            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
+
+//            val alphaAnimation = AlphaAnimation(0.0f, 1.0f)
+//            alphaAnimation.duration = 1000
+////            alphaAnimation.interpolator = LinearInterpolator()
+//            alphaAnimation.repeatCount = Animation.INFINITE
+//            alphaAnimation.repeatMode = Animation.RESTART
+//            cameraView.findViewById<View>(R.id.vRedDot).animation = alphaAnimation
+//            alphaAnimation.start()
+            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
+        }
     }
 
     /**

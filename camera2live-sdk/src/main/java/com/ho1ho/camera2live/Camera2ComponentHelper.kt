@@ -359,9 +359,10 @@ class Camera2ComponentHelper(
                 .maxBy { it.height * it.width }!!
             ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
         }
-        if (inRecordMode) {
-            startRecording()
-        }
+        // FIXME How can I use this?
+//        if (inRecordMode) {
+//            startRecording()
+//        }
 
         val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
 
@@ -372,8 +373,11 @@ class Camera2ComponentHelper(
         session = createCaptureSession(camera, targets, cameraHandler)
 
         captureRequestBuilder = if (inRecordMode) {
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-                .apply { addTarget(imageReader.surface);addTarget(cameraSurfaceView.holder.surface) }
+            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                addTarget(cameraSurfaceView.holder.surface)
+                // FIXME
+//                addTarget(imageReader.surface)
+            }
         } else {
             camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(cameraSurfaceView.holder.surface) }
         }

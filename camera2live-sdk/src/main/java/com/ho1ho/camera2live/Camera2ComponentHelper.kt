@@ -50,6 +50,7 @@ import kotlin.math.min
  * Author: Michael Leo
  * Date: 20-6-24 下午5:05
  */
+@Suppress("unused")
 class Camera2ComponentHelper(
     private val context: Fragment, private var lensFacing: Int, private val cameraView: View
 ) {
@@ -59,8 +60,6 @@ class Camera2ComponentHelper(
 
     private lateinit var cameraId: String
     private var lensSwitchListener: LensSwitchListener? = null
-
-    private lateinit var captureRequestBuilder: CaptureRequest.Builder
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
@@ -99,6 +98,47 @@ class Camera2ComponentHelper(
                 DataProcessFactory.getConcreteObject(value) ?: com.ho1ho.camera2live.extensions.fail("unsupported encoding type=$value")
         }
 
+    private lateinit var capturePreviewRequestBuilder: CaptureRequest.Builder
+
+    /** Requests used for preview only in the [CameraCaptureSession] */
+    private val previewRequest: CaptureRequest by lazy {
+        // Capture request holds references to target surfaces
+        capturePreviewRequestBuilder =
+            session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                // Add the preview surface target
+                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                // Auto focus
+                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                // Auto exposure. The flash will be open automatically in dark.
+                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
+                // AWB
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+
+            }
+        capturePreviewRequestBuilder.build()
+    }
+
+    /** Requests used for preview and recording in the [CameraCaptureSession] */
+    private val recordRequest: CaptureRequest by lazy {
+        // Capture request holds references to target surfaces
+        session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+            // Add the preview and recording surface targets
+            addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+            // FIXME
+            addTarget(imageReader.surface)
+            CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+            // Sets user requested FPS for all targets
+            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+            // Auto focus
+            set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+            // AWB
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+
+        }.build()
+    }
+
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
         val screenSize = DeviceUtil.getResolution(context.requireContext())
@@ -110,7 +150,7 @@ class Camera2ComponentHelper(
     }
 
     /** Get the optimized size from camera supported size */
-    lateinit var selectedSizeFromCamera: Size
+    private lateinit var selectedSizeFromCamera: Size
 
     /** Camera preview size as well as the output video size */
     private var previewSize: Size? = null
@@ -238,20 +278,21 @@ class Camera2ComponentHelper(
         // Take care of the result value. It's in camera orientation.
         CLog.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
         // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
-        previewSize =
-            if (swapDimension) Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width) else {
-                selectedSizeFromCamera
-            }
+        previewSize = if (swapDimension) Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width) else {
+            selectedSizeFromCamera
+        }
         CLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
     }
 
     // ===== Debug code =======================
+    @Suppress("WeakerAccess")
     var outputH264ForDebug = false
 
     /**
      * Notice that, if you do allow to output YUV, **ONLY** the YUV file will be outputted.
      * The H264 file will not be created no matter what you set for [outputH264ForDebug]
      */
+    @Suppress("WeakerAccess")
     var outputYuvForDebug = false
     private var videoYuvOsForDebug: BufferedOutputStream? = null
     private var videoH264OsForDebug: BufferedOutputStream? = null
@@ -372,40 +413,9 @@ class Camera2ComponentHelper(
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
 
-        captureRequestBuilder = if (inRecordMode) {
-            // For recording
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                addTarget(cameraSurfaceView.holder.surface)
-                // FIXME
-//                addTarget(imageReader.surface)
-                // Auto focus
-                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
-            }
-            // Auto focus
-        } else {
-            // For photo
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
-                addTarget(cameraSurfaceView.holder.surface)
-                // Auto focus
-                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                // Auto exposure. The flash will be open automatically in dark.
-                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
-            }
-        }
-
-        // AWB
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
-        if (inRecordMode) {
-            // Set camera fps according to mCameraSupportedFpsRanges[mCameraSupportedFpsRanges.length-1]
-            CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
-            captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-        }
-
         // This will keep sending the capture request as frequently as possible until the
         // session is torn down or session.stopRepeating() is called
-        session.setRepeatingRequest(captureRequestBuilder.build(), null, cameraHandler)
+        session.setRepeatingRequest(previewRequest, null, cameraHandler)
     }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
@@ -461,8 +471,10 @@ class Camera2ComponentHelper(
         }, handler)
     }
 
-    suspend fun startRecording(): CombinedCaptureResult = suspendCoroutine { cont ->
+    suspend fun startRecording(): CombinedCaptureResult = suspendCoroutine { /*cont ->*/
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+
+        session.setRepeatingRequest(recordRequest, null, cameraHandler)
 
         imageReader.setOnImageAvailableListener({ reader ->
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
@@ -600,11 +612,11 @@ class Camera2ComponentHelper(
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be on.
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
+        capturePreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+        capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
         torchOn = try {
-            val captureRequest = captureRequestBuilder.build()
+            val captureRequest = capturePreviewRequestBuilder.build()
             session.setRepeatingRequest(captureRequest, null, cameraHandler)
 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -627,11 +639,11 @@ class Camera2ComponentHelper(
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be off.
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
-        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
+        capturePreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+        capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
         torchOn = try {
-            val captureRequest = captureRequestBuilder.build()
+            val captureRequest = capturePreviewRequestBuilder.build()
             session.setRepeatingRequest(captureRequest, null, cameraHandler)
 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -765,6 +777,7 @@ class Camera2ComponentHelper(
      * Most of time, when you don't need camera, just call [closeCamera] method, so that you can reuse it again.
      * This method only should be called when you do want to release camera resources and do not want to use it any more.
      */
+    @Suppress("WeakerAccess")
     fun stopCameraThread() {
         cameraHandler.removeCallbacksAndMessages(null)
         cameraThread.quitSafely()

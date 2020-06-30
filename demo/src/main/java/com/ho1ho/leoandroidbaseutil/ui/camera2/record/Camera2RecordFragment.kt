@@ -59,7 +59,6 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
 
         cameraView.holder?.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                camera2Helper.initDebugOutput()
                 camera2Helper.encoderType = if (
                     CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
                     || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
@@ -86,22 +85,13 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
 
     override suspend fun onRecordButtonClick() {
         CLog.w(TAG, "onRecordButtonClick")
+        camera2Helper.initDebugOutput()
         camera2Helper.startRecording()
     }
 
     override suspend fun onStopRecordButtonClick() {
         camera2Helper.stopRecording()
-    }
-
-    override fun onResume() {
-        CLog.i(TAG, "Camera2RecordFragment onResume")
-        super.onResume()
-    }
-
-    override fun onPause() {
-        CLog.i(TAG, "Camera2RecordFragment onPause")
         camera2Helper.closeDebugOutput()
-        super.onPause()
     }
 
     companion object {

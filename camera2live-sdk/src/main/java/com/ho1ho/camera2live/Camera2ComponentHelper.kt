@@ -805,7 +805,7 @@ class Camera2ComponentHelper(
             return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${sdf.format(Date())}.$extension")
         }
 
-        // Camera Recording - Start
+        // ===== Camera Recording - Start ============================================
         val ORIENTATIONS = mapOf(
             Surface.ROTATION_0 to 90,
             Surface.ROTATION_90 to 0,
@@ -841,7 +841,7 @@ class Camera2ComponentHelper(
         const val VIDEO_FPS_FREQUENCY_NORMAL = 15
         const val VIDEO_FPS_FREQUENCY_LOW = 10
         const val VIDEO_FPS_FREQUENCY_VERY_LOW = 5
-        // Camera Recording - End
+        // ===== Camera Recording - End ============================================
     }
 
 }

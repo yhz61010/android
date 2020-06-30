@@ -89,6 +89,10 @@ class Camera2RecordFragment : BaseCamera2Fragment() {
         camera2Helper.startRecording()
     }
 
+    override suspend fun onStopRecordButtonClick() {
+        camera2Helper.stopRecording()
+    }
+
     override fun onResume() {
         CLog.i(TAG, "Camera2RecordFragment onResume")
         super.onResume()

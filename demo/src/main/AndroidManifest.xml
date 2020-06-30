@@ -23,7 +23,9 @@
         <activity android:name=".ui.sharescreen.client.ScreenShareClientActivity" />
         <activity android:name=".ui.sharescreen.master.ScreenShareMasterActivity" />
         <activity android:name=".ui.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
-        <activity android:name=".ui.camera2.Camera2LiveActivity" />
+        <activity
+            android:name=".ui.camera2.Camera2LiveActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".ui.NetworkMonitorActivity" />
         <activity android:name=".ui.LogActivity" />
         <activity android:name=".ui.DeviceInfoActivity" />

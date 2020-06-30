@@ -20,6 +20,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -507,7 +508,7 @@ class Camera2ComponentHelper(
             }
         }, cameraHandler)
 
-        cameraView.post {
+        cameraView.postDelayed({
             cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
 
 //            val alphaAnimation = AlphaAnimation(0.0f, 1.0f)
@@ -518,7 +519,24 @@ class Camera2ComponentHelper(
 //            cameraView.findViewById<View>(R.id.vRedDot).animation = alphaAnimation
 //            alphaAnimation.start()
             (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
-        }
+        }, 1000)
+
+        accumulateRecordTime()
+        MediaActionSound().play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
+    private var recordDuration: Int = 0
+
+    @SuppressLint("SetTextI18n")
+    private fun accumulateRecordTime() {
+        cameraView.postDelayed({
+            val duration = recordDuration++
+            val second = duration % 60
+            val minute = duration / 60 % 60
+            val hour = duration / 3600 % 60
+            cameraView.findViewById<TextView>(R.id.txtRecordTime).text = "%02d:%02d:%02d".format(hour, minute, second)
+            accumulateRecordTime()
+        }, 1000)
     }
 
     /**

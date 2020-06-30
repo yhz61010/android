@@ -79,7 +79,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 camera2Helper.setRepeatingRequest()
-                onTakePhotoButtonClick()
+                getCapturingImage(camera2Helper.takePhoto())
                 // Re-enable click listener after photo is taken
                 it.post { it.isEnabled = true }
             }
@@ -121,7 +121,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
     }
 
-    abstract suspend fun onTakePhotoButtonClick()
+    abstract suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult)
     abstract suspend fun onRecordButtonClick()
     abstract suspend fun onStopRecordButtonClick()
 

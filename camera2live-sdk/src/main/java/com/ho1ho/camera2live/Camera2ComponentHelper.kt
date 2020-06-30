@@ -135,25 +135,6 @@ class Camera2ComponentHelper(
         capturePreviewRequestBuilder.build()
     }
 
-    /** Requests used for preview and recording in the [CameraCaptureSession] */
-    private val recordRequest: CaptureRequest by lazy {
-        // Capture request holds references to target surfaces
-        session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            // Add the preview and recording surface targets
-            addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-            addTarget(imageReader.surface)
-            CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
-            // Sets user requested FPS for all targets
-            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-            // Auto focus
-            set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
-            // AWB
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
-        }.build()
-    }
-
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
         val screenSize = DeviceUtil.getResolution(context.requireContext())
@@ -511,8 +492,6 @@ class Camera2ComponentHelper(
             cameraView.findViewById<View>(R.id.switchFacing).visibility = View.GONE
         }
 
-        session.setRepeatingRequest(recordRequest, null, cameraHandler)
-
         imageReader.setOnImageAvailableListener({ reader ->
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()
@@ -541,6 +520,24 @@ class Camera2ComponentHelper(
                 }
             }
         }, cameraHandler)
+
+        session.setRepeatingRequest(
+            // Capture request holds references to target surfaces
+            session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                // Add the preview and recording surface targets
+                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                addTarget(imageReader.surface)
+                CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+                // Sets user requested FPS for all targets
+                set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+                // Auto focus
+                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+                // AWB
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+
+            }.build(), null, cameraHandler
+        )
 
         cameraView.postDelayed({
             cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE

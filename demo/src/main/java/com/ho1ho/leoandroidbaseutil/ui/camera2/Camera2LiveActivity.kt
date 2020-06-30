@@ -17,7 +17,6 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppUtil.hideNavigationBar(this)
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -49,6 +48,11 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             .replace(R.id.cameraFragment, cameraViewFragment, "cameraview")
             .addToBackStack(null)
             .commitAllowingStateLoss()
+    }
+
+    override fun onResume() {
+        AppUtil.hideNavigationBar(this)
+        super.onResume()
     }
 
     override fun onDestroy() {

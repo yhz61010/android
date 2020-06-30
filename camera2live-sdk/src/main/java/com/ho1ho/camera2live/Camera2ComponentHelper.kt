@@ -57,7 +57,6 @@ import kotlin.math.min
 class Camera2ComponentHelper(
     private val context: Fragment, private var lensFacing: Int, private val cameraView: View
 ) {
-    private var inRecordMode = false
     private var supportFlash = false   // Support flash
     private var torchOn = false        // Flash continuously on
 
@@ -70,7 +69,10 @@ class Camera2ComponentHelper(
         context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
 
-    /** [CameraCharacteristics] corresponding to the provided Camera ID */
+    /**
+     * [CameraCharacteristics] corresponding to the provided Camera ID
+     * It is initialized in [initializeParameters]
+     */
     lateinit var characteristics: CameraCharacteristics
 
     // FIXME Recording
@@ -145,13 +147,19 @@ class Camera2ComponentHelper(
         min(screenSize.x, screenSize.y)
     }
 
-    /** Get the optimized size from camera supported size */
+    /**
+     * Get the optimized size from camera supported size
+     * It is initialized in [initializeRecordingParameters]
+     */
     private lateinit var selectedSizeFromCamera: Size
 
     /** Camera preview size as well as the output video size */
     private var previewSize: Size? = null
 
-    /** Camera supported FPS range */
+    /**
+     * Camera supported FPS range
+     * It is initialized in [initializeParameters]
+     */
     private lateinit var cameraSupportedFpsRanges: Array<Range<Int>>
 
     interface EncodeDataUpdateListener {
@@ -361,6 +369,45 @@ class Camera2ComponentHelper(
     /** Internal reference to the ongoing [CameraCaptureSession] configured with our parameters */
     private lateinit var session: CameraCaptureSession
 
+    fun extraInitializeCameraForRecording() {
+        initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
+        /** [previewSize] is initialized in [initializeRecordingParameters] */
+        initCameraEncoder(
+            previewSize!!.width, previewSize!!.height,
+            (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
+            builder.videoFps, builder.iFrameInterval, builder.bitrateMode
+        )
+    }
+
+    fun setImageReaderForRecording() {
+        /** [selectedSizeFromCamera] is initialized in [initializeRecordingParameters] */
+        imageReader = ImageReader.newInstance(
+            selectedSizeFromCamera.width,
+            selectedSizeFromCamera.height,
+            ImageFormat.YUV_420_888 /*ImageFormat.JPEG*/,
+            IMAGE_BUFFER_SIZE
+        )
+    }
+
+    fun setImageReaderForPhoto() {
+        /** [characteristics] is initialized in [initializeParameters] */
+        // Initialize an image reader which will be used to capture still photos
+        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
+            .maxBy { it.height * it.width }!!
+        imageReader = ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
+    }
+
+    suspend fun setRepeatingRequest() {
+//        session.stopRepeating()
+        session.close()
+        val targets = listOf(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface, imageReader.surface)
+        // Start a capture session using our open camera and list of Surfaces where frames will go
+        session = createCaptureSession(camera, targets, cameraHandler)
+        // This will keep sending the capture request as frequently as possible until the
+        // session is torn down or session.stopRepeating() is called
+        session.setRepeatingRequest(previewRequest, null, cameraHandler)
+    }
+
     /**
      * Begin all camera operations in a coroutine in the main thread. This function:
      * - Opens the camera
@@ -368,39 +415,15 @@ class Camera2ComponentHelper(
      * - Starts the preview by dispatching a repeating capture request
      * - Sets up the still image capture listeners
      */
-    fun initializeCamera(inRecordMode: Boolean) = context.lifecycleScope.launch(Dispatchers.Main) {
-        this@Camera2ComponentHelper.inRecordMode = inRecordMode
+    fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
         initializeParameters()
-        if (inRecordMode) {
-            initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
-            initCameraEncoder(
-                previewSize!!.width, previewSize!!.height,
-                (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
-                builder.videoFps, builder.iFrameInterval, builder.bitrateMode
-            )
-        }
 
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
-        imageReader = if (inRecordMode) {
-            ImageReader.newInstance(
-                selectedSizeFromCamera.width,
-                selectedSizeFromCamera.height,
-                ImageFormat.YUV_420_888 /*ImageFormat.JPEG*/,
-                IMAGE_BUFFER_SIZE
-            )
-        } else {
-            // Initialize an image reader which will be used to capture still photos
-            val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
-                .maxBy { it.height * it.width }!!
-            ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
-        }
-
         val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
-
         // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(cameraSurfaceView.holder.surface, imageReader.surface)
+        val targets = listOf(cameraSurfaceView.holder.surface)
 
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
@@ -479,7 +502,7 @@ class Camera2ComponentHelper(
         session.stopRepeating()
         closeCamera()
         MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
-        cameraView.post { initializeCamera(inRecordMode) }
+        cameraView.post { initializeCamera() }
     }
 
     fun startRecording() {
@@ -742,7 +765,7 @@ class Camera2ComponentHelper(
 
         closeCamera()
         this.lensFacing = lensFacing
-        initializeCamera(inRecordMode)
+        initializeCamera()
         lensSwitchListener?.onSwitch(lensFacing)
     }
 

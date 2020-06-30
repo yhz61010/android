@@ -10,12 +10,11 @@ import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.BackPressedListener
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.leoandroidbaseutil.ui.camera2.record.Camera2RecordFragment
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 
 class Camera2LiveActivity : BaseDemonstrationActivity() {
-    private val cameraViewFragment = Camera2RecordFragment()
+    private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.hideNavigationBar(this)

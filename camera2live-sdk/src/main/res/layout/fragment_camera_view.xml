@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
-    tools:context="com.ho1ho.leoandroidbaseutil.ui.camera2.record.CameraViewFragment">
+    tools:context=".view.BaseCamera2Fragment">
 
     <com.ho1ho.camera2live.view.CameraSurfaceView
         android:id="@+id/cameraSurfaceView"

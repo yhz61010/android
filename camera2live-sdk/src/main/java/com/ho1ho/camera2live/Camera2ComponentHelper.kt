@@ -476,6 +476,11 @@ class Camera2ComponentHelper(
 
     suspend fun startRecording(): CombinedCaptureResult = suspendCoroutine { /*cont ->*/
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        cameraView.post {
+            cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
+            cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
+            cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.VISIBLE
+        }
 
         session.setRepeatingRequest(recordRequest, null, cameraHandler)
 
@@ -510,14 +515,6 @@ class Camera2ComponentHelper(
 
         cameraView.postDelayed({
             cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
-
-//            val alphaAnimation = AlphaAnimation(0.0f, 1.0f)
-//            alphaAnimation.duration = 1000
-////            alphaAnimation.interpolator = LinearInterpolator()
-//            alphaAnimation.repeatCount = Animation.INFINITE
-//            alphaAnimation.repeatMode = Animation.RESTART
-//            cameraView.findViewById<View>(R.id.vRedDot).animation = alphaAnimation
-//            alphaAnimation.start()
             (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
         }, 1000)
 

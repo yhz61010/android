@@ -69,6 +69,15 @@
             android:background="@drawable/ic_shutter" />
 
         <ImageView
+            android:id="@+id/ivRecordStop"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_centerInParent="true"
+            tools:visibility="visible"
+            android:visibility="gone"
+            android:background="@drawable/ic_shutter_stop" />
+
+        <ImageView
             android:id="@+id/ivShotRecord"
             android:layout_width="42dp"
             android:layout_height="42dp"

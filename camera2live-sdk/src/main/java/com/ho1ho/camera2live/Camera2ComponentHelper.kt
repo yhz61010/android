@@ -373,23 +373,29 @@ class Camera2ComponentHelper(
         session = createCaptureSession(camera, targets, cameraHandler)
 
         captureRequestBuilder = if (inRecordMode) {
+            // For recording
             camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
                 addTarget(cameraSurfaceView.holder.surface)
                 // FIXME
 //                addTarget(imageReader.surface)
+                // Auto focus
+                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
             }
+            // Auto focus
         } else {
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(cameraSurfaceView.holder.surface) }
+            // For photo
+            camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
+                addTarget(cameraSurfaceView.holder.surface)
+                // Auto focus
+                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                // Auto exposure. The flash will be open automatically in dark.
+                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
+            }
         }
 
         // AWB
 //        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
 //        captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
-        // Auto focus
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
-        // Auto exposure. The flash will be open automatically in dark.
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
 
         if (inRecordMode) {
             // Set camera fps according to mCameraSupportedFpsRanges[mCameraSupportedFpsRanges.length-1]

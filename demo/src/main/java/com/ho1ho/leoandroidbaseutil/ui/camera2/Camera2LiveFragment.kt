@@ -46,8 +46,8 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         })
     }
 
-    override suspend fun onTakePhotoButtonClick() {
-        camera2Helper.takePhoto().use { result ->
+    override suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult) {
+        result.use {
             Log.d(TAG, "Result received: $result")
 
             // Save the result to disk
@@ -61,8 +61,9 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 exif.saveAttributes()
                 Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
             }
+        }
 
-            // Display the photo taken to user
+        // Display the photo taken to user
 //                    lifecycleScope.launch(Dispatchers.Main) {
 //                        navController.navigate(
 //                            CameraFragmentDirections
@@ -74,7 +75,6 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                                )
 //                        )
 //                    }
-        }
     }
 
     override suspend fun onRecordButtonClick() {

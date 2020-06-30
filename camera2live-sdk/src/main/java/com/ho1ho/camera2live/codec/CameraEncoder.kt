@@ -57,13 +57,17 @@ class CameraEncoder @JvmOverloads constructor(
 
         val mediaCodecCallback = object : MediaCodec.Callback() {
             override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-                val inputBuffer = codec.getInputBuffer(inputBufferId)
+                try {
+                    val inputBuffer = codec.getInputBuffer(inputBufferId)
 
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = queue.poll()?.also { inputBuffer?.put(it) }
+                    // fill inputBuffer with valid data
+                    inputBuffer?.clear()
+                    val data = queue.poll()?.also { inputBuffer?.put(it) }
 
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
+                    codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
+                } catch (e: Exception) {
+                    CLog.e(TAG, "You can ignore this error safely.")
+                }
             }
 
             override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {

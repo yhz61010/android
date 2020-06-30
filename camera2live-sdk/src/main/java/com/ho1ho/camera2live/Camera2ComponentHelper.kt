@@ -496,8 +496,9 @@ class Camera2ComponentHelper(
         cameraView.removeCallbacks(recordTimerRunnable)
         recordDuration = 0
         session.stopRepeating()
-        imageReader.close()
+        closeCamera()
         MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
+        cameraView.post { initializeCamera(inRecordMode) }
     }
 
     fun startRecording() {

@@ -86,12 +86,23 @@ abstract class BaseCamera2Fragment : Fragment() {
 
         ivShotRecord.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
-//            it.isEnabled = false
+            it.isEnabled = false
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
                 // Re-enable click listener after recording is taken
-//                it.post { it.isEnabled = true }
+                it.post { it.isEnabled = true }
+            }
+        }
+
+        ivRecordStop.setOnClickListener {
+            // Disable click listener to prevent multiple requests simultaneously in flight
+            it.isEnabled = false
+            // Perform I/O heavy operations in a different scope
+            lifecycleScope.launch(Dispatchers.IO) {
+                onStopRecordButtonClick()
+                // Re-enable click listener after recording is taken
+                it.post { it.isEnabled = true }
             }
         }
 
@@ -105,6 +116,7 @@ abstract class BaseCamera2Fragment : Fragment() {
 
     abstract suspend fun onTakePhotoButtonClick()
     abstract suspend fun onRecordButtonClick()
+    abstract suspend fun onStopRecordButtonClick()
 
     override fun onStop() {
         super.onStop()

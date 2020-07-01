@@ -125,7 +125,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                 camera2Helper.stopRecording()
                 onStopRecordButtonClick()
                 // Re-enable click listener after recording is taken
-                it.post { it.isEnabled = true }
+                it.post { it.isEnabled = true; camera2Helper.initializeCamera() }
             }
         }
 
@@ -139,12 +139,16 @@ abstract class BaseCamera2Fragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        camera2Helper.closeCamera()
+        if (camera2Helper.isRecording) {
+            camera2Helper.stopRecording()
+        } else {
+            camera2Helper.closeCamera()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        camera2Helper.release()
+        camera2Helper.stopCameraThread()
     }
 
     companion object {

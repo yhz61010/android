@@ -41,6 +41,10 @@ abstract class BaseCamera2Fragment : Fragment() {
     /** Live data listener for changes in the device orientation relative to the camera */
     lateinit var relativeOrientation: OrientationLiveData
 
+    abstract suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult)
+    abstract suspend fun onRecordButtonClick()
+    abstract suspend fun onStopRecordButtonClick()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.fragment_camera_view, container, false)
 
@@ -132,10 +136,6 @@ abstract class BaseCamera2Fragment : Fragment() {
             })
         }
     }
-
-    abstract suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult)
-    abstract suspend fun onRecordButtonClick()
-    abstract suspend fun onStopRecordButtonClick()
 
     override fun onStop() {
         super.onStop()

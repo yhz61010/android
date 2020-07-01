@@ -20,6 +20,13 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Date: 20-6-29 上午9:50
  */
 class Camera2LiveFragment : BaseCamera2Fragment() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableRecordFeature = true
+        enableTakePhotoFeature = true
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

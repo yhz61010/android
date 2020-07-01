@@ -35,15 +35,22 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             }
         }
 
-        AndPermission.with(this)
-            .runtime()
-            .permission(Permission.CAMERA)
-            .onGranted {
-                Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-            }
-            .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
-            .start()
+        if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
+            addFragment()
+        } else {
+            AndPermission.with(this)
+                .runtime()
+                .permission(Permission.CAMERA)
+                .onGranted {
+                    Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
+                    addFragment()
+                }
+                .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
+                .start()
+        }
+    }
 
+    private fun addFragment() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.cameraFragment, cameraViewFragment, "cameraview")
             .addToBackStack(null)

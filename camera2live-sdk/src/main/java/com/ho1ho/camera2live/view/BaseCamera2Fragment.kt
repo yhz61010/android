@@ -3,6 +3,7 @@ package com.ho1ho.camera2live.view
 import android.annotation.SuppressLint
 import android.hardware.camera2.CameraMetadata
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -91,13 +92,13 @@ abstract class BaseCamera2Fragment : Fragment() {
         ivShot.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
-            camera2Helper.setImageReaderForPhoto()
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
-                camera2Helper.setRepeatingRequest()
+                val st = SystemClock.elapsedRealtime()
                 getCapturingImage(camera2Helper.takePhoto())
                 // Re-enable click listener after photo is taken
                 it.post { it.isEnabled = true }
+                Log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
 

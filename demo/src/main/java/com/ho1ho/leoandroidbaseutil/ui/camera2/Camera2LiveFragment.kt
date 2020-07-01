@@ -47,7 +47,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread
                 view.post {
-                    this.runCatching {
+                    runCatching {
                         camera2Helper.initializeCamera()
                     }.getOrElse {
                         CLog.e(TAG, "=====> Finally openCamera error <=====")

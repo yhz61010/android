@@ -420,7 +420,7 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
-        Log.e(TAG, "=====> initializeCamera() <=====")
+        Log.i(TAG, "=====> initializeCamera() <=====")
         initializeParameters()
 
         camera = runCatching {
@@ -456,7 +456,7 @@ class Camera2ComponentHelper(
             }
 
             override fun onClosed(camera: CameraDevice) {
-                Log.w(TAG, "Camera $cameraId has been closded")
+                Log.w(TAG, "Camera $cameraId has been closed")
                 super.onClosed(camera)
             }
 
@@ -470,7 +470,7 @@ class Camera2ComponentHelper(
                     else -> "Unknown"
                 }
                 device.close()
-                val exc = IllegalStateException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
+                val exc = IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
                 Log.e(TAG, exc.message, exc)
                 if (cont.isActive) cont.resumeWithException(exc)
             }
@@ -875,7 +875,7 @@ class Camera2ComponentHelper(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        Log.e(TAG, "=====> stopCameraThread() being called <=====")
+        Log.i(TAG, "=====> stopCameraThread() being called <=====")
     }
 
     /** Handy method to release all the camera resources. */

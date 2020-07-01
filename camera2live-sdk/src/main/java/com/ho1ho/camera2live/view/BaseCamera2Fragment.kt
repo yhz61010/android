@@ -30,6 +30,8 @@ abstract class BaseCamera2Fragment : Fragment() {
     protected lateinit var switchFlashBtn: ToggleButton
 
     protected lateinit var camera2Helper: Camera2ComponentHelper
+    protected var enableTakePhotoFeature = true
+    protected var enableRecordFeature = true
 
     var backPressListener: BackPressedListener? = null
 
@@ -45,12 +47,22 @@ abstract class BaseCamera2Fragment : Fragment() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!enableRecordFeature) {
+            view.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
+            view.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
+            view.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
+        }
+        if (!enableTakePhotoFeature) {
+            view.findViewById<View>(R.id.ivShot).visibility = View.GONE
+        }
         view.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
             activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()
         }
         cameraView = view.findViewById(R.id.cameraSurfaceView)
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK, view)
+        camera2Helper.enableRecordFeature = enableRecordFeature
+        camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
         switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()

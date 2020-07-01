@@ -57,6 +57,9 @@ import kotlin.math.min
 class Camera2ComponentHelper(
     private val context: Fragment, private var lensFacing: Int, private val cameraView: View
 ) {
+    var enableTakePhotoFeature = true
+    var enableRecordFeature = true
+
     private var supportFlash = false   // Support flash
     private var torchOn = false        // Flash continuously on
 
@@ -493,7 +496,11 @@ class Camera2ComponentHelper(
             cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
             (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).stop()
             cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.VISIBLE
-            cameraView.findViewById<View>(R.id.ivShot).visibility = View.VISIBLE
+            if (enableTakePhotoFeature) {
+                cameraView.findViewById<View>(R.id.ivShot).visibility = View.VISIBLE
+            } else {
+                cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
+            }
             cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
             cameraView.findViewById<View>(R.id.switchFacing).visibility = View.VISIBLE
         }

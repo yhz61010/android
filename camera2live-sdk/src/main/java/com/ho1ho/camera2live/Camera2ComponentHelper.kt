@@ -423,7 +423,7 @@ class Camera2ComponentHelper(
         Log.e(TAG, "=====> initializeCamera() <=====")
         initializeParameters()
 
-        camera = this.runCatching {
+        camera = runCatching {
             // Open the selected camera
             openCamera(cameraManager, cameraId, cameraHandler)
         }.getOrThrow()

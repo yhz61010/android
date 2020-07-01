@@ -9,10 +9,7 @@ import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
 import android.media.MediaActionSound
-import android.os.Build
-import android.os.Environment
-import android.os.Handler
-import android.os.HandlerThread
+import android.os.*
 import android.util.Log
 import android.util.Range
 import android.util.Size
@@ -385,6 +382,7 @@ class Camera2ComponentHelper(
 
     fun setImageReaderForRecording() {
         /** [selectedSizeFromCamera] is initialized in [initializeRecordingParameters] */
+        if (::imageReader.isInitialized) imageReader.close()
         imageReader = ImageReader.newInstance(
             selectedSizeFromCamera.width,
             selectedSizeFromCamera.height,
@@ -393,7 +391,7 @@ class Camera2ComponentHelper(
         )
     }
 
-    fun setImageReaderForPhoto() {
+    private fun setImageReaderForPhoto() {
         /** [characteristics] is initialized in [initializeParameters] */
         // Initialize an image reader which will be used to capture still photos
         val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
@@ -403,7 +401,7 @@ class Camera2ComponentHelper(
 
     suspend fun setRepeatingRequest() {
 //        session.stopRepeating()
-        session.close()
+        if (::session.isInitialized) session.close()
         val targets = listOf(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface, imageReader.surface)
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
@@ -428,16 +426,13 @@ class Camera2ComponentHelper(
             openCamera(cameraManager, cameraId, cameraHandler)
         }.getOrThrow()
 
-        val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
-        // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(cameraSurfaceView.holder.surface)
-
-        // Start a capture session using our open camera and list of Surfaces where frames will go
-        session = createCaptureSession(camera, targets, cameraHandler)
-
-        // This will keep sending the capture request as frequently as possible until the
-        // session is torn down or session.stopRepeating() is called
-        session.setRepeatingRequest(previewRequest, null, cameraHandler)
+        if (enableTakePhotoFeature) {
+            val st = SystemClock.elapsedRealtime()
+            setImageReaderForPhoto()
+            Log.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
+            setRepeatingRequest()
+            Log.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
+        }
     }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
@@ -597,6 +592,7 @@ class Camera2ComponentHelper(
      * from the single capture, and outputs a [CombinedCaptureResult] object.
      */
     suspend fun takePhoto(): CombinedCaptureResult = suspendCoroutine { cont ->
+        val st = SystemClock.elapsedRealtime()
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         // Flush any images left in the image reader
         @Suppress("ControlFlowWithEmptyBody")
@@ -676,6 +672,7 @@ class Camera2ComponentHelper(
                             "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                         )
 
+                        Log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
                         // Build the result and resume progress
                         cont.resume(CombinedCaptureResult(image, result, exifOrientation, imageReader.imageFormat))
 

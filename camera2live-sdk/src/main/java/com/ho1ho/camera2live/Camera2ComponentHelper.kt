@@ -81,7 +81,8 @@ class Camera2ComponentHelper(
     // FIXME Recording
     /////// Recording - Start ///////////////////////////////////////////////////////////
     private var recordDuration: Int = 0
-    private var isRecording = false
+    var isRecording = false
+        private set
 
     @SuppressLint("SetTextI18n")
     private var recordTimerRunnable = Runnable {
@@ -419,10 +420,13 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
+        Log.e(TAG, "=====> initializeCamera() <=====")
         initializeParameters()
 
-        // Open the selected camera
-        camera = openCamera(cameraManager, cameraId, cameraHandler)
+        camera = this.runCatching {
+            // Open the selected camera
+            openCamera(cameraManager, cameraId, cameraHandler)
+        }.getOrThrow()
 
         val cameraSurfaceView = cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
         // Creates list of Surfaces where the camera will output frames
@@ -451,6 +455,11 @@ class Camera2ComponentHelper(
                 context.requireActivity().finish()
             }
 
+            override fun onClosed(camera: CameraDevice) {
+                Log.w(TAG, "Camera $cameraId has been closded")
+                super.onClosed(camera)
+            }
+
             override fun onError(device: CameraDevice, error: Int) {
                 val msg = when (error) {
                     ERROR_CAMERA_DEVICE -> "Fatal (device)"
@@ -460,7 +469,8 @@ class Camera2ComponentHelper(
                     ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
                     else -> "Unknown"
                 }
-                val exc = RuntimeException("Camera $cameraId error: ($error) $msg")
+                device.close()
+                val exc = IllegalStateException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
                 Log.e(TAG, exc.message, exc)
                 if (cont.isActive) cont.resumeWithException(exc)
             }
@@ -509,7 +519,6 @@ class Camera2ComponentHelper(
         session.stopRepeating()
         closeCamera()
         MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
-        cameraView.post { initializeCamera() }
     }
 
     fun startRecording() {
@@ -835,16 +844,18 @@ class Camera2ComponentHelper(
      * Or just call the handy method [release] to finish the job.
      */
     fun closeCamera() {
-        CLog.i(TAG, "closeCamera()")
+        CLog.i(TAG, "closeCamera() - Start")
 
         try {
-            if (::session.isInitialized) session.close()
             if (::camera.isInitialized) camera.close()
+            if (::session.isInitialized) session.close()
             if (::imageReader.isInitialized) imageReader.close()
 
-            if (::cameraEncoder.isInitialized) cameraEncoder.release()
+            if (::cameraEncoder.isInitialized) cameraEncoder.stop()
         } catch (e: InterruptedException) {
             Log.e(TAG, "Interrupted while trying to lock camera closing.", e)
+        } finally {
+            CLog.i(TAG, "closeCamera() - End")
         }
     }
 
@@ -855,10 +866,16 @@ class Camera2ComponentHelper(
      */
     @Suppress("WeakerAccess")
     fun stopCameraThread() {
-        cameraHandler.removeCallbacksAndMessages(null)
-        cameraThread.quitSafely()
-        imageReaderHandler.removeCallbacksAndMessages(null)
-        imageReaderThread.quitSafely()
+        try {
+            if (::cameraEncoder.isInitialized) cameraEncoder.release()
+            cameraHandler.removeCallbacksAndMessages(null)
+            cameraThread.quitSafely()
+            imageReaderHandler.removeCallbacksAndMessages(null)
+            imageReaderThread.quitSafely()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        Log.e(TAG, "=====> stopCameraThread() being called <=====")
     }
 
     /** Handy method to release all the camera resources. */

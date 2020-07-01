@@ -11,6 +11,7 @@ import androidx.exifinterface.media.ExifInterface
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
+import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.view.BaseCamera2Fragment
@@ -45,7 +46,14 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 Log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread
-                view.post { camera2Helper.initializeCamera() }
+                view.post {
+                    this.runCatching {
+                        camera2Helper.initializeCamera()
+                    }.getOrElse {
+                        CLog.e(TAG, "=====> Finally openCamera error <=====")
+                        ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
+                    }
+                }
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit

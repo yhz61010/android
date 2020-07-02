@@ -34,6 +34,7 @@ abstract class BaseCamera2Fragment : Fragment() {
     protected lateinit var camera2Helper: Camera2ComponentHelper
     protected var enableTakePhotoFeature = true
     protected var enableRecordFeature = true
+    protected var enableGallery = true
 
     var backPressListener: BackPressedListener? = null
 

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="camera_top_control_size">32dp</dimen>
+    <dimen name="camera_top_control_size">28dp</dimen>
     <dimen name="camera_top_control_margin">48dp</dimen>
     <dimen name="camera_shutter_size">64dp</dimen>
-    <dimen name="camera_record_size">42dp</dimen>
+    <dimen name="camera_secondary_ctl_size">42dp</dimen>
+    <dimen name="camera_bottom_ctl_horizontal_margin">48dp</dimen>
 </resources>

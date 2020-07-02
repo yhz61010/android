@@ -15,7 +15,7 @@
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:foreground="@android:color/transparent" />
+        android:background="@android:color/transparent" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -24,22 +24,34 @@
         android:layout_marginTop="32dp"
         android:orientation="horizontal">
 
-        <ToggleButton
-            android:id="@+id/switchFlashBtn"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentRight="true"
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
             android:layout_centerVertical="true"
-            android:background="@drawable/toggle_selector"
+            android:src="@drawable/back_btn_normal" />
+
+        <ToggleButton
+            android:id="@+id/switchFacing"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
+            android:layout_toRightOf="@id/ivBack"
+            android:layout_centerVertical="true"
+            android:background="@drawable/toggle_facing_selector"
+            android:layout_marginLeft="@dimen/camera_top_control_margin"
             android:textOff=""
             android:textOn="" />
 
-        <ImageView
-            android:id="@+id/ivBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+        <ToggleButton
+            android:id="@+id/switchFlashBtn"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
+            android:layout_toRightOf="@id/switchFacing"
             android:layout_centerVertical="true"
-            android:src="@drawable/back_btn_normal" />
+            android:layout_marginLeft="@dimen/camera_top_control_margin"
+            android:background="@drawable/toggle_flash_selector"
+            android:textOff=""
+            android:textOn="" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -50,28 +62,17 @@
         android:layout_marginHorizontal="16dp"
         android:orientation="horizontal">
 
-        <ToggleButton
-            android:id="@+id/switchFacing"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="32dp"
-            android:background="@drawable/toggle_facing_selector"
-            android:textOff=""
-            android:textOn="" />
-
         <ImageView
             android:id="@+id/ivShot"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="@dimen/camera_shutter_size"
+            android:layout_height="@dimen/camera_shutter_size"
             android:layout_centerInParent="true"
             android:background="@drawable/ic_shutter" />
 
         <ImageView
             android:id="@+id/ivRecordStop"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="@dimen/camera_shutter_size"
+            android:layout_height="@dimen/camera_shutter_size"
             android:layout_centerInParent="true"
             tools:visibility="visible"
             android:visibility="gone"
@@ -79,8 +80,8 @@
 
         <ImageView
             android:id="@+id/ivShotRecord"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="@dimen/camera_record_size"
+            android:layout_height="@dimen/camera_record_size"
             android:layout_marginRight="32dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"

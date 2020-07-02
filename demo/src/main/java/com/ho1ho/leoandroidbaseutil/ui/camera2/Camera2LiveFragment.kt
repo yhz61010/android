@@ -66,21 +66,18 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
     }
 
     override suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult) {
-        result.use {
-            Log.d(TAG, "Result received: $result")
 
-            // Save the result to disk
-            val output = camera2Helper.saveResult(result)
-            Log.d(TAG, "Image saved: ${output.absolutePath}")
+        // Save the result to disk
+        val output = camera2Helper.saveResult(result)
+        Log.d(TAG, "Image saved: ${output.absolutePath}")
 
-            // If the result is a JPEG file, update EXIF metadata with orientation info
+        // If the result is a JPEG file, update EXIF metadata with orientation info
 //            if (output.extension == "jpg") {
 //                val exif = ExifInterface(output.absolutePath)
 //                exif.setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
 //                exif.saveAttributes()
 //                Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
 //            }
-        }
 
         // Display the photo taken to user
 //                    lifecycleScope.launch(Dispatchers.Main) {

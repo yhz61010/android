@@ -60,6 +60,7 @@ class Camera2ComponentHelper(
 ) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
+    var enableGallery = true
 
     // FIXME Set this vale properly
     private var previewWidth: Int = 0

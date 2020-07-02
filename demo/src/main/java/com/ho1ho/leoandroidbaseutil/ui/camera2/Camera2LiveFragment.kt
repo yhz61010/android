@@ -5,9 +5,9 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
-import androidx.exifinterface.media.ExifInterface
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
@@ -40,15 +40,19 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
                 else DataProcessFactory.ENCODER_TYPE_NORMAL
 
-                // Selects appropriate preview size and configures view finder
-                val previewSize = getPreviewOutputSize(cameraView.display, camera2Helper.characteristics, SurfaceHolder::class.java)
-                Log.d(TAG, "View finder size: ${cameraView.width} x ${cameraView.height}")
+                // Selects appropriate preview size and configures camera surface
+                val previewSize = getPreviewOutputSize(
+                    Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                    camera2Helper.characteristics,
+                    SurfaceHolder::class.java
+                )
+                Log.d(TAG, "CameraSurfaceView size: ${cameraView.width} x ${cameraView.height}")
                 Log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread
                 view.post {
                     runCatching {
-                        camera2Helper.initializeCamera()
+                        camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
                         CLog.e(TAG, "=====> Finally openCamera error <=====")
                         ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
@@ -70,12 +74,12 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
             Log.d(TAG, "Image saved: ${output.absolutePath}")
 
             // If the result is a JPEG file, update EXIF metadata with orientation info
-            if (output.extension == "jpg") {
-                val exif = ExifInterface(output.absolutePath)
-                exif.setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
-                exif.saveAttributes()
-                Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
-            }
+//            if (output.extension == "jpg") {
+//                val exif = ExifInterface(output.absolutePath)
+//                exif.setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+//                exif.saveAttributes()
+//                Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
+//            }
         }
 
         // Display the photo taken to user
@@ -100,8 +104,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         // BITRATE_MODE_VBR: 84.929kB/s
         // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
         // BITRATE_MODE_CBR: 113.630kB/s
-        val desiredSize = CAMERA_SIZE_HIGH
-        val camera2ComponentBuilder = camera2Helper.Builder(desiredSize[0], desiredSize[1])
+        val camera2ComponentBuilder = camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)
 //        camera2ComponentBuilder.previewInFullscreen = true
         camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_NORMAL
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
@@ -138,5 +141,6 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     companion object {
         private val TAG = Camera2LiveFragment::class.java.simpleName
+        private val DESIGNED_CAMERA_SIZE = CAMERA_SIZE_HIGH
     }
 }

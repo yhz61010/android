@@ -18,6 +18,7 @@ import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.Keep
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -981,6 +982,7 @@ class Camera2ComponentHelper(
     }
 
     /** Helper data class used to hold capture metadata with their associated image */
+    @Keep
     data class CombinedCaptureResult(
         val image: Image,
         val metadata: CaptureResult,

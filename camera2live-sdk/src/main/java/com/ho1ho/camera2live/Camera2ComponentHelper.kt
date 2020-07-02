@@ -818,6 +818,8 @@ class Camera2ComponentHelper(
             ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
                 val buffer = result.image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+                // FIXME The buffer that is just the JPEG data not the original camera image.
+                // So I can not mirror image in the general way like this below:
                 //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {
                     val output = createFile(context.requireContext(), "jpg")

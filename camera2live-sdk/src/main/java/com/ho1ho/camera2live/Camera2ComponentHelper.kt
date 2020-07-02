@@ -25,7 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.computeExifOrientation
 import com.ho1ho.androidbase.exts.fail
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.camera2live.base.DataProcessContext
 import com.ho1ho.camera2live.base.DataProcessFactory
@@ -207,7 +207,7 @@ class Camera2ComponentHelper(
                 val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
-                    CLog.d(TAG, "$baseOutputFolderForDebug=$mkdirStatus")
+                    LLog.d(TAG, "$baseOutputFolderForDebug=$mkdirStatus")
                 }
                 if (outputYuvForDebug) {
                     val videoYuvFile = File(baseOutputFolderForDebug, "camera.yuv")
@@ -229,12 +229,12 @@ class Camera2ComponentHelper(
     fun closeDebugOutput() {
         try {
             if (outputYuvForDebug) {
-                CLog.i(TAG, "release videoYuvOs")
+                LLog.i(TAG, "release videoYuvOs")
                 videoYuvOsForDebug?.flush()
                 videoYuvOsForDebug?.close()
             }
             if (outputH264ForDebug) {
-                CLog.i(TAG, "release videoH264Os")
+                LLog.i(TAG, "release videoH264Os")
                 videoH264OsForDebug?.flush()
                 videoH264OsForDebug?.close()
             }
@@ -249,28 +249,28 @@ class Camera2ComponentHelper(
         val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
         var swapDimension = false
-        CLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
-        CLog.w(TAG, "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
+        LLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
+        LLog.w(TAG, "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
         when (deviceRotation) {
             Surface.ROTATION_0, Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
-                CLog.w(TAG, "swapDimension set true")
+                LLog.w(TAG, "swapDimension set true")
                 swapDimension = true
             }
             Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
                 swapDimension = true
             }
-            else -> CLog.e(TAG, "Display rotation is invalid: $deviceRotation")
+            else -> LLog.e(TAG, "Display rotation is invalid: $deviceRotation")
         }
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
-        CLog.w(TAG, "allCameraSupportSize: ${allCameraSupportSize?.contentToString()}")
+        LLog.w(TAG, "allCameraSupportSize: ${allCameraSupportSize?.contentToString()}")
 
         // The device is normally in portrait by default.
         // Actually, the camera orientation is just 90 degree anticlockwise.
         var cameraWidth = desiredVideoHeight
         var cameraHeight = desiredVideoWidth
-        CLog.w(TAG, "cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
+        LLog.w(TAG, "cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Landscape: true. Portrait: false
         if (swapDimension) {
@@ -279,19 +279,19 @@ class Camera2ComponentHelper(
         }
         if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
         if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
-        CLog.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
+        LLog.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Calculate ImageReader input preview size from supported size list by camera.
         // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
         // Attention: The returned value is in camera orientation. NOT in device orientation.
         selectedSizeFromCamera = getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
         // Take care of the result value. It's in camera orientation.
-        CLog.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
+        LLog.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
         // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
         previewSize = if (swapDimension) Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width) else {
             selectedSizeFromCamera
         }
-        CLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
+        LLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
     }
 
     // ===== Debug code =======================
@@ -320,21 +320,21 @@ class Camera2ComponentHelper(
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
-        CLog.w(TAG, "isFlashSupported=$isFlashSupported")
+        LLog.w(TAG, "isFlashSupported=$isFlashSupported")
         this.supportFlash = isFlashSupported ?: false
 
         // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
         val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-        CLog.w(TAG, "hardwareLevel=$hardwareLevel")
+        LLog.w(TAG, "hardwareLevel=$hardwareLevel")
 
         // Get camera supported fps. It will be used to create CaptureRequest
         cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-        CLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
+        LLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
 
         val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-        CLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
+        LLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
         val highSpeedVideoSizes = configMap.highSpeedVideoSizes
-        CLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
+        LLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
     }
 
     /** Readers used as buffers for camera still shots */
@@ -537,14 +537,14 @@ class Camera2ComponentHelper(
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()
             if (image == null) {
-                CLog.w(TAG, "Recording: image is null")
+                LLog.w(TAG, "Recording: image is null")
                 return@setOnImageAvailableListener
             }
             cameraHandler.post {
                 try {
                     val width = image.width
                     val height = image.height
-                    CLog.v(TAG, "Image width=$width height=$height")
+                    LLog.v(TAG, "Image width=$width height=$height")
 
                     if (outputYuvForDebug) {
                         videoYuvOsForDebug?.write(dataProcessContext.doProcess(image, lensFacing))
@@ -568,7 +568,7 @@ class Camera2ComponentHelper(
                 // Add the preview and recording surface targets
                 addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
                 addTarget(imageReader.surface)
-                CLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+                LLog.w(TAG, "Camera FPS=${builder.cameraFps}")
                 // Sets user requested FPS for all targets
                 set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
                 // Auto focus
@@ -860,7 +860,7 @@ class Camera2ComponentHelper(
      * Or just call the handy method [release] to finish the job.
      */
     fun closeCamera() {
-        CLog.i(TAG, "closeCamera() - Start")
+        LLog.i(TAG, "closeCamera() - Start")
 
         try {
             if (::camera.isInitialized) camera.close()
@@ -871,7 +871,7 @@ class Camera2ComponentHelper(
         } catch (e: InterruptedException) {
             Log.e(TAG, "Interrupted while trying to lock camera closing.", e)
         } finally {
-            CLog.i(TAG, "closeCamera() - End")
+            LLog.i(TAG, "closeCamera() - End")
         }
     }
 

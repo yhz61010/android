@@ -19,9 +19,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_height="60dp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/camera_ctl_layer_bg"
         android:orientation="horizontal">
 
         <ImageView
@@ -59,8 +59,17 @@
         android:layout_width="match_parent"
         android:layout_height="90dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginHorizontal="16dp"
+        android:background="@color/camera_ctl_layer_bg"
         android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/ivAlbum"
+            android:layout_width="@dimen/camera_secondary_ctl_size"
+            android:layout_height="@dimen/camera_secondary_ctl_size"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/camera_bottom_ctl_horizontal_margin"
+            android:background="@drawable/ic_photo_album" />
 
         <ImageView
             android:id="@+id/ivShot"
@@ -80,9 +89,9 @@
 
         <ImageView
             android:id="@+id/ivShotRecord"
-            android:layout_width="@dimen/camera_record_size"
-            android:layout_height="@dimen/camera_record_size"
-            android:layout_marginRight="32dp"
+            android:layout_width="@dimen/camera_secondary_ctl_size"
+            android:layout_height="@dimen/camera_secondary_ctl_size"
+            android:layout_marginRight="@dimen/camera_bottom_ctl_horizontal_margin"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:background="@drawable/ic_shutter_record" />

@@ -36,7 +36,10 @@ import com.ho1ho.camera2live.view.CameraSurfaceView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.*
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
@@ -689,8 +692,21 @@ class Camera2ComponentHelper(
                             "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                         )
                         Log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
+
+                        val buffer = image.planes[0].buffer
+                        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
                         // Build the result and resume progress
-                        cont.resume(CombinedCaptureResult(image, result, exifOrientation, mirrored, imageReader.imageFormat))
+                        cont.resume(
+                            CombinedCaptureResult(
+                                imageBytes,
+                                image.width,
+                                image.height,
+                                result,
+                                exifOrientation,
+                                mirrored,
+                                imageReader.imageFormat
+                            )
+                        )
 
                         // There is no need to break out of the loop, this coroutine will suspend
                     }
@@ -817,14 +833,12 @@ class Camera2ComponentHelper(
 
             // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
             ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                val buffer = result.image.planes[0].buffer
-                val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
                 // FIXME The buffer that is just the JPEG data not the original camera image.
                 // So I can not mirror image in the general way like this below:
                 //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {
                     val output = createFile(context.requireContext(), "jpg")
-                    FileOutputStream(output).use { it.write(bytes) }
+                    FileOutputStream(output).use { it.write(result.imageBytes) }
                     cont.resume(output)
                 } catch (exc: IOException) {
                     Log.e(TAG, "Unable to write JPEG image to file", exc)
@@ -833,21 +847,21 @@ class Camera2ComponentHelper(
             }
 
             // When the format is RAW we use the DngCreator utility library
-            ImageFormat.RAW_SENSOR -> {
-                val dngCreator = DngCreator(characteristics, result.metadata)
-                try {
-                    val output = createFile(context.requireContext(), "dng")
-                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
-                    cont.resume(output)
-                } catch (exc: IOException) {
-                    Log.e(TAG, "Unable to write DNG image to file", exc)
-                    cont.resumeWithException(exc)
-                }
-            }
+//            ImageFormat.RAW_SENSOR -> {
+//                val dngCreator = DngCreator(characteristics, result.metadata)
+//                try {
+//                    val output = createFile(context.requireContext(), "dng")
+//                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+//                    cont.resume(output)
+//                } catch (exc: IOException) {
+//                    Log.e(TAG, "Unable to write DNG image to file", exc)
+//                    cont.resumeWithException(exc)
+//                }
+//            }
 
             // No other formats are supported by this sample
             else -> {
-                val exc = RuntimeException("Unknown image format: ${result.image.format}")
+                val exc = RuntimeException("Unknown image format: ${result.format}")
                 Log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
@@ -984,12 +998,36 @@ class Camera2ComponentHelper(
     /** Helper data class used to hold capture metadata with their associated image */
     @Keep
     data class CombinedCaptureResult(
-        val image: Image,
+        val imageBytes: ByteArray,
+        val width: Int,
+        val height: Int,
         val metadata: CaptureResult,
         val orientation: Int,
         val mirrored: Boolean,
         val format: Int
-    ) : Closeable {
-        override fun close() = image.close()
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as CombinedCaptureResult
+
+            if (!imageBytes.contentEquals(other.imageBytes)) return false
+            if (metadata != other.metadata) return false
+            if (orientation != other.orientation) return false
+            if (mirrored != other.mirrored) return false
+            if (format != other.format) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = imageBytes.contentHashCode()
+            result = 31 * result + metadata.hashCode()
+            result = 31 * result + orientation
+            result = 31 * result + mirrored.hashCode()
+            result = 31 * result + format
+            return result
+        }
     }
 }

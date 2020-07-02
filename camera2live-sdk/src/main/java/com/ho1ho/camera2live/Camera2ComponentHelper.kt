@@ -57,6 +57,10 @@ class Camera2ComponentHelper(
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
 
+    // FIXME Set this vale properly
+    private var previewWidth: Int = 0
+    private var previewHeight: Int = 0
+
     private var supportFlash = false   // Support flash
     private var torchOn = false        // Flash continuously on
 
@@ -391,12 +395,12 @@ class Camera2ComponentHelper(
         )
     }
 
-    private fun setImageReaderForPhoto() {
+    private fun setImageReaderForPhoto(previewWidth: Int, previewHeight: Int) {
         /** [characteristics] is initialized in [initializeParameters] */
         // Initialize an image reader which will be used to capture still photos
-        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
-            .maxBy { it.height * it.width }!!
-        imageReader = ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
+//        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
+//            .maxBy { it.height * it.width }!!
+        imageReader = ImageReader.newInstance(previewWidth, previewHeight, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
     }
 
     suspend fun setRepeatingRequest() {
@@ -417,8 +421,10 @@ class Camera2ComponentHelper(
      * - Starts the preview by dispatching a repeating capture request
      * - Sets up the still image capture listeners
      */
-    fun initializeCamera() = context.lifecycleScope.launch(Dispatchers.Main) {
-        Log.i(TAG, "=====> initializeCamera() <=====")
+    fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
+        Log.i(TAG, "=====> initializeCamera($previewWidth x $previewHeight) <=====")
+        this@Camera2ComponentHelper.previewWidth = previewWidth
+        this@Camera2ComponentHelper.previewHeight = previewHeight
         initializeParameters()
 
         camera = runCatching {
@@ -428,7 +434,7 @@ class Camera2ComponentHelper(
 
         if (enableTakePhotoFeature) {
             val st = SystemClock.elapsedRealtime()
-            setImageReaderForPhoto()
+            setImageReaderForPhoto(previewWidth, previewHeight)
             Log.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
             setRepeatingRequest()
             Log.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
@@ -586,6 +592,14 @@ class Camera2ComponentHelper(
         cameraView.postDelayed(recordTimerRunnable, 1000)
     }
 
+    private fun getJpegOrientation(): Int {
+        val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
+        val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        val jpegOrientation = (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
+        Log.d(TAG, "jpegOrientation=$jpegOrientation")
+        return jpegOrientation
+    }
+
     /**
      * Helper function used to capture a still image using the [CameraDevice.TEMPLATE_STILL_CAPTURE]
      * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
@@ -609,7 +623,10 @@ class Camera2ComponentHelper(
 
         val captureRequest = session.device.createCaptureRequest(
             CameraDevice.TEMPLATE_STILL_CAPTURE
-        ).apply { addTarget(imageReader.surface) }
+        ).apply {
+            addTarget(imageReader.surface)
+            set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation())
+        }
         session.capture(captureRequest.build(), object : CameraCaptureSession.CaptureCallback() {
             override fun onCaptureStarted(
                 session: CameraCaptureSession,
@@ -661,8 +678,7 @@ class Camera2ComponentHelper(
                         }
 
                         val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
-                        val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
-
+                        val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
                         val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
@@ -671,10 +687,9 @@ class Camera2ComponentHelper(
                             TAG,
                             "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                         )
-
                         Log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
                         // Build the result and resume progress
-                        cont.resume(CombinedCaptureResult(image, result, exifOrientation, imageReader.imageFormat))
+                        cont.resume(CombinedCaptureResult(image, result, exifOrientation, mirrored, imageReader.imageFormat))
 
                         // There is no need to break out of the loop, this coroutine will suspend
                     }
@@ -778,7 +793,7 @@ class Camera2ComponentHelper(
 
         closeCamera()
         this.lensFacing = lensFacing
-        initializeCamera()
+        initializeCamera(previewWidth, previewHeight)
         lensSwitchListener?.onSwitch(lensFacing)
     }
 
@@ -803,6 +818,7 @@ class Camera2ComponentHelper(
             ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
                 val buffer = result.image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+                //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {
                     val output = createFile(context.requireContext(), "jpg")
                     FileOutputStream(output).use { it.write(bytes) }
@@ -881,6 +897,25 @@ class Camera2ComponentHelper(
         stopCameraThread()
     }
 
+    private fun mirrorImage(imageBytes: ByteArray, w: Int, h: Int) {
+        var temp: Byte
+        var a: Int
+        var b: Int
+        var i = 0
+        while (i < h) {
+            a = i * w
+            b = (i + 1) * w - 1
+            while (a < b) {
+                temp = imageBytes[a]
+                imageBytes[a] = imageBytes[b]
+                imageBytes[b] = temp
+                a++
+                b--
+            }
+            i++
+        }
+    }
+
     companion object {
         private val TAG = Camera2ComponentHelper::class.java.simpleName
 
@@ -948,6 +983,7 @@ class Camera2ComponentHelper(
         val image: Image,
         val metadata: CaptureResult,
         val orientation: Int,
+        val mirrored: Boolean,
         val format: Int
     ) : Closeable {
         override fun close() = image.close()

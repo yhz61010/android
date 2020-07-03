@@ -75,6 +75,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK, view)
         camera2Helper.enableRecordFeature = enableRecordFeature
         camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
+        camera2Helper.enableGallery = enableGallery
         switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()

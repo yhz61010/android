@@ -10,6 +10,7 @@ import android.view.SurfaceHolder
 import android.view.View
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.camera2live.Camera2ComponentHelper
@@ -134,6 +135,10 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     override suspend fun onStopRecordButtonClick() {
         camera2Helper.closeDebugOutput()
+    }
+
+    override fun onOpenGallery() {
+        CameraUtil.openGallery(requireActivity(), false)
     }
 
     companion object {

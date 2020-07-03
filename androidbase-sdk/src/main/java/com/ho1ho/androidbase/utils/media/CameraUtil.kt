@@ -1,6 +1,6 @@
 package com.ho1ho.androidbase.utils.media
 
-import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -9,10 +9,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import com.ho1ho.androidbase.R
 import com.ho1ho.androidbase.utils.CLog
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
+import com.ho1ho.androidbase.utils.file.FileUtil
 import java.util.*
 
 /**
@@ -27,13 +26,16 @@ object CameraUtil {
     @Suppress("WeakerAccess")
     const val REQUEST_CODE_CAMERA_CROP = 0x2235
 
+    @Suppress("WeakerAccess")
+    const val REQUEST_CODE_OPEN_GALLERY = 0x2236
+
     private const val TAG = "CameraUtil"
 
     fun takePhoto(ctx: Activity): Uri? {
         var imageUri: Uri? = null
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
-            val imageFile = createImageFile(ctx)
+            val imageFile = FileUtil.createImageFile(ctx)
             CLog.i(TAG, "takePhoto Image saved path=${imageFile!!.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
@@ -48,21 +50,6 @@ object CameraUtil {
             ctx.startActivityForResult(takePhotoIntent, REQUEST_CODE_OPEN_CAMERA)
         }
         return imageUri
-    }
-
-    fun createImageFile(ctx: Context): File? {
-        @SuppressLint("SimpleDateFormat") val timeStamp =
-            SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
-        val storageDir = ctx.externalCacheDir
-        var imageFile: File? = null
-        try {
-            imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
-            CLog.i(TAG, "createImageFile=${imageFile.absoluteFile}")
-        } catch (e: IOException) {
-            CLog.e(TAG, "createImageFile error", e)
-        }
-        return imageFile
     }
 
     fun performCrop(ctx: Activity, srcImageUri: Uri?): Uri? {
@@ -88,7 +75,7 @@ object CameraUtil {
             cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             //start the activity - we handle returning in onActivityResult
 //             startActivityForResult(cropIntent, PIC_CROP);
-            val croppedImageFile = createImageFile(ctx)
+            val croppedImageFile = FileUtil.createImageFile(ctx)
             CLog.w(TAG, "Cropped image saved path=${croppedImageFile!!.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
@@ -103,5 +90,30 @@ object CameraUtil {
             CLog.e(TAG, "performCrop error", e)
         }
         return croppedImageUri
+    }
+
+    fun openGallery(act: Activity, multiple: Boolean) {
+        val getIntent = Intent(Intent.ACTION_GET_CONTENT)
+        getIntent.type = "image/*"
+        getIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple)
+
+        val pickIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        pickIntent.type = "image/*"
+
+        val chooserIntent = Intent.createChooser(getIntent, act.getString(R.string.cmn_chooser_gallery))
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(pickIntent))
+        act.startActivityForResult(chooserIntent, REQUEST_CODE_OPEN_GALLERY)
+    }
+
+    @TargetApi(19)
+    fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
+        val selectedImage: MutableList<String> = ArrayList()
+        data?.data?.let { url -> FileUtil.getImageRealFilePath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) } }
+        data?.clipData?.let {
+            for (i in 0 until it.itemCount) {
+                FileUtil.getImageRealFilePath(ctx, it.getItemAt(i).uri)?.let { selectedImage.add(it) }
+            }
+        }
+        return selectedImage
     }
 }

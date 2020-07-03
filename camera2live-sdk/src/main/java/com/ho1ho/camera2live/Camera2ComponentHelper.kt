@@ -62,6 +62,7 @@ class Camera2ComponentHelper(
 ) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
+    var enableGallery = true
 
     // FIXME Set this vale properly
     private var previewWidth: Int = 0
@@ -518,6 +519,11 @@ class Camera2ComponentHelper(
             } else {
                 cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
             }
+            if (enableGallery) {
+                cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.VISIBLE
+            } else {
+                cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+            }
             cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
             cameraView.findViewById<View>(R.id.switchFacing).visibility = View.VISIBLE
         }
@@ -536,6 +542,7 @@ class Camera2ComponentHelper(
             cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
             cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.VISIBLE
             cameraView.findViewById<View>(R.id.switchFacing).visibility = View.GONE
+            cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
         }
 
         imageReader.setOnImageAvailableListener({ reader ->

@@ -991,7 +991,7 @@ class Camera2ComponentHelper(
         val imageBytes: ByteArray,
         val width: Int,
         val height: Int,
-        val metadata: CaptureResult,
+        val metadata: CaptureResult?,
         val orientation: Int,
         val mirrored: Boolean,
         val format: Int

@@ -9,7 +9,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import java.io.File
-import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -93,9 +93,13 @@ object FileUtil {
     fun getFileUri(context: Context, file: File): Uri =
         FileProvider.getUriForFile(context, context.applicationContext.packageName + ".fileprovider", file)
 
-    fun createImageFile(ctx: Context): File? {
-        val timeStamp = DateFormat.getDateTimeInstance().format("yyyyMMdd_HHmmss").format(Date())
-        val storageDir = ctx.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return runCatching { File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir) }.getOrNull()
+    /**
+     * Create a [File] named a using formatted timestamp with the current date and time.
+     *
+     * @return [File] created.
+     */
+    fun createImageFile(ctx: Context, extension: String): File {
+        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
+        return File(ctx.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${sdf.format(Date())}.$extension")
     }
 }

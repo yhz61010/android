@@ -35,8 +35,8 @@ object CameraUtil {
         var imageUri: Uri? = null
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
-            val imageFile = FileUtil.createImageFile(ctx)
-            CLog.i(TAG, "takePhoto Image saved path=${imageFile!!.absolutePath}")
+            val imageFile = FileUtil.createImageFile(ctx, "jpg")
+            CLog.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
             imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -75,17 +75,16 @@ object CameraUtil {
             cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             //start the activity - we handle returning in onActivityResult
 //             startActivityForResult(cropIntent, PIC_CROP);
-            val croppedImageFile = FileUtil.createImageFile(ctx)
-            CLog.w(TAG, "Cropped image saved path=${croppedImageFile!!.absolutePath}")
+            val croppedImageFile = FileUtil.createImageFile(ctx, "jpg")
+            CLog.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
-            if (croppedImageFile != null) {
-                // Only Uri.fromeFile can be used for cropping output Uri.
-                // You CAN NOT use FileProvider.getUriForFile
-                croppedImageUri = Uri.fromFile(croppedImageFile)
-                cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, croppedImageUri)
-                ctx.startActivityForResult(cropIntent, REQUEST_CODE_CAMERA_CROP)
-            }
+
+            // Only Uri.fromeFile can be used for cropping output Uri.
+            // You CAN NOT use FileProvider.getUriForFile
+            croppedImageUri = Uri.fromFile(croppedImageFile)
+            cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, croppedImageUri)
+            ctx.startActivityForResult(cropIntent, REQUEST_CODE_CAMERA_CROP)
         } catch (e: ActivityNotFoundException) {
             CLog.e(TAG, "performCrop error", e)
         }

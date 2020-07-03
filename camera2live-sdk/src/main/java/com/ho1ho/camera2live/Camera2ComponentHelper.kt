@@ -9,7 +9,10 @@ import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
 import android.media.MediaActionSound
-import android.os.*
+import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.Log
 import android.util.Range
 import android.util.Size
@@ -27,6 +30,7 @@ import com.ho1ho.androidbase.exts.fail
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
+import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.camera2live.base.DataProcessContext
 import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.codec.CameraEncoder
@@ -40,8 +44,6 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
@@ -837,7 +839,7 @@ class Camera2ComponentHelper(
                 // So I can not mirror image in the general way like this below:
                 //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {
-                    val output = createFile(context.requireContext(), "jpg")
+                    val output = FileUtil.createImageFile(context.requireContext(), "jpg")
                     FileOutputStream(output).use { it.write(result.imageBytes) }
                     cont.resume(output)
                 } catch (exc: IOException) {
@@ -943,18 +945,6 @@ class Camera2ComponentHelper(
 
         /** Maximum time allowed to wait for the result of an image capture */
         private const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
-
-        /**
-         * **Attention:** This method is Debug ONLY
-         *
-         * Create a [File] named a using formatted timestamp with the current date and time.
-         *
-         * @return [File] created.
-         */
-        private fun createFile(context: Context, extension: String): File {
-            val sdf = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
-            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${sdf.format(Date())}.$extension")
-        }
 
         // ===== Camera Recording - Start ============================================
         val ORIENTATIONS = mapOf(

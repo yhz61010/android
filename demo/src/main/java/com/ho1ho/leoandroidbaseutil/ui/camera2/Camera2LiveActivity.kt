@@ -1,11 +1,14 @@
 package com.ho1ho.leoandroidbaseutil.ui.camera2
 
+import android.app.Activity
+import android.content.Intent
 import android.media.MediaFormat
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.BackPressedListener
 import com.ho1ho.leoandroidbaseutil.R
@@ -47,6 +50,14 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
                 }
                 .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
                 .start()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
+            CLog.i(TAG, "OPEN_GALLERY onActivityResult")
+            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
         }
     }
 

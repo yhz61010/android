@@ -4,10 +4,13 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import java.io.File
+import java.text.DateFormat
+import java.util.*
 
 /**
  * Author: Michael Leo
@@ -54,10 +57,7 @@ object FileUtil {
                 imagePath = getImagePath(ctx, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection)
             } else if ("com.android.providers.downloads.documents" == uri.authority) {
                 val contentUri =
-                    ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"),
-                        java.lang.Long.valueOf(docId)
-                    )
+                    ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(docId))
                 imagePath = getImagePath(ctx, contentUri, null)
             }
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
@@ -93,4 +93,9 @@ object FileUtil {
     fun getFileUri(context: Context, file: File): Uri =
         FileProvider.getUriForFile(context, context.applicationContext.packageName + ".fileprovider", file)
 
+    fun createImageFile(ctx: Context): File? {
+        val timeStamp = DateFormat.getDateTimeInstance().format("yyyyMMdd_HHmmss").format(Date())
+        val storageDir = ctx.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return runCatching { File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir) }.getOrNull()
+    }
 }

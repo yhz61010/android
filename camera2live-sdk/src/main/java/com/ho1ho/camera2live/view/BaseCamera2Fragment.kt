@@ -47,6 +47,7 @@ abstract class BaseCamera2Fragment : Fragment() {
     abstract suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult)
     abstract suspend fun onRecordButtonClick()
     abstract suspend fun onStopRecordButtonClick()
+    abstract fun onOpenGallery()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.fragment_camera_view, container, false)
@@ -62,6 +63,10 @@ abstract class BaseCamera2Fragment : Fragment() {
         if (!enableTakePhotoFeature) {
             view.findViewById<View>(R.id.ivShot).visibility = View.GONE
         }
+        if (!enableGallery) {
+            view.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+        }
+        view.findViewById<View>(R.id.ivAlbum).setOnClickListener { onOpenGallery() }
         view.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
             activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()

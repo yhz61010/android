@@ -86,7 +86,6 @@ class Camera2ComponentHelper(
      */
     lateinit var characteristics: CameraCharacteristics
 
-    // FIXME Recording
     /////// Recording - Start ///////////////////////////////////////////////////////////
     private var recordDuration: Int = 0
     var isRecording = false
@@ -129,25 +128,6 @@ class Camera2ComponentHelper(
         }
 
     private lateinit var capturePreviewRequestBuilder: CaptureRequest.Builder
-
-    /** Requests used for preview only in the [CameraCaptureSession] */
-    private val previewRequest: CaptureRequest by lazy {
-        // Capture request holds references to target surfaces
-        capturePreviewRequestBuilder =
-            session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                // Add the preview surface target
-                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-                // Auto focus
-                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                // Auto exposure. The flash will be open automatically in dark.
-                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
-                // AWB
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
-            }
-        capturePreviewRequestBuilder.build()
-    }
 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
@@ -410,15 +390,32 @@ class Camera2ComponentHelper(
         imageReader = ImageReader.newInstance(previewWidth, previewHeight, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
     }
 
-    suspend fun setRepeatingRequest() {
+    suspend fun setPreviewRepeatingRequest() {
 //        session.stopRepeating()
-        if (::session.isInitialized) session.close()
+//        stopRepeating()
+        // There is no need to call session.close() method. Please check its comment
+//        if (::session.isInitialized) session.close()
         val targets = listOf(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface, imageReader.surface)
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
+
+        // Capture request holds references to target surfaces
+        capturePreviewRequestBuilder =
+            session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                // Add the preview surface target
+                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                // Auto focus
+                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                // Auto exposure. The flash will be open automatically in dark.
+                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
+                // AWB
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+
+            }
         // This will keep sending the capture request as frequently as possible until the
         // session is torn down or session.stopRepeating() is called
-        session.setRepeatingRequest(previewRequest, null, cameraHandler)
+        session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
     }
 
     /**
@@ -443,7 +440,7 @@ class Camera2ComponentHelper(
             val st = SystemClock.elapsedRealtime()
             setImageReaderForPhoto(previewWidth, previewHeight)
             Log.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
-            setRepeatingRequest()
+            setPreviewRepeatingRequest()
             Log.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
         }
     }
@@ -507,6 +504,20 @@ class Camera2ComponentHelper(
         }, handler)
     }
 
+    private fun stopRepeating() {
+        if (::session.isInitialized) {
+            session.stopRepeating()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                session.abortCaptures()
+            }
+            try {
+                Thread.sleep(100)
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun stopRecording() {
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = false
@@ -529,7 +540,7 @@ class Camera2ComponentHelper(
         }
         cameraView.removeCallbacks(recordTimerRunnable)
         recordDuration = 0
-        session.stopRepeating()
+        stopRepeating()
         closeCamera()
         MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
     }
@@ -739,9 +750,7 @@ class Camera2ComponentHelper(
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
         torchOn = try {
-            val captureRequest = capturePreviewRequestBuilder.build()
-            session.setRepeatingRequest(captureRequest, null, cameraHandler)
-
+            session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, true);
             //                    }
@@ -886,8 +895,9 @@ class Camera2ComponentHelper(
         LLog.i(TAG, "closeCamera() - Start")
 
         try {
+            // There is no need to call session.close() method. Please check its comment
+//            if (::session.isInitialized) session.close()
             if (::camera.isInitialized) camera.close()
-            if (::session.isInitialized) session.close()
             if (::imageReader.isInitialized) imageReader.close()
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()

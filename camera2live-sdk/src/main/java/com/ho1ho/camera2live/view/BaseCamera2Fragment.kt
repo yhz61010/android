@@ -119,7 +119,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                 onRecordButtonClick()
                 camera2Helper.extraInitializeCameraForRecording()
                 camera2Helper.setImageReaderForRecording()
-                camera2Helper.setRepeatingRequest()
+                camera2Helper.setPreviewRepeatingRequest()
                 camera2Helper.startRecording()
                 // Re-enable click listener after recording is taken
                 it.post { it.isEnabled = true }

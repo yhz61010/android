@@ -701,6 +701,13 @@ class Camera2ComponentHelper(
                             imageQueue.take().close()
                         }
 
+                        val buffer = image.planes[0].buffer
+                        val width = image.width
+                        val height = image.height
+                        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+                        // DO NOT forget for close Image object
+                        image.close()
+
                         val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
@@ -713,14 +720,12 @@ class Camera2ComponentHelper(
                         )
                         Log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
 
-                        val buffer = image.planes[0].buffer
-                        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
                         // Build the result and resume progress
                         cont.resume(
                             CombinedCaptureResult(
                                 imageBytes,
-                                image.width,
-                                image.height,
+                                width,
+                                height,
                                 result,
                                 exifOrientation,
                                 mirrored,

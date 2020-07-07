@@ -15,6 +15,8 @@ import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
+import java.io.File
+import java.io.FileOutputStream
 
 class Camera2LiveActivity : BaseDemonstrationActivity() {
     private val cameraViewFragment = Camera2LiveFragment()
@@ -57,7 +59,20 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
             CLog.i(TAG, "OPEN_GALLERY onActivityResult")
-            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
+//            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
+            // The following code is just for demo. The exception is not considered.
+            data?.data?.let {
+                // In Android 10+, I really do not know how to get the file real path.
+                // According to the post [https://stackoverflow.com/a/2790688],
+                // there is no need for us to know the real path. I just need to get the InputStream directly. That's enough.
+                // Set uri for ImageView
+//                ImageView(this).setImageURI(uri)
+                // Or get file input stream.
+                val inputStream = contentResolver.openInputStream(it)!!
+                val outputStream = FileOutputStream(File(getExternalFilesDir(null)?.absolutePath!!, "os.jpg"))
+                inputStream.copyTo(outputStream)
+                CLog.e(TAG, "File output")
+            }
         }
     }
 

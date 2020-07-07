@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.media.MediaFormat
 import android.os.Bundle
+import android.os.Environment
 import android.view.WindowManager
 import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
@@ -69,7 +70,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
 //                ImageView(this).setImageURI(uri)
                 // Or get file input stream.
                 val inputStream = contentResolver.openInputStream(it)!!
-                val outputStream = FileOutputStream(File(getExternalFilesDir(null)?.absolutePath!!, "os.jpg"))
+                val outputStream = FileOutputStream(File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg"))
                 inputStream.copyTo(outputStream)
                 CLog.e(TAG, "File output")
             }

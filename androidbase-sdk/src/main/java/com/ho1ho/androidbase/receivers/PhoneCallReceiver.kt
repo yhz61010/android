@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import java.util.*
 
 /**
@@ -31,7 +31,7 @@ import java.util.*
 abstract class PhoneCallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == null) {
-            CLog.e(TAG, "onReceive intent or action is null")
+            LLog.e(TAG, "onReceive intent or action is null")
             return
         }
 

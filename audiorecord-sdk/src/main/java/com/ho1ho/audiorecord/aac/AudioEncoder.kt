@@ -3,7 +3,7 @@ package com.ho1ho.audiorecord.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicLong
@@ -22,7 +22,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
     val csd0: ByteArray
 
     init {
-        CLog.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
+        LLog.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
         csd0 = getAudioEncodingCsd0(
             PROFILE_AAC_LC,
             sampleRate,
@@ -137,7 +137,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
      * @param outAacDataLenWithAdts The length of audio data with ADTS header.
      */
     private fun addAdtsToDataWithoutCRC(outAacDataWithAdts: ByteArray, outAacDataLenWithAdts: Int) {
-        CLog.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        LLog.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
 
         // ByteBuffer key
         // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -158,7 +158,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
         val freqIdx: Int =
             csd0[0].toInt() and 0x7 shl 1 or (csd0[1].toInt() shr 7 and 0x1) // 4: 44.1KHz 8: 16Khz 11: 8Khz
         val chanCfg: Int = csd0[1].toInt() shr 3 and 0xF // 1: single_channel_element 2: CPE(channel_pair_element)
-        CLog.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx chanCfg=$chanCfg")
+        LLog.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx chanCfg=$chanCfg")
 
         // https://www.jianshu.com/p/5c770a22e8f8
         outAacDataWithAdts[0] = 0xFF.toByte()
@@ -178,7 +178,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
                 reset()
             }
         } catch (e: Exception) {
-            CLog.e(TAG, "stop error.", e)
+            LLog.e(TAG, "stop error.", e)
         }
     }
 
@@ -191,7 +191,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
             audioEncoder.release()
             outputAacStream.close()
         } catch (e: Exception) {
-            CLog.e(TAG, "release error.", e)
+            LLog.e(TAG, "release error.", e)
         }
     }
 
@@ -239,7 +239,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
         @kotlin.jvm.JvmStatic
         fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
             val result = frameIndex * 1000000L / sampleRate
-            CLog.d(TAG, "computePresentationTimeUs=$result")
+            LLog.d(TAG, "computePresentationTimeUs=$result")
             return result
         }
     }

@@ -8,7 +8,7 @@ import android.os.Environment
 import android.view.WindowManager
 import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.BackPressedListener
@@ -29,10 +29,10 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_camera2_live)
 
         CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            .forEach { CLog.e(TAG, "H264 Encoder: ${it.name}") }
+            .forEach { LLog.e(TAG, "H264 Encoder: ${it.name}") }
         val hasTopazEncoder =
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-        CLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
+        LLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
         cameraViewFragment.backPressListener = object :
             BackPressedListener {
@@ -59,7 +59,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
-            CLog.i(TAG, "OPEN_GALLERY onActivityResult")
+            LLog.i(TAG, "OPEN_GALLERY onActivityResult")
 //            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
             // The following code is just for demo. The exception is not considered.
             data?.data?.let {
@@ -72,7 +72,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
                 val inputStream = contentResolver.openInputStream(it)!!
                 val outputStream = FileOutputStream(File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg"))
                 inputStream.copyTo(outputStream)
-                CLog.e(TAG, "File output")
+                LLog.e(TAG, "File output")
             }
         }
     }

@@ -2,7 +2,7 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import kotlinx.coroutines.*
@@ -32,15 +32,15 @@ class CoroutineActivity : BaseDemonstrationActivity() {
         val cs = CoroutineScope(Dispatchers.Main)
         cs.launch {
             var name = fetchDoc("Book0")
-            CLog.e(ITAG, "Finally result-fetchDoc=$name")
+            LLog.e(ITAG, "Finally result-fetchDoc=$name")
             name = fetchDocByPost("Post1")
-            CLog.e(ITAG, "Finally result-fetchDocByPost=$name")
+            LLog.e(ITAG, "Finally result-fetchDocByPost=$name")
         }
         cs.launch { fetchTwoDocs() }
         cs.launch {
             withTimeout(1300L) {
                 repeat(1000) { i ->
-                    CLog.e(ITAG, "I'm sleeping $i ...")
+                    LLog.e(ITAG, "I'm sleeping $i ...")
                     delay(500L)
                 }
             }
@@ -49,20 +49,20 @@ class CoroutineActivity : BaseDemonstrationActivity() {
             val time = measureTimeMillis {
                 delay(987L)
             }
-            CLog.e(ITAG, "measureTimeMillis cost=$time")
+            LLog.e(ITAG, "measureTimeMillis cost=$time")
         }
 
         cs.launch { // 运行在父协程的上下文中，即 runBlocking 主协程
-            CLog.e(ITAG, "main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+            LLog.e(ITAG, "main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
         }
         cs.launch(Dispatchers.Unconfined) { // 不受限的——将工作在主线程中
-            CLog.e(ITAG, "Unconfined            : I'm working in thread ${Thread.currentThread().name}")
+            LLog.e(ITAG, "Unconfined            : I'm working in thread ${Thread.currentThread().name}")
         }
         cs.launch(Dispatchers.Default) { // 将会获取默认调度器
-            CLog.e(ITAG, "Default               : I'm working in thread ${Thread.currentThread().name}")
+            LLog.e(ITAG, "Default               : I'm working in thread ${Thread.currentThread().name}")
         }
         cs.launch(newSingleThreadContext("MyOwnThread")) { // 将使它获得一个新的线程
-            CLog.e(ITAG, "newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+            LLog.e(ITAG, "newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
         }
         cs.launch(Dispatchers.Default + CoroutineName("-test")) { coroutineName() }
 
@@ -72,7 +72,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
 
         doSomething()
 
-        CLog.e(ITAG, "Main done")
+        LLog.e(ITAG, "Main done")
     }
 
     override fun onDestroy() {
@@ -85,7 +85,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
         repeat(10) { i ->
             mainScope.launch {
                 delay((i + 1) * 200L) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
-                CLog.e(ITAG, "Coroutine $i is done|${Thread.currentThread().name}")
+                LLog.e(ITAG, "Coroutine $i is done|${Thread.currentThread().name}")
             }
         }
     }
@@ -93,19 +93,19 @@ class CoroutineActivity : BaseDemonstrationActivity() {
     private suspend fun coroutineName() = coroutineScope {
         val v1 = async(CoroutineName("v1coroutine")) {
             delay(500)
-            CLog.e(ITAG, "Computing v1 | ${Thread.currentThread().name}")
+            LLog.e(ITAG, "Computing v1 | ${Thread.currentThread().name}")
             252
         }
         val v2 = async(CoroutineName("v2coroutine")) {
             delay(1000)
-            CLog.e(ITAG, "Computing v2 | ${Thread.currentThread().name}")
+            LLog.e(ITAG, "Computing v2 | ${Thread.currentThread().name}")
             6
         }
-        CLog.e(ITAG, "The answer for v1 / v2 = ${v1.await() / v2.await()}")
+        LLog.e(ITAG, "The answer for v1 / v2 = ${v1.await() / v2.await()}")
     }
 
     private fun normalMethod() {
-        CLog.w(ITAG, "normalMethod")
+        LLog.w(ITAG, "normalMethod")
     }
 
     // Dispatchers.Main
@@ -113,7 +113,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
         // Dispatchers.Main
         val result = get(name)
         // Dispatchers.Main
-        CLog.e(ITAG, "[fetchDoc] You got=$result [${Thread.currentThread().name}]")
+        LLog.e(ITAG, "[fetchDoc] You got=$result [${Thread.currentThread().name}]")
         return result
     }
 
@@ -122,7 +122,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
         // Dispatchers.Main
         val result = post(name)
         // Dispatchers.Main
-        CLog.e(ITAG, "[fetchDocByPost] You got=$result [${Thread.currentThread().name}]")
+        LLog.e(ITAG, "[fetchDocByPost] You got=$result [${Thread.currentThread().name}]")
         return result
     }
 
@@ -131,10 +131,10 @@ class CoroutineActivity : BaseDemonstrationActivity() {
             async { fetchDoc("Book1") },  // async returns a result for the first doc
             async { fetchDoc("Book2") }   // async returns a result for the second doc
         )
-        CLog.e(ITAG, "All async done - ${Thread.currentThread().name}")
+        LLog.e(ITAG, "All async done - ${Thread.currentThread().name}")
         // use awaitAll to wait for both network requests
         deferreds.awaitAll()
-        CLog.e(ITAG, "After awaitAll - ${Thread.currentThread().name}")
+        LLog.e(ITAG, "After awaitAll - ${Thread.currentThread().name}")
     }
 
     // look at this in the next section

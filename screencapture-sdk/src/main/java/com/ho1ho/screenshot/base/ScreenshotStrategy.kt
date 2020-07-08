@@ -9,7 +9,7 @@ import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.ImageUtil
 import java.io.IOException
 
@@ -50,7 +50,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
         fun build(): ScreenshotStrategy {
             displayIntervalInMs = (1000 / (fps + 1)).toInt()
-            CLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
+            LLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
             return ScreenshotStrategy(this)
         }
 
@@ -75,7 +75,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             screenshotHandler = Handler(screenshotThread!!.looper)
             imageReader?.setOnImageAvailableListener(mOnImageAvailableListener, screenshotHandler)
         } catch (e: IOException) {
-            CLog.e(TAG, "onStart error", e)
+            LLog.e(TAG, "onStart error", e)
         }
     }
 
@@ -96,7 +96,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
         if ((SystemClock.elapsedRealtime() - previousDisplayTime) < builder.displayIntervalInMs) {
             image.close()
-            CLog.d(TAG, "Ignore image due to fps")
+            LLog.d(TAG, "Ignore image due to fps")
             return@OnImageAvailableListener
         }
 
@@ -106,7 +106,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             try {
                 val width = image.width
                 val height = image.height
-                CLog.v(TAG, "Image width=$width height=$height")
+                LLog.v(TAG, "Image width=$width height=$height")
 
 //                var st = SystemClock.elapsedRealtimeNanos()
                 val bitmap = ImageUtil.createBitmapFromImage(image)
@@ -124,7 +124,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 targetBitmap.recycle()
 //                FileUtil.writeBitmapToFile(bitmap, 1)
             } catch (e: Exception) {
-                CLog.e(TAG, "screenshotHandler error=${e.message}")
+                LLog.e(TAG, "screenshotHandler error=${e.message}")
             } finally {
                 image.close()
             }

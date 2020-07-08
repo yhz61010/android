@@ -56,7 +56,7 @@ object JsonUtil {
      * Serializing the specified object into string.
      *
      * @param bytes the object for which JSON representation is to be created
-     * @return Returns `json string` or `""` if serializing failed.
+     * @return Returns `Hex string in big endian` or `[]` if serializing failed.
      */
     fun toHexadecimalString(bytes: ByteArray?): String {
         if (bytes == null || bytes.isEmpty()) {
@@ -79,6 +79,6 @@ object JsonUtil {
                 ex
             )
         }
-        return ""
+        return "[]"
     }
 }

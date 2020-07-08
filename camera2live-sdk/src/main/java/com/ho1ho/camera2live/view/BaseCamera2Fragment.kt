@@ -3,7 +3,9 @@ package com.ho1ho.camera2live.view
 import android.annotation.SuppressLint
 import android.hardware.camera2.CameraMetadata
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +32,9 @@ abstract class BaseCamera2Fragment : Fragment() {
     protected lateinit var switchFlashBtn: ToggleButton
 
     protected lateinit var camera2Helper: Camera2ComponentHelper
+    protected var enableTakePhotoFeature = true
+    protected var enableRecordFeature = true
+    protected var enableGallery = true
 
     var backPressListener: BackPressedListener? = null
 
@@ -39,18 +44,38 @@ abstract class BaseCamera2Fragment : Fragment() {
     /** Live data listener for changes in the device orientation relative to the camera */
     lateinit var relativeOrientation: OrientationLiveData
 
+    abstract suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult)
+    abstract suspend fun onRecordButtonClick()
+    abstract suspend fun onStopRecordButtonClick()
+    abstract fun onOpenGallery()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.fragment_camera_view, container, false)
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!enableRecordFeature) {
+            view.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
+            view.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
+            view.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
+        }
+        if (!enableTakePhotoFeature) {
+            view.findViewById<View>(R.id.ivShot).visibility = View.GONE
+        }
+        if (!enableGallery) {
+            view.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+        }
+        view.findViewById<View>(R.id.ivAlbum).setOnClickListener { onOpenGallery() }
         view.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
             activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()
         }
         cameraView = view.findViewById(R.id.cameraSurfaceView)
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK, view)
+        camera2Helper.enableRecordFeature = enableRecordFeature
+        camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
+        camera2Helper.enableGallery = enableGallery
         switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
@@ -75,23 +100,41 @@ abstract class BaseCamera2Fragment : Fragment() {
         ivShot.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
-
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
-                onTakePhotoButtonClick()
+                val st = SystemClock.elapsedRealtime()
+                getCapturingImage(camera2Helper.takePhoto())
                 // Re-enable click listener after photo is taken
                 it.post { it.isEnabled = true }
+                Log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
 
         ivShotRecord.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
-//            it.isEnabled = false
+            it.isEnabled = false
+
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
+                camera2Helper.extraInitializeCameraForRecording()
+                camera2Helper.setImageReaderForRecording()
+                camera2Helper.setPreviewRepeatingRequest()
+                camera2Helper.startRecording()
                 // Re-enable click listener after recording is taken
-//                it.post { it.isEnabled = true }
+                it.post { it.isEnabled = true }
+            }
+        }
+
+        ivRecordStop.setOnClickListener {
+            // Disable click listener to prevent multiple requests simultaneously in flight
+            it.isEnabled = false
+            // Perform I/O heavy operations in a different scope
+            lifecycleScope.launch(Dispatchers.IO) {
+                camera2Helper.stopRecording()
+                onStopRecordButtonClick()
+                // Re-enable click listener after recording is taken
+                it.post { it.isEnabled = true; camera2Helper.initializeCamera(CAMERA_SIZE_HIGH.width, CAMERA_SIZE_HIGH.height) }
             }
         }
 
@@ -103,26 +146,27 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
     }
 
-    abstract suspend fun onTakePhotoButtonClick()
-    abstract suspend fun onRecordButtonClick()
-
     override fun onStop() {
         super.onStop()
-        camera2Helper.closeCamera()
+        if (camera2Helper.isRecording) {
+            camera2Helper.stopRecording()
+        } else {
+            camera2Helper.closeCamera()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        camera2Helper.release()
+        camera2Helper.stopCameraThread()
     }
 
     companion object {
         private val TAG = BaseCamera2Fragment::class.java.simpleName
 
-        val CAMERA_SIZE_EXTRA = intArrayOf(1080, 1920)
-        val CAMERA_SIZE_HIGH = intArrayOf(720, 1280)
-        val CAMERA_SIZE_NORMAL = intArrayOf(720, 960)
-        val CAMERA_SIZE_LOW = intArrayOf(480, 640)
+        val CAMERA_SIZE_EXTRA = Size(1080, 1920)
+        val CAMERA_SIZE_HIGH = Size(720, 1280)
+        val CAMERA_SIZE_NORMAL = Size(720, 960)
+        val CAMERA_SIZE_LOW = Size(480, 640)
     }
 }
 

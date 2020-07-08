@@ -4,7 +4,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.camera2live.listeners.CallbackListener
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -33,7 +33,7 @@ class CameraEncoder @JvmOverloads constructor(
     private var mFrameCount: Long = 0
 
     private fun initEncoder() {
-        CLog.i(
+        LLog.i(
             TAG,
             String.format("initEncoder width=%d height=%d bitrate=%d frameRate=%d", width, height, bitrate, frameRate)
         )
@@ -57,13 +57,17 @@ class CameraEncoder @JvmOverloads constructor(
 
         val mediaCodecCallback = object : MediaCodec.Callback() {
             override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-                val inputBuffer = codec.getInputBuffer(inputBufferId)
+                try {
+                    val inputBuffer = codec.getInputBuffer(inputBufferId)
 
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = queue.poll()?.also { inputBuffer?.put(it) }
+                    // fill inputBuffer with valid data
+                    inputBuffer?.clear()
+                    val data = queue.poll()?.also { inputBuffer?.put(it) }
 
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
+                    codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
+                } catch (e: Exception) {
+                    LLog.e(TAG, "You can ignore this error safely.")
+                }
             }
 
             override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
@@ -78,9 +82,9 @@ class CameraEncoder @JvmOverloads constructor(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
-                            CLog.w(TAG, "Found SPS/PPS frame: ${csd!!.contentToString()}")
+                            LLog.w(TAG, "Found SPS/PPS frame: ${csd!!.contentToString()}")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> CLog.i(TAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
@@ -97,14 +101,14 @@ class CameraEncoder @JvmOverloads constructor(
             }
 
             override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-                CLog.w(TAG, "onOutputFormatChanged format=$format")
+                LLog.w(TAG, "onOutputFormatChanged format=$format")
                 // Subsequent data will conform to new format.
                 // Can ignore if using getOutputFormat(outputBufferId)
                 outputFormat = format // option B
             }
 
             override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-                CLog.e(TAG, "onError e=${e.message}")
+                LLog.e(TAG, "onError e=${e.message}")
             }
         }
 

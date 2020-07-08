@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.exception
 import com.ho1ho.androidbase.exts.toHexStringLE
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
 import com.ho1ho.socket_sdk.framework.base.inter.ReceivingDataListener
@@ -68,7 +68,7 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
                 CONNECTION_TIMEOUT_IN_MILLS
             )
         } catch (e: Exception) {
-            CLog.e(tag, "init() Exception: ${e.message}")
+            LLog.e(tag, "init() Exception: ${e.message}")
         }
     }
 
@@ -89,33 +89,33 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
     fun connect(listener: NettyConnectionListener) {
-        CLog.i(tag, "===== connect() current state=$connectStateName =====")
+        LLog.i(tag, "===== connect() current state=$connectStateName =====")
         when (connectState) {
             CONNECTING -> {
-                CLog.w(tag, "===== Wait for connecting =====")
+                LLog.w(tag, "===== Wait for connecting =====")
                 return
             }
             CONNECTED -> {
-                CLog.w(tag, "===== Already connected =====")
+                LLog.w(tag, "===== Already connected =====")
                 return
             }
-            else -> CLog.i(tag, "===== Prepare to connect to server =====")
+            else -> LLog.i(tag, "===== Prepare to connect to server =====")
         }
         connectState = CONNECTING
         try {
             connectionListener = listener.apply { onConnectionConnecting(this@BaseNettyClient) }
             val f = mBootstrap!!.connect(mHost, mPort).sync()
-            CLog.i(tag, "Binding ChannelFuture listener...")
+            LLog.i(tag, "Binding ChannelFuture listener...")
             f.addListener(mChannelFutureListener)
         } catch (e: Exception) {
-            CLog.e(tag, "Retry due to connect error=${e.message}")
+            LLog.e(tag, "Retry due to connect error=${e.message}")
             doRetry()
         }
     }
 
     @Suppress("WeakerAccess")
     fun reconnect() {
-        CLog.w(tag, "===== reconnect() current state=$connectStateName =====")
+        LLog.w(tag, "===== reconnect() current state=$connectStateName =====")
         connectionListener ?: exception("You must call connect first")
 //        disconnect()
         connectState = DISCONNECTED
@@ -124,43 +124,43 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
 
     @Suppress("WeakerAccess")
     fun disconnect() {
-        CLog.w(tag, "===== disconnect() current state=$connectStateName =====")
+        LLog.w(tag, "===== disconnect() current state=$connectStateName =====")
         connectState = DISCONNECTED
         defaultChannelHandler?.let {
-            CLog.w(tag, "===== call onConnectionDisconnect =====")
+            LLog.w(tag, "===== call onConnectionDisconnect =====")
             connectionListener?.onConnectionDisconnect(this)
         }
     }
 
     fun release() {
-        CLog.e(tag, "===== release() current state=$connectStateName } =====")
+        LLog.e(tag, "===== release() current state=$connectStateName } =====")
         if (UNINITIALIZED == connectState) {
-            CLog.w(tag, "Already released")
+            LLog.w(tag, "Already released")
             return
         }
         connectState = UNINITIALIZED
 
-        CLog.w(tag, "Releasing connect listener...")
+        LLog.w(tag, "Releasing connect listener...")
         connectionListener = null
 
         mRetryHandler?.run {
-            CLog.w(tag, "Removing RetryThread from RetryHandler...")
+            LLog.w(tag, "Removing RetryThread from RetryHandler...")
             removeCallbacksAndMessages(null)
             mRetryHandler = null
         }
 
         mRetryThread?.run {
-            CLog.w(tag, "Quiting RetryThread safely...")
+            LLog.w(tag, "Quiting RetryThread safely...")
             quitSafely()
             mRetryThread = null
         }
 
-        CLog.w(tag, "Releasing default socket handler...")
+        LLog.w(tag, "Releasing default socket handler...")
         defaultChannelHandler?.release()
         defaultChannelHandler = null
 
         mChannel?.run {
-            CLog.w(tag, "Closing channel...")
+            LLog.w(tag, "Closing channel...")
 //            closeFuture().syncUninterruptibly()
             closeFuture()
             close()
@@ -170,13 +170,13 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
         mChannelInitializer = null
 
         mEventLoopGroup?.run {
-            CLog.w(tag, "Shutting down socket...")
+            LLog.w(tag, "Shutting down socket...")
             shutdownGracefully().syncUninterruptibly()
             mEventLoopGroup = null
         }
         mBootstrap = null
 
-        CLog.w(tag, "=====> Socket released <=====")
+        LLog.w(tag, "=====> Socket released <=====")
     }
 
     private val mChannelFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
@@ -186,26 +186,26 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
             mChannel = mChannelFuture!!.syncUninterruptibly().channel()
             connectState = CONNECTED
             if (null != defaultChannelHandler) {
-                CLog.i(tag, "===== operationComplete - onConnectionCreated() =====")
+                LLog.i(tag, "===== operationComplete - onConnectionCreated() =====")
                 connectionListener?.onConnectionCreated(this@BaseNettyClient)
             }
         } else {
             connectState = CONNECT_FAILED
-            CLog.e(tag, "Retry due to future failure")
+            LLog.e(tag, "Retry due to future failure")
             doRetry()
         }
     }
 
     // ================================================
     private fun initRetryHandler() {
-        CLog.i(tag, "===== initRetryHandler() =====")
+        LLog.i(tag, "===== initRetryHandler() =====")
         if (mRetryThread == null) {
-            CLog.i(tag, "===== init mRetryThread =====")
+            LLog.i(tag, "===== init mRetryThread =====")
             mRetryThread = HandlerThread("retry-thread")
             mRetryThread!!.start()
         }
         if (mRetryHandler == null) {
-            CLog.i(tag, "===== init mRetryHandler =====")
+            LLog.i(tag, "===== init mRetryHandler =====")
             mRetryHandler = Handler(mRetryThread!!.looper)
         }
     }
@@ -213,7 +213,7 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
     private fun doRetry() {
         if (mRetryTimes >= CONNECT_MAX_RETRY_TIMES) {
             defaultChannelHandler?.let {
-                CLog.w(tag, "===== Connect failed - call onConnectionFailed() =====")
+                LLog.w(tag, "===== Connect failed - call onConnectionFailed() =====")
                 mRetryTimes = 0
                 connectionListener?.onConnectionFailed(this)
             }
@@ -222,7 +222,7 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
 
 //        val retryDelay = 1000L * (1 shl mRetryTimes++)
         val retryDelay = 5000L;mRetryTimes++
-        CLog.e(tag, "===== doRetry($mRetryTimes) in ${retryDelay}ms =====")
+        LLog.e(tag, "===== doRetry($mRetryTimes) in ${retryDelay}ms =====")
 
         mRetryHandler!!.postDelayed({ reconnect() }, retryDelay)
     }
@@ -231,12 +231,12 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
 
     private fun isValidExecuteCommandEnv(): Boolean {
         if (CONNECTED != connectState) {
-            CLog.e(tag, "Socket is not connected. Can not send command.")
+            LLog.e(tag, "Socket is not connected. Can not send command.")
             ToastUtil.showDebugToast("Socket is not connected. Can not send command.")
             return false
         }
         if (mChannel == null) {
-            CLog.e(tag, "Can not execute cmd because of Channel is null.")
+            LLog.e(tag, "Can not execute cmd because of Channel is null.")
             ToastUtil.showDebugToast("Channel is null. Can not send command.")
             return false
         }
@@ -245,16 +245,16 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
 
     private fun executeCommandInString(cmd: String?, showLog: Boolean) {
         if (!isValidExecuteCommandEnv()) {
-            CLog.e(tag, "Not invalid execute command evn!")
+            LLog.e(tag, "Not invalid execute command evn!")
             return
         }
         if (cmd.isNullOrBlank()) {
-            CLog.w(tag, "Can not execute blank string command.")
+            LLog.w(tag, "Can not execute blank string command.")
             ToastUtil.showDebugErrorToast("Empty string command")
             return
         }
         if (showLog) {
-            CLog.i(tag, "exeCmd s[${cmd.length}]=$cmd")
+            LLog.i(tag, "exeCmd s[${cmd.length}]=$cmd")
         }
         mChannel!!.writeAndFlush(cmd + "\n")
     }
@@ -264,12 +264,12 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
             return
         }
         if (bytes == null || bytes.isEmpty()) {
-            CLog.w(tag, "Can not execute blank binary command.")
+            LLog.w(tag, "Can not execute blank binary command.")
             ToastUtil.showDebugErrorToast("Command bytes is empty. Can not send command.")
             return
         }
         if (showLog) {
-            CLog.i(tag, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
+            LLog.i(tag, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
         }
         mChannel!!.writeAndFlush(Unpooled.wrappedBuffer(bytes))
     }

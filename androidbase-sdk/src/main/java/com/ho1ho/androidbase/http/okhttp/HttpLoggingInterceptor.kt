@@ -1,7 +1,7 @@
 package com.ho1ho.androidbase.http.okhttp
 
 
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol
@@ -88,7 +88,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
              */
             val DEFAULT: Logger = object : Logger {
                 override fun log(message: String?) {
-                    CLog.w(TAG, message)
+                    LLog.w(TAG, message)
                 }
             }
         }

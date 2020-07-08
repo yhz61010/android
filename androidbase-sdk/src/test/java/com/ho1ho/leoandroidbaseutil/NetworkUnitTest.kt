@@ -14,7 +14,7 @@ import org.powermock.modules.junit4.PowerMockRunner
 
 @RunWith(PowerMockRunner::class)
 @PrepareForTest(Log::class)
-class AndroidBaseSdkUnitTest {
+class NetworkUnitTest {
     @Test
     fun getIpsByName() {
         var ips = InternetUtil.getIpsByName("ho1ho.com").toTypedArray()

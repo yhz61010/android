@@ -6,7 +6,7 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.PcmToWavUtil
 import com.ho1ho.audiorecord.aac.AudioEncoder
 import com.ho1ho.audiorecord.bean.PcmBean
@@ -61,7 +61,7 @@ class MicRecord(
     ) {
         val bufferSizeInBytes = max(BUFFER_SIZE_FACTOR * recordBufferSize, 0)
         this.recordBufferSize = bufferSizeInBytes
-        CLog.i(
+        LLog.i(
             TAG, """createAudioRecord
                     sampleRate=$sampleRate
                     channelConfig=$channelConfig
@@ -85,19 +85,19 @@ class MicRecord(
     private fun initAdvancedFeatures() {
         if (AcousticEchoCanceler.isAvailable()) {
             AcousticEchoCanceler.create(audioRecord.audioSessionId)?.let {
-                CLog.w(TAG, "Enable AcousticEchoCanceler")
+                LLog.w(TAG, "Enable AcousticEchoCanceler")
                 it.enabled = true
             }
         }
         if (AutomaticGainControl.isAvailable()) {
             AutomaticGainControl.create(audioRecord.audioSessionId)?.let {
-                CLog.w(TAG, "Enable AutomaticGainControl")
+                LLog.w(TAG, "Enable AutomaticGainControl")
                 it.enabled = true
             }
         }
         if (NoiseSuppressor.isAvailable()) {
             NoiseSuppressor.create(audioRecord.audioSessionId)?.let {
-                CLog.w(TAG, "Enable NoiseSuppressor")
+                LLog.w(TAG, "Enable NoiseSuppressor")
                 it.enabled = true
             }
         }
@@ -105,12 +105,12 @@ class MicRecord(
 
     fun stop() {
         try {
-            CLog.i(TAG, "stop()")
+            LLog.i(TAG, "stop()")
             isRecording = false
             try {
                 audioRecord.stop()
             } catch (e: Exception) {
-                CLog.e(TAG, e)
+                LLog.e(TAG, e)
             }
             if (BuildConfig.DEBUG) {
                 pcmOs!!.flush()
@@ -120,19 +120,19 @@ class MicRecord(
             mAacEncoder.stop()
             mPcmQueue.clear()
         } catch (e: Exception) {
-            CLog.e(TAG, "stop error", e)
+            LLog.e(TAG, "stop error", e)
         }
     }
 
     fun release() {
         try {
-            CLog.i(TAG, "release()")
+            LLog.i(TAG, "release()")
             stop()
             audioRecord.release()
             mAacEncoder.release()
             mThreadPool?.shutdownNow()
         } catch (e: Exception) {
-            CLog.e(TAG, "release error", e)
+            LLog.e(TAG, "release error", e)
         }
     }
 
@@ -148,7 +148,7 @@ class MicRecord(
                     val folder = File(outputFolder)
                     if (!folder.exists()) {
                         val mkdirStatus = folder.mkdirs()
-                        CLog.i(TAG, "mkdir [$outputFolder] $mkdirStatus")
+                        LLog.i(TAG, "mkdir [$outputFolder] $mkdirStatus")
                     }
                     pcmFile = File(outputFolder, "original.pcm")
                     wavFile = File(outputFolder, "original.wav")
@@ -163,7 +163,7 @@ class MicRecord(
                     rst = SystemClock.elapsedRealtime()
                     readPcmSize = audioRecord.read(pcmData, 0, pcmData.size)
                     red = SystemClock.elapsedRealtime()
-                    CLog.d(TAG, "AudioRecord.cost=${red - rst} ReadSize=${readPcmSize * 2} PCM-16bit[${pcmData.size}]")
+                    LLog.d(TAG, "AudioRecord.cost=${red - rst} ReadSize=${readPcmSize * 2} PCM-16bit[${pcmData.size}]")
                     mPcmQueue.offer(PcmBean(pcmData, readPcmSize))
 
 //                    val oriPcmDataInBytes = ByteArray(readPcmSize * 2)
@@ -174,7 +174,7 @@ class MicRecord(
 //                    pcmOs!!.write(oriPcmDataInBytes)
                 }
             } catch (e: Exception) {
-                CLog.e(TAG, e)
+                LLog.e(TAG, e)
             }
         }
     }
@@ -190,7 +190,7 @@ class MicRecord(
                     }
                     val pcmBean = mPcmQueue.poll()
                     if (pcmBean == null) {
-                        CLog.e(TAG, "pcmBean is queue is null.")
+                        LLog.e(TAG, "pcmBean is queue is null.")
                         continue
                     }
                     val oriPcmData = pcmBean.pcm
@@ -205,7 +205,7 @@ class MicRecord(
                         pcmOs!!.write(oriPcmDataInBytes)
                     }
                     recCallback!!.onCallback(oriPcmDataInBytes)
-                    CLog.d(TAG, "Encode while-End cost=${SystemClock.elapsedRealtime() - est}")
+                    LLog.d(TAG, "Encode while-End cost=${SystemClock.elapsedRealtime() - est}")
                 } // end while
                 if (BuildConfig.DEBUG) {
                     pcmOs!!.flush()
@@ -213,7 +213,7 @@ class MicRecord(
                     PcmToWavUtil.pcmToWav(pcmFile!!, wavFile!!, channelCount, sampleRate, if (audioFormat == 2) 16 else 8)
                 }
             } catch (e: Exception) {
-                CLog.e(TAG, "Encode AAC error.", e)
+                LLog.e(TAG, "Encode AAC error.", e)
             }
         }
     }

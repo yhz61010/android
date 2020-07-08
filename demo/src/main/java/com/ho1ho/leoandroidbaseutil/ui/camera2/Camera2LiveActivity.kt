@@ -1,24 +1,28 @@
 package com.ho1ho.leoandroidbaseutil.ui.camera2
 
+import android.app.Activity
+import android.content.Intent
 import android.media.MediaFormat
 import android.os.Bundle
+import android.os.Environment
 import android.view.WindowManager
 import android.widget.Toast
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.BackPressedListener
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.leoandroidbaseutil.ui.camera2.record.Camera2RecordFragment
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
+import java.io.File
+import java.io.FileOutputStream
 
 class Camera2LiveActivity : BaseDemonstrationActivity() {
-    private val cameraViewFragment = Camera2RecordFragment()
+    private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppUtil.hideNavigationBar(this)
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -37,19 +41,52 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             }
         }
 
-        AndPermission.with(this)
-            .runtime()
-            .permission(Permission.CAMERA)
-            .onGranted {
-                Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-            }
-            .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
-            .start()
+        if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
+            addFragment()
+        } else {
+            AndPermission.with(this)
+                .runtime()
+                .permission(Permission.CAMERA)
+                .onGranted {
+                    Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
+                    addFragment()
+                }
+                .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
+                .start()
+        }
+    }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
+            CLog.i(TAG, "OPEN_GALLERY onActivityResult")
+//            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
+            // The following code is just for demo. The exception is not considered.
+            data?.data?.let {
+                // In Android 10+, I really do not know how to get the file real path.
+                // According to the post [https://stackoverflow.com/a/2790688],
+                // there is no need for us to know the real path. I just need to get the InputStream directly. That's enough.
+                // Set uri for ImageView
+//                ImageView(this).setImageURI(uri)
+                // Or get file input stream.
+                val inputStream = contentResolver.openInputStream(it)!!
+                val outputStream = FileOutputStream(File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg"))
+                inputStream.copyTo(outputStream)
+                CLog.e(TAG, "File output")
+            }
+        }
+    }
+
+    private fun addFragment() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.cameraFragment, cameraViewFragment, "cameraview")
             .addToBackStack(null)
             .commitAllowingStateLoss()
+    }
+
+    override fun onResume() {
+        AppUtil.hideNavigationBar(this)
+        super.onResume()
     }
 
     override fun onDestroy() {

@@ -4,8 +4,8 @@ import android.media.*
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
-import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.JsonUtil.toHexadecimalString
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.audiorecord.BuildConfig
 import com.ho1ho.audiorecord.aac.AudioEncoder.Companion.computePresentationTimeUs
 import com.webrtc.audioprocessing.AudioProcessing
@@ -58,7 +58,7 @@ class AudioDecoder @JvmOverloads constructor(
         initAudioDecoder(sampleRate, channelCount, csd0)
         // AudioManager.STREAM_VOICE_CALL
         // AudioManager.STREAM_MUSIC
-        CLog.i(
+        LLog.i(
             TAG,
             """AacDecoder 
                 sampleRate=$sampleRate
@@ -117,10 +117,10 @@ class AudioDecoder @JvmOverloads constructor(
             if (mAacOs != null) {
                 mAacOs!!.write(audioData)
             } else {
-                CLog.d(TAG, "mAacOs is null")
+                LLog.d(TAG, "mAacOs is null")
             }
         } catch (e: Exception) {
-            CLog.e(TAG, "You can ignore this message safely. writeDataToDisk error")
+            LLog.e(TAG, "You can ignore this message safely. writeDataToDisk error")
         }
     }
 
@@ -132,11 +132,11 @@ class AudioDecoder @JvmOverloads constructor(
             return
         }
         try {
-            CLog.d(TAG, "END-OF-AUDIO stop stream.")
+            LLog.d(TAG, "END-OF-AUDIO stop stream.")
             mAacOs!!.flush()
             mAacOs!!.close()
         } catch (e: Exception) {
-            CLog.d(TAG, "closeOutputStream error", e)
+            LLog.d(TAG, "closeOutputStream error", e)
         }
     }
 
@@ -144,13 +144,13 @@ class AudioDecoder @JvmOverloads constructor(
      * DEBUG ONLY
      */
     fun initOutputStream() {
-        CLog.w(TAG, "START-AUDIO init stream.")
+        LLog.w(TAG, "START-AUDIO init stream.")
         val outputFolder: String = "/sdcard" + File.separator + "leo-audio"
         val folder = File(outputFolder)
         if (!folder.exists()) {
             val succ = folder.mkdirs()
             if (!succ) {
-                CLog.e(TAG, "Can not create output file=$outputFolder")
+                LLog.e(TAG, "Can not create output file=$outputFolder")
             }
         }
         val aacFile =
@@ -159,7 +159,7 @@ class AudioDecoder @JvmOverloads constructor(
         try {
             mAacOs = BufferedOutputStream(FileOutputStream(aacFilename), 64 * 1024)
         } catch (e: Exception) {
-            CLog.e(TAG, "initOutputStream error.", e)
+            LLog.e(TAG, "initOutputStream error.", e)
         }
     }
 
@@ -174,9 +174,9 @@ class AudioDecoder @JvmOverloads constructor(
 //        mAudioManager =
 //            CustomApplication.getInstance().getSystemService(Context.AUDIO_SERVICE)
 //        //        mCurrentStreamType = streamType;
-        CLog.w(TAG, "stream=$streamType")
+        LLog.w(TAG, "stream=$streamType")
         if (audioTrack != null) {
-            CLog.e(TAG, "mAudioTrack is not null")
+            LLog.e(TAG, "mAudioTrack is not null")
             return
         }
         try {
@@ -198,7 +198,7 @@ class AudioDecoder @JvmOverloads constructor(
                 audioTrack!!.play()
             }
         } catch (e: Exception) {
-            CLog.e(TAG, "initAudioTrack error", e)
+            LLog.e(TAG, "initAudioTrack error", e)
         }
     }
 
@@ -252,10 +252,10 @@ class AudioDecoder @JvmOverloads constructor(
             mediaFormat.setByteBuffer("csd-0", csd_0)
             audioDecoder!!.configure(mediaFormat, null, null, 0)
         } catch (e: IOException) {
-            CLog.e(TAG, "initAudioDecoder error.", e)
+            LLog.e(TAG, "initAudioDecoder error.", e)
         }
         if (audioDecoder == null) {
-            CLog.e(TAG, "mAudioDecoder is null")
+            LLog.e(TAG, "mAudioDecoder is null")
             return
         }
         // Start MediaCodec. Waiting to receive data.
@@ -272,7 +272,7 @@ class AudioDecoder @JvmOverloads constructor(
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
             val inputIndex = audioDecoder!!.dequeueInputBuffer(-1)
             if (BuildConfig.DEBUG) {
-                CLog.d(TAG, "inputIndex=$inputIndex")
+                LLog.d(TAG, "inputIndex=$inputIndex")
             }
             if (inputIndex < 0) {
                 return
@@ -298,7 +298,7 @@ class AudioDecoder @JvmOverloads constructor(
             // Start decoding and get output index
             var outputIndex = audioDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
             if (BuildConfig.DEBUG) {
-                CLog.d(TAG, "outputIndex=$outputIndex")
+                LLog.d(TAG, "outputIndex=$outputIndex")
             }
             var chunkPCM: ByteArray
             // Get decoded data in bytes
@@ -308,14 +308,14 @@ class AudioDecoder @JvmOverloads constructor(
                 if (outputBuffer != null) {
                     outputBuffer[chunkPCM]
                 } else {
-                    CLog.e(TAG, "outputBuffer is null")
+                    LLog.e(TAG, "outputBuffer is null")
                 }
                 // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
                 if (chunkPCM.size > 0) {
                     val finalChunkPCM = chunkPCM
                     mAudioPlayHandler!!.post {
                         if (BuildConfig.DEBUG) {
-                            CLog.d(TAG, "PCM data[${finalChunkPCM.size}]")
+                            LLog.d(TAG, "PCM data[${finalChunkPCM.size}]")
                         }
                         if (audioTrack == null || AudioTrack.STATE_UNINITIALIZED == audioTrack!!.state) {
                             return@post
@@ -347,7 +347,7 @@ class AudioDecoder @JvmOverloads constructor(
 //                                }
                                 apmEd = SystemClock.elapsedRealtimeNanos()
                                 if (BuildConfig.DEBUG) {
-                                    CLog.d(TAG, "Play APM[${playPartData.size * 2}] cost=${(apmEd - apmSt) / 1000}us")
+                                    LLog.d(TAG, "Play APM[${playPartData.size * 2}] cost=${(apmEd - apmSt) / 1000}us")
                                 }
 
                                 // Play decoded audio data in PCM
@@ -390,10 +390,10 @@ class AudioDecoder @JvmOverloads constructor(
             }
         } catch (e: Exception) {
 //            e.printStackTrace();
-            CLog.e(TAG, "You can ignore this message safely. decodeAndPlay error")
+            LLog.e(TAG, "You can ignore this message safely. decodeAndPlay error")
         } finally {
             val ed = SystemClock.elapsedRealtime()
-            CLog.d(TAG, "Cost=${ed - st}")
+            LLog.d(TAG, "Cost=${ed - st}")
         }
     }
 
@@ -414,20 +414,20 @@ class AudioDecoder @JvmOverloads constructor(
         }
 
     private fun purgeAudioPlayThread() {
-        CLog.i(TAG, "purgeAudioPlayThread()")
+        LLog.i(TAG, "purgeAudioPlayThread()")
         if (mAudioPlayHandler != null) {
-            CLog.i(TAG, "mAudioPlayHandler removeCallbacks")
+            LLog.i(TAG, "mAudioPlayHandler removeCallbacks")
             mAudioPlayHandler!!.removeCallbacksAndMessages(null)
         }
         if (mAudioPlayThread != null) {
-            CLog.i(TAG, "mAudioPlayThread.quitSafely()")
+            LLog.i(TAG, "mAudioPlayThread.quitSafely()")
             mAudioPlayThread!!.quitSafely()
         }
     }
 
     @Synchronized
     fun flush(): Long {
-        CLog.i(TAG, "flush()")
+        LLog.i(TAG, "flush()")
         val st = SystemClock.elapsedRealtime()
         if (audioTrack != null /* && STATE_UNINITIALIZED != mAudioTrack.getState()*/) {
             audioTrack!!.pause()
@@ -435,7 +435,7 @@ class AudioDecoder @JvmOverloads constructor(
             audioTrack!!.release()
             audioTrack = null
         }
-        CLog.w(TAG, "flush")
+        LLog.w(TAG, "flush")
         initAudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig, audioFormat, trackBufferSize)
         if (audioDecoder != null) {
             audioDecoder!!.flush()
@@ -448,7 +448,7 @@ class AudioDecoder @JvmOverloads constructor(
 //                closeOutputStream();
 //            }
         val cost = SystemClock.elapsedRealtime() - st
-        CLog.d(TAG, "flush cost=$cost")
+        LLog.d(TAG, "flush cost=$cost")
         return cost
     }
 
@@ -510,10 +510,10 @@ class AudioDecoder @JvmOverloads constructor(
         }
 
     fun playAudioInSpeaker() {
-        CLog.w(TAG, "3 playAudioInSpeaker")
+        LLog.w(TAG, "3 playAudioInSpeaker")
 
         // AudioManager.STREAM_VOICE_CALL // AudioManager.STREAM_MUSIC
-        CLog.w(TAG, "4 set audioOutputSource=STREAM_MUSIC")
+        LLog.w(TAG, "4 set audioOutputSource=STREAM_MUSIC")
         flush()
         setOutputSourceInAudioManagerForSpeaker()
     }
@@ -526,11 +526,11 @@ class AudioDecoder @JvmOverloads constructor(
     }
 
     fun playAudioInEarphone() {
-        CLog.w(TAG, "3 playAudioInEarphone")
+        LLog.w(TAG, "3 playAudioInEarphone")
 
         // AudioManager.STREAM_VOICE_CALL // AudioManager.STREAM_MUSIC
 //        CustomApplication.getInstance().audioOutputSource = AudioManager.STREAM_VOICE_CALL
-        CLog.w(TAG, "6 set audioOutputSource=STREAM_VOICE_CALL")
+        LLog.w(TAG, "6 set audioOutputSource=STREAM_VOICE_CALL")
         flush()
         setOutputSourceInAudioManagerForEarphone()
     }

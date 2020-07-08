@@ -1,7 +1,6 @@
-package com.ho1ho.androidbase.utils
+package com.ho1ho.log_sdk
 
 import android.content.Context
-import com.ho1ho.androidbase.utils.file.FileUtil
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
 import java.io.File
@@ -12,15 +11,29 @@ import java.io.File
  */
 object CLog {
     private const val DEBUG_MODE = true
-    private const val BASE_TAG = "LEO-Demo-"
+    private const val BASE_TAG = "LEO-"
 
     init {
         System.loadLibrary("c++_shared")
         System.loadLibrary("marsxlog")
     }
 
+    private fun getLogDir(ctx: Context, baseFolderName: String): File {
+        val builder = getBaseDirString(ctx, baseFolderName) + File.separator + "log"
+        val dir = File(builder)
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+    @Suppress("WeakerAccess")
+    private fun getBaseDirString(ctx: Context, baseFolderName: String): String {
+        return ctx.getExternalFilesDir(null)?.let {
+            it.absolutePath + File.separator + baseFolderName
+        } ?: ""
+    }
+
     fun init(context: Context) {
-        val logDir = FileUtil.getLogDir(context, "xlog")
+        val logDir = getLogDir(context, "xlog")
         Xlog.appenderOpen(
             if (DEBUG_MODE) Xlog.LEVEL_DEBUG else Xlog.LEVEL_INFO,
             Xlog.AppednerModeAsync,

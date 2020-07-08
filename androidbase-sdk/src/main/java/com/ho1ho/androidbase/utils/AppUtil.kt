@@ -180,7 +180,7 @@ object AppUtil {
             metaData = ""
             return metaData
         } finally {
-            CLog.d(TAG, "metaData=$metaData")
+            LLog.d(TAG, "metaData=$metaData")
         }
         return metaData
     }
@@ -189,7 +189,7 @@ object AppUtil {
     @Suppress("unused")
     fun installApk(ctx: Context, file: File) {
         try {
-            CLog.i(TAG, "installApk uri: $file")
+            LLog.i(TAG, "installApk uri: $file")
             val intent = Intent(Intent.ACTION_VIEW)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val downloadedApkUri = FileUtil.getFileUri(ctx, file)
@@ -202,14 +202,14 @@ object AppUtil {
             }
             ctx.startActivity(intent)
         } catch (e: Exception) {
-            CLog.e(TAG, "installApk error", e)
+            LLog.e(TAG, "installApk error", e)
         }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Suppress("unused")
     fun exitApp(ctx: Context) {
-        CLog.w(TAG, "=====> exitApp() <=====")
+        LLog.w(TAG, "=====> exitApp() <=====")
         try {
             val activityManager = ctx.applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val appTaskList = activityManager.appTasks
@@ -218,7 +218,7 @@ object AppUtil {
             }
             exitProcess(0)
         } catch (e: Exception) {
-            CLog.e(TAG, "exitApp error.", e)
+            LLog.e(TAG, "exitApp error.", e)
         }
     }
 

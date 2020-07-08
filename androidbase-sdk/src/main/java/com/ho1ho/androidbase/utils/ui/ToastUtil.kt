@@ -27,142 +27,70 @@ object ToastUtil {
 
     // ============================================
     fun showNormalToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_SHORT,
-            isFailed = false,
-            defaultToast = true
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
     }
 
     fun showNormalToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_SHORT,
-            isFailed = false,
-            defaultToast = true
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
     }
 
     fun showNormalLongToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_LONG,
-            isFailed = false,
-            defaultToast = true
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
     }
 
     fun showNormalLongToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_LONG,
-            isFailed = false,
-            defaultToast = true
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
     }
     // ============================================
 
     fun showToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_SHORT,
-            false
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, false)
     }
 
     fun showToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_SHORT,
-            false
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, false)
     }
 
     fun showLongToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_LONG,
-            false
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, false)
     }
 
     fun showLongToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_LONG,
-            false
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, false)
     }
 
     // ============================================
     fun showErrorToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_SHORT,
-            true
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, true)
     }
 
     fun showErrorToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_SHORT,
-            true
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, true)
     }
 
     fun showErrorLongToast(@StringRes resId: Int) {
-        showToast(
-            mApplicationCtx,
-            mApplicationCtx.getString(resId),
-            Toast.LENGTH_LONG,
-            true
-        )
+        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, true)
     }
 
     fun showErrorLongToast(message: String?) {
-        showToast(
-            mApplicationCtx,
-            message,
-            Toast.LENGTH_LONG,
-            true
-        )
+        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, true)
     }
 
     // ============================================
     fun showDebugToast(message: String?) {
-        if (BuildConfig.DEBUG) {
-            showToast("DEBUG: $message")
-        }
+        if (BuildConfig.DEBUG) showToast("DEBUG: $message")
     }
 
     fun showDebugLongToast(message: String?) {
-        if (BuildConfig.DEBUG) {
-            showLongToast("DEBUG: $message")
-        }
+        if (BuildConfig.DEBUG) showLongToast("DEBUG: $message")
     }
 
     fun showDebugErrorToast(message: String?) {
-        if (BuildConfig.DEBUG) {
-            showErrorToast("DEBUG: $message")
-        }
+        if (BuildConfig.DEBUG) showErrorToast("DEBUG: $message")
     }
 
     fun showDebugErrorLongToast(message: String?) {
-        if (BuildConfig.DEBUG) {
-            showErrorLongToast("DEBUG: $message")
-        }
+        if (BuildConfig.DEBUG) showErrorLongToast("DEBUG: $message")
     }
 
     // ============================================

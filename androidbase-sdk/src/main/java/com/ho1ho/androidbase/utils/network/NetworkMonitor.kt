@@ -5,7 +5,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 import com.ho1ho.androidbase.exts.humanReadableByteCount
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import java.util.concurrent.TimeUnit
 
 /**
@@ -33,7 +33,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
      * The data will be sent in every *freq* second(s)
      */
     fun startMonitor(freq: Int = 1) {
-        CLog.i(TAG, "startMonitor()")
+        LLog.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq
         this.freq = interval
         trafficStat = TrafficStatHelper.getInstance(ctx, monitorHandler!!)
@@ -42,7 +42,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
     }
 
     fun stopMonitor() {
-        CLog.i(TAG, "stopMonitor()")
+        LLog.i(TAG, "stopMonitor()")
         releaseMonitorThread()
     }
 
@@ -64,23 +64,23 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                 val ping = NetworkUtil.getLatency(ctx, ip, 1).toInt()
                 val networkStats: IntArray? = NetworkUtil.getWifiNetworkStats(ctx)
                 if (networkStats == null) {
-                    CLog.i(TAG, "P:$ping")
+                    LLog.i(TAG, "P:$ping")
                 } else {
                     val strengthIn5Score = networkStats[3]
                     // Ping Link Rssi
-                    CLog.i(
+                    LLog.i(
                         TAG,
                         "P:$ping\tL:${networkStats[0]}Mbps\tR:${networkStats[1]} ${networkStats[2]} $strengthIn5Score/100"
                     )
                     if (strengthIn5Score != Int.MIN_VALUE) {
                         if (strengthIn5Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD && strengthCountdown < 1) {
-                            CLog.w(
+                            LLog.w(
                                 TAG,
                                 "Strength: [${networkStats[1]}][${networkStats[2]}][$strengthIn5Score/100] Very bad"
                             )
                             strengthCountdown = MAX_COUNT
                         } else if (strengthIn5Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD && strengthCountdown < 1) {
-                            CLog.w(TAG, "Strength: [${networkStats[1]}][${networkStats[2]}][$strengthIn5Score/100] Bad")
+                            LLog.w(TAG, "Strength: [${networkStats[1]}][${networkStats[2]}][$strengthIn5Score/100] Bad")
                             strengthCountdown = MAX_COUNT
                         }
                     }
@@ -88,14 +88,14 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                 // Sometimes, the ping value will be extremely high(like, 319041664, 385195024). For this abnormal case, we just ignore it.
                 if (ping < 60000) {
                     if (ping > NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH && pingCountdown < 1) {
-                        CLog.w(TAG, "P:$ping Very High")
+                        LLog.w(TAG, "P:$ping Very High")
                         pingCountdown = MAX_COUNT
                     } else if (ping > NetworkUtil.NETWORK_PING_DELAY_HIGH && pingCountdown < 1) {
-                        CLog.w(TAG, "P:$ping High")
+                        LLog.w(TAG, "P:$ping High")
                         pingCountdown = MAX_COUNT
                     }
                 } else {
-                    CLog.w(TAG, "DO NOT show abnormal ping value [$ping]")
+                    LLog.w(TAG, "DO NOT show abnormal ping value [$ping]")
                 }
                 monitorHandler?.postDelayed(this, TimeUnit.SECONDS.toMillis(freq.toLong()))
             } catch (e: Exception) {
@@ -105,7 +105,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
     }
 
     private fun initMonitorThread() {
-        CLog.i(TAG, "initMonitorThread()")
+        LLog.i(TAG, "initMonitorThread()")
         monitorThread = HandlerThread("monitor-thread")
         monitorThread!!.start()
         monitorHandler = object : Handler(monitorThread!!.looper) {
@@ -114,7 +114,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                     val speedArray = (msg.obj) as Array<*>
                     val downloadSpeed = (speedArray[0] as Long).humanReadableByteCount()
                     val uploadSpeed = (speedArray[1] as Long).humanReadableByteCount()
-                    CLog.i(TAG, "S:$downloadSpeed/$uploadSpeed")
+                    LLog.i(TAG, "S:$downloadSpeed/$uploadSpeed")
                 }
                 super.handleMessage(msg)
             }
@@ -122,7 +122,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
     }
 
     private fun releaseMonitorThread() {
-        CLog.w(TAG, "releaseMonitorThread()")
+        LLog.w(TAG, "releaseMonitorThread()")
         trafficStat?.stopCalculateNetSpeed()
         monitorHandler?.removeCallbacksAndMessages(null)
         monitorHandler = null

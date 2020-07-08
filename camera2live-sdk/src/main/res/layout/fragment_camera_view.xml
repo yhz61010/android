@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
-    tools:context="com.ho1ho.leoandroidbaseutil.ui.camera2.record.CameraViewFragment">
+    tools:context=".view.BaseCamera2Fragment">
 
     <com.ho1ho.camera2live.view.CameraSurfaceView
         android:id="@+id/cameraSurfaceView"
@@ -15,66 +15,115 @@
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:foreground="@android:color/transparent" />
+        android:background="@android:color/transparent" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_height="60dp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/camera_ctl_layer_bg"
         android:orientation="horizontal">
-
-        <ToggleButton
-            android:id="@+id/switchFlashBtn"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/toggle_selector"
-            android:textOff=""
-            android:textOn="" />
 
         <ImageView
             android:id="@+id/ivBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
             android:layout_centerVertical="true"
             android:src="@drawable/back_btn_normal" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginHorizontal="16dp"
-        android:orientation="horizontal">
 
         <ToggleButton
             android:id="@+id/switchFacing"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_alignParentLeft="true"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
+            android:layout_toRightOf="@id/ivBack"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="32dp"
             android:background="@drawable/toggle_facing_selector"
+            android:layout_marginLeft="@dimen/camera_top_control_margin"
             android:textOff=""
             android:textOn="" />
 
+        <ToggleButton
+            android:id="@+id/switchFlashBtn"
+            android:layout_width="@dimen/camera_top_control_size"
+            android:layout_height="@dimen/camera_top_control_size"
+            android:layout_toRightOf="@id/switchFacing"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/camera_top_control_margin"
+            android:background="@drawable/toggle_flash_selector"
+            android:textOff=""
+            android:textOn="" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/llCtlLayer"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/camera_ctl_layer_bg"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/ivAlbum"
+            android:layout_width="@dimen/camera_secondary_ctl_size"
+            android:layout_height="@dimen/camera_secondary_ctl_size"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/camera_bottom_ctl_horizontal_margin"
+            android:background="@drawable/ic_photo_album" />
+
         <ImageView
             android:id="@+id/ivShot"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="@dimen/camera_shutter_size"
+            android:layout_height="@dimen/camera_shutter_size"
             android:layout_centerInParent="true"
             android:background="@drawable/ic_shutter" />
 
         <ImageView
+            android:id="@+id/ivRecordStop"
+            android:layout_width="@dimen/camera_shutter_size"
+            android:layout_height="@dimen/camera_shutter_size"
+            android:layout_centerInParent="true"
+            tools:visibility="visible"
+            android:visibility="gone"
+            android:background="@drawable/ic_shutter_stop" />
+
+        <ImageView
             android:id="@+id/ivShotRecord"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_marginRight="32dp"
+            android:layout_width="@dimen/camera_secondary_ctl_size"
+            android:layout_height="@dimen/camera_secondary_ctl_size"
+            android:layout_marginRight="@dimen/camera_bottom_ctl_horizontal_margin"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:background="@drawable/ic_shutter_record" />
     </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/llRecordTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/llCtlLayer"
+        android:gravity="center_vertical"
+        android:paddingRight="20dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/vRedDot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/red_dot_blink_anim" />
+
+        <TextView
+            android:id="@+id/txtRecordTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="00:00:10"
+            android:textColor="@android:color/white"
+            android:textSize="16dp" />
+    </LinearLayout>
 
 </RelativeLayout>

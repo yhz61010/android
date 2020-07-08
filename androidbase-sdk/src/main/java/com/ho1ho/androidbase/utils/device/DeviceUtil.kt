@@ -9,6 +9,8 @@ import android.telephony.TelephonyManager
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.ho1ho.androidbase.utils.CLog
+import com.uusafe.android.cleanprocess.utils.ShellUtil
+import java.io.File
 import java.util.*
 
 /**
@@ -190,10 +192,36 @@ object DeviceUtil {
     val product = Build.PRODUCT
     val display = Build.DISPLAY
     val others = ""
+    val cpuName = Build.HARDWARE
+    val cpuQualifiedName =
+        runCatching {
+            ShellUtil.execCmd("cat /proc/cpuinfo | grep -i hardware", false).successMsg.replaceFirst(
+                Regex("hardware[\\s\\t]*:", RegexOption.IGNORE_CASE),
+                ""
+            )
+        }.getOrDefault(
+            ""
+        )
+    val supportedCpuArchs: Array<String> = Build.SUPPORTED_ABIS
+
+    val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
+        file?.name?.matches(Regex("cpu[0-9]+")) ?: false
+    }?.size ?: 0
+
+    val cpuMinFreq = runCatching {
+        File("/sys/devices/system/cpu/").listFiles { file: File? ->
+            file?.name?.matches(Regex("cpu[0-9]+")) ?: false
+        }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_min_freq", false).successMsg.toInt() }?.max() ?: -1
+    }.getOrDefault(-2)
+    val cpuMaxFreq = runCatching {
+        File("/sys/devices/system/cpu/").listFiles { file: File? ->
+            file?.name?.matches(Regex("cpu[0-9]+")) ?: false
+        }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.max() ?: -1
+    }.getOrDefault(-2)
 
     fun getDeviceInfo(ctx: Context): String {
         val memInfo = getMemInfoInMegs(ctx)
-        val size = getResolutionWithVirtualKey(ctx)
+        val screenSize = getResolutionWithVirtualKey(ctx)
         return """
             Device basic information:
             Manufacturer: $manufacturer
@@ -202,7 +230,9 @@ object DeviceUtil {
             DeviceName: $deviceName
             Model: $model
             Product: $product
-            Display: $display(${size.x}x${size.y}-${getDensity(ctx)})
+            Cpu: $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            Supported ABIS: ${supportedCpuArchs.contentToString()}
+            Display: $display(${screenSize.x}x${screenSize.y}-${getDensity(ctx)})
             MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
             """.trimIndent()
     }

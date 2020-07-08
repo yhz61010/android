@@ -13,26 +13,28 @@ fun Byte.toBytes(): ByteArray = byteArrayOf(this)
  */
 fun Int.asByteAndForceToBytes(): ByteArray = this.toByte().toBytes()
 
-fun ByteArray.toShort(index: Int = 0): Short = (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
-fun ByteArray.toShortLE(index: Int = 0): Short = (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
+fun ByteArray.readByte(index: Int = 0): Byte = (this[index + 1].toInt() and 0xFF).toByte()
 
-fun ByteArray.toInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or (
+fun ByteArray.readShort(index: Int = 0): Short = (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
+fun ByteArray.readShortLE(index: Int = 0): Short = (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
+
+fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or (
         this[2 + index].toInt() and 0xFF shl 8) or (
         this[1 + index].toInt() and 0xFF shl 16) or (
         this[0 + index].toInt() and 0xFF shl 24)
 
-fun ByteArray.toIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or (
+fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or (
         this[index + 1].toInt() and 0xFF shl 8) or (
         this[index + 2].toInt() and 0xFF shl 16) or (
         this[index + 3].toInt() and 0xFF shl 24)
 
-fun ByteArray.toLong(): Long {
+fun ByteArray.readLong(): Long {
     var result: Long = 0
     for (i in 7 downTo 0) result = result or this[i].toLong() and 0xFF shl ((7 - i) * 8)
     return result
 }
 
-fun ByteArray.toLongLE(): Long {
+fun ByteArray.readLongLE(): Long {
     var result: Long = 0
     for (i in 7 downTo 0) result = result or this[i].toLong() and 0xFF shl (i * 8)
     return result

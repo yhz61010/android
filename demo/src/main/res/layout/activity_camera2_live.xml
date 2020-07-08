@@ -4,4 +4,5 @@
     android:id="@+id/cameraFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
     tools:context=".ui.camera2.Camera2LiveActivity" />

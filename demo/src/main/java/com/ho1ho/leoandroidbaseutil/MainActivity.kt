@@ -11,7 +11,6 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.leoandroidbaseutil.ui.*
 import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
@@ -28,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        CLog.closeLog()
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)

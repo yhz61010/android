@@ -1,7 +1,6 @@
 package com.ho1ho.leoandroidbaseutil
 
 import androidx.multidex.MultiDexApplication
-import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.ui.ForegroundComponent
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import io.reactivex.plugins.RxJavaPlugins
@@ -16,7 +15,6 @@ class CustomApplication : MultiDexApplication() {
         super.onCreate()
         instance = this
 
-        CLog.init(this)
         ForegroundComponent.init(this, 0L)
 
 //        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE)

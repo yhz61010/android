@@ -7,7 +7,7 @@ import android.content.Intent
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.screenshot.base.*
 
 /**
@@ -75,7 +75,7 @@ object ScreenCapture {
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
 
         fun build(): ScreenProcessor {
-            CLog.i(
+            LLog.i(
                 TAG,
                 "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize"
             )

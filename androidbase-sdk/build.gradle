@@ -24,8 +24,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
@@ -58,6 +58,4 @@ dependencies {
     api 'com.squareup.retrofit2:converter-gson:2.9.0'
     api 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
     api group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
-
-    api 'com.tencent.mars:mars-xlog:1.2.3'
 }

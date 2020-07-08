@@ -1,6 +1,6 @@
 package com.webrtc.audioprocessing
 
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 
 /**
  * Author: Michael Leo
@@ -13,7 +13,7 @@ class AudioProcessing(private val mApmVM: ApmVM) {
             mApmVM.start = false
             mApm.close()
         } catch (e: Exception) {
-            CLog.e(TAG, "onDestroy error", e)
+            LLog.e(TAG, "onDestroy error", e)
         }
     }
 
@@ -46,10 +46,10 @@ class AudioProcessing(private val mApmVM: ApmVM) {
                     }
                 }
             } else {
-                CLog.d(TAG, "processReverseStream length invalid")
+                LLog.d(TAG, "processReverseStream length invalid")
             }
         } catch (ex: Exception) {
-            CLog.e(TAG, "processReverseStream error", ex)
+            LLog.e(TAG, "processReverseStream error", ex)
         }
     }
 
@@ -63,7 +63,7 @@ class AudioProcessing(private val mApmVM: ApmVM) {
     }
 
     init {
-        CLog.i(TAG, mApmVM.toString())
+        LLog.i(TAG, mApmVM.toString())
         try {
             mApm = Apm(
                 mApmVM.aecExtendFilter,
@@ -96,7 +96,7 @@ class AudioProcessing(private val mApmVM: ApmVM) {
             }
             mApmVM.start = true
         } catch (ex: Exception) {
-            CLog.e(TAG, "initApm error", ex)
+            LLog.e(TAG, "initApm error", ex)
         }
     }
 }

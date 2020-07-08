@@ -11,7 +11,7 @@ import android.os.*
 import androidx.core.app.NotificationCompat
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toJsonString
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.H264Util
 import com.ho1ho.androidbase.utils.notification.NotificationUtil
 import com.ho1ho.leoandroidbaseutil.MainActivity
@@ -76,7 +76,7 @@ class MediaProjectionService : Service() {
     }
 
     override fun onCreate() {
-        CLog.i(ITAG, "=====> onCreate <=====")
+        LLog.i(ITAG, "=====> onCreate <=====")
         super.onCreate()
         serviceThread = HandlerThread("service-thread")
         serviceThread.start()
@@ -98,28 +98,28 @@ class MediaProjectionService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        CLog.i(ITAG, "=====> onBind <=====")
+        LLog.i(ITAG, "=====> onBind <=====")
         return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        CLog.i(ITAG, "=====> onStartCommand <=====")
+        LLog.i(ITAG, "=====> onStartCommand <=====")
         return START_STICKY
     }
 
     override fun onRebind(intent: Intent?) {
-        CLog.i(ITAG, "=====> onRebind <=====")
+        LLog.i(ITAG, "=====> onRebind <=====")
         super.onRebind(intent)
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        CLog.w(ITAG, "=====> onUnbind <=====")
+        LLog.w(ITAG, "=====> onUnbind <=====")
         stopScreenShare()
         return false
     }
 
     override fun onDestroy() {
-        CLog.w(ITAG, "=====> onDestroy <=====")
+        LLog.w(ITAG, "=====> onDestroy <=====")
         super.onDestroy()
     }
 
@@ -183,7 +183,7 @@ class MediaProjectionService : Service() {
      * This method must be following `setData()` method
      */
     fun startScreenShare(setting: ScreenShareSetting) {
-        CLog.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
+        LLog.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
         mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
@@ -215,7 +215,7 @@ class MediaProjectionService : Service() {
     }
 
     fun stopScreenShare() {
-        CLog.w(ITAG, "stopScreenShare")
+        LLog.w(ITAG, "stopScreenShare")
         if (outputH264File) {
             try {
                 videoH264Os.flush()
@@ -226,23 +226,23 @@ class MediaProjectionService : Service() {
         }
 
         serviceHandler.post {
-            CLog.w(ITAG, "screenProcessor onStop()")
+            LLog.w(ITAG, "screenProcessor onStop()")
             screenProcessor?.onStop()
         }
     }
 
     fun onReleaseScreenShare() {
-        CLog.w(ITAG, "onReleaseScreenShare()")
+        LLog.w(ITAG, "onReleaseScreenShare()")
         stopScreenShare()
         serviceHandler.post {
-            CLog.w(ITAG, "onReleaseScreenShare onRelease()")
+            LLog.w(ITAG, "onReleaseScreenShare onRelease()")
             screenProcessor?.onRelease()
         }
     }
 
     @Suppress("WeakerAccess")
     fun triggerIFrame() {
-        CLog.w(ITAG, "triggerIFrame()")
+        LLog.w(ITAG, "triggerIFrame()")
         val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h264Encoder
         encoder?.let { H264Util.sendIdrFrameByManual(it) }
     }

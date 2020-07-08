@@ -5,7 +5,7 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -79,16 +79,16 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         mCheckRunnable?.let { mHandler.removeCallbacks(mCheckRunnable!!) }
 
         if (wasBackground) {
-            CLog.i(TAG, "Went FG")
+            LLog.i(TAG, "Went FG")
             mListeners.forEach {
                 try {
                     it.onBecameForeground()
                 } catch (e: Exception) {
-                    CLog.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+                    LLog.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
                 }
             }
         } else {
-            CLog.i(TAG, "Still FG")
+            LLog.i(TAG, "Still FG")
         }
     }
 
@@ -103,16 +103,16 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         mHandler.postDelayed(Runnable {
             if (isForeground && mPaused) {
                 isForeground = false
-                CLog.i(TAG, "Went BG")
+                LLog.i(TAG, "Went BG")
                 mListeners.forEach {
                     try {
                         it.onBecameBackground()
                     } catch (e: Exception) {
-                        CLog.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                        LLog.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
                     }
                 }
             } else {
-                CLog.i(TAG, "Still BG")
+                LLog.i(TAG, "Still BG")
             }
         }.also { mCheckRunnable = it }, becameBackgroundDelay)
     }
@@ -120,9 +120,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {
         try {
-            CLog.i(TAG, "=====> onActivityDestroyed($activity) <=====")
+            LLog.i(TAG, "=====> onActivityDestroyed($activity) <=====")
         } catch (e: Exception) {
-            CLog.e(TAG, "onActivityDestroyed error=${e.message}")
+            LLog.e(TAG, "onActivityDestroyed error=${e.message}")
         }
     }
 

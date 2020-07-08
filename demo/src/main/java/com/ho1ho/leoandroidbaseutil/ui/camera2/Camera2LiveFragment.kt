@@ -9,7 +9,7 @@ import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
@@ -55,7 +55,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     runCatching {
                         camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
-                        CLog.e(TAG, "=====> Finally openCamera error <=====")
+                        LLog.e(TAG, "=====> Finally openCamera error <=====")
                         ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
                     }
                 }
@@ -95,7 +95,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
     }
 
     override suspend fun onRecordButtonClick() {
-        CLog.w(TAG, "onRecordButtonClick")
+        LLog.w(TAG, "onRecordButtonClick")
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
         // BITRATE_MODE_CBR: 85.875kB/s

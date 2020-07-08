@@ -9,7 +9,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import com.ho1ho.androidbase.annotations.NotImplemented
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.YuvUtil
 import java.io.IOException
 
@@ -62,7 +62,7 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
 
         fun build(): ScreenRecordX264Strategy {
             displayIntervalInMs = (1000 / (fps + 1)).toInt()
-            CLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate")
+            LLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate")
             return ScreenRecordX264Strategy(this)
         }
 
@@ -90,7 +90,7 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
             screenRecHandler = Handler(screenRecThread!!.looper)
             imageReader?.setOnImageAvailableListener(mOnImageAvailableListener, screenRecHandler)
         } catch (e: IOException) {
-            CLog.e(TAG, "onStart error", e)
+            LLog.e(TAG, "onStart error", e)
         }
     }
 
@@ -109,7 +109,7 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
         if (image == null || screenRecHandler == null) return@OnImageAvailableListener
         if ((SystemClock.elapsedRealtime() - previousDisplayTime) < builder.displayIntervalInMs) {
             image.close()
-            CLog.d(TAG, "Ignore image due to fps")
+            LLog.d(TAG, "Ignore image due to fps")
             return@OnImageAvailableListener
         }
         previousDisplayTime = SystemClock.elapsedRealtime()
@@ -118,7 +118,7 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
                 val width = image.width
                 val height = image.height
                 image.format
-                CLog.v(TAG, "Image width=$width height=$height")
+                LLog.v(TAG, "Image width=$width height=$height")
 
                 val rgbaBytes = ByteArray(image.planes[0].buffer.remaining())
                 image.planes[0].buffer.get(rgbaBytes)
@@ -126,11 +126,11 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
                 val st = SystemClock.elapsedRealtime()
                 YuvUtil.rgb2YCbCr420(rgbaBytes, yuvBytes, width, height)
                 val ed = SystemClock.elapsedRealtime()
-                CLog.e(TAG, "rgb2YCbCr420 cost=${ed - st} time=$time timespan=$timespan")
+                LLog.e(TAG, "rgb2YCbCr420 cost=${ed - st} time=$time timespan=$timespan")
                 time += timespan
 //                x264!!.encodeData(yuvBytes, yuvBytes.size, time)
             } catch (e: Exception) {
-                CLog.e(TAG, "screenRecHandler error=${e.message}")
+                LLog.e(TAG, "screenRecHandler error=${e.message}")
             } finally {
                 image.close()
             }

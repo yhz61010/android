@@ -1,6 +1,6 @@
 package com.ho1ho.androidbase.exts
 
-import com.ho1ho.androidbase.utils.CLog
+import com.ho1ho.androidbase.utils.LLog
 
 /**
  * Author: Michael Leo
@@ -25,43 +25,43 @@ val Any.ITAG: String
     }
 
 fun Any.verbLog(msg: String) {
-    CLog.v("$ITAG-auto", msg)
+    LLog.v("$ITAG-auto", msg)
 }
 
 fun Any.debugLog(msg: String) {
-    CLog.d("$ITAG-auto", msg)
+    LLog.d("$ITAG-auto", msg)
 }
 
 fun Any.infoLog(msg: String) {
-    CLog.i("$ITAG-auto", msg)
+    LLog.i("$ITAG-auto", msg)
 }
 
 fun Any.warnLog(msg: String) {
-    CLog.w("$ITAG-auto", msg)
+    LLog.w("$ITAG-auto", msg)
 }
 
 fun Any.errorLog(msg: String) {
-    CLog.e("$ITAG-auto", msg)
+    LLog.e("$ITAG-auto", msg)
 }
 
 // ==============================
 
 fun String.vLog() {
-    CLog.v("$ITAG-str", this)
+    LLog.v("$ITAG-str", this)
 }
 
 fun String.dLog() {
-    CLog.d("$ITAG-str", this)
+    LLog.d("$ITAG-str", this)
 }
 
 fun String.iLog() {
-    CLog.i("$ITAG-str", this)
+    LLog.i("$ITAG-str", this)
 }
 
 fun String.wLog() {
-    CLog.w("$ITAG-str", this)
+    LLog.w("$ITAG-str", this)
 }
 
 fun String.fLog() {
-    CLog.e("$ITAG-str", this)
+    LLog.e("$ITAG-str", this)
 }

@@ -4,7 +4,6 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
-import com.ho1ho.androidbase.utils.CLog
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.media.H264Util
@@ -84,7 +83,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 //                CLog.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                        CLog.w(ITAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
+                        LLog.w(ITAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
@@ -102,14 +101,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            CLog.w(ITAG, "onOutputFormatChanged format=$format")
+            LLog.w(ITAG, "onOutputFormatChanged format=$format")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            CLog.e(ITAG, "onError e=${e.message}")
+            LLog.e(ITAG, "onError e=${e.message}")
         }
     }
 
@@ -122,11 +121,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         private var firstData = AtomicBoolean(false)
 
         override fun onOpen(serverHandshake: ServerHandshake) {
-            CLog.d(ITAG, "onOpen")
+            LLog.d(ITAG, "onOpen")
         }
 
         override fun onMessage(s: String) {
-            CLog.d(ITAG, "onMessage: $s")
+            LLog.d(ITAG, "onMessage: $s")
         }
 
         override fun onMessage(bytes: ByteBuffer) {
@@ -135,11 +134,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             LLog.i(ITAG, "onMessage length=${data.size}")
 
             if (!firstData.get()) {
-                CLog.w(ITAG, "first data=${data.contentToString()}")
+                LLog.w(ITAG, "first data=${data.contentToString()}")
                 firstData.set(true)
                 val sps = H264Util.getSps(data)
                 val pps = H264Util.getPps(data)
-                CLog.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
+                LLog.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
                 if (sps != null && pps != null) {
                     initDecoder(sps, pps)
                     return
@@ -153,12 +152,12 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onClose(i: Int, s: String, b: Boolean) {
-            CLog.d(ITAG, "onClose")
+            LLog.d(ITAG, "onClose")
             runOnUiThread { toggleButton.isChecked = false }
         }
 
         override fun onError(e: Exception) {
-            CLog.e(ITAG, "onError")
+            LLog.e(ITAG, "onError")
             e.printStackTrace()
         }
     }

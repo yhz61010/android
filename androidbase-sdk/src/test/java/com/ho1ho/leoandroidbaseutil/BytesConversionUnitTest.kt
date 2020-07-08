@@ -1,9 +1,8 @@
 package com.ho1ho.leoandroidbaseutil
 
-import com.ho1ho.androidbase.exts.asByteAndForceToBytes
-import com.ho1ho.androidbase.exts.toBytes
-import com.ho1ho.androidbase.exts.toBytesLE
+import com.ho1ho.androidbase.exts.*
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BytesConversionUnitTest {
@@ -154,13 +153,44 @@ class BytesConversionUnitTest {
 
     @Test
     fun bytesToNumber() {
-//        println(JsonUtil.toHexadecimalString((1.toLong()).toBytesLE()))
+        assertTrue(0.toByte() == byteArrayOf(0x00).readByte())
+        assertTrue(0.toShort() == byteArrayOf(0x00, 0x00).readShort())
+        assertTrue(0.toShort() == byteArrayOf(0x00, 0x00).readShortLE())
+        assertTrue(0 == byteArrayOf(0x00, 0x00, 0x00, 0x00).readInt())
+        assertTrue(0 == byteArrayOf(0x00, 0x00, 0x00, 0x00).readIntLE())
+        assertTrue(0L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLong())
+        assertTrue(0L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
 
-//        assertTrue(0.toShort() == byteArrayOf(0x00).toShort())
-//        assertTrue(0.toShort() == byteArrayOf(0x00).toShortLE())
-//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00), 0.toBytes())
-//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00), 0.toBytesLE())
-//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), 0L.toBytes())
-//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), 0L.toBytesLE())
+        assertTrue(1.toByte() == byteArrayOf(0x01).readByte())
+        assertTrue(1.toShort() == byteArrayOf(0x00, 0x01).readShort())
+        assertTrue(1.toShort() == byteArrayOf(0x01, 0x00).readShortLE())
+        assertTrue(1 == byteArrayOf(0x00, 0x00, 0x00, 0x01).readInt())
+        assertTrue(1 == byteArrayOf(0x01, 0x00, 0x00, 0x00).readIntLE())
+        assertTrue(1L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01).readLong())
+        assertTrue(1L == byteArrayOf(0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
+
+        assertTrue(127.toByte() == byteArrayOf(0x7F).readByte())
+        assertTrue(127.toShort() == byteArrayOf(0x00, 0x7F).readShort())
+        assertTrue(127.toShort() == byteArrayOf(0x7F, 0x00).readShortLE())
+        assertTrue(127 == byteArrayOf(0x00, 0x00, 0x00, 0x7F).readInt())
+        assertTrue(127 == byteArrayOf(0x7F, 0x00, 0x00, 0x00).readIntLE())
+        assertTrue(127L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7F).readLong())
+        assertTrue(127L == byteArrayOf(0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
+
+        assertTrue(128.toByte() == byteArrayOf(0x80.toByte()).readByte())
+        assertTrue(128.toShort() == byteArrayOf(0x00, 0x80.toByte()).readShort())
+        assertTrue(128.toShort() == byteArrayOf(0x80.toByte(), 0x00).readShortLE())
+        assertTrue(128 == byteArrayOf(0x00, 0x00, 0x00, 0x80.toByte()).readInt())
+        assertTrue(128 == byteArrayOf(0x80.toByte(), 0x00, 0x00, 0x00).readIntLE())
+        assertTrue(128L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80.toByte()).readLong())
+        assertTrue(128L == byteArrayOf(0x80.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
+
+        assertTrue(255.toByte() == byteArrayOf(0xFF.toByte()).readByte())
+        assertTrue(255.toShort() == byteArrayOf(0x00, 0xFF.toByte()).readShort())
+        assertTrue(255.toShort() == byteArrayOf(0xFF.toByte(), 0x00).readShortLE())
+        assertTrue(255 == byteArrayOf(0x00, 0x00, 0x00, 0xFF.toByte()).readInt())
+        assertTrue(255 == byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00).readIntLE())
+        assertTrue(255L == byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF.toByte()).readLong())
+        assertTrue(255L == byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
     }
 }

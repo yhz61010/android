@@ -118,4 +118,14 @@ class BytesConversionUnitTest {
         assertArrayEquals(byteArrayOf(0x49, 0x96.toByte(), 0x02, 0xD2.toByte()), 1234567890.toBytes())
         assertArrayEquals(byteArrayOf(0xD2.toByte(), 0x02, 0x96.toByte(), 0x49), 1234567890.toBytesLE())
     }
+
+    @Test
+    fun bytesToNumber() {
+//        assertTrue(0.toShort() == byteArrayOf(0x00).toShort())
+//        assertTrue(0.toShort() == byteArrayOf(0x00).toShortLE())
+//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00), 0.toBytes())
+//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00), 0.toBytesLE())
+//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), 0L.toBytes())
+//        assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), 0L.toBytesLE())
+    }
 }

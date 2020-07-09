@@ -15,7 +15,6 @@ import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import com.ho1ho.androidbase.utils.animation.AnimationUtil
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.utils.OrientationLiveData
@@ -85,9 +84,9 @@ abstract class BaseCamera2Fragment : Fragment() {
         switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, _: Boolean ->
             val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
             btnView?.isEnabled = false
-            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
+//            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
             camera2Helper.switchCamera()
-            btnView?.postDelayed({ btnView.isEnabled = true }, 100)
+            btnView?.postDelayed({ btnView.isEnabled = true }, 300)
         }
 
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {

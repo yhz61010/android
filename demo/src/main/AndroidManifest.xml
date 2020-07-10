@@ -18,6 +18,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".ui.TakeScreenshotActivity"></activity>
         <activity android:name=".ui.CoroutineActivity" />
         <activity android:name=".ui.AudioActivity" />
         <activity android:name=".ui.sharescreen.client.ScreenShareClientActivity" />

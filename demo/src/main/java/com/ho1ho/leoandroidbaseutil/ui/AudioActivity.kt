@@ -2,11 +2,11 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.media.AudioFormat
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.audiorecord.MicRecord
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 
-class AudioActivity : AppCompatActivity() {
+class AudioActivity : BaseDemonstrationActivity() {
     private lateinit var micRecord: MicRecord
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -3,6 +3,7 @@ package com.ho1ho.androidbase.utils.device
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
+import android.view.Window
 
 /**
  * Author: Michael Leo
@@ -10,19 +11,16 @@ import android.view.View
  */
 object ScreenUtil {
 
-    // window.decorView.rootView for capture the whole screen
+    /**
+     * Using [window.decorView.rootView] to capture the whole screen
+     */
     fun takeScreenshot(view: View): Bitmap? {
-        val bitmap: Bitmap?
-        try {
-            bitmap = Bitmap.createBitmap(
-                view.width,
-                view.height, Bitmap.Config.ARGB_8888
-            )
-        } catch (e: Exception) {
-            return null
+        return runCatching { Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888) }.getOrNull()?.also {
+            view.draw(Canvas(it))
         }
-        val canvas = Canvas(bitmap)
-        view.draw(canvas)
-        return bitmap
+    }
+
+    fun takeScreenshot(win: Window): Bitmap? {
+        return takeScreenshot(win.decorView.rootView)
     }
 }

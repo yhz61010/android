@@ -82,11 +82,17 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
         switchCameraBtn = view.findViewById(R.id.switchFacing)
         switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, _: Boolean ->
-            val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
             btnView?.isEnabled = false
+            ivShot.isEnabled = false
+            ivShotRecord.isEnabled = false
+//            val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
 //            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
             camera2Helper.switchCamera()
-            btnView?.postDelayed({ btnView.isEnabled = true }, 300)
+            btnView?.post {
+                btnView.isEnabled = true
+                ivShot.isEnabled = true
+                ivShotRecord.isEnabled = true
+            }
         }
 
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
@@ -106,12 +112,18 @@ abstract class BaseCamera2Fragment : Fragment() {
         ivShot.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
+            switchCameraBtn.isEnabled = false
+            ivShotRecord.isEnabled = false
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
                 getCapturingImage(camera2Helper.takePhoto())
                 // Re-enable click listener after photo is taken
-                it.post { it.isEnabled = true }
+                it.post {
+                    it.isEnabled = true
+                    switchCameraBtn.isEnabled = true
+                    ivShotRecord.isEnabled = true
+                }
                 Log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
@@ -119,6 +131,8 @@ abstract class BaseCamera2Fragment : Fragment() {
         ivShotRecord.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
+            switchCameraBtn.isEnabled = false
+            ivShot.isEnabled = false
 
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
@@ -128,7 +142,11 @@ abstract class BaseCamera2Fragment : Fragment() {
                 camera2Helper.setPreviewRepeatingRequest()
                 camera2Helper.startRecording()
                 // Re-enable click listener after recording is taken
-                it.post { it.isEnabled = true }
+                it.post {
+                    it.isEnabled = true
+                    switchCameraBtn.isEnabled = false
+                    ivShot.isEnabled = false
+                }
             }
         }
 

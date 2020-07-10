@@ -10,7 +10,7 @@ import android.view.View
  * Date: 20-7-9 下午2:50
  */
 object AnimationUtil {
-    fun flipAnimatorX(oldView: View, newView: View, durationInMills: Long) {
+    fun flipHorizontal(oldView: View, newView: View, durationInMills: Long) {
         val animator1: ObjectAnimator = ObjectAnimator.ofFloat(oldView, "rotationY", 0F, 90F)
         val animator2: ObjectAnimator = ObjectAnimator.ofFloat(newView, "rotationY", -90F, 0F)
 //        animator2.interpolator = OvershootInterpolator(2.0f)

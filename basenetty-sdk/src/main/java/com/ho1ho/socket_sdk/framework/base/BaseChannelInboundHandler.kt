@@ -1,6 +1,5 @@
 package com.ho1ho.socket_sdk.framework.base
 
-import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
@@ -10,85 +9,100 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseChannelInboundHandler<T>(protected val mBaseClient: BaseNettyClient) :
+abstract class BaseChannelInboundHandler<T>(private val mBaseClient: BaseNettyClient) :
     SimpleChannelInboundHandler<T>() {
+
+    private val tagName = javaClass.simpleName
+
+    @Volatile
+    private var caughtException = false
 
     abstract fun release()
 
-    private var caughtException = false
-
-    @Throws(Exception::class)
     override fun handlerAdded(ctx: ChannelHandlerContext) {
-        LLog.i(ITAG, "===== handlerAdded(${ctx.name()}) =====")
+        LLog.i(tagName, "===== handlerAdded(${ctx.name()}) =====")
         super.handlerAdded(ctx)
     }
 
-    @Throws(Exception::class)
     override fun channelRegistered(ctx: ChannelHandlerContext) {
-        LLog.i(ITAG, "===== Channel is registered to EventLoop(${ctx.name()}) =====")
+        LLog.i(tagName, "===== Channel is registered to EventLoop(${ctx.name()}) =====")
         super.channelRegistered(ctx)
     }
 
-    @Throws(Exception::class)
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LLog.i(ITAG, "===== Channel is active(${ctx.name()}) =====")
+        LLog.i(tagName, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
 //        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
         super.channelActive(ctx)
+        mBaseClient.connectState = BaseNettyClient.STATUS_CONNECTED
+        mBaseClient.connectionListener.onConnected(mBaseClient)
     }
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        LLog.w(ITAG, "===== Channel is inactive and reached its end of lifetime(${ctx.name()}) =====")
-        if (!caughtException) {
-            mBaseClient.connectState = BaseNettyClient.DISCONNECTED
-            mBaseClient.connectionListener?.onConnectionDisconnect(mBaseClient)
-        } else {
-            LLog.e(ITAG, "Caught socket exception! DO NOT fire onConnectionDisconnect() method!")
-        }
+        LLog.i(
+            tagName,
+            "===== Disconnected from: ${ctx.channel().remoteAddress()} | Channel is inactive and reached its end of lifetime(${ctx.name()}) ====="
+        )
         super.channelInactive(ctx)
+
+        if (!caughtException) {
+            mBaseClient.connectState = BaseNettyClient.STATUS_DISCONNECTED
+            mBaseClient.connectionListener.onDisconnected(mBaseClient)
+            LLog.w(tagName, "=====> Socket disconnected <=====")
+        } else {
+            LLog.e(tagName, "Caught socket exception! DO NOT fire onDisconnect() method!")
+        }
     }
 
-    @Throws(Exception::class)
+    /**
+     * According to the [official example](https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime/UptimeClientHandler.java), if connection is disconnected after connecting,
+     * reconnect it here.
+     */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {
-        LLog.i(ITAG, "===== Channel is unregistered from EventLoop(${ctx.name()}) =====")
+        LLog.i(tagName, "===== Channel is unregistered from EventLoop(${ctx.name()}) =====")
         super.channelUnregistered(ctx)
     }
 
-    @Throws(Exception::class)
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LLog.i(ITAG, "===== handlerRemoved(${ctx.name()}) =====")
+        LLog.i(tagName, "===== handlerRemoved(${ctx.name()}) =====")
         super.handlerRemoved(ctx)
     }
 
-    @Throws(Exception::class)
+    /**
+     * Call [ctx.close().syncUninterruptibly()] synchronized.
+     */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        if (caughtException) {
+            LLog.e(tagName, "exceptionCaught had been triggered. Do not fire it again.")
+            return
+        }
         caughtException = true
-        LLog.e(ITAG, "===== Caught Exception =====")
-        LLog.e(ITAG, "Exception: ${cause.message}")
-        LLog.e(ITAG, "============================")
+        val exceptionType = when (cause) {
+            is IOException -> "IOException"
+            is IllegalArgumentException -> "IllegalArgumentException"
+            else -> "Unknown Exception"
+        }
+        LLog.e(tagName, "===== Caught $exceptionType =====")
+        LLog.e(tagName, "Exception: ${cause.message}")
 
-        val channel = ctx.channel()
-        val isChannelActive = channel.isActive
-        LLog.e(ITAG, "Channel is active: $isChannelActive")
-        if (isChannelActive) {
-            ctx.close()
-        }
-        when (cause) {
-            is IOException -> {
-                LLog.e(ITAG, "===== Caught IOException =====")
-            }
-            is IllegalArgumentException -> {
-                LLog.e(ITAG, "IllegalArgumentException msg=${cause.message}")
-            }
-            else -> {
-                LLog.e(ITAG, "Unknown Exception msg=${cause.message}")
-            }
-        }
-        mBaseClient.connectState = BaseNettyClient.CONNECT_EXCEPTION
-        mBaseClient.connectionListener?.onCaughtException(mBaseClient, cause)
+//        val channel = ctx.channel()
+//        val isChannelActive = channel.isActive
+//        LLog.e(tagName, "Channel is active: $isChannelActive")
+//        if (isChannelActive) {
+//            ctx.close()
+//        }
+        ctx.close().syncUninterruptibly()
+
+        mBaseClient.connectState = BaseNettyClient.STATUS_CONNECT_EXCEPTION
+        mBaseClient.connectionListener.onException(mBaseClient, cause)
+        LLog.e(tagName, "============================")
     }
 
-    @Throws(Exception::class)
+    override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
+        LLog.i(tagName, "===== userEventTriggered(${ctx.name()}) =====")
+        super.userEventTriggered(ctx, evt)
+    }
+
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
     }
 }

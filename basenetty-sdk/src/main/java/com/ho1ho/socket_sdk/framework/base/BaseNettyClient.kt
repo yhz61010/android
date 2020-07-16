@@ -1,8 +1,5 @@
 package com.ho1ho.socket_sdk.framework.base
 
-import android.os.Handler
-import android.os.HandlerThread
-import com.ho1ho.androidbase.exts.exception
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
@@ -14,229 +11,198 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
 
 /**
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseNettyClient protected constructor(private var mHost: String, private var mPort: Int) {
+abstract class BaseNettyClient protected constructor(
+    private val host: String,
+    private val port: Int,
+    val connectionListener: NettyConnectionListener
+) {
+    init {
+        init()
+    }
 
-    private val tag = this::class.java.simpleName
+    private lateinit var bootstrap: Bootstrap
+    private lateinit var eventLoopGroup: EventLoopGroup
+    private var channel: Channel? = null
 
-    private var mEventLoopGroup: EventLoopGroup? = null
-    private var mBootstrap: Bootstrap? = null
-    private var mChannel: Channel? = null
-    private var mChannelFuture: ChannelFuture? = null
-    private var mChannelInitializer: ChannelInitializer<SocketChannel>? = null
+    private var channelInitializer: ChannelInitializer<SocketChannel>? = null
     var defaultChannelHandler: BaseChannelInboundHandler<*>? = null
         private set
 
     var receivingDataListener: ReceivingDataListener? = null
-    var connectionListener: NettyConnectionListener? = null
-    var connectState = DISCONNECTED
+
+    @Volatile
+    var connectState: Int = STATUS_UNINITIALIZED
     private val connectStateName
         get() = when (connectState) {
-            UNINITIALIZED -> "UNINITIALIZED"
-            INITIALIZED -> "INITIALIZED"
-            DISCONNECTED -> "DISCONNECTED"
-            CONNECTING -> "CONNECTING"
-            CONNECTED -> "CONNECTED"
-            CONNECT_FAILED -> "CONNECT_FAILED"
-            CONNECT_EXCEPTION -> "CONNECT_EXCEPTION"
+            STATUS_UNINITIALIZED -> "UNINITIALIZED"
+            STATUS_CONNECTING -> "CONNECTING"
+            STATUS_CONNECTED -> "CONNECTED"
+            STATUS_DISCONNECTED -> "DISCONNECTED"
+            STATUS_CONNECT_FAILED -> "CONNECT_FAILED"
+            STATUS_CONNECT_EXCEPTION -> "CONNECT_EXCEPTION"
             else -> "UNKNOWN"
         }
-    private var mRetryHandler: Handler? = null
-    private var mRetryThread: HandlerThread? = null
-    private var mRetryTimes = 0
+    private var retryTimes = 0
 
-    init {
-        init()
-        initRetryHandler()
+    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
+        if (future.isSuccess) {
+            retryTimes = 0
+            channel = future.syncUninterruptibly().channel()
+            LLog.i(TAG, "===== Connect success =====")
+        } else {
+            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
+            doRetry(future)
+        }
     }
 
     private fun init() {
-        try {
-            connectState = INITIALIZED
-            mBootstrap = Bootstrap()
-            mEventLoopGroup = NioEventLoopGroup()
-            mBootstrap!!.group(mEventLoopGroup)
-            mBootstrap!!.channel(NioSocketChannel::class.java)
-            mBootstrap!!.option(ChannelOption.TCP_NODELAY, true)
-            mBootstrap!!.option(ChannelOption.SO_KEEPALIVE, true)
-            mBootstrap!!.option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                CONNECTION_TIMEOUT_IN_MILLS
-            )
-        } catch (e: Exception) {
-            LLog.e(tag, "init() Exception: ${e.message}")
-        }
+        bootstrap = Bootstrap()
+        eventLoopGroup = NioEventLoopGroup()
+        bootstrap.group(eventLoopGroup)
+        bootstrap.channel(NioSocketChannel::class.java)
+        bootstrap.option(ChannelOption.TCP_NODELAY, true)
+        bootstrap.option(ChannelOption.SO_KEEPALIVE, true)
+        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
     }
 
     fun initHandler(handler: BaseChannelInboundHandler<*>?) {
         defaultChannelHandler = handler
-        mChannelInitializer = object : ChannelInitializer<SocketChannel>() {
+        channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {
                 val pipeline = socketChannel.pipeline()
                 addLastToPipeline(pipeline)
-                if (null != defaultChannelHandler) {
-                    pipeline.addLast("default-channel-handler", defaultChannelHandler)
+                defaultChannelHandler?.let {
+                    pipeline.addLast("default-channel-handler", it)
                 }
             }
         }
-        mBootstrap!!.handler(mChannelInitializer)
+        bootstrap.handler(channelInitializer)
     }
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
-    fun connect(listener: NettyConnectionListener) {
-        LLog.i(tag, "===== connect() current state=$connectStateName =====")
+    /**
+     * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
+     */
+    @Throws(RejectedExecutionException::class)
+    fun connect() {
+        LLog.i(TAG, "===== connect() current state=$connectStateName =====")
         when (connectState) {
-            CONNECTING -> {
-                LLog.w(tag, "===== Wait for connecting =====")
+            STATUS_CONNECTING -> {
+                LLog.w(TAG, "===== Wait for connecting =====")
                 return
             }
-            CONNECTED -> {
-                LLog.w(tag, "===== Already connected =====")
+            STATUS_CONNECTED -> {
+                LLog.w(TAG, "===== Already connected =====")
                 return
             }
-            else -> LLog.i(tag, "===== Prepare to connect to server =====")
+            else -> LLog.i(TAG, "===== Prepare to connect to server =====")
         }
-        connectState = CONNECTING
+        connectState = STATUS_CONNECTING
+        connectionListener.onConnecting(this)
         try {
-            connectionListener = listener.apply { onConnectionConnecting(this@BaseNettyClient) }
-            val f = mBootstrap!!.connect(mHost, mPort).sync()
-            LLog.i(tag, "Binding ChannelFuture listener...")
-            f.addListener(mChannelFutureListener)
-        } catch (e: Exception) {
-            LLog.e(tag, "Retry due to connect error=${e.message}")
-            doRetry()
+            bootstrap.connect(host, port).sync().addListener(connectFutureListener)
+        } catch (e: RejectedExecutionException) {
+            LLog.e(TAG, "Netty client had already been released. You must re-initialize it again.")
+            // If connection has been connected before, [channelInactive] will be called, so the status and
+            // listener will be triggered at that time.
+            // However, if netty client had been release, call [connect] again will cause exception. We must assign it status to default status again.
+            connectState = STATUS_UNINITIALIZED
+            throw e
         }
     }
 
-    @Suppress("WeakerAccess")
-    fun reconnect() {
-        LLog.w(tag, "===== reconnect() current state=$connectStateName =====")
-        connectionListener ?: exception("You must call connect first")
-//        disconnect()
-        connectState = DISCONNECTED
-        connect(connectionListener!!)
-    }
-
-    @Suppress("WeakerAccess")
+    /**
+     * After calling this method, you can reuse it again by calling [connect].
+     * If you don't want to reconnect it anymore, do not forget to call [release].
+     */
     fun disconnect() {
-        LLog.w(tag, "===== disconnect() current state=$connectStateName =====")
-        connectState = DISCONNECTED
-        defaultChannelHandler?.let {
-            LLog.w(tag, "===== call onConnectionDisconnect =====")
-            connectionListener?.onConnectionDisconnect(this)
-        }
-    }
-
-    fun release() {
-        LLog.e(tag, "===== release() current state=$connectStateName } =====")
-        if (UNINITIALIZED == connectState) {
-            LLog.w(tag, "Already released")
+        LLog.w(TAG, "===== disconnect() current state=$connectStateName =====")
+        if (STATUS_DISCONNECTED == connectState || STATUS_UNINITIALIZED == connectState) {
+            LLog.w(TAG, "Already disconnected or not initialized.")
             return
         }
-        connectState = UNINITIALIZED
+        // The [STATUS_DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
+        // However, if connection status is [STATUS_CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
+        // So we just need to assign its status to [STATUS_DISCONNECTED]. No need to call listener.
+        connectState = STATUS_DISCONNECTED
+        channel?.disconnect()
+    }
 
-        LLog.w(tag, "Releasing connect listener...")
-        connectionListener = null
-
-        mRetryHandler?.run {
-            LLog.w(tag, "Removing RetryThread from RetryHandler...")
-            removeCallbacksAndMessages(null)
-            mRetryHandler = null
+    /**
+     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.) So you'd better NOT call this method in main thread.
+     *
+     * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
+     * If you want to reconnect it again, do not call this method, just call [disconnect].
+     */
+    fun release() {
+        LLog.w(TAG, "===== release() current state=$connectStateName =====")
+        if (STATUS_UNINITIALIZED == connectState) {
+            LLog.w(TAG, "Already release or not initialized")
+            return
         }
 
-        mRetryThread?.run {
-            LLog.w(tag, "Quiting RetryThread safely...")
-            quitSafely()
-            mRetryThread = null
-        }
-
-        LLog.w(tag, "Releasing default socket handler...")
+        retryTimes = 0
+        LLog.w(TAG, "Releasing default socket handler first...")
         defaultChannelHandler?.release()
         defaultChannelHandler = null
+        channelInitializer = null
 
-        mChannel?.run {
-            LLog.w(tag, "Closing channel...")
-//            closeFuture().syncUninterruptibly()
+        channel?.run {
+            LLog.w(TAG, "Closing channel...")
+            pipeline().removeAll { true }
+//            closeFuture().syncUninterruptibly() // It will stuck here. Why???
             closeFuture()
-            close()
-            mChannel = null
+            close().syncUninterruptibly()
+            channel = null
         }
-        defaultChannelHandler = null
-        mChannelInitializer = null
 
-        mEventLoopGroup?.run {
-            LLog.w(tag, "Shutting down socket...")
-            shutdownGracefully().syncUninterruptibly()
-            mEventLoopGroup = null
+        eventLoopGroup.run {
+            LLog.w(TAG, "Releasing socket...")
+            shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+//            shutdownGracefully()
         }
-        mBootstrap = null
 
-        LLog.w(tag, "=====> Socket released <=====")
+        connectState = STATUS_UNINITIALIZED
+        LLog.w(TAG, "=====> Socket released <=====")
     }
 
-    private val mChannelFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
-        if (future.isSuccess) {
-            mRetryTimes = 0
-            mChannelFuture = future
-            mChannel = mChannelFuture!!.syncUninterruptibly().channel()
-            connectState = CONNECTED
-            if (null != defaultChannelHandler) {
-                LLog.i(tag, "===== operationComplete - onConnectionCreated() =====")
-                connectionListener?.onConnectionCreated(this@BaseNettyClient)
+    private fun doRetry(future: ChannelFuture) {
+        retryTimes++
+        LLog.w(TAG, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_SECOND}s | current state=$connectStateName =====")
+        connectState = STATUS_CONNECT_FAILED
+        connectionListener.onFailed(this@BaseNettyClient)
+        future.channel().eventLoop().schedule(object : Runnable {
+            override fun run() {
+                if (retryTimes >= CONNECT_MAX_RETRY_TIMES) {
+                    defaultChannelHandler?.let {
+                        LLog.e(TAG, "===== Connect failed - call onConnectionFailed() =====")
+                        retryTimes = 0
+                    }
+                    return
+                }
+                connect()
             }
-        } else {
-            connectState = CONNECT_FAILED
-            LLog.e(tag, "Retry due to future failure")
-            doRetry()
-        }
-    }
-
-    // ================================================
-    private fun initRetryHandler() {
-        LLog.i(tag, "===== initRetryHandler() =====")
-        if (mRetryThread == null) {
-            LLog.i(tag, "===== init mRetryThread =====")
-            mRetryThread = HandlerThread("retry-thread")
-            mRetryThread!!.start()
-        }
-        if (mRetryHandler == null) {
-            LLog.i(tag, "===== init mRetryHandler =====")
-            mRetryHandler = Handler(mRetryThread!!.looper)
-        }
-    }
-
-    private fun doRetry() {
-        if (mRetryTimes >= CONNECT_MAX_RETRY_TIMES) {
-            defaultChannelHandler?.let {
-                LLog.w(tag, "===== Connect failed - call onConnectionFailed() =====")
-                mRetryTimes = 0
-                connectionListener?.onConnectionFailed(this)
-            }
-            return
-        }
-
-//        val retryDelay = 1000L * (1 shl mRetryTimes++)
-        val retryDelay = 5000L;mRetryTimes++
-        LLog.e(tag, "===== doRetry($mRetryTimes) in ${retryDelay}ms =====")
-
-        mRetryHandler!!.postDelayed({ reconnect() }, retryDelay)
+        }, RETRY_DELAY_IN_SECOND, TimeUnit.SECONDS)
     }
 
     // ================================================
 
     private fun isValidExecuteCommandEnv(): Boolean {
-        if (CONNECTED != connectState) {
-            LLog.e(tag, "Socket is not connected. Can not send command.")
+        if (STATUS_CONNECTED != connectState) {
+            LLog.e(TAG, "Socket is not connected. Can not send command.")
             ToastUtil.showDebugToast("Socket is not connected. Can not send command.")
             return false
         }
-        if (mChannel == null) {
-            LLog.e(tag, "Can not execute cmd because of Channel is null.")
+        if (channel == null) {
+            LLog.e(TAG, "Can not execute cmd because of Channel is null.")
             ToastUtil.showDebugToast("Channel is null. Can not send command.")
             return false
         }
@@ -245,18 +211,18 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
 
     private fun executeCommandInString(cmd: String?, showLog: Boolean) {
         if (!isValidExecuteCommandEnv()) {
-            LLog.e(tag, "Not invalid execute command evn!")
+            LLog.e(TAG, "Not invalid execute command evn!")
             return
         }
         if (cmd.isNullOrBlank()) {
-            LLog.w(tag, "Can not execute blank string command.")
+            LLog.w(TAG, "Can not execute blank string command.")
             ToastUtil.showDebugErrorToast("Empty string command")
             return
         }
         if (showLog) {
-            LLog.i(tag, "exeCmd s[${cmd.length}]=$cmd")
+            LLog.i(TAG, "exeCmd s[${cmd.length}]=$cmd")
         }
-        mChannel!!.writeAndFlush(cmd + "\n")
+        channel?.writeAndFlush(cmd + "\n")
     }
 
     private fun executeCommandInBinary(bytes: ByteArray?, showLog: Boolean) {
@@ -264,48 +230,70 @@ abstract class BaseNettyClient protected constructor(private var mHost: String, 
             return
         }
         if (bytes == null || bytes.isEmpty()) {
-            LLog.w(tag, "Can not execute blank binary command.")
+            LLog.w(TAG, "Can not execute blank binary command.")
             ToastUtil.showDebugErrorToast("Command bytes is empty. Can not send command.")
             return
         }
         if (showLog) {
-            LLog.i(tag, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
+            LLog.i(TAG, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
         }
-        mChannel!!.writeAndFlush(Unpooled.wrappedBuffer(bytes))
+        channel?.writeAndFlush(Unpooled.wrappedBuffer(bytes))
     }
 
-    fun executeCommand(cmd: String) {
-        executeCommandInString(cmd, true)
-    }
-
-    @Suppress("unused")
-    fun executeCommand(cmd: String, showLog: Boolean) {
+    @JvmOverloads
+    fun executeCommand(cmd: String, showLog: Boolean = true) {
         executeCommandInString(cmd, showLog)
     }
 
     @Suppress("unused")
-    fun executeCommand(cmd: ByteArray?, showLog: Boolean) {
+    @JvmOverloads
+    fun executeCommand(cmd: ByteArray?, showLog: Boolean = true) {
         executeCommandInBinary(cmd, showLog)
-    }
-
-    fun executeCommand(cmd: ByteArray?) {
-        executeCommandInBinary(cmd, true)
     }
 
     // ================================================
 
     companion object {
-        const val UNINITIALIZED = -1
-        const val INITIALIZED = 0
-        const val DISCONNECTED = 1
-        const val CONNECTING = 2
-        const val CONNECTED = 3
-        const val CONNECT_FAILED = 4
-        const val CONNECT_EXCEPTION = 5
+        private const val TAG = "BaseNettyClient"
 
-        const val HEARTBEAT_INTERVAL_IN_MS = 10_000L
-        const val HEARTBEAT_TIMEOUT_TIMES = 3
-        const val CONNECTION_TIMEOUT_IN_MILLS = 60_000
-        private const val CONNECT_MAX_RETRY_TIMES = 180
+        /**
+         * This is the connection default status after initializing netty client.
+         *
+         * Only you release socket, it will be in this status.
+         * In this status, you can not reconnect again. You must create netty client again.
+         */
+        const val STATUS_UNINITIALIZED = 0
+        const val STATUS_CONNECTING = 1
+        const val STATUS_CONNECTED = 2
+
+        /**
+         * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect. Only in this case, [STATUS_DISCONNECTED] listener will be triggered.
+         *
+         * **Attention:** [STATUS_CONNECT_FAILED] and [STATUS_CONNECT_EXCEPTION] will **NOT** trigger [STATUS_DISCONNECTED] listener.
+         */
+        const val STATUS_DISCONNECTED = 3
+
+        /**
+         * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
+         *
+         * Once connecting is in this status, [STATUS_DISCONNECTED] listener will **NOT** be triggered.
+         * [STATUS_CONNECT_EXCEPTION] listener will **NOT** be triggered either.
+         */
+        const val STATUS_CONNECT_FAILED = 4
+
+        /**
+         * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
+         *
+         * Once connecting is in this status, [STATUS_DISCONNECTED] listener will **NOT** be triggered.
+         * [STATUS_CONNECT_FAILED] listener will **NOT** be triggered either.
+         */
+        const val STATUS_CONNECT_EXCEPTION = 5
+
+        //        const val HEARTBEAT_INTERVAL_IN_MS = 10_000L
+//        const val HEARTBEAT_TIMEOUT_TIMES = 3
+        const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
+        private const val CONNECT_MAX_RETRY_TIMES = 3
+
+        private const val RETRY_DELAY_IN_SECOND: Long = 2L
     }
 }

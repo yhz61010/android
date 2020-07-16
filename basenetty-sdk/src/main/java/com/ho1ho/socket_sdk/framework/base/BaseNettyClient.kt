@@ -11,6 +11,7 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
+import java.net.ConnectException
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
@@ -116,6 +117,10 @@ abstract class BaseNettyClient protected constructor(
             // However, if netty client had been release, call [connect] again will cause exception. We must assign it status to default status again.
             connectState = STATUS_UNINITIALIZED
             throw e
+        } catch (e: ConnectException) {
+            LLog.e(TAG, "===== Connect refused: ${e.message} =====")
+            connectState = STATUS_CONNECT_FAILED
+            connectionListener.onFailed(this)
         }
     }
 

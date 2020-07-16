@@ -58,6 +58,7 @@ class SocketActivity : BaseDemonstrationActivity() {
         socketClient.receivingDataListener = object : ReceivingDataListener {
             override fun onReceiveData(which: Int, obj: Any?) {
                 LLog.i(TAG, "onReceiveData: ${obj?.toJsonString()}")
+                runOnUiThread { txtView.text = txtView.text.toString() + obj?.toJsonString() + "\n" }
             }
         }
     }
@@ -74,6 +75,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         socketClientHandler.sendMsgToServer(editText.text.toString())
+        txtView.text = ""
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {

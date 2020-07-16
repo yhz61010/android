@@ -32,22 +32,27 @@ class SocketActivity : BaseDemonstrationActivity() {
         val connectionListener = object : NettyConnectionListener {
             override fun onConnecting(client: BaseNettyClient) {
                 LLog.i(TAG, "onConnecting")
+                ToastUtil.showDebugToast("onConnecting")
             }
 
             override fun onConnected(client: BaseNettyClient) {
                 LLog.i(TAG, "onConnected")
+                ToastUtil.showDebugToast("onConnected")
             }
 
             override fun onDisconnected(client: BaseNettyClient) {
                 LLog.i(TAG, "onDisconnect")
+                ToastUtil.showDebugToast("onDisconnect")
             }
 
             override fun onFailed(client: BaseNettyClient) {
                 LLog.i(TAG, "onFailed")
+                ToastUtil.showDebugToast("onFailed")
             }
 
             override fun onException(client: BaseNettyClient, cause: Throwable) {
                 LLog.i(TAG, "onCaughtException")
+                ToastUtil.showDebugToast("onCaughtException")
             }
 
         }

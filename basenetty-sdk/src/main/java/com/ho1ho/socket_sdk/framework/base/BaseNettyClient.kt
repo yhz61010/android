@@ -272,7 +272,8 @@ abstract class BaseNettyClient protected constructor(
         const val STATUS_CONNECTED = 2
 
         /**
-         * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect. Only in this case, [STATUS_DISCONNECTED] listener will be triggered.
+         * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect or server is down.
+         * Only in these two cases, [STATUS_DISCONNECTED] listener will be triggered.
          *
          * **Attention:** [STATUS_CONNECT_FAILED] and [STATUS_CONNECT_EXCEPTION] will **NOT** trigger [STATUS_DISCONNECTED] listener.
          */

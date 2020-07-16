@@ -32,6 +32,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tagName, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
 //        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
+        caughtException = false
         super.channelActive(ctx)
         baseClient.connectState = BaseNettyClient.STATUS_CONNECTED
         baseClient.connectionListener.onConnected(baseClient)

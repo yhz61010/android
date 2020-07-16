@@ -75,7 +75,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         socketClientHandler.sendMsgToServer(editText.text.toString())
-        txtView.text = ""
+        editText.text.clear()
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {

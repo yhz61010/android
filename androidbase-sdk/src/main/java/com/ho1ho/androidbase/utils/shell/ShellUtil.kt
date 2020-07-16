@@ -1,4 +1,4 @@
-package com.uusafe.android.cleanprocess.utils
+package com.ho1ho.androidbase.utils.shell
 
 import android.annotation.TargetApi
 import android.os.Build

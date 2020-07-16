@@ -1,7 +1,6 @@
 package com.ho1ho.socket_sdk.framework.base.inter
 
 import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
-import io.netty.channel.ChannelHandlerContext
 
 /**
  * Author: Michael Leo
@@ -11,6 +10,7 @@ interface NettyConnectionListener {
 
     fun onConnecting(client: BaseNettyClient)
     fun onConnected(client: BaseNettyClient)
+    fun onReceivedData(client: BaseNettyClient, data: Any?)
     fun onDisconnected(client: BaseNettyClient)
     fun onFailed(client: BaseNettyClient)
     fun onException(client: BaseNettyClient, cause: Throwable)
@@ -22,7 +22,7 @@ interface NettyConnectionListener {
 //    fun onReceiveHeartbeat(msg: Any?) {}
 
     // =========================================
-    fun onReaderIdle(ctx: ChannelHandlerContext?) {}
-    fun onWriterIdle(ctx: ChannelHandlerContext?) {}
-    fun onAllIdle(ctx: ChannelHandlerContext?) {}
+//    fun onReaderIdle(ctx: ChannelHandlerContext?) {}
+//    fun onWriterIdle(ctx: ChannelHandlerContext?) {}
+//    fun onAllIdle(ctx: ChannelHandlerContext?) {}
 }

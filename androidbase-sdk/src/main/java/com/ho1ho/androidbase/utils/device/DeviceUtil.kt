@@ -2,16 +2,17 @@ package com.ho1ho.androidbase.utils.device
 
 import android.app.ActivityManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Point
 import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
 import com.uusafe.android.cleanprocess.utils.ShellUtil
 import java.io.File
 import java.util.*
+import kotlin.math.max
 
 /**
  * Author: Michael Leo
@@ -89,8 +90,7 @@ object DeviceUtil {
         return 1.0f * p.x / p.y
     }
 
-    val uUID: String
-        get() = UUID.randomUUID().toString()
+    val uuid: String = UUID.randomUUID().toString()
 
     private fun getImei(ctx: Context, slotId: Int): String {
         return try {
@@ -108,11 +108,11 @@ object DeviceUtil {
             LLog.e(TAG, "screenSize is null")
             return false
         }
-        return Math.max(screenSize.x, screenSize.y) > EXTREME_LARGE_SCREEN_THRESHOLD
+        return max(screenSize.x, screenSize.y) > EXTREME_LARGE_SCREEN_THRESHOLD
     }
 
     private fun isExtremeLargeScreen(width: Int, height: Int): Boolean {
-        return Math.max(width, height) > EXTREME_LARGE_SCREEN_THRESHOLD
+        return max(width, height) > EXTREME_LARGE_SCREEN_THRESHOLD
     }
 
     fun isExtremeLargeScreen(ctx: Context): Boolean {
@@ -153,29 +153,6 @@ object DeviceUtil {
         EXTREME_LARGE_SCREEN_MULTIPLE_TIMES =
             getExtremeLargeScreenMultipleTimes(ctx)
         return if (EXTREME_LARGE_SCREEN_MULTIPLE_TIMES > 1) dimension / EXTREME_LARGE_SCREEN_MULTIPLE_TIMES else dimension
-    }
-
-    /**
-     * Return the version name of empty string if can't get version string.
-     */
-    fun getVersionName(ctx: Context) =
-        ctx.packageManager.getPackageInfo(ctx.packageName, PackageManager.GET_CONFIGURATIONS).versionName ?: ""
-
-    /**
-     * Return the version code or 0 if can't get version code.
-     */
-    fun getVersionCode(ctx: Context): Long {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            ctx.packageManager.getPackageInfo(
-                ctx.packageName,
-                PackageManager.GET_CONFIGURATIONS
-            ).longVersionCode
-        } else {
-            ctx.packageManager.getPackageInfo(
-                ctx.packageName,
-                PackageManager.GET_CONFIGURATIONS
-            ).versionCode.toLong()
-        }
     }
 
     val isOsVersionHigherThenGingerbread: Boolean
@@ -224,6 +201,8 @@ object DeviceUtil {
         val screenSize = getResolutionWithVirtualKey(ctx)
         return """
             Device basic information:
+            App version: ${AppUtil.getVersionName(ctx)}
+            App code: ${AppUtil.getVersionCode(ctx)}
             Manufacturer: $manufacturer
             Brand: $brand
             OsVersion: $osVersion($osVersionSdkInt)

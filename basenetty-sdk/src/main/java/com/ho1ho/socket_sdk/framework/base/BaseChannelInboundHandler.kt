@@ -9,7 +9,7 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseChannelInboundHandler<T>(private val mBaseClient: BaseNettyClient) :
+abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyClient) :
     SimpleChannelInboundHandler<T>() {
 
     private val tagName = javaClass.simpleName
@@ -33,8 +33,8 @@ abstract class BaseChannelInboundHandler<T>(private val mBaseClient: BaseNettyCl
         LLog.i(tagName, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
 //        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
         super.channelActive(ctx)
-        mBaseClient.connectState = BaseNettyClient.STATUS_CONNECTED
-        mBaseClient.connectionListener.onConnected(mBaseClient)
+        baseClient.connectState = BaseNettyClient.STATUS_CONNECTED
+        baseClient.connectionListener.onConnected(baseClient)
     }
 
     @Throws(Exception::class)
@@ -46,8 +46,8 @@ abstract class BaseChannelInboundHandler<T>(private val mBaseClient: BaseNettyCl
         super.channelInactive(ctx)
 
         if (!caughtException) {
-            mBaseClient.connectState = BaseNettyClient.STATUS_DISCONNECTED
-            mBaseClient.connectionListener.onDisconnected(mBaseClient)
+            baseClient.connectState = BaseNettyClient.STATUS_DISCONNECTED
+            baseClient.connectionListener.onDisconnected(baseClient)
             LLog.w(tagName, "=====> Socket disconnected <=====")
         } else {
             LLog.e(tagName, "Caught socket exception! DO NOT fire onDisconnect() method!")
@@ -93,8 +93,8 @@ abstract class BaseChannelInboundHandler<T>(private val mBaseClient: BaseNettyCl
 //        }
         ctx.close().syncUninterruptibly()
 
-        mBaseClient.connectState = BaseNettyClient.STATUS_CONNECT_EXCEPTION
-        mBaseClient.connectionListener.onException(mBaseClient, cause)
+        baseClient.connectState = BaseNettyClient.STATUS_CONNECT_EXCEPTION
+        baseClient.connectionListener.onException(baseClient, cause)
         LLog.e(tagName, "============================")
     }
 

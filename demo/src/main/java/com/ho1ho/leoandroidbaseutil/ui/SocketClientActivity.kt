@@ -10,7 +10,6 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.base.BaseChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
-import com.ho1ho.socket_sdk.framework.base.inter.ReceivingDataListener
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
@@ -40,6 +39,11 @@ class SocketActivity : BaseDemonstrationActivity() {
                 ToastUtil.showDebugToast("onConnected")
             }
 
+            override fun onReceivedData(client: BaseNettyClient, data: Any?) {
+                LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
+                runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
+            }
+
             override fun onDisconnected(client: BaseNettyClient) {
                 LLog.i(TAG, "onDisconnect")
                 ToastUtil.showDebugToast("onDisconnect")
@@ -60,12 +64,6 @@ class SocketActivity : BaseDemonstrationActivity() {
         socketClient = SocketClient("50d.win", 8080, connectionListener)
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
-        socketClient.receivingDataListener = object : ReceivingDataListener {
-            override fun onReceiveData(which: Int, obj: Any?) {
-                LLog.i(TAG, "onReceiveData: ${obj?.toJsonString()}")
-                runOnUiThread { txtView.text = txtView.text.toString() + obj?.toJsonString() + "\n" }
-            }
-        }
     }
 
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -108,8 +106,7 @@ class SocketActivity : BaseDemonstrationActivity() {
         @Throws(Exception::class)
         override fun channelRead0(ctx: ChannelHandlerContext, msg: String) {
             super.channelRead0(ctx, msg)
-            LLog.i(TAG, "Client received: $msg")
-            client.receivingDataListener?.onReceiveData(SOCKET_WHICH_CLIENT, msg)
+            client.connectionListener.onReceivedData(client, msg)
         }
 
         fun sendMsgToServer(msg: String) {
@@ -122,6 +119,5 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     companion object {
         const val TAG = "SocketClient"
-        private const val SOCKET_WHICH_CLIENT = 1
     }
 }

@@ -19,6 +19,7 @@ import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
+import java.util.concurrent.RejectedExecutionException
 
 class SocketActivity : BaseDemonstrationActivity() {
     private lateinit var socketClient: SocketClient
@@ -51,7 +52,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
         }
 
-        socketClient = SocketClient("10.10.10.211", 9443, connectionListener)
+        socketClient = SocketClient("54.179.39.129", 8080, connectionListener)
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
         socketClient.receivingDataListener = object : ReceivingDataListener {
@@ -64,8 +65,10 @@ class SocketActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         try {
             socketClient.connect()
+        } catch (e: RejectedExecutionException) {
+            ToastUtil.showDebugToast("Can not reuse netty: ${e.message}")
         } catch (e: Exception) {
-            ToastUtil.showDebugToast("Connect failed: ${e.message}")
+            ToastUtil.showDebugToast("Unknown exception: ${e.message}")
         }
     }
 

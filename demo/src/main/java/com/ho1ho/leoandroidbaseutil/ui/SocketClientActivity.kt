@@ -57,7 +57,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
         }
 
-        socketClient = SocketClient("54.179.39.129", 8080, connectionListener)
+        socketClient = SocketClient("50d.win", 8080, connectionListener)
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
         socketClient.receivingDataListener = object : ReceivingDataListener {

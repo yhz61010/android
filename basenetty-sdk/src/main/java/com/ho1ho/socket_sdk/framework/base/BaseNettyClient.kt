@@ -4,7 +4,6 @@ import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
-import com.ho1ho.socket_sdk.framework.base.inter.ReceivingDataListener
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
@@ -36,7 +35,7 @@ abstract class BaseNettyClient protected constructor(
     var defaultChannelHandler: BaseChannelInboundHandler<*>? = null
         private set
 
-    var receivingDataListener: ReceivingDataListener? = null
+//    var receivingDataListener: ReceivingDataListener? = null
 
     @Volatile
     var connectState: Int = STATUS_UNINITIALIZED

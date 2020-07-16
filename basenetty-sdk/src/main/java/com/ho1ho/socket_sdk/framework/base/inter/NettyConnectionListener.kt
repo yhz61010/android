@@ -9,13 +9,13 @@ import io.netty.channel.ChannelHandlerContext
  */
 interface NettyConnectionListener {
 
-    fun onConnectionConnecting(client: BaseNettyClient)
-    fun onConnectionCreated(client: BaseNettyClient)
-    fun onConnectionDisconnect(client: BaseNettyClient)
-    fun onConnectionFailed(client: BaseNettyClient)
+    fun onConnecting(client: BaseNettyClient)
+    fun onConnected(client: BaseNettyClient)
+    fun onDisconnected(client: BaseNettyClient)
+    fun onFailed(client: BaseNettyClient)
+    fun onException(client: BaseNettyClient, cause: Throwable)
 
     //    fun onConnectionTimeout()
-    fun onCaughtException(client: BaseNettyClient, cause: Throwable)
 
     // =========================================
 //    fun sendHeartbeat() {}

@@ -29,6 +29,8 @@ import java.io.FileOutputStream
  * Android Q+(Android 10+) MediaProjection must be used in Service and with android:foregroundServiceType="mediaProjection" permission.
  * Example:
  * <pre>
+ * <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+ *
  * <service
  *  android:name=".MediaProjectionService"
  *  tools:targetApi="q"

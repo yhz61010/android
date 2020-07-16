@@ -40,7 +40,7 @@ object ScreenCapture {
         private val width: Int,
         private val height: Int,
         private val dpi: Int,
-        private val mediaProjection: MediaProjection,
+        private val mediaProjection: MediaProjection?,
         private val captureType: Int,
         private val screenDataListener: ScreenDataListener
     ) {
@@ -81,8 +81,12 @@ object ScreenCapture {
             )
             return when (captureType) {
                 SCREEN_CAPTURE_TYPE_IMAGE ->
-                    ScreenshotStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+                    ScreenshotStrategy.Builder(width, height, dpi, screenDataListener)
                         .setFps(fps)
+                        .setBitrate(bitrate)
+                        .setBitrateMode(bitrateMode)
+                        .setKeyFrameRate(keyFrameRate)
+                        .setIFrameInterval(iFrameInterval)
                         .setSampleSize(sampleSize)
                         .build()
                 SCREEN_CAPTURE_TYPE_MEDIACODEC ->

@@ -7,7 +7,7 @@ package com.ho1ho.socket_sdk.framework.base.bean
 interface BaseReceivingData {
     fun getWhich(): Int
 
-    companion object {
-        const val RECEIVING_DATA_TYPE_CLIENT_INFO = 0X1001
-    }
+//    companion object {
+//        const val RECEIVING_DATA_TYPE_CLIENT_INFO = 0X1001
+//    }
 }

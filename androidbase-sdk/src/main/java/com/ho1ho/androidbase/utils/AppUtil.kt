@@ -31,6 +31,30 @@ import kotlin.system.exitProcess
 object AppUtil {
     private const val TAG = "AppUtil"
 
+    /**
+     * Return the version name of empty string if can't get version string.
+     */
+    fun getVersionName(ctx: Context) =
+        ctx.packageManager.getPackageInfo(ctx.packageName, PackageManager.GET_CONFIGURATIONS).versionName ?: ""
+
+    /**
+     * Return the version code or 0 if can't get version code.
+     */
+    fun getVersionCode(ctx: Context): Long {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ctx.packageManager.getPackageInfo(
+                ctx.packageName,
+                PackageManager.GET_CONFIGURATIONS
+            ).longVersionCode
+        } else {
+            ctx.packageManager.getPackageInfo(
+                ctx.packageName,
+                PackageManager.GET_CONFIGURATIONS
+            ).versionCode.toLong()
+        }
+    }
+
+
     fun ignoreDuplicateStartSplash(act: Activity): Boolean {
         return if (act.intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT > 0) {
             act.finish()

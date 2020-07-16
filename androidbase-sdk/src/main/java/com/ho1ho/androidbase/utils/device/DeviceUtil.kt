@@ -9,7 +9,7 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
-import com.uusafe.android.cleanprocess.utils.ShellUtil
+import com.ho1ho.androidbase.utils.shell.ShellUtil
 import java.io.File
 import java.util.*
 import kotlin.math.max

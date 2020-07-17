@@ -1,6 +1,7 @@
 package com.ho1ho.socket_sdk.framework.base
 
 import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import java.io.IOException
@@ -34,7 +35,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 //        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
         caughtException = false
         super.channelActive(ctx)
-        baseClient.connectState = BaseNettyClient.STATUS_CONNECTED
+        baseClient.connectState = ConnectionStatus.CONNECTED
         baseClient.connectionListener.onConnected(baseClient)
     }
 
@@ -47,7 +48,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
         super.channelInactive(ctx)
 
         if (!caughtException) {
-            baseClient.connectState = BaseNettyClient.STATUS_DISCONNECTED
+            baseClient.connectState = ConnectionStatus.DISCONNECTED
             baseClient.connectionListener.onDisconnected(baseClient)
             LLog.w(tagName, "=====> Socket disconnected <=====")
         } else {
@@ -94,7 +95,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 //        }
         ctx.close().syncUninterruptibly()
 
-        baseClient.connectState = BaseNettyClient.STATUS_CONNECT_EXCEPTION
+        baseClient.connectState = ConnectionStatus.EXCEPTION
         baseClient.connectionListener.onException(baseClient, cause)
         LLog.e(tagName, "============================")
     }

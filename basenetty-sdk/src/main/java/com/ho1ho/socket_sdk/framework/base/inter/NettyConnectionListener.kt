@@ -12,7 +12,7 @@ interface NettyConnectionListener {
     fun onConnected(client: BaseNettyClient)
     fun onReceivedData(client: BaseNettyClient, data: Any?)
     fun onDisconnected(client: BaseNettyClient)
-    fun onFailed(client: BaseNettyClient)
+    fun onFailed(client: BaseNettyClient, code: Int, msg: String)
     fun onException(client: BaseNettyClient, cause: Throwable)
 
     //    fun onConnectionTimeout()
@@ -25,4 +25,47 @@ interface NettyConnectionListener {
 //    fun onReaderIdle(ctx: ChannelHandlerContext?) {}
 //    fun onWriterIdle(ctx: ChannelHandlerContext?) {}
 //    fun onAllIdle(ctx: ChannelHandlerContext?) {}
+
+    companion object {
+        const val CONNECTION_ERROR_ALREADY_RELEASED = 0x1000
+        const val CONNECTION_ERROR_CAN_NOT_CONNECT_TO_SERVER = 0x1001
+        const val CONNECTION_ERROR_CONNECT_EXCEPTION = 0x1002
+        const val CONNECTION_ERROR_UNEXPECTED_EXCEPTION = 0x1003
+    }
+}
+
+enum class ConnectionStatus {
+    /**
+     * This is the connection default status after initializing netty client.
+     *
+     * Only you release socket, it will be in this status.
+     * In this status, you can not reconnect again. You must create netty client again.
+     */
+    UNINITIALIZED,
+    CONNECTING,
+    CONNECTED,
+
+    /**
+     * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect or server is down.
+     * Only in these two cases, [DISCONNECTED] listener will be triggered.
+     *
+     * **Attention:** [FAILED] and [EXCEPTION] will **NOT** trigger [DISCONNECTED] listener.
+     */
+    DISCONNECTED,
+
+    /**
+     * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
+     *
+     * Once connecting is in this status, [DISCONNECTED] listener will **NOT** be triggered.
+     * [EXCEPTION] listener will **NOT** be triggered either.
+     */
+    FAILED,
+
+    /**
+     * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
+     *
+     * Once connecting is in this status, [DISCONNECTED] listener will **NOT** be triggered.
+     * [FAILED] listener will **NOT** be triggered either.
+     */
+    EXCEPTION
 }

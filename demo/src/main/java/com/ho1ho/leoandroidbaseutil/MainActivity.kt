@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record screen by screenshot", ScreenshotRecordH264Activity::class.java),
-            Pair("WebSocket client", SocketActivity::class.java)
+            Pair("Socket client", SocketActivity::class.java)
         )
 
         private val color = arrayOf(

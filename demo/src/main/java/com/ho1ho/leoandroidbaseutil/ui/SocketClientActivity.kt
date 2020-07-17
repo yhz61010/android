@@ -18,7 +18,6 @@ import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
-import java.util.concurrent.RejectedExecutionException
 
 class SocketActivity : BaseDemonstrationActivity() {
     private lateinit var socketClient: SocketClient
@@ -49,9 +48,9 @@ class SocketActivity : BaseDemonstrationActivity() {
                 ToastUtil.showDebugToast("onDisconnect")
             }
 
-            override fun onFailed(client: BaseNettyClient) {
-                LLog.i(TAG, "onFailed")
-                ToastUtil.showDebugToast("onFailed")
+            override fun onFailed(client: BaseNettyClient, code: Int, msg: String) {
+                LLog.i(TAG, "onFailed code: $code message: $msg")
+                ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 
             override fun onException(client: BaseNettyClient, cause: Throwable) {
@@ -67,13 +66,7 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        try {
-            socketClient.connect()
-        } catch (e: RejectedExecutionException) {
-            ToastUtil.showDebugToast("Can not reuse netty: ${e.message}")
-        } catch (e: Exception) {
-            ToastUtil.showDebugToast("Unknown exception: ${e.message}")
-        }
+        socketClient.connect()
     }
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {

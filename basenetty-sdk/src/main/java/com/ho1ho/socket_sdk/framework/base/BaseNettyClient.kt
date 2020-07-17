@@ -108,7 +108,7 @@ abstract class BaseNettyClient protected constructor(
             // bootstrap.connect(host, port).addListener(connectFutureListener)
             // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
             // Just like RejectedExecutionException exception.
-            bootstrap.connect(host, port).sync().addListener(connectFutureListener)
+            bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
         } catch (e: RejectedExecutionException) {
             LLog.e(TAG, "Netty client had already been released. You must re-initialize it again.")
             // If connection has been connected before, [channelInactive] will be called, so the status and

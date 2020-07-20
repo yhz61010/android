@@ -49,23 +49,21 @@ enum class ConnectionStatus {
      * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect or server is down.
      * Only in these two cases, [DISCONNECTED] listener will be triggered.
      *
-     * **Attention:** [FAILED] and [EXCEPTION] will **NOT** trigger [DISCONNECTED] listener.
+     * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [DISCONNECTED] listener.
      */
     DISCONNECTED,
 
     /**
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
      *
-     * Once connecting is in this status, [DISCONNECTED] listener will **NOT** be triggered.
-     * [EXCEPTION] listener will **NOT** be triggered either.
+     * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */
     FAILED,
 
     /**
      * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
      *
-     * Once connecting is in this status, [DISCONNECTED] listener will **NOT** be triggered.
-     * [FAILED] listener will **NOT** be triggered either.
+     * Once connecting is in this status, [DISCONNECTED] and [FAILED] listeners will **NOT** be triggered either.
      */
     EXCEPTION
 }

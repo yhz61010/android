@@ -12,8 +12,9 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import java.net.ConnectException
+import java.util.*
 import java.util.concurrent.RejectedExecutionException
-import java.util.concurrent.TimeUnit
+import kotlin.concurrent.schedule
 
 /**
  * Author: Michael Leo
@@ -42,16 +43,16 @@ abstract class BaseNettyClient protected constructor(
     var connectState: ConnectionStatus = ConnectionStatus.UNINITIALIZED
     private var retryTimes = 0
 
-    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
-        if (future.isSuccess) {
-            retryTimes = 0
-            channel = future.syncUninterruptibly().channel()
-            LLog.i(TAG, "===== Connect success =====")
-        } else {
-            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
-            doRetry(future)
-        }
-    }
+//    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
+//        if (future.isSuccess) {
+//            retryTimes = 0
+//            channel = future.syncUninterruptibly().channel()
+//            LLog.i(TAG, "===== Connect success =====")
+//        } else {
+//            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
+//            doRetry()
+//        }
+//    }
 
     private fun init() {
         bootstrap = Bootstrap()
@@ -83,6 +84,7 @@ abstract class BaseNettyClient protected constructor(
      * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
 //    @Throws(RejectedExecutionException::class)
+    @Synchronized
     fun connect() {
         LLog.i(TAG, "===== connect() current state=${connectState.name} =====")
         when (connectState) {
@@ -108,23 +110,27 @@ abstract class BaseNettyClient protected constructor(
             // bootstrap.connect(host, port).addListener(connectFutureListener)
             // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
             // Just like RejectedExecutionException exception. However, I never catch RejectedExecutionException as I expect. Who can tell me why?
-            bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
+            val f = bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
+            channel = f.syncUninterruptibly().channel()
+            retryTimes = 0
+            LLog.i(TAG, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {
+            LLog.e(TAG, "===== RejectedExecutionException: ${e.message} =====")
             LLog.e(TAG, "Netty client had already been released. You must re-initialize it again.")
             // If connection has been connected before, [channelInactive] will be called, so the status and
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.
             // So we handle it here.
             connectState = ConnectionStatus.FAILED
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, "Netty already released")
+            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: ConnectException) {
             LLog.e(TAG, "===== ConnectException: ${e.message} =====")
             connectState = ConnectionStatus.FAILED
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect exception")
+            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
         } catch (e: Exception) {
             LLog.e(TAG, "===== Unexpected exception : ${e.message} =====")
             connectState = ConnectionStatus.FAILED
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected exception")
+            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
         }
     }
 
@@ -183,23 +189,22 @@ abstract class BaseNettyClient protected constructor(
         LLog.w(TAG, "=====> Socket released <=====")
     }
 
-    private fun doRetry(future: ChannelFuture) {
+    private fun doRetry() {
         retryTimes++
-        LLog.w(TAG, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_SECOND}s | current state=${connectState.name} =====")
+        LLog.w(TAG, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_MILLS}ms | current state=${connectState.name} =====")
         connectState = ConnectionStatus.FAILED
         connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CAN_NOT_CONNECT_TO_SERVER, "Can't connect to server.")
-        future.channel().eventLoop().schedule(object : Runnable {
-            override fun run() {
-                if (retryTimes >= CONNECT_MAX_RETRY_TIMES) {
-                    defaultChannelHandler?.let {
-                        LLog.e(TAG, "===== Connect failed - call onConnectionFailed() =====")
-                        retryTimes = 0
-                    }
-                    return
+        Timer("connect-retry", false).schedule(RETRY_DELAY_IN_MILLS) {
+            if (retryTimes >= CONNECT_MAX_RETRY_TIMES) {
+                defaultChannelHandler?.let {
+                    LLog.e(TAG, "===== Connect failed - call onConnectionFailed() =====")
+                    retryTimes = 0
                 }
+            } else {
+                disconnect()
                 connect()
             }
-        }, RETRY_DELAY_IN_SECOND, TimeUnit.SECONDS)
+        }
     }
 
     // ================================================
@@ -270,6 +275,6 @@ abstract class BaseNettyClient protected constructor(
         const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
         private const val CONNECT_MAX_RETRY_TIMES = 3
 
-        private const val RETRY_DELAY_IN_SECOND: Long = 2L
+        private const val RETRY_DELAY_IN_MILLS: Long = 2000L
     }
 }

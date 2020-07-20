@@ -12,7 +12,7 @@ interface NettyConnectionListener {
     fun onConnected(client: BaseNettyClient)
     fun onReceivedData(client: BaseNettyClient, data: Any?)
     fun onDisconnected(client: BaseNettyClient)
-    fun onFailed(client: BaseNettyClient, code: Int, msg: String)
+    fun onFailed(client: BaseNettyClient, code: Int, msg: String?)
     fun onException(client: BaseNettyClient, cause: Throwable)
 
     //    fun onConnectionTimeout()

@@ -1,5 +1,7 @@
 package com.ho1ho.socket_sdk.framework.base
 
+import android.os.Handler
+import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
@@ -11,10 +13,7 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import java.net.ConnectException
-import java.util.*
 import java.util.concurrent.RejectedExecutionException
-import kotlin.concurrent.schedule
 
 /**
  * Author: Michael Leo
@@ -41,18 +40,20 @@ abstract class BaseNettyClient protected constructor(
 
     @Volatile
     var connectState: ConnectionStatus = ConnectionStatus.UNINITIALIZED
+    private val retryThread = HandlerThread("retry-thread").apply { start() }
+    private val retryHandler = Handler(retryThread.looper)
     private var retryTimes = 0
 
-//    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
-//        if (future.isSuccess) {
-//            retryTimes = 0
-//            channel = future.syncUninterruptibly().channel()
-//            LLog.i(TAG, "===== Connect success =====")
-//        } else {
-//            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
-//            doRetry()
-//        }
-//    }
+    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
+        if (future.isSuccess) {
+            stopRetryHandler()
+            channel = future.syncUninterruptibly().channel()
+            LLog.i(TAG, "===== Connect success =====")
+        } else {
+            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
+            doRetry()
+        }
+    }
 
     private fun init() {
         bootstrap = Bootstrap()
@@ -110,9 +111,12 @@ abstract class BaseNettyClient protected constructor(
             // bootstrap.connect(host, port).addListener(connectFutureListener)
             // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
             // Just like RejectedExecutionException exception. However, I never catch RejectedExecutionException as I expect. Who can tell me why?
-            val f = bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
-            channel = f.syncUninterruptibly().channel()
-            retryTimes = 0
+
+//            val f = bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
+//            channel = f.syncUninterruptibly().channel()
+//            retryTimes = 0
+
+            bootstrap.connect(host, port).addListener(connectFutureListener)
             LLog.i(TAG, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {
             LLog.e(TAG, "===== RejectedExecutionException: ${e.message} =====")
@@ -123,11 +127,11 @@ abstract class BaseNettyClient protected constructor(
             // So we handle it here.
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
-        } catch (e: ConnectException) {
+        }/* catch (e: ConnectException) {
             LLog.e(TAG, "===== ConnectException: ${e.message} =====")
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-        } catch (e: Exception) {
+        }*/ catch (e: Exception) {
             LLog.e(TAG, "===== Unexpected exception : ${e.message} =====")
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
@@ -144,6 +148,7 @@ abstract class BaseNettyClient protected constructor(
             LLog.w(TAG, "Already disconnected or not initialized.")
             return
         }
+        stopRetryHandler()
         // The [STATUS_DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
         // However, if connection status is [STATUS_CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
         // So we just need to assign its status to [STATUS_DISCONNECTED]. No need to call listener.
@@ -164,7 +169,10 @@ abstract class BaseNettyClient protected constructor(
             return
         }
 
-        retryTimes = 0
+        LLog.w(TAG, "Releasing retry handler...")
+        stopRetryHandler()
+        retryThread.quitSafely()
+
         LLog.w(TAG, "Releasing default socket handler first...")
         defaultChannelHandler?.release()
         defaultChannelHandler = null
@@ -194,17 +202,26 @@ abstract class BaseNettyClient protected constructor(
         LLog.w(TAG, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_MILLS}ms | current state=${connectState.name} =====")
         connectState = ConnectionStatus.FAILED
         connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CAN_NOT_CONNECT_TO_SERVER, "Can't connect to server.")
-        Timer("connect-retry", false).schedule(RETRY_DELAY_IN_MILLS) {
+        retryHandler.postDelayed({
             if (retryTimes >= CONNECT_MAX_RETRY_TIMES) {
-                defaultChannelHandler?.let {
-                    LLog.e(TAG, "===== Connect failed - call onConnectionFailed() =====")
-                    retryTimes = 0
-                }
+                LLog.e(TAG, "===== Connect failed - Exceed max retry times. =====")
+                stopRetryHandler()
+                connectState = ConnectionStatus.FAILED
+                connectionListener.onFailed(
+                    this@BaseNettyClient,
+                    NettyConnectionListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
+                    "Exceed max retry times."
+                )
             } else {
-                disconnect()
                 connect()
             }
-        }
+        }, RETRY_DELAY_IN_MILLS)
+    }
+
+    private fun stopRetryHandler() {
+        retryHandler.removeCallbacksAndMessages(null)
+        retryThread.interrupt()
+        retryTimes = 0
     }
 
     // ================================================

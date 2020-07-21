@@ -1,5 +1,6 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import com.ho1ho.androidbase.exts.toJsonString
@@ -44,6 +45,7 @@ class SocketActivity : BaseDemonstrationActivity() {
                 ToastUtil.showDebugToast("onConnected")
             }
 
+            @SuppressLint("SetTextI18n")
             override fun onReceivedData(client: BaseNettyClient, data: Any?) {
                 LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
                 runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }

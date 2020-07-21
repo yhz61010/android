@@ -32,6 +32,8 @@ interface NettyConnectionListener {
         const val CONNECTION_ERROR_CONNECT_EXCEPTION = 0x1002
         const val CONNECTION_ERROR_UNEXPECTED_EXCEPTION = 0x1003
         const val CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES = 0x1004
+        const val CONNECTION_ERROR_SERVER_DOWN = 0x1005
+        const val CONNECTION_ERROR_NETWORK_LOST = 0x1006
     }
 }
 

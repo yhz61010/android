@@ -18,8 +18,14 @@ import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SocketActivity : BaseDemonstrationActivity() {
+    private val cs = CoroutineScope(Dispatchers.IO)
+
     private lateinit var socketClient: SocketClient
     private lateinit var socketClientHandler: SocketClientHandler
 
@@ -49,7 +55,7 @@ class SocketActivity : BaseDemonstrationActivity() {
             }
 
             override fun onFailed(client: BaseNettyClient, code: Int, msg: String?) {
-                LLog.i(TAG, "onFailed code: $code message: $msg")
+                LLog.i(TAG, "${Thread.currentThread().id} onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 
@@ -65,21 +71,38 @@ class SocketActivity : BaseDemonstrationActivity() {
         socketClient.initHandler(socketClientHandler)
     }
 
+    override fun onDestroy() {
+        cs.launch {
+            socketClient.release()
+        }
+        super.onDestroy()
+    }
+
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        socketClient.connect()
+        cs.launch {
+            repeat(1) {
+                socketClient.connect()
+            }
+        }
     }
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
-        socketClientHandler.sendMsgToServer(editText.text.toString())
-        editText.text.clear()
+        cs.launch {
+            socketClientHandler.sendMsgToServer(editText.text.toString())
+            withContext(Dispatchers.Main) { editText.text.clear() }
+        }
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        socketClient.disconnectManually()
+        cs.launch {
+            socketClient.disconnectManually()
+        }
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
-        socketClient.release()
+        cs.launch {
+            socketClient.release()
+        }
     }
 
     // =====================================================

@@ -2,6 +2,7 @@ package com.ho1ho.socket_sdk.framework.base
 
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
+import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import java.io.IOException
@@ -13,7 +14,7 @@ import java.io.IOException
 abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyClient) :
     SimpleChannelInboundHandler<T>() {
 
-    private val tagName = javaClass.simpleName
+    private val tag = javaClass.simpleName
 
     @Volatile
     private var caughtException = false
@@ -21,42 +22,46 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     abstract fun release()
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
-        LLog.i(tagName, "===== handlerAdded(${ctx.name()}) =====")
+        LLog.i(tag, "===== handlerAdded(${ctx.name()}) =====")
         super.handlerAdded(ctx)
     }
 
     override fun channelRegistered(ctx: ChannelHandlerContext) {
-        LLog.i(tagName, "===== Channel is registered to EventLoop(${ctx.name()}) =====")
+        LLog.i(tag, "===== Channel is registered to EventLoop(${ctx.name()}) =====")
         super.channelRegistered(ctx)
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LLog.i(tagName, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
+        LLog.i(tag, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
 //        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
         caughtException = false
+        baseClient.retryTimes.set(0)
+        baseClient.disconnectManually = false
         super.channelActive(ctx)
-        baseClient.connectState = ConnectionStatus.CONNECTED
+        baseClient.connectState.set(ConnectionStatus.CONNECTED)
         baseClient.connectionListener.onConnected(baseClient)
     }
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LLog.w(
-            tagName,
+            tag,
             "===== disconnectManually=${baseClient.disconnectManually} Disconnected from: ${ctx.channel()
                 .remoteAddress()} | Channel is inactive and reached its end of lifetime(${ctx.name()}) ====="
         )
         super.channelInactive(ctx)
 
         if (!caughtException) {
-            baseClient.connectState = ConnectionStatus.DISCONNECTED
+            baseClient.connectState.set(ConnectionStatus.DISCONNECTED)
             baseClient.connectionListener.onDisconnected(baseClient)
             if (!baseClient.disconnectManually) {
+                baseClient.connectState.set(ConnectionStatus.FAILED)
+                baseClient.connectionListener.onFailed(baseClient, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
                 baseClient.doRetry()
             }
-            LLog.w(tagName, "=====> Socket disconnected <=====")
+            LLog.w(tag, "=====> Socket disconnected <=====")
         } else {
-            LLog.e(tagName, "Caught socket exception! DO NOT fire onDisconnect() method!")
+            LLog.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
         }
     }
 
@@ -65,12 +70,12 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      * reconnect it here.
      */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {
-        LLog.i(tagName, "===== Channel is unregistered from EventLoop(${ctx.name()}) =====")
+        LLog.i(tag, "===== Channel is unregistered from EventLoop(${ctx.name()}) =====")
         super.channelUnregistered(ctx)
     }
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LLog.i(tagName, "===== handlerRemoved(${ctx.name()}) =====")
+        LLog.i(tag, "===== handlerRemoved(${ctx.name()}) =====")
         super.handlerRemoved(ctx)
     }
 
@@ -79,7 +84,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (caughtException) {
-            LLog.e(tagName, "exceptionCaught had been triggered. Do not fire it again.")
+            LLog.e(tag, "exceptionCaught had been triggered. Do not fire it again.")
             return
         }
         caughtException = true
@@ -88,8 +93,8 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
             is IllegalArgumentException -> "IllegalArgumentException"
             else -> "Unknown Exception"
         }
-        LLog.e(tagName, "===== Caught $exceptionType =====")
-        LLog.e(tagName, "Exception: ${cause.message}")
+        LLog.e(tag, "===== Caught $exceptionType =====")
+        LLog.e(tag, "Exception: ${cause.message}")
 
 //        val channel = ctx.channel()
 //        val isChannelActive = channel.isActive
@@ -99,13 +104,20 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 //        }
         ctx.close().syncUninterruptibly()
 
-        baseClient.connectState = ConnectionStatus.EXCEPTION
-        baseClient.connectionListener.onException(baseClient, cause)
-        LLog.e(tagName, "============================")
+        if ("IOException" == exceptionType) {
+            baseClient.connectState.set(ConnectionStatus.FAILED)
+            baseClient.connectionListener.onFailed(baseClient, NettyConnectionListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+            baseClient.doRetry()
+        } else {
+            baseClient.connectState.set(ConnectionStatus.EXCEPTION)
+            baseClient.connectionListener.onException(baseClient, cause)
+        }
+
+        LLog.e(tag, "============================")
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
-        LLog.i(tagName, "===== userEventTriggered(${ctx.name()}) =====")
+        LLog.i(tag, "===== userEventTriggered(${ctx.name()}) =====")
         super.userEventTriggered(ctx, evt)
     }
 

@@ -117,6 +117,8 @@ abstract class BaseNettyClient protected constructor(
             channel = f.syncUninterruptibly().channel()
             retryTimes = 0
 
+            // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
+            // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
 //            bootstrap.connect(host, port).addListener(connectFutureListener)
             LLog.i(TAG, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {

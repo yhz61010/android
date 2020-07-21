@@ -28,6 +28,8 @@ interface NettyConnectionListener {
 
     companion object {
         const val CONNECTION_ERROR_ALREADY_RELEASED = 0x1000
+
+        @Suppress("unused")
         const val CONNECTION_ERROR_CAN_NOT_CONNECT_TO_SERVER = 0x1001
         const val CONNECTION_ERROR_CONNECT_EXCEPTION = 0x1002
         const val CONNECTION_ERROR_UNEXPECTED_EXCEPTION = 0x1003

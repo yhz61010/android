@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         private val featureList = arrayOf(
             Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("Log", LogActivity::class.java),
+            Pair("Clipboard", ClipboardActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),

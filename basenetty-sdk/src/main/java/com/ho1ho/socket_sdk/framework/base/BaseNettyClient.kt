@@ -252,7 +252,6 @@ abstract class BaseNettyClient protected constructor(
 
     private fun executeCommandInString(cmd: String?, showLog: Boolean) {
         if (!isValidExecuteCommandEnv()) {
-            LLog.e(tag, "Not invalid execute command evn!")
             return
         }
         if (cmd.isNullOrBlank()) {

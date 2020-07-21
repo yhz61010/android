@@ -84,6 +84,12 @@ class SocketActivity : BaseDemonstrationActivity() {
         cs.launch {
             repeat(1) {
                 socketClient.connect()
+
+                // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
+                // val socketClient = SocketClient("50d.win", 8080, connectionListener)
+                // val socketClientHandler = SocketClientHandler(socketClient)
+                // socketClient.initHandler(socketClientHandler)
+                // socketClient.connect()
             }
         }
     }

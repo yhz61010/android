@@ -260,7 +260,7 @@ abstract class BaseNettyClient protected constructor(
             return
         }
         if (showLog) {
-            LLog.i(tag, "exeCmd s[${cmd.length}]=$cmd")
+            LLog.i(tag, "exeCmd [${cmd.length}]=$cmd")
         }
         channel?.writeAndFlush(cmd + "\n")
     }

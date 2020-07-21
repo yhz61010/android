@@ -31,6 +31,7 @@ interface NettyConnectionListener {
         const val CONNECTION_ERROR_CAN_NOT_CONNECT_TO_SERVER = 0x1001
         const val CONNECTION_ERROR_CONNECT_EXCEPTION = 0x1002
         const val CONNECTION_ERROR_UNEXPECTED_EXCEPTION = 0x1003
+        const val CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES = 0x1004
     }
 }
 
@@ -55,6 +56,7 @@ enum class ConnectionStatus {
 
     /**
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
+     * It will be fired if try to connect to server failed(Example, Server down, invalid ip or port and etc.) or retry to connect failed.
      *
      * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */

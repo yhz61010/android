@@ -75,7 +75,7 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        socketClient.disconnect()
+        socketClient.disconnectManually()
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {

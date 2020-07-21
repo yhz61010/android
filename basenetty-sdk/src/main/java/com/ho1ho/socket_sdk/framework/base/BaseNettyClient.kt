@@ -40,6 +40,9 @@ abstract class BaseNettyClient protected constructor(
 //    var receivingDataListener: ReceivingDataListener? = null
 
     @Volatile
+    var disconnectManually = false
+
+    @Volatile
     var connectState: ConnectionStatus = ConnectionStatus.UNINITIALIZED
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
@@ -139,32 +142,38 @@ abstract class BaseNettyClient protected constructor(
             LLog.e(TAG, "===== Unexpected exception : ${e.message} =====")
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
+            doRetry()
         }
     }
 
     /**
      * After calling this method, you can reuse it again by calling [connect].
      * If you don't want to reconnect it anymore, do not forget to call [release].
+     *
+     * **Remember**, If you call this method, it will not trigger retry process.
      */
-    fun disconnect() {
+    fun disconnectManually() {
+        disconnectManually = true
         LLog.w(TAG, "===== disconnect() current state=${connectState.name} =====")
         if (ConnectionStatus.DISCONNECTED == connectState || ConnectionStatus.UNINITIALIZED == connectState) {
             LLog.w(TAG, "Already disconnected or not initialized.")
             return
         }
-        // The [STATUS_DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
-        // However, if connection status is [STATUS_CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
-        // So we just need to assign its status to [STATUS_DISCONNECTED]. No need to call listener.
+        // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
+        // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
+        // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
         connectState = ConnectionStatus.DISCONNECTED
         stopRetryHandler()
         channel?.disconnect()?.syncUninterruptibly()
+        // See above line, we do disconnect with syncUninterruptibly() method, so we can restore disconnectManually flag here.
+        disconnectManually = false
     }
 
     /**
      * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.) So you'd better NOT call this method in main thread.
      *
      * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
-     * If you want to reconnect it again, do not call this method, just call [disconnect].
+     * If you want to reconnect it again, do not call this method, just call [disconnectManually].
      */
     fun release() {
         LLog.w(TAG, "===== release() current state=${connectState.name} =====")
@@ -201,7 +210,7 @@ abstract class BaseNettyClient protected constructor(
         LLog.w(TAG, "=====> Socket released <=====")
     }
 
-    private fun doRetry() {
+    fun doRetry() {
         retryTimes++
         LLog.w(TAG, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_MILLS}ms | current state=${connectState.name} =====")
         connectState = ConnectionStatus.FAILED

@@ -41,15 +41,19 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        LLog.i(
+        LLog.w(
             tagName,
-            "===== Disconnected from: ${ctx.channel().remoteAddress()} | Channel is inactive and reached its end of lifetime(${ctx.name()}) ====="
+            "===== disconnectManually=${baseClient.disconnectManually} Disconnected from: ${ctx.channel()
+                .remoteAddress()} | Channel is inactive and reached its end of lifetime(${ctx.name()}) ====="
         )
         super.channelInactive(ctx)
 
         if (!caughtException) {
             baseClient.connectState = ConnectionStatus.DISCONNECTED
             baseClient.connectionListener.onDisconnected(baseClient)
+            if (!baseClient.disconnectManually) {
+                baseClient.doRetry()
+            }
             LLog.w(tagName, "=====> Socket disconnected <=====")
         } else {
             LLog.e(tagName, "Caught socket exception! DO NOT fire onDisconnect() method!")

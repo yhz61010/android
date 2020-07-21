@@ -13,6 +13,7 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
+import java.net.ConnectException
 import java.util.concurrent.RejectedExecutionException
 
 /**
@@ -44,16 +45,16 @@ abstract class BaseNettyClient protected constructor(
     private val retryHandler = Handler(retryThread.looper)
     private var retryTimes = 0
 
-    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
-        if (future.isSuccess) {
-            stopRetryHandler()
-            channel = future.syncUninterruptibly().channel()
-            LLog.i(TAG, "===== Connect success =====")
-        } else {
-            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
-            doRetry()
-        }
-    }
+//    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
+//        if (future.isSuccess) {
+//            stopRetryHandler()
+//            channel = future.syncUninterruptibly().channel()
+//            LLog.i(TAG, "===== Connect success =====")
+//        } else {
+//            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
+//            doRetry()
+//        }
+//    }
 
     private fun init() {
         bootstrap = Bootstrap()
@@ -112,11 +113,11 @@ abstract class BaseNettyClient protected constructor(
             // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
             // Just like RejectedExecutionException exception. However, I never catch RejectedExecutionException as I expect. Who can tell me why?
 
-//            val f = bootstrap.connect(host, port).sync()//.addListener(connectFutureListener)
-//            channel = f.syncUninterruptibly().channel()
-//            retryTimes = 0
+            val f = bootstrap.connect(host, port).sync()
+            channel = f.syncUninterruptibly().channel()
+            retryTimes = 0
 
-            bootstrap.connect(host, port).addListener(connectFutureListener)
+//            bootstrap.connect(host, port).addListener(connectFutureListener)
             LLog.i(TAG, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {
             LLog.e(TAG, "===== RejectedExecutionException: ${e.message} =====")
@@ -127,11 +128,12 @@ abstract class BaseNettyClient protected constructor(
             // So we handle it here.
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
-        }/* catch (e: ConnectException) {
+        } catch (e: ConnectException) {
             LLog.e(TAG, "===== ConnectException: ${e.message} =====")
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-        }*/ catch (e: Exception) {
+            doRetry()
+        } catch (e: Exception) {
             LLog.e(TAG, "===== Unexpected exception : ${e.message} =====")
             connectState = ConnectionStatus.FAILED
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
@@ -148,12 +150,12 @@ abstract class BaseNettyClient protected constructor(
             LLog.w(TAG, "Already disconnected or not initialized.")
             return
         }
-        stopRetryHandler()
         // The [STATUS_DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
         // However, if connection status is [STATUS_CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
         // So we just need to assign its status to [STATUS_DISCONNECTED]. No need to call listener.
         connectState = ConnectionStatus.DISCONNECTED
-        channel?.disconnect()
+        stopRetryHandler()
+        channel?.disconnect()?.syncUninterruptibly()
     }
 
     /**

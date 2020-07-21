@@ -19,6 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
+ * A thread-safe class
+ *
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */

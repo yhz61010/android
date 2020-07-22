@@ -6,5 +6,9 @@ package com.ho1ho.socket_sdk.framework.base.retry_strategy.base
  */
 interface RetryStrategy {
     fun getMaxTimes(): Int
-    fun getDelayInMillSec(): Long
+
+    /**
+     * @param currentRetryTimes Start at 1
+     */
+    fun getDelayInMillSec(currentRetryTimes: Int): Long
 }

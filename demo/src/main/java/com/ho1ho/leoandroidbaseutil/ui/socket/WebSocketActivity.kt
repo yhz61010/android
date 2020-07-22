@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.ui
+package com.ho1ho.leoandroidbaseutil.ui.socket
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -16,6 +16,9 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.Delimiters
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
@@ -23,16 +26,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URI
+import java.nio.charset.Charset
 
-class SocketActivity : BaseDemonstrationActivity() {
+class WebSocketActivity : BaseDemonstrationActivity() {
     private val cs = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var socketClient: SocketClient
-    private lateinit var socketClientHandler: SocketClientHandler
+    private lateinit var webSocketClient: WebSocketClient
+    private lateinit var webSocketClientHandler: WebSocketClientHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_socket_client)
+        setContentView(R.layout.activity_websocket_client)
 
         val connectionListener = object : NettyConnectionListener {
             override fun onConnecting(client: BaseNettyClient) {
@@ -68,14 +73,17 @@ class SocketActivity : BaseDemonstrationActivity() {
 
         }
 
-        socketClient = SocketClient("50d.win", 8080, connectionListener)
-        socketClientHandler = SocketClientHandler(socketClient)
-        socketClient.initHandler(socketClientHandler)
+        webSocketClient = WebSocketClient(
+            URI("ws://142.11.215.254:9090/ws"),
+            connectionListener
+        )
+        webSocketClientHandler = WebSocketClientHandler(webSocketClient)
+        webSocketClient.initHandler(webSocketClientHandler)
     }
 
     override fun onDestroy() {
         cs.launch {
-            socketClient.release()
+            webSocketClient.release()
         }
         super.onDestroy()
     }
@@ -83,7 +91,7 @@ class SocketActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-                socketClient.connect()
+                webSocketClient.connect()
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -96,26 +104,27 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            socketClientHandler.sendMsgToServer(editText.text.toString())
+            webSocketClientHandler.sendMsgToServer(editText.text.toString())
             withContext(Dispatchers.Main) { editText.text.clear() }
         }
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            socketClient.disconnectManually()
+            webSocketClient.disconnectManually()
         }
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            socketClient.release()
+            webSocketClient.release()
         }
     }
 
     // =====================================================
 
-    class SocketClient(host: String, port: Int, connectionListener: NettyConnectionListener) : BaseNettyClient(host, port, connectionListener) {
+    class WebSocketClient(webSocketUri: URI, connectionListener: NettyConnectionListener) :
+        BaseNettyClient(webSocketUri, connectionListener) {
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             with(pipeline) {
                 addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
@@ -126,11 +135,18 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     @ChannelHandler.Sharable
-    class SocketClientHandler(private val client: BaseNettyClient) : BaseChannelInboundHandler<String>(client) {
-        @Throws(Exception::class)
-        override fun channelRead0(ctx: ChannelHandlerContext, msg: String) {
-            super.channelRead0(ctx, msg)
-            client.connectionListener.onReceivedData(client, msg)
+    class WebSocketClientHandler(private val client: BaseNettyClient) : BaseChannelInboundHandler<Any>(client) {
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
+            val receivedString: String?
+            val frame = msg as WebSocketFrame
+            if (frame is TextWebSocketFrame) {
+                receivedString = frame.text()
+            } else if (frame is PongWebSocketFrame) {
+                receivedString = frame.content().toString(Charset.forName("UTF-8"))
+            } else {
+                receivedString = null
+            }
+            client.connectionListener.onReceivedData(client, receivedString)
         }
 
         fun sendMsgToServer(msg: String) {
@@ -142,6 +158,6 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     companion object {
-        const val TAG = "SocketClient"
+        const val TAG = "WebSocketClient"
     }
 }

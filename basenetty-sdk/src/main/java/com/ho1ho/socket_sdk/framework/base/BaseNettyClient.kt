@@ -185,12 +185,12 @@ abstract class BaseNettyClient protected constructor(
      * **Remember**, If you call this method, it will not trigger retry process.
      */
     fun disconnectManually() {
-        disconnectManually = true
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
         if (ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already disconnected or not initialized.")
             return
         }
+        disconnectManually = true
         // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
         // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
@@ -211,7 +211,7 @@ abstract class BaseNettyClient protected constructor(
             LLog.w(tag, "Already release or not initialized")
             return
         }
-
+        disconnectManually = true
         LLog.w(tag, "Releasing retry handler...")
         stopRetryHandler()
         retryThread.quitSafely()

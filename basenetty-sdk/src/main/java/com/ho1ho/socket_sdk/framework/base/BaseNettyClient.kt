@@ -259,10 +259,7 @@ abstract class BaseNettyClient protected constructor(
                 "Exceed max retry times."
             )
         } else {
-            LLog.w(
-                tag,
-                "===== reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name} ====="
-            )
+            LLog.w(tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}")
             retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
         }
     }

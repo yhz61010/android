@@ -6,6 +6,8 @@ import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -36,6 +38,8 @@ abstract class BaseNettyClient protected constructor(
     private val host: String,
     private val port: Int,
     val connectionListener: NettyConnectionListener,
+    private val retryStrategy: RetryStrategy = ConstantRetry(),
+    // FIXME implement SSL socket
     private val isSecured: Boolean = false
 ) {
     internal var webSocketUri: URI? = null
@@ -49,8 +53,9 @@ abstract class BaseNettyClient protected constructor(
     protected constructor(
         webSocketUri: URI,
         connectionListener: NettyConnectionListener,
+        retryStrategy: RetryStrategy = ConstantRetry(),
         isSecured: Boolean = false
-    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, isSecured) {
+    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy, isSecured) {
         this.isWebSocket = true
         this.webSocketUri = webSocketUri
         LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
@@ -244,7 +249,7 @@ abstract class BaseNettyClient protected constructor(
 
     fun doRetry() {
         retryTimes.getAndIncrement()
-        if (retryTimes.get() > CONNECT_MAX_RETRY_TIMES) {
+        if (retryTimes.get() > retryStrategy.getMaxTimes()) {
             LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
             stopRetryHandler()
             connectState.set(ConnectionStatus.FAILED)
@@ -254,8 +259,8 @@ abstract class BaseNettyClient protected constructor(
                 "Exceed max retry times."
             )
         } else {
-            LLog.w(tag, "===== reconnect($retryTimes) in ${RETRY_DELAY_IN_MILLS}ms | current state=${connectState.get().name} =====")
-            retryHandler.postDelayed({ connect() }, RETRY_DELAY_IN_MILLS)
+            LLog.w(tag, "===== reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec()}ms | current state=${connectState.get().name} =====")
+            retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec())
         }
     }
 
@@ -331,11 +336,6 @@ abstract class BaseNettyClient protected constructor(
     // ================================================
 
     companion object {
-        //        const val HEARTBEAT_INTERVAL_IN_MS = 10_000L
-        //        const val HEARTBEAT_TIMEOUT_TIMES = 3
         const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
-
-        private const val CONNECT_MAX_RETRY_TIMES = 10
-        private const val RETRY_DELAY_IN_MILLS: Long = 2000L
     }
 }

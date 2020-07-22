@@ -8,7 +8,6 @@ import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.websocketx.*
 import io.netty.util.CharsetUtil
 import java.io.IOException
@@ -21,22 +20,8 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
-    private var handshakeFuture: ChannelPromise? = null
-    private val handshaker: WebSocketClientHandshaker? by lazy {
-        if (baseClient.isWebSocket) {
-            val httpHeaders: HttpHeaders = DefaultHttpHeaders()
-            WebSocketClientHandshakerFactory.newHandshaker(
-                baseClient.webSocketUri,
-                WebSocketVersion.V13,
-                null,
-                false,
-                httpHeaders,
-                1024 * 1024 /*5 * 65536*/
-            )
-        } else {
-            null
-        }
-    }
+    private var channelPromise: ChannelPromise? = null
+    private var handshaker: WebSocketClientHandshaker? = null
 
     @Volatile
     private var caughtException = false
@@ -46,7 +31,15 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== handlerAdded =====")
         if (baseClient.isWebSocket) {
-            handshakeFuture = ctx.newPromise()
+            handshaker = WebSocketClientHandshakerFactory.newHandshaker(
+                baseClient.webSocketUri,
+                WebSocketVersion.V13,
+                null,
+                false,
+                DefaultHttpHeaders(),
+                1024 * 1024 /*5 * 65536*/
+            )
+            channelPromise = ctx.newPromise()
         }
         super.handlerAdded(ctx)
     }
@@ -76,6 +69,9 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
             "===== disconnectManually=${baseClient.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
                 .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
         )
+        if (baseClient.isWebSocket) {
+            handshaker?.close(ctx.channel(), CloseWebSocketFrame())
+        }
         super.channelInactive(ctx)
 
         if (!caughtException) {
@@ -153,25 +149,25 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      * DO NOT override this method
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
-        if (msg is FullHttpResponse) {
-            LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
-            if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                val exceptionInfo =
-                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
-                LLog.e(tag, exceptionInfo)
-                throw IllegalStateException(exceptionInfo)
-            }
-        }
-
         if (baseClient.isWebSocket) {
+            if (msg is FullHttpResponse) {
+                LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+                    val exceptionInfo =
+                        "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+                    LLog.e(tag, exceptionInfo)
+                    throw IllegalStateException(exceptionInfo)
+                }
+            }
+
             if (handshaker?.isHandshakeComplete == false) {
                 try {
                     handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
                     LLog.w(tag, "=====> WebSocket client connected <=====")
-                    handshakeFuture?.setSuccess()
+                    channelPromise?.setSuccess()
                 } catch (e: WebSocketHandshakeException) {
                     LLog.e(tag, "=====> WebSocket client failed to connect <=====")
-                    handshakeFuture?.setFailure(e)
+                    channelPromise?.setFailure(e)
                 }
                 return
             }

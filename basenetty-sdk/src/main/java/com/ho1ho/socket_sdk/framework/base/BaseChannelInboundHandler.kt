@@ -4,7 +4,13 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.handler.codec.http.DefaultHttpHeaders
+import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.codec.http.HttpHeaders
+import io.netty.handler.codec.http.websocketx.*
+import io.netty.util.CharsetUtil
 import java.io.IOException
 
 /**
@@ -12,7 +18,24 @@ import java.io.IOException
  * Date: 20-5-13 下午4:39
  */
 abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyClient) :
-    SimpleChannelInboundHandler<T>() {
+    SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+
+    private var handshakeFuture: ChannelPromise? = null
+    private val handshaker: WebSocketClientHandshaker? by lazy {
+        if (baseClient.isWebSocket) {
+            val httpHeaders: HttpHeaders = DefaultHttpHeaders()
+            WebSocketClientHandshakerFactory.newHandshaker(
+                baseClient.webSocketUri,
+                WebSocketVersion.V13,
+                null,
+                false,
+                httpHeaders,
+                1024 * 1024 /*5 * 65536*/
+            )
+        } else {
+            null
+        }
+    }
 
     private val tag = javaClass.simpleName
 
@@ -23,6 +46,9 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== handlerAdded(${ctx.name()}) =====")
+        if (baseClient.isWebSocket) {
+            handshakeFuture = ctx.newPromise()
+        }
         super.handlerAdded(ctx)
     }
 
@@ -37,6 +63,9 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
         caughtException = false
         baseClient.retryTimes.set(0)
         baseClient.disconnectManually = false
+        if (baseClient.isWebSocket) {
+            handshaker?.handshake(ctx.channel())
+        }
         super.channelActive(ctx)
         baseClient.connectState.set(ConnectionStatus.CONNECTED)
         baseClient.connectionListener.onConnected(baseClient)
@@ -121,6 +150,41 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
         super.userEventTriggered(ctx, evt)
     }
 
+    /**
+     * DO NOT override this method
+     */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
+        if (baseClient.isWebSocket) {
+            if (handshaker?.isHandshakeComplete == false) {
+                try {
+                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
+                    LLog.w(tag, "=====> WebSocket client connected <=====")
+                    handshakeFuture?.setSuccess()
+                } catch (e: WebSocketHandshakeException) {
+                    LLog.e(tag, "=====> WebSocket client failed to connect <=====")
+                    handshakeFuture?.setFailure(e)
+                }
+                return
+            }
+
+            if (msg is FullHttpResponse) {
+                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+                LLog.e(tag, exceptionInfo)
+                throw IllegalStateException(exceptionInfo)
+            }
+
+            val frame = msg as WebSocketFrame
+            if (frame is CloseWebSocketFrame) {
+                LLog.w(tag, "=====> WebSocket Client received close frame <=====")
+                ctx.channel().close()
+                return
+            }
+        }
+
+        onReceivedData(ctx, msg)
     }
+}
+
+interface ReadSocketDataListener<T> {
+    fun onReceivedData(ctx: ChannelHandlerContext, msg: T)
 }

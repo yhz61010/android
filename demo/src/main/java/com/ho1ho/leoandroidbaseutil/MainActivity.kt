@@ -15,6 +15,8 @@ import com.ho1ho.leoandroidbaseutil.ui.*
 import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareMasterActivity
+import com.ho1ho.leoandroidbaseutil.ui.socket.SocketActivity
+import com.ho1ho.leoandroidbaseutil.ui.socket.WebSocketActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -90,7 +92,8 @@ class MainActivity : AppCompatActivity() {
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record screen by screenshot", ScreenshotRecordH264Activity::class.java),
-            Pair("Socket client", SocketActivity::class.java)
+            Pair("Socket client", SocketActivity::class.java),
+            Pair("WebSocket client", WebSocketActivity::class.java)
         )
 
         private val color = arrayOf(

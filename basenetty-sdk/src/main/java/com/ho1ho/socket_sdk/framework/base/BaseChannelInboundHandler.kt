@@ -19,6 +19,7 @@ import java.io.IOException
  */
 abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyClient) :
     SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+    private val tag = javaClass.simpleName
 
     private var handshakeFuture: ChannelPromise? = null
     private val handshaker: WebSocketClientHandshaker? by lazy {
@@ -36,8 +37,6 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
             null
         }
     }
-
-    private val tag = javaClass.simpleName
 
     @Volatile
     private var caughtException = false
@@ -59,7 +58,6 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
-//        mBaseClient.connectionListener?.onConnectionCreated(mBaseClient)
         caughtException = false
         baseClient.retryTimes.set(0)
         baseClient.disconnectManually = false

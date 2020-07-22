@@ -309,11 +309,8 @@ abstract class BaseNettyClient protected constructor(
         }
 
         if (isWebSocket) {
-            if (isPing) {
-                channel?.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            } else {
-                channel?.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
-            }
+            if (isPing) channel?.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+            else channel?.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
         } else {
             channel?.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }

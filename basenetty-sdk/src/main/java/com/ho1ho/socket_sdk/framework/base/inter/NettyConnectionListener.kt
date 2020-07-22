@@ -59,7 +59,7 @@ enum class ConnectionStatus {
 
     /**
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
-     * It will be fired if try to connect to server failed(Example, Server down, invalid ip or port and etc.) or retry to connect failed.
+     * For example, server down, invalid ip or port, retry to connect failed.
      *
      * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */

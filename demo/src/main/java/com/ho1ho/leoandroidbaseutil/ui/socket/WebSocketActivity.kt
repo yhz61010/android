@@ -104,8 +104,8 @@ class WebSocketActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            webSocketClientHandler.sendMsgToServer(editText.text.toString())
-            withContext(Dispatchers.Main) { editText.text.clear() }
+            val result = webSocketClientHandler.sendMsgToServer(editText.text.toString())
+            withContext(Dispatchers.Main) { editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
         }
     }
 
@@ -149,8 +149,8 @@ class WebSocketActivity : BaseDemonstrationActivity() {
             client.connectionListener.onReceivedData(client, receivedString)
         }
 
-        fun sendMsgToServer(msg: String) {
-            client.executeCommand(msg)
+        fun sendMsgToServer(msg: String): Boolean {
+            return client.executeCommand(msg)
         }
 
         override fun release() {

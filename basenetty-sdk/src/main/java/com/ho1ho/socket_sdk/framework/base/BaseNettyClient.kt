@@ -7,6 +7,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
 import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
@@ -262,7 +263,14 @@ abstract class BaseNettyClient protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(): Boolean {
+    private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
+        if (cmd == null) {
+            LLog.e(tag, "The command is null. Stop processing.")
+            return false
+        }
+        if (cmd !is String && cmd !is ByteArray) {
+            throw IllegalArgumentException("Command must be either String or ByteArray.")
+        }
         if (ConnectionStatus.CONNECTED != connectState.get()) {
             LLog.e(tag, "Socket is not connected. Can not send command.")
             return false
@@ -277,75 +285,49 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeCommandInString(cmd: String?, showLog: Boolean, isPing: Boolean) {
-        if (!isValidExecuteCommandEnv()) {
+    private fun executeUnifiedCommand(cmd: Any?, showLog: Boolean, isPing: Boolean) {
+        if (!isValidExecuteCommandEnv(cmd)) {
             return
         }
-        if (cmd.isNullOrBlank()) {
-            LLog.w(tag, "Can not execute blank string command.")
-            return
-        }
-        if (showLog) {
-            LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
+        val stringCmd: String?
+        val bytesCmd: ByteBuf?
+        val isStringCmd: Boolean
+        when (cmd) {
+            is String -> {
+                isStringCmd = true
+                stringCmd = cmd
+                bytesCmd = null
+                if (showLog) LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
+            }
+            is ByteArray -> {
+                isStringCmd = false
+                stringCmd = null
+                bytesCmd = Unpooled.wrappedBuffer(cmd)
+                if (showLog) LLog.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
+            }
+            else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
         if (isWebSocket) {
             if (isPing) {
-                channel?.writeAndFlush(PingWebSocketFrame(Unpooled.wrappedBuffer(cmd.toByteArray())))
+                channel?.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
             } else {
-                channel?.writeAndFlush(TextWebSocketFrame(cmd))
+                channel?.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
             }
         } else {
-            channel?.writeAndFlush(cmd + "\n")
-        }
-    }
-
-    /**
-     * @param isPing Only works in WebSocket mode
-     */
-    private fun executeCommandInBinary(bytes: ByteArray?, showLog: Boolean, isPing: Boolean) {
-        if (!isValidExecuteCommandEnv()) {
-            return
-        }
-        if (bytes == null || bytes.isEmpty()) {
-            LLog.w(tag, "Can not execute blank binary command.")
-            return
-        }
-        if (showLog) {
-            LLog.i(tag, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
-        }
-        if (isWebSocket) {
-            if (isPing) {
-                channel?.writeAndFlush(PingWebSocketFrame(Unpooled.wrappedBuffer(bytes)))
-            } else {
-                channel?.writeAndFlush(BinaryWebSocketFrame(Unpooled.wrappedBuffer(bytes)))
-            }
-        } else {
-            channel?.writeAndFlush(Unpooled.wrappedBuffer(bytes))
+            channel?.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
     }
 
     @JvmOverloads
-    fun executeCommand(cmd: String, showLog: Boolean = true) {
-        executeCommandInString(cmd, showLog, false)
+    fun executeCommand(cmd: Any?, showLog: Boolean = true) {
+        executeUnifiedCommand(cmd, showLog, false)
     }
 
     @Suppress("unused")
     @JvmOverloads
-    fun executeCommand(cmd: ByteArray, showLog: Boolean = true) {
-        executeCommandInBinary(cmd, showLog, false)
-    }
-
-    @Suppress("unused")
-    @JvmOverloads
-    fun executePingCommand(cmd: String?, showLog: Boolean = true) {
-        executeCommandInString(cmd, showLog, true)
-    }
-
-    @Suppress("unused")
-    @JvmOverloads
-    fun executePingCommand(bytes: ByteArray?, showLog: Boolean = true) {
-        executeCommandInBinary(bytes, showLog, true)
+    fun executePingCommand(cmd: Any?, showLog: Boolean = true) {
+        executeUnifiedCommand(cmd, showLog, true)
     }
 
     // ================================================

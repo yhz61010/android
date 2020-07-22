@@ -44,7 +44,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     abstract fun release()
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== handlerAdded(${ctx.name()}) =====")
+        LLog.i(tag, "===== handlerAdded =====")
         if (baseClient.isWebSocket) {
             handshakeFuture = ctx.newPromise()
         }
@@ -52,12 +52,12 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     }
 
     override fun channelRegistered(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is registered to EventLoop(${ctx.name()}) =====")
+        LLog.i(tag, "===== Channel is registered to EventLoop =====")
         super.channelRegistered(ctx)
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is active(${ctx.name()}) Connected to: ${ctx.channel().remoteAddress()} =====")
+        LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
         caughtException = false
         baseClient.retryTimes.set(0)
         baseClient.disconnectManually = false
@@ -73,15 +73,16 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LLog.w(
             tag,
-            "===== disconnectManually=${baseClient.disconnectManually} Disconnected from: ${ctx.channel()
-                .remoteAddress()} | Channel is inactive and reached its end of lifetime(${ctx.name()}) ====="
+            "===== disconnectManually=${baseClient.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
+                .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
         )
         super.channelInactive(ctx)
 
         if (!caughtException) {
-            baseClient.connectState.set(ConnectionStatus.DISCONNECTED)
-            baseClient.connectionListener.onDisconnected(baseClient)
-            if (!baseClient.disconnectManually) {
+            if (baseClient.disconnectManually) {
+                baseClient.connectState.set(ConnectionStatus.DISCONNECTED)
+                baseClient.connectionListener.onDisconnected(baseClient)
+            } else { // Server down
                 baseClient.connectState.set(ConnectionStatus.FAILED)
                 baseClient.connectionListener.onFailed(baseClient, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
                 baseClient.doRetry()
@@ -97,12 +98,12 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      * reconnect it here.
      */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is unregistered from EventLoop(${ctx.name()}) =====")
+        LLog.i(tag, "===== Channel is unregistered from EventLoop =====")
         super.channelUnregistered(ctx)
     }
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== handlerRemoved(${ctx.name()}) =====")
+        LLog.i(tag, "===== handlerRemoved =====")
         super.handlerRemoved(ctx)
     }
 

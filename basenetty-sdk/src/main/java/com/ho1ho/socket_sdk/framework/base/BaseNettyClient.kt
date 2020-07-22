@@ -334,8 +334,8 @@ abstract class BaseNettyClient protected constructor(
         //        const val HEARTBEAT_INTERVAL_IN_MS = 10_000L
         //        const val HEARTBEAT_TIMEOUT_TIMES = 3
         const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
-        private const val CONNECT_MAX_RETRY_TIMES = 3
 
+        private const val CONNECT_MAX_RETRY_TIMES = 10
         private const val RETRY_DELAY_IN_MILLS: Long = 2000L
     }
 }

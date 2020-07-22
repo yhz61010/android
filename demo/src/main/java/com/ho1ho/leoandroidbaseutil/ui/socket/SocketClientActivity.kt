@@ -37,11 +37,6 @@ class SocketActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_socket_client)
 
         val connectionListener = object : NettyConnectionListener {
-            override fun onConnecting(client: BaseNettyClient) {
-                LLog.i(TAG, "onConnecting")
-                ToastUtil.showDebugToast("onConnecting")
-            }
-
             override fun onConnected(client: BaseNettyClient) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")

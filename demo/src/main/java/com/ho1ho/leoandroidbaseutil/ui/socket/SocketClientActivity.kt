@@ -57,7 +57,7 @@ class SocketActivity : BaseDemonstrationActivity() {
             }
 
             override fun onFailed(client: BaseNettyClient, code: Int, msg: String?) {
-                LLog.i(TAG, "${Thread.currentThread().id} onFailed code: $code message: $msg")
+                LLog.i(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 

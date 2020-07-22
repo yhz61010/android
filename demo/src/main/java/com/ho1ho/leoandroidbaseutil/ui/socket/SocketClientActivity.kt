@@ -68,7 +68,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
         }
 
-        socketClient = SocketClient("142.11.215.254", 9443, connectionListener)
+        socketClient = SocketClient("61010.ml", 9443, connectionListener)
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
     }

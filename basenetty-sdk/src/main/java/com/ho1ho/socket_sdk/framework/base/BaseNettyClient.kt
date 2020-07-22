@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
+import io.netty.handler.stream.ChunkedWriteHandler
 import java.net.ConnectException
 import java.net.URI
 import java.util.concurrent.RejectedExecutionException
@@ -105,6 +106,9 @@ abstract class BaseNettyClient protected constructor(
                 if (isWebSocket) {
                     pipeline.addLast(HttpClientCodec())
                     pipeline.addLast(HttpObjectAggregator(65536))
+                    /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
+                     * neither spending a lot of memory nor getting [OutOfMemoryError]. */
+                    pipeline.addLast(ChunkedWriteHandler())
                     pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
                 }
                 addLastToPipeline(pipeline)

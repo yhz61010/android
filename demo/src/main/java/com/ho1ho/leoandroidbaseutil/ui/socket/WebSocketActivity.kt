@@ -11,6 +11,8 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.base.BaseChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
@@ -75,7 +77,8 @@ class WebSocketActivity : BaseDemonstrationActivity() {
 
         webSocketClient = WebSocketClient(
             URI("ws://61010.ml:9090/ws"),
-            connectionListener
+            connectionListener,
+            ConstantRetry(10, 2000)
         )
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
@@ -123,8 +126,8 @@ class WebSocketActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class WebSocketClient(webSocketUri: URI, connectionListener: NettyConnectionListener) :
-        BaseNettyClient(webSocketUri, connectionListener) {
+    class WebSocketClient(webSocketUri: URI, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
+        BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             with(pipeline) {
                 addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))

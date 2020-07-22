@@ -11,7 +11,7 @@ class ConstantRetry(private val maxTimes: Int = 10, private val delayInMillSec: 
         return maxTimes
     }
 
-    override fun getDelayInMillSec(): Long {
+    override fun getDelayInMillSec(currentRetryTimes: Int): Long {
         return delayInMillSec
     }
 }

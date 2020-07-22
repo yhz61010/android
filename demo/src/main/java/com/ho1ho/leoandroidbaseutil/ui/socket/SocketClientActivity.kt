@@ -11,6 +11,8 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.base.BaseChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.ExponentRetry
+import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
@@ -68,7 +70,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
         }
 
-        socketClient = SocketClient("61010.ml", 9443, connectionListener)
+        socketClient = SocketClient("61010.ml", 9443, connectionListener, ExponentRetry(5, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
     }
@@ -115,7 +117,8 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class SocketClient(host: String, port: Int, connectionListener: NettyConnectionListener) : BaseNettyClient(host, port, connectionListener) {
+    class SocketClient(host: String, port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
+        BaseNettyClient(host, port, connectionListener, retryStrategy) {
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             with(pipeline) {
                 addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))

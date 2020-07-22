@@ -64,7 +64,7 @@ class WebSocketActivity : BaseDemonstrationActivity() {
             }
 
             override fun onFailed(client: BaseNettyClient, code: Int, msg: String?) {
-                LLog.w(TAG, "${Thread.currentThread().id} onFailed code: $code message: $msg")
+                LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 

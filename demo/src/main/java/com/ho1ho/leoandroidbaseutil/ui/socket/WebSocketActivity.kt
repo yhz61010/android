@@ -57,17 +57,17 @@ class WebSocketActivity : BaseDemonstrationActivity() {
             }
 
             override fun onDisconnected(client: BaseNettyClient) {
-                LLog.i(TAG, "onDisconnect")
+                LLog.w(TAG, "onDisconnect")
                 ToastUtil.showDebugToast("onDisconnect")
             }
 
             override fun onFailed(client: BaseNettyClient, code: Int, msg: String?) {
-                LLog.i(TAG, "${Thread.currentThread().id} onFailed code: $code message: $msg")
+                LLog.w(TAG, "${Thread.currentThread().id} onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 
             override fun onException(client: BaseNettyClient, cause: Throwable) {
-                LLog.i(TAG, "onCaughtException")
+                LLog.e(TAG, "onCaughtException reason: ${cause.message}")
                 ToastUtil.showDebugToast("onCaughtException")
             }
 

@@ -134,19 +134,12 @@ abstract class BaseNettyClient protected constructor(
     @Synchronized
     fun connect() {
         LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
-        when (connectState.get()) {
-            ConnectionStatus.CONNECTING -> {
-                LLog.w(tag, "===== Wait for connecting =====")
-                return
-            }
-            ConnectionStatus.CONNECTED -> {
-                LLog.w(tag, "===== Already connected =====")
-                return
-            }
-            else -> LLog.i(tag, "===== Prepare to connect to server =====")
+        if (connectState.get() == ConnectionStatus.CONNECTED) {
+            LLog.w(tag, "===== Already connected =====")
+            return
+        } else {
+            LLog.i(tag, "===== Prepare to connect to server =====")
         }
-        connectState.set(ConnectionStatus.CONNECTING)
-        connectionListener.onConnecting(this)
         try {
             // You call connect() with sync() method like this bellow:
             // bootstrap.connect(host, port).sync()

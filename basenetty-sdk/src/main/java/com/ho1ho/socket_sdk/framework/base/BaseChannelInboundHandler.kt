@@ -153,6 +153,16 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      * DO NOT override this method
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
+        if (msg is FullHttpResponse) {
+            LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+            if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+                val exceptionInfo =
+                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+                LLog.e(tag, exceptionInfo)
+                throw IllegalStateException(exceptionInfo)
+            }
+        }
+
         if (baseClient.isWebSocket) {
             if (handshaker?.isHandshakeComplete == false) {
                 try {
@@ -164,12 +174,6 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
                     handshakeFuture?.setFailure(e)
                 }
                 return
-            }
-
-            if (msg is FullHttpResponse) {
-                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
-                LLog.e(tag, exceptionInfo)
-                throw IllegalStateException(exceptionInfo)
             }
 
             val frame = msg as WebSocketFrame

@@ -42,11 +42,6 @@ class WebSocketActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_websocket_client)
 
         val connectionListener = object : NettyConnectionListener {
-            override fun onConnecting(client: BaseNettyClient) {
-                LLog.i(TAG, "onConnecting")
-                ToastUtil.showDebugToast("onConnecting")
-            }
-
             override fun onConnected(client: BaseNettyClient) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")
@@ -72,14 +67,9 @@ class WebSocketActivity : BaseDemonstrationActivity() {
                 LLog.e(TAG, "onCaughtException reason: ${cause.message}")
                 ToastUtil.showDebugToast("onCaughtException")
             }
-
         }
 
-        webSocketClient = WebSocketClient(
-            URI("ws://61010.ml:9090/ws"),
-            connectionListener,
-            ConstantRetry(10, 2000)
-        )
+        webSocketClient = WebSocketClient(URI("ws://61010.ml:9090/ws"), connectionListener, ConstantRetry(10, 2000))
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
     }

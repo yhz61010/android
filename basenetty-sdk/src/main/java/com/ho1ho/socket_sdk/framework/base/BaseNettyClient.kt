@@ -166,12 +166,10 @@ abstract class BaseNettyClient protected constructor(
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: ConnectException) {
-            LLog.e(tag, "===== ConnectException: ${e.message} =====")
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
             doRetry()
         } catch (e: Exception) {
-            LLog.e(tag, "===== Unexpected exception : ${e.message} =====")
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
             doRetry()

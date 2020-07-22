@@ -96,8 +96,8 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            socketClientHandler.sendMsgToServer(editText.text.toString())
-            withContext(Dispatchers.Main) { editText.text.clear() }
+            val result = socketClientHandler.sendMsgToServer(editText.text.toString())
+            withContext(Dispatchers.Main) { editText.text.clear(); if (!result) ToastUtil.showDebugErrorToast("Send command error") }
         }
     }
 
@@ -131,8 +131,8 @@ class SocketActivity : BaseDemonstrationActivity() {
             client.connectionListener.onReceivedData(client, msg)
         }
 
-        fun sendMsgToServer(msg: String) {
-            client.executeCommand(msg)
+        fun sendMsgToServer(msg: String): Boolean {
+            return client.executeCommand(msg)
         }
 
         override fun release() {

@@ -285,9 +285,9 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmd: Any?, showLog: Boolean, isPing: Boolean) {
+    private fun executeUnifiedCommand(cmd: Any?, showLog: Boolean, isPing: Boolean): Boolean {
         if (!isValidExecuteCommandEnv(cmd)) {
-            return
+            return false
         }
         val stringCmd: String?
         val bytesCmd: ByteBuf?
@@ -314,24 +314,21 @@ abstract class BaseNettyClient protected constructor(
         } else {
             channel?.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
+        return true
     }
 
     @JvmOverloads
-    fun executeCommand(cmd: Any?, showLog: Boolean = true) {
-        executeUnifiedCommand(cmd, showLog, false)
-    }
+    fun executeCommand(cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(cmd, showLog, false)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmd: Any?, showLog: Boolean = true) {
-        executeUnifiedCommand(cmd, showLog, true)
-    }
+    fun executePingCommand(cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(cmd, showLog, true)
 
     // ================================================
 
     companion object {
         //        const val HEARTBEAT_INTERVAL_IN_MS = 10_000L
-//        const val HEARTBEAT_TIMEOUT_TIMES = 3
+        //        const val HEARTBEAT_TIMEOUT_TIMES = 3
         const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
         private const val CONNECT_MAX_RETRY_TIMES = 3
 

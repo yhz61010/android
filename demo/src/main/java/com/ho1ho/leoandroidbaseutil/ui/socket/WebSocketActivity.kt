@@ -74,7 +74,7 @@ class WebSocketActivity : BaseDemonstrationActivity() {
         }
 
         webSocketClient = WebSocketClient(
-            URI("ws://142.11.215.254:9090/ws"),
+            URI("ws://61010.ml:9090/ws"),
             connectionListener
         )
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)

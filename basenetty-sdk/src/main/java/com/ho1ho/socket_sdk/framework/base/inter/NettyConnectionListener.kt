@@ -51,8 +51,7 @@ enum class ConnectionStatus {
     CONNECTED,
 
     /**
-     * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect or server is down.
-     * Only in these two cases, [DISCONNECTED] listener will be triggered.
+     * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
      *
      * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [DISCONNECTED] listener.
      */

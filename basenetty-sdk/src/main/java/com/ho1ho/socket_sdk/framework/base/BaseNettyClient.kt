@@ -13,7 +13,14 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
+import io.netty.handler.codec.http.HttpClientCodec
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
 import java.net.ConnectException
+import java.net.URI
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -27,10 +34,25 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class BaseNettyClient protected constructor(
     private val host: String,
     private val port: Int,
-    val connectionListener: NettyConnectionListener
+    val connectionListener: NettyConnectionListener,
+    private val isSecured: Boolean = false
 ) {
+    internal var webSocketUri: URI? = null
+    internal var isWebSocket: Boolean
+
     init {
+        isWebSocket = false
         init()
+    }
+
+    protected constructor(
+        webSocketUri: URI,
+        connectionListener: NettyConnectionListener,
+        isSecured: Boolean = false
+    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, isSecured) {
+        this.isWebSocket = true
+        this.webSocketUri = webSocketUri
+        LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
     }
 
     private val tag = javaClass.simpleName
@@ -80,6 +102,11 @@ abstract class BaseNettyClient protected constructor(
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {
                 val pipeline = socketChannel.pipeline()
+                if (isWebSocket) {
+                    pipeline.addLast(HttpClientCodec())
+                    pipeline.addLast(HttpObjectAggregator(65536))
+                    pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
+                }
                 addLastToPipeline(pipeline)
                 defaultChannelHandler?.let {
                     pipeline.addLast("default-channel-handler", it)
@@ -252,7 +279,10 @@ abstract class BaseNettyClient protected constructor(
         return true
     }
 
-    private fun executeCommandInString(cmd: String?, showLog: Boolean) {
+    /**
+     * @param isPing Only works in WebSocket mode
+     */
+    private fun executeCommandInString(cmd: String?, showLog: Boolean, isPing: Boolean) {
         if (!isValidExecuteCommandEnv()) {
             return
         }
@@ -262,12 +292,24 @@ abstract class BaseNettyClient protected constructor(
             return
         }
         if (showLog) {
-            LLog.i(tag, "exeCmd [${cmd.length}]=$cmd")
+            LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
         }
-        channel?.writeAndFlush(cmd + "\n")
+
+        if (isWebSocket) {
+            if (isPing) {
+                channel?.writeAndFlush(PingWebSocketFrame(Unpooled.wrappedBuffer(cmd.toByteArray())))
+            } else {
+                channel?.writeAndFlush(TextWebSocketFrame(cmd))
+            }
+        } else {
+            channel?.writeAndFlush(cmd + "\n")
+        }
     }
 
-    private fun executeCommandInBinary(bytes: ByteArray?, showLog: Boolean) {
+    /**
+     * @param isPing Only works in WebSocket mode
+     */
+    private fun executeCommandInBinary(bytes: ByteArray?, showLog: Boolean, isPing: Boolean) {
         if (!isValidExecuteCommandEnv()) {
             return
         }
@@ -279,18 +321,38 @@ abstract class BaseNettyClient protected constructor(
         if (showLog) {
             LLog.i(tag, "exeCmd HEX[${bytes.size}]=[${bytes.toHexStringLE()}]")
         }
-        channel?.writeAndFlush(Unpooled.wrappedBuffer(bytes))
+        if (isWebSocket) {
+            if (isPing) {
+                channel?.writeAndFlush(PingWebSocketFrame(Unpooled.wrappedBuffer(bytes)))
+            } else {
+                channel?.writeAndFlush(BinaryWebSocketFrame(Unpooled.wrappedBuffer(bytes)))
+            }
+        } else {
+            channel?.writeAndFlush(Unpooled.wrappedBuffer(bytes))
+        }
     }
 
     @JvmOverloads
     fun executeCommand(cmd: String, showLog: Boolean = true) {
-        executeCommandInString(cmd, showLog)
+        executeCommandInString(cmd, showLog, false)
     }
 
     @Suppress("unused")
     @JvmOverloads
-    fun executeCommand(cmd: ByteArray?, showLog: Boolean = true) {
-        executeCommandInBinary(cmd, showLog)
+    fun executeCommand(cmd: ByteArray, showLog: Boolean = true) {
+        executeCommandInBinary(cmd, showLog, false)
+    }
+
+    @Suppress("unused")
+    @JvmOverloads
+    fun executePingCommand(cmd: String?, showLog: Boolean = true) {
+        executeCommandInString(cmd, showLog, true)
+    }
+
+    @Suppress("unused")
+    @JvmOverloads
+    fun executePingCommand(bytes: ByteArray?, showLog: Boolean = true) {
+        executeCommandInBinary(bytes, showLog, true)
     }
 
     // ================================================

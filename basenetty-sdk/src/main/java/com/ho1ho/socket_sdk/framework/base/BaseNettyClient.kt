@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
 import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
 import io.netty.bootstrap.Bootstrap
@@ -266,12 +265,10 @@ abstract class BaseNettyClient protected constructor(
     private fun isValidExecuteCommandEnv(): Boolean {
         if (ConnectionStatus.CONNECTED != connectState.get()) {
             LLog.e(tag, "Socket is not connected. Can not send command.")
-            ToastUtil.showDebugToast("Socket is not connected. Can not send command.")
             return false
         }
         if (channel == null) {
             LLog.e(tag, "Can not execute cmd because of Channel is null.")
-            ToastUtil.showDebugToast("Channel is null. Can not send command.")
             return false
         }
         return true
@@ -286,7 +283,6 @@ abstract class BaseNettyClient protected constructor(
         }
         if (cmd.isNullOrBlank()) {
             LLog.w(tag, "Can not execute blank string command.")
-            ToastUtil.showDebugErrorToast("Empty string command")
             return
         }
         if (showLog) {
@@ -313,7 +309,6 @@ abstract class BaseNettyClient protected constructor(
         }
         if (bytes == null || bytes.isEmpty()) {
             LLog.w(tag, "Can not execute blank binary command.")
-            ToastUtil.showDebugErrorToast("Command bytes is empty. Can not send command.")
             return
         }
         if (showLog) {

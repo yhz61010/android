@@ -8,7 +8,6 @@ import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
  */
 interface NettyConnectionListener {
 
-    fun onConnecting(client: BaseNettyClient)
     fun onConnected(client: BaseNettyClient)
     fun onReceivedData(client: BaseNettyClient, data: Any?)
     fun onDisconnected(client: BaseNettyClient)
@@ -47,7 +46,6 @@ enum class ConnectionStatus {
      * In this status, you can not reconnect again. You must create netty client again.
      */
     UNINITIALIZED,
-    CONNECTING,
     CONNECTED,
 
     /**

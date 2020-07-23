@@ -61,16 +61,18 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                 onInit()
             }
 
+        val timer = Timer("capture-screen-record-th")
         toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 val width = window.decorView.rootView.width
                 val height = window.decorView.rootView.height
+                LLog.d(ITAG, "$width x $height=${width * height}")
 
                 screenProcessor.onStart()
-                val timer = Timer("capture-screen-record-th")
                 timer.scheduleAtFixedRate(object : TimerTask() {
                     override fun run() {
                         val bitmap = ScreenUtil.takeScreenshot(window)
+//                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
                         if (bitmap != null) {
 //                            val compressedBmpOS = ByteArrayOutputStream()
 //                            it.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
@@ -88,6 +90,7 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                     }
                 }, 100, 300)
             } else {
+                timer.cancel()
                 screenProcessor.onRelease()
             }
         }

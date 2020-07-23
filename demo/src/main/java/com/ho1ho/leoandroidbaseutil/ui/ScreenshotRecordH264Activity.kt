@@ -1,17 +1,17 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
+import android.os.SystemClock
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.device.ScreenUtil
-import com.ho1ho.androidbase.utils.file.FileUtil
-import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareSetting
 import com.ho1ho.screenshot.ScreenCapture
 import com.ho1ho.screenshot.base.ScreenDataListener
+import com.ho1ho.screenshot.base.ScreenshotStrategy
 import kotlinx.android.synthetic.main.activity_screenshot_record_h264.*
 import java.util.*
 
@@ -72,21 +72,21 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                 timer.scheduleAtFixedRate(object : TimerTask() {
                     override fun run() {
                         val bitmap = ScreenUtil.takeScreenshot(window)
-                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
-//                        if (bitmap != null) {
-////                            val compressedBmpOS = ByteArrayOutputStream()
-////                            it.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
-////                            val opt = BitmapFactory.Options()
-////                            opt.inSampleSize = 2
-//                            val argb = IntArray(width * height)
-//                            bitmap.getPixels(argb, 0, width, 0, 0, width, height)
-//                            bitmap.recycle()
-//                            val yuv = ByteArray(width * height * 3 / 2)
-//                            val st = SystemClock.elapsedRealtime()
-//                            conver_argb_to_i420(yuv, argb, width, height)
-//                            LLog.w(ITAG, "yuv[${yuv.size}] convert cost=${SystemClock.elapsedRealtime() - st}")
-//                            (screenProcessor as ScreenshotStrategy).queue.offer(yuv)
-//                        }
+//                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
+                        if (bitmap != null) {
+//                            val compressedBmpOS = ByteArrayOutputStream()
+//                            it.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
+//                            val opt = BitmapFactory.Options()
+//                            opt.inSampleSize = 2
+                            val argb = IntArray(width * height)
+                            bitmap.getPixels(argb, 0, width, 0, 0, width, height)
+                            bitmap.recycle()
+                            val yuv = ByteArray(width * height * 3 / 2)
+                            val st = SystemClock.elapsedRealtime()
+                            conver_argb_to_i420(yuv, argb, width, height)
+                            LLog.w(ITAG, "yuv[${yuv.size}] convert cost=${SystemClock.elapsedRealtime() - st}")
+                            (screenProcessor as ScreenshotStrategy).queue.offer(yuv)
+                        }
                     }
                 }, 100, 300)
             } else {

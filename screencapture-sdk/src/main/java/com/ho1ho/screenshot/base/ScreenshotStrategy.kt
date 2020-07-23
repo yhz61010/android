@@ -42,7 +42,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 inputBuffer?.clear()
                 val data = queue.poll()?.also { inputBuffer?.put(it) }
                 val pts = computePresentationTimeUs(++mFrameCount)
-                LLog.d(TAG, "PTS=$pts")
+                LLog.d(TAG, "PTS=$pts data[${data?.size}]")
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, pts, 0)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -155,12 +155,12 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
-        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
 //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        h264Encoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        outputFormat = h264Encoder?.outputFormat // option B
-        h264Encoder?.setCallback(mediaCodecCallback)
-
+        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
+            it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            outputFormat = it.outputFormat // option B
+            it.setCallback(mediaCodecCallback)
+        }
         initHandler()
     }
 

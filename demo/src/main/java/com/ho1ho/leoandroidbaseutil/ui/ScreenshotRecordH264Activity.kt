@@ -78,11 +78,11 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
 //                            opt.inSampleSize = 2
                             val argb = IntArray(width * height)
                             bitmap.getPixels(argb, 0, width, 0, 0, width, height)
+                            bitmap.recycle()
                             val yuv = ByteArray(width * height * 3 / 2)
                             val st = SystemClock.elapsedRealtime()
                             conver_argb_to_i420(yuv, argb, width, height)
                             LLog.w(ITAG, "yuv[${yuv.size}] convert cost=${SystemClock.elapsedRealtime() - st}")
-                            bitmap.recycle()
                             (screenProcessor as ScreenshotStrategy).queue.offer(yuv)
                         }
                     }

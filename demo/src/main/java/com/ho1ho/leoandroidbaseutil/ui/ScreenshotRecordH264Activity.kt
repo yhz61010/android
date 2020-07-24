@@ -2,6 +2,7 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.exts.toHexString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.file.FileUtil
@@ -27,19 +28,8 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any) {
             val buf = buffer as ByteArray
-            LLog.i(ITAG, "Get h264 data[${buf.size}]")
+            LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
             videoH264OsForDebug.write(buf)
-//            if (outputH264File) {
-//                try {
-//                    videoH264Os.write(buf)
-//                } catch (e: Exception) {
-//                    e.printStackTrace()
-//                }
-//            }
-//            screenDataUpdateListener?.onUpdate(buffer)
-            // Bitmap for screenshot
-//            val bitmap = buffer as Bitmap
-//            FileUtil.writeBitmapToFile(bitmap, 0)
         }
     }
 

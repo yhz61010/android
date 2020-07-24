@@ -220,29 +220,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //        }
 
         videoDataSendHandler?.post {
-            builder.screenDataListener.onDataUpdate(bytes)
+            builder.screenDataListener.onDataUpdate(bytes, flags)
         }
     }
 
     companion object {
         private const val TAG = "ScrRec"
-
-        @Suppress("unused")
-        const val NAL_SLICE = 1
-
-        //        const val NAL_SLICE_DPA = 2
-        //        const val NAL_SLICE_DPB = 3
-        //        const val NAL_SLICE_DPC = 4
-        @Suppress("unused")
-        const val NAL_SLICE_IDR = 5
-
-        //        const val NAL_SEI = 6
-        @Suppress("unused")
-        const val NAL_SPS = 7
-
-        @Suppress("unused")
-        const val NAL_PPS = 8
-        //        const val NAL_AUD = 9
-        //        const val NAL_FILLER = 12
     }
 }

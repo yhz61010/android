@@ -103,7 +103,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                     }
                 }
                 screenshotHandler.post {
-                    builder.screenDataListener.onDataUpdate(encodedBytes)
+                    builder.screenDataListener.onDataUpdate(encodedBytes, info.flags)
                 }
             }
             codec.releaseOutputBuffer(outputBufferId, false)
@@ -178,7 +178,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                         val encodedBytes = ByteArray(bufferInfo.size)
                         it.get(encodedBytes)
                         screenshotHandler.post {
-                            builder.screenDataListener.onDataUpdate(encodedBytes)
+                            builder.screenDataListener.onDataUpdate(encodedBytes, bufferInfo.flags)
                         }
                     }
                     // MediaMuxer is ignoring KEY_FRAMERATE, so I set it manually here

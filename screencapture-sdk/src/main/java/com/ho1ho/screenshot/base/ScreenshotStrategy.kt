@@ -281,7 +281,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             onInit()
             onStart()
             while (isRecording) {
-                ScreenUtil.takeScreenshot(window)?.let {
+                ScreenUtil.takeScreenshot(window, Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
                         val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
                         encodeImages(compressedBitmap)

@@ -49,7 +49,8 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
             (screenInfo.y * 0.8F).toInt() / 16 * 16,
             DeviceUtil.getDensity(this)
         )
-        setting.fps = 3f
+        // Seems does not work. Check bellow setKeyFrameRate
+        setting.fps = 60f
 
         val screenProcessor = ScreenCapture.Builder(
             setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
@@ -59,6 +60,8 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
             ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE,
             screenDataListener
         ).setFps(setting.fps)
+            // It seems this fps works
+            .setKeyFrameRate(60)
             .setQuality(80)
             .setSampleSize(1)
             .build()

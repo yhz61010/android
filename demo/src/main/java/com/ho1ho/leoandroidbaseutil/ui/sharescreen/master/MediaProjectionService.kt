@@ -198,7 +198,7 @@ class MediaProjectionService : Service() {
             // SCREEN_CAPTURE_TYPE_IMAGE
             // SCREEN_CAPTURE_TYPE_MEDIACODEC
             // SCREEN_CAPTURE_TYPE_X264
-            ScreenCapture.SCREEN_CAPTURE_TYPE_MEDIACODEC,
+            ScreenCapture.SCREEN_CAPTURE_TYPE_MEDIA_CODEC,
             screenDataListener
         )
             .setFps(setting.fps)

@@ -14,9 +14,6 @@ import com.ho1ho.screenshot.ScreenCapture
 import com.ho1ho.screenshot.base.ScreenDataListener
 import com.ho1ho.screenshot.base.ScreenshotStrategy
 import kotlinx.android.synthetic.main.activity_screenshot_record_h264.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -46,10 +43,6 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
         file.mkdirs()
         videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
 
-        val width = window.decorView.rootView.width
-        val height = window.decorView.rootView.height
-        LLog.d(ITAG, "$width x $height=${width * height}")
-
         val screenInfo = DeviceUtil.getResolution(this)
         val setting = ScreenShareSetting(
             (screenInfo.x * 0.8F).toInt() / 16 * 16,
@@ -72,13 +65,7 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
 
         toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    screenProcessor.run {
-                        onInit()
-                        onStart()
-                    }
-                    (screenProcessor as ScreenshotStrategy).startRecord(window)
-                }
+                (screenProcessor as ScreenshotStrategy).startRecord(window)
             } else {
                 videoH264OsForDebug.flush()
                 videoH264OsForDebug.close()

@@ -14,7 +14,10 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.ScreenUtil
 import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.screenshot.TextureRenderer
-import java.io.IOException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -240,7 +243,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         eglSurface = EGL14.EGL_NO_SURFACE
     }
 
-    @Throws(IOException::class)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
         with(format) {
@@ -284,18 +286,22 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     fun startRecord(window: Window) {
-        while (isRecording) {
-            ScreenUtil.takeScreenshot(window)?.let {
-                if (builder.sampleSize > 1) {
-                    val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
-                    encodeImages(compressedBitmap)
-                    compressedBitmap.recycle()
-                } else {
-                    encodeImages(it)
+        CoroutineScope(Dispatchers.IO).launch {
+            onInit()
+            onStart()
+            while (isRecording) {
+                ScreenUtil.takeScreenshot(window)?.let {
+                    if (builder.sampleSize > 1) {
+                        val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
+                        encodeImages(compressedBitmap)
+                        compressedBitmap.recycle()
+                    } else {
+                        encodeImages(it)
+                    }
+                    it.recycle()
                 }
-                it.recycle()
+                delay(16)
             }
-            Thread.sleep(16)
         }
     }
 

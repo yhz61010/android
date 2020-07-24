@@ -12,6 +12,7 @@ import android.view.Surface
 import android.view.Window
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.ScreenUtil
+import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.screenshot.TextureRenderer
 import java.io.IOException
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -129,6 +130,8 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         @Suppress("WeakerAccess")
         var fps = 20F
             private set
+        var quality = 100
+            private set
         var sampleSize = 1
             private set
         var bitrate = width * height
@@ -143,6 +146,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             private set
 
         fun setFps(fps: Float) = apply { this.fps = fps }
+        fun setQuality(quality: Int) = apply { this.quality = quality }
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
@@ -218,7 +222,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
         // Render the bitmap/texture here
 //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-        renderer.draw(bitmap.width, bitmap.height, bitmap, getMvp())
+        renderer.draw(builder.width, builder.height, bitmap, getMvp())
 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay, eglSurface,
@@ -303,27 +307,27 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         with(format) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
-//            setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
+            setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
-//            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
+            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
-//                @Suppress("unchecked")
-//                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
+                @Suppress("unchecked")
+                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-//                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
-//                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
 //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
         h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
             it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-//            outputFormat = it.outputFormat // option B
+            outputFormat = it.outputFormat // option B
 //            it.setCallback(mediaCodecCallback)
         }
 
@@ -342,10 +346,15 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     fun startRecord(window: Window) {
         while (isRecording) {
-            val bitmap = ScreenUtil.takeScreenshot(window)
-//                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
-            if (bitmap != null) {
-                encodeImages(bitmap)
+            ScreenUtil.takeScreenshot(window)?.let {
+                if (builder.sampleSize > 1) {
+                    val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
+                    encodeImages(compressedBitmap)
+                    compressedBitmap.recycle()
+                } else {
+                    encodeImages(it)
+                }
+                it.recycle()
             }
         }
     }

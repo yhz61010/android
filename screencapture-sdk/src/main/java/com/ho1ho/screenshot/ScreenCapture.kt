@@ -55,6 +55,7 @@ object ScreenCapture {
 
         // Screenshot setting
         private var sampleSize = 1
+        private var quality = 100
 
         // ==================================================
         // ===== For H264
@@ -71,8 +72,8 @@ object ScreenCapture {
         /**
          * Only used in `ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE` mode
          */
-        @Suppress("unused")
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
+        fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
             LLog.i(
@@ -87,6 +88,7 @@ object ScreenCapture {
                         .setBitrateMode(bitrateMode)
                         .setKeyFrameRate(keyFrameRate)
                         .setIFrameInterval(iFrameInterval)
+                        .setQuality(quality)
                         .setSampleSize(sampleSize)
                         .build()
                 SCREEN_CAPTURE_TYPE_MEDIACODEC ->

@@ -26,6 +26,8 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         private const val TAG = "ScrShotRec"
     }
 
+    @Volatile
+    private var isRecording = false
 
     // EGL
     private var eglDisplay: EGLDisplay? = null
@@ -37,7 +39,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     // Init OpenGL, once we have initialized context and surface
     private lateinit var renderer: TextureRenderer
-    private val timeoutUs = 100_000L
+    private val timeoutUs = 10_000L
     private val bufferInfo = MediaCodec.BufferInfo()
 
 
@@ -163,44 +165,48 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     private fun drainEncoder(endOfStream: Boolean) {
-        if (endOfStream)
-            h264Encoder!!.signalEndOfInputStream()
+        kotlin.runCatching {
+            if (endOfStream)
+                h264Encoder?.signalEndOfInputStream()
 
-        while (true) {
-            val outBufferId = h264Encoder!!.dequeueOutputBuffer(bufferInfo, timeoutUs)
-            LLog.e(TAG, "drainEncoder outBufferId=$outBufferId")
-            if (outBufferId >= 0) {
-                val encodedBuffer = h264Encoder!!.getOutputBuffer(outBufferId)
-                encodedBuffer?.let {
-                    val encodedBytes = ByteArray(bufferInfo.size)
-                    it.get(encodedBytes)
-                    screenshotHandler.post {
-                        builder.screenDataListener.onDataUpdate(encodedBytes)
+            while (true) {
+                val outBufferId = h264Encoder?.dequeueOutputBuffer(bufferInfo, timeoutUs)
+//            LLog.e(TAG, "drainEncoder outBufferId=$outBufferId")
+                if (outBufferId != null && outBufferId >= 0) {
+                    val encodedBuffer = h264Encoder?.getOutputBuffer(outBufferId)
+                    encodedBuffer?.let {
+                        val encodedBytes = ByteArray(bufferInfo.size)
+                        it.get(encodedBytes)
+                        screenshotHandler.post {
+                            builder.screenDataListener.onDataUpdate(encodedBytes)
+                        }
                     }
-                }
-                // MediaMuxer is ignoring KEY_FRAMERATE, so I set it manually here
-                // to achieve the desired frame rate
-                bufferInfo.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
+                    // MediaMuxer is ignoring KEY_FRAMERATE, so I set it manually here
+                    // to achieve the desired frame rate
+                    bufferInfo.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
 
-                h264Encoder!!.releaseOutputBuffer(outBufferId, true)
-                LLog.e(TAG, "drainEncoder encode")
-                // Are we finished here?
-                if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    LLog.e(TAG, "drainEncoder encode end")
-                    break
-                }
-            } else if (outBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                if (!endOfStream)
-                    break
+                    h264Encoder?.releaseOutputBuffer(outBufferId, true)
+//                LLog.e(TAG, "drainEncoder encode")
+                    // Are we finished here?
+                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                        LLog.e(TAG, "drainEncoder encode end")
+                        break
+                    }
+                } else if (outBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                    if (!endOfStream)
+                        break
 
-                // End of stream, but still no output available. Try again.
-            } else if (outBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    // End of stream, but still no output available. Try again.
+                } else if (outBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                }
             }
+        }.onFailure {
+            LLog.d(TAG, "Encode failed")
         }
     }
 
-    fun encodeImages(bitmap: Bitmap) {
-        LLog.w(TAG, "encodeImages")
+    private fun encodeImages(bitmap: Bitmap) {
+        LLog.d(TAG, "encodeImages")
 
 //        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
 //            bitmap.width,
@@ -329,12 +335,13 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     override fun onStart() {
+        isRecording = true
         h264Encoder?.start()
         // Prepare surface
     }
 
     fun startRecord(window: Window) {
-        while (true) {
+        while (isRecording) {
             val bitmap = ScreenUtil.takeScreenshot(window)
 //                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
             if (bitmap != null) {
@@ -346,13 +353,14 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     override fun onStop() {
         drainEncoder(true)
         h264Encoder?.stop()
+        isRecording = false
     }
 
     override fun onRelease() {
         onStop()
+        releaseHandler()
         h264Encoder?.release()
         releaseEgl()
-        releaseHandler()
     }
 
     private fun initHandler() {

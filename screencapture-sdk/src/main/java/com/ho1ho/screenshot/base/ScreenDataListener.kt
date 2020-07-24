@@ -5,5 +5,5 @@ package com.ho1ho.screenshot.base
  * Date: 20-5-15 下午1:51
  */
 interface ScreenDataListener {
-    fun onDataUpdate(buffer: Any)
+    fun onDataUpdate(buffer: Any, flags: Int)
 }

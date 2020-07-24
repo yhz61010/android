@@ -1,5 +1,6 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
+import android.media.MediaCodec
 import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toHexString
@@ -26,9 +27,13 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
     private lateinit var videoH264OsForDebug: BufferedOutputStream
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: Any) {
+        override fun onDataUpdate(buffer: Any, flags: Int) {
             val buf = buffer as ByteArray
-            LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
+            when (flags) {
+                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
+                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
+                else -> LLog.i(ITAG, "Get h264 data[${buf.size}]")
+            }
             videoH264OsForDebug.write(buf)
         }
     }

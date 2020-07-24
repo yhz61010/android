@@ -142,8 +142,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             private set
         var iFrameInterval = 1
             private set
-        var displayIntervalInMs: Int = 0
-            private set
 
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setQuality(quality: Int) = apply { this.quality = quality }
@@ -154,11 +152,9 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         fun build(): ScreenshotStrategy {
-            displayIntervalInMs = (1000 / (fps + 1)).toInt()
             LLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
             return ScreenshotStrategy(this)
         }
-
     }
 
     private fun getMvp(): FloatArray {

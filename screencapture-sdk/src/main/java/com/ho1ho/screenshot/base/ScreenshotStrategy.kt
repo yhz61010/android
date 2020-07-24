@@ -178,11 +178,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     private fun initEgl() {
         surface = h264Encoder?.createInputSurface()
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-        if (eglDisplay == EGL14.EGL_NO_DISPLAY)
-            throw RuntimeException(
-                "eglDisplay == EGL14.EGL_NO_DISPLAY: "
-                        + GLUtils.getEGLErrorString(EGL14.eglGetError())
-            )
+        if (eglDisplay == EGL14.EGL_NO_DISPLAY) throw RuntimeException("eglDisplay == EGL14.EGL_NO_DISPLAY: ${GLUtils.getEGLErrorString(EGL14.eglGetError())}")
 
         val version = IntArray(2)
         if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1))

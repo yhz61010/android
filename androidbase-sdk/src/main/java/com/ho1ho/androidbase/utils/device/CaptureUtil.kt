@@ -14,15 +14,15 @@ object ScreenUtil {
     /**
      * Using [window.decorView.rootView] to capture the whole screen
      */
-    fun takeScreenshot(view: View): Bitmap? {
+    fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return runCatching {
-            Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also {
+            Bitmap.createBitmap(view.width, view.height, config).also {
                 view.draw(Canvas(it))
             }
         }.getOrNull()
     }
 
-    fun takeScreenshot(win: Window): Bitmap? {
-        return takeScreenshot(win.decorView.rootView)
+    fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+        return takeScreenshot(win.decorView.rootView, config)
     }
 }

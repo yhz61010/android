@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
+import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareSetting
@@ -14,14 +15,20 @@ import kotlinx.android.synthetic.main.activity_screenshot_record_h264.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 
 class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
+
+    private lateinit var videoH264OsForDebug: BufferedOutputStream
 
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any) {
             val buf = buffer as ByteArray
             LLog.i(ITAG, "Get h264 data[${buf.size}]")
+            videoH264OsForDebug.write(buf)
 //            if (outputH264File) {
 //                try {
 //                    videoH264Os.write(buf)
@@ -39,6 +46,10 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screenshot_record_h264)
+
+        val file = File(FileUtil.getBaseDirString(this, "output"))
+        file.mkdirs()
+        videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
 
         val width = window.decorView.rootView.width
         val height = window.decorView.rootView.height
@@ -73,6 +84,8 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                     (screenProcessor as ScreenshotStrategy).startRecord(window)
                 }
             } else {
+                videoH264OsForDebug.flush()
+                videoH264OsForDebug.close()
                 screenProcessor.onRelease()
             }
         }

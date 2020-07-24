@@ -61,7 +61,7 @@ class MediaProjectionService : Service() {
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: Any) {
+        override fun onDataUpdate(buffer: Any, flags: Int) {
             val buf = buffer as ByteArray
             if (outputH264File) {
                 try {

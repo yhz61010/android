@@ -295,6 +295,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 }
                 it.recycle()
             }
+            Thread.sleep(16)
         }
     }
 

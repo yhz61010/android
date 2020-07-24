@@ -18,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Author: Michael Leo
@@ -44,8 +43,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     // Init OpenGL, once we have initialized context and surface
     private lateinit var renderer: TextureRenderer
 
-    private var mFrameCount: Long = 0
-    val queue = ConcurrentLinkedQueue<ByteArray>()
+    private var frameCount: Long = 0
 
     @SuppressWarnings("unused")
     var spsPpsBytes: ByteArray? = null
@@ -61,7 +59,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            LLog.d(TAG, "output queue[${queue.size}]")
             val outputBuffer = codec.getOutputBuffer(outputBufferId)
             // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
             // bufferFormat is equivalent to member variable outputFormat
@@ -70,7 +67,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 val encodedBytes = ByteArray(info.size)
                 it.get(encodedBytes)
 
-                info.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
+                info.presentationTimeUs = computePresentationTimeUs(++frameCount)
 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
@@ -165,7 +162,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay, eglSurface,
-            computePresentationTimeUs(mFrameCount) * 1000
+            computePresentationTimeUs(frameCount) * 1000
         )
 
         // Feed encoder with next frame produced by OpenGL

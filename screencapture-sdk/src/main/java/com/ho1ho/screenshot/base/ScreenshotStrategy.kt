@@ -31,6 +31,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     @Volatile
     private var isRecording = false
+    private val mvp = getMvp()
 
     // EGL
     private var eglDisplay: EGLDisplay? = null
@@ -158,7 +159,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
         // Render the bitmap/texture here
 //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-        renderer.draw(builder.width, builder.height, bitmap, getMvp())
+        renderer.draw(builder.width, builder.height, bitmap, mvp)
 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay, eglSurface,
@@ -314,10 +315,8 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     private fun releaseHandler() {
         if (::screenshotHandler.isInitialized) screenshotHandler.removeCallbacksAndMessages(null)
-        if (::screenshotThread.isInitialized) screenshotThread.quitSafely();
+        if (::screenshotThread.isInitialized) screenshotThread.quitSafely()
     }
 
     private fun computePresentationTimeUs(frameIndex: Long): Long = (frameIndex * 1_000_000 / builder.fps).toLong()
-
-
 }

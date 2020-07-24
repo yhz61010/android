@@ -29,9 +29,9 @@ object ImageUtil {
      * Using this method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
      * It's better to release the source bitmap by calling Bitmap.recycle() after calling this method.
      */
-    fun compressBitmap(bitmap: Bitmap, sampleSize: Int = 1): Bitmap {
+    fun compressBitmap(bitmap: Bitmap, quality: Int = 100, sampleSize: Int = 1): Bitmap {
         val compressedBmpOS = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, compressedBmpOS)
         val opt = BitmapFactory.Options()
         opt.inSampleSize = sampleSize
         return BitmapFactory.decodeByteArray(compressedBmpOS.toByteArray(), 0, compressedBmpOS.size(), opt)

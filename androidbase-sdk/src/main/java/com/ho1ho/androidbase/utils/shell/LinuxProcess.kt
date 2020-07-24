@@ -1,9 +1,12 @@
 package com.ho1ho.androidbase.utils.shell
 
+import androidx.annotation.Keep
+
 /**
  * Author: Michael Leo
  * Date: 19-11-29 下午4:24
  */
+@Keep
 data class LinuxProcess(val pid: Int) {
     var user: String? = null
     var ppid = 0

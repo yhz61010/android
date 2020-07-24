@@ -58,20 +58,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     private var outputFormat: MediaFormat? = null
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-//            try {
-//                LLog.d(TAG, "input queue[${queue.size}]")
-//                val inputBuffer = codec.getInputBuffer(inputBufferId)
-//
-//                // fill inputBuffer with valid data
-//                inputBuffer?.clear()
-//                val data = queue.poll()?.also { inputBuffer?.put(it) }
-//                val pts = computePresentationTimeUs(++mFrameCount)
-//                LLog.d(TAG, "PTS=$pts data[${data?.size}]")
-//                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, pts, 0)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//                LLog.e(TAG, "You can ignore this error safely.")
-//            }
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
@@ -84,7 +70,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 val encodedBytes = ByteArray(info.size)
                 it.get(encodedBytes)
 
-                info.presentationTimeUs = computePresentationTimeUs(mFrameCount)
+                info.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
@@ -164,47 +150,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         return mvp
     }
 
-    private fun drainEncoder(endOfStream: Boolean) {
-        kotlin.runCatching {
-            if (endOfStream)
-                h264Encoder?.signalEndOfInputStream()
-
-            while (true) {
-                val outBufferId = h264Encoder?.dequeueOutputBuffer(bufferInfo, timeoutUs)
-//            LLog.e(TAG, "drainEncoder outBufferId=$outBufferId")
-                if (outBufferId != null && outBufferId >= 0) {
-                    val encodedBuffer = h264Encoder?.getOutputBuffer(outBufferId)
-                    encodedBuffer?.let {
-                        val encodedBytes = ByteArray(bufferInfo.size)
-                        it.get(encodedBytes)
-                        screenshotHandler.post {
-                            builder.screenDataListener.onDataUpdate(encodedBytes, bufferInfo.flags)
-                        }
-                    }
-                    // MediaMuxer is ignoring KEY_FRAMERATE, so I set it manually here
-                    // to achieve the desired frame rate
-                    bufferInfo.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
-
-                    h264Encoder?.releaseOutputBuffer(outBufferId, true)
-//                LLog.e(TAG, "drainEncoder encode")
-                    // Are we finished here?
-                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        LLog.e(TAG, "drainEncoder encode end")
-                        break
-                    }
-                } else if (outBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                    if (!endOfStream)
-                        break
-
-                    // End of stream, but still no output available. Try again.
-                } else if (outBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                }
-            }
-        }.onFailure {
-            LLog.d(TAG, "Encode failed")
-        }
-    }
-
     private fun encodeImages(bitmap: Bitmap) {
         LLog.d(TAG, "encodeImages")
 
@@ -213,8 +158,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 //            bitmap.height
 //        )
 //        LLog.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
-
-        drainEncoder(false)
 
         // Render the bitmap/texture here
 //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
@@ -324,7 +267,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
             it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             outputFormat = it.outputFormat // option B
-//            it.setCallback(mediaCodecCallback)
+            it.setCallback(mediaCodecCallback)
         }
 
         initEgl()
@@ -356,7 +299,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     override fun onStop() {
-        drainEncoder(true)
         h264Encoder?.stop()
         isRecording = false
     }

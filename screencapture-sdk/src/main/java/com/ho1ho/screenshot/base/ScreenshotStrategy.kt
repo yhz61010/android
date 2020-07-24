@@ -43,9 +43,6 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     // Init OpenGL, once we have initialized context and surface
     private lateinit var renderer: TextureRenderer
-    private val timeoutUs = 10_000L
-    private val bufferInfo = MediaCodec.BufferInfo()
-
 
     private var mFrameCount: Long = 0
     val queue = ConcurrentLinkedQueue<ByteArray>()

@@ -15,7 +15,7 @@ object ScreenUtil {
      * Using [window.decorView.rootView] to capture the whole screen
      */
     fun takeScreenshot(view: View): Bitmap? {
-        return runCatching { Bitmap.createBitmap(view.width, view.height, Bitmap.Config.RGB_565) }.getOrNull()?.also {
+        return runCatching { Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888) }.getOrNull()?.also {
             view.draw(Canvas(it))
         }
     }

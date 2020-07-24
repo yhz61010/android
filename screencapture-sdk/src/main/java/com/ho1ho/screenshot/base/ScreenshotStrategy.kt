@@ -1,12 +1,18 @@
 package com.ho1ho.screenshot.base
 
+import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.opengl.*
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.view.Surface
+import android.view.Window
 import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.androidbase.utils.device.ScreenUtil
+import com.ho1ho.screenshot.TextureRenderer
 import java.io.IOException
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -19,6 +25,21 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     companion object {
         private const val TAG = "ScrShotRec"
     }
+
+
+    // EGL
+    private var eglDisplay: EGLDisplay? = null
+    private var eglContext: EGLContext? = null
+    private var eglSurface: EGLSurface? = null
+
+    // Surface provided by MediaCodec and used to get data produced by OpenGL
+    private var surface: Surface? = null
+
+    // Init OpenGL, once we have initialized context and surface
+    private lateinit var renderer: TextureRenderer
+    private val timeoutUs = 100_000L
+    private val bufferInfo = MediaCodec.BufferInfo()
+
 
     private var mFrameCount: Long = 0
     val queue = ConcurrentLinkedQueue<ByteArray>()
@@ -34,20 +55,20 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     private var outputFormat: MediaFormat? = null
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-            try {
-                LLog.d(TAG, "input queue[${queue.size}]")
-                val inputBuffer = codec.getInputBuffer(inputBufferId)
-
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = queue.poll()?.also { inputBuffer?.put(it) }
-                val pts = computePresentationTimeUs(++mFrameCount)
-                LLog.d(TAG, "PTS=$pts data[${data?.size}]")
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, pts, 0)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                LLog.e(TAG, "You can ignore this error safely.")
-            }
+//            try {
+//                LLog.d(TAG, "input queue[${queue.size}]")
+//                val inputBuffer = codec.getInputBuffer(inputBufferId)
+//
+//                // fill inputBuffer with valid data
+//                inputBuffer?.clear()
+//                val data = queue.poll()?.also { inputBuffer?.put(it) }
+//                val pts = computePresentationTimeUs(++mFrameCount)
+//                LLog.d(TAG, "PTS=$pts data[${data?.size}]")
+//                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, pts, 0)
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                LLog.e(TAG, "You can ignore this error safely.")
+//            }
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
@@ -59,6 +80,8 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             outputBuffer?.let {
                 val encodedBytes = ByteArray(info.size)
                 it.get(encodedBytes)
+
+                info.presentationTimeUs = computePresentationTimeUs(mFrameCount)
 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
@@ -132,49 +155,203 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
 
     }
 
+    private fun getMvp(): FloatArray {
+        val mvp = FloatArray(16)
+        Matrix.setIdentityM(mvp, 0)
+        Matrix.scaleM(mvp, 0, 1f, -1f, 1f)
+        return mvp
+    }
+
+    private fun drainEncoder(endOfStream: Boolean) {
+        if (endOfStream)
+            h264Encoder!!.signalEndOfInputStream()
+
+        while (true) {
+            val outBufferId = h264Encoder!!.dequeueOutputBuffer(bufferInfo, timeoutUs)
+            LLog.e(TAG, "drainEncoder outBufferId=$outBufferId")
+            if (outBufferId >= 0) {
+                val encodedBuffer = h264Encoder!!.getOutputBuffer(outBufferId)
+                encodedBuffer?.let {
+                    val encodedBytes = ByteArray(bufferInfo.size)
+                    it.get(encodedBytes)
+                    screenshotHandler.post {
+                        builder.screenDataListener.onDataUpdate(encodedBytes)
+                    }
+                }
+                // MediaMuxer is ignoring KEY_FRAMERATE, so I set it manually here
+                // to achieve the desired frame rate
+                bufferInfo.presentationTimeUs = computePresentationTimeUs(++mFrameCount)
+
+                h264Encoder!!.releaseOutputBuffer(outBufferId, true)
+                LLog.e(TAG, "drainEncoder encode")
+                // Are we finished here?
+                if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                    LLog.e(TAG, "drainEncoder encode end")
+                    break
+                }
+            } else if (outBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                if (!endOfStream)
+                    break
+
+                // End of stream, but still no output available. Try again.
+            } else if (outBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+            }
+        }
+    }
+
+    fun encodeImages(bitmap: Bitmap) {
+        LLog.w(TAG, "encodeImages")
+
+//        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
+//            bitmap.width,
+//            bitmap.height
+//        )
+//        LLog.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
+
+        drainEncoder(false)
+
+        // Render the bitmap/texture here
+//            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+        renderer.draw(bitmap.width, bitmap.height, bitmap, getMvp())
+
+        EGLExt.eglPresentationTimeANDROID(
+            eglDisplay, eglSurface,
+            computePresentationTimeUs(mFrameCount) * 1000
+        )
+
+        // Feed encoder with next frame produced by OpenGL
+        EGL14.eglSwapBuffers(eglDisplay, eglSurface)
+    }
+
+    private fun initEgl() {
+        surface = h264Encoder?.createInputSurface()
+        eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
+        if (eglDisplay == EGL14.EGL_NO_DISPLAY)
+            throw RuntimeException(
+                "eglDisplay == EGL14.EGL_NO_DISPLAY: "
+                        + GLUtils.getEGLErrorString(EGL14.eglGetError())
+            )
+
+        val version = IntArray(2)
+        if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1))
+            throw RuntimeException("eglInitialize(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+
+        val attribList = intArrayOf(
+            EGL14.EGL_RED_SIZE, 8,
+            EGL14.EGL_GREEN_SIZE, 8,
+            EGL14.EGL_BLUE_SIZE, 8,
+            EGL14.EGL_ALPHA_SIZE, 8,
+            EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+            EGLExt.EGL_RECORDABLE_ANDROID, 1,
+            EGL14.EGL_NONE
+        )
+        val configs = arrayOfNulls<EGLConfig>(1)
+        val nConfigs = IntArray(1)
+        EGL14.eglChooseConfig(eglDisplay, attribList, 0, configs, 0, configs.size, nConfigs, 0)
+
+        var err = EGL14.eglGetError()
+        if (err != EGL14.EGL_SUCCESS)
+            throw RuntimeException(GLUtils.getEGLErrorString(err))
+
+        val ctxAttribs = intArrayOf(
+            EGL14.EGL_CONTEXT_CLIENT_VERSION, 2,
+            EGL14.EGL_NONE
+        )
+        eglContext = EGL14.eglCreateContext(eglDisplay, configs[0], EGL14.EGL_NO_CONTEXT, ctxAttribs, 0)
+
+        err = EGL14.eglGetError()
+        if (err != EGL14.EGL_SUCCESS)
+            throw RuntimeException(GLUtils.getEGLErrorString(err))
+
+        val surfaceAttribs = intArrayOf(
+            EGL14.EGL_NONE
+        )
+        eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, configs[0], surface, surfaceAttribs, 0)
+        err = EGL14.eglGetError()
+        if (err != EGL14.EGL_SUCCESS)
+            throw RuntimeException(GLUtils.getEGLErrorString(err))
+
+        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+            throw RuntimeException("eglMakeCurrent(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+    }
+
+    private fun releaseEgl() {
+        if (eglDisplay != EGL14.EGL_NO_DISPLAY) {
+            EGL14.eglDestroySurface(eglDisplay, eglSurface)
+            EGL14.eglDestroyContext(eglDisplay, eglContext)
+            EGL14.eglReleaseThread()
+            EGL14.eglTerminate(eglDisplay)
+        }
+
+        surface?.release()
+        surface = null
+
+        eglDisplay = EGL14.EGL_NO_DISPLAY
+        eglContext = EGL14.EGL_NO_CONTEXT
+        eglSurface = EGL14.EGL_NO_SURFACE
+    }
+
     @Throws(IOException::class)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
         with(format) {
-            setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
+            setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
-            setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
+//            setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
-            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
+//            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
-                @Suppress("unchecked")
-                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
+//                @Suppress("unchecked")
+//                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+//                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
-                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+//                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
 //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
         h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
             it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            outputFormat = it.outputFormat // option B
-            it.setCallback(mediaCodecCallback)
+//            outputFormat = it.outputFormat // option B
+//            it.setCallback(mediaCodecCallback)
         }
+
+        initEgl()
+
+        renderer = TextureRenderer()
+
         initHandler()
     }
 
     override fun onStart() {
         h264Encoder?.start()
+        // Prepare surface
+    }
+
+    fun startRecord(window: Window) {
+        while (true) {
+            val bitmap = ScreenUtil.takeScreenshot(window)
+//                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
+            if (bitmap != null) {
+                encodeImages(bitmap)
+            }
+        }
     }
 
     override fun onStop() {
+        drainEncoder(true)
         h264Encoder?.stop()
     }
 
     override fun onRelease() {
         onStop()
         h264Encoder?.release()
+        releaseEgl()
         releaseHandler()
     }
 

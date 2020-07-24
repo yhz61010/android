@@ -1,11 +1,13 @@
 package com.ho1ho.leoandroidbaseutil.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
-import com.ho1ho.androidbase.utils.device.ScreenUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareSetting
@@ -13,10 +15,16 @@ import com.ho1ho.screenshot.ScreenCapture
 import com.ho1ho.screenshot.base.ScreenDataListener
 import com.ho1ho.screenshot.base.ScreenshotStrategy
 import kotlinx.android.synthetic.main.activity_screenshot_record_h264.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 
 
 class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
+
+    private val CODE_IMAGE_SEARCH = 1111
+    private var selectedImgUris = ArrayList<Uri>()
 
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any) {
@@ -40,27 +48,6 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screenshot_record_h264)
 
-        val screenInfo = DeviceUtil.getResolution(this)
-        val setting = ScreenShareSetting(
-            (screenInfo.x * 0.8F).toInt() / 16 * 16,
-            (screenInfo.y * 0.8F).toInt() / 16 * 16,
-            DeviceUtil.getDensity(this)
-        )
-
-        val screenProcessor = ScreenCapture.Builder(
-            setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            setting.height, // 800 1024 1280
-            setting.dpi,
-            null,
-            ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE,
-            screenDataListener
-        )
-            .setFps(setting.fps)
-            .setSampleSize(1)
-            .build().apply {
-                onInit()
-            }
-
         val timer = Timer("capture-screen-record-th")
         toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -68,30 +55,33 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                 val height = window.decorView.rootView.height
                 LLog.d(ITAG, "$width x $height=${width * height}")
 
-                screenProcessor.onStart()
-                timer.scheduleAtFixedRate(object : TimerTask() {
-                    override fun run() {
-                        val bitmap = ScreenUtil.takeScreenshot(window)
-//                        ImageUtil.writeBitmapToFile(FileUtil.createImageFile(this@ScreenshotRecordH264Activity, "jpg"), bitmap!!, 100)
-                        if (bitmap != null) {
-//                            val compressedBmpOS = ByteArrayOutputStream()
-//                            it.compress(Bitmap.CompressFormat.JPEG, 100, compressedBmpOS)
-//                            val opt = BitmapFactory.Options()
-//                            opt.inSampleSize = 2
-                            val argb = IntArray(width * height)
-                            bitmap.getPixels(argb, 0, width, 0, 0, width, height)
-                            bitmap.recycle()
-                            val yuv = ByteArray(width * height * 3 / 2)
-                            val st = SystemClock.elapsedRealtime()
-                            conver_argb_to_i420(yuv, argb, width, height)
-                            LLog.w(ITAG, "yuv[${yuv.size}] convert cost=${SystemClock.elapsedRealtime() - st}")
-                            (screenProcessor as ScreenshotStrategy).queue.offer(yuv)
+                val screenInfo = DeviceUtil.getResolution(this)
+                val setting = ScreenShareSetting(
+                    (screenInfo.x * 0.8F).toInt() / 16 * 16,
+                    (screenInfo.y * 0.8F).toInt() / 16 * 16,
+                    DeviceUtil.getDensity(this)
+                )
+                setting.fps = 20f
+
+                val cs = CoroutineScope(Dispatchers.IO).launch {
+                    val screenProcessor = ScreenCapture.Builder(
+                        setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
+                        setting.height, // 800 1024 1280
+                        setting.dpi,
+                        null,
+                        ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE,
+                        screenDataListener
+                    ).setFps(setting.fps)
+                        .setSampleSize(1)
+                        .build().apply {
+                            onInit()
+                            onStart()
                         }
-                    }
-                }, 100, 300)
+                    (screenProcessor as ScreenshotStrategy).startRecord(window)
+                }
             } else {
                 timer.cancel()
-                screenProcessor.onRelease()
+//                comp.onRelease()
             }
         }
     }
@@ -130,5 +120,58 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
                 index++
             }
         }
+    }
+
+    // ==========================
+
+    fun performImagesSearch(activity: AppCompatActivity, code: Int) {
+        performFileSearch(
+            activity, code, true,
+            "image/*",
+            "image/png", "image/jpeg", "image/tiff"
+        )
+    }
+
+    fun performFileSearch(
+        activity: AppCompatActivity, code: Int, multiple: Boolean, type: String,
+        vararg mimetype: String
+    ) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            this.type = type
+            putExtra(Intent.EXTRA_MIME_TYPES, mimetype)
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple)
+        }
+
+        activity.startActivityForResult(intent, code)
+    }
+
+    fun onSelectPicClick(view: View) {
+        performImagesSearch(this, CODE_IMAGE_SEARCH)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        addImages(data!!)
+    }
+
+    private fun addImages(data: Intent) {
+        if (data != null) {
+            if (data.data != null) {
+                selectedImgUris.add(data.data!!)
+            } else if (data.clipData != null) {
+                val cd = data.clipData!!
+                val unsorted = ArrayList<Uri>()
+                for (i in 0 until cd.itemCount) {
+                    val item = cd.getItemAt(i)
+                    unsorted.add(item.uri)
+                }
+
+                // System file picker doesn't guarantee any kind of order when
+                // Multiple files are selected, so I at least sort by path/filename
+                selectedImgUris.addAll(unsorted.sortedBy { it.encodedPath })
+            }
+        }
+
     }
 }

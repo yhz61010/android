@@ -2,7 +2,7 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
 import android.view.View
-import com.ho1ho.androidbase.utils.device.ScreenUtil
+import com.ho1ho.androidbase.utils.device.CaptureUtil
 import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
@@ -16,7 +16,7 @@ class TakeScreenshotActivity : BaseDemonstrationActivity() {
     }
 
     fun onScreenshot(view: View) {
-        val bitmap = ScreenUtil.takeScreenshot(window)
+        val bitmap = CaptureUtil.takeScreenshot(window)
         bitmap?.let {
             val screenshotFile = File(getExternalFilesDir(null), "screenshot.jpg")
             ImageUtil.writeBitmapToFile(screenshotFile, it, 100)

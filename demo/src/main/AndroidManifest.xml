@@ -19,7 +19,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.socket.WebSocketActivity"></activity>
+        <activity android:name=".H265DecoderActivity" />
+        <activity android:name=".ui.socket.WebSocketActivity" />
         <activity android:name=".ui.ClipboardActivity" />
         <activity android:name=".ui.socket.SocketActivity" />
         <activity android:name=".ui.ScreenshotRecordH264Activity" />

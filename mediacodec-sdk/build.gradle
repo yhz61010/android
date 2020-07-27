@@ -10,11 +10,8 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-
         versionCode 1
         versionName "1.0"
-
-        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -33,6 +30,7 @@ android {
 }
 
 dependencies {
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    api 'com.tencent.mars:mars-xlog:1.2.3'
+    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 }

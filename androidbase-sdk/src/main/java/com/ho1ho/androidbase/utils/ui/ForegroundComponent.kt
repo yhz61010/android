@@ -52,10 +52,10 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     val isBackground: Boolean
         get() = !isForeground
 
-    private var mPaused = true
-    private val mHandler = Handler()
-    private val mListeners: MutableList<AppStateListener> = CopyOnWriteArrayList()
-    private var mCheckRunnable: Runnable? = null
+    private var paused = true
+    private val handler = Handler()
+    private val listeners: MutableList<AppStateListener> = CopyOnWriteArrayList()
+    private var checkRunnable: Runnable? = null
 
     interface AppStateListener {
         fun onBecameForeground()
@@ -64,23 +64,23 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
 
     @Suppress("unused")
     fun addListener(listener: AppStateListener) {
-        mListeners.add(listener)
+        listeners.add(listener)
     }
 
     @Suppress("unused")
     fun removeListener(listener: AppStateListener) {
-        mListeners.remove(listener)
+        listeners.remove(listener)
     }
 
     override fun onActivityResumed(activity: Activity) {
-        mPaused = false
+        paused = false
         val wasBackground = !isForeground
         isForeground = true
-        mCheckRunnable?.let { mHandler.removeCallbacks(mCheckRunnable!!) }
+        checkRunnable?.let { handler.removeCallbacks(checkRunnable!!) }
 
         if (wasBackground) {
             LLog.i(TAG, "Went FG")
-            mListeners.forEach {
+            listeners.forEach {
                 try {
                     it.onBecameForeground()
                 } catch (e: Exception) {
@@ -96,15 +96,15 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
     override fun onActivityStarted(activity: Activity) {}
     override fun onActivityStopped(activity: Activity) {
-        mPaused = true
-        if (mCheckRunnable != null) {
-            mHandler.removeCallbacks(mCheckRunnable!!)
+        paused = true
+        if (checkRunnable != null) {
+            handler.removeCallbacks(checkRunnable!!)
         }
-        mHandler.postDelayed(Runnable {
-            if (isForeground && mPaused) {
+        handler.postDelayed(Runnable {
+            if (isForeground && paused) {
                 isForeground = false
                 LLog.i(TAG, "Went BG")
-                mListeners.forEach {
+                listeners.forEach {
                     try {
                         it.onBecameBackground()
                     } catch (e: Exception) {
@@ -114,7 +114,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             } else {
                 LLog.i(TAG, "Still BG")
             }
-        }.also { mCheckRunnable = it }, becameBackgroundDelay)
+        }.also { checkRunnable = it }, becameBackgroundDelay)
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
@@ -131,7 +131,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         private const val CHECK_DELAY: Long = 500
 
         @Volatile
-        private var mInstance: ForegroundComponent? = null
+        private var instance: ForegroundComponent? = null
 
         /**
          * Its not strictly necessary to use this method - _usually_ invoking
@@ -143,20 +143,20 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
          * @return an initialised Foreground instance
          */
         fun init(application: Application, becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
-            if (mInstance == null) {
+            if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
-                    if (mInstance == null) {
-                        mInstance = ForegroundComponent(becameBackgroundDelay)
-                        application.registerActivityLifecycleCallbacks(mInstance)
+                    if (instance == null) {
+                        instance = ForegroundComponent(becameBackgroundDelay)
+                        application.registerActivityLifecycleCallbacks(instance)
                     }
                 }
             }
-            return mInstance!!
+            return instance!!
         }
 
         fun get(): ForegroundComponent {
-            checkNotNull(mInstance) { "ForegroundComponent is not initialised - invoke at least once with parameterised init/get" }
-            return mInstance!!
+            checkNotNull(instance) { "ForegroundComponent is not initialised - invoke at least once with parameterised init/get" }
+            return instance!!
         }
     }
 }

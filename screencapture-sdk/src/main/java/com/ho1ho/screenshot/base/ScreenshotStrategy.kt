@@ -120,7 +120,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         val dpi: Int,
         val screenDataListener: ScreenDataListener
     ) {
-        @Suppress("WeakerAccess")
+        // FIXME: Seems does not work. Check bellow setKeyFrameRate
         var fps = 20F
             private set
         var quality = 100

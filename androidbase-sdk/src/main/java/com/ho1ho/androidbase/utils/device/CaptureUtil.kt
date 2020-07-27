@@ -1,5 +1,6 @@
 package com.ho1ho.androidbase.utils.device
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
@@ -25,5 +26,9 @@ object CaptureUtil {
 
     fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return takeScreenshot(win.decorView.rootView, config)
+    }
+
+    fun takeScreenshot(act: Activity, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+        return Falcon.takeScreenshotBitmap(act)
     }
 }

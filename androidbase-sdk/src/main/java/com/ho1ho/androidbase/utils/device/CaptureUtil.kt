@@ -9,11 +9,12 @@ import android.view.Window
  * Author: Michael Leo
  * Date: 20-5-15 下午5:12
  */
-object ScreenUtil {
+object CaptureUtil {
 
     /**
-     * Using [window.decorView.rootView] to capture the whole screen
+     * Using `window.decorView.rootView` to capture the whole screen
      */
+    @Suppress("WeakerAccess")
     fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return runCatching {
             Bitmap.createBitmap(view.width, view.height, config).also {

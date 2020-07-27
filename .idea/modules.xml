@@ -9,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camera2live-sdk/LeoAndroidBaseUtil.camera2live-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/camera2live-sdk/LeoAndroidBaseUtil.camera2live-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-sdk/LeoAndroidBaseUtil.log-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/log-sdk/LeoAndroidBaseUtil.log-sdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mediacodec-sdk/LeoAndroidBaseUtil.mediacodec-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/mediacodec-sdk/LeoAndroidBaseUtil.mediacodec-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" />
     </modules>
   </component>

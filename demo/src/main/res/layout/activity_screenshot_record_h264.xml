@@ -41,4 +41,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName" />
+
+    <Button
+        android:id="@+id/btnToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Show Toast"
+        android:onClick="onShowToastClick"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+
+    <Button
+        android:id="@+id/btnDlg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Show Dialog"
+        android:onClick="onShowDialogClick"
+        app:layout_constraintEnd_toEndOf="@+id/btnToast"
+        app:layout_constraintStart_toStartOf="@+id/btnToast"
+        app:layout_constraintTop_toBottomOf="@+id/btnToast" />
 </androidx.constraintlayout.widget.ConstraintLayout>

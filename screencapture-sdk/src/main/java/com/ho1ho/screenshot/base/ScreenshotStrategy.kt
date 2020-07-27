@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 /**
  * **Limitation**
@@ -290,7 +291,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             onInit()
             onStart()
             while (isRecording) {
-                CaptureUtil.takeScreenshot(act, Bitmap.Config.RGB_565)?.let {
+                CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
                         val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
                         encodeImages(compressedBitmap)

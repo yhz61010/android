@@ -16,4 +16,7 @@ object CodecUtil {
     fun hasEncoderByCodecName(mimeType: String, codecName: String) =
         getEncoderListByMimeType(mimeType)
             .indexOfFirst { it.name.equals(codecName, true) } > -1
+
+    @Suppress("unused")
+    fun getAllSupportedCodecList() = MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos
 }

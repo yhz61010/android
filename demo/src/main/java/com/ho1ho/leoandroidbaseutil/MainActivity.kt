@@ -29,6 +29,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+//        CustomApplication.instance.closeDebugOutputFile()
+
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)

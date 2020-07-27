@@ -14,6 +14,7 @@ import android.view.View
 import android.view.WindowManager
 import com.ho1ho.androidbase.utils.LLog
 import java.io.*
+import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -34,22 +35,20 @@ object Falcon {
      * Takes screenshot of provided activity and saves it to provided file.
      * File content will be overwritten if there is already some content.
      *
-     * @param activity Activity of which the screenshot will be taken.
+     * @param weakAct WeakReference<Activity> of which the screenshot will be taken.
      * @param toFile   File where the screenshot will be saved.
      * If there is some content it will be overwritten
      * @throws UnableToTakeScreenshotException When there is unexpected error during taking screenshot
      */
     @Suppress("unused")
-    fun takeScreenshot(activity: Activity?, toFile: File?) {
-        requireNotNull(activity) { "Parameter activity cannot be null." }
+    fun takeScreenshot(weakAct: WeakReference<Activity>, toFile: File?) {
         requireNotNull(toFile) { "Parameter toFile cannot be null." }
         var bitmap: Bitmap? = null
         try {
-            bitmap = takeBitmapUnchecked(activity)
+            bitmap = takeBitmapUnchecked(weakAct)
             writeBitmap(bitmap, toFile)
         } catch (e: Exception) {
-            val message = ("Unable to take screenshot to file " + toFile.absolutePath
-                    + " of activity " + activity.javaClass.name)
+            val message = ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
             Log.e(TAG, message, e)
             throw UnableToTakeScreenshotException(message, e)
         } finally {
@@ -61,12 +60,10 @@ object Falcon {
     /**
      * Takes screenshot of provided activity and puts it into bitmap.
      *
-     * @param activity Activity of which the screenshot will be taken.
+     * @param activity WeakReference<Activity> of which the screenshot will be taken.
      * @return Bitmap of what is displayed in activity.
-     * @throws UnableToTakeScreenshotException When there is unexpected error during taking screenshot
      */
-    fun takeScreenshotBitmap(activity: Activity?, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-        requireNotNull(activity) { "Parameter activity cannot be null." }
+    fun takeScreenshotBitmap(activity: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return try {
             takeBitmapUnchecked(activity, config)
         } catch (e: Exception) {
@@ -81,10 +78,10 @@ object Falcon {
     //endregion
     //region Methods
     @Throws(InterruptedException::class)
-    private fun takeBitmapUnchecked(activity: Activity, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
-        val viewRoots = getRootViews(activity)
+    private fun takeBitmapUnchecked(weakAct: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
+        val viewRoots = getRootViews(weakAct)
         if (viewRoots.isEmpty()) {
-            throw UnableToTakeScreenshotException("Unable to capture any view data in $activity")
+            throw UnableToTakeScreenshotException("Unable to capture any view data in $weakAct")
         }
         var maxWidth = Int.MIN_VALUE
         var maxHeight = Int.MIN_VALUE
@@ -102,20 +99,17 @@ object Falcon {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             drawRootsToBitmap(viewRoots, bitmap)
         } else {
-            drawRootsToBitmapOtherThread(activity, viewRoots, bitmap)
+            drawRootsToBitmapOtherThread(weakAct, viewRoots, bitmap)
         }
         return bitmap
     }
 
     @Throws(InterruptedException::class)
-    private fun drawRootsToBitmapOtherThread(
-        activity: Activity, viewRoots: List<ViewRootData>,
-        bitmap: Bitmap
-    ) {
+    private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>, viewRoots: List<ViewRootData>, bitmap: Bitmap) {
         val errorInMainThread =
             AtomicReference<Exception>()
         val latch = CountDownLatch(1)
-        activity.runOnUiThread {
+        weakAct.get()?.runOnUiThread {
             try {
                 drawRootsToBitmap(viewRoots, bitmap)
             } catch (ex: Exception) {
@@ -171,11 +165,11 @@ object Falcon {
     }
 
     @SuppressLint("ObsoleteSdkInt")
-    fun getRootViews(activity: Activity): List<ViewRootData> {
+    fun getRootViews(weakAct: WeakReference<Activity>): List<ViewRootData> {
         val globalWindowManager: Any = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
-            getFieldValue("mWindowManager", activity.windowManager)!!
+            getFieldValue("mWindowManager", weakAct.get()?.windowManager)!!
         } else {
-            getFieldValue("mGlobal", activity.windowManager)!!
+            getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
         }
         val rootObjects = getFieldValue("mRoots", globalWindowManager)
         val paramsObject = getFieldValue("mParams", globalWindowManager)
@@ -271,22 +265,22 @@ object Falcon {
         }
     }
 
-    private fun getFieldValue(fieldName: String, target: Any): Any? {
+    private fun getFieldValue(fieldName: String, target: Any?): Any? {
         return kotlin.runCatching {
             getFieldValueUnchecked(fieldName, target)
         }.getOrNull()
     }
 
-    private fun getFieldValueUnchecked(fieldName: String, target: Any): Any? {
+    private fun getFieldValueUnchecked(fieldName: String, target: Any?): Any? {
         return kotlin.runCatching {
-            findField(fieldName, target.javaClass)?.let {
+            findField(fieldName, target?.javaClass)?.let {
                 it.isAccessible = true
                 it[target]
             }
         }.getOrNull()
     }
 
-    fun findField(name: String, clazz: Class<*>): Field? {
+    fun findField(name: String, clazz: Class<*>?): Field? {
         var currentClass: Class<*>? = clazz
         while (currentClass != Any::class.java) {
             kotlin.runCatching {

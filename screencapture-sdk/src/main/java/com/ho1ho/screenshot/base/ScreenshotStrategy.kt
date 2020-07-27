@@ -11,7 +11,7 @@ import android.os.HandlerThread
 import android.view.Surface
 import android.view.Window
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.androidbase.utils.device.ScreenUtil
+import com.ho1ho.androidbase.utils.device.CaptureUtil
 import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.screenshot.TextureRenderer
 import kotlinx.coroutines.CoroutineScope
@@ -290,7 +290,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
             onInit()
             onStart()
             while (isRecording) {
-                ScreenUtil.takeScreenshot(window, Bitmap.Config.RGB_565)?.let {
+                CaptureUtil.takeScreenshot(window, Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
                         val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
                         encodeImages(compressedBitmap)

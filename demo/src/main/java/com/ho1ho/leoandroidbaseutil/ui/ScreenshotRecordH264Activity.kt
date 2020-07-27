@@ -2,11 +2,14 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.media.MediaCodec
 import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AlertDialog
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toHexString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.file.FileUtil
+import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareSetting
@@ -67,12 +70,28 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
 
         toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (screenProcessor as ScreenshotStrategy).startRecord(window)
+                (screenProcessor as ScreenshotStrategy).startRecord(this)
             } else {
                 videoH264OsForDebug.flush()
                 videoH264OsForDebug.close()
                 screenProcessor.onRelease()
             }
         }
+    }
+
+    fun onShowToastClick(view: View) {
+        ToastUtil.showToast("Custom Toast")
+    }
+
+    fun onShowDialogClick(view: View) {
+        AlertDialog.Builder(this)
+            .setTitle("Title")
+            .setMessage("This is a dialog")
+            .setPositiveButton("OK") { dlg, _ ->
+                dlg.dismiss()
+            }
+            .setNeutralButton("Cancel", null)
+            .create()
+            .show()
     }
 }

@@ -1,5 +1,6 @@
 package com.ho1ho.screenshot.base
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -9,7 +10,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
-import android.view.Window
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.CaptureUtil
 import com.ho1ho.androidbase.utils.media.ImageUtil
@@ -285,12 +285,12 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         // Prepare surface
     }
 
-    fun startRecord(window: Window) {
+    fun startRecord(act: Activity) {
         CoroutineScope(Dispatchers.IO).launch {
             onInit()
             onStart()
             while (isRecording) {
-                CaptureUtil.takeScreenshot(window, Bitmap.Config.RGB_565)?.let {
+                CaptureUtil.takeScreenshot(act, Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
                         val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
                         encodeImages(compressedBitmap)

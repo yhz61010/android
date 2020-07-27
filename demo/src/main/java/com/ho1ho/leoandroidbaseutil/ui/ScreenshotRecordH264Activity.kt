@@ -50,7 +50,7 @@ class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
             DeviceUtil.getDensity(this)
         )
         // FIXME: Seems does not work. Check bellow setKeyFrameRate
-        setting.fps = 60f
+        setting.fps = 5f
 
         val screenProcessor = ScreenCapture.Builder(
             setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]

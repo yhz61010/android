@@ -147,4 +147,5 @@ dependencies {
     implementation project(':screencapture-sdk')
     implementation project(':basenetty-sdk')
     implementation project(':audiorecord-sdk')
+    implementation project(':mediacodec-sdk')
 }

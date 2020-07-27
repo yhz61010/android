@@ -93,7 +93,8 @@ class MainActivity : AppCompatActivity() {
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record screen by screenshot", ScreenshotRecordH264Activity::class.java),
             Pair("Socket client", SocketActivity::class.java),
-            Pair("WebSocket client", WebSocketActivity::class.java)
+            Pair("WebSocket client", WebSocketActivity::class.java),
+            Pair("H265 Decoder", H265DecoderActivity::class.java)
         )
 
         private val color = arrayOf(

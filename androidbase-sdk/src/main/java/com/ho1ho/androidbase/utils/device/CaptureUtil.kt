@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
 import android.view.Window
+import java.lang.ref.WeakReference
 
 /**
  * Author: Michael Leo
@@ -28,7 +29,7 @@ object CaptureUtil {
         return takeScreenshot(win.decorView.rootView, config)
     }
 
-    fun takeScreenshot(act: Activity, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-        return Falcon.takeScreenshotBitmap(act)
+    fun takeScreenshot(act: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+        return Falcon.takeScreenshotBitmap(act, config)
     }
 }

@@ -54,10 +54,8 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
         mTimer = Timer()
         mTimer!!.schedule(object : TimerTask() {
             override fun run() {
-                val downSpeed = downloadSpeed
-                val upSpeed = uploadSpeed
                 if (emitDataCounter == interval) {
-                    handler.obtainMessage(MESSAGE_TRAFFIC_UPDATE, arrayOf(downSpeed, upSpeed)).sendToTarget()
+                    handler.obtainMessage(MESSAGE_TRAFFIC_UPDATE, arrayOf(downloadSpeed, uploadSpeed)).sendToTarget()
                     emitDataCounter = 1
                 } else {
                     emitDataCounter++

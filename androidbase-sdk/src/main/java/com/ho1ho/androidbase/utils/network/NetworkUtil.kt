@@ -16,7 +16,7 @@ import java.util.*
  */
 object NetworkUtil {
 
-    const val NETWORK_PING_DELAY_HIGH = 180
+    const val NETWORK_PING_DELAY_HIGH = 200
     const val NETWORK_PING_DELAY_VERY_HIGH = 300
 
     const val NETWORK_SIGNAL_STRENGTH_BAD = 2

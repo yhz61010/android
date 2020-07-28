@@ -21,15 +21,6 @@ import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
 /**
- * **Limitation**
- *
- * You can **ONLY** record the activity window.
- *
- * The known components that can not be recorded are list here:(including but not limited to these components)
- *
- * - Toast
- * - Soft keyboard
- *
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
  */

@@ -106,22 +106,14 @@ object Falcon {
 
     @Throws(InterruptedException::class)
     private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>, viewRoots: List<ViewRootData>, bitmap: Bitmap) {
-        val errorInMainThread =
-            AtomicReference<Exception>()
+        val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
-            try {
-                drawRootsToBitmap(viewRoots, bitmap)
-            } catch (ex: Exception) {
-                errorInMainThread.set(ex)
-            } finally {
-                latch.countDown()
-            }
-        }
+            kotlin.runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }.also { latch.countDown() }
+        } ?: latch.countDown()
         latch.await()
-        val exception = errorInMainThread.get()
-        if (exception != null) {
-            throw UnableToTakeScreenshotException(exception)
+        errorInMainThread.get()?.let {
+            throw UnableToTakeScreenshotException(it)
         }
     }
 
@@ -304,19 +296,19 @@ object Falcon {
      */
     class UnableToTakeScreenshotException : RuntimeException {
         internal constructor(detailMessage: String) : super(detailMessage) {}
-        internal constructor(detailMessage: String, exception: Exception) : super(
+        internal constructor(detailMessage: String, exception: Throwable) : super(
             detailMessage,
             extractException(exception)
         )
 
-        constructor(ex: Exception) : super(extractException(ex)) {}
+        constructor(ex: Throwable) : super(extractException(ex)) {}
 
         companion object {
             /**
              * Method to avoid multiple wrapping. If there is already our exception,
              * just wrap the cause again
              */
-            private fun extractException(ex: Exception): Throwable? {
+            private fun extractException(ex: Throwable): Throwable? {
                 return if (ex is UnableToTakeScreenshotException) {
                     ex.cause
                 } else ex

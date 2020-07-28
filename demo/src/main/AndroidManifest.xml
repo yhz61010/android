@@ -23,7 +23,7 @@
         <activity android:name=".ui.socket.WebSocketActivity" />
         <activity android:name=".ui.ClipboardActivity" />
         <activity android:name=".ui.socket.SocketActivity" />
-        <activity android:name=".ui.ScreenshotRecordH264Activity" />
+        <activity android:name=".ui.RecordSingleAppScreenActivity" />
         <activity android:name=".ui.TakeScreenshotActivity" />
         <activity android:name=".ui.CoroutineActivity" />
         <activity android:name=".ui.AudioActivity" />

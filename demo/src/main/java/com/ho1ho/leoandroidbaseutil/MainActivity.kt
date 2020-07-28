@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             Pair("Audio", AudioActivity::class.java),
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
-            Pair("Record screen by screenshot", ScreenshotRecordH264Activity::class.java),
+            Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Socket client", SocketActivity::class.java),
             Pair("WebSocket client", WebSocketActivity::class.java),
             Pair("H265 Decoder", H265DecoderActivity::class.java)

@@ -14,6 +14,15 @@ import java.lang.ref.WeakReference
 object CaptureUtil {
 
     /**
+     * **Limitation**
+     *
+     * You can **ONLY** record the specified view or activity window .
+     *
+     * For activity window, the known components that can not be recorded are list here:(including but not limited to these components)
+     *
+     * - Toast
+     * - Soft keyboard
+     *
      * Using `window.decorView.rootView` to capture the whole screen
      */
     @Suppress("WeakerAccess")
@@ -25,6 +34,16 @@ object CaptureUtil {
         }.getOrNull()
     }
 
+    /**
+     * **Limitation**
+     *
+     * You can **ONLY** record the activity window.
+     *
+     * The known components that can not be recorded are list here:(including but not limited to these components)
+     *
+     * - Toast
+     * - Soft keyboard
+     */
     fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return takeScreenshot(win.decorView.rootView, config)
     }

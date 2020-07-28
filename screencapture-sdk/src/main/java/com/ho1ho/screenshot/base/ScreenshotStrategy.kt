@@ -74,9 +74,11 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         spsPpsBytes = encodedBytes.copyOf()
-                        LLog.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
+//                        LLog.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
                     }
-                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(TAG, "Found Key Frame[" + info.size + "]")
+                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
+//                        LLog.i(TAG, "Found Key Frame[" + info.size + "]")
+                    }
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                         // Do nothing
                     }
@@ -292,7 +294,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                     }
                     it.recycle()
                 }
-                delay(16)
+                delay(32)
             }
         }
     }

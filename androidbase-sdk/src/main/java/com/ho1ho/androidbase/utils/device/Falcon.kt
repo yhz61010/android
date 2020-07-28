@@ -272,7 +272,7 @@ object Falcon {
         }.getOrNull()
     }
 
-    fun findField(name: String, clazz: Class<*>?): Field? {
+    private fun findField(name: String, clazz: Class<*>?): Field? {
         var currentClass: Class<*>? = clazz
         while (currentClass != Any::class.java) {
             kotlin.runCatching {
@@ -295,13 +295,13 @@ object Falcon {
      * screenshot capturing to enable better client code exception handling.
      */
     class UnableToTakeScreenshotException : RuntimeException {
-        internal constructor(detailMessage: String) : super(detailMessage) {}
+        internal constructor(detailMessage: String) : super(detailMessage)
         internal constructor(detailMessage: String, exception: Throwable) : super(
             detailMessage,
             extractException(exception)
         )
 
-        constructor(ex: Throwable) : super(extractException(ex)) {}
+        constructor(ex: Throwable) : super(extractException(ex))
 
         companion object {
             /**

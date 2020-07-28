@@ -47,9 +47,9 @@ object NetworkUtil {
         if (isOffline(ctx)) {
             return (-2).toDouble()
         }
-        val pingCommand = String.format(Locale.getDefault(), "/system/bin/ping -c %d %s", numberOfPackages, ipAddress)
         var inputLine: String? = null
         try {
+            val pingCommand = String.format(Locale.getDefault(), "/system/bin/ping -c %d %s", numberOfPackages, ipAddress)
             // Execute the command on the environment interface
             val process = Runtime.getRuntime().exec(pingCommand)
             // Gets the input stream to get the output of the executed command

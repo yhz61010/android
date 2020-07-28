@@ -22,7 +22,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ScreenshotRecordH264Activity : BaseDemonstrationActivity() {
+class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
 
     private lateinit var videoH264OsForDebug: BufferedOutputStream
 

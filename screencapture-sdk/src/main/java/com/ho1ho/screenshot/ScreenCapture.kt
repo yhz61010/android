@@ -18,8 +18,8 @@ object ScreenCapture {
 
     private const val TAG = "ScrCap"
 
-    const val SCREEN_CAPTURE_TYPE_IMAGE = 1
-    const val SCREEN_CAPTURE_TYPE_MEDIA_CODEC = 2
+    const val BY_IMAGE = 1
+    const val BY_MEDIA_CODEC = 2
 
     @Suppress("unused")
     const val SCREEN_CAPTURE_TYPE_X264 = 3
@@ -37,7 +37,7 @@ object ScreenCapture {
     }
 
     /**
-     * @param dpi Not used for [ScreenshotStrategy] which type is [SCREEN_CAPTURE_TYPE_IMAGE]
+     * @param dpi Not used for [ScreenshotStrategy] which type is [BY_IMAGE]
      */
     class Builder(
         private val width: Int,
@@ -84,7 +84,7 @@ object ScreenCapture {
                 "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize"
             )
             return when (captureType) {
-                SCREEN_CAPTURE_TYPE_IMAGE ->
+                BY_IMAGE ->
                     ScreenshotStrategy.Builder(width, height, dpi, screenDataListener)
                         .setFps(fps)
                         .setBitrate(bitrate)
@@ -94,7 +94,7 @@ object ScreenCapture {
                         .setQuality(quality)
                         .setSampleSize(sampleSize)
                         .build()
-                SCREEN_CAPTURE_TYPE_MEDIA_CODEC ->
+                BY_MEDIA_CODEC ->
                     ScreenRecordMediaCodecStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
                         .setFps(fps)
                         .setBitrate(bitrate)

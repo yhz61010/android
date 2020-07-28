@@ -157,6 +157,7 @@ object Falcon {
     }
 
     @SuppressLint("ObsoleteSdkInt")
+    @Suppress("UNCHECKED_CAST")
     fun getRootViews(weakAct: WeakReference<Activity>): List<ViewRootData> {
         val globalWindowManager: Any = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
             getFieldValue("mWindowManager", weakAct.get()?.windowManager)!!

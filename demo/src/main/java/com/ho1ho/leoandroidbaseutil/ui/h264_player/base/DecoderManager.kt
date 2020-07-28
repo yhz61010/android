@@ -12,7 +12,9 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-7-28 下午4:53
  */
-class DecoderManager private constructor() {
+object DecoderManager {
+    private const val TAG = "DecoderManager"
+
     private var mediaCodec: MediaCodec? = null
     private var mediaFormat: MediaFormat? = null
     private val frameIndex: Long = 0
@@ -54,7 +56,7 @@ class DecoderManager private constructor() {
     /**
      * Play the MP4 file Thread
      */
-    private inner class DecoderMP4Thread : Thread() {
+    private class DecoderMP4Thread : Thread() {
         var pts: Long = 0
         override fun run() {
             super.run()
@@ -84,7 +86,7 @@ class DecoderManager private constructor() {
         }
     }
 
-    private inner class DecoderH264Thread : Thread() {
+    private class DecoderH264Thread : Thread() {
         var pts: Long = 0
         override fun run() {
             super.run()
@@ -152,19 +154,5 @@ class DecoderManager private constructor() {
         mDecodeH264Thread = DecoderH264Thread()
         mDecodeH264Thread!!.name = "DecoderH264Thread"
         mDecodeH264Thread!!.start()
-    }
-
-    companion object {
-        private val TAG = DecoderManager::class.java.simpleName
-
-        //    public static String PATH = "http://live.hkstv.hk.lxdns.com/live/hks/playlist.m3u8";
-        private var instance: DecoderManager? = null
-        fun getInstance(): DecoderManager {
-            if (instance == null) {
-                instance =
-                    DecoderManager()
-            }
-            return instance!!
-        }
     }
 }

@@ -150,7 +150,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     private fun encodeImages(bitmap: Bitmap) {
-        LLog.d(TAG, "encodeImages")
+//        LLog.d(TAG, "encodeImages")
 
 //        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
 //            bitmap.width,

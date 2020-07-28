@@ -78,6 +78,7 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
     }
 
     override fun onDestroy() {
+        // DO NOT forget to stop monitor.
         networkMonitor.stopMonitor()
         super.onDestroy()
     }

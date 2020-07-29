@@ -3,10 +3,9 @@ package com.ho1ho.leoandroidbaseutil.ui.h264_player.base
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.view.Surface
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.PlayMp4ByMediaCodecH264Activity
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.mp4File
 
 /**
  * Author: Michael Leo
@@ -29,12 +28,12 @@ object DecoderManager {
     /**
      * * Synchronized callback decoding
      */
-    private fun init() {
+    private fun init(videoFile: String, surface: Surface, width: Int, height: Int) {
         kotlin.runCatching {
             mediaCodec = MediaCodec.createDecoderByType("video/avc")
-            mediaFormat = MediaFormat.createVideoFormat("video/avc", 1080, 1920)
+            mediaFormat = MediaFormat.createVideoFormat("video/avc", width, height)
             mediaExtractor = MediaExtractor()
-            mediaExtractor.setDataSource(mp4File.absolutePath)
+            mediaExtractor.setDataSource(videoFile)
             LLog.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
             for (i in 0 until mediaExtractor.trackCount) {
                 val format = mediaExtractor.getTrackFormat(i)
@@ -45,7 +44,7 @@ object DecoderManager {
                     mediaExtractor.selectTrack(i)
                 }
             }
-            mediaCodec.configure(mediaFormat, PlayMp4ByMediaCodecH264Activity.surface, null, 0)
+            mediaCodec.configure(mediaFormat, surface, null, 0)
             mediaCodec.start()
         }.onFailure { ToastUtil.showErrorToast("Init Decoder error") }
     }
@@ -54,26 +53,29 @@ object DecoderManager {
      * Play the MP4 file Thread
      */
     private class DecoderMP4Thread : Thread() {
-        var pts: Long = 0
         override fun run() {
             while (!isDecodeFinish) {
-                val inputIndex = mediaCodec.dequeueInputBuffer(-1)
-                LLog.d(TAG, " inputIndex: $inputIndex")
-                if (inputIndex >= 0) {
-                    mediaCodec.getInputBuffer(inputIndex)?.let {
-                        val sampleSize = mediaExtractor.readSampleData(it, 0)
-                        val time = mediaExtractor.sampleTime
-                        if (sampleSize > 0 && time > 0) {
-                            mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
-                            mSpeedController.preRender(time)
-                            mediaExtractor.advance()
+                kotlin.runCatching {
+                    val inputIndex = mediaCodec.dequeueInputBuffer(-1)
+                    LLog.d(TAG, " inputIndex: $inputIndex")
+                    if (inputIndex >= 0) {
+                        mediaCodec.getInputBuffer(inputIndex)?.let {
+                            val sampleSize = mediaExtractor.readSampleData(it, 0)
+                            val time = mediaExtractor.sampleTime
+                            if (sampleSize > 0 && time > 0) {
+                                mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
+                                mSpeedController.preRender(time)
+                                mediaExtractor.advance()
+                            }
                         }
                     }
-                }
-                val bufferInfo = MediaCodec.BufferInfo()
-                val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
-                if (outIndex >= 0) {
-                    mediaCodec.releaseOutputBuffer(outIndex, true)
+                    val bufferInfo = MediaCodec.BufferInfo()
+                    val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
+                    if (outIndex >= 0) {
+                        mediaCodec.releaseOutputBuffer(outIndex, true)
+                    }
+                }.onFailure {
+                    LLog.e(TAG, "decode mp4 error")
                 }
             }
         }
@@ -105,7 +107,7 @@ object DecoderManager {
 //    }
 
     fun close() {
-        try {
+        kotlin.runCatching {
             LLog.d(TAG, "close start")
             isDecodeFinish = true
             mDecodeMp4Thread.join(2000)
@@ -115,15 +117,12 @@ object DecoderManager {
             mediaCodec.stop()
             mediaCodec.release()
             mSpeedController.reset()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
-        DecodeH264File.getInstance().close()
-//        instance = null
+        }.onFailure { LLog.e(TAG, "close error") }
+        DecodeH264File.close()
     }
 
-    fun startMP4Decode() {
-        init()
+    fun startMP4Decode(videoFile: String, surface: Surface, width: Int, height: Int) {
+        init(videoFile, surface, width, height)
         mDecodeMp4Thread.name = "DecoderMP4Thread"
         mDecodeMp4Thread.start()
     }

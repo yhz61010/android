@@ -21,7 +21,7 @@ class DecoderManager {
     private val bufferInfo = MediaCodec.BufferInfo()
     private lateinit var mediaFormat: MediaFormat
 
-    private val videoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
+    private val outputVideoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
 
     @Volatile
     private var isDecodeFinish = false
@@ -57,7 +57,7 @@ class DecoderManager {
 //                csd1.get(csd1ByteArray)
                 LLog.w(TAG, "csd0=${csd0ByteArray.toHexString()}")
 //                LLog.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
-                videoRawDataFile.write(csd0ByteArray)
+                outputVideoRawDataFile.write(csd0ByteArray)
 //                videoRawDataFile.write(csd1ByteArray)
                 videoWidth = width
                 videoHeight = height
@@ -91,7 +91,7 @@ class DecoderManager {
                             if (sampleSize > 0) {
                                 val outByteArray = ByteArray(sampleSize)
                                 it.get(outByteArray)
-                                videoRawDataFile.write(outByteArray)
+                                outputVideoRawDataFile.write(outByteArray)
                             }
                             val time = mediaExtractor.sampleTime
                             LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
@@ -101,8 +101,8 @@ class DecoderManager {
                             } else {
                                 LLog.w(TAG, "Decode done")
                                 isDecodeFinish = true
-                                videoRawDataFile.flush()
-                                videoRawDataFile.close()
+                                outputVideoRawDataFile.flush()
+                                outputVideoRawDataFile.close()
                             }
                         }
                     }

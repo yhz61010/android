@@ -70,13 +70,14 @@ object DecoderManager {
                             LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
                             if (sampleSize > 0 && time > 0) {
                                 mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
-                                mSpeedController.preRender(time)
                                 mediaExtractor.advance()
                             }
                         }
                     }
                     val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
                     if (outIndex >= 0) {
+                        LLog.d(TAG, "bufferInfo.presentationTime=${bufferInfo.presentationTimeUs}")
+                        mSpeedController.preRender(bufferInfo.presentationTimeUs)
                         mediaCodec.releaseOutputBuffer(outIndex, true)
                     }
                 }.onFailure {

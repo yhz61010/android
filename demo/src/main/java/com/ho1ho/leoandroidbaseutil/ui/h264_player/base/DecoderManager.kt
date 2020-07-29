@@ -28,26 +28,30 @@ object DecoderManager {
     /**
      * * Synchronized callback decoding
      */
-    private fun init(videoFile: String, surface: Surface, width: Int, height: Int) {
+    private fun init(videoFile: String, surface: Surface) {
         kotlin.runCatching {
-            mediaCodec =
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
-            mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_HEVC, width, height)
             mediaExtractor = MediaExtractor()
             mediaExtractor.setDataSource(videoFile)
             LLog.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
             for (i in 0 until mediaExtractor.trackCount) {
                 val format = mediaExtractor.getTrackFormat(i)
                 val mime = format.getString(MediaFormat.KEY_MIME)!!
-                LLog.d(TAG, "mime: $mime")
+                val width = format.getInteger(MediaFormat.KEY_WIDTH)
+                val height = format.getInteger(MediaFormat.KEY_HEIGHT)
+                LLog.d(TAG, "mime: $mime width: $width height: $height")
                 if (mime.startsWith("video")) {
                     mediaFormat = format
                     mediaExtractor.selectTrack(i)
+
+//                    mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
+                    mediaCodec = MediaCodec.createDecoderByType(mime)
+                    mediaCodec.configure(mediaFormat, surface, null, 0)
+                    mediaCodec.start()
+                    break
                 }
             }
-            mediaCodec.configure(mediaFormat, surface, null, 0)
-            mediaCodec.start()
-        }.onFailure { ToastUtil.showErrorToast("Init Decoder error") }
+
+        }.onFailure { it.printStackTrace();ToastUtil.showErrorToast("Init Decoder error") }
     }
 
     /**
@@ -123,8 +127,8 @@ object DecoderManager {
 //        DecodeH264File.close()
     }
 
-    fun startMP4Decode(videoFile: String, surface: Surface, width: Int, height: Int) {
-        init(videoFile, surface, width, height)
+    fun startMP4Decode(videoFile: String, surface: Surface) {
+        init(videoFile, surface)
         mDecodeMp4Thread.name = "DecoderMP4Thread"
         mDecodeMp4Thread.start()
     }

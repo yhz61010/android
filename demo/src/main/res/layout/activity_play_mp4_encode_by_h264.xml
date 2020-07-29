@@ -4,12 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     tools:context=".ui.h264_player.PlayMp4ByMediaCodecH264Activity">
 
-    <SurfaceView
+    <com.ho1ho.leoandroidbaseutil.ui.h264_player.ui.CustomSurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

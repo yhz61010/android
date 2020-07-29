@@ -9,12 +9,13 @@ import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.AudioPlayManager
 import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.DecoderManager
 import kotlinx.android.synthetic.main.activity_play_mp4_encode_by_h264.*
 import java.io.File
 
-//val videoFile = File(Environment.getExternalStorageDirectory(), "video.mp4")
-val videoFile = File(Environment.getExternalStorageDirectory(), "h265.mp4")
+val videoFile = File(Environment.getExternalStorageDirectory(), "video.mp4")
+//val videoFile = File(Environment.getExternalStorageDirectory(), "h265.mp4")
 
 class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
 
@@ -38,8 +39,8 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
 //                    DecoderManager.startH264Decode()
                 } else {
                     DecoderManager.startMP4Decode(videoFile.absolutePath, surface)
-//                    AudioPlayManager.setContext(applicationContext)
-//                    AudioPlayManager.startThread()
+                    AudioPlayManager.setContext(applicationContext)
+                    AudioPlayManager.startThread()
                 }
             }
 
@@ -55,7 +56,7 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
 
     override fun onStop() {
         DecoderManager.close()
-//        AudioPlayManager.close()
+        AudioPlayManager.close()
         super.onStop()
     }
 }

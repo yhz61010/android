@@ -5,15 +5,16 @@ import android.os.Environment
 import android.view.Surface
 import android.view.SurfaceHolder
 import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.AudioPlayManager
 import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.DecoderManager
 import kotlinx.android.synthetic.main.activity_play_mp4_encode_by_h264.*
 import java.io.File
 
-val mp4File = File(Environment.getExternalStorageDirectory(), "video.mp4")
+//val videoFile = File(Environment.getExternalStorageDirectory(), "video.mp4")
+val videoFile = File(Environment.getExternalStorageDirectory(), "h265.mp4")
 
 class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
 
@@ -27,6 +28,7 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
     private var isPlayH264 = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_mp4_encode_by_h264)
 
@@ -38,9 +40,9 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
                 if (isPlayH264) {
 //                    DecoderManager.startH264Decode()
                 } else {
-                    DecoderManager.startMP4Decode(mp4File.absolutePath, surface, 1080, 1920)
-                    AudioPlayManager.setContext(applicationContext)
-                    AudioPlayManager.startThread()
+                    DecoderManager.startMP4Decode(videoFile.absolutePath, surface, 1080, 1920)
+//                    AudioPlayManager.setContext(applicationContext)
+//                    AudioPlayManager.startThread()
                 }
             }
 
@@ -49,9 +51,14 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
         })
     }
 
+    override fun onResume() {
+        AppUtil.hideNavigationBar(this)
+        super.onResume()
+    }
+
     override fun onStop() {
         DecoderManager.close()
-        AudioPlayManager.close()
+//        AudioPlayManager.close()
         super.onStop()
     }
 }

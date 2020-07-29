@@ -11,7 +11,9 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-7-28 下午4:54
  */
-class AudioPlayManager {
+object AudioPlayManager {
+    private val TAG = AudioTrack::class.java.simpleName
+
     private val mSampleRate = 44100
     private val channelCount = 2
     private var mAudioTrack: AudioTrack? = null
@@ -83,7 +85,7 @@ class AudioPlayManager {
 //        instance = null
     }
 
-    internal inner class PlayThread : Thread() {
+    internal class PlayThread : Thread() {
         override fun run() {
             super.run()
             mAudioTrack!!.play()
@@ -116,15 +118,4 @@ class AudioPlayManager {
         }
     }
 
-    companion object {
-        private val TAG = AudioTrack::class.java.simpleName
-        private var instance: AudioPlayManager? = null
-        fun getInstance(): AudioPlayManager {
-            if (instance == null) {
-                instance =
-                    AudioPlayManager()
-            }
-            return instance!!
-        }
-    }
 }

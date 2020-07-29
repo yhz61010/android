@@ -15,9 +15,7 @@ import java.io.FileOutputStream
  * Author: Michael Leo
  * Date: 20-7-28 下午4:53
  */
-object DecoderManager {
-    private const val TAG = "DecoderManager"
-
+class DecoderManager {
     private lateinit var mediaExtractor: MediaExtractor
     private lateinit var mediaCodec: MediaCodec
     private val bufferInfo = MediaCodec.BufferInfo()
@@ -82,7 +80,7 @@ object DecoderManager {
     /**
      * Play the MP4 file Thread
      */
-    private class DecoderMP4Thread : Thread() {
+    private inner class DecoderMP4Thread : Thread() {
         override fun run() {
             while (!isDecodeFinish) {
                 kotlin.runCatching {
@@ -175,4 +173,8 @@ object DecoderManager {
 //        mDecodeH264Thread.name = "DecoderH264Thread"
 //        mDecodeH264Thread.start()
 //    }
+
+    companion object {
+        private const val TAG = "DecoderManager"
+    }
 }

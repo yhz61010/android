@@ -23,6 +23,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
         lateinit var surface: Surface
     }
 
+    private val decoderManager = DecoderManager()
     private var isPlayH264 = false
     private val videoSurfaceView: CustomSurfaceView by lazy { surfaceView as CustomSurfaceView }
 
@@ -39,9 +40,9 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
                 if (isPlayH264) {
 //                    DecoderManager.startH264Decode()
                 } else {
-                    DecoderManager.init(videoFile.absolutePath, surface)
-                    videoSurfaceView.setDimension(DecoderManager.videoWidth, DecoderManager.videoHeight)
-                    DecoderManager.startMP4Decode()
+                    decoderManager.init(videoFile.absolutePath, surface)
+                    videoSurfaceView.setDimension(decoderManager.videoWidth, decoderManager.videoHeight)
+                    decoderManager.startMP4Decode()
 //                    AudioPlayManager.setContext(applicationContext)
 //                    AudioPlayManager.startThread()
                 }
@@ -58,7 +59,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
     }
 
     override fun onStop() {
-        DecoderManager.close()
+        decoderManager.close()
 //        AudioPlayManager.close()
         super.onStop()
     }

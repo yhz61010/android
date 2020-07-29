@@ -23,12 +23,16 @@ object DecoderManager {
     private var isDecodeFinish = false
     private val mSpeedController: SpeedManager = SpeedManager()
     private val mDecodeMp4Thread: DecoderMP4Thread = DecoderMP4Thread()
+
+    var videoWidth: Int = 0
+    var videoHeight: Int = 0
+
 //    private val mDecodeH264Thread: DecoderH264Thread = DecoderH264Thread()
 
     /**
      * * Synchronized callback decoding
      */
-    private fun init(videoFile: String, surface: Surface) {
+    fun init(videoFile: String, surface: Surface) {
         kotlin.runCatching {
             mediaExtractor = MediaExtractor()
             mediaExtractor.setDataSource(videoFile)
@@ -39,6 +43,8 @@ object DecoderManager {
                 val width = format.getInteger(MediaFormat.KEY_WIDTH)
                 val height = format.getInteger(MediaFormat.KEY_HEIGHT)
                 val keyFrameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE)
+                videoWidth = width
+                videoHeight = height
                 LLog.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
                 if (mime.startsWith("video")) {
                     mediaFormat = format
@@ -129,8 +135,7 @@ object DecoderManager {
 //        DecodeH264File.close()
     }
 
-    fun startMP4Decode(videoFile: String, surface: Surface) {
-        init(videoFile, surface)
+    fun startMP4Decode() {
         mDecodeMp4Thread.name = "DecoderMP4Thread"
         mDecodeMp4Thread.start()
     }

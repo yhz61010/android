@@ -3,7 +3,7 @@ package com.ho1ho.leoandroidbaseutil.ui.h264_player.base
 import android.content.Context
 import android.media.*
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.mp4File
+import com.ho1ho.leoandroidbaseutil.ui.h264_player.videoFile
 import java.io.FileInputStream
 import java.io.IOException
 
@@ -55,7 +55,7 @@ object AudioPlayManager {
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
             mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, mSampleRate, channelCount)
             mediaExtractor = MediaExtractor()
-            mediaExtractor!!.setDataSource(mp4File.absolutePath)
+            mediaExtractor!!.setDataSource(videoFile.absolutePath)
             LLog.d(TAG, "getTrackCount: " + mediaExtractor!!.trackCount)
             for (i in 0 until mediaExtractor!!.trackCount) {
                 val format = mediaExtractor!!.getTrackFormat(i)

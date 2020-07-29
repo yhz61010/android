@@ -80,11 +80,12 @@ object DecoderManager {
                             }
                         }
                     }
-                    val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
-                    if (outIndex >= 0) {
+                    var outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
+                    while (outIndex >= 0) {
                         LLog.d(TAG, "bufferInfo.presentationTime=${bufferInfo.presentationTimeUs}")
                         mSpeedController.preRender(bufferInfo.presentationTimeUs)
                         mediaCodec.releaseOutputBuffer(outIndex, true)
+                        outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
                     }
                 }.onFailure {
                     LLog.e(TAG, "decode mp4 error")

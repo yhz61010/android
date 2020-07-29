@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.ui.h264_player
+package com.ho1ho.leoandroidbaseutil.ui.media_player
 
 import android.os.Bundle
 import android.os.Environment
@@ -9,15 +9,15 @@ import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.DecoderManager
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.ui.CustomSurfaceView
-import kotlinx.android.synthetic.main.activity_play_mp4_encode_by_h264.*
+import com.ho1ho.leoandroidbaseutil.ui.media_player.base.DecoderManager
+import com.ho1ho.leoandroidbaseutil.ui.media_player.ui.CustomSurfaceView
+import kotlinx.android.synthetic.main.activity_play_video.*
 import java.io.File
 
 //val videoFile = File(Environment.getExternalStorageDirectory(), "video.mp4")
 val videoFile = File(Environment.getExternalStorageDirectory(), "h265.mp4")
 
-class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
+class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
 
     companion object {
         lateinit var surface: Surface
@@ -29,7 +29,7 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_play_mp4_encode_by_h264)
+        setContentView(R.layout.activity_play_video)
 
         surface = videoSurfaceView.holder.surface
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {

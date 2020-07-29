@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.ui.h264_player.ui
+package com.ho1ho.leoandroidbaseutil.ui.media_player.ui
 
 import android.content.Context
 import android.os.Build

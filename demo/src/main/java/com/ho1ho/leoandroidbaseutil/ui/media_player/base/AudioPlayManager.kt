@@ -1,9 +1,9 @@
-package com.ho1ho.leoandroidbaseutil.ui.h264_player.base
+package com.ho1ho.leoandroidbaseutil.ui.media_player.base
 
 import android.content.Context
 import android.media.*
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.leoandroidbaseutil.ui.h264_player.videoFile
+import com.ho1ho.leoandroidbaseutil.ui.media_player.videoFile
 import java.io.FileInputStream
 import java.io.IOException
 

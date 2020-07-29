@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.ui.h264_player.base
+package com.ho1ho.leoandroidbaseutil.ui.media_player.base
 
 import android.media.MediaCodec
 import android.media.MediaExtractor

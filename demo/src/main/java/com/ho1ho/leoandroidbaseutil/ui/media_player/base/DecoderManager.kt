@@ -3,9 +3,13 @@ package com.ho1ho.leoandroidbaseutil.ui.media_player.base
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.os.Environment
 import android.view.Surface
+import com.ho1ho.androidbase.exts.toHexString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Author: Michael Leo
@@ -18,6 +22,8 @@ object DecoderManager {
     private lateinit var mediaCodec: MediaCodec
     private val bufferInfo = MediaCodec.BufferInfo()
     private var mediaFormat: MediaFormat? = null
+
+    private val videoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
 
     @Volatile
     private var isDecodeFinish = false
@@ -43,6 +49,18 @@ object DecoderManager {
                 val width = format.getInteger(MediaFormat.KEY_WIDTH)
                 val height = format.getInteger(MediaFormat.KEY_HEIGHT)
                 val keyFrameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE)
+                val csd0 = format.getByteBuffer("csd-0")!!
+                // We must make a copy of that csd0 value from format. Or else the video will not be played.
+                val copiedCsd0 = csd0.duplicate()
+//                val csd1 = format.getByteBuffer("csd-1")!!
+                val csd0ByteArray = ByteArray(copiedCsd0.remaining())
+//                val csd1ByteArray = ByteArray(csd1.remaining())
+                copiedCsd0.get(csd0ByteArray)
+//                csd1.get(csd1ByteArray)
+                LLog.w(TAG, "csd0=${csd0ByteArray.toHexString()}")
+//                LLog.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
+                videoRawDataFile.write(csd0ByteArray)
+//                videoRawDataFile.write(csd1ByteArray)
                 videoWidth = width
                 videoHeight = height
                 LLog.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
@@ -72,15 +90,26 @@ object DecoderManager {
                     if (inputIndex >= 0) {
                         mediaCodec.getInputBuffer(inputIndex)?.let {
                             val sampleSize = mediaExtractor.readSampleData(it, 0)
+                            if (sampleSize > 0) {
+                                val outByteArray = ByteArray(sampleSize)
+                                it.get(outByteArray)
+                                videoRawDataFile.write(outByteArray)
+                            }
                             val time = mediaExtractor.sampleTime
                             LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
                             if (sampleSize > 0 && time > 0) {
                                 mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
                                 mediaExtractor.advance()
+                            } else {
+                                LLog.w(TAG, "Decode done")
+                                isDecodeFinish = true
+                                videoRawDataFile.flush()
+                                videoRawDataFile.close()
                             }
                         }
                     }
                     var outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
+//                    LLog.w(TAG, "outIndex=$outIndex")
                     while (outIndex >= 0) {
                         LLog.d(TAG, "bufferInfo.presentationTime=${bufferInfo.presentationTimeUs}")
                         mSpeedController.preRender(bufferInfo.presentationTimeUs)

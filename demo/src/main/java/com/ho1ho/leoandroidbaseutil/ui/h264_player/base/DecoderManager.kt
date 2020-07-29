@@ -30,8 +30,9 @@ object DecoderManager {
      */
     private fun init(videoFile: String, surface: Surface, width: Int, height: Int) {
         kotlin.runCatching {
-            mediaCodec = MediaCodec.createDecoderByType("video/avc")
-            mediaFormat = MediaFormat.createVideoFormat("video/avc", width, height)
+            mediaCodec =
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
+            mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_HEVC, width, height)
             mediaExtractor = MediaExtractor()
             mediaExtractor.setDataSource(videoFile)
             LLog.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
@@ -57,7 +58,7 @@ object DecoderManager {
             while (!isDecodeFinish) {
                 kotlin.runCatching {
                     val inputIndex = mediaCodec.dequeueInputBuffer(-1)
-                    LLog.d(TAG, " inputIndex: $inputIndex")
+                    LLog.d(TAG, "inputIndex: $inputIndex")
                     if (inputIndex >= 0) {
                         mediaCodec.getInputBuffer(inputIndex)?.let {
                             val sampleSize = mediaExtractor.readSampleData(it, 0)

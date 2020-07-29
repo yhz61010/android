@@ -22,9 +22,6 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
         lateinit var surface: Surface
     }
 
-    private val INIT_MANAGER_MSG = 0x01
-    private val INIT_MANAGER_DELAY = 1 * 1000
-
     private var isPlayH264 = false
 
     override fun onCreate(savedInstanceState: Bundle?) {

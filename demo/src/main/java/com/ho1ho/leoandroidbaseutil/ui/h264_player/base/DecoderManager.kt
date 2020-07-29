@@ -38,7 +38,8 @@ object DecoderManager {
                 val mime = format.getString(MediaFormat.KEY_MIME)!!
                 val width = format.getInteger(MediaFormat.KEY_WIDTH)
                 val height = format.getInteger(MediaFormat.KEY_HEIGHT)
-                LLog.d(TAG, "mime: $mime width: $width height: $height")
+                val keyFrameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE)
+                LLog.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
                 if (mime.startsWith("video")) {
                     mediaFormat = format
                     mediaExtractor.selectTrack(i)
@@ -61,12 +62,12 @@ object DecoderManager {
         override fun run() {
             while (!isDecodeFinish) {
                 kotlin.runCatching {
-                    val inputIndex = mediaCodec.dequeueInputBuffer(-1)
-                    LLog.d(TAG, "inputIndex: $inputIndex")
+                    val inputIndex = mediaCodec.dequeueInputBuffer(0)
                     if (inputIndex >= 0) {
                         mediaCodec.getInputBuffer(inputIndex)?.let {
                             val sampleSize = mediaExtractor.readSampleData(it, 0)
                             val time = mediaExtractor.sampleTime
+                            LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
                             if (sampleSize > 0 && time > 0) {
                                 mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
                                 mSpeedController.preRender(time)

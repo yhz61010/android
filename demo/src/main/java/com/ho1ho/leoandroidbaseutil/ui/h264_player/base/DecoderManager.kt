@@ -117,7 +117,9 @@ object DecoderManager {
             mediaCodec.release()
             mSpeedController.reset()
         }.onFailure { LLog.e(TAG, "close error") }
-        DecodeH264File.close()
+
+        // FIXME If deocde H264 raw stream, do not forget to close it when you don't need it
+//        DecodeH264File.close()
     }
 
     fun startMP4Decode(videoFile: String, surface: Surface, width: Int, height: Int) {

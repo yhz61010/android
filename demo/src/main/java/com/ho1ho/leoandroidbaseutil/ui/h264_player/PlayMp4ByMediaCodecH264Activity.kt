@@ -38,7 +38,7 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
                 if (isPlayH264) {
 //                    DecoderManager.startH264Decode()
                 } else {
-                    DecoderManager.startMP4Decode()
+                    DecoderManager.startMP4Decode(mp4File.absolutePath, surface, 1080, 1920)
                     AudioPlayManager.getInstance().setContext(applicationContext)
                     AudioPlayManager.getInstance().startThread()
                 }

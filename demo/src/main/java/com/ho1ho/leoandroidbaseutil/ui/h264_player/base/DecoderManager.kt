@@ -69,7 +69,6 @@ object DecoderManager {
                             }
                         }
                     }
-                    val bufferInfo = MediaCodec.BufferInfo()
                     val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
                     if (outIndex >= 0) {
                         mediaCodec.releaseOutputBuffer(outIndex, true)

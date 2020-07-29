@@ -9,7 +9,9 @@ import java.nio.ByteBuffer
  * Author: Michael Leo
  * Date: 20-7-28 下午4:54
  */
-class DecodeH264File {
+object DecodeH264File {
+    private const val TAG = "DecodeH264File"
+
     private val inputStream: FileInputStream? = null
     private var rf: RandomAccessFile? = null
 
@@ -114,19 +116,6 @@ class DecodeH264File {
     }
 
     fun close() {
-        instance = null
-    }
-
-    companion object {
-        private const val TAG = "DecodeH264File"
-        private var instance: DecodeH264File? = null
-        fun getInstance(): DecodeH264File {
-            if (instance == null) {
-                instance =
-                    DecodeH264File()
-            }
-            return instance!!
-        }
     }
 
 //    init {

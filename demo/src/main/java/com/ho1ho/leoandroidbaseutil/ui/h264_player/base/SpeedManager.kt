@@ -58,7 +58,7 @@ class SpeedManager {
                 frameDelta = mFixedFrameDurationUsec
             } else {
                 frameDelta = presentationTimeUs - mPrevPresentUsec
-                LLog.d(TAG, " frameDelta: $frameDelta")
+                LLog.d(TAG, "frameDelta: $frameDelta")
             }
             if (frameDelta < 0) {
                 //LogManager.w("Weird, video times went backward");

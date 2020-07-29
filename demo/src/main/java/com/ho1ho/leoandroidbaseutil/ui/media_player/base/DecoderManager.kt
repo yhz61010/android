@@ -21,7 +21,7 @@ object DecoderManager {
     private lateinit var mediaExtractor: MediaExtractor
     private lateinit var mediaCodec: MediaCodec
     private val bufferInfo = MediaCodec.BufferInfo()
-    private var mediaFormat: MediaFormat? = null
+    private lateinit var mediaFormat: MediaFormat
 
     private val videoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
 

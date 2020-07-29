@@ -9,7 +9,7 @@ import java.nio.ByteBuffer
  * Author: Michael Leo
  * Date: 20-7-28 下午4:54
  */
-object DecodeH264File {
+object DecodeH264RawFile {
     private const val TAG = "DecodeH264File"
 
     private val inputStream: FileInputStream? = null

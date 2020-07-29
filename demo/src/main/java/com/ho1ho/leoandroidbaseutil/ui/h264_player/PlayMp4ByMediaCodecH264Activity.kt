@@ -10,6 +10,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.h264_player.base.DecoderManager
+import com.ho1ho.leoandroidbaseutil.ui.h264_player.ui.CustomSurfaceView
 import kotlinx.android.synthetic.main.activity_play_mp4_encode_by_h264.*
 import java.io.File
 
@@ -23,13 +24,14 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
     }
 
     private var isPlayH264 = false
+    private val videoSurfaceView: CustomSurfaceView by lazy { surfaceView as CustomSurfaceView }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_mp4_encode_by_h264)
 
-        surface = surfaceView.holder.surface
+        surface = videoSurfaceView.holder.surface
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 isPlayH264 = intent.getBooleanExtra("isPlayH264", false)
@@ -37,6 +39,7 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
                 if (isPlayH264) {
 //                    DecoderManager.startH264Decode()
                 } else {
+                    videoSurfaceView.setDimension(1920, 800)
                     DecoderManager.startMP4Decode(videoFile.absolutePath, surface)
 //                    AudioPlayManager.setContext(applicationContext)
 //                    AudioPlayManager.startThread()

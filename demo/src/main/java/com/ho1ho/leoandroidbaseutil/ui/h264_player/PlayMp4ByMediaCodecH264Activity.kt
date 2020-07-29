@@ -48,4 +48,10 @@ class PlayMp4ByMediaCodecH264Activity : BaseDemonstrationActivity() {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
         })
     }
+
+    override fun onStop() {
+        DecoderManager.close()
+        AudioPlayManager.close()
+        super.onStop()
+    }
 }

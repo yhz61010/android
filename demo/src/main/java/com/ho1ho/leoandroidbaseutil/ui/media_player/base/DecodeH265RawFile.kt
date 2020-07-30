@@ -165,20 +165,22 @@ class DecodeH265RawFile {
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            val outputBuffer = codec.getOutputBuffer(outputBufferId)
-            // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-            // bufferFormat is equivalent to member variable outputFormat
-            // outputBuffer is ready to be processed or rendered.
-            outputBuffer?.let {
-                when (info.flags) {
-                    MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> Unit
-                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")
-                    MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
-                    MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-                    else -> Unit
+            kotlin.runCatching {
+                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+                // bufferFormat is equivalent to member variable outputFormat
+                // outputBuffer is ready to be processed or rendered.
+                outputBuffer?.let {
+                    when (info.flags) {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> Unit
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
+                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
+                        else -> Unit
+                    }
                 }
-            }
-            codec.releaseOutputBuffer(outputBufferId, true)
+                codec.releaseOutputBuffer(outputBufferId, true)
+            }.onFailure { it.printStackTrace() }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

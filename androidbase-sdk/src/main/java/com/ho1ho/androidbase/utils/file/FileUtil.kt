@@ -11,6 +11,8 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -20,6 +22,21 @@ import java.util.*
  * Date: 20-5-13 下午2:04
  */
 object FileUtil {
+    fun copyInputStreamToFile(inputStream: InputStream, fullPath: String) {
+        val file = File(fullPath)
+        if (!file.exists()) {
+            val bufferSize = 8 shl 10
+            val readBuffer = ByteArray(bufferSize)
+            var readLen: Int
+            inputStream.use { input ->
+                FileOutputStream(file).buffered(bufferSize).use { output ->
+                    while (input.read(readBuffer).also { readLen = it } != -1) {
+                        output.write(readBuffer, 0, readLen)
+                    }
+                }
+            }
+        }
+    }
 
     fun getLogDir(ctx: Context, baseFolderName: String): File {
         val builder = getBaseDirString(ctx, baseFolderName) + File.separator + "log"

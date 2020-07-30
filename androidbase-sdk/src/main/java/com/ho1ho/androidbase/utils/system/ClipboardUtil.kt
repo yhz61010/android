@@ -1,4 +1,4 @@
-package com.ho1ho.androidbase.utils
+package com.ho1ho.androidbase.utils.system
 
 import android.annotation.TargetApi
 import android.app.Activity

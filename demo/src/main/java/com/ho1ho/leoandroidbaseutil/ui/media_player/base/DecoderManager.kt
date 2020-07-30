@@ -21,17 +21,12 @@ class DecoderManager {
     private lateinit var mediaCodec: MediaCodec
     private var outputFormat: MediaFormat? = null
     private lateinit var mediaFormat: MediaFormat
+    private val mSpeedController: SpeedManager = SpeedManager()
 
     private val outputVideoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
 
-    @Volatile
-    private var isDecodeFinish = false
-    private val mSpeedController: SpeedManager = SpeedManager()
-
     var videoWidth: Int = 0
     var videoHeight: Int = 0
-
-//    private val mDecodeH264Thread: DecoderH264Thread = DecoderH264Thread()
 
     /**
      * * Synchronized callback decoding
@@ -94,13 +89,12 @@ class DecoderManager {
                         mediaExtractor.advance()
                     } else {
                         LLog.w(TAG, "Decode done")
-                        isDecodeFinish = true
                         outputVideoRawDataFile.flush()
                         outputVideoRawDataFile.close()
                     }
                 }
             }.onFailure {
-                LLog.e(TAG, "decode mp4 error")
+                LLog.e(TAG, "decode mp4 error", it)
             }
         }
 
@@ -150,26 +144,15 @@ class DecoderManager {
     fun close() {
         kotlin.runCatching {
             LLog.d(TAG, "close start")
-            isDecodeFinish = true
-//            mDecodeH264Thread.join(2000)
             mediaCodec.stop()
             mediaCodec.release()
             mSpeedController.reset()
         }.onFailure { LLog.e(TAG, "close error") }
-
-        // FIXME If deocde H264 raw stream, do not forget to close it when you don't need it
-//        DecodeH264File.close()
     }
 
     fun startDecoding() {
         mediaCodec.start()
     }
-
-//    fun startH264Decode() {
-//        init()
-//        mDecodeH264Thread.name = "DecoderH264Thread"
-//        mDecodeH264Thread.start()
-//    }
 
     companion object {
         private const val TAG = "DecoderManager"

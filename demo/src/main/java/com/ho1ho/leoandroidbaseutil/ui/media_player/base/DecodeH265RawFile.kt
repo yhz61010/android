@@ -150,6 +150,11 @@ class DecodeH265RawFile {
                     // fill inputBuffer with valid data
                     it.clear()
                     val readSize = readSampleData(it)
+                    if (readSize < 0) {
+                        LLog.w(TAG, "EOS")
+                        close()
+                        return
+                    }
                     val pts = computePresentationTimeUs(++frameCount)
                     LLog.w(TAG, "readSize[$readSize]\tpts=$pts")
                     codec.queueInputBuffer(inputBufferId, 0, readSize, pts, 0)

@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.ho1ho.leoandroidbaseutil.ui.*
 import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
+import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayRawH265ByMediaCodecActivity
 import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayVideoByMediaCodecActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareMasterActivity
@@ -95,9 +96,10 @@ class MainActivity : AppCompatActivity() {
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
-            Pair("Socket client", SocketActivity::class.java),
-            Pair("WebSocket client", WebSocketActivity::class.java),
-            Pair("Media Player Decoded by MediaCodec", PlayVideoByMediaCodecActivity::class.java)
+            Pair("Socket Client", SocketActivity::class.java),
+            Pair("WebSocket Client", WebSocketActivity::class.java),
+            Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
+            Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java)
         )
 
         private val color = arrayOf(

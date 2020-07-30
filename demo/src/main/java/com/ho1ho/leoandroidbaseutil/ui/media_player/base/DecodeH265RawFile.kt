@@ -25,10 +25,10 @@ import java.nio.ByteBuffer
  *
  * - F: 1 bit
  *
- * forbidden_zero_bit.  Required to be zero in [HEVC].  Note that the
+ * forbidden_zero_bit.  Required to be zero in HEVC.  Note that the
  * inclusion of this bit in the NAL unit header was to enable
  * transport of HEVC video over MPEG-2 transport systems (avoidance
- * of start code emulations) [MPEG2S].  In the context of this memo,
+ * of start code emulations) MPEG2S.  In the context of this memo,
  * the value 1 may be used to indicate a syntax violation, e.g., for
  * a NAL unit resulted from aggregating a number of fragmented units
  * of a NAL unit but missing the last fragment, as described in Section 4.4.3.
@@ -36,16 +36,16 @@ import java.nio.ByteBuffer
  * - Type: 6 bits
  *
  * nal_unit_type.  This field specifies the NAL unit type as defined
- * in Table 7-1 of [HEVC].  If the most significant bit of this field
+ * in Table 7-1 of HEVC.  If the most significant bit of this field
  * of a NAL unit is equal to 0 (i.e., the value of this field is less
  * than 32), the NAL unit is a VCL NAL unit.  Otherwise, the NAL unit
  * is a non-VCL NAL unit.  For a reference of all currently defined
  * NAL unit types and their semantics, please refer to Section 7.4.2
- * in [HEVC].
+ * in HEVC.
  *
  * - LayerId: 6 bits
  *
- * nuh_layer_id.  Required to be equal to zero in [HEVC].  It is
+ * nuh_layer_id.  Required to be equal to zero in HEVC.  It is
  * anticipated that in future scalable or 3D video coding extensions
  * of this specification, this syntax element will be used to
  * identify additional layers that may be present in the CVS, wherein
@@ -199,10 +199,6 @@ class DecodeH265RawFile {
 
     private lateinit var rf: RandomAccessFile
 
-    //    private val SLICE: Array<String>
-//    private val byteList: List<Byte?> = ArrayList<Any?>()
-    private val isStartCode4 = false
-
     fun readSampleData(buffer: ByteBuffer?): Int {
         val nal = nalu ?: return -1
 //        LLog.w(TAG, "H265 Data[${nal.size}]=${nal.toHexStringLE()}")
@@ -223,6 +219,8 @@ class DecodeH265RawFile {
             var reWind = 0
             while (!findNALStartCode) {
                 val hex = rf.read()
+                val naluType = getNaluType(hex.toByte())
+                LLog.w(TAG, "NALU Type=$naluType")
                 if (curIndex >= bb.size) {
                     return null
                 }
@@ -264,5 +262,5 @@ class DecodeH265RawFile {
         mediaCodec.start()
     }
 
-    fun getNaluType(nalu: Byte): Int = (nalu.toInt() shr 1 and 0x03F)
+    private fun getNaluType(nalu: Byte): Int = ((nalu.toInt() and 0x07E) shr 1)
 }

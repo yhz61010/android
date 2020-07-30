@@ -16,11 +16,10 @@ import java.io.FileOutputStream
  * Author: Michael Leo
  * Date: 20-7-28 下午4:53
  */
-class DecoderManager {
+class DecoderVideoFileManager {
     private lateinit var mediaExtractor: MediaExtractor
     private lateinit var mediaCodec: MediaCodec
     private var outputFormat: MediaFormat? = null
-    private lateinit var mediaFormat: MediaFormat
     private val mSpeedController: SpeedManager = SpeedManager()
 
     private val outputVideoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
@@ -28,9 +27,6 @@ class DecoderManager {
     var videoWidth: Int = 0
     var videoHeight: Int = 0
 
-    /**
-     * * Synchronized callback decoding
-     */
     fun init(videoFile: String, surface: Surface) {
         kotlin.runCatching {
             mediaExtractor = MediaExtractor()
@@ -58,12 +54,9 @@ class DecoderManager {
                 videoHeight = height
                 LLog.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
                 if (mime.startsWith("video")) {
-                    mediaFormat = format
                     mediaExtractor.selectTrack(i)
-
-//                    mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
-                    mediaCodec = MediaCodec.createDecoderByType(mime)
-                    mediaCodec.configure(mediaFormat, surface, null, 0)
+                    mediaCodec = MediaCodec.createDecoderByType(mime) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
+                    mediaCodec.configure(format, surface, null, 0)
                     mediaCodec.setCallback(mediaCodecCallback)
                     break
                 }
@@ -99,9 +92,11 @@ class DecoderManager {
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-            LLog.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
-            mSpeedController.preRender(info.presentationTimeUs)
-            codec.releaseOutputBuffer(index, true)
+            kotlin.runCatching {
+                LLog.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
+                mSpeedController.preRender(info.presentationTimeUs)
+                codec.releaseOutputBuffer(index, true)
+            }.onFailure { LLog.e(TAG, "onOutputBufferAvailable error", it) }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

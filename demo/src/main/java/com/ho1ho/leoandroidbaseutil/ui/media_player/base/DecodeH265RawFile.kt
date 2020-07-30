@@ -133,7 +133,7 @@ class DecodeH265RawFile {
 
 //        mediaCodec = MediaCodec.createByCodecName("OMX.google.h265.decoder")
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
+            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_HEVC, width, height)
             format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
             mediaCodec.configure(format, surface, null, 0)
             outputFormat = mediaCodec.outputFormat // option B

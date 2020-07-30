@@ -42,7 +42,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
                 } else {
                     decoderManager.init(videoFile.absolutePath, surface)
                     videoSurfaceView.setDimension(decoderManager.videoWidth, decoderManager.videoHeight)
-                    decoderManager.startMP4Decode()
+                    decoderManager.startDecoding()
 //                    AudioPlayManager.setContext(applicationContext)
 //                    AudioPlayManager.startThread()
                 }

@@ -73,7 +73,7 @@ fun Long.toBytesLE(): ByteArray = ByteArray(Long.SIZE_BYTES).also { for (i in it
 // ==============================================
 
 fun Byte.toHexString() = let { "%02X".format(it) }
-fun ByteArray.toAsciiString(delimiter: CharSequence = "") = map { it.toChar() }.joinToString(delimiter)
+fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toChar() }.joinToString(delimiter)
 
 /**
  * Attention.
@@ -81,7 +81,7 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = "") = map { it.toChar() }.
  */
 //fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
 
-fun ByteArray.toHexString(delimiter: CharSequence = " "): String {
+fun ByteArray.toHexString(delimiter: CharSequence = ","): String {
     val result = StringBuilder()
     forEach {
         val octet = it.toInt()
@@ -95,7 +95,7 @@ fun ByteArray.toHexString(delimiter: CharSequence = " "): String {
     return result.toString()
 }
 
-fun ByteArray.toHexStringLE(delimiter: CharSequence = " "): String {
+fun ByteArray.toHexStringLE(delimiter: CharSequence = ","): String {
     val result = StringBuilder()
     forEach {
         val octet = it.toInt()

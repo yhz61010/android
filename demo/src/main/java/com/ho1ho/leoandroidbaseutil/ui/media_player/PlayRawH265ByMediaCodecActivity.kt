@@ -1,18 +1,19 @@
 package com.ho1ho.leoandroidbaseutil.ui.media_player
 
 import android.os.Bundle
-import android.os.Environment
 import android.view.Surface
 import android.view.SurfaceHolder
 import com.ho1ho.androidbase.utils.AppUtil
+import com.ho1ho.androidbase.utils.system.ResourcesUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.media_player.base.DecodeH265RawFile
 import com.ho1ho.leoandroidbaseutil.ui.media_player.ui.CustomSurfaceView
 import kotlinx.android.synthetic.main.activity_play_video.*
-import java.io.File
-
-val videoRawFile = File(Environment.getExternalStorageDirectory(), "h265.h265")
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
 
@@ -29,9 +30,21 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_play_video)
 
         surface = videoSurfaceView.holder.surface
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val rawH265File = saveRawFile()
+            addSurfaceCallback(rawH265File)
+        }
+    }
+
+    private fun saveRawFile(): String {
+        return ResourcesUtil.saveRawResourceToFile(resources, R.raw.tears_400_x265_raw, getExternalFilesDir(null)!!.absolutePath, "h265.h265")
+    }
+
+    private suspend fun addSurfaceCallback(h265RawFile: String) = withContext(Dispatchers.Main) {
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                decoderManager.init(videoRawFile.absolutePath, 1920, 800, surface)
+                decoderManager.init(h265RawFile, 1920, 800, surface)
                 videoSurfaceView.setDimension(1920, 800)
                 decoderManager.startDecoding()
             }

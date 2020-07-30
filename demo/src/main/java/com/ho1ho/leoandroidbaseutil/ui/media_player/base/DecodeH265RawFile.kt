@@ -120,6 +120,8 @@ class DecodeH265RawFile {
     fun init(videoFile: String, width: Int, height: Int, surface: Surface) {
         kotlin.runCatching {
             rf = RandomAccessFile(File(videoFile), "r")
+            LLog.w(TAG, "File length=${rf.length()}")
+
             val vps = nalu!!
             val sps = nalu!!
             val pps = nalu!!
@@ -144,22 +146,13 @@ class DecodeH265RawFile {
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
             kotlin.runCatching {
-                val inputBuffer = codec.getInputBuffer(inputBufferId)
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-//                val readSize = readSampleData(inputBuffer)
-                val h265Data = nalu
-                LLog.w(TAG, "h265Data[${h265Data?.size}]=${h265Data?.toHexStringLE()}")
-                if (h265Data != null) {
-                    val readSize = h265Data.size
-                    inputBuffer?.put(h265Data)
-//                    val retrieveData = ByteArray(readSize)
-//                    inputBuffer?.get(retrieveData)
+                codec.getInputBuffer(inputBufferId)?.let {
+                    // fill inputBuffer with valid data
+                    it.clear()
+                    val readSize = readSampleData(it)
                     val pts = computePresentationTimeUs(++frameCount)
-//                    LLog.w(TAG, "readSize[$readSize]\tpts=$pts\tretrieveData[${retrieveData.size}]=${retrieveData.toHexStringLE()}")
+                    LLog.w(TAG, "readSize[$readSize]\tpts=$pts")
                     codec.queueInputBuffer(inputBufferId, 0, readSize, pts, 0)
-                } else {
-                    close()
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -205,7 +198,7 @@ class DecodeH265RawFile {
 
     fun readSampleData(buffer: ByteBuffer?): Int {
         val nal = nalu ?: return -1
-        LLog.w(TAG, "H265 Data[${nal.size}]=${nal.toHexStringLE()}")
+//        LLog.w(TAG, "H265 Data[${nal.size}]=${nal.toHexStringLE()}")
         buffer?.put(nal)
         return nal.size
     }

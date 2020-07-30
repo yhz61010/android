@@ -5,6 +5,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
+import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toHexString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
@@ -18,7 +19,7 @@ import java.io.FileOutputStream
 class DecoderManager {
     private lateinit var mediaExtractor: MediaExtractor
     private lateinit var mediaCodec: MediaCodec
-    private val bufferInfo = MediaCodec.BufferInfo()
+    private var outputFormat: MediaFormat? = null
     private lateinit var mediaFormat: MediaFormat
 
     private val outputVideoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
@@ -26,7 +27,6 @@ class DecoderManager {
     @Volatile
     private var isDecodeFinish = false
     private val mSpeedController: SpeedManager = SpeedManager()
-    private val mDecodeMp4Thread: DecoderMP4Thread = DecoderMP4Thread()
 
     var videoWidth: Int = 0
     var videoHeight: Int = 0
@@ -69,7 +69,7 @@ class DecoderManager {
 //                    mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
                     mediaCodec = MediaCodec.createDecoderByType(mime)
                     mediaCodec.configure(mediaFormat, surface, null, 0)
-                    mediaCodec.start()
+                    mediaCodec.setCallback(mediaCodecCallback)
                     break
                 }
             }
@@ -77,47 +77,48 @@ class DecoderManager {
         }.onFailure { it.printStackTrace();ToastUtil.showErrorToast("Init Decoder error") }
     }
 
-    /**
-     * Play the MP4 file Thread
-     */
-    private inner class DecoderMP4Thread : Thread() {
-        override fun run() {
-            while (!isDecodeFinish) {
-                kotlin.runCatching {
-                    val inputIndex = mediaCodec.dequeueInputBuffer(0)
-                    if (inputIndex >= 0) {
-                        mediaCodec.getInputBuffer(inputIndex)?.let {
-                            val sampleSize = mediaExtractor.readSampleData(it, 0)
-                            if (sampleSize > 0) {
-                                val outByteArray = ByteArray(sampleSize)
-                                it.get(outByteArray)
-                                outputVideoRawDataFile.write(outByteArray)
-                            }
-                            val time = mediaExtractor.sampleTime
-                            LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
-                            if (sampleSize > 0 && time > 0) {
-                                mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
-                                mediaExtractor.advance()
-                            } else {
-                                LLog.w(TAG, "Decode done")
-                                isDecodeFinish = true
-                                outputVideoRawDataFile.flush()
-                                outputVideoRawDataFile.close()
-                            }
-                        }
+    private val mediaCodecCallback = object : MediaCodec.Callback() {
+        override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
+            kotlin.runCatching {
+                codec.getInputBuffer(index)?.let {
+                    val sampleSize = mediaExtractor.readSampleData(it, 0)
+                    if (sampleSize > 0) {
+                        val outByteArray = ByteArray(sampleSize)
+                        it.get(outByteArray)
+                        outputVideoRawDataFile.write(outByteArray)
                     }
-                    var outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
-//                    LLog.w(TAG, "outIndex=$outIndex")
-                    while (outIndex >= 0) {
-                        LLog.d(TAG, "bufferInfo.presentationTime=${bufferInfo.presentationTimeUs}")
-                        mSpeedController.preRender(bufferInfo.presentationTimeUs)
-                        mediaCodec.releaseOutputBuffer(outIndex, true)
-                        outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
+                    val time = mediaExtractor.sampleTime
+                    LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
+                    if (sampleSize > 0 && time > 0) {
+                        codec.queueInputBuffer(index, 0, sampleSize, time, 0)
+                        mediaExtractor.advance()
+                    } else {
+                        LLog.w(TAG, "Decode done")
+                        isDecodeFinish = true
+                        outputVideoRawDataFile.flush()
+                        outputVideoRawDataFile.close()
                     }
-                }.onFailure {
-                    LLog.e(TAG, "decode mp4 error")
                 }
+            }.onFailure {
+                LLog.e(TAG, "decode mp4 error")
             }
+        }
+
+        override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
+            LLog.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
+            mSpeedController.preRender(info.presentationTimeUs)
+            codec.releaseOutputBuffer(index, true)
+        }
+
+        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+            LLog.w(ITAG, "onOutputFormatChanged format=$format")
+            // Subsequent data will conform to new format.
+            // Can ignore if using getOutputFormat(outputBufferId)
+            outputFormat = format // option B
+        }
+
+        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+            LLog.e(ITAG, "onError e=${e.message}")
         }
     }
 
@@ -150,10 +151,7 @@ class DecoderManager {
         kotlin.runCatching {
             LLog.d(TAG, "close start")
             isDecodeFinish = true
-            mDecodeMp4Thread.join(2000)
 //            mDecodeH264Thread.join(2000)
-            val isAlive = mDecodeMp4Thread.isAlive
-            LLog.d(TAG, "close end isAlive :$isAlive")
             mediaCodec.stop()
             mediaCodec.release()
             mSpeedController.reset()
@@ -163,9 +161,8 @@ class DecoderManager {
 //        DecodeH264File.close()
     }
 
-    fun startMP4Decode() {
-        mDecodeMp4Thread.name = "DecoderMP4Thread"
-        mDecodeMp4Thread.start()
+    fun startDecoding() {
+        mediaCodec.start()
     }
 
 //    fun startH264Decode() {

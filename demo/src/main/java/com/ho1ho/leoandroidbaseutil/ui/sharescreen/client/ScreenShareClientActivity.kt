@@ -78,11 +78,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             // bufferFormat is equivalent to member variable outputFormat
             // outputBuffer is ready to be processed or rendered.
             outputBuffer?.let {
-                val decodedData = ByteArray(info.size)
-                it.get(decodedData)
 //                CLog.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                        val decodedData = ByteArray(info.size)
+                        it.get(decodedData)
                         LLog.w(ITAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")

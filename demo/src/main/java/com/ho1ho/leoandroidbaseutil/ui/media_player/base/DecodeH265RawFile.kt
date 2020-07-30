@@ -242,7 +242,7 @@ class DecodeH265RawFile {
             return nal
         }
 
-    //find match "00 00 00 01"
+    // Find NALU prefix "00 00 00 01"
     private fun findStartCode4(bb: ByteArray, offSet: Int): Boolean {
         if (offSet < 0) {
             return false

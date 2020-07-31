@@ -1,5 +1,6 @@
 package com.ho1ho.leoandroidbaseutil.ui.media_player
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.SurfaceHolder
 import com.ho1ho.androidbase.exts.ITAG
@@ -36,6 +37,10 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
                         ResourcesUtil.saveRawResourceToFile(resources, R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
                     }
                     decoderManager.init(videoFile, surface)
+                    // In order to fix the SurfaceView blink problem,
+                    // first we set SurfaceView color to black same as root layout background color.
+                    // When SurfaceView is ready to render, we remove its background color.
+                    videoSurfaceView.setBackgroundColor(Color.TRANSPARENT)
                     videoSurfaceView.setDimension(decoderManager.videoWidth, decoderManager.videoHeight)
                     decoderManager.startDecoding()
 //                    AudioPlayManager.setContext(applicationContext)

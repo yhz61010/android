@@ -13,13 +13,11 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.ui.media_player.base.DecoderVideoFileManager
 import com.ho1ho.leoandroidbaseutil.ui.media_player.ui.CustomSurfaceView
 import kotlinx.android.synthetic.main.activity_play_video.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
 
+    private val uiScope = CoroutineScope(Dispatchers.Main + Job())
     private val decoderManager = DecoderVideoFileManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +30,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
         val surface = videoSurfaceView.holder.surface
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                CoroutineScope(Dispatchers.Main).launch {
+                uiScope.launch {
                     val videoFile = withContext(Dispatchers.IO) {
                         ResourcesUtil.saveRawResourceToFile(resources, R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
                     }
@@ -60,6 +58,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
 
     override fun onStop() {
         decoderManager.close()
+        uiScope.cancel()
 //        AudioPlayManager.close()
         super.onStop()
     }

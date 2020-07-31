@@ -19,8 +19,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.media_player.PlayRawH265ByMediaCodecActivity" />
-        <activity android:name=".ui.media_player.PlayVideoByMediaCodecActivity" />
+        <activity
+            android:name=".ui.media_player.PlayRawH265ByMediaCodecActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity
+            android:name=".ui.media_player.PlayVideoByMediaCodecActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".ui.socket.WebSocketActivity" />
         <activity android:name=".ui.ClipboardActivity" />
         <activity android:name=".ui.socket.SocketActivity" />

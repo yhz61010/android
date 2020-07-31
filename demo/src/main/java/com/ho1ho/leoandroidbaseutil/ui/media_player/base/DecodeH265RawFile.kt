@@ -10,6 +10,7 @@ import com.ho1ho.androidbase.utils.ui.ToastUtil
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.util.concurrent.ConcurrentLinkedQueue
 
 
 /**
@@ -117,14 +118,16 @@ class DecodeH265RawFile {
     private var outputFormat: MediaFormat? = null
     private var frameCount: Long = 0
 
+    private val queue = ConcurrentLinkedQueue<ByteArray>()
+
     fun init(videoFile: String, width: Int, height: Int, surface: Surface) {
         kotlin.runCatching {
             rf = RandomAccessFile(File(videoFile), "r")
             LLog.w(TAG, "File length=${rf.length()}")
 
-            val vps = nalu!!
-            val sps = nalu!!
-            val pps = nalu!!
+            val vps = getNalu()!!
+            val sps = getNalu()!!
+            val pps = getNalu()!!
 
             LLog.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
             LLog.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
@@ -146,19 +149,15 @@ class DecodeH265RawFile {
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
             kotlin.runCatching {
-                codec.getInputBuffer(inputBufferId)?.let {
-                    // fill inputBuffer with valid data
-                    it.clear()
-                    val readSize = readSampleData(it)
-                    if (readSize < 0) {
-                        LLog.w(TAG, "EOS")
-                        close()
-                        return
-                    }
-                    val pts = computePresentationTimeUs(++frameCount)
-                    LLog.w(TAG, "readSize[$readSize]\tpts=$pts")
-                    codec.queueInputBuffer(inputBufferId, 0, readSize, pts, 0)
+                val inputBuffer = codec.getInputBuffer(inputBufferId)
+                // fill inputBuffer with valid data
+                inputBuffer?.clear()
+//                LLog.w(TAG, "poll queue size=${queue.size}")
+                val data = queue.poll()?.also {
+//                CLog.i(ITAG, "onInputBufferAvailable length=${it.size}")
+                    inputBuffer?.put(it)
                 }
+                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
             }.onFailure {
                 it.printStackTrace()
             }
@@ -200,47 +199,46 @@ class DecodeH265RawFile {
     private lateinit var rf: RandomAccessFile
 
     fun readSampleData(buffer: ByteBuffer?): Int {
-        val nal = nalu ?: return -1
+        val nal = getNalu() ?: return -1
 //        LLog.w(TAG, "H265 Data[${nal.size}]=${nal.toHexStringLE()}")
         buffer?.put(nal)
         return nal.size
     }
 
-    private val nalu: ByteArray?
-        get() {
-            var curIndex = 0
-            val bb = ByteArray(100000)
-            rf.read(bb, curIndex, 4)
-            if (findStartCode4(bb, 0)) {
-                curIndex = 4
-            }
-            var findNALStartCode = false
-            var nextNalStartPos = 0
-            var reWind = 0
-            while (!findNALStartCode) {
-                val hex = rf.read()
-                val naluType = getNaluType(hex.toByte())
-//                LLog.w(TAG, "NALU Type=$naluType")
-                if (curIndex >= bb.size) {
-                    return null
-                }
-                bb[curIndex++] = hex.toByte()
-                if (hex == -1) {
-                    nextNalStartPos = curIndex
-                }
-                if (findStartCode4(bb, curIndex - 4)) {
-                    findNALStartCode = true
-                    reWind = 4
-                    nextNalStartPos = curIndex - reWind
-                }
-            }
-            val nal = ByteArray(nextNalStartPos)
-            System.arraycopy(bb, 0, nal, 0, nextNalStartPos)
-            val pos = rf.filePointer
-            val setPos = pos - reWind
-            rf.seek(setPos)
-            return nal
+    private fun getNalu(): ByteArray? {
+        var curIndex = 0
+        val bb = ByteArray(100000)
+        rf.read(bb, curIndex, 4)
+        if (findStartCode4(bb, 0)) {
+            curIndex = 4
         }
+        var findNALStartCode = false
+        var nextNalStartPos = 0
+        var reWind = 0
+        while (!findNALStartCode) {
+            val hex = rf.read()
+            val naluType = getNaluType(hex.toByte())
+//                LLog.w(TAG, "NALU Type=$naluType")
+            if (curIndex >= bb.size) {
+                return null
+            }
+            bb[curIndex++] = hex.toByte()
+            if (hex == -1) {
+                nextNalStartPos = curIndex
+            }
+            if (findStartCode4(bb, curIndex - 4)) {
+                findNALStartCode = true
+                reWind = 4
+                nextNalStartPos = curIndex - reWind
+            }
+        }
+        val nal = ByteArray(nextNalStartPos)
+        System.arraycopy(bb, 0, nal, 0, nextNalStartPos)
+        val pos = rf.filePointer
+        val setPos = pos - reWind
+        rf.seek(setPos)
+        return nal
+    }
 
     // Find NALU prefix "00 00 00 01"
     private fun findStartCode4(bb: ByteArray, offSet: Int): Boolean {
@@ -259,6 +257,12 @@ class DecodeH265RawFile {
     }
 
     fun startDecoding() {
+        Thread {
+            while (true) {
+//                LLog.w(TAG, "offer queue size=${queue.size}")
+                queue.offer(getNalu()!!)
+            }
+        }.start()
         mediaCodec.start()
     }
 

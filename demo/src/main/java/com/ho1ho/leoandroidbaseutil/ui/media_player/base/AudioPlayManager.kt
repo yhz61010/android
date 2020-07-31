@@ -2,8 +2,9 @@ package com.ho1ho.leoandroidbaseutil.ui.media_player.base
 
 import android.content.Context
 import android.media.*
+import android.os.Environment
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.leoandroidbaseutil.ui.media_player.videoFile
+import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 
@@ -13,6 +14,7 @@ import java.io.IOException
  */
 object AudioPlayManager {
     private val TAG = AudioTrack::class.java.simpleName
+    private val videoFile = File(Environment.getExternalStorageDirectory(), "h265.mp4")
 
     private val mSampleRate = 44100
     private val channelCount = 2

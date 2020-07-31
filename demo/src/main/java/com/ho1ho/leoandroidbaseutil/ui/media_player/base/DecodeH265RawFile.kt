@@ -220,7 +220,7 @@ class DecodeH265RawFile {
             while (!findNALStartCode) {
                 val hex = rf.read()
                 val naluType = getNaluType(hex.toByte())
-                LLog.w(TAG, "NALU Type=$naluType")
+//                LLog.w(TAG, "NALU Type=$naluType")
                 if (curIndex >= bb.size) {
                     return null
                 }

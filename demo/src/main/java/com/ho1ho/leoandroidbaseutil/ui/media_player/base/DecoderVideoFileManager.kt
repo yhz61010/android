@@ -111,31 +111,6 @@ class DecoderVideoFileManager {
         }
     }
 
-//    private class DecoderH264Thread : Thread() {
-//        var pts: Long = 0
-//        override fun run() {
-//            super.run()
-//            val startTime = System.nanoTime()
-//            while (!isDecodeFinish) {
-//                val inputIndex = mediaCodec.dequeueInputBuffer(-1)
-//                if (inputIndex >= 0) {
-//                    mediaCodec.getInputBuffer(inputIndex)?.let {
-//                        val sampleSize: Int = DecodeH264File.getInstance().readSampleData(it)
-//                        val time = (System.nanoTime() - startTime) / 1000
-//                        if (sampleSize > 0 && time > 0) {
-//                            mediaCodec.queueInputBuffer(inputIndex, 0, sampleSize, time, 0)
-//                            mSpeedController.preRender(time)
-//                        }
-//                    }
-//                }
-//                val outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0)
-//                if (outIndex >= 0) {
-//                    mediaCodec.releaseOutputBuffer(outIndex, true)
-//                }
-//            }
-//        }
-//    }
-
     fun close() {
         kotlin.runCatching {
             LLog.d(TAG, "close start")

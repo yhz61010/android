@@ -3,7 +3,10 @@ package com.ho1ho.leoandroidbaseutil.ui.media_player
 import android.os.Bundle
 import android.view.Surface
 import android.view.SurfaceHolder
+import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.AppUtil
+import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.androidbase.utils.system.ResourcesUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
@@ -28,9 +31,9 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_video)
+        CodecUtil.getAllSupportedCodecList().forEach { LLog.i(ITAG, "Codec name=${it.name}") }
 
         surface = videoSurfaceView.holder.surface
-
         CoroutineScope(Dispatchers.IO).launch {
             val rawH265File = saveRawFile()
             addSurfaceCallback(rawH265File)

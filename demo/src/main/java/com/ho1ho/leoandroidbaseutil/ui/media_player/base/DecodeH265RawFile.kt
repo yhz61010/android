@@ -10,7 +10,7 @@ import com.ho1ho.androidbase.utils.ui.ToastUtil
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ArrayBlockingQueue
 
 
 /**
@@ -118,7 +118,8 @@ class DecodeH265RawFile {
     private var outputFormat: MediaFormat? = null
     private var frameCount: Long = 0
 
-    private val queue = ConcurrentLinkedQueue<ByteArray>()
+    private val queue = ArrayBlockingQueue<ByteArray>(10)
+    private var csd0Size: Int = 0
 
     fun init(videoFile: String, width: Int, height: Int, surface: Surface) {
         kotlin.runCatching {
@@ -135,6 +136,8 @@ class DecodeH265RawFile {
 
             val csd0 = vps + sps + pps
             LLog.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE()}")
+            csd0Size = csd0.size
+            currentIndex = csd0Size.toLong()
 
 //        mediaCodec = MediaCodec.createByCodecName("OMX.google.h265.decoder")
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
@@ -152,10 +155,10 @@ class DecodeH265RawFile {
                 val inputBuffer = codec.getInputBuffer(inputBufferId)
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
-//                LLog.w(TAG, "poll queue size=${queue.size}")
                 val data = queue.poll()?.also {
 //                CLog.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
+                    LLog.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
             }.onFailure {
@@ -198,11 +201,26 @@ class DecodeH265RawFile {
 
     private lateinit var rf: RandomAccessFile
 
-    fun readSampleData(buffer: ByteBuffer?): Int {
-        val nal = getNalu() ?: return -1
-//        LLog.w(TAG, "H265 Data[${nal.size}]=${nal.toHexStringLE()}")
-        buffer?.put(nal)
-        return nal.size
+    private var currentIndex = 0L
+    private fun getRawH265(): ByteArray? {
+        val bufferSize = 100_000
+        val bb = ByteArray(bufferSize)
+        LLog.e(TAG, "Current file pos=$currentIndex")
+        rf.seek(currentIndex)
+        var readSize = rf.read(bb, 0, bufferSize)
+        if (readSize == -1) {
+            return null
+        }
+        for (i in 4 until readSize) {
+            if (findStartCode4(bb, readSize - i)) {
+                readSize -= i
+                break
+            }
+        }
+        val wholeNalu = ByteArray(readSize)
+        System.arraycopy(bb, 0, wholeNalu, 0, readSize)
+        currentIndex += readSize
+        return wholeNalu
     }
 
     private fun getNalu(): ByteArray? {
@@ -217,7 +235,7 @@ class DecodeH265RawFile {
         var reWind = 0
         while (!findNALStartCode) {
             val hex = rf.read()
-            val naluType = getNaluType(hex.toByte())
+//            val naluType = getNaluType(hex.toByte())
 //                LLog.w(TAG, "NALU Type=$naluType")
             if (curIndex >= bb.size) {
                 return null
@@ -258,9 +276,20 @@ class DecodeH265RawFile {
 
     fun startDecoding() {
         Thread {
+            val startIdx = 4
             while (true) {
-//                LLog.w(TAG, "offer queue size=${queue.size}")
-                queue.offer(getNalu()!!)
+                val bytes = getRawH265() ?: break
+                var previousStart = 0
+                for (i in startIdx until bytes.size) {
+                    if (findStartCode4(bytes, i)) {
+                        val frame = ByteArray(i - previousStart)
+                        System.arraycopy(bytes, previousStart, frame, 0, frame.size)
+                        queue.offer(frame)
+                        LLog.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
+                        previousStart = i
+                        Thread.sleep(32)
+                    }
+                }
             }
         }.start()
         mediaCodec.start()

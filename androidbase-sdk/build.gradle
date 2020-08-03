@@ -31,6 +31,12 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
+
+    testOptions {
+        unitTests {
+            returnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -42,6 +48,7 @@ dependencies {
     api "androidx.lifecycle:lifecycle-livedata-core-ktx:$rootProject.ext.archLifecycleVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidTestRunnerVersion"
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
     testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powermockVersion"

@@ -295,5 +295,6 @@ class DecodeH265RawFile {
         mediaCodec.start()
     }
 
+    @Suppress("unused")
     private fun getNaluType(nalu: Byte): Int = ((nalu.toInt() and 0x07E) shr 1)
 }

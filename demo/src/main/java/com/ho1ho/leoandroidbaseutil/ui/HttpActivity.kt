@@ -50,6 +50,11 @@ class HttpActivity : BaseDemonstrationActivity() {
                 LLog.w(ITAG, "Response=$t")
                 txtResult.text = t
             }
+
+            override fun onError(code: Int, msg: String, e: Throwable) {
+                LLog.w(ITAG, "Request error. code=$code msg=$msg")
+                txtResult.text = "Request error. code=$code msg=$msg"
+            }
         }
         val service = ApiService.getService("https://iface.market.alicloudapi.com", CommonService::class.java)
         ApiSubscribe.subscribe(

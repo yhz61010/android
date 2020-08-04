@@ -4,12 +4,7 @@ import com.ho1ho.androidbase.http.SslUtils
 import com.ho1ho.androidbase.http.okhttp.HttpLoggingInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import java.security.GeneralSecurityException
-import java.security.KeyStore
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
 
 /**
  * Author: Michael Leo
@@ -23,28 +18,12 @@ abstract class BaseHttpRequest {
                 .connectTimeout(DEFAULT_CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(DEFAULT_WRITE_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-                .sslSocketFactory(SslUtils.createSocketFactory("TLS"), systemDefaultTrustManager())
+                .sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
                 .hostnameVerifier(SslUtils.doNotVerifier)
                 .addInterceptor(getHeaderInterceptor())
                 .addInterceptor(logInterceptor)
             return httpClientBuilder.build()
         }
-
-    private fun systemDefaultTrustManager(): X509TrustManager {
-        return try {
-            val trustManagerFactory: TrustManagerFactory =
-                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-            trustManagerFactory.init(null as KeyStore?)
-            val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
-            check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
-                ("Unexpected default trust managers: ${trustManagers.contentToString()}")
-            }
-            trustManagers[0] as X509TrustManager
-        } catch (e: GeneralSecurityException) {
-            // The system has no TLS. Just give up.
-            throw AssertionError()
-        }
-    }
 
     private val logInterceptor: Interceptor
         get() {

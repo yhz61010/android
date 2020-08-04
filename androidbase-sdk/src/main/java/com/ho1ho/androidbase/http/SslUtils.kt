@@ -8,7 +8,7 @@ import javax.net.ssl.*
  * Author: Michael Leo
  * Date: 19-10-22 上午10:03
  *
- * Usage:
+ * Usage1 - HttpsURLConnection:
  * ```kotlin
  * SslUtils.trustAllHosts("TLS")
  * val urlServer = URL(url)
@@ -20,9 +20,17 @@ import javax.net.ssl.*
  * }
  * conn.connect()
  * ```
+ *
+ * Usage2 - OkHttp:
+ * ```kotlin
+ * val builder = OkHttpClient.Builder()
+ * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"), SslUtils.trustAllCerts[0] as X509TrustManager)
+ * builder.hostnameVerifier(SslUtils.doNotVerifier)
+ * val client = builder.build()
+ * ```
  */
 object SslUtils {
-    private val trustAllCerts =
+    val trustAllCerts =
         arrayOf<TrustManager>(object : X509TrustManager {
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
             override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit

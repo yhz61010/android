@@ -86,20 +86,21 @@ class MainActivity : AppCompatActivity() {
         private val featureList = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
-            Pair("Device Info", DeviceInfoActivity::class.java),
-            Pair("Log", LogActivity::class.java),
-            Pair("Clipboard", ClipboardActivity::class.java),
-            Pair("Network Monitor", NetworkMonitorActivity::class.java),
-            Pair("Camera2Live", Camera2LiveActivity::class.java),
-            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
-            Pair("Audio", AudioActivity::class.java),
-            Pair("Coroutine", CoroutineActivity::class.java),
-            Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
-            Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Socket Client", SocketActivity::class.java),
             Pair("WebSocket Client", WebSocketActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
-            Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java)
+            Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
+            Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
+            Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
+            Pair("Device Info", DeviceInfoActivity::class.java),
+            Pair("Network Monitor", NetworkMonitorActivity::class.java),
+            Pair("Camera2Live", Camera2LiveActivity::class.java),
+            Pair("Audio", AudioActivity::class.java),
+            Pair("Coroutine", CoroutineActivity::class.java),
+            Pair("HTTP Related", HttpActivity::class.java),
+            Pair("Log", LogActivity::class.java),
+            Pair("Clipboard", ClipboardActivity::class.java),
+            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java)
         )
 
         private val color = arrayOf(

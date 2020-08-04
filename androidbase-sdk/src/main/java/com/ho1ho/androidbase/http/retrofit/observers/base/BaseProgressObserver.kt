@@ -39,7 +39,6 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         // java.net.SocketTimeoutException: timeout
         // java.net.SocketTimeoutException: SSL handshake timed out
         // ----------------------
-        val errMsg: String? = null
         var statusCode = -1
         when (e) {
             is ConnectException -> {
@@ -77,7 +76,7 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
                 }
             }
         }
-        mListener.onError(statusCode, errMsg, e)
+        mListener.onError(statusCode, e.message ?: "", e)
     }
 
     override fun onComplete() {

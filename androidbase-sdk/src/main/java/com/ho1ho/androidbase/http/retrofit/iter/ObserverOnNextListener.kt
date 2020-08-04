@@ -6,6 +6,6 @@ package com.ho1ho.androidbase.http.retrofit.iter
  */
 interface ObserverOnNextListener<T> {
     fun onNext(t: T)
-    fun onError(code: Int?, msg: String?, e: Throwable?) {}
+    fun onError(code: Int, msg: String, e: Throwable) {}
     fun onComplete() {}
 }

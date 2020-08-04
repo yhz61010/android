@@ -1,5 +1,6 @@
 package com.ho1ho.androidbase.http
 
+import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
@@ -24,25 +25,22 @@ import javax.net.ssl.*
  * Usage2 - OkHttp:
  * ```kotlin
  * val builder = OkHttpClient.Builder()
- * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"), SslUtils.trustAllCerts[0] as X509TrustManager)
+ * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"), SslUtils.systemDefaultTrustManager())
  * builder.hostnameVerifier(SslUtils.doNotVerifier)
  * val client = builder.build()
  * ```
  */
 object SslUtils {
-    val trustAllCerts =
-        arrayOf<TrustManager>(object : X509TrustManager {
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-        })
+    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+    })
 
     val doNotVerifier = HostnameVerifier { _, _ -> true }
 
     fun createSocketFactory(protocol: String): SSLSocketFactory =
-        SSLContext.getInstance(protocol).apply {
-            init(null, trustAllCerts, SecureRandom())
-        }.socketFactory
+        SSLContext.getInstance(protocol).apply { init(null, trustAllCerts, SecureRandom()) }.socketFactory
 
     /**
      * Trust every server - don't check for any certificate
@@ -52,4 +50,16 @@ object SslUtils {
         HttpsURLConnection.setDefaultSSLSocketFactory(createSocketFactory(protocol))
     }
 
+    fun systemDefaultTrustManager(): X509TrustManager {
+        return kotlin.runCatching {
+            val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            trustManagerFactory.init(null as KeyStore?)
+            val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
+            check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
+                ("Unexpected default trust managers: ${trustManagers.contentToString()}")
+            }
+            trustManagers[0] as X509TrustManager
+            // GeneralSecurityException will be thrown if the system has no TLS.
+        }.getOrThrow()
+    }
 }

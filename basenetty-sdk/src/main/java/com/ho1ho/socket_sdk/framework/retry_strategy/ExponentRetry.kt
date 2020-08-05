@@ -1,6 +1,6 @@
-package com.ho1ho.socket_sdk.framework.base.retry_strategy
+package com.ho1ho.socket_sdk.framework.retry_strategy
 
-import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
+import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 
 /**
  * Author: Michael Leo

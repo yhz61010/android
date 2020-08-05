@@ -16,7 +16,6 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
 import io.netty.channel.ChannelPipeline
 import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
@@ -55,7 +54,7 @@ abstract class BaseNetty protected constructor(
         option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
     }
     private var channel: Channel? = null
-    protected var channelInitializer: ChannelInitializer<SocketChannel>? = null
+    protected var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseChannelInboundHandler<*>? = null
         protected set
 

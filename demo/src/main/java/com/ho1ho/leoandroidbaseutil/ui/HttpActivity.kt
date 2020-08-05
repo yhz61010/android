@@ -45,8 +45,8 @@ class HttpActivity : BaseDemonstrationActivity() {
         @POST("/fileTransfer/uploadFile")
         fun uploadFile(@QueryMap parameters: Map<String, String>, @Part file: MultipartBody.Part): Observable<String>
 
-        @GET("/{urlPath}")
         @Streaming
+        @GET("/{urlPath}")
         fun downloadFile(@Path("urlPath") urlPath: String): Observable<ResponseBody>
 //        fun downloadFile(@Url fileUrl: String): Observable<String>
     }

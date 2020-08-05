@@ -18,7 +18,7 @@ import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayVideoByMediaCodecActivit
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
 import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareMasterActivity
 import com.ho1ho.leoandroidbaseutil.ui.socket.SocketActivity
-import com.ho1ho.leoandroidbaseutil.ui.socket.WebSocketActivity
+import com.ho1ho.leoandroidbaseutil.ui.socket.WebSocketClientActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("Socket Client", SocketActivity::class.java),
-            Pair("WebSocket Client", WebSocketActivity::class.java),
+            Pair("WebSocket Client", WebSocketClientActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),

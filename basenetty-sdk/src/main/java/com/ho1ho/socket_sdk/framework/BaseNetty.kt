@@ -11,7 +11,10 @@ import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.netty.channel.*
+import io.netty.channel.Channel
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
+import io.netty.channel.ChannelPipeline
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
@@ -41,17 +44,17 @@ abstract class BaseNetty protected constructor(
     protected val tag = javaClass.simpleName
 
     internal var webSocketUri: URI? = null
-    internal var isWebSocket: Boolean = false
+    internal val isWebSocket: Boolean by lazy { webSocketUri != null }
 
-    init {
-        isWebSocket = false
-        init()
+    private val eventLoopGroup = NioEventLoopGroup()
+    internal val bootstrap = Bootstrap().apply {
+        group(eventLoopGroup)
+        channel(NioSocketChannel::class.java)
+        option(ChannelOption.TCP_NODELAY, true)
+        option(ChannelOption.SO_KEEPALIVE, true)
+        option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
     }
-
-    protected lateinit var bootstrap: Bootstrap
-    private lateinit var eventLoopGroup: EventLoopGroup
     private var channel: Channel? = null
-
     protected var channelInitializer: ChannelInitializer<SocketChannel>? = null
     var defaultChannelHandler: BaseChannelInboundHandler<*>? = null
         protected set
@@ -129,16 +132,6 @@ abstract class BaseNetty protected constructor(
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
             doRetry()
         }
-    }
-
-    protected open fun init() {
-        bootstrap = Bootstrap()
-        eventLoopGroup = NioEventLoopGroup()
-        bootstrap.group(eventLoopGroup)
-        bootstrap.channel(NioSocketChannel::class.java)
-        bootstrap.option(ChannelOption.TCP_NODELAY, true)
-        bootstrap.option(ChannelOption.SO_KEEPALIVE, true)
-        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
     }
 
     /**

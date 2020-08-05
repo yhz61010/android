@@ -35,7 +35,6 @@ abstract class BaseNettyClient protected constructor(
         connectionListener: NettyConnectionListener,
         retryStrategy: RetryStrategy = ConstantRetry()
     ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
-        this.isWebSocket = true
         this.webSocketUri = webSocketUri
         LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
     }

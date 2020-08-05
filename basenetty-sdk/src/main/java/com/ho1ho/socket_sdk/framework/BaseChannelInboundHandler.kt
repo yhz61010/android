@@ -1,8 +1,8 @@
-package com.ho1ho.socket_sdk.framework.base
+package com.ho1ho.socket_sdk.framework
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
-import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ConnectionStatus
+import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -16,7 +16,7 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyClient) :
+abstract class BaseChannelInboundHandler<T>(private val netty: BaseNetty) :
     SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
@@ -30,9 +30,9 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== handlerAdded =====")
-        if (baseClient.isWebSocket) {
+        if (netty.isWebSocket) {
             handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-                baseClient.webSocketUri,
+                netty.webSocketUri,
                 WebSocketVersion.V13,
                 null,
                 false,
@@ -52,36 +52,36 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
         caughtException = false
-        baseClient.retryTimes.set(0)
-        baseClient.disconnectManually = false
-        if (baseClient.isWebSocket) {
+        netty.retryTimes.set(0)
+        netty.disconnectManually = false
+        if (netty.isWebSocket) {
             handshaker?.handshake(ctx.channel())
         }
         super.channelActive(ctx)
-        baseClient.connectState.set(ConnectionStatus.CONNECTED)
-        baseClient.connectionListener.onConnected(baseClient)
+        netty.connectState.set(ConnectionStatus.CONNECTED)
+        netty.connectionListener.onConnected(netty)
     }
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LLog.w(
             tag,
-            "===== disconnectManually=${baseClient.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
+            "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
                 .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
         )
-        if (baseClient.isWebSocket) {
+        if (netty.isWebSocket) {
             handshaker?.close(ctx.channel(), CloseWebSocketFrame())
         }
         super.channelInactive(ctx)
 
         if (!caughtException) {
-            if (baseClient.disconnectManually) {
-                baseClient.connectState.set(ConnectionStatus.DISCONNECTED)
-                baseClient.connectionListener.onDisconnected(baseClient)
+            if (netty.disconnectManually) {
+                netty.connectState.set(ConnectionStatus.DISCONNECTED)
+                netty.connectionListener.onDisconnected(netty)
             } else { // Server down
-                baseClient.connectState.set(ConnectionStatus.FAILED)
-                baseClient.connectionListener.onFailed(baseClient, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
-                baseClient.doRetry()
+                netty.connectState.set(ConnectionStatus.FAILED)
+                netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
+                netty.doRetry()
             }
             LLog.w(tag, "=====> Socket disconnected <=====")
         } else {
@@ -129,12 +129,12 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
         ctx.close().syncUninterruptibly()
 
         if ("IOException" == exceptionType) {
-            baseClient.connectState.set(ConnectionStatus.FAILED)
-            baseClient.connectionListener.onFailed(baseClient, NettyConnectionListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-            baseClient.doRetry()
+            netty.connectState.set(ConnectionStatus.FAILED)
+            netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+            netty.doRetry()
         } else {
-            baseClient.connectState.set(ConnectionStatus.EXCEPTION)
-            baseClient.connectionListener.onException(baseClient, cause)
+            netty.connectState.set(ConnectionStatus.EXCEPTION)
+            netty.connectionListener.onException(netty, cause)
         }
 
         LLog.e(tag, "============================")
@@ -149,7 +149,7 @@ abstract class BaseChannelInboundHandler<T>(private val baseClient: BaseNettyCli
      * DO NOT override this method
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
-        if (baseClient.isWebSocket) {
+        if (netty.isWebSocket) {
             if (msg is FullHttpResponse) {
                 LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
                 if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {

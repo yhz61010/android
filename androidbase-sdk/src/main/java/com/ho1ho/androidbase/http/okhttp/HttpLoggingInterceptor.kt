@@ -201,14 +201,20 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             val headers = response.headers
             var i = 0
             val count = headers.size
+            var hasInlineFile = false
             while (i < count) {
                 logger.log("${headers.name(i)}: ${headers.value(i)}")
+                if ("Content-Disposition".contentEquals(headers.name(i)) && headers.value(i).startsWith("inline; filename")) {
+                    hasInlineFile = true
+                }
                 i++
             }
             if (!logBody || !response.promisesBody()) {
                 logger.log("<-- END HTTP")
             } else if (bodyEncoded(response.headers)) {
                 logger.log("<-- END HTTP (encoded body omitted)")
+            } else if (hasInlineFile) {
+                logger.log("<-- END HTTP (inline file omitted)")
             } else {
                 val source = responseBody?.source()
                 source?.request(Long.MAX_VALUE)

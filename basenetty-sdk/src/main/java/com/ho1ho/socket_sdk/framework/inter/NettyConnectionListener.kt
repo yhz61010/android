@@ -1,6 +1,6 @@
 package com.ho1ho.socket_sdk.framework.inter
 
-import com.ho1ho.socket_sdk.framework.BaseNettyClient
+import com.ho1ho.socket_sdk.framework.BaseNetty
 
 /**
  * Author: Michael Leo
@@ -8,11 +8,11 @@ import com.ho1ho.socket_sdk.framework.BaseNettyClient
  */
 interface NettyConnectionListener {
 
-    fun onConnected(netty: BaseNettyClient)
-    fun onReceivedData(netty: BaseNettyClient, data: Any?)
-    fun onDisconnected(netty: BaseNettyClient)
-    fun onFailed(netty: BaseNettyClient, code: Int, msg: String?)
-    fun onException(netty: BaseNettyClient, cause: Throwable)
+    fun onConnected(netty: BaseNetty)
+    fun onReceivedData(netty: BaseNetty, data: Any?)
+    fun onDisconnected(netty: BaseNetty)
+    fun onFailed(netty: BaseNetty, code: Int, msg: String?)
+    fun onException(netty: BaseNetty, cause: Throwable)
 
     //    fun onConnectionTimeout()
 

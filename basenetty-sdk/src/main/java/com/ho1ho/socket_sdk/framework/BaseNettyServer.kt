@@ -27,7 +27,6 @@ abstract class BaseNettyServer protected constructor(
     override val connectionListener: NettyConnectionListener,
     override val retryStrategy: RetryStrategy = ConstantRetry()
 ) : BaseNetty(host, port, connectionListener, retryStrategy) {
-
     @Suppress("unused")
     protected constructor(
         webSocketUri: URI,
@@ -68,6 +67,4 @@ abstract class BaseNettyServer protected constructor(
         }
         bootstrap.handler(channelInitializer)
     }
-
-    // ================================================
 }

@@ -108,7 +108,7 @@ abstract class BaseNettyServer protected constructor(
                 }
             }
         }
-        bootstrap.handler(channelInitializer)
+        bootstrap.childHandler(channelInitializer)
     }
 
     //    var receivingDataListener: ReceivingDataListener? = null

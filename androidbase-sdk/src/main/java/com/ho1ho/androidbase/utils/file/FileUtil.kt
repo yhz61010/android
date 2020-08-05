@@ -54,6 +54,10 @@ object FileUtil {
         return File(ctx.getExternalFilesDir(null), fileName)
     }
 
+    fun createFile(ctx: Context, baseFolderName: String, fileName: String): File {
+        return File(getBaseDirString(ctx, baseFolderName), fileName)
+    }
+
     @Suppress("unused")
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(

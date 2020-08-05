@@ -38,18 +38,20 @@ object FileUtil {
         }
     }
 
-    fun getLogDir(ctx: Context, baseFolderName: String): File {
-        val builder = getBaseDirString(ctx, baseFolderName) + File.separator + "log"
-        val dir = File(builder)
-        if (!dir.exists()) dir.mkdirs()
-        return dir
+    fun getLogDir(ctx: Context, baseFolderName: String = "log"): File {
+        return File(getBaseDirString(ctx, baseFolderName), "log").also {
+            if (!it.exists()) it.mkdirs()
+        }
     }
 
-    @Suppress("WeakerAccess")
-    fun getBaseDirString(ctx: Context, baseFolderName: String): String {
-        return ctx.getExternalFilesDir(null)?.let {
-            it.absolutePath + File.separator + baseFolderName
-        } ?: ""
+    fun getBaseDirString(ctx: Context, baseFolderName: String = ""): File {
+        return File(ctx.getExternalFilesDir(null), baseFolderName).also {
+            if (!it.exists()) it.mkdirs()
+        }
+    }
+
+    fun createFile(ctx: Context, fileName: String): File {
+        return File(ctx.getExternalFilesDir(null), fileName)
     }
 
     @Suppress("unused")

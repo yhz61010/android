@@ -244,8 +244,13 @@ abstract class BaseNettyServer protected constructor(
             channel = null
         }
 
+        bossGroup.run {
+            LLog.w(tag, "Releasing bossGroup...")
+            shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+//            shutdownGracefully()
+        }
         workerGroup.run {
-            LLog.w(tag, "Releasing socket...")
+            LLog.w(tag, "Releasing workerGroup...")
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
 //            shutdownGracefully()
         }

@@ -120,6 +120,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         val hasRequestBody = requestBody != null
         val connection = chain.connection()
         val protocol = connection?.protocol() ?: Protocol.HTTP_1_1
+        var hasBoundary = false
         logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
         var requestStartMessage = "--> ${request.method} ${request.url} $protocol"
         if (!logHeaders && hasRequestBody) requestStartMessage =
@@ -129,7 +130,12 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             if (hasRequestBody) {
                 // Request body headers are only present when installed as a network interceptor. Force
                 // them to be included (when available) so there values are known.
-                requestBody?.contentType()?.let { logger.log("Content-Type: $it") }
+                requestBody?.contentType()?.let {
+                    logger.log("Content-Type: $it")
+                    if (it.toString().contains("boundary=")) {
+                        hasBoundary = true
+                    }
+                }
                 if (requestBody?.contentLength() ?: -1 != -1L) {
                     logger.log("Content-Length: ${requestBody?.contentLength()}")
                 }
@@ -153,6 +159,8 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                 logger.log("--> END ${request.method}")
             } else if (bodyEncoded(request.headers)) {
                 logger.log("--> END ${request.method} (encoded body omitted)")
+            } else if (hasBoundary) {
+                logger.log("--> END ${request.method} (Found boundary ${requestBody?.contentLength()}-byte body omitted)")
             } else {
                 val buffer = Buffer()
                 requestBody?.writeTo(buffer)
@@ -187,7 +195,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         val contentLength = responseBody?.contentLength() ?: -1
         val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
         logger.log(
-            "<-- ${response.code} ${response.message} ${response.request.url} (${tookMs}ms ${if (!logHeaders) ", $bodySize body" else ""})"
+            "<-- ${response.code} ${response.message} ${response.request.url} (${tookMs}ms${if (!logHeaders) " , $bodySize body" else ""})"
         )
         if (logHeaders) {
             val headers = response.headers

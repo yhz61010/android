@@ -61,7 +61,7 @@ abstract class BaseNettyServer protected constructor(
                 }
                 addLastToPipeline(pipeline)
                 defaultInboundHandler?.let {
-                    pipeline.addLast("default-channel-handler", it)
+                    pipeline.addLast("default-inbound-handler", it)
                 }
             }
         }

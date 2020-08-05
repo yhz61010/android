@@ -103,15 +103,11 @@ class HttpActivity : BaseDemonstrationActivity() {
         val body: MultipartBody.Part = MultipartBody.Part.create(requestBody)
 
         val parameters = mapOf(
-            "companyCode" to "companyCode",
-            "userId" to "userId",
-            "deviceId" to "deviceId",
-            "cloudPhoneId" to "cloudPhoneId",
-            "from" to "from",
-            "package" to "package"
+            "your_parameter1" to "1",
+            "your_parameter2" to "2"
         )
 
-        val service = ApiService.getService("https://10.10.10.211:9443", CommonService::class.java)
+        val service = ApiService.getService("server_url", CommonService::class.java)
         ApiSubscribe.subscribe(service.uploadFile(parameters, body), NoProgressObserver(observer))
     }
 

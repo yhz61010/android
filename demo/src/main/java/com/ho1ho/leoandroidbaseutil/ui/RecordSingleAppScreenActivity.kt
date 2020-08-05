@@ -42,8 +42,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screenshot_record_h264)
 
-        val file = File(FileUtil.getBaseDirString(this, "output"))
-        file.mkdirs()
+        val file = FileUtil.getBaseDirString(this, "output")
         videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
 
         val screenInfo = DeviceUtil.getResolution(this)

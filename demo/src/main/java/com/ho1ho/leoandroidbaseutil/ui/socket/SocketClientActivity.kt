@@ -9,7 +9,6 @@ import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.BaseChannelInboundHandler
-import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
 import com.ho1ho.socket_sdk.framework.retry_strategy.ExponentRetry
@@ -38,28 +37,28 @@ class SocketActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_socket_client)
 
         val connectionListener = object : NettyConnectionListener {
-            override fun onConnected(netty: BaseNetty) {
+            override fun onConnected(netty: BaseNettyClient) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")
             }
 
             @SuppressLint("SetTextI18n")
-            override fun onReceivedData(netty: BaseNetty, data: Any?) {
+            override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
                 LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
                 runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
             }
 
-            override fun onDisconnected(netty: BaseNetty) {
+            override fun onDisconnected(netty: BaseNettyClient) {
                 LLog.w(TAG, "onDisconnect")
                 ToastUtil.showDebugToast("onDisconnect")
             }
 
-            override fun onFailed(netty: BaseNetty, code: Int, msg: String?) {
+            override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
                 LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 
-            override fun onException(netty: BaseNetty, cause: Throwable) {
+            override fun onException(netty: BaseNettyClient, cause: Throwable) {
                 LLog.e(TAG, "onCaughtException reason: ${cause.message}")
                 ToastUtil.showDebugToast("onCaughtException")
             }
@@ -125,7 +124,7 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     @ChannelHandler.Sharable
-    class SocketClientHandler(private val netty: BaseNetty) : BaseChannelInboundHandler<String>(netty) {
+    class SocketClientHandler(private val netty: BaseNettyClient) : BaseChannelInboundHandler<String>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: String) {
             netty.connectionListener.onReceivedData(netty, msg)
         }

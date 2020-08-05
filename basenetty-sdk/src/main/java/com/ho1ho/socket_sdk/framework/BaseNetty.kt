@@ -1,13 +1,13 @@
-package com.ho1ho.socket_sdk.framework.base
+package com.ho1ho.socket_sdk.framework
 
 import android.os.Handler
 import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.base.inter.ConnectionStatus
-import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
-import com.ho1ho.socket_sdk.framework.base.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
+import com.ho1ho.socket_sdk.framework.inter.ConnectionStatus
+import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -15,16 +15,9 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import io.netty.handler.codec.http.HttpClientCodec
-import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import io.netty.handler.stream.ChunkedWriteHandler
 import java.net.ConnectException
 import java.net.URI
 import java.util.concurrent.RejectedExecutionException
@@ -32,47 +25,36 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * A thread-safe class
- *
  * Author: Michael Leo
- * Date: 20-5-13 下午4:39
+ * Date: 20-8-5 下午2:53
  */
-abstract class BaseNettyClient protected constructor(
-    private val host: String,
-    private val port: Int,
-    val connectionListener: NettyConnectionListener,
-    private val retryStrategy: RetryStrategy = ConstantRetry()
+abstract class BaseNetty protected constructor(
+    protected open val host: String,
+    protected open val port: Int,
+    open val connectionListener: NettyConnectionListener,
+    protected open val retryStrategy: RetryStrategy = ConstantRetry()
 ) {
+    companion object {
+        const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
+    }
+
+    protected val tag = javaClass.simpleName
+
     internal var webSocketUri: URI? = null
-    internal var isWebSocket: Boolean
+    internal var isWebSocket: Boolean = false
 
     init {
         isWebSocket = false
         init()
     }
 
-    @Suppress("unused")
-    protected constructor(
-        webSocketUri: URI,
-        connectionListener: NettyConnectionListener,
-        retryStrategy: RetryStrategy = ConstantRetry()
-    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
-        this.isWebSocket = true
-        this.webSocketUri = webSocketUri
-        LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
-    }
-
-    private val tag = javaClass.simpleName
-
-    private lateinit var bootstrap: Bootstrap
+    protected lateinit var bootstrap: Bootstrap
     private lateinit var eventLoopGroup: EventLoopGroup
     private var channel: Channel? = null
 
-    private var channelInitializer: ChannelInitializer<SocketChannel>? = null
+    protected var channelInitializer: ChannelInitializer<SocketChannel>? = null
     var defaultChannelHandler: BaseChannelInboundHandler<*>? = null
-        private set
-
-//    var receivingDataListener: ReceivingDataListener? = null
+        protected set
 
     @Volatile
     internal var disconnectManually = false
@@ -82,6 +64,10 @@ abstract class BaseNettyClient protected constructor(
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
     internal var retryTimes = AtomicInteger(0)
+
+    open fun addLastToPipeline(pipeline: ChannelPipeline) {}
+
+    //    var receivingDataListener: ReceivingDataListener? = null
 
 //    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
 //        if (future.isSuccess) {
@@ -93,45 +79,6 @@ abstract class BaseNettyClient protected constructor(
 //            doRetry()
 //        }
 //    }
-
-    private fun init() {
-        bootstrap = Bootstrap()
-        eventLoopGroup = NioEventLoopGroup()
-        bootstrap.group(eventLoopGroup)
-        bootstrap.channel(NioSocketChannel::class.java)
-        bootstrap.option(ChannelOption.TCP_NODELAY, true)
-        bootstrap.option(ChannelOption.SO_KEEPALIVE, true)
-        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
-    }
-
-    fun initHandler(handler: BaseChannelInboundHandler<*>?) {
-        defaultChannelHandler = handler
-        channelInitializer = object : ChannelInitializer<SocketChannel>() {
-            override fun initChannel(socketChannel: SocketChannel) {
-                val pipeline = socketChannel.pipeline()
-                if (isWebSocket) {
-                    if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                        LLog.w(tag, "Working in wss mode")
-                        val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-                        pipeline.addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
-                    }
-                    pipeline.addLast(HttpClientCodec())
-                    pipeline.addLast(HttpObjectAggregator(65536))
-                    /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
-                     * neither spending a lot of memory nor getting [OutOfMemoryError]. */
-                    pipeline.addLast(ChunkedWriteHandler())
-                    pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
-                }
-                addLastToPipeline(pipeline)
-                defaultChannelHandler?.let {
-                    pipeline.addLast("default-channel-handler", it)
-                }
-            }
-        }
-        bootstrap.handler(channelInitializer)
-    }
-
-    open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
     /**
      * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
@@ -184,6 +131,16 @@ abstract class BaseNettyClient protected constructor(
         }
     }
 
+    protected open fun init() {
+        bootstrap = Bootstrap()
+        eventLoopGroup = NioEventLoopGroup()
+        bootstrap.group(eventLoopGroup)
+        bootstrap.channel(NioSocketChannel::class.java)
+        bootstrap.option(ChannelOption.TCP_NODELAY, true)
+        bootstrap.option(ChannelOption.SO_KEEPALIVE, true)
+        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
+    }
+
     /**
      * After calling this method, you can reuse it again by calling [connect].
      * If you don't want to reconnect it anymore, do not forget to call [release].
@@ -203,6 +160,23 @@ abstract class BaseNettyClient protected constructor(
         connectState.set(ConnectionStatus.DISCONNECTED)
         stopRetryHandler()
         channel?.disconnect()?.syncUninterruptibly()
+    }
+
+    fun doRetry() {
+        retryTimes.getAndIncrement()
+        if (retryTimes.get() > retryStrategy.getMaxTimes()) {
+            LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
+            stopRetryHandler()
+            connectState.set(ConnectionStatus.FAILED)
+            connectionListener.onFailed(
+                this@BaseNetty,
+                NettyConnectionListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
+                "Exceed max retry times."
+            )
+        } else {
+            LLog.w(tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}")
+            retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
+        }
     }
 
     /**
@@ -244,23 +218,6 @@ abstract class BaseNettyClient protected constructor(
 
         connectState.set(ConnectionStatus.UNINITIALIZED)
         LLog.w(tag, "=====> Socket released <=====")
-    }
-
-    fun doRetry() {
-        retryTimes.getAndIncrement()
-        if (retryTimes.get() > retryStrategy.getMaxTimes()) {
-            LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
-            stopRetryHandler()
-            connectState.set(ConnectionStatus.FAILED)
-            connectionListener.onFailed(
-                this@BaseNettyClient,
-                NettyConnectionListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
-                "Exceed max retry times."
-            )
-        } else {
-            LLog.w(tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}")
-            retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
-        }
     }
 
     private fun stopRetryHandler() {
@@ -333,8 +290,4 @@ abstract class BaseNettyClient protected constructor(
     fun executePingCommand(cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(cmd, showLog, true)
 
     // ================================================
-
-    companion object {
-        const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
-    }
 }

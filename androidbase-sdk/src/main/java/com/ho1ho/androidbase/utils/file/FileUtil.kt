@@ -58,6 +58,10 @@ object FileUtil {
         return File(getBaseDirString(ctx, baseFolderName), fileName)
     }
 
+    fun createTmpFile(ctx: Context, suffix: String?): File {
+        return createFile(ctx, "tmp", "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}")
+    }
+
     @Suppress("unused")
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(

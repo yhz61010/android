@@ -59,7 +59,7 @@ class SocketActivity : BaseDemonstrationActivity() {
             }
 
             override fun onException(client: BaseNettyClient, cause: Throwable) {
-                LLog.e(WebSocketActivity.TAG, "onCaughtException reason: ${cause.message}")
+                LLog.e(TAG, "onCaughtException reason: ${cause.message}")
                 ToastUtil.showDebugToast("onCaughtException")
             }
 

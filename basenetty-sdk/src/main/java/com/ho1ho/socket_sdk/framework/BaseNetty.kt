@@ -56,7 +56,7 @@ abstract class BaseNetty protected constructor(
     }
     private var channel: Channel? = null
     protected var channelInitializer: ChannelInitializer<SocketChannel>? = null
-    var defaultChannelHandler: BaseChannelInboundHandler<*>? = null
+    var defaultInboundHandler: BaseChannelInboundHandler<*>? = null
         protected set
 
     @Volatile
@@ -190,8 +190,8 @@ abstract class BaseNetty protected constructor(
         retryThread.quitSafely()
 
         LLog.w(tag, "Releasing default socket handler first...")
-        defaultChannelHandler?.release()
-        defaultChannelHandler = null
+        defaultInboundHandler?.release()
+        defaultInboundHandler = null
         channelInitializer = null
 
         channel?.run {

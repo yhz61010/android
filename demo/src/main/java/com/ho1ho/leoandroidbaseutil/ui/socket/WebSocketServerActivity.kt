@@ -94,7 +94,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     }
 
 //    @ChannelHandler.Sharable
-//    class WebSocketServerHandler(private val netty: BaseNetty) : BaseChannelInboundHandler<Any>(netty) {
+//    class WebSocketServerHandler(private val netty: BaseNetty) : BaseServerChannelInboundHandler<Any>(netty) {
 //        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
 //            val receivedString: String?
 //            val frame = msg as WebSocketFrame

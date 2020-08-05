@@ -38,7 +38,7 @@ abstract class BaseNettyClient protected constructor(
     }
 
     fun initHandler(handler: BaseChannelInboundHandler<*>?) {
-        defaultChannelHandler = handler
+        defaultInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {
                 val pipeline = socketChannel.pipeline()
@@ -56,7 +56,7 @@ abstract class BaseNettyClient protected constructor(
                     pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
                 }
                 addLastToPipeline(pipeline)
-                defaultChannelHandler?.let {
+                defaultInboundHandler?.let {
                     pipeline.addLast("default-channel-handler", it)
                 }
             }

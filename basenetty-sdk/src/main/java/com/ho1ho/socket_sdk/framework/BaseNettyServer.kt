@@ -42,15 +42,15 @@ abstract class BaseNettyServer protected constructor(
     }
 
     fun initHandler(handler: BaseChannelInboundHandler<*>?) {
-        defaultChannelHandler = handler
+        defaultInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
-            override fun initChannel(socketChannel: SocketChannel) {
-                val pipeline = socketChannel.pipeline()
+            override fun initChannel(serverSocketChannel: SocketChannel) {
+                val pipeline = serverSocketChannel.pipeline()
                 if (isWebSocket) {
                     if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
                         LLog.w(tag, "Working in wss mode")
                         val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-                        pipeline.addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
+                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
                     }
                     pipeline.addLast(HttpClientCodec())
                     pipeline.addLast(HttpObjectAggregator(65536))
@@ -60,7 +60,7 @@ abstract class BaseNettyServer protected constructor(
                     pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
                 }
                 addLastToPipeline(pipeline)
-                defaultChannelHandler?.let {
+                defaultInboundHandler?.let {
                     pipeline.addLast("default-channel-handler", it)
                 }
             }

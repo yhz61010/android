@@ -11,6 +11,7 @@ import com.ho1ho.androidbase.http.retrofit.ApiSubscribe
 import com.ho1ho.androidbase.http.retrofit.iter.ObserverOnNextListener
 import com.ho1ho.androidbase.http.retrofit.observers.NoProgressObserver
 import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.androidbase.utils.system.ResourcesUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
@@ -20,6 +21,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.ResponseBody
 import retrofit2.http.*
 import java.io.File
 
@@ -42,6 +44,10 @@ class HttpActivity : BaseDemonstrationActivity() {
         @Multipart
         @POST("/fileTransfer/uploadFile")
         fun uploadFile(@QueryMap parameters: Map<String, String>, @Part file: MultipartBody.Part): Observable<String>
+
+        @GET("/{urlPath}")
+        fun downloadFile(@Path("urlPath") urlPath: String): Observable<ResponseBody>
+//        fun downloadFile(@Url fileUrl: String): Observable<String>
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -109,6 +115,20 @@ class HttpActivity : BaseDemonstrationActivity() {
 
         val service = ApiService.getService("server_url", CommonService::class.java)
         ApiSubscribe.subscribe(service.uploadFile(parameters, body), NoProgressObserver(observer))
+    }
+
+    fun onDownloadClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        txtResult.text = "Downloading..."
+        val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody> {
+            override fun onNext(t: ResponseBody) {
+                val filePath = FileUtil.createFile(this@HttpActivity, "download.jpg").absolutePath
+                FileUtil.copyInputStreamToFile(t.byteStream(), filePath)
+                LLog.w(ITAG, "Downloaded to $filePath")
+                txtResult.text = "Downloaded to $filePath"
+            }
+        }
+        val service = ApiService.getService("https://cdn.cnbj1.fds.api.mi-img.com", CommonService::class.java)
+        ApiSubscribe.subscribe(service.downloadFile("middle.community.vip.bkt/fabe6b0d6f228621e4418e500fcbc0bc"), NoProgressObserver(observer))
     }
 
     private fun getMimeType(file: File): String? {

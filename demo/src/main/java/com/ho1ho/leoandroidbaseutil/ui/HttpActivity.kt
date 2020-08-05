@@ -47,8 +47,9 @@ class HttpActivity : BaseDemonstrationActivity() {
 
         @Streaming
         @GET("/{urlPath}")
-        fun downloadFile(@Path("urlPath") urlPath: String): Observable<ResponseBody>
-//        fun downloadFile(@Url fileUrl: String): Observable<String>
+        // Values are URL encoded by default. Disable with encoded=true.
+        fun downloadFile(@Path("urlPath", encoded = true) urlPath: String): Observable<ResponseBody>
+//        fun downloadFile(@Url fileUrl: String): Observable<ResponseBody>
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -122,14 +123,22 @@ class HttpActivity : BaseDemonstrationActivity() {
         txtResult.text = "Downloading..."
         val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody> {
             override fun onNext(t: ResponseBody) {
-                val filePath = FileUtil.createFile(this@HttpActivity, "download.jpg").absolutePath
+                val filePath = FileUtil.createFile(this@HttpActivity, "download.pdf").absolutePath
                 FileUtil.copyInputStreamToFile(t.byteStream(), filePath)
                 LLog.w(ITAG, "Downloaded to $filePath")
                 txtResult.text = "Downloaded to $filePath"
             }
+
+            override fun onError(code: Int, msg: String, e: Throwable) {
+                LLog.w(ITAG, "Download error. code=$code msg=$msg")
+                txtResult.text = "Download error. code=$code msg=$msg"
+            }
         }
-        val service = ApiService.getService("https://cdn.cnbj1.fds.api.mi-img.com", CommonService::class.java)
-        ApiSubscribe.subscribe(service.downloadFile("middle.community.vip.bkt/fabe6b0d6f228621e4418e500fcbc0bc"), NoProgressObserver(observer))
+        val service = ApiService.getService("http://temp.ho1ho.com", CommonService::class.java)
+        ApiSubscribe.subscribe(
+            service.downloadFile("%E6%96%B0%E4%B8%9C%E6%96%B9%E6%89%98%E4%B8%9A%E8%80%83%E8%AF%95%E5%AE%98%E6%96%B9%E6%8C%87%E5%8D%97.pdf"),
+            NoProgressObserver(observer)
+        )
     }
 
     private fun getMimeType(file: File): String? {

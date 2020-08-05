@@ -1,4 +1,4 @@
-package com.ho1ho.socket_sdk.framework.base.bean
+package com.ho1ho.socket_sdk.framework.bean
 
 /**
  * Author: Michael Leo

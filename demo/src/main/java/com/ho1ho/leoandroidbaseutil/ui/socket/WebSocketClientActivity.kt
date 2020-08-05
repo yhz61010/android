@@ -8,11 +8,12 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.socket_sdk.framework.base.BaseChannelInboundHandler
-import com.ho1ho.socket_sdk.framework.base.BaseNettyClient
-import com.ho1ho.socket_sdk.framework.base.inter.NettyConnectionListener
-import com.ho1ho.socket_sdk.framework.base.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.base.retry_strategy.base.RetryStrategy
+import com.ho1ho.socket_sdk.framework.BaseChannelInboundHandler
+import com.ho1ho.socket_sdk.framework.BaseNetty
+import com.ho1ho.socket_sdk.framework.BaseNettyClient
+import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
@@ -42,28 +43,28 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_websocket_client)
 
         val connectionListener = object : NettyConnectionListener {
-            override fun onConnected(client: BaseNettyClient) {
+            override fun onConnected(netty: BaseNetty) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")
             }
 
             @SuppressLint("SetTextI18n")
-            override fun onReceivedData(client: BaseNettyClient, data: Any?) {
+            override fun onReceivedData(netty: BaseNetty, data: Any?) {
                 LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
                 runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
             }
 
-            override fun onDisconnected(client: BaseNettyClient) {
+            override fun onDisconnected(netty: BaseNetty) {
                 LLog.w(TAG, "onDisconnect")
                 ToastUtil.showDebugToast("onDisconnect")
             }
 
-            override fun onFailed(client: BaseNettyClient, code: Int, msg: String?) {
+            override fun onFailed(netty: BaseNetty, code: Int, msg: String?) {
                 LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
 
-            override fun onException(client: BaseNettyClient, cause: Throwable) {
+            override fun onException(netty: BaseNetty, cause: Throwable) {
                 LLog.e(TAG, "onCaughtException reason: ${cause.message}")
                 ToastUtil.showDebugToast("onCaughtException")
             }
@@ -132,7 +133,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     @ChannelHandler.Sharable
-    class WebSocketClientHandler(private val client: BaseNettyClient) : BaseChannelInboundHandler<Any>(client) {
+    class WebSocketClientHandler(private val netty: BaseNetty) : BaseChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame
@@ -147,11 +148,11 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                     null
                 }
             }
-            client.connectionListener.onReceivedData(client, receivedString)
+            netty.connectionListener.onReceivedData(netty, receivedString)
         }
 
         fun sendMsgToServer(msg: String): Boolean {
-            return client.executeCommand(msg)
+            return netty.executeCommand(msg)
         }
 
         override fun release() {

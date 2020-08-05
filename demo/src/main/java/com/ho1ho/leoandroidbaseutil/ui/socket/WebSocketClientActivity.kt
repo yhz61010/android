@@ -71,7 +71,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
 
         webSocketClient = WebSocketClient(
-            URI("wss://10.10.10.211:9443/minicomm/client/tytest_218/100857AC453FDEAF0F3FAAB18A2EFA4F"),
+            URI("ws://61010.ml:9090/ws"),
             connectionListener,
             ConstantRetry(10, 2000)
         )

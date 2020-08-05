@@ -69,7 +69,11 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        webSocketClient = WebSocketClient(URI("ws://61010.ml:9090/ws"), connectionListener, ConstantRetry(10, 2000))
+        webSocketClient = WebSocketClient(
+            URI("wss://10.10.10.211:9443/minicomm/client/tytest_218/100857AC453FDEAF0F3FAAB18A2EFA4F"),
+            connectionListener,
+            ConstantRetry(10, 2000)
+        )
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
     }
@@ -132,12 +136,16 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame
-            if (frame is TextWebSocketFrame) {
-                receivedString = frame.text()
-            } else if (frame is PongWebSocketFrame) {
-                receivedString = frame.content().toString(Charset.forName("UTF-8"))
-            } else {
-                receivedString = null
+            receivedString = when (frame) {
+                is TextWebSocketFrame -> {
+                    frame.text()
+                }
+                is PongWebSocketFrame -> {
+                    frame.content().toString(Charset.forName("UTF-8"))
+                }
+                else -> {
+                    null
+                }
             }
             client.connectionListener.onReceivedData(client, receivedString)
         }

@@ -21,6 +21,9 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
+import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.stream.ChunkedWriteHandler
 import java.net.ConnectException
 import java.net.URI
@@ -38,9 +41,7 @@ abstract class BaseNettyClient protected constructor(
     private val host: String,
     private val port: Int,
     val connectionListener: NettyConnectionListener,
-    private val retryStrategy: RetryStrategy = ConstantRetry(),
-    // FIXME implement SSL socket
-    private val isSecured: Boolean = false
+    private val retryStrategy: RetryStrategy = ConstantRetry()
 ) {
     internal var webSocketUri: URI? = null
     internal var isWebSocket: Boolean
@@ -50,12 +51,12 @@ abstract class BaseNettyClient protected constructor(
         init()
     }
 
+    @Suppress("unused")
     protected constructor(
         webSocketUri: URI,
         connectionListener: NettyConnectionListener,
-        retryStrategy: RetryStrategy = ConstantRetry(),
-        isSecured: Boolean = false
-    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy, isSecured) {
+        retryStrategy: RetryStrategy = ConstantRetry()
+    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
         this.isWebSocket = true
         this.webSocketUri = webSocketUri
         LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
@@ -109,6 +110,11 @@ abstract class BaseNettyClient protected constructor(
             override fun initChannel(socketChannel: SocketChannel) {
                 val pipeline = socketChannel.pipeline()
                 if (isWebSocket) {
+                    if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
+                        LLog.w(tag, "Working in wss mode")
+                        val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                        pipeline.addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
+                    }
                     pipeline.addLast(HttpClientCodec())
                     pipeline.addLast(HttpObjectAggregator(65536))
                     /** A [ChannelHandler] that adds support for writing a large data stream asynchronously

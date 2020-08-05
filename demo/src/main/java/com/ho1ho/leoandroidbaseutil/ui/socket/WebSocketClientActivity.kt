@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 import java.net.URI
 import java.nio.charset.Charset
 
-class WebSocketActivity : BaseDemonstrationActivity() {
+class WebSocketClientActivity : BaseDemonstrationActivity() {
     private val cs = CoroutineScope(Dispatchers.IO)
 
     private lateinit var webSocketClient: WebSocketClient

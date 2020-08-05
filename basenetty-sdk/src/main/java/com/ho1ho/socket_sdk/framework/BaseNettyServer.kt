@@ -13,7 +13,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.ServerSocketChannel
+import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
@@ -26,7 +26,6 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.stream.ChunkedWriteHandler
 import java.net.ConnectException
-import java.net.InetSocketAddress
 import java.net.URI
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
@@ -56,7 +55,6 @@ abstract class BaseNettyServer protected constructor(
     private val workerGroup = NioEventLoopGroup()
     private val bootstrap = ServerBootstrap()
         .group(bossGroup, workerGroup)
-        .localAddress(InetSocketAddress(port))
         .channel(NioServerSocketChannel::class.java)
         .option(ChannelOption.SO_BACKLOG, 256)
         .childOption(ChannelOption.TCP_NODELAY, true)
@@ -85,9 +83,9 @@ abstract class BaseNettyServer protected constructor(
 
     fun initHandler(handler: BaseChannelInboundHandler<*>?) {
         defaultInboundHandler = handler
-        channelInitializer = object : ChannelInitializer<ServerSocketChannel>() {
-            override fun initChannel(serverSocketChannel: ServerSocketChannel) {
-                val pipeline = serverSocketChannel.pipeline()
+        channelInitializer = object : ChannelInitializer<SocketChannel>() {
+            override fun initChannel(socketChannel: SocketChannel) {
+                val pipeline = socketChannel.pipeline()
                 if (isWebSocket) {
                     if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
                         LLog.w(tag, "Working in wss mode")
@@ -111,19 +109,6 @@ abstract class BaseNettyServer protected constructor(
         bootstrap.childHandler(channelInitializer)
     }
 
-    //    var receivingDataListener: ReceivingDataListener? = null
-
-//    private val connectFutureListener: ChannelFutureListener = ChannelFutureListener { future ->
-//        if (future.isSuccess) {
-//            stopRetryHandler()
-//            channel = future.syncUninterruptibly().channel()
-//            LLog.i(TAG, "===== Connect success =====")
-//        } else {
-//            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
-//            doRetry()
-//        }
-//    }
-
     /**
      * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
@@ -138,22 +123,10 @@ abstract class BaseNettyServer protected constructor(
             LLog.i(tag, "===== Prepare to connect to server =====")
         }
         try {
-            // You call connect() with sync() method like this bellow:
-            // bootstrap.connect(host, port).sync()
-            // you must handle exception by yourself, because of you want to
-            // process connection synchronously. And the connection listener will be ignored regardless of whether you add it.
-            //
-            // If you want your connection listener work, do like this:
-            // bootstrap.connect(host, port).addListener(connectFutureListener)
-            // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
-            // Just like RejectedExecutionException exception. However, I never catch RejectedExecutionException as I expect. Who can tell me why?
-
+            // Want to use asynchronous way? Tell me how.
             val f = bootstrap.bind(port).sync()
             channel = f.syncUninterruptibly().channel()
 
-            // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
-            // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
-//            bootstrap.connect(host, port).addListener(connectFutureListener)
             LLog.i(tag, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====")

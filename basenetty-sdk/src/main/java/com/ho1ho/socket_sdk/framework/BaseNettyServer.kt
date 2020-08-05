@@ -7,7 +7,7 @@ import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
-import io.netty.channel.socket.SocketChannel
+import io.netty.channel.socket.ServerSocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
@@ -43,8 +43,8 @@ abstract class BaseNettyServer protected constructor(
 
     fun initHandler(handler: BaseChannelInboundHandler<*>?) {
         defaultInboundHandler = handler
-        channelInitializer = object : ChannelInitializer<SocketChannel>() {
-            override fun initChannel(serverSocketChannel: SocketChannel) {
+        channelInitializer = object : ChannelInitializer<ServerSocketChannel>() {
+            override fun initChannel(serverSocketChannel: ServerSocketChannel) {
                 val pipeline = serverSocketChannel.pipeline()
                 if (isWebSocket) {
                     if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {

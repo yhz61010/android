@@ -1,7 +1,6 @@
 package com.ho1ho.socket_sdk.framework
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -122,14 +121,14 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 //        }
         ctx.close().syncUninterruptibly()
 
-        if ("IOException" == exceptionType) {
-            netty.connectState.set(ServerConnectStatus.FAILED)
-            netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-            netty.doRetry()
-        } else {
-            netty.connectState.set(ServerConnectStatus.EXCEPTION)
-            netty.connectionListener.onException(netty, cause)
-        }
+//        if ("IOException" == exceptionType) {
+//            netty.connectState.set(ServerConnectStatus.FAILED)
+//            netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+//            netty.doRetry()
+//        } else {
+//            netty.connectState.set(ServerConnectStatus.EXCEPTION)
+//            netty.connectionListener.onException(netty, cause)
+//        }
 
         LLog.e(tag, "============================")
     }

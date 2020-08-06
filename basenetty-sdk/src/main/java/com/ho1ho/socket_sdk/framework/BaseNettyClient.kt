@@ -15,12 +15,16 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
+import io.netty.handler.codec.DelimiterBasedFrameDecoder
+import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
+import io.netty.handler.codec.string.StringDecoder
+import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
@@ -92,23 +96,28 @@ abstract class BaseNettyClient protected constructor(
         defaultInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {
-                val pipeline = socketChannel.pipeline()
-                if (isWebSocket) {
-                    if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                        LLog.w(tag, "Working in wss mode")
-                        val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-                        pipeline.addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
+                with(socketChannel.pipeline()) {
+                    if (isWebSocket) {
+                        if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
+                            LLog.w(tag, "Working in wss mode")
+                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                            addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
+                        }
+                        addLast(HttpClientCodec())
+                        addLast(HttpObjectAggregator(65536))
+                        /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
+                         * neither spending a lot of memory nor getting [OutOfMemoryError]. */
+                        addLast(ChunkedWriteHandler())
+                        addLast(WebSocketClientCompressionHandler.INSTANCE)
+                    } else {
+                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+                        addLast(StringDecoder())
+                        addLast(StringEncoder())
                     }
-                    pipeline.addLast(HttpClientCodec())
-                    pipeline.addLast(HttpObjectAggregator(65536))
-                    /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
-                     * neither spending a lot of memory nor getting [OutOfMemoryError]. */
-                    pipeline.addLast(ChunkedWriteHandler())
-                    pipeline.addLast(WebSocketClientCompressionHandler.INSTANCE)
-                }
-                addLastToPipeline(pipeline)
-                defaultInboundHandler?.let {
-                    pipeline.addLast("default-inbound-handler", it)
+                    addLastToPipeline(this)
+                    defaultInboundHandler?.let {
+                        addLast("default-inbound-handler", it)
+                    }
                 }
             }
         }

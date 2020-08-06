@@ -1,8 +1,7 @@
 package com.ho1ho.socket_sdk.framework
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ConnectionStatus
-import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ClientConnectListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -57,7 +56,7 @@ abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) 
             handshaker?.handshake(ctx.channel())
         }
         super.channelActive(ctx)
-        netty.connectState.set(ConnectionStatus.CONNECTED)
+        netty.connectState.set(ClientConnectStatus.CONNECTED)
         netty.connectionListener.onConnected(netty)
     }
 
@@ -75,11 +74,11 @@ abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) 
 
         if (!caughtException) {
             if (netty.disconnectManually) {
-                netty.connectState.set(ConnectionStatus.DISCONNECTED)
+                netty.connectState.set(ClientConnectStatus.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
             } else { // Server down
-                netty.connectState.set(ConnectionStatus.FAILED)
-                netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
+                netty.connectState.set(ClientConnectStatus.FAILED)
+                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
                 netty.doRetry()
             }
             LLog.w(tag, "=====> Socket disconnected <=====")
@@ -128,11 +127,11 @@ abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) 
         ctx.close().syncUninterruptibly()
 
         if ("IOException" == exceptionType) {
-            netty.connectState.set(ConnectionStatus.FAILED)
-            netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+            netty.connectState.set(ClientConnectStatus.FAILED)
+            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
             netty.doRetry()
         } else {
-            netty.connectState.set(ConnectionStatus.EXCEPTION)
+            netty.connectState.set(ClientConnectStatus.EXCEPTION)
             netty.connectionListener.onException(netty, cause)
         }
 

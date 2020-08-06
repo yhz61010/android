@@ -11,7 +11,7 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.BaseChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyClient
-import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ClientConnectListener
 import com.ho1ho.socket_sdk.framework.retry_strategy.ExponentRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
@@ -32,7 +32,7 @@ class SocketActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_socket_client)
 
-        val connectionListener = object : NettyConnectionListener {
+        val connectionListener = object : ClientConnectListener {
             override fun onConnected(netty: BaseNetty) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")
@@ -108,7 +108,7 @@ class SocketActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class SocketClient(host: String, port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
+    class SocketClient(host: String, port: Int, connectionListener: ClientConnectListener, retryStrategy: RetryStrategy) :
         BaseNettyClient(host, port, connectionListener, retryStrategy)
 
     @ChannelHandler.Sharable

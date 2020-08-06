@@ -43,12 +43,12 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         LLog.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
         // Add active client to server
         netty.clients.add(ctx.channel())
-        caughtException = false
-        netty.retryTimes.set(0)
-        netty.disconnectManually = false
-        if (netty.isWebSocket) {
-            handshaker?.handshake(ctx.channel())
-        }
+//        caughtException = false
+//        netty.retryTimes.set(0)
+//        netty.disconnectManually = false
+//        if (netty.isWebSocket) {
+//            handshaker?.handshake(ctx.channel())
+//        }
         super.channelActive(ctx)
         netty.connectState.set(ConnectionStatus.CONNECTED)
         netty.connectionListener.onConnected(netty)
@@ -141,12 +141,16 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
      * DO NOT override this method
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
+        LLog.i(tag, "===== channelRead0 =====")
         if (netty.isWebSocket) {
+            // Process the handshake from client to server
             if (msg is FullHttpResponse) {
                 LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
                 handleHttpRequest(ctx, msg.retain())
                 return
             }
+
+            // The following codes process WebSocket connection
 
             val frame = msg as WebSocketFrame
             if (frame is CloseWebSocketFrame) {

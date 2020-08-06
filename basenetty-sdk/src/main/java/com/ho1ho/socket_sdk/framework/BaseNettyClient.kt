@@ -115,9 +115,7 @@ abstract class BaseNettyClient protected constructor(
                         addLast(StringEncoder())
                     }
                     addLastToPipeline(this)
-                    defaultInboundHandler?.let {
-                        addLast("default-inbound-handler", it)
-                    }
+                    defaultInboundHandler?.let { addLast("default-inbound-handler", it) }
                 }
             }
         }

@@ -14,6 +14,7 @@ import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
@@ -41,9 +42,14 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_web_socket_server)
 
         val connectionListener = object : ServerConnectListener {
-            override fun onConnected(netty: BaseNetty) {
-                LLog.i(TAG, "onConnected")
-                ToastUtil.showDebugToast("onConnected")
+            override fun onStarted(netty: BaseNetty) {
+                LLog.i(TAG, "onStarted")
+                ToastUtil.showDebugToast("onStarted")
+            }
+
+            override fun onClientConnected(netty: BaseNetty, clientChannel: Channel) {
+                LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
+                ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
             }
 
             @SuppressLint("SetTextI18n")
@@ -52,9 +58,9 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
                 runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
             }
 
-            override fun onDisconnected(netty: BaseNetty) {
-                LLog.w(TAG, "onDisconnect")
-                ToastUtil.showDebugToast("onDisconnect")
+            override fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel) {
+                LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
+                ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
             }
 
             override fun onFailed(netty: BaseNetty, code: Int, msg: String?) {
@@ -78,6 +84,18 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             repeat(1) {
                 webSocketServer.startServer()
             }
+        }
+    }
+
+    fun onStopServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        cs.launch {
+            webSocketServer.stopServer()
+        }
+    }
+
+    fun onReleaseServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        cs.launch {
+            webSocketServer.release()
         }
     }
 

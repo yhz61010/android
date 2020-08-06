@@ -25,4 +25,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtResponse" />
+
+    <Button
+        android:id="@+id/btnStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:onClick="onStopServerClick"
+        android:text="Stop Server"
+        app:layout_constraintEnd_toEndOf="@+id/btnStartServer"
+        app:layout_constraintStart_toStartOf="@+id/btnStartServer"
+        app:layout_constraintTop_toBottomOf="@+id/btnStartServer" />
+
+    <Button
+        android:id="@+id/btnReleaseServer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Release Server"
+        android:onClick="onReleaseServerClick"
+        app:layout_constraintEnd_toEndOf="@+id/btnStop"
+        app:layout_constraintStart_toStartOf="@+id/btnStop"
+        app:layout_constraintTop_toBottomOf="@+id/btnStop" />
 </androidx.constraintlayout.widget.ConstraintLayout>

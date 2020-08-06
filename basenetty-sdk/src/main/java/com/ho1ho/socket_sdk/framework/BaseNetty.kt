@@ -12,7 +12,6 @@ interface ReadSocketDataListener<T> {
     fun onReceivedData(ctx: ChannelHandlerContext, msg: T)
 }
 
-
 enum class ClientConnectStatus {
     /**
      * This is the connection default status after initializing netty client.

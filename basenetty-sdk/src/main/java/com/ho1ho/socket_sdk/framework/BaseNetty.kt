@@ -55,27 +55,30 @@ enum class ServerConnectStatus {
      * In this status, you can not reconnect again. You must create netty client again.
      */
     UNINITIALIZED,
-    CONNECTED,
+
+    STARTED,
+    STOPPED,
+    CLIENT_CONNECTED,
 
     /**
      * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
      *
-     * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [DISCONNECTED] listener.
+     * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
      */
-    DISCONNECTED,
+    CLIENT_DISCONNECTED,
 
     /**
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
      * For example, server down, invalid ip or port, retry to connect failed.
      *
-     * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
+     * Once connecting is in this status, [CLIENT_DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */
     FAILED,
 
     /**
      * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
      *
-     * Once connecting is in this status, [DISCONNECTED] and [FAILED] listeners will **NOT** be triggered either.
+     * Once connecting is in this status, [CLIENT_DISCONNECTED] and [FAILED] listeners will **NOT** be triggered either.
      */
     EXCEPTION
 }

@@ -140,7 +140,7 @@ abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) 
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
-        LLog.i(tag, "===== userEventTriggered(${ctx.name()}) =====")
+        LLog.i(tag, "===== userEventTriggered =====")
         super.userEventTriggered(ctx, evt)
     }
 

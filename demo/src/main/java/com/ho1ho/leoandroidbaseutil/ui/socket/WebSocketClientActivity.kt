@@ -16,14 +16,9 @@ import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import io.netty.handler.codec.string.StringDecoder
-import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +65,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        webSocketClient = WebSocketClient(URI("ws://10.10.9.64:10010/ws"), connectionListener, ConstantRetry(10, 2000))
+        webSocketClient = WebSocketClient(URI("ws://50d.win:9090/ws"), connectionListener, ConstantRetry(10, 2000))
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
     }
@@ -118,15 +113,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class WebSocketClient(webSocketUri: URI, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
-        BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
-        override fun addLastToPipeline(pipeline: ChannelPipeline) {
-            with(pipeline) {
-                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-                addLast(StringDecoder())
-                addLast(StringEncoder())
-            }
-        }
-    }
+        BaseNettyClient(webSocketUri, connectionListener, retryStrategy)
 
     @ChannelHandler.Sharable
     class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseChannelInboundHandler<Any>(netty) {

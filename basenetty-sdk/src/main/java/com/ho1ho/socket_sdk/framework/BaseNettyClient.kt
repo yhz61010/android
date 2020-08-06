@@ -169,7 +169,7 @@ abstract class BaseNettyClient protected constructor(
 //            bootstrap.connect(host, port).addListener(connectFutureListener)
             LLog.i(tag, "===== Connect success =====")
         } catch (e: RejectedExecutionException) {
-            LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====")
+            LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
             LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")
             // If connection has been connected before, [channelInactive] will be called, so the status and
             // listener will be triggered at that time.
@@ -178,10 +178,12 @@ abstract class BaseNettyClient protected constructor(
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: ConnectException) {
+            LLog.e(tag, "===== ConnectException: ${e.message} =====", e)
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
             doRetry()
         } catch (e: Exception) {
+            LLog.e(tag, "===== Exception: ${e.message} =====", e)
             connectState.set(ConnectionStatus.FAILED)
             connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
             doRetry()

@@ -96,7 +96,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class WebSocketServer(port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
-        BaseNettyServer(port, connectionListener, retryStrategy) {
+        BaseNettyServer(port, connectionListener, retryStrategy, true) {
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             with(pipeline) {
                 addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))

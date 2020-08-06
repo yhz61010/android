@@ -25,7 +25,6 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.stream.ChunkedWriteHandler
@@ -100,7 +99,8 @@ abstract class BaseNettyServer protected constructor(
                         /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
                          * neither spending a lot of memory nor getting [OutOfMemoryError]. */
                         addLast(ChunkedWriteHandler())
-                        addLast(WebSocketServerCompressionHandler())
+                        // FIXME If add this, the server can not receive client message.
+//                        addLast(WebSocketServerCompressionHandler())
                         addLast(WebSocketServerProtocolHandler(webSocketPath))
                     } else {
                         addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))

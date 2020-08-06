@@ -39,7 +39,7 @@ abstract class BaseNettyServer protected constructor(
     private val port: Int,
     val connectionListener: NettyConnectionListener,
     private val retryStrategy: RetryStrategy = ConstantRetry(),
-    private var isWebSocket: Boolean = false
+    internal var isWebSocket: Boolean = false
 ) : BaseNetty() {
     // InetSocketAddress(port).hostString, port, connectionListener, retryStrategy
 

@@ -16,8 +16,7 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) :
-    SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) : SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
     private var channelPromise: ChannelPromise? = null

@@ -28,6 +28,7 @@ import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.concurrent.GlobalEventExecutor
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -130,6 +131,15 @@ abstract class BaseNettyServer protected constructor(
             connectState.set(ServerConnectStatus.STARTED)
             LLog.i(tag, "===== Connect success on ${channel.localAddress()} =====")
             connectionListener.onStarted(this)
+        } catch (e: RejectedExecutionException) {
+            LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
+            LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")
+            // If connection has been connected before, [channelInactive] will be called, so the status and
+            // listener will be triggered at that time.
+            // However, if netty client had been release, call [connect] again will cause exception.
+            // So we handle it here.
+            connectState.set(ServerConnectStatus.FAILED)
+            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: Exception) {
             connectState.set(ServerConnectStatus.FAILED)
             connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR, e.message)

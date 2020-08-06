@@ -40,7 +40,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
         // Add active client to server
-        netty.clients.add(ctx.channel())
+        val clientChannel = ctx.channel()
+        netty.clients.add(clientChannel)
 //        caughtException = false
 //        netty.retryTimes.set(0)
 //        netty.disconnectManually = false
@@ -48,35 +49,38 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 //            handshaker?.handshake(ctx.channel())
 //        }
         super.channelActive(ctx)
-        netty.connectState.set(ServerConnectStatus.CONNECTED)
-        netty.connectionListener.onConnected(netty)
+        netty.connectState.set(ServerConnectStatus.CLIENT_CONNECTED)
+        netty.connectionListener.onClientConnected(netty, clientChannel)
     }
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LLog.w(
             tag,
-            "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
-                .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
+            "===== Client disconnected: ${ctx.channel().remoteAddress()} stopManually=${netty.stopManually} caughtException=$caughtException ====="
         )
-        netty.clients.remove(ctx.channel())
+        val clientChannel = ctx.channel()
+        netty.clients.remove(clientChannel)
         if (netty.isWebSocket) {
-            handshaker?.close(ctx.channel(), CloseWebSocketFrame())
+            handshaker?.close(clientChannel, CloseWebSocketFrame())
         }
         super.channelInactive(ctx)
 
-        if (!caughtException) {
-            if (netty.disconnectManually) {
-                netty.connectState.set(ServerConnectStatus.DISCONNECTED)
-                netty.connectionListener.onDisconnected(netty)
-            } else { // Client disconnect
-                netty.connectState.set(ServerConnectStatus.FAILED)
-                netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
-            }
-            LLog.w(tag, "=====> Socket disconnected <=====")
-        } else {
-            LLog.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
-        }
+        netty.connectState.set(ServerConnectStatus.CLIENT_DISCONNECTED)
+        netty.connectionListener.onClientDisconnected(netty, clientChannel)
+
+//        if (!caughtException) {
+//            if (netty.stopManually) {
+//                netty.connectState.set(ServerConnectStatus.CLIENT_DISCONNECTED)
+//                netty.connectionListener.onClientDisconnected(netty, clientChannel)
+//            } else { // Client disconnect
+//                netty.connectState.set(ServerConnectStatus.FAILED)
+//                netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
+//            }
+//            LLog.w(tag, "=====> Socket disconnected <=====")
+//        } else {
+//            LLog.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
+//        }
     }
 
     /**

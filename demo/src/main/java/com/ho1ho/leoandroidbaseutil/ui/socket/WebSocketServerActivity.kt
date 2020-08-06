@@ -11,7 +11,7 @@ import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyServer
 import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
-import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
@@ -40,7 +40,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_socket_server)
 
-        val connectionListener = object : NettyConnectionListener {
+        val connectionListener = object : ServerConnectListener {
             override fun onConnected(netty: BaseNetty) {
                 LLog.i(TAG, "onConnected")
                 ToastUtil.showDebugToast("onConnected")
@@ -90,7 +90,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener, retryStrategy: RetryStrategy) :
         BaseNettyServer(port, connectionListener, retryStrategy, true)
 
     @ChannelHandler.Sharable

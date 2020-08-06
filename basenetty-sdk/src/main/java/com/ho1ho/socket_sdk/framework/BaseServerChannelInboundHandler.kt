@@ -71,10 +71,9 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             if (netty.disconnectManually) {
                 netty.connectState.set(ConnectionStatus.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
-            } else { // Server down
+            } else { // Client disconnect
                 netty.connectState.set(ConnectionStatus.FAILED)
-                netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
-                netty.doRetry()
+                netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
             }
             LLog.w(tag, "=====> Socket disconnected <=====")
         } else {
@@ -134,7 +133,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
-        LLog.i(tag, "===== userEventTriggered =====")
+        LLog.i(tag, "===== userEventTriggered ($evt)=====")
         super.userEventTriggered(ctx, evt)
     }
 

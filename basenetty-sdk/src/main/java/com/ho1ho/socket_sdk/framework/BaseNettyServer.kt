@@ -133,7 +133,7 @@ abstract class BaseNettyServer protected constructor(
             connectionListener.onStarted(this)
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
-            LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")
+            LLog.e(tag, "Netty server had already been released. You must re-initialize it again.")
             // If connection has been connected before, [channelInactive] will be called, so the status and
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.

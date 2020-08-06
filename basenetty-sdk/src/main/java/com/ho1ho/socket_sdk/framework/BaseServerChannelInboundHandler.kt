@@ -40,7 +40,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
+        LLog.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
         // Add active client to server
         netty.clients.add(ctx.channel())
         caughtException = false

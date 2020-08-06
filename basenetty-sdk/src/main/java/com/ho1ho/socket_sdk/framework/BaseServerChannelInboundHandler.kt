@@ -1,8 +1,7 @@
 package com.ho1ho.socket_sdk.framework
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ConnectionStatus
-import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -12,7 +11,6 @@ import io.netty.handler.codec.http.websocketx.*
 import io.netty.util.CharsetUtil
 import java.io.IOException
 import java.net.URI
-
 
 /**
  * Author: Michael Leo
@@ -50,7 +48,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 //            handshaker?.handshake(ctx.channel())
 //        }
         super.channelActive(ctx)
-        netty.connectState.set(ConnectionStatus.CONNECTED)
+        netty.connectState.set(ServerConnectStatus.CONNECTED)
         netty.connectionListener.onConnected(netty)
     }
 
@@ -69,11 +67,11 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
         if (!caughtException) {
             if (netty.disconnectManually) {
-                netty.connectState.set(ConnectionStatus.DISCONNECTED)
+                netty.connectState.set(ServerConnectStatus.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
             } else { // Client disconnect
-                netty.connectState.set(ConnectionStatus.FAILED)
-                netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
+                netty.connectState.set(ServerConnectStatus.FAILED)
+                netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
             }
             LLog.w(tag, "=====> Socket disconnected <=====")
         } else {
@@ -121,11 +119,11 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         ctx.close().syncUninterruptibly()
 
         if ("IOException" == exceptionType) {
-            netty.connectState.set(ConnectionStatus.FAILED)
-            netty.connectionListener.onFailed(netty, NettyConnectionListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+            netty.connectState.set(ServerConnectStatus.FAILED)
+            netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
             netty.doRetry()
         } else {
-            netty.connectState.set(ConnectionStatus.EXCEPTION)
+            netty.connectState.set(ServerConnectStatus.EXCEPTION)
             netty.connectionListener.onException(netty, cause)
         }
 
@@ -141,7 +139,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
      * DO NOT override this method
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
-        LLog.i(tag, "===== channelRead0 =====")
         if (netty.isWebSocket) {
             // Process the handshake from client to server
             if (msg is FullHttpResponse) {
@@ -158,24 +155,19 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
                 ctx.channel().close()
                 return
             }
-            //PingWebSocketFrame
-//        if (frame is PingWebSocketFrame) {
-//            ctx.channel().write(PongWebSocketFrame(frame.content().retain()))
-//            return;
-//        }
 
 //        val receivedData = when (frame) {
 //            is BinaryWebSocketFrame -> {
-//                frame.content()
+//                frame.content().retain()
 //            }
 //            is TextWebSocketFrame -> {
-//                frame.text()
+//                frame.text().retain()
 //            }
 //            is PingWebSocketFrame -> {
-//                frame.content().toString(Charset.forName("UTF-8"))
+//                frame.content().retain().toString(Charset.forName("UTF-8"))
 //            }
 //            is PongWebSocketFrame -> {
-//                frame.content().toString(Charset.forName("UTF-8"))
+//                frame.content().retain().toString(Charset.forName("UTF-8"))
 //            }
 //            else -> {
 //                null
@@ -201,8 +193,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     private fun handleHttpRequest(ctx: ChannelHandlerContext, msg: FullHttpResponse) {
         if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
             if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                val exceptionInfo =
-                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
                 LLog.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)
             }

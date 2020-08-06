@@ -16,11 +16,6 @@ import com.ho1ho.socket_sdk.framework.retry_strategy.ExponentRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.Delimiters
-import io.netty.handler.codec.string.StringDecoder
-import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -114,15 +109,7 @@ class SocketActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class SocketClient(host: String, port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
-        BaseNettyClient(host, port, connectionListener, retryStrategy) {
-        override fun addLastToPipeline(pipeline: ChannelPipeline) {
-            with(pipeline) {
-                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-                addLast(StringDecoder())
-                addLast(StringEncoder())
-            }
-        }
-    }
+        BaseNettyClient(host, port, connectionListener, retryStrategy)
 
     @ChannelHandler.Sharable
     class SocketClientHandler(private val netty: BaseNettyClient) : BaseChannelInboundHandler<String>(netty) {

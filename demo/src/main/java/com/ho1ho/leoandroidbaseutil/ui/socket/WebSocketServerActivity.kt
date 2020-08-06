@@ -16,14 +16,9 @@ import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import io.netty.handler.codec.string.StringDecoder
-import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -96,15 +91,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class WebSocketServer(port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
-        BaseNettyServer(port, connectionListener, retryStrategy, true) {
-        override fun addLastToPipeline(pipeline: ChannelPipeline) {
-            with(pipeline) {
-                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-                addLast(StringDecoder())
-                addLast(StringEncoder())
-            }
-        }
-    }
+        BaseNettyServer(port, connectionListener, retryStrategy, true)
 
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {

@@ -6,11 +6,9 @@ import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
+import io.netty.handler.codec.http.websocketx.*
 import io.netty.util.CharsetUtil
 import java.io.IOException
 
@@ -31,17 +29,17 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== handlerAdded =====")
-//        if (netty.isWebSocket) {
-//            handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-//                netty.webSocketUri,
-//                WebSocketVersion.V13,
-//                null,
-//                false,
-//                DefaultHttpHeaders(),
-//                1024 * 1024 /*5 * 65536*/
-//            )
-//            channelPromise = ctx.newPromise()
-//        }
+        if (netty.isWebSocket) {
+            handshaker = WebSocketClientHandshakerFactory.newHandshaker(
+                netty.webSocketUri,
+                WebSocketVersion.V13,
+                null,
+                false,
+                DefaultHttpHeaders(),
+                1024 * 1024 /*5 * 65536*/
+            )
+            channelPromise = ctx.newPromise()
+        }
         super.handlerAdded(ctx)
     }
 
@@ -55,9 +53,9 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         caughtException = false
         netty.retryTimes.set(0)
         netty.disconnectManually = false
-//        if (netty.isWebSocket) {
-//            handshaker?.handshake(ctx.channel())
-//        }
+        if (netty.isWebSocket) {
+            handshaker?.handshake(ctx.channel())
+        }
         super.channelActive(ctx)
         netty.connectState.set(ConnectionStatus.CONNECTED)
         netty.connectionListener.onConnected(netty)
@@ -70,9 +68,9 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
                 .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
         )
-//        if (netty.isWebSocket) {
-//            handshaker?.close(ctx.channel(), CloseWebSocketFrame())
-//        }
+        if (netty.isWebSocket) {
+            handshaker?.close(ctx.channel(), CloseWebSocketFrame())
+        }
         super.channelInactive(ctx)
 
         if (!caughtException) {

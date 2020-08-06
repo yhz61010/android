@@ -19,7 +19,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_socket_client.*
+import kotlinx.android.synthetic.main.activity_web_socket_server.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,7 +49,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             @SuppressLint("SetTextI18n")
             override fun onReceivedData(netty: BaseNetty, data: Any?) {
                 LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-                runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
+                runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
             }
 
             override fun onDisconnected(netty: BaseNetty) {

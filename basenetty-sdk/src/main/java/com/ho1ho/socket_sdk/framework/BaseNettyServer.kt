@@ -4,8 +4,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ConnectionStatus
-import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.ServerBootstrap
@@ -40,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 abstract class BaseNettyServer protected constructor(
     private val port: Int,
-    val connectionListener: NettyConnectionListener,
+    val connectionListener: ServerConnectListener,
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/ws"
@@ -75,7 +74,7 @@ abstract class BaseNettyServer protected constructor(
     var disconnectManually = false
 
     @Volatile
-    internal var connectState: AtomicReference<ConnectionStatus> = AtomicReference(ConnectionStatus.UNINITIALIZED)
+    internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(ServerConnectStatus.UNINITIALIZED)
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
     var retryTimes = AtomicInteger(0)
@@ -122,7 +121,7 @@ abstract class BaseNettyServer protected constructor(
     @Synchronized
     fun startServer() {
         LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
-        if (connectState.get() == ConnectionStatus.CONNECTED) {
+        if (connectState.get() == ServerConnectStatus.CONNECTED) {
             LLog.w(tag, "===== Already connected =====")
             return
         } else {
@@ -141,15 +140,15 @@ abstract class BaseNettyServer protected constructor(
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.
             // So we handle it here.
-            connectState.set(ConnectionStatus.FAILED)
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
+            connectState.set(ServerConnectStatus.FAILED)
+            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: ConnectException) {
-            connectState.set(ConnectionStatus.FAILED)
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
+            connectState.set(ServerConnectStatus.FAILED)
+            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
             doRetry()
         } catch (e: Exception) {
-            connectState.set(ConnectionStatus.FAILED)
-            connectionListener.onFailed(this, NettyConnectionListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
+            connectState.set(ServerConnectStatus.FAILED)
+            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
             doRetry()
         }
     }
@@ -162,7 +161,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun disconnectManually() {
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ServerConnectStatus.DISCONNECTED == connectState.get() || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already disconnected or not initialized.")
             return
         }
@@ -170,7 +169,7 @@ abstract class BaseNettyServer protected constructor(
         // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
         // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
-        connectState.set(ConnectionStatus.DISCONNECTED)
+        connectState.set(ServerConnectStatus.DISCONNECTED)
         stopRetryHandler()
         channel.disconnect().syncUninterruptibly()
     }
@@ -180,10 +179,10 @@ abstract class BaseNettyServer protected constructor(
         if (retryTimes.get() > retryStrategy.getMaxTimes()) {
             LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
             stopRetryHandler()
-            connectState.set(ConnectionStatus.FAILED)
+            connectState.set(ServerConnectStatus.FAILED)
             connectionListener.onFailed(
                 this@BaseNettyServer,
-                NettyConnectionListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
+                ServerConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
                 "Exceed max retry times."
             )
         } else {
@@ -200,7 +199,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun release() {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return
         }
@@ -233,7 +232,7 @@ abstract class BaseNettyServer protected constructor(
 //            shutdownGracefully()
         }
 
-        connectState.set(ConnectionStatus.UNINITIALIZED)
+        connectState.set(ServerConnectStatus.UNINITIALIZED)
         LLog.w(tag, "=====> Socket released <=====")
     }
 
@@ -257,7 +256,7 @@ abstract class BaseNettyServer protected constructor(
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("Command must be either String or ByteArray.")
         }
-        if (ConnectionStatus.CONNECTED != connectState.get()) {
+        if (ServerConnectStatus.CONNECTED != connectState.get()) {
             LLog.e(tag, "Socket is not connected. Can not send command.")
             return false
         }

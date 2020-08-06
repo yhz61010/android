@@ -10,12 +10,25 @@ import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyServer
+import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.inter.NettyConnectionListener
+import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
 import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelPipeline
+import io.netty.handler.codec.DelimiterBasedFrameDecoder
+import io.netty.handler.codec.Delimiters
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.string.StringDecoder
+import io.netty.handler.codec.string.StringEncoder
 import kotlinx.android.synthetic.main.activity_socket_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.nio.charset.Charset
 
 class WebSocketServerActivity : BaseDemonstrationActivity() {
 
@@ -26,7 +39,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     private val cs = CoroutineScope(Dispatchers.IO)
 
     private lateinit var webSocketServer: WebSocketServer
-//    private lateinit var webSocketServerHandler: WebSocketServerHandler
+    private lateinit var webSocketServerHandler: WebSocketServerHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,22 +73,22 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             }
         }
 
-//        webSocketServer = WebSocketServer(10086, connectionListener, ConstantRetry(10, 2000))
-//        webSocketServerHandler = WebSocketServerHandler(webSocketServer)
-//        webSocketServer.initHandler(webSocketServerHandler)
+        webSocketServer = WebSocketServer(10010, connectionListener, ConstantRetry(10, 2000))
+        webSocketServerHandler = WebSocketServerHandler(webSocketServer)
+        webSocketServer.initHandler(webSocketServerHandler)
     }
 
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-//                webSocketServer.connect()
+                webSocketServer.startServer()
             }
         }
     }
 
     override fun onDestroy() {
         cs.launch {
-//            webSocketServer.release()
+            webSocketServer.release()
         }
         super.onDestroy()
     }
@@ -84,39 +97,39 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     class WebSocketServer(port: Int, connectionListener: NettyConnectionListener, retryStrategy: RetryStrategy) :
         BaseNettyServer(port, connectionListener, retryStrategy) {
-//        override fun addLastToPipeline(pipeline: ChannelPipeline) {
-//            with(pipeline) {
-//                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-//                addLast(StringDecoder())
-//                addLast(StringEncoder())
-//            }
-//        }
+        override fun addLastToPipeline(pipeline: ChannelPipeline) {
+            with(pipeline) {
+                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+                addLast(StringDecoder())
+                addLast(StringEncoder())
+            }
+        }
     }
 
-//    @ChannelHandler.Sharable
-//    class WebSocketServerHandler(private val netty: BaseNetty) : BaseServerChannelInboundHandler<Any>(netty) {
-//        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-//            val receivedString: String?
-//            val frame = msg as WebSocketFrame
-//            receivedString = when (frame) {
-//                is TextWebSocketFrame -> {
-//                    frame.text()
-//                }
-//                is PongWebSocketFrame -> {
-//                    frame.content().toString(Charset.forName("UTF-8"))
-//                }
-//                else -> {
-//                    null
-//                }
-//            }
-//            netty.connectionListener.onReceivedData(netty, receivedString)
-//        }
-//
-//        fun sendMsgToServer(msg: String): Boolean {
-//            return netty.executeCommand(msg)
-//        }
-//
-//        override fun release() {
-//        }
-//    }
+    @ChannelHandler.Sharable
+    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
+            val receivedString: String?
+            val frame = msg as WebSocketFrame
+            receivedString = when (frame) {
+                is TextWebSocketFrame -> {
+                    frame.text()
+                }
+                is PongWebSocketFrame -> {
+                    frame.content().toString(Charset.forName("UTF-8"))
+                }
+                else -> {
+                    null
+                }
+            }
+            netty.connectionListener.onReceivedData(netty, receivedString)
+        }
+
+        fun sendMsgToServer(msg: String): Boolean {
+            return netty.executeCommand(msg)
+        }
+
+        override fun release() {
+        }
+    }
 }

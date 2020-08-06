@@ -63,7 +63,7 @@ abstract class BaseNettyServer protected constructor(
 
     private var channel: Channel? = null
     private var channelInitializer: ChannelInitializer<*>? = null
-    var defaultInboundHandler: BaseChannelInboundHandler<*>? = null
+    var defaultInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
 
     @Volatile
@@ -81,7 +81,7 @@ abstract class BaseNettyServer protected constructor(
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
-    fun initHandler(handler: BaseChannelInboundHandler<*>?) {
+    fun initHandler(handler: BaseServerChannelInboundHandler<*>?) {
         defaultInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {

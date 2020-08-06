@@ -156,6 +156,7 @@ abstract class BaseNettyServer protected constructor(
         connectState.set(ServerConnectStatus.STOPPED)
         stopRetryHandler()
         channel.disconnect().syncUninterruptibly()
+        connectionListener.onStopped(this)
     }
 
     fun doRetry() {

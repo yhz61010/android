@@ -47,14 +47,19 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
                 ToastUtil.showDebugToast("onStarted")
             }
 
+            override fun onStopped(netty: BaseNetty) {
+                LLog.i(TAG, "onStop")
+                ToastUtil.showDebugToast("onStop")
+            }
+
             override fun onClientConnected(netty: BaseNetty, clientChannel: Channel) {
                 LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
                 ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
             }
 
             @SuppressLint("SetTextI18n")
-            override fun onReceivedData(netty: BaseNetty, data: Any?) {
-                LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
+            override fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?) {
+                LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
                 runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
             }
 
@@ -127,7 +132,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
                     null
                 }
             }
-            netty.connectionListener.onReceivedData(netty, receivedString)
+            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }
 
         fun sendMsgToServer(msg: String): Boolean {

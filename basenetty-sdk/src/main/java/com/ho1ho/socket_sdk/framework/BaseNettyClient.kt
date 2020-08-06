@@ -67,7 +67,7 @@ abstract class BaseNettyClient protected constructor(
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
-    private var channel: Channel? = null
+    private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseChannelInboundHandler<*>? = null
         protected set
@@ -83,7 +83,6 @@ abstract class BaseNettyClient protected constructor(
 
     init {
         LLog.w(tag, "host=$host port=$port")
-
         bootstrap.channel(NioSocketChannel::class.java)
     }
 
@@ -188,7 +187,7 @@ abstract class BaseNettyClient protected constructor(
      */
     fun disconnectManually() {
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
-        if (ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already disconnected or not initialized.")
             return
         }
@@ -198,7 +197,7 @@ abstract class BaseNettyClient protected constructor(
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
         connectState.set(ConnectionStatus.DISCONNECTED)
         stopRetryHandler()
-        channel?.disconnect()?.syncUninterruptibly()
+        channel.disconnect().syncUninterruptibly()
     }
 
     fun doRetry() {
@@ -226,7 +225,7 @@ abstract class BaseNettyClient protected constructor(
      */
     fun release() {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
-        if (ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ConnectionStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return
         }
@@ -240,13 +239,12 @@ abstract class BaseNettyClient protected constructor(
         defaultInboundHandler = null
         channelInitializer = null
 
-        channel?.run {
+        channel.run {
             LLog.w(tag, "Closing channel...")
             pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
             closeFuture()
             close().syncUninterruptibly()
-            channel = null
         }
 
         workerGroup.run {
@@ -268,6 +266,10 @@ abstract class BaseNettyClient protected constructor(
     // ================================================
 
     private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
+        if (!::channel.isInitialized) {
+            LLog.e(tag, "Channel is not initialized. Stop processing.")
+            return false
+        }
         if (cmd == null) {
             LLog.e(tag, "The command is null. Stop processing.")
             return false
@@ -279,8 +281,8 @@ abstract class BaseNettyClient protected constructor(
             LLog.e(tag, "Socket is not connected. Can not send command.")
             return false
         }
-        if (channel == null) {
-            LLog.e(tag, "Can not execute cmd because of Channel is null.")
+        if (!channel.isActive) {
+            LLog.e(tag, "Can not execute cmd because of Channel is not active.")
             return false
         }
         return true
@@ -313,10 +315,10 @@ abstract class BaseNettyClient protected constructor(
         }
 
         if (isWebSocket) {
-            if (isPing) channel?.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            else channel?.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            if (isPing) channel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+            else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
         } else {
-            channel?.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+            channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
         return true
     }

@@ -61,7 +61,7 @@ abstract class BaseNettyServer protected constructor(
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
 
-    private var channel: Channel? = null
+    private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
@@ -74,10 +74,6 @@ abstract class BaseNettyServer protected constructor(
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
     var retryTimes = AtomicInteger(0)
-
-    init {
-//        LLog.w(tag, "host=$host port=$port")
-    }
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
@@ -127,7 +123,7 @@ abstract class BaseNettyServer protected constructor(
             val f = bootstrap.bind(port).sync()
             channel = f.syncUninterruptibly().channel()
 
-            LLog.i(tag, "===== Connect success =====")
+            LLog.i(tag, "===== Connect success on ${channel.localAddress()} =====")
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====")
             LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")
@@ -156,7 +152,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun disconnectManually() {
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
-        if (ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ConnectionStatus.DISCONNECTED == connectState.get() || ConnectionStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already disconnected or not initialized.")
             return
         }
@@ -166,7 +162,7 @@ abstract class BaseNettyServer protected constructor(
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
         connectState.set(ConnectionStatus.DISCONNECTED)
         stopRetryHandler()
-        channel?.disconnect()?.syncUninterruptibly()
+        channel.disconnect().syncUninterruptibly()
     }
 
     fun doRetry() {
@@ -194,7 +190,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun release() {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
-        if (ConnectionStatus.UNINITIALIZED == connectState.get()) {
+        if (!::channel.isInitialized || ConnectionStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return
         }
@@ -208,13 +204,12 @@ abstract class BaseNettyServer protected constructor(
         defaultInboundHandler = null
         channelInitializer = null
 
-        channel?.run {
+        channel.run {
             LLog.w(tag, "Closing channel...")
             pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
             closeFuture()
             close().syncUninterruptibly()
-            channel = null
         }
 
         bossGroup.run {
@@ -241,6 +236,10 @@ abstract class BaseNettyServer protected constructor(
     // ================================================
 
     private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
+        if (!::channel.isInitialized) {
+            LLog.e(tag, "Channel is not initialized. Stop processing.")
+            return false
+        }
         if (cmd == null) {
             LLog.e(tag, "The command is null. Stop processing.")
             return false
@@ -252,8 +251,8 @@ abstract class BaseNettyServer protected constructor(
             LLog.e(tag, "Socket is not connected. Can not send command.")
             return false
         }
-        if (channel == null) {
-            LLog.e(tag, "Can not execute cmd because of Channel is null.")
+        if (!channel.isActive) {
+            LLog.e(tag, "Can not execute cmd because of Channel is not active.")
             return false
         }
         return true
@@ -286,10 +285,10 @@ abstract class BaseNettyServer protected constructor(
         }
 
         if (isWebSocket) {
-            if (isPing) channel?.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            else channel?.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            if (isPing) channel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+            else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
         } else {
-            channel?.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+            channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
         return true
     }

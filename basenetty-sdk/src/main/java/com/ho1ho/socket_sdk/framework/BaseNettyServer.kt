@@ -12,25 +12,25 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
+import io.netty.channel.group.ChannelGroup
+import io.netty.channel.group.DefaultChannelGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.Delimiters
-import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
+import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.stream.ChunkedWriteHandler
+import io.netty.util.concurrent.GlobalEventExecutor
 import java.net.ConnectException
-import java.net.URI
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -43,7 +43,8 @@ abstract class BaseNettyServer protected constructor(
     private val port: Int,
     val connectionListener: NettyConnectionListener,
     private val retryStrategy: RetryStrategy = ConstantRetry(),
-    internal var isWebSocket: Boolean = false
+    internal var isWebSocket: Boolean = false,
+    internal var webSocketPath: String = "/ws"
 ) : BaseNetty() {
     // InetSocketAddress(port).hostString, port, connectionListener, retryStrategy
 
@@ -53,21 +54,22 @@ abstract class BaseNettyServer protected constructor(
 
     private val tag = javaClass.simpleName
 
-    internal var webSocketUri: URI? = null
+    // All client channels
+    internal val clients: ChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
     private val bossGroup = NioEventLoopGroup()
     private val workerGroup = NioEventLoopGroup()
     private val bootstrap = ServerBootstrap()
         .group(bossGroup, workerGroup)
         .channel(NioServerSocketChannel::class.java)
-        .option(ChannelOption.SO_BACKLOG, 256)
+        .option(ChannelOption.SO_BACKLOG, 1024)
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
 
     private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
-    var defaultInboundHandler: BaseServerChannelInboundHandler<*>? = null
+    var defaultServerInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
 
     @Volatile
@@ -82,30 +84,31 @@ abstract class BaseNettyServer protected constructor(
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
     fun initHandler(handler: BaseServerChannelInboundHandler<*>?) {
-        defaultInboundHandler = handler
+        defaultServerInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
-                        if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                            LLog.w(tag, "Working in wss mode")
-                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-                            // FIXME
-//                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
-                        }
-                        addLast(HttpClientCodec())
+//                        if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
+//                            LLog.w(tag, "Working in wss mode")
+//                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+//                            // FIXME
+////                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
+//                        }
+                        addLast(HttpServerCodec())
                         addLast(HttpObjectAggregator(65536))
                         /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
                          * neither spending a lot of memory nor getting [OutOfMemoryError]. */
                         addLast(ChunkedWriteHandler())
-                        addLast(WebSocketClientCompressionHandler.INSTANCE)
+                        addLast(WebSocketServerCompressionHandler())
+                        addLast(WebSocketServerProtocolHandler(webSocketPath))
                     } else {
                         addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
                         addLast(StringDecoder())
                         addLast(StringEncoder())
                     }
                     addLastToPipeline(this)
-                    defaultInboundHandler?.let { addLast("default-inbound-handler", it) }
+                    defaultServerInboundHandler?.let { addLast("default-server-inbound-handler", it) }
                 }
             }
         }
@@ -207,8 +210,8 @@ abstract class BaseNettyServer protected constructor(
         retryThread.quitSafely()
 
         LLog.w(tag, "Releasing default socket handler first...")
-        defaultInboundHandler?.release()
-        defaultInboundHandler = null
+        defaultServerInboundHandler?.release()
+        defaultServerInboundHandler = null
         channelInitializer = null
 
         channel.run {

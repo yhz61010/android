@@ -11,6 +11,8 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.websocketx.*
 import io.netty.util.CharsetUtil
 import java.io.IOException
+import java.net.URI
+
 
 /**
  * Author: Michael Leo
@@ -29,17 +31,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== handlerAdded =====")
-        if (netty.isWebSocket) {
-            handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-                netty.webSocketUri,
-                WebSocketVersion.V13,
-                null,
-                false,
-                DefaultHttpHeaders(),
-                1024 * 1024 /*5 * 65536*/
-            )
-            channelPromise = ctx.newPromise()
-        }
         super.handlerAdded(ctx)
     }
 
@@ -50,6 +41,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
+        // Add active client to server
+        netty.clients.add(ctx.channel())
         caughtException = false
         netty.retryTimes.set(0)
         netty.disconnectManually = false
@@ -68,6 +61,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
                 .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
         )
+        netty.clients.remove(ctx.channel())
         if (netty.isWebSocket) {
             handshaker?.close(ctx.channel(), CloseWebSocketFrame())
         }
@@ -117,7 +111,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             else -> "Unknown Exception"
         }
         LLog.e(tag, "===== Caught $exceptionType =====")
-        LLog.e(tag, "Exception: ${cause.message}")
+        LLog.e(tag, "Exception: ${cause.message}", cause)
 
 //        val channel = ctx.channel()
 //        val isChannelActive = channel.isActive
@@ -140,7 +134,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
-        LLog.i(tag, "===== userEventTriggered(${ctx.name()}) =====")
+        LLog.i(tag, "===== userEventTriggered =====")
         super.userEventTriggered(ctx, evt)
     }
 
@@ -151,23 +145,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         if (netty.isWebSocket) {
             if (msg is FullHttpResponse) {
                 LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
-                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                    val exceptionInfo =
-                        "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
-                    LLog.e(tag, exceptionInfo)
-                    throw IllegalStateException(exceptionInfo)
-                }
-            }
-
-            if (handshaker?.isHandshakeComplete == false) {
-                try {
-                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
-                    LLog.w(tag, "=====> WebSocket client connected <=====")
-                    channelPromise?.setSuccess()
-                } catch (e: WebSocketHandshakeException) {
-                    LLog.e(tag, "=====> WebSocket client failed to connect <=====")
-                    channelPromise?.setFailure(e)
-                }
+                handleHttpRequest(ctx, msg.retain())
                 return
             }
 
@@ -177,8 +155,65 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
                 ctx.channel().close()
                 return
             }
+            //PingWebSocketFrame
+//        if (frame is PingWebSocketFrame) {
+//            ctx.channel().write(PongWebSocketFrame(frame.content().retain()))
+//            return;
+//        }
+
+//        val receivedData = when (frame) {
+//            is BinaryWebSocketFrame -> {
+//                frame.content()
+//            }
+//            is TextWebSocketFrame -> {
+//                frame.text()
+//            }
+//            is PingWebSocketFrame -> {
+//                frame.content().toString(Charset.forName("UTF-8"))
+//            }
+//            is PongWebSocketFrame -> {
+//                frame.content().toString(Charset.forName("UTF-8"))
+//            }
+//            else -> {
+//                null
+//            }
+//        }
+
+//            if (handshaker?.isHandshakeComplete == false) {
+//                try {
+//                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
+//                    LLog.w(tag, "=====> WebSocket client connected <=====")
+//                    channelPromise?.setSuccess()
+//                } catch (e: WebSocketHandshakeException) {
+//                    LLog.e(tag, "=====> WebSocket client failed to connect <=====")
+//                    channelPromise?.setFailure(e)
+//                }
+//                return
+//            }
         }
 
         onReceivedData(ctx, msg)
+    }
+
+    private fun handleHttpRequest(ctx: ChannelHandlerContext, msg: FullHttpResponse) {
+        if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+            if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+                val exceptionInfo =
+                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+                LLog.e(tag, exceptionInfo)
+                throw IllegalStateException(exceptionInfo)
+            }
+            return
+        }
+        handshaker = WebSocketClientHandshakerFactory.newHandshaker(
+            URI("ws://${ctx.channel()}/${netty.webSocketPath}"),
+            WebSocketVersion.V13,
+            null,
+            false,
+            DefaultHttpHeaders(),
+            1024 * 1024 /*5 * 65536*/
+        )
+        channelPromise = ctx.newPromise()
+        handshaker?.handshake(ctx.channel())
     }
 }

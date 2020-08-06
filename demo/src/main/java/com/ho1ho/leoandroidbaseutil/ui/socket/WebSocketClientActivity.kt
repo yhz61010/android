@@ -65,7 +65,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        webSocketClient = WebSocketClient(URI("ws://50d.win:9090/ws"), connectionListener, ConstantRetry(10, 2000))
+        webSocketClient = WebSocketClient(URI("ws://10.10.9.64:10010/ws"), connectionListener, ConstantRetry(10, 2000))
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
     }

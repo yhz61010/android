@@ -38,37 +38,43 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onStarted(netty: BaseNettyServer) {
             LLog.i(TAG, "onStarted")
             ToastUtil.showDebugToast("onStarted")
-            runOnUiThread { txtResponse.text = "Server started" }
+            runOnUiThread { txtResponse.text = "Server started";sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
             LLog.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nServer stopped" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nServer stopped";sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}" }
+            runOnUiThread {
+                txtResponse.text = "${txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                sv.fullScroll(View.FOCUS_DOWN)
+            }
         }
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\n$data" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\n$data";sv.fullScroll(View.FOCUS_DOWN) }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}" }
+            runOnUiThread {
+                txtResponse.text = "${txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                sv.fullScroll(View.FOCUS_DOWN)
+            }
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nStart failed $code $msg" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nStart failed $code $msg";sv.fullScroll(View.FOCUS_DOWN) }
         }
     }
 

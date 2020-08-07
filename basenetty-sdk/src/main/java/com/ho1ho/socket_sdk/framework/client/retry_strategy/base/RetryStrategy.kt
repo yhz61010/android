@@ -1,4 +1,4 @@
-package com.ho1ho.socket_sdk.framework.retry_strategy.base
+package com.ho1ho.socket_sdk.framework.client.retry_strategy.base
 
 /**
  * Author: Michael Leo

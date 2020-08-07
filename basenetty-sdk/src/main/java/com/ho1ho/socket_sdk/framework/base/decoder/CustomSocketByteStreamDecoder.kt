@@ -1,4 +1,4 @@
-package com.ho1ho.socket_sdk.framework.decoder
+package com.ho1ho.socket_sdk.framework.base.decoder
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext

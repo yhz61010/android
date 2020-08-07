@@ -1,6 +1,6 @@
-package com.ho1ho.socket_sdk.framework.inter
+package com.ho1ho.socket_sdk.framework.server
 
-import com.ho1ho.socket_sdk.framework.BaseNetty
+import com.ho1ho.socket_sdk.framework.base.BaseNetty
 import io.netty.channel.Channel
 
 /**
@@ -20,8 +20,5 @@ interface ServerConnectListener<in T : BaseNetty> {
         const val CONNECTION_ERROR_ALREADY_RELEASED = 0x8000
         const val CONNECTION_ERROR_SERVER_START_ERROR = 0x8001
         const val CONNECTION_ERROR_UNEXPECTED_EXCEPTION = 0x8003
-        const val CONNECTION_ERROR_CONNECT_EXCEPTION = 0x8002
-        const val CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES = 0x8004
-        const val CONNECTION_ERROR_SERVER_DOWN = 0x8005
     }
 }

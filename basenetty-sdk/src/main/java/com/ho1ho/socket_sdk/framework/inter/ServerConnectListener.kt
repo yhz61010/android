@@ -10,7 +10,7 @@ import io.netty.channel.Channel
 interface ServerConnectListener<in T : BaseNetty> {
 
     fun onStarted(netty: T)
-    fun onStopped(netty: T)
+    fun onStopped()
     fun onStartFailed(netty: T, code: Int, msg: String?)
     fun onReceivedData(netty: T, clientChannel: Channel, data: Any?)
     fun onClientConnected(netty: T, clientChannel: Channel)

@@ -114,7 +114,10 @@ abstract class BaseNettyServer protected constructor(
             connectState.set(ServerConnectStatus.STARTED)
             LLog.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
+            // After running this line below, the process will stuck there and waiting client connection
             serverChannel.closeFuture().sync()
+            // When serverChannel.close be executed, the process will continue to run.
+            LLog.i(tag, "===== Stopping server... =====")
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
             LLog.e(tag, "Netty server had already been released. You must re-initialize it again.")
@@ -144,7 +147,7 @@ abstract class BaseNettyServer protected constructor(
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
 
-        LLog.w(tag, "Releasing default socket handler first...")
+        LLog.w(tag, "Releasing default server inbound handler first...")
         defaultServerInboundHandler?.release()
         defaultServerInboundHandler = null
         channelInitializer = null
@@ -153,8 +156,6 @@ abstract class BaseNettyServer protected constructor(
             LLog.w(tag, "Closing channel...")
             kotlin.runCatching {
                 pipeline().removeAll { true }
-//            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-//                closeFuture()
                 close().syncUninterruptibly()
             }.onFailure { LLog.e(tag, "Close channel error.", it) }
         }

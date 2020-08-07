@@ -1,12 +1,13 @@
-package com.ho1ho.socket_sdk.framework
+package com.ho1ho.socket_sdk.framework.client
 
 import android.os.Handler
 import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ClientConnectListener
-import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
+import com.ho1ho.socket_sdk.framework.base.BaseNetty
+import com.ho1ho.socket_sdk.framework.base.ClientConnectStatus
+import com.ho1ho.socket_sdk.framework.client.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -73,17 +74,22 @@ abstract class BaseNettyClient protected constructor(
         .handler(LoggingHandler(LogLevel.INFO))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
+        .option(
+            ChannelOption.CONNECT_TIMEOUT_MILLIS,
+            CONNECTION_TIMEOUT_IN_MILLS
+        )
     private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
-    var defaultInboundHandler: BaseChannelInboundHandler<*>? = null
+    var defaultInboundHandler: BaseClientChannelInboundHandler<*>? = null
         protected set
 
     @Volatile
     var disconnectManually = false
 
     @Volatile
-    internal var connectState: AtomicReference<ClientConnectStatus> = AtomicReference(ClientConnectStatus.UNINITIALIZED)
+    internal var connectState: AtomicReference<ClientConnectStatus> = AtomicReference(
+        ClientConnectStatus.UNINITIALIZED
+    )
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
     var retryTimes = AtomicInteger(0)
@@ -94,7 +100,7 @@ abstract class BaseNettyClient protected constructor(
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
-    fun initHandler(handler: BaseChannelInboundHandler<*>?) {
+    fun initHandler(handler: BaseClientChannelInboundHandler<*>?) {
         defaultInboundHandler = handler
         channelInitializer = object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(socketChannel: SocketChannel) {

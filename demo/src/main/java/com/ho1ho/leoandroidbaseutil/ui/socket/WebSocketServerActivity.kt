@@ -38,11 +38,13 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onStarted(netty: BaseNettyServer) {
             LLog.i(TAG, "onStarted")
             ToastUtil.showDebugToast("onStarted")
+            runOnUiThread { txtResponse.text = "Server started" }
         }
 
-        override fun onStopped(netty: BaseNettyServer) {
+        override fun onStopped() {
             LLog.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
+            runOnUiThread { txtResponse.text = "Server stopped" }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -86,13 +88,13 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     fun onStopServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            webSocketServer.stopServer()
+            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
         }
     }
 
     override fun onDestroy() {
         cs.launch {
-            webSocketServer.stopServer()
+            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
         }
         super.onDestroy()
     }

@@ -54,10 +54,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
             runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
-            (netty.defaultServerInboundHandler as WebSocketServerHandler).responseClientMsg(
-                clientChannel,
-                "Server received: $data"
-            )
+            webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -110,12 +107,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             val receivedString: String?
             val frame = msg as WebSocketFrame
             receivedString = when (frame) {
-                is TextWebSocketFrame -> {
-                    frame.text()
-                }
-                is PongWebSocketFrame -> {
-                    frame.content().toString(Charset.forName("UTF-8"))
-                }
+                is TextWebSocketFrame -> frame.text()
+                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
                 else -> null
             }
             netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)

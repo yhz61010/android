@@ -7,14 +7,14 @@ import io.netty.channel.Channel
  * Author: Michael Leo
  * Date: 20-8-6 下午6:25
  */
-interface ServerConnectListener {
+interface ServerConnectListener<in T : BaseNetty> {
 
-    fun onStarted(netty: BaseNetty)
-    fun onStopped(netty: BaseNetty)
-    fun onStartFailed(netty: BaseNetty, code: Int, msg: String?)
-    fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?)
-    fun onClientConnected(netty: BaseNetty, clientChannel: Channel)
-    fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel)
+    fun onStarted(netty: T)
+    fun onStopped(netty: T)
+    fun onStartFailed(netty: T, code: Int, msg: String?)
+    fun onReceivedData(netty: T, clientChannel: Channel, data: Any?)
+    fun onClientConnected(netty: T, clientChannel: Channel)
+    fun onClientDisconnected(netty: T, clientChannel: Channel)
 
     companion object {
         const val CONNECTION_ERROR_ALREADY_RELEASED = 0x8000

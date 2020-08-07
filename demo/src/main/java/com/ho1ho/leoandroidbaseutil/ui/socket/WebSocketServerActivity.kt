@@ -8,7 +8,6 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyServer
 import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
@@ -35,34 +34,38 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     private lateinit var webSocketServer: WebSocketServer
     private lateinit var webSocketServerHandler: WebSocketServerHandler
 
-    private val connectionListener = object : ServerConnectListener {
-        override fun onStarted(netty: BaseNetty) {
+    private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
+        override fun onStarted(netty: BaseNettyServer) {
             LLog.i(TAG, "onStarted")
             ToastUtil.showDebugToast("onStarted")
         }
 
-        override fun onStopped(netty: BaseNetty) {
+        override fun onStopped(netty: BaseNettyServer) {
             LLog.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
         }
 
-        override fun onClientConnected(netty: BaseNetty, clientChannel: Channel) {
+        override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
         }
 
         @SuppressLint("SetTextI18n")
-        override fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?) {
+        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
             runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
+            (netty.defaultServerInboundHandler as WebSocketServerHandler).responseClientMsg(
+                clientChannel,
+                "Server received: $data"
+            )
         }
 
-        override fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel) {
+        override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
         }
 
-        override fun onStartFailed(netty: BaseNetty, code: Int, msg: String?) {
+        override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
         }
@@ -99,7 +102,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener) : BaseNettyServer(port, connectionListener, true)
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
 
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
@@ -118,8 +121,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }
 
-        fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand(msg)
+        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
+            return netty.executeCommand(clientChannel, msg)
         }
 
         override fun release() {

@@ -8,7 +8,7 @@ import io.netty.channel.ChannelHandlerContext
  */
 abstract class BaseNetty
 
-interface ReadSocketDataListener<T> {
+interface ReadSocketDataListener<in T> {
     fun onReceivedData(ctx: ChannelHandlerContext, msg: T)
 }
 

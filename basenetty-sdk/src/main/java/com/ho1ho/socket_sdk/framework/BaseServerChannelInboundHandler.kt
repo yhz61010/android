@@ -4,10 +4,13 @@ import com.ho1ho.androidbase.utils.LLog
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.channel.group.ChannelGroup
+import io.netty.channel.group.DefaultChannelGroup
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.websocketx.*
 import io.netty.util.CharsetUtil
+import io.netty.util.concurrent.GlobalEventExecutor
 import java.io.IOException
 import java.net.URI
 
@@ -17,6 +20,10 @@ import java.net.URI
  */
 abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) : SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
+
+    // All client channels
+    @Suppress("WeakerAccess")
+    val clients: ChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
     private var channelPromise: ChannelPromise? = null
     private var handshaker: WebSocketClientHandshaker? = null
@@ -40,7 +47,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         LLog.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
         // Add active client to server
         val clientChannel = ctx.channel()
-        netty.clients.add(clientChannel)
+        clients.add(clientChannel)
 //        caughtException = false
 //        netty.retryTimes.set(0)
 //        netty.disconnectManually = false
@@ -56,7 +63,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LLog.w(tag, "===== Client disconnected: ${ctx.channel().remoteAddress()} caughtException=$caughtException =====")
         val clientChannel = ctx.channel()
-        netty.clients.remove(clientChannel)
+        clients.remove(clientChannel)
         if (netty.isWebSocket) {
             handshaker?.close(clientChannel, CloseWebSocketFrame())
         }

@@ -1,12 +1,8 @@
 package com.ho1ho.socket_sdk.framework
 
-import android.os.Handler
-import android.os.HandlerThread
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
-import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -29,7 +25,6 @@ import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.concurrent.GlobalEventExecutor
 import java.util.concurrent.RejectedExecutionException
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -39,7 +34,6 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class BaseNettyServer protected constructor(
     private val port: Int,
     val connectionListener: ServerConnectListener,
-    private val retryStrategy: RetryStrategy = ConstantRetry(),
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/ws"
 ) : BaseNetty() {
@@ -70,13 +64,7 @@ abstract class BaseNettyServer protected constructor(
         protected set
 
     @Volatile
-    var stopManually = false
-
-    @Volatile
     internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(ServerConnectStatus.UNINITIALIZED)
-    private val retryThread = HandlerThread("retry-thread").apply { start() }
-    private val retryHandler = Handler(retryThread.looper)
-    var retryTimes = AtomicInteger(0)
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
@@ -139,73 +127,27 @@ abstract class BaseNettyServer protected constructor(
             // However, if netty client had been release, call [connect] again will cause exception.
             // So we handle it here.
             connectState.set(ServerConnectStatus.FAILED)
-            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
+            connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: Exception) {
             connectState.set(ServerConnectStatus.FAILED)
-            connectionListener.onFailed(this, ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR, e.message)
-            doRetry()
-        }
-    }
-
-    /**
-     * After calling this method, you can reuse it again by calling [connect].
-     * If you don't want to reconnect it anymore, do not forget to call [release].
-     *
-     * **Remember**, If you call this method, it will not trigger retry process.
-     */
-    fun stopServer(): Boolean {
-        LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ServerConnectStatus.STARTED != connectState.get() || ServerConnectStatus.STOPPED == connectState.get()) {
-            LLog.w(tag, "Server is not started or already stopped or not initialized.")
-            return false
-        }
-        stopManually = true
-        // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
-        // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
-        // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
-        connectState.set(ServerConnectStatus.STOPPED)
-        stopRetryHandler()
-        kotlin.runCatching {
-            channel.disconnect().syncUninterruptibly()
-        }.onFailure { LLog.e(tag, "stopServer error.", it) }
-        connectionListener.onStopped(this)
-        return true
-    }
-
-    fun doRetry() {
-        retryTimes.getAndIncrement()
-        if (retryTimes.get() > retryStrategy.getMaxTimes()) {
-            LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
-            stopRetryHandler()
-            connectState.set(ServerConnectStatus.FAILED)
-            connectionListener.onFailed(
-                this@BaseNettyServer,
-                ServerConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
-                "Exceed max retry times."
-            )
-        } else {
-            LLog.w(tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}")
-            retryHandler.postDelayed({ startServer() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
+            connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR, e.message)
         }
     }
 
     /**
      * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.) So you'd better NOT call this method in main thread.
      *
-     * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
+     * Once you call [stopServer], you can not reconnect it again by calling [connect], you must create netty client again.
      * If you want to reconnect it again, do not call this method, just call [stopServer].
      */
-    fun release(): Boolean {
-        LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
+    fun stopServer(): Boolean {
+        LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
         if (!::channel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return false
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
-        stopManually = true
         LLog.w(tag, "Releasing retry handler...")
-        stopRetryHandler()
-        retryThread.quitSafely()
 
         LLog.w(tag, "Releasing default socket handler first...")
         defaultServerInboundHandler?.release()
@@ -234,12 +176,6 @@ abstract class BaseNettyServer protected constructor(
         }
         LLog.w(tag, "=====> Server released <=====")
         return true
-    }
-
-    private fun stopRetryHandler() {
-        retryHandler.removeCallbacksAndMessages(null)
-        retryThread.interrupt()
-        retryTimes.set(0)
     }
 
     // ================================================

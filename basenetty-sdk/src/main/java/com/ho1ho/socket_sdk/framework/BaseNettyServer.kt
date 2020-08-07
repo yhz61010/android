@@ -36,7 +36,6 @@ abstract class BaseNettyServer protected constructor(
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/ws"
 ) : BaseNetty() {
-    // InetSocketAddress(port).hostString, port, connectionListener, retryStrategy
 
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
@@ -99,7 +98,7 @@ abstract class BaseNettyServer protected constructor(
     }
 
     /**
-     * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
+     * If server has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
 //    @Throws(RejectedExecutionException::class)
     @Synchronized
@@ -121,10 +120,6 @@ abstract class BaseNettyServer protected constructor(
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
             LLog.e(tag, "Netty server had already been released. You must re-initialize it again.")
-            // If connection has been connected before, [channelInactive] will be called, so the status and
-            // listener will be triggered at that time.
-            // However, if netty client had been release, call [connect] again will cause exception.
-            // So we handle it here.
             connectState.set(ServerConnectStatus.FAILED)
             connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: Exception) {
@@ -163,12 +158,10 @@ abstract class BaseNettyServer protected constructor(
         bossGroup.run {
             LLog.w(tag, "Releasing bossGroup...")
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-//            shutdownGracefully()
         }
         workerGroup.run {
             LLog.w(tag, "Releasing workerGroup...")
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-//            shutdownGracefully()
         }
         LLog.w(tag, "=====> Server released <=====")
         connectState.set(ServerConnectStatus.STOPPED)

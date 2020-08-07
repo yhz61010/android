@@ -72,11 +72,6 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
                 LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
-
-            override fun onException(netty: BaseNetty, cause: Throwable) {
-                LLog.e(TAG, "onCaughtException reason: ${cause.message}")
-                ToastUtil.showDebugToast("onCaughtException")
-            }
         }
 
         webSocketServer = WebSocketServer(10010, connectionListener, ConstantRetry(10, 2000))

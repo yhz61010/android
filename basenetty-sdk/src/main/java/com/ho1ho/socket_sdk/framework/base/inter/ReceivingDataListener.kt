@@ -1,4 +1,4 @@
-package com.ho1ho.socket_sdk.framework.inter
+package com.ho1ho.socket_sdk.framework.base.inter
 
 /**
  * Author: Michael Leo

@@ -1,8 +1,9 @@
-package com.ho1ho.socket_sdk.framework
+package com.ho1ho.socket_sdk.framework.server
 
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
+import com.ho1ho.socket_sdk.framework.base.BaseNetty
+import com.ho1ho.socket_sdk.framework.base.ServerConnectStatus
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -52,7 +53,10 @@ abstract class BaseNettyServer protected constructor(
         .option(ChannelOption.SO_BACKLOG, 1024)
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
-        .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
+        .childOption(
+            ChannelOption.CONNECT_TIMEOUT_MILLIS,
+            CONNECTION_TIMEOUT_IN_MILLS
+        )
 
     private lateinit var serverChannel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
@@ -60,7 +64,9 @@ abstract class BaseNettyServer protected constructor(
         protected set
 
     @Volatile
-    internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(ServerConnectStatus.UNINITIALIZED)
+    internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(
+        ServerConnectStatus.UNINITIALIZED
+    )
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 

@@ -1,6 +1,7 @@
 package com.ho1ho.socket_sdk.framework
 
 import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -28,9 +29,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     private var channelPromise: ChannelPromise? = null
     private var handshaker: WebSocketClientHandshaker? = null
 
-    @Volatile
-    private var caughtException = false
-
     abstract fun release()
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
@@ -45,15 +43,9 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
-        // Add active client to server
         val clientChannel = ctx.channel()
+        // Add active client to server
         clients.add(clientChannel)
-//        caughtException = false
-//        netty.retryTimes.set(0)
-//        netty.disconnectManually = false
-//        if (netty.isWebSocket) {
-//            handshaker?.handshake(ctx.channel())
-//        }
         super.channelActive(ctx)
         netty.connectState.set(ServerConnectStatus.CLIENT_CONNECTED)
         netty.connectionListener.onClientConnected(netty, clientChannel)
@@ -61,7 +53,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        LLog.w(tag, "===== Client disconnected: ${ctx.channel().remoteAddress()} caughtException=$caughtException =====")
+        LLog.w(tag, "===== Client disconnected: ${ctx.channel().remoteAddress()} =====")
         val clientChannel = ctx.channel()
         clients.remove(clientChannel)
         if (netty.isWebSocket) {
@@ -71,25 +63,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
         netty.connectState.set(ServerConnectStatus.CLIENT_DISCONNECTED)
         netty.connectionListener.onClientDisconnected(netty, clientChannel)
-
-//        if (!caughtException) {
-//            if (netty.stopManually) {
-//                netty.connectState.set(ServerConnectStatus.CLIENT_DISCONNECTED)
-//                netty.connectionListener.onClientDisconnected(netty, clientChannel)
-//            } else { // Client disconnect
-//                netty.connectState.set(ServerConnectStatus.FAILED)
-//                netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Client disconnect")
-//            }
-//            LLog.w(tag, "=====> Socket disconnected <=====")
-//        } else {
-//            LLog.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
-//        }
     }
 
-    /**
-     * According to the [official example](https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime/UptimeClientHandler.java), if connection is disconnected after connecting,
-     * reconnect it here.
-     */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Channel is unregistered from EventLoop =====")
         super.channelUnregistered(ctx)
@@ -104,11 +79,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
      * Call [ctx.close().syncUninterruptibly()] synchronized.
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        if (caughtException) {
-            LLog.e(tag, "exceptionCaught had been triggered. Do not fire it again.")
-            return
-        }
-        caughtException = true
         val exceptionType = when (cause) {
             is IOException -> "IOException"
             is IllegalArgumentException -> "IllegalArgumentException"
@@ -125,14 +95,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 //        }
         ctx.close().syncUninterruptibly()
 
-//        if ("IOException" == exceptionType) {
-//            netty.connectState.set(ServerConnectStatus.FAILED)
-//            netty.connectionListener.onFailed(netty, ServerConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-//            netty.doRetry()
-//        } else {
-//            netty.connectState.set(ServerConnectStatus.EXCEPTION)
-//            netty.connectionListener.onException(netty, cause)
-//        }
+        netty.connectState.set(ServerConnectStatus.FAILED)
+        netty.connectionListener.onStartFailed(netty, ServerConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Caught exception")
 
         LLog.e(tag, "============================")
     }

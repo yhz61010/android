@@ -7,9 +7,9 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.socket_sdk.framework.BaseNettyServer
-import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
-import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
+import com.ho1ho.socket_sdk.framework.server.BaseNettyServer
+import com.ho1ho.socket_sdk.framework.server.BaseServerChannelInboundHandler
+import com.ho1ho.socket_sdk.framework.server.ServerConnectListener
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -58,7 +58,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\n$data";sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\n${clientChannel.remoteAddress()}: $data";sv.fullScroll(View.FOCUS_DOWN) }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 

@@ -1,6 +1,6 @@
-package com.ho1ho.socket_sdk.framework.inter
+package com.ho1ho.socket_sdk.framework.client
 
-import com.ho1ho.socket_sdk.framework.BaseNetty
+import com.ho1ho.socket_sdk.framework.base.BaseNetty
 
 /**
  * Author: Michael Leo

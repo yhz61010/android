@@ -1,1 +1,6 @@
-<manifest package="com.ho1ho.socket_sdk" />
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ho1ho.socket_sdk">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

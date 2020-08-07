@@ -131,8 +131,8 @@ abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) 
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
             netty.doRetry()
         } else {
-            netty.connectState.set(ClientConnectStatus.EXCEPTION)
-            netty.connectionListener.onException(netty, cause)
+            netty.connectState.set(ClientConnectStatus.FAILED)
+            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error")
         }
 
         LLog.e(tag, "============================")

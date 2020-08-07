@@ -15,7 +15,6 @@ interface ServerConnectListener {
     fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?)
     fun onClientConnected(netty: BaseNetty, clientChannel: Channel)
     fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel)
-    fun onException(netty: BaseNetty, cause: Throwable)
 
     //    fun onConnectionTimeout()
 

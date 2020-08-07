@@ -135,10 +135,10 @@ abstract class BaseNettyServer protected constructor(
     }
 
     /**
-     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.) So you'd better NOT call this method in main thread.
+     * Stop and release server using **syncUninterruptibly** method.(Full release will cost almost 4s.) So you'd better NOT call this method in main thread.
      *
-     * Once you call [stopServer], you can not reconnect it again by calling [connect], you must create netty client again.
-     * If you want to reconnect it again, do not call this method, just call [stopServer].
+     * Once you call this method, you can not start server again simply by calling [startServer] because of the Server Netty object will be released.
+     * If you want to start server again, you must recreate the Server Netty object.
      */
     fun stopServer(): Boolean {
         LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")

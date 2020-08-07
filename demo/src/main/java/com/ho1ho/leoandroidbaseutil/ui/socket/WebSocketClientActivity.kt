@@ -58,11 +58,6 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
-
-            override fun onException(netty: BaseNetty, cause: Throwable) {
-                LLog.e(TAG, "onCaughtException reason: ${cause.message}")
-                ToastUtil.showDebugToast("onCaughtException")
-            }
         }
 
         webSocketClient = WebSocketClient(URI("ws://10.10.9.64:10010/ws"), connectionListener, ConstantRetry(10, 2000))

@@ -106,15 +106,15 @@ abstract class BaseNettyServer protected constructor(
     fun startServer() {
         LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
         if (connectState.get() == ServerConnectStatus.STARTED) {
-            LLog.w(tag, "===== Already started =====")
+            LLog.w(tag, "===== Already started or not initialized =====")
             return
         }
         try {
             serverChannel = bootstrap.bind(port).sync().channel()
-            serverChannel.closeFuture().sync()
             connectState.set(ServerConnectStatus.STARTED)
-            LLog.i(tag, "===== Connect success on ${serverChannel.localAddress()} =====")
+            LLog.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
+            serverChannel.closeFuture().sync()
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
             LLog.e(tag, "Netty server had already been released. You must re-initialize it again.")
@@ -138,7 +138,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun stopServer(): Boolean {
         LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
-        if (ServerConnectStatus.UNINITIALIZED == connectState.get()) {
+        if (!::serverChannel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return false
         }
@@ -170,6 +170,8 @@ abstract class BaseNettyServer protected constructor(
 //            shutdownGracefully()
         }
         LLog.w(tag, "=====> Server released <=====")
+        connectState.set(ServerConnectStatus.STOPPED)
+        connectionListener.onStopped()
         return true
     }
 

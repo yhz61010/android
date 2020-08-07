@@ -12,8 +12,6 @@ import com.ho1ho.socket_sdk.framework.BaseNetty
 import com.ho1ho.socket_sdk.framework.BaseNettyServer
 import com.ho1ho.socket_sdk.framework.BaseServerChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
-import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -37,51 +35,50 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     private lateinit var webSocketServer: WebSocketServer
     private lateinit var webSocketServerHandler: WebSocketServerHandler
 
+    private val connectionListener = object : ServerConnectListener {
+        override fun onStarted(netty: BaseNetty) {
+            LLog.i(TAG, "onStarted")
+            ToastUtil.showDebugToast("onStarted")
+        }
+
+        override fun onStopped(netty: BaseNetty) {
+            LLog.i(TAG, "onStop")
+            ToastUtil.showDebugToast("onStop")
+        }
+
+        override fun onClientConnected(netty: BaseNetty, clientChannel: Channel) {
+            LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
+            ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
+        }
+
+        @SuppressLint("SetTextI18n")
+        override fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?) {
+            LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
+            runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
+        }
+
+        override fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel) {
+            LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
+            ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
+        }
+
+        override fun onStartFailed(netty: BaseNetty, code: Int, msg: String?) {
+            LLog.w(TAG, "onFailed code: $code message: $msg")
+            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_socket_server)
-
-        val connectionListener = object : ServerConnectListener {
-            override fun onStarted(netty: BaseNetty) {
-                LLog.i(TAG, "onStarted")
-                ToastUtil.showDebugToast("onStarted")
-            }
-
-            override fun onStopped(netty: BaseNetty) {
-                LLog.i(TAG, "onStop")
-                ToastUtil.showDebugToast("onStop")
-            }
-
-            override fun onClientConnected(netty: BaseNetty, clientChannel: Channel) {
-                LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
-                ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
-            }
-
-            @SuppressLint("SetTextI18n")
-            override fun onReceivedData(netty: BaseNetty, clientChannel: Channel, data: Any?) {
-                LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
-                runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
-            }
-
-            override fun onClientDisconnected(netty: BaseNetty, clientChannel: Channel) {
-                LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
-                ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
-            }
-
-            override fun onFailed(netty: BaseNetty, code: Int, msg: String?) {
-                LLog.w(TAG, "onFailed code: $code message: $msg")
-                ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            }
-        }
-
-        webSocketServer = WebSocketServer(10010, connectionListener, ConstantRetry(10, 2000))
-        webSocketServerHandler = WebSocketServerHandler(webSocketServer)
-        webSocketServer.initHandler(webSocketServerHandler)
     }
 
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
+                webSocketServer = WebSocketServer(10010, connectionListener)
+                webSocketServerHandler = WebSocketServerHandler(webSocketServer)
+                webSocketServer.initHandler(webSocketServerHandler)
                 webSocketServer.startServer()
             }
         }
@@ -93,23 +90,16 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         }
     }
 
-    fun onReleaseServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch {
-            webSocketServer.release()
-        }
-    }
-
     override fun onDestroy() {
         cs.launch {
-            webSocketServer.release()
+            webSocketServer.stopServer()
         }
         super.onDestroy()
     }
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener, retryStrategy: RetryStrategy) :
-        BaseNettyServer(port, connectionListener, retryStrategy, true)
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener) : BaseNettyServer(port, connectionListener, true)
 
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
@@ -123,9 +113,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
                 is PongWebSocketFrame -> {
                     frame.content().toString(Charset.forName("UTF-8"))
                 }
-                else -> {
-                    null
-                }
+                else -> null
             }
             netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }

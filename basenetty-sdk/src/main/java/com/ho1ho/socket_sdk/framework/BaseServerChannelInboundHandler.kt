@@ -54,10 +54,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        LLog.w(
-            tag,
-            "===== Client disconnected: ${ctx.channel().remoteAddress()} stopManually=${netty.stopManually} caughtException=$caughtException ====="
-        )
+        LLog.w(tag, "===== Client disconnected: ${ctx.channel().remoteAddress()} caughtException=$caughtException =====")
         val clientChannel = ctx.channel()
         netty.clients.remove(clientChannel)
         if (netty.isWebSocket) {

@@ -46,7 +46,7 @@ abstract class BaseNettyServer protected constructor(
     // InetSocketAddress(port).hostString, port, connectionListener, retryStrategy
 
     companion object {
-        const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
+        private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }
 
     private val tag = javaClass.simpleName

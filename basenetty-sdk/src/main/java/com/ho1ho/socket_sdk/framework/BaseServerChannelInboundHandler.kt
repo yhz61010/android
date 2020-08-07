@@ -190,6 +190,20 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         onReceivedData(ctx, msg)
     }
 
+    /**
+     * WebSocket request is something like this:
+     *
+     * GET ws://websocket.example.com/ HTTP/1.1
+     * Origin: http://example.com
+     * Connection: Upgrade
+     * Host: websocket.example.com
+     * Upgrade: websocket
+     *
+     * HTTP/1.1 101 WebSocket Protocol Handshake
+     * Date: Sun, 20 Nov 2016 12:45:56 GMT
+     * Connection: Upgrade
+     * Upgrade: WebSocket
+     */
     private fun handleHttpRequest(ctx: ChannelHandlerContext, msg: FullHttpResponse) {
         if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
             if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {

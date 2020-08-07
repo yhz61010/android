@@ -47,7 +47,7 @@ abstract class BaseNettyClient protected constructor(
     private val retryStrategy: RetryStrategy = ConstantRetry()
 ) : BaseNetty() {
     companion object {
-        const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
+        private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }
 
     private val tag = javaClass.simpleName

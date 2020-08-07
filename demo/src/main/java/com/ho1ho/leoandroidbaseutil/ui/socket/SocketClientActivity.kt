@@ -53,12 +53,6 @@ class SocketActivity : BaseDemonstrationActivity() {
                 LLog.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }
-
-            override fun onException(netty: BaseNetty, cause: Throwable) {
-                LLog.e(TAG, "onCaughtException reason: ${cause.message}")
-                ToastUtil.showDebugToast("onCaughtException")
-            }
-
         }
 
         socketClient = SocketClient("61010.ml", 9443, connectionListener, ExponentRetry(5, 1))

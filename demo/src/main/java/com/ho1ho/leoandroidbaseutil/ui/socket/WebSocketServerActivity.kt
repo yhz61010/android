@@ -3,7 +3,6 @@ package com.ho1ho.leoandroidbaseutil.ui.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
@@ -23,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.charset.Charset
 
+@SuppressLint("SetTextI18n")
 class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     companion object {
@@ -38,38 +38,37 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onStarted(netty: BaseNettyServer) {
             LLog.i(TAG, "onStarted")
             ToastUtil.showDebugToast("onStarted")
-            runOnUiThread { txtResponse.text = "Server started\n" }
+            runOnUiThread { txtResponse.text = "Server started" }
         }
 
         override fun onStopped() {
             LLog.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
-            runOnUiThread { txtResponse.text = "\nServer stopped" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nServer stopped" }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
-            runOnUiThread { txtResponse.text = "\nClient connected: ${clientChannel.remoteAddress()}" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}" }
         }
 
-        @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
-            LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: ${data?.toJsonString()}")
-            runOnUiThread { txtResponse.text = txtResponse.text.toString() + data?.toJsonString() + "\n" }
+            LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\n$data" }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
-            runOnUiThread { txtResponse.text = "\nClient disconnected: ${clientChannel.remoteAddress()}" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}" }
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            runOnUiThread { txtResponse.text = "\nStart failed $code $msg" }
+            runOnUiThread { txtResponse.text = "${txtResponse.text}\nStart failed $code $msg" }
         }
     }
 

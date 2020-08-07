@@ -1,7 +1,8 @@
-package com.ho1ho.socket_sdk.framework
+package com.ho1ho.socket_sdk.framework.client
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ClientConnectListener
+import com.ho1ho.socket_sdk.framework.base.ClientConnectStatus
+import com.ho1ho.socket_sdk.framework.base.ReadSocketDataListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -15,7 +16,8 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseChannelInboundHandler<T>(private val netty: BaseNettyClient) : SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyClient) : SimpleChannelInboundHandler<T>(),
+    ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
     private var channelPromise: ChannelPromise? = null

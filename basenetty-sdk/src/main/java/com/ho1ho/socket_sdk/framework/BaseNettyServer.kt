@@ -153,11 +153,11 @@ abstract class BaseNettyServer protected constructor(
      *
      * **Remember**, If you call this method, it will not trigger retry process.
      */
-    fun stopServer() {
+    fun stopServer(): Boolean {
         LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
         if (!::channel.isInitialized || ServerConnectStatus.STARTED != connectState.get() || ServerConnectStatus.STOPPED == connectState.get()) {
             LLog.w(tag, "Server is not started or already stopped or not initialized.")
-            return
+            return false
         }
         stopManually = true
         // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
@@ -165,8 +165,11 @@ abstract class BaseNettyServer protected constructor(
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
         connectState.set(ServerConnectStatus.STOPPED)
         stopRetryHandler()
-        channel.disconnect().syncUninterruptibly()
+        kotlin.runCatching {
+            channel.disconnect().syncUninterruptibly()
+        }.onFailure { LLog.e(tag, "stopServer error.", it) }
         connectionListener.onStopped(this)
+        return true
     }
 
     fun doRetry() {
@@ -192,11 +195,11 @@ abstract class BaseNettyServer protected constructor(
      * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
      * If you want to reconnect it again, do not call this method, just call [stopServer].
      */
-    fun release() {
+    fun release(): Boolean {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
         if (!::channel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
-            return
+            return false
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
         stopManually = true
@@ -230,6 +233,7 @@ abstract class BaseNettyServer protected constructor(
 //            shutdownGracefully()
         }
         LLog.w(tag, "=====> Server released <=====")
+        return true
     }
 
     private fun stopRetryHandler() {

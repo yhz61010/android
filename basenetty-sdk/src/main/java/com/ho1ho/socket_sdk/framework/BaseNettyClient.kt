@@ -138,7 +138,7 @@ abstract class BaseNettyClient protected constructor(
 //    }
 
     /**
-     * If netty client has already been release, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
+     * If netty client has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
 //    @Throws(RejectedExecutionException::class)
     @Synchronized

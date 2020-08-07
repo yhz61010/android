@@ -8,11 +8,11 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
-import com.ho1ho.socket_sdk.framework.BaseChannelInboundHandler
-import com.ho1ho.socket_sdk.framework.BaseNettyClient
-import com.ho1ho.socket_sdk.framework.inter.ClientConnectListener
-import com.ho1ho.socket_sdk.framework.retry_strategy.ConstantRetry
-import com.ho1ho.socket_sdk.framework.retry_strategy.base.RetryStrategy
+import com.ho1ho.socket_sdk.framework.client.BaseClientChannelInboundHandler
+import com.ho1ho.socket_sdk.framework.client.BaseNettyClient
+import com.ho1ho.socket_sdk.framework.client.ClientConnectListener
+import com.ho1ho.socket_sdk.framework.client.retry_strategy.ConstantRetry
+import com.ho1ho.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
@@ -112,7 +112,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         BaseNettyClient(webSocketUri, connectionListener, retryStrategy)
 
     @ChannelHandler.Sharable
-    class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseChannelInboundHandler<Any>(netty) {
+    class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame

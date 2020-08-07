@@ -1,7 +1,8 @@
-package com.ho1ho.socket_sdk.framework
+package com.ho1ho.socket_sdk.framework.server
 
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.socket_sdk.framework.inter.ServerConnectListener
+import com.ho1ho.socket_sdk.framework.base.ReadSocketDataListener
+import com.ho1ho.socket_sdk.framework.base.ServerConnectStatus
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -19,7 +20,8 @@ import java.net.URI
  * Author: Michael Leo
  * Date: 20-8-5 下午8:18
  */
-abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) : SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) : SimpleChannelInboundHandler<T>(),
+    ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
     // All client channels

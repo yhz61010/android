@@ -35,14 +35,7 @@ enum class ClientConnectStatus {
      *
      * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */
-    FAILED,
-
-    /**
-     * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
-     *
-     * Once connecting is in this status, [DISCONNECTED] and [FAILED] listeners will **NOT** be triggered either.
-     */
-    EXCEPTION
+    FAILED
 }
 
 
@@ -72,12 +65,5 @@ enum class ServerConnectStatus {
      *
      * Once connecting is in this status, [CLIENT_DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
      */
-    FAILED,
-
-    /**
-     * After connecting server successfully, if any error occurred while connecting, for example: Network disconnected, this status will be assigned.
-     *
-     * Once connecting is in this status, [CLIENT_DISCONNECTED] and [FAILED] listeners will **NOT** be triggered either.
-     */
-    EXCEPTION
+    FAILED
 }

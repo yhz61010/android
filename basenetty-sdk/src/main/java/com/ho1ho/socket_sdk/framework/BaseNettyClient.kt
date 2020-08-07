@@ -191,13 +191,17 @@ abstract class BaseNettyClient protected constructor(
      * After calling this method, you can reuse it again by calling [connect].
      * If you don't want to reconnect it anymore, do not forget to call [release].
      *
+     * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and any exception will be ignored.
+     *
      * **Remember**, If you call this method, it will not trigger retry process.
      */
-    fun disconnectManually() {
+    fun disconnectManually(): Boolean {
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ClientConnectStatus.CONNECTED != connectState.get() || ClientConnectStatus.DISCONNECTED == connectState.get()) {
+        if (ClientConnectStatus.DISCONNECTED == connectState.get()
+            || ClientConnectStatus.UNINITIALIZED == connectState.get()
+        ) {
             LLog.w(tag, "Socket is not connected or already disconnected or not initialized.")
-            return
+            return false
         }
         disconnectManually = true
         // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
@@ -205,7 +209,8 @@ abstract class BaseNettyClient protected constructor(
         // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
         connectState.set(ClientConnectStatus.DISCONNECTED)
         stopRetryHandler()
-        channel.disconnect().syncUninterruptibly()
+        kotlin.runCatching { channel.disconnect().syncUninterruptibly() }.onFailure { LLog.e(tag, "disconnectManually error.", it) }
+        return true
     }
 
     fun doRetry() {
@@ -220,22 +225,28 @@ abstract class BaseNettyClient protected constructor(
                 "Exceed max retry times."
             )
         } else {
-            LLog.w(tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}")
+            LLog.w(
+                tag,
+                "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}"
+            )
             retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
         }
     }
 
     /**
-     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.) So you'd better NOT call this method in main thread.
+     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.)
+     * So you'd better NOT call this method in main thread.
      *
      * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
      * If you want to reconnect it again, do not call this method, just call [disconnectManually].
+     *
+     * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and any exception will be ignored.
      */
-    fun release() {
+    fun release(): Boolean {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
         if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
-            return
+            return false
         }
         connectState.set(ClientConnectStatus.UNINITIALIZED)
         disconnectManually = true
@@ -264,6 +275,7 @@ abstract class BaseNettyClient protected constructor(
 //            shutdownGracefully()
         }
         LLog.w(tag, "=====> Socket released <=====")
+        return true
     }
 
     private fun stopRetryHandler() {

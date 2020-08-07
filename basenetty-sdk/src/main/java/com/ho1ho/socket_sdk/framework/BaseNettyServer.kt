@@ -16,12 +16,11 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
+import io.netty.handler.logging.LogLevel
+import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.concurrent.GlobalEventExecutor
 import java.util.concurrent.RejectedExecutionException
@@ -53,12 +52,13 @@ abstract class BaseNettyServer protected constructor(
     private val bootstrap = ServerBootstrap()
         .group(bossGroup, workerGroup)
         .channel(NioServerSocketChannel::class.java)
+        .handler(LoggingHandler(LogLevel.INFO))
         .option(ChannelOption.SO_BACKLOG, 1024)
         .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
 
-    private lateinit var channel: Channel
+    private lateinit var serverChannel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultServerInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
@@ -113,11 +113,10 @@ abstract class BaseNettyServer protected constructor(
             return
         }
         try {
-            // Want to use asynchronous way? Tell me how.
-            val f = bootstrap.bind(port).sync()
-            channel = f.syncUninterruptibly().channel()
+            serverChannel = bootstrap.bind(port).sync().channel()
+            serverChannel.closeFuture().sync()
             connectState.set(ServerConnectStatus.STARTED)
-            LLog.i(tag, "===== Connect success on ${channel.localAddress()} =====")
+            LLog.i(tag, "===== Connect success on ${serverChannel.localAddress()} =====")
             connectionListener.onStarted(this)
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
@@ -142,7 +141,7 @@ abstract class BaseNettyServer protected constructor(
      */
     fun stopServer(): Boolean {
         LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
+        if (ServerConnectStatus.UNINITIALIZED == connectState.get()) {
             LLog.w(tag, "Already release or not initialized")
             return false
         }
@@ -153,12 +152,12 @@ abstract class BaseNettyServer protected constructor(
         defaultServerInboundHandler = null
         channelInitializer = null
 
-        channel.run {
+        serverChannel.run {
             LLog.w(tag, "Closing channel...")
             kotlin.runCatching {
                 pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-                closeFuture()
+//                closeFuture()
                 close().syncUninterruptibly()
             }.onFailure { LLog.e(tag, "Close channel error.", it) }
         }
@@ -180,10 +179,6 @@ abstract class BaseNettyServer protected constructor(
     // ================================================
 
     private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
-        if (!::channel.isInitialized) {
-            LLog.e(tag, "Channel is not initialized. Stop processing.")
-            return false
-        }
         if (cmd == null) {
             LLog.e(tag, "The command is null. Stop processing.")
             return false
@@ -193,10 +188,6 @@ abstract class BaseNettyServer protected constructor(
         }
         if (ServerConnectStatus.CLIENT_CONNECTED != connectState.get()) {
             LLog.e(tag, "Socket is not connected. Can not send command.")
-            return false
-        }
-        if (!channel.isActive) {
-            LLog.e(tag, "Can not execute cmd because of Channel is not active.")
             return false
         }
         return true
@@ -228,12 +219,13 @@ abstract class BaseNettyServer protected constructor(
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
-        if (isWebSocket) {
-            if (isPing) channel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
-        } else {
-            channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
-        }
+        // FIXME Add channel parameter
+//        if (isWebSocket) {
+//            if (isPing) serverChannel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+//            else serverChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+//        } else {
+//            serverChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+//        }
         return true
     }
 

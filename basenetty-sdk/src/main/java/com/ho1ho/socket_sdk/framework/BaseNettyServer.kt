@@ -155,8 +155,8 @@ abstract class BaseNettyServer protected constructor(
      */
     fun stopServer() {
         LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ServerConnectStatus.STOPPED == connectState.get() || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
-            LLog.w(tag, "Already stopped or not initialized.")
+        if (!::channel.isInitialized || ServerConnectStatus.STARTED != connectState.get() || ServerConnectStatus.STOPPED == connectState.get()) {
+            LLog.w(tag, "Server is not started or already stopped or not initialized.")
             return
         }
         stopManually = true
@@ -198,6 +198,7 @@ abstract class BaseNettyServer protected constructor(
             LLog.w(tag, "Already release or not initialized")
             return
         }
+        connectState.set(ServerConnectStatus.UNINITIALIZED)
         stopManually = true
         LLog.w(tag, "Releasing retry handler...")
         stopRetryHandler()
@@ -210,10 +211,12 @@ abstract class BaseNettyServer protected constructor(
 
         channel.run {
             LLog.w(tag, "Closing channel...")
-            pipeline().removeAll { true }
+            kotlin.runCatching {
+                pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-            closeFuture()
-            close().syncUninterruptibly()
+                closeFuture()
+                close().syncUninterruptibly()
+            }.onFailure { LLog.e(tag, "Close channel error.", it) }
         }
 
         bossGroup.run {
@@ -226,8 +229,6 @@ abstract class BaseNettyServer protected constructor(
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
 //            shutdownGracefully()
         }
-
-        connectState.set(ServerConnectStatus.UNINITIALIZED)
         LLog.w(tag, "=====> Server released <=====")
     }
 

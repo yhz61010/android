@@ -38,18 +38,19 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onStarted(netty: BaseNettyServer) {
             LLog.i(TAG, "onStarted")
             ToastUtil.showDebugToast("onStarted")
-            runOnUiThread { txtResponse.text = "Server started" }
+            runOnUiThread { txtResponse.text = "Server started\n" }
         }
 
         override fun onStopped() {
             LLog.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
-            runOnUiThread { txtResponse.text = "Server stopped" }
+            runOnUiThread { txtResponse.text = "\nServer stopped" }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
+            runOnUiThread { txtResponse.text = "\nClient connected: ${clientChannel.remoteAddress()}" }
         }
 
         @SuppressLint("SetTextI18n")
@@ -62,11 +63,13 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
+            runOnUiThread { txtResponse.text = "\nClient disconnected: ${clientChannel.remoteAddress()}" }
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            runOnUiThread { txtResponse.text = "\nStart failed $code $msg" }
         }
     }
 

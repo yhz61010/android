@@ -58,7 +58,7 @@ abstract class BaseNettyClient protected constructor(
         retryStrategy: RetryStrategy = ConstantRetry()
     ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
         this.webSocketUri = webSocketUri
-        LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port}")
+        LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port} retry_strategy=$retryStrategy")
     }
 
     internal var webSocketUri: URI? = null

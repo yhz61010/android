@@ -25,7 +25,7 @@ enum class ClientConnectStatus {
     /**
      * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
      *
-     * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [DISCONNECTED] listener.
+     * **Attention:** [FAILED] and listeners will **NOT** trigger [DISCONNECTED] listener.
      */
     DISCONNECTED,
 
@@ -33,7 +33,7 @@ enum class ClientConnectStatus {
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
      * For example, server down, invalid ip or port, retry to connect failed.
      *
-     * Once connecting is in this status, [DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
+     * Once connecting is in this status, [DISCONNECTED] listeners will **NOT** be triggered.
      */
     FAILED
 }
@@ -55,7 +55,7 @@ enum class ServerConnectStatus {
     /**
      * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
      *
-     * **Attention:** [FAILED] and [EXCEPTION] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
+     * **Attention:** [FAILED] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
      */
     CLIENT_DISCONNECTED,
 
@@ -63,7 +63,7 @@ enum class ServerConnectStatus {
      * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
      * For example, server down, invalid ip or port, retry to connect failed.
      *
-     * Once connecting is in this status, [CLIENT_DISCONNECTED] and [EXCEPTION] listeners will **NOT** be triggered.
+     * Once connecting is in this status, [CLIENT_DISCONNECTED] listeners will **NOT** be triggered.
      */
     FAILED
 }

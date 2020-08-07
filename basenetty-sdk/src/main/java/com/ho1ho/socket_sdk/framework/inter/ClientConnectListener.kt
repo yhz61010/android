@@ -12,7 +12,6 @@ interface ClientConnectListener {
     fun onReceivedData(netty: BaseNetty, data: Any?)
     fun onDisconnected(netty: BaseNetty)
     fun onFailed(netty: BaseNetty, code: Int, msg: String?)
-    fun onException(netty: BaseNetty, cause: Throwable)
 
     //    fun onConnectionTimeout()
 

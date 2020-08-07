@@ -195,8 +195,8 @@ abstract class BaseNettyClient protected constructor(
      */
     fun disconnectManually() {
         LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ClientConnectStatus.DISCONNECTED == connectState.get() || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
-            LLog.w(tag, "Already disconnected or not initialized.")
+        if (!::channel.isInitialized || ClientConnectStatus.CONNECTED != connectState.get() || ClientConnectStatus.DISCONNECTED == connectState.get()) {
+            LLog.w(tag, "Socket is not connected or already disconnected or not initialized.")
             return
         }
         disconnectManually = true
@@ -237,6 +237,7 @@ abstract class BaseNettyClient protected constructor(
             LLog.w(tag, "Already release or not initialized")
             return
         }
+        connectState.set(ClientConnectStatus.UNINITIALIZED)
         disconnectManually = true
         LLog.w(tag, "Releasing retry handler...")
         stopRetryHandler()
@@ -249,10 +250,12 @@ abstract class BaseNettyClient protected constructor(
 
         channel.run {
             LLog.w(tag, "Closing channel...")
-            pipeline().removeAll { true }
+            kotlin.runCatching {
+                pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-            closeFuture()
-            close().syncUninterruptibly()
+                closeFuture()
+                close().syncUninterruptibly()
+            }.onFailure { LLog.e(tag, "Close channel error.", it) }
         }
 
         workerGroup.run {
@@ -260,8 +263,6 @@ abstract class BaseNettyClient protected constructor(
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
 //            shutdownGracefully()
         }
-
-        connectState.set(ClientConnectStatus.UNINITIALIZED)
         LLog.w(tag, "=====> Socket released <=====")
     }
 

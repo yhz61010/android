@@ -24,6 +24,8 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
+import io.netty.handler.logging.LogLevel
+import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
@@ -67,6 +69,8 @@ abstract class BaseNettyClient protected constructor(
     private val workerGroup = NioEventLoopGroup()
     private val bootstrap = Bootstrap()
         .group(workerGroup)
+        .channel(NioSocketChannel::class.java)
+        .handler(LoggingHandler(LogLevel.INFO))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
@@ -85,8 +89,7 @@ abstract class BaseNettyClient protected constructor(
     var retryTimes = AtomicInteger(0)
 
     init {
-        LLog.w(tag, "host=$host port=$port")
-        bootstrap.channel(NioSocketChannel::class.java)
+        LLog.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=$retryStrategy")
     }
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}

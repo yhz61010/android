@@ -147,7 +147,6 @@ abstract class BaseNettyServer protected constructor(
             return false
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
-        LLog.w(tag, "Releasing retry handler...")
 
         LLog.w(tag, "Releasing default socket handler first...")
         defaultServerInboundHandler?.release()

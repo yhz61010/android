@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class BaseNettyClient protected constructor(
     private val host: String,
     private val port: Int,
-    val connectionListener: ClientConnectListener,
+    val connectionListener: ClientConnectListener<BaseNettyClient>,
     private val retryStrategy: RetryStrategy = ConstantRetry()
 ) : BaseNetty() {
     companion object {
@@ -56,7 +56,7 @@ abstract class BaseNettyClient protected constructor(
 
     protected constructor(
         webSocketUri: URI,
-        connectionListener: ClientConnectListener,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy = ConstantRetry()
     ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
         this.webSocketUri = webSocketUri

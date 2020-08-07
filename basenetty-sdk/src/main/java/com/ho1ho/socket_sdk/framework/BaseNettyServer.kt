@@ -7,8 +7,6 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
-import io.netty.channel.group.ChannelGroup
-import io.netty.channel.group.DefaultChannelGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -16,13 +14,15 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.stream.ChunkedWriteHandler
-import io.netty.util.concurrent.GlobalEventExecutor
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicReference
 
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 abstract class BaseNettyServer protected constructor(
     private val port: Int,
-    val connectionListener: ServerConnectListener,
+    val connectionListener: ServerConnectListener<BaseNettyServer>,
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/ws"
 ) : BaseNetty() {
@@ -43,9 +43,6 @@ abstract class BaseNettyServer protected constructor(
     }
 
     private val tag = javaClass.simpleName
-
-    // All client channels
-    internal val clients: ChannelGroup = DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
     private val bossGroup = NioEventLoopGroup()
     private val workerGroup = NioEventLoopGroup()
@@ -178,7 +175,7 @@ abstract class BaseNettyServer protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmd: Any?): Boolean {
         if (cmd == null) {
             LLog.e(tag, "The command is null. Stop processing.")
             return false
@@ -186,8 +183,8 @@ abstract class BaseNettyServer protected constructor(
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("Command must be either String or ByteArray.")
         }
-        if (ServerConnectStatus.CLIENT_CONNECTED != connectState.get()) {
-            LLog.e(tag, "Socket is not connected. Can not send command.")
+        if (!clientChannel.isActive) {
+            LLog.e(tag, "Client channel is not active. Can not send command.")
             return false
         }
         return true
@@ -196,8 +193,8 @@ abstract class BaseNettyServer protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmd: Any?, showLog: Boolean, isPing: Boolean): Boolean {
-        if (!isValidExecuteCommandEnv(cmd)) {
+    private fun executeUnifiedCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean, isPing: Boolean): Boolean {
+        if (!isValidExecuteCommandEnv(clientChannel, cmd)) {
             return false
         }
         val stringCmd: String?
@@ -219,22 +216,21 @@ abstract class BaseNettyServer protected constructor(
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
-        // FIXME Add channel parameter
-//        if (isWebSocket) {
-//            if (isPing) serverChannel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-//            else serverChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
-//        } else {
-//            serverChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
-//        }
+        if (isWebSocket) {
+            if (isPing) clientChannel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+            else clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+        } else {
+            clientChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+        }
         return true
     }
 
     @JvmOverloads
-    fun executeCommand(cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(cmd, showLog, false)
+    fun executeCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showLog, false)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(cmd, showLog, true)
+    fun executePingCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showLog, true)
 
     // ================================================
 }

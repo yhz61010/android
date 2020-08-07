@@ -66,7 +66,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     override fun onDestroy() {
         cs.launch {
-            webSocketClient.release()
+            if (::webSocketClient.isInitialized) webSocketClient.release()
         }
         super.onDestroy()
     }
@@ -74,7 +74,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-                webSocketClient.connect()
+                if (::webSocketClient.isInitialized) webSocketClient.connect()
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -87,20 +87,22 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            val result = webSocketClientHandler.sendMsgToServer(editText.text.toString())
-            withContext(Dispatchers.Main) { editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+            if (::webSocketClientHandler.isInitialized) {
+                val result = webSocketClientHandler.sendMsgToServer(editText.text.toString())
+                withContext(Dispatchers.Main) { editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+            }
         }
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            webSocketClient.disconnectManually()
+            if (::webSocketClient.isInitialized) webSocketClient.disconnectManually()
         }
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            webSocketClient.release()
+            if (::webSocketClient.isInitialized) webSocketClient.release()
         }
     }
 

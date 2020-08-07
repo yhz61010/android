@@ -201,6 +201,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         }
         handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             // FIXME what about wss?
+//            msg.headers().get(HttpHeaderNames.HOST)
             URI("ws://${ctx.channel()}/${netty.webSocketPath}"),
             WebSocketVersion.V13,
             null,

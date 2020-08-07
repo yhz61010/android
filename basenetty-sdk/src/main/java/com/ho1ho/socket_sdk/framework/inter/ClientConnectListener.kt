@@ -13,17 +13,6 @@ interface ClientConnectListener {
     fun onDisconnected(netty: BaseNetty)
     fun onFailed(netty: BaseNetty, code: Int, msg: String?)
 
-    //    fun onConnectionTimeout()
-
-    // =========================================
-//    fun sendHeartbeat() {}
-//    fun onReceiveHeartbeat(msg: Any?) {}
-
-    // =========================================
-//    fun onReaderIdle(ctx: ChannelHandlerContext?) {}
-//    fun onWriterIdle(ctx: ChannelHandlerContext?) {}
-//    fun onAllIdle(ctx: ChannelHandlerContext?) {}
-
     companion object {
         const val CONNECTION_ERROR_ALREADY_RELEASED = 0x1000
 

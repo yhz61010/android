@@ -20,6 +20,11 @@ enum class ClientConnectStatus {
      * In this status, you can not reconnect again. You must create netty client again.
      */
     UNINITIALIZED,
+
+    /** Because of [CONNECTED] status is an asynchronous status, when user do connect to server successively,
+     * it will create more than one connection than you expect. So we need this status to tell user you're
+     * doing a connect now. */
+    CONNECTING,
     CONNECTED,
 
     /**

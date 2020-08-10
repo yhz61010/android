@@ -34,10 +34,11 @@ object CLog {
 
     fun init(context: Context) {
         val logDir = getLogDir(context, "xlog")
+        val cacheDir = getLogDir(context, "x-cache-dir")
         Xlog.appenderOpen(
             if (DEBUG_MODE) Xlog.LEVEL_DEBUG else Xlog.LEVEL_INFO,
             Xlog.AppednerModeAsync,
-            File(context.filesDir, "x-cache-dir").absolutePath,
+            cacheDir.absolutePath,
             logDir.absolutePath,
             "main", 5, if (DEBUG_MODE) "" else context.packageName
         )

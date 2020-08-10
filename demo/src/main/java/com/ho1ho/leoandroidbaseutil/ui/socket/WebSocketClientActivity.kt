@@ -75,7 +75,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LLog.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
         cs.launch {
-            repeat(20) {
+            repeat(1) {
                 if (::webSocketClient.isInitialized) {
                     LLog.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
                     webSocketClient.connect()

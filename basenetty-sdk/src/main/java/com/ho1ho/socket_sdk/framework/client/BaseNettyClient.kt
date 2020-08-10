@@ -214,10 +214,11 @@ abstract class BaseNettyClient protected constructor(
             return false
         }
         disconnectManually = true
+
         // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
         // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
-        // So we just need to assign its status to [DISCONNECTED]. No need to call listener.
-        connectState.set(ClientConnectStatus.DISCONNECTED)
+        // In this case, we do not change the connect status.
+
         stopRetryHandler()
         kotlin.runCatching { channel.disconnect().syncUninterruptibly() }.onFailure { LLog.e(tag, "disconnectManually error.", it) }
         return true
@@ -247,18 +248,20 @@ abstract class BaseNettyClient protected constructor(
      * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.)
      * So you'd better NOT call this method in main thread.
      *
-     * Once you call [release], you can not reconnect it again by calling [connect], you must create netty client again.
+     * Once you call [release], you can not reconnect it again by calling [connect] simply, you must recreate netty client again.
      * If you want to reconnect it again, do not call this method, just call [disconnectManually].
      *
      * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and any exception will be ignored.
      */
     fun release(): Boolean {
         LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
-        if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
-            LLog.w(tag, "Already release or not initialized")
-            return false
+        synchronized(this) {
+            if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
+                LLog.w(tag, "Already release or not initialized")
+                return false
+            }
+            connectState.set(ClientConnectStatus.UNINITIALIZED)
         }
-        connectState.set(ClientConnectStatus.UNINITIALIZED)
         disconnectManually = true
         LLog.w(tag, "Releasing retry handler...")
         stopRetryHandler()

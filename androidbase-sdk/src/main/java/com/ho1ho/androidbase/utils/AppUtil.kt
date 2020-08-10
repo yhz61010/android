@@ -54,7 +54,6 @@ object AppUtil {
         }
     }
 
-
     fun ignoreDuplicateStartSplash(act: Activity): Boolean {
         return if (act.intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT > 0) {
             act.finish()
@@ -261,5 +260,42 @@ object AppUtil {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
         Process.killProcess(Process.myPid())
+    }
+
+    /**
+     * Remove Android P warning dialog.
+     *
+     * Detected problems with API compatibility(visit g.co/dev/appcompat for more info
+     */
+    @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
+    fun closeAndroidPDialog() {
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.P) {
+            LLog.w(TAG, "Not Android 9. Do not closeAndroidPDialog")
+            return
+        }
+        LLog.w(TAG, "closeAndroidPDialog on Android 9")
+        try {
+            val aClass =
+                Class.forName("android.content.pm.PackageParser\$Package")
+            val declaredConstructor =
+                aClass.getDeclaredConstructor(
+                    String::class.java
+                )
+            declaredConstructor.isAccessible = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        try {
+            val cls = Class.forName("android.app.ActivityThread")
+            val declaredMethod = cls.getDeclaredMethod("currentActivityThread")
+            declaredMethod.isAccessible = true
+            val activityThread = declaredMethod.invoke(null)
+            val mHiddenApiWarningShown =
+                cls.getDeclaredField("mHiddenApiWarningShown")
+            mHiddenApiWarningShown.isAccessible = true
+            mHiddenApiWarningShown.setBoolean(activityThread, true)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

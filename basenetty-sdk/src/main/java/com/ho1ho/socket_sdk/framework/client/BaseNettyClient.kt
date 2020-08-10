@@ -146,15 +146,16 @@ abstract class BaseNettyClient protected constructor(
     /**
      * If netty client has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
-//    @Throws(RejectedExecutionException::class)
-    @Synchronized
     fun connect() {
         LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
-        if (connectState.get() == ClientConnectStatus.CONNECTED) {
-            LLog.w(tag, "===== Already connected =====")
-            return
-        } else {
-            LLog.i(tag, "===== Prepare to connect to server =====")
+        synchronized(this) {
+            if (connectState.get() == ClientConnectStatus.CONNECTING || connectState.get() == ClientConnectStatus.CONNECTED) {
+                LLog.w(tag, "===== Connecting or already connected =====")
+                return
+            } else {
+                LLog.i(tag, "===== Prepare to connect to server =====")
+            }
+            connectState.set(ClientConnectStatus.CONNECTING)
         }
         try {
             // You call connect() with sync() method like this bellow:

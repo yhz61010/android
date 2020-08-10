@@ -2,6 +2,7 @@ package com.ho1ho.leoandroidbaseutil.ui.socket
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
@@ -72,9 +73,13 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LLog.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
         cs.launch {
-            repeat(1) {
-                if (::webSocketClient.isInitialized) webSocketClient.connect()
+            repeat(20) {
+                if (::webSocketClient.isInitialized) {
+                    LLog.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
+                    webSocketClient.connect()
+                }
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)

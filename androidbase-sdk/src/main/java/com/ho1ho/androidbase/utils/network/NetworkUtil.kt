@@ -1,12 +1,19 @@
 package com.ho1ho.androidbase.utils.network
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
+import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.LLog
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.net.InetSocketAddress
+import java.net.NetworkInterface
+import java.net.Socket
+import java.net.SocketAddress
 import java.util.*
 
 /**
@@ -112,5 +119,65 @@ object NetworkUtil {
             return null
         }
         return intArrayOf(linkSpeed, rssi, wifiScoreIn5, wifiScore)
+    }
+
+    fun isHostReachable(hostname: String?, port: Int, timeoutInMillis: Int): Boolean {
+        var connected = false
+        kotlin.runCatching {
+            val socket = Socket()
+            val socketAddress: SocketAddress = InetSocketAddress(hostname, port)
+            socket.connect(socketAddress, timeoutInMillis)
+            if (socket.isConnected) {
+                connected = true
+                socket.close()
+            }
+        }.onFailure {
+            LLog.e(ITAG, "isHostReachable error", it)
+        }
+        return connected
+    }
+
+    /**
+     * Need following permission
+     * ```xml
+     * <uses-permission name="android.permission.ACCESS_WIFI_STATE" />
+     * ```
+     */
+    @SuppressLint("HardwareIds", "MissingPermission")
+    private fun getMacAddressBeforeAndroidM(application: Application): String {
+        val wifiMan = application.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val wifiInf = wifiMan.connectionInfo
+        // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
+        // Please check WifiInfo#DEFAULT_MAC_ADDRESS
+        return if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress
+    }
+
+    fun getMacAddress(application: Application): String {
+        return kotlin.runCatching {
+            var address = getMacAddressBeforeAndroidM(application)
+            if (address.isNotBlank()) {
+                return address
+            }
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val netWork = interfaces.nextElement()
+                val by = netWork.hardwareAddress
+                if (by == null || by.isEmpty()) {
+                    continue
+                }
+                val builder = StringBuilder()
+                for (b in by) {
+                    builder.append(String.format("%02X:", b))
+                }
+                if (builder.isNotEmpty()) {
+                    builder.deleteCharAt(builder.length - 1)
+                }
+                val mac = builder.toString()
+                if (netWork.name == "wlan0") {
+                    address = mac
+                }
+            }
+            address
+        }.getOrDefault("")
     }
 }

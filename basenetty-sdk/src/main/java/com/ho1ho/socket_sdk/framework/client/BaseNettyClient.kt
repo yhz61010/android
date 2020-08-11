@@ -61,7 +61,10 @@ abstract class BaseNettyClient protected constructor(
         retryStrategy: RetryStrategy = ConstantRetry()
     ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
         this.webSocketUri = webSocketUri
-        LLog.w(tag, "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port} retry_strategy=$retryStrategy")
+        LLog.w(
+            tag,
+            "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port} retry_strategy=${retryStrategy::class.simpleName}"
+        )
     }
 
     internal var webSocketUri: URI? = null
@@ -95,7 +98,7 @@ abstract class BaseNettyClient protected constructor(
     var retryTimes = AtomicInteger(0)
 
     init {
-        LLog.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=$retryStrategy")
+        LLog.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}

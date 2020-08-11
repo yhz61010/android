@@ -93,6 +93,25 @@ object ToastUtil {
         if (BuildConfig.DEBUG) showErrorLongToast("DEBUG: $message")
     }
 
+    // ------------
+
+    fun showDebugToast(@StringRes resId: Int) {
+        showDebugToast(mApplicationCtx.getString(resId))
+    }
+
+    fun showDebugLongToast(@StringRes resId: Int) {
+        showDebugLongToast(mApplicationCtx.getString(resId))
+    }
+
+    fun showDebugErrorToast(@StringRes resId: Int) {
+        showDebugErrorToast(mApplicationCtx.getString(resId))
+    }
+
+    fun showDebugErrorLongToast(@StringRes resId: Int) {
+        showDebugErrorLongToast(mApplicationCtx.getString(resId))
+    }
+
+
     // ============================================
     private fun showToast(
         context: Context,

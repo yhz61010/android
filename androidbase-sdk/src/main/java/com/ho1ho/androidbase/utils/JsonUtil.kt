@@ -20,7 +20,7 @@ object JsonUtil {
      * @return an object of type T from the string. Returns `null` if `json` is `null`
      * or if `json` is empty.
     </T> */
-    fun <T> toObject(json: String?, clazz: Class<T>?): T? {
+    fun <T> toObject(json: String?, clazz: Class<T>): T? {
         try {
             return GSON.fromJson(json, clazz)
         } catch (ex: Exception) {

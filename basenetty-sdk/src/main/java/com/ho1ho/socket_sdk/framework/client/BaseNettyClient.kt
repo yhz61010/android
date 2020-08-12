@@ -25,8 +25,6 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler
 import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
-import io.netty.handler.logging.LogLevel
-import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
@@ -74,7 +72,6 @@ abstract class BaseNettyClient protected constructor(
     private val bootstrap = Bootstrap()
         .group(workerGroup)
         .channel(NioSocketChannel::class.java)
-        .handler(LoggingHandler(LogLevel.INFO))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
         .option(
@@ -87,7 +84,7 @@ abstract class BaseNettyClient protected constructor(
         protected set
 
     @Volatile
-    var disconnectManually = false
+    internal var disconnectManually = false
 
     @Volatile
     internal var connectState: AtomicReference<ClientConnectStatus> = AtomicReference(
@@ -95,7 +92,7 @@ abstract class BaseNettyClient protected constructor(
     )
     private val retryThread = HandlerThread("retry-thread").apply { start() }
     private val retryHandler = Handler(retryThread.looper)
-    var retryTimes = AtomicInteger(0)
+    private var retryTimes = AtomicInteger(0)
 
     init {
         LLog.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
@@ -120,6 +117,9 @@ abstract class BaseNettyClient protected constructor(
                          * neither spending a lot of memory nor getting [OutOfMemoryError]. */
                         addLast(ChunkedWriteHandler())
                         addLast(WebSocketClientCompressionHandler.INSTANCE)
+//                        if (BuildConfig.DEBUG) {
+//                            addLast(LoggingHandler(LogLevel.INFO))
+//                        }
                     } else {
                         addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
                         addLast(StringDecoder())
@@ -173,11 +173,22 @@ abstract class BaseNettyClient protected constructor(
 
             val f = bootstrap.connect(host, port).sync()
             channel = f.syncUninterruptibly().channel()
-
-            // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
-            // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
+            retryTimes.set(0)
+            disconnectManually = false
+            if (isWebSocket) {
+                defaultInboundHandler?.channelPromise?.addListener { _ ->
+                    LLog.i(tag, "===== Connect success =====")
+                    connectState.set(ClientConnectStatus.CONNECTED)
+                    connectionListener.onConnected(this@BaseNettyClient)
+                }
+            } else {
+                // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
+                // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
 //            bootstrap.connect(host, port).addListener(connectFutureListener)
-            LLog.i(tag, "===== Connect success =====")
+                LLog.i(tag, "===== Connect success =====")
+                connectState.set(ClientConnectStatus.CONNECTED)
+                connectionListener.onConnected(this@BaseNettyClient)
+            }
         } catch (e: RejectedExecutionException) {
             LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
             LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")

@@ -20,7 +20,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     ReadSocketDataListener<T> {
     private val tag = javaClass.simpleName
 
-    private var channelPromise: ChannelPromise? = null
+    internal var channelPromise: ChannelPromise? = null
     private var handshaker: WebSocketClientHandshaker? = null
 
     @Volatile
@@ -52,14 +52,10 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun channelActive(ctx: ChannelHandlerContext) {
         LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
         caughtException = false
-        netty.retryTimes.set(0)
-        netty.disconnectManually = false
         if (netty.isWebSocket) {
             handshaker?.handshake(ctx.channel())
         }
         super.channelActive(ctx)
-        netty.connectState.set(ClientConnectStatus.CONNECTED)
-        netty.connectionListener.onConnected(netty)
     }
 
     @Throws(Exception::class)

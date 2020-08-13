@@ -82,6 +82,7 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toChar() }
 //fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
 
 fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
+    if (this.isEmpty()) return ""
     val result = StringBuilder()
     forEach {
         val octet = it.toInt()
@@ -101,6 +102,7 @@ fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence =
 }
 
 fun ByteArray.toHexStringLE(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
+    if (this.isEmpty()) return ""
     val result = StringBuilder()
     forEach {
         val octet = it.toInt()

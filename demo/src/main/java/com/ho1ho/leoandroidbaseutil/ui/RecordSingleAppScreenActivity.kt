@@ -30,7 +30,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         override fun onDataUpdate(buffer: Any, flags: Int) {
             val buf = buffer as ByteArray
             when (flags) {
-                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
+                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString()}")
                 MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
                 else -> LLog.i(ITAG, "Get h264 data[${buf.size}]")
             }

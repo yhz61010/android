@@ -3,9 +3,7 @@ package com.ho1ho.androidbase.utils.network
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.TrafficStats
-import android.os.Handler
 import java.io.RandomAccessFile
-import java.util.*
 
 /**
  * static long getMobileRxBytes() // 获取通过 Mobile 连接收到的字节总数，但不包含 WiFi static long
@@ -22,7 +20,7 @@ import java.util.*
  * Author: Michael Leo
  * Date: 19-8-30 下午1:38
  */
-class TrafficStatHelper private constructor(val ctx: Context, private val handler: Handler) {
+class TrafficStatHelper private constructor(val ctx: Context, private val monitorCallback: NetworkMonitor.Callback?) {
 
     /**
      * The data will be sent in every *freq* second(s)
@@ -38,36 +36,9 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
      * Last saved sent bytes
      */
     private var preTxBytes: Long = 0
-    private var mTimer: Timer? = null
-    private var emitDataCounter = 1
 
-    /**
-     * The data will be sent in every *freq* second(s)
-     */
-    fun startCalculateNetSpeed(freq: Int = 1) {
-        val interval: Int = if (freq < 1) 1 else freq
-//        this.freq = interval
-        emitDataCounter = 1
-        preRxBytes = totalReceivedBytes
-        preTxBytes = totalSentBytes
-        mTimer?.cancel()
-        mTimer = Timer()
-        mTimer!!.schedule(object : TimerTask() {
-            override fun run() {
-                if (emitDataCounter == interval) {
-                    handler.obtainMessage(MESSAGE_TRAFFIC_UPDATE, arrayOf(downloadSpeed, uploadSpeed)).sendToTarget()
-                    emitDataCounter = 1
-                } else {
-                    emitDataCounter++
-                }
-            }
-        }, 1000, 1000)
-    }
-
-    fun stopCalculateNetSpeed() {
-        emitDataCounter = 1
-        mTimer?.cancel()
-        mTimer = null
+    fun getSpeed(): Array<Long> {
+        return arrayOf(downloadSpeed, uploadSpeed)
     }
 
     @Suppress("unused")
@@ -110,7 +81,7 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
     /**
      * Get current download speed(STAT_TIME_INTERVAL_IN_SECONDS seconds total traffic)
      */
-    val downloadSpeed: Long
+    private val downloadSpeed: Long
         get() {
             val curRxBytes = totalReceivedBytes
             if (preRxBytes == 0L) preRxBytes = curRxBytes
@@ -122,7 +93,7 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
     /**
      * Get upload speed(STAT_TIME_INTERVAL_IN_SECONDS seconds total traffic)
      */
-    val uploadSpeed: Long
+    private val uploadSpeed: Long
         get() {
             val curTxBytes = totalSentBytes
             if (preTxBytes == 0L) preTxBytes = curTxBytes
@@ -132,17 +103,15 @@ class TrafficStatHelper private constructor(val ctx: Context, private val handle
         }
 
     companion object {
-        const val MESSAGE_TRAFFIC_UPDATE = 0x010
-
         @Volatile
         private var instance: TrafficStatHelper? = null
         var UUID: Int = -1
-        fun getInstance(ctx: Context, handler: Handler): TrafficStatHelper {
+        fun getInstance(ctx: Context, monitorCallback: NetworkMonitor.Callback?): TrafficStatHelper {
             if (instance == null) {
                 synchronized(this) {
                     if (instance == null) {
                         UUID = ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
-                        instance = TrafficStatHelper(ctx, handler)
+                        instance = TrafficStatHelper(ctx, monitorCallback)
                     }
                 }
             }

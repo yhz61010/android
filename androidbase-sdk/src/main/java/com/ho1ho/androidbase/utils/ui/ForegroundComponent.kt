@@ -92,10 +92,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         }
     }
 
-    override fun onActivityPaused(activity: Activity) {}
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-    override fun onActivityStarted(activity: Activity) {}
-    override fun onActivityStopped(activity: Activity) {
+    override fun onActivityPaused(activity: Activity) {
         paused = true
         if (checkRunnable != null) {
             handler.removeCallbacks(checkRunnable!!)
@@ -116,6 +113,10 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             }
         }.also { checkRunnable = it }, becameBackgroundDelay)
     }
+
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityStarted(activity: Activity) {}
+    override fun onActivityStopped(activity: Activity) {}
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {

@@ -220,7 +220,7 @@ abstract class BaseNettyClient protected constructor(
      * **Remember**, If you call this method, it will not trigger retry process.
      */
     fun disconnectManually(): Boolean {
-        LLog.w(tag, "===== disconnect() current state=${connectState.get().name} =====")
+        LLog.w(tag, "===== disconnectManually() current state=${connectState.get().name} =====")
         if (ClientConnectStatus.DISCONNECTED == connectState.get()
             || ClientConnectStatus.UNINITIALIZED == connectState.get()
         ) {

@@ -17,6 +17,7 @@ import android.os.Process
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import com.ho1ho.androidbase.BuildConfig
 import com.ho1ho.androidbase.utils.device.DeviceProp
 import com.ho1ho.androidbase.utils.file.FileUtil
@@ -255,11 +256,11 @@ object AppUtil {
     }
 
     @Suppress("unused")
-    fun restartApp(context: Context, targetClass: Class<*>?) {
-        val intent = Intent(context, targetClass)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+    fun restartApp(context: Context, targetIntent: Intent) {
+        targetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(targetIntent)
         Process.killProcess(Process.myPid())
+//        Runtime.getRuntime().exit(0)
     }
 
     /**
@@ -296,6 +297,23 @@ object AppUtil {
             mHiddenApiWarningShown.setBoolean(activityThread, true)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    // =============================================================================================
+
+    fun openSoftKeyboard(context: Activity) {
+        val imm =
+            context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
+    }
+
+    fun closeSoftKeyboard(context: Activity) {
+        val view = context.window.peekDecorView()
+        if (view != null) {
+            val imm =
+                context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
 }

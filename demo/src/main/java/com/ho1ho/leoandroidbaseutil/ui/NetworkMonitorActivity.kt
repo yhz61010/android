@@ -29,50 +29,26 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_network_monitor)
 
-        networkMonitor = NetworkMonitor(this.application, "220.181.38.148")
-        networkMonitor.monitorCallback = object : NetworkMonitor.Callback {
-            override fun onSpeedChanged(downloadSpeed: Long, uploadSpeed: Long) {
-                LLog.i(ITAG, "S:${downloadSpeed.humanReadableByteCount()}/${uploadSpeed.humanReadableByteCount()}")
-                txtNetworkStatus.text =
-                    "${txtNetworkStatus.text}\nDownload: ${downloadSpeed.humanReadableByteCount()}    Upload: ${uploadSpeed.humanReadableByteCount()}\n"
-                scrollView2.post {
-                    scrollView2.fullScroll(View.FOCUS_DOWN)
-                }
+        networkMonitor = NetworkMonitor(this.application, "220.181.38.148") { info ->
+            val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
+            val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
+
+            val latencyStatus = when (info.showPingTips) {
+                NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
+                NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
+                else -> null
             }
 
-            override fun onPingWifiSignalChanged(
-                ping: Int,
-                showPingLatencyToast: Int,
-                linkSpeed: Int,
-                rssi: Int,
-                wifiScoreIn5: Int,
-                wifiScore: Int,
-                showWifiSignalStatus: Int
-            ) {
-                val latencyStatus =
-                    when (showPingLatencyToast) {
-                        NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
-                        NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
-                        else -> null
-                    }
-
-                val wifiSignalStatus =
-                    when (showWifiSignalStatus) {
-                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
-                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
-                        else -> null
-                    }
-                LLog.i(
-                    ITAG,
-                    "P:$ping${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}\tL:${linkSpeed}Mbps\tR:${rssi} $wifiScoreIn5 $wifiScore/100 ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
-                )
-                txtNetworkStatus.text =
-                    "${txtNetworkStatus.text}\nP:$ping${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}   L:${linkSpeed}Mbps   R:${rssi}   $wifiScoreIn5   $wifiScore/100   ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
-                scrollView2.post {
-                    scrollView2.fullScroll(View.FOCUS_DOWN)
-                }
+            val wifiSignalStatus = when (info.showWifiSig) {
+                NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
+                NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
+                else -> null
             }
-
+            val infoStr =
+                "S:$downloadSpeedStr/$uploadSpeedStr\t\tP:${info.ping}${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}\t\tL:${info.linkSpeed}Mbps\tR:${info.rssi} ${info.wifiScoreIn5} ${info.wifiScore} ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
+            LLog.i(ITAG, infoStr)
+            txtNetworkStatus.text = infoStr
+            scrollView2.post { scrollView2.fullScroll(View.FOCUS_DOWN) }
         }
         networkMonitor.startMonitor(3)
     }

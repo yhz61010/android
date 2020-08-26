@@ -14,16 +14,17 @@ import java.util.concurrent.TimeUnit
  *
  * Usage:
  * ```kotlin
- * val networkMonitor = NetworkMonitor(ctx, ip)
+ * val networkMonitor = NetworkMonitor(ctx, ip) { networkMonitorResult -> }
  * networkMonitor.startMonitor()
  * networkMonitor.stopMonitor()
  * ```
  */
-class NetworkMonitor(private val ctx: Context, private val ip: String) {
+class NetworkMonitor(private val ctx: Context, private val ip: String, f: (NetworkMonitorResult) -> Unit) {
+    companion object {
+        private const val TAG = "NM"
+    }
 
     private var freq = 1
-
-    var monitorCallback: Callback? = null
 
     private var trafficStat: TrafficStatHelper? = null
     private val monitorThread = HandlerThread("monitor-thread").apply { start() }
@@ -73,16 +74,25 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                     ping = -3
                 }
 
+                var downloadSpeed: Long = 0
+                var uploadSpeed: Long = 0
                 trafficStat?.getSpeed()?.let {
-                    monitorCallback?.speedUpdate(it[0] / freq, it[1] / freq)
+                    downloadSpeed = it[0] / freq
+                    uploadSpeed = it[1] / freq
                 }
 
-                monitorCallback?.pingWifiSigUpdate(
-                    ping,
-                    showPingLatencyStatus,
-                    networkStats?.get(0) ?: -1, networkStats?.get(1) ?: -1,
-                    networkStats?.get(2) ?: -1, networkStats?.get(3) ?: -1,
-                    showWifiSignalStatus
+                f.invoke(
+                    NetworkMonitorResult(
+                        downloadSpeed,
+                        uploadSpeed,
+                        ping,
+                        showPingLatencyStatus,
+                        networkStats?.get(0) ?: -1,
+                        networkStats?.get(1) ?: -1,
+                        networkStats?.get(2) ?: -1,
+                        networkStats?.get(3) ?: -1,
+                        showWifiSignalStatus
+                    )
                 )
                 monitorHandler.postDelayed(this, TimeUnit.SECONDS.toMillis(freq.toLong()))
             } catch (e: Exception) {
@@ -98,7 +108,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
         LLog.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq
         this.freq = interval
-        trafficStat = TrafficStatHelper.getInstance(ctx, monitorCallback)
+        trafficStat = TrafficStatHelper.getInstance(ctx)
         monitorHandler.post(pingRunnable)
     }
 
@@ -115,15 +125,15 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
         }.getOrNull()
     }
 
-    companion object {
-        private const val TAG = "NM"
-    }
-
-    interface Callback {
-        fun speedUpdate(downloadSpeed: Long, uploadSpeed: Long)
-
-        // p: Ping
-        // showPTips: show ping toast
-        fun pingWifiSigUpdate(p: Int, showPTips: Int, linkSpeed: Int, rssi: Int, wifiScoreIn5: Int, wifiScore: Int, showWifiSig: Int)
-    }
+    data class NetworkMonitorResult(
+        val downloadSpeed: Long,
+        val uploadSpeed: Long,
+        val ping: Int,
+        val showPingTips: Int,
+        val linkSpeed: Int,
+        val rssi: Int,
+        val wifiScoreIn5: Int,
+        val wifiScore: Int,
+        val showWifiSig: Int
+    )
 }

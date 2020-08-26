@@ -23,8 +23,8 @@ import java.util.*
  */
 object NetworkUtil {
 
-    const val NETWORK_PING_DELAY_HIGH = 200
-    const val NETWORK_PING_DELAY_VERY_HIGH = 300
+    const val NETWORK_PING_DELAY_HIGH = 130
+    const val NETWORK_PING_DELAY_VERY_HIGH = 200
 
     const val NETWORK_SIGNAL_STRENGTH_BAD = 2
     const val NETWORK_SIGNAL_STRENGTH_VERY_BAD = 1
@@ -123,7 +123,7 @@ object NetworkUtil {
 
     fun isHostReachable(hostname: String?, port: Int, timeoutInMillis: Int): Boolean {
         var connected = false
-        kotlin.runCatching {
+        runCatching {
             val socket = Socket()
             val socketAddress: SocketAddress = InetSocketAddress(hostname, port)
             socket.connect(socketAddress, timeoutInMillis)
@@ -153,7 +153,7 @@ object NetworkUtil {
     }
 
     fun getMacAddress(application: Application): String {
-        return kotlin.runCatching {
+        return runCatching {
             var address = getMacAddressBeforeAndroidM(application)
             if (address.isNotBlank()) {
                 return address

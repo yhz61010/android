@@ -2,8 +2,7 @@ package com.ho1ho.androidbase.utils.network
 
 import android.content.Context
 import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.os.HandlerThread
 import com.ho1ho.androidbase.utils.LLog
 import java.util.concurrent.TimeUnit
 
@@ -27,14 +26,8 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
     var monitorCallback: Callback? = null
 
     private var trafficStat: TrafficStatHelper? = null
-    private val monitorHandler = object : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
-            if (TrafficStatHelper.MESSAGE_TRAFFIC_UPDATE == msg.what) {
-                val speedArray = (msg.obj) as Array<*>
-                monitorCallback?.onSpeedChanged(speedArray[0] as Long, speedArray[1] as Long)
-            }
-        }
-    }
+    private val monitorThread = HandlerThread("monitor-thread").apply { start() }
+    private val monitorHandler = Handler(monitorThread.looper)
     private val pingRunnable: Runnable = object : Runnable {
         private var pingCountdown: Long = 0
         private var strengthCountdown: Long = 0
@@ -68,10 +61,10 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                 }
                 // Sometimes, the ping value will be extremely high(like, 319041664, 385195024). For this abnormal case, we just ignore it.
                 if (ping < 60000) {
-                    if (ping > NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH && pingCountdown < 1) {
+                    if (ping >= NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH && pingCountdown < 1) {
                         showPingLatencyStatus = NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH
                         pingCountdown = MAX_COUNT
-                    } else if (ping > NetworkUtil.NETWORK_PING_DELAY_HIGH && pingCountdown < 1) {
+                    } else if (ping >= NetworkUtil.NETWORK_PING_DELAY_HIGH && pingCountdown < 1) {
                         showPingLatencyStatus = NetworkUtil.NETWORK_PING_DELAY_HIGH
                         pingCountdown = MAX_COUNT
                     }
@@ -80,7 +73,11 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
                     ping = -3
                 }
 
-                monitorCallback?.onPingWifiSignalChanged(
+                trafficStat?.getSpeed()?.let {
+                    monitorCallback?.speedUpdate(it[0] / freq, it[1] / freq)
+                }
+
+                monitorCallback?.pingWifiSigUpdate(
                     ping,
                     showPingLatencyStatus,
                     networkStats?.get(0) ?: -1, networkStats?.get(1) ?: -1,
@@ -101,8 +98,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
         LLog.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq
         this.freq = interval
-        trafficStat = TrafficStatHelper.getInstance(ctx, monitorHandler)
-        trafficStat?.startCalculateNetSpeed(interval)
+        trafficStat = TrafficStatHelper.getInstance(ctx, monitorCallback)
         monitorHandler.post(pingRunnable)
     }
 
@@ -113,8 +109,10 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
 
     private fun releaseMonitorThread() {
         LLog.w(TAG, "releaseMonitorThread()")
-        trafficStat?.stopCalculateNetSpeed()
-        monitorHandler.removeCallbacksAndMessages(null)
+        runCatching {
+            monitorHandler.removeCallbacksAndMessages(null)
+            monitorThread.interrupt()
+        }.getOrNull()
     }
 
     companion object {
@@ -122,15 +120,10 @@ class NetworkMonitor(private val ctx: Context, private val ip: String) {
     }
 
     interface Callback {
-        fun onSpeedChanged(downloadSpeed: Long, uploadSpeed: Long)
-        fun onPingWifiSignalChanged(
-            ping: Int,
-            showPingLatencyToast: Int,
-            linkSpeed: Int,
-            rssi: Int,
-            wifiScoreIn5: Int,
-            wifiScore: Int,
-            showWifiSignalStatus: Int
-        )
+        fun speedUpdate(downloadSpeed: Long, uploadSpeed: Long)
+
+        // p: Ping
+        // showPTips: show ping toast
+        fun pingWifiSigUpdate(p: Int, showPTips: Int, linkSpeed: Int, rssi: Int, wifiScoreIn5: Int, wifiScore: Int, showWifiSig: Int)
     }
 }

@@ -28,10 +28,10 @@ import io.reactivex.schedulers.Schedulers
  * ```
  */
 object ApiSubscribe {
-    fun <T> subscribe(observable: Observable<T>, observer: Observer<T>?) {
+    fun <T> subscribe(observable: Observable<T>, observer: Observer<T>) {
         observable.subscribeOn(Schedulers.io())
             .unsubscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(observer!!)
+            .subscribe(observer)
     }
 }

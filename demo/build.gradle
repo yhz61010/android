@@ -106,7 +106,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            def apkFileName = "LeoDemo-${variant.flavorName}-${buildType.name}-v${variant.versionName}(${variant.versionCode}).apk"
+            def apkFileName = "LeoDemo-${variant.flavorName}-${buildType.name}-v${variant.versionName}-${variant.versionCode}-.apk"
             outputFileName = apkFileName
         }
     }
@@ -124,14 +124,14 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation "androidx.cardview:cardview:1.0.0"
+    "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+    implementation "androidx.cardview:cardview:$rootProject.ext.cardviewVersion"
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation "androidx.multidex:multidex:2.0.1"
-    implementation 'com.google.android.material:material:1.2.0'
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
+    implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
+    implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
@@ -141,8 +141,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
-//    implementation 'org.greenrobot:eventbus:3.1.1'
-    implementation 'com.yanzhenjie:permission:2.0.3'
+//    implementation "org.greenrobot:eventbus:3.1.1"
+    implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
 
     implementation project(':camera2live-sdk')
     implementation project(':screencapture-sdk')

@@ -28,11 +28,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "$rootProject.ext.java_version"
     }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    api 'com.tencent.mars:mars-xlog:1.2.3'
+    api "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
 }

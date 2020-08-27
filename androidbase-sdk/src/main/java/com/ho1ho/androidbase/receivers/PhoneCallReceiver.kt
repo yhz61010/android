@@ -16,12 +16,12 @@ import java.util.*
  * Example:
  * ```kotlin
  * val callReceiver = object: PhoneCallReceiver() {
- *     override fun onIncomingCallReceived(ctx: Context?, number: String?, start: Date?) { }
- *     override fun onIncomingCallAnswered(ctx: Context?, number: String?, start: Date?) { }
- *     override fun onIncomingCallEnded(ctx: Context?, number: String?, start: Date?, end: Date?) { }
- *     override fun onOutgoingCallStarted(ctx: Context?, number: String?, start: Date?) { }
- *     override fun onOutgoingCallEnded(ctx: Context?, number: String?, start: Date?, end: Date?) { }
- *     override fun onMissedCall(ctx: Context?, number: String?, start: Date?) { }
+ *     override fun onIncomingCallReceived(ctx: Context, number: String?, start: Date?) { }
+ *     override fun onIncomingCallAnswered(ctx: Context, number: String?, start: Date?) { }
+ *     override fun onIncomingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?) { }
+ *     override fun onOutgoingCallStarted(ctx: Context, number: String?, start: Date?) { }
+ *     override fun onOutgoingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?) { }
+ *     override fun onMissedCall(ctx: Context, number: String?, start: Date?) { }
  * }
  * val callIntentFilter = IntentFilter("android.intent.action.PHONE_STATE")
  * callIntentFilter.addAction(Intent.ACTION_NEW_OUTGOING_CALL)
@@ -52,29 +52,29 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
     }
 
     //Derived classes should override these to respond to specific events of interest
-    protected abstract fun onIncomingCallReceived(ctx: Context?, number: String?, start: Date?)
-    protected abstract fun onIncomingCallAnswered(ctx: Context?, number: String?, start: Date?)
+    protected abstract fun onIncomingCallReceived(ctx: Context, number: String?, start: Date?)
+    protected abstract fun onIncomingCallAnswered(ctx: Context, number: String?, start: Date?)
     protected abstract fun onIncomingCallEnded(
-        ctx: Context?,
+        ctx: Context,
         number: String?,
         start: Date?,
         end: Date?
     )
 
-    protected abstract fun onOutgoingCallStarted(ctx: Context?, number: String?, start: Date?)
+    protected abstract fun onOutgoingCallStarted(ctx: Context, number: String?, start: Date?)
     protected abstract fun onOutgoingCallEnded(
-        ctx: Context?,
+        ctx: Context,
         number: String?,
         start: Date?,
         end: Date?
     )
 
-    protected abstract fun onMissedCall(ctx: Context?, number: String?, start: Date?)
+    protected abstract fun onMissedCall(ctx: Context, number: String?, start: Date?)
 
     // Deals with actual events
     // Incoming call-  goes from IDLE to RINGING when it rings, to OFFHOOK when it's answered, to IDLE when its hung up
     // Outgoing call-  goes from IDLE to OFFHOOK when it dials out, to IDLE when hung up
-    private fun onCallStateChanged(context: Context?, state: Int, number: String?) {
+    private fun onCallStateChanged(context: Context, state: Int, number: String?) {
         if (lastState == state) {
             // No change, debounce extras
             return

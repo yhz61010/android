@@ -3,6 +3,7 @@ package com.ho1ho.log_sdk
 import android.content.Context
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
+import com.tencent.mars.xlog.Xlog.XLogConfig
 import java.io.File
 
 /**
@@ -10,7 +11,7 @@ import java.io.File
  * Date: 20-4-20 上午11:39
  */
 object CLog {
-    private const val DEBUG_MODE = true
+    private val DEBUG_MODE = BuildConfig.DEBUG
     private const val BASE_TAG = "LEO-"
 
     init {
@@ -35,14 +36,23 @@ object CLog {
     fun init(context: Context) {
         val logDir = getLogDir(context, "xlog")
         val cacheDir = getLogDir(context, "x-cache-dir")
-        Xlog.appenderOpen(
-            if (DEBUG_MODE) Xlog.LEVEL_DEBUG else Xlog.LEVEL_INFO,
-            Xlog.AppednerModeAsync,
-            cacheDir.absolutePath,
-            logDir.absolutePath,
-            "main", 5, if (DEBUG_MODE) "" else context.packageName
-        )
-        Xlog.setConsoleLogOpen(DEBUG_MODE)
+        //init xlog
+        val logConfig = XLogConfig()
+        logConfig.mode = Xlog.AppednerModeAsync
+        logConfig.logdir = logDir.absolutePath
+        logConfig.nameprefix = "main"
+        logConfig.pubkey = if (DEBUG_MODE) "" else context.packageName
+        logConfig.compressmode = Xlog.ZLIB_MODE
+        logConfig.compresslevel = 0
+        logConfig.cachedir = cacheDir.absolutePath
+        logConfig.cachedays = 5
+        if (DEBUG_MODE) {
+            logConfig.level = Xlog.LEVEL_DEBUG
+            Xlog.setConsoleLogOpen(true)
+        } else {
+            logConfig.level = Xlog.LEVEL_INFO
+            Xlog.setConsoleLogOpen(false)
+        }
         Log.setLogImp(Xlog())
     }
 

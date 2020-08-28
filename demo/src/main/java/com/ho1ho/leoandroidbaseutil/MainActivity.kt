@@ -11,6 +11,8 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.ui.*
 import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayRawH265ByMediaCodecActivity
@@ -33,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
 //        CustomApplication.instance.closeDebugOutputFile()
-
+        LLog.i(ITAG, "onDestroy()")
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
@@ -102,7 +104,8 @@ class MainActivity : AppCompatActivity() {
             Pair("HTTP Related", HttpActivity::class.java),
             Pair("Log", LogActivity::class.java),
             Pair("Clipboard", ClipboardActivity::class.java),
-            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java)
+            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
+            Pair("KeepAlive", KeepAliveActivity::class.java)
         )
 
         private val color = arrayOf(

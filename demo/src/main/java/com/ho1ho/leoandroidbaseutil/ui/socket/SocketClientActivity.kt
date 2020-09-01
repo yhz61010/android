@@ -104,7 +104,9 @@ class SocketActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class SocketClient(host: String, port: Int, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
-        BaseNettyClient(host, port, connectionListener, retryStrategy)
+        BaseNettyClient(host, port, connectionListener, retryStrategy) {
+        override fun getTagName() = "SocketClient"
+    }
 
     @ChannelHandler.Sharable
     class SocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<String>(netty) {
@@ -113,7 +115,7 @@ class SocketActivity : BaseDemonstrationActivity() {
         }
 
         fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand(msg)
+            return netty.executeCommand("SocketCmd", "Send msg to server", msg)
         }
 
         override fun release() {

@@ -114,7 +114,9 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
-        BaseNettyClient(webSocketUri, connectionListener, retryStrategy)
+        BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
+        override fun getTagName() = "WebSocketClient"
+    }
 
     @ChannelHandler.Sharable
     class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
@@ -136,7 +138,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
 
         fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand(msg)
+            return netty.executeCommand("WebSocketCmd", "Send msg to server", msg)
         }
 
         override fun release() {

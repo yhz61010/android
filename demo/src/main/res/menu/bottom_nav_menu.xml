@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_common"
+        android:icon="@drawable/ic_common_black_24dp"
+        android:title="@string/title_common" />
+
+    <item
+        android:id="@+id/navigation_jetpack"
+        android:icon="@drawable/ic_jetpack_black_24dp"
+        android:title="@string/title_jetpack" />
+
+</menu>

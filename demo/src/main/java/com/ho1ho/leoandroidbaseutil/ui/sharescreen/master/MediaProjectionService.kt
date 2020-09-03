@@ -14,8 +14,8 @@ import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.H264Util
 import com.ho1ho.androidbase.utils.notification.NotificationUtil
-import com.ho1ho.leoandroidbaseutil.MainActivity
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.common_components.CommonFragment
 import com.ho1ho.screenshot.ScreenCapture
 import com.ho1ho.screenshot.base.ScreenDataListener
 import com.ho1ho.screenshot.base.ScreenProcessor
@@ -136,7 +136,7 @@ class MediaProjectionService : Service() {
             )
         }
 
-        val notifyIntent = Intent(this, MainActivity::class.java)
+        val notifyIntent = Intent(this, CommonFragment::class.java)
         val mainPendingIntent = PendingIntent.getActivity(
             this,
             SystemClock.elapsedRealtime().toInt(),

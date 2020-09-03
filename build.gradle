@@ -52,6 +52,7 @@ ext {
     cardviewVersion = '1.0.0'
     constraintlayoutVersion = '2.0.1'
     multidexVersion = '2.0.1'
+    navVersion = '2.3.0'
 
     nettyVersion = '4.1.50.Final'
     okhttpVersion = '4.8.1'

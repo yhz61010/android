@@ -16,9 +16,17 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity android:name=".ui.KeepAliveActivity" />
         <activity android:name=".ui.socket.WebSocketServerActivity" />
         <activity android:name=".ui.HttpActivity" />
@@ -44,13 +52,6 @@
         <activity android:name=".ui.NetworkMonitorActivity" />
         <activity android:name=".ui.LogActivity" />
         <activity android:name=".ui.DeviceInfoActivity" />
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <service
             android:name=".ui.sharescreen.master.MediaProjectionService"

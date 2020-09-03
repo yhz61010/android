@@ -14,15 +14,15 @@ import androidx.fragment.app.Fragment
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.ui.*
-import com.ho1ho.leoandroidbaseutil.ui.camera2.Camera2LiveActivity
-import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayRawH265ByMediaCodecActivity
-import com.ho1ho.leoandroidbaseutil.ui.media_player.PlayVideoByMediaCodecActivity
-import com.ho1ho.leoandroidbaseutil.ui.sharescreen.client.ScreenShareClientActivity
-import com.ho1ho.leoandroidbaseutil.ui.sharescreen.master.ScreenShareMasterActivity
-import com.ho1ho.leoandroidbaseutil.ui.socket.SocketActivity
-import com.ho1ho.leoandroidbaseutil.ui.socket.WebSocketClientActivity
-import com.ho1ho.leoandroidbaseutil.ui.socket.WebSocketServerActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.*
+import com.ho1ho.leoandroidbaseutil.common_components.examples.camera2.Camera2LiveActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayRawH265ByMediaCodecActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayVideoByMediaCodecActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.master.ScreenShareMasterActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.SocketActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketClientActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketServerActivity
 
 class CommonFragment : Fragment() {
 

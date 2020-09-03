@@ -13,7 +13,7 @@
 
     <fragment
         android:id="@+id/navigation_jetpack"
-        android:name="com.ho1ho.leoandroidbaseutil.jetpack.JetpackFragment"
+        android:name="com.ho1ho.leoandroidbaseutil.jetpack_components.JetpackFragment"
         android:label="@string/title_jetpack"
         tools:layout="@layout/fragment_jetpack" />
 

@@ -1,0 +1,13 @@
+package com.ho1ho.leoandroidbaseutil.jetpack_components
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+
+class JetpackViewModel : ViewModel() {
+
+    private val _text = MutableLiveData<String>().apply {
+        value = "This is dashboard Fragment"
+    }
+    val text: LiveData<String> = _text
+}

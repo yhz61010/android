@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <com.ho1ho.leoandroidbaseutil.ui.media_player.ui.CustomSurfaceView
+    <com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.ui.CustomSurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

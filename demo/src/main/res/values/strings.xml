@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">LeoAndroidBaseUtil</string>
+
+    <string name="title_common">Common</string>
+    <string name="title_jetpack">Jetpack</string>
 </resources>

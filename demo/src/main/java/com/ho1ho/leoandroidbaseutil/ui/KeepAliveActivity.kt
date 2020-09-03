@@ -2,11 +2,11 @@ package com.ho1ho.leoandroidbaseutil.ui
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import com.ho1ho.androidbase.utils.system.KeepAlive
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.ui.base.BaseDemonstrationActivity
 
-class KeepAliveActivity : AppCompatActivity() {
+class KeepAliveActivity : BaseDemonstrationActivity() {
 
     private val keepAlive: KeepAlive by lazy { KeepAlive(this) }
 

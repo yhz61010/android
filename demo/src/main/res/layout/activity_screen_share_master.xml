@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.sharescreen.master.ScreenShareMasterActivity">
+    tools:context=".common_components.examples.sharescreen.master.ScreenShareMasterActivity">
 
     <ToggleButton
         android:id="@+id/toggleButton"

@@ -126,15 +126,15 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+    implementation "androidx.appcompat:appcompat:$appcompatVersion"
     implementation "androidx.cardview:cardview:$rootProject.ext.cardviewVersion"
+    implementation "androidx.recyclerview:recyclerview:$recyclerviewVersion"
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
     implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
     implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
     implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"

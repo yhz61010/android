@@ -30,10 +30,11 @@ class CommonFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val root = inflater.inflate(R.layout.fragment_common, container, false)
-        root.findViewById<GridView>(R.id.gridView).adapter = ColorBaseAdapter(this)
-        return root
+    ): View? = inflater.inflate(R.layout.fragment_common, container, false)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        view.findViewById<GridView>(R.id.gridView).adapter = ColorBaseAdapter(this)
     }
 
     override fun onDestroy() {

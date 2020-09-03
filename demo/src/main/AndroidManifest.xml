@@ -27,34 +27,34 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.KeepAliveActivity" />
-        <activity android:name=".ui.socket.WebSocketServerActivity" />
-        <activity android:name=".ui.HttpActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.KeepAliveActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketServerActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.HttpActivity" />
         <activity
-            android:name=".ui.media_player.PlayRawH265ByMediaCodecActivity"
+            android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
-            android:name=".ui.media_player.PlayVideoByMediaCodecActivity"
+            android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayVideoByMediaCodecActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity android:name=".ui.socket.WebSocketClientActivity" />
-        <activity android:name=".ui.ClipboardActivity" />
-        <activity android:name=".ui.socket.SocketActivity" />
-        <activity android:name=".ui.RecordSingleAppScreenActivity" />
-        <activity android:name=".ui.TakeScreenshotActivity" />
-        <activity android:name=".ui.CoroutineActivity" />
-        <activity android:name=".ui.AudioActivity" />
-        <activity android:name=".ui.sharescreen.client.ScreenShareClientActivity" />
-        <activity android:name=".ui.sharescreen.master.ScreenShareMasterActivity" />
-        <activity android:name=".ui.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketClientActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.ClipboardActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.socket.SocketActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.RecordSingleAppScreenActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.TakeScreenshotActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.CoroutineActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.AudioActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.client.ScreenShareClientActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.master.ScreenShareMasterActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
         <activity
-            android:name=".ui.camera2.Camera2LiveActivity"
+            android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.camera2.Camera2LiveActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity android:name=".ui.NetworkMonitorActivity" />
-        <activity android:name=".ui.LogActivity" />
-        <activity android:name=".ui.DeviceInfoActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.NetworkMonitorActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.LogActivity" />
+        <activity android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.DeviceInfoActivity" />
 
         <service
-            android:name=".ui.sharescreen.master.MediaProjectionService"
+            android:name="com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.master.MediaProjectionService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"

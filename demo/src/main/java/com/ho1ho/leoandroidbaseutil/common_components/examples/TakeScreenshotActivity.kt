@@ -6,7 +6,7 @@ import com.ho1ho.androidbase.utils.device.CaptureUtil
 import com.ho1ho.androidbase.utils.media.ImageUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import java.io.File
 
 class TakeScreenshotActivity : BaseDemonstrationActivity() {

@@ -13,7 +13,7 @@ import com.ho1ho.androidbase.utils.media.CameraUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.camera2live.view.BackPressedListener
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import java.io.File

@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.common_components.examples.base
+package com.ho1ho.leoandroidbaseutil.base
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

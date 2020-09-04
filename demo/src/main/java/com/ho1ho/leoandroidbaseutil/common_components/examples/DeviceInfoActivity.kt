@@ -5,7 +5,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlinx.android.synthetic.main.activity_device_info.*
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {

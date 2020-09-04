@@ -16,7 +16,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.ho1ho.screenshot.ScreenCapture
 import kotlinx.android.synthetic.main.activity_screen_share_master.*
 import org.java_websocket.WebSocket

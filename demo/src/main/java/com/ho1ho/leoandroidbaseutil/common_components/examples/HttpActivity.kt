@@ -14,7 +14,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.androidbase.utils.system.ResourcesUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_http.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

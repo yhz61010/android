@@ -11,7 +11,7 @@ import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.master.ScreenShareSetting
 import com.ho1ho.screenshot.ScreenCapture
 import com.ho1ho.screenshot.base.ScreenDataListener

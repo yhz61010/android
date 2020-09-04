@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import com.ho1ho.androidbase.utils.system.KeepAlive
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 class KeepAliveActivity : BaseDemonstrationActivity() {
 

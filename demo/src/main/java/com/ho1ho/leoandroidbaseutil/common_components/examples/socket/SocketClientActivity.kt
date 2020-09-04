@@ -7,7 +7,7 @@ import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.ho1ho.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.client.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.client.ClientConnectListener

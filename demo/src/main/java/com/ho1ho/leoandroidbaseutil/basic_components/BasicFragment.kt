@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.jetpack_components
+package com.ho1ho.leoandroidbaseutil.basic_components
 
 import android.content.Intent
 import android.graphics.Color
@@ -22,13 +22,13 @@ import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.SocketActiv
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.WebSocketClientActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.WebSocketServerActivity
 
-class JetpackFragment : Fragment() {
+class BasicFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_jetpack, container, false)
+    ): View? = inflater.inflate(R.layout.fragment_basic, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

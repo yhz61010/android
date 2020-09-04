@@ -4,7 +4,7 @@ import android.media.AudioFormat
 import android.os.Bundle
 import com.ho1ho.audiorecord.MicRecord
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 class AudioActivity : BaseDemonstrationActivity() {
     private lateinit var micRecord: MicRecord

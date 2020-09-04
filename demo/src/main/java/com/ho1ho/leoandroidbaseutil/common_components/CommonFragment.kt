@@ -6,14 +6,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.leoandroidbaseutil.ColorBaseAdapter
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.CommonFragment.Companion.featureList
 import com.ho1ho.leoandroidbaseutil.common_components.examples.*
 import com.ho1ho.leoandroidbaseutil.common_components.examples.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayRawH265ByMediaCodecActivity
@@ -34,7 +32,7 @@ class CommonFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val colorBaseAdapter = ColorBaseAdapter()
+        val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 val intent = Intent(requireContext(), featureList[position].second)
@@ -59,7 +57,7 @@ class CommonFragment : Fragment() {
     }
 
     companion object {
-        val featureList = arrayOf(
+        private val featureList = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
@@ -81,7 +79,7 @@ class CommonFragment : Fragment() {
             Pair("KeepAlive", KeepAliveActivity::class.java)
         )
 
-        val color = arrayOf(
+        val colors = arrayOf(
             Color.parseColor("#80CBC4"),
             Color.parseColor("#80DEEA"),
             Color.parseColor("#81D4FA"),
@@ -101,47 +99,5 @@ class CommonFragment : Fragment() {
             Color.parseColor("#FFE082"),
             Color.parseColor("#FFF59D")
         )
-    }
-}
-
-class ColorBaseAdapter : RecyclerView.Adapter<ColorBaseAdapter.ItemViewHolder>() {
-    var onItemClickListener: OnItemClickListener? = null
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.grid_item, parent, false)
-        return ItemViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        holder.bind(featureList[position].first)
-        holder.itemView.setOnClickListener {
-            onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
-        }
-
-        holder.itemView.setOnLongClickListener {
-            onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
-            true
-        }
-    }
-
-    override fun getItemCount(): Int = featureList.size
-
-    override fun getItemId(position: Int) = position.toLong()
-
-    // =============================================
-    interface OnItemClickListener {
-        fun onItemClick(view: View, position: Int)
-        fun onItemLongClick(view: View, position: Int) {}
-    }
-    // =============================================
-
-    class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val txtView: TextView = itemView.findViewById(R.id.name)
-        private val cardView: CardView = itemView.findViewById(R.id.cardView)
-
-        fun bind(title: String) {
-            txtView.text = title
-            cardView.setCardBackgroundColor(CommonFragment.color[CommonFragment.color.indices.random()])
-        }
     }
 }

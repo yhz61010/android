@@ -9,7 +9,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.androidbase.utils.system.ResourcesUtil.saveRawResourceToFile
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.base.DecodeH265RawFile
 import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.ui.CustomSurfaceView
 import kotlinx.android.synthetic.main.activity_play_video.*

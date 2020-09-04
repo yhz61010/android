@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ho1ho.leoandroidbaseutil.R
 
@@ -34,8 +33,8 @@ class JetpackFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.findViewById<RecyclerView>(R.id.recyclerView).run {
-            layoutManager = LinearLayoutManager(requireActivity())
-            adapter = ListAdapter(JetpackFragment.mNicolasCageMovies)
+//            layoutManager = LinearLayoutManager(requireActivity())
+            adapter = ListAdapter(mNicolasCageMovies)
         }
     }
 }

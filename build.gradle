@@ -48,11 +48,12 @@ ext {
     archLifecycleVersion = '2.2.0'
     appcompatVersion = '1.2.0'
     recyclerviewVersion = '1.1.0'
-    materialVersion = '1.2.0'
+    materialVersion = '1.2.1'
     cardviewVersion = '1.0.0'
     constraintlayoutVersion = '2.0.1'
     multidexVersion = '2.0.1'
     navVersion = '2.3.0'
+    roomVersion = '2.2.5'
 
     nettyVersion = '4.1.50.Final'
     okhttpVersion = '4.8.1'

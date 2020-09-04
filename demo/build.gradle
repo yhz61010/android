@@ -80,6 +80,8 @@ android {
     }
 
     packagingOptions {
+        // This line is for room
+        exclude 'META-INF/atomicfu.kotlin_module'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/DEPENDENCIES'
@@ -136,19 +138,34 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
 
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+    // ===== Room - Start
+    implementation "androidx.room:room-runtime:$roomVersion"
+    // For Kotlin use kapt instead of annotationProcessor
+    kapt "androidx.room:room-compiler:$roomVersion"
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation "androidx.room:room-ktx:$roomVersion"
+    // optional - RxJava support for Room
+    implementation "androidx.room:room-rxjava2:$roomVersion"
+    // optional - Guava support for Room, including Optional and ListenableFuture
+    implementation "androidx.room:room-guava:$roomVersion"
+    // ===== Room - End
 
+    // Lifecycle components
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
-//    implementation "org.greenrobot:eventbus:3.1.1"
-    implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
 
     implementation project(':camera2live-sdk')
     implementation project(':screencapture-sdk')
     implementation project(':basenetty-sdk')
     implementation project(':audiorecord-sdk')
+
+    testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+
+    //    implementation "org.greenrobot:eventbus:3.1.1"
+    implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
+
 }

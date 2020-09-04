@@ -13,7 +13,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.ColorBaseAdapter
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.RecyclerviewActivity
-import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.RoomActivity
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.room.RoomActivity
 
 class JetpackFragment : Fragment() {
 

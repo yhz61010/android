@@ -8,7 +8,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.network.NetworkMonitor
 import com.ho1ho.androidbase.utils.network.NetworkUtil
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.common_components.examples.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlinx.android.synthetic.main.activity_network_monitor.*
 
 /**

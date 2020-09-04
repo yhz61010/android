@@ -12,5 +12,5 @@
         android:layout_height="match_parent"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="@integer/grid_columns"
-        tools:listitem="@layout/grid_item" />
+        tools:listitem="@layout/main_recyclerview_item" />
 </RelativeLayout>

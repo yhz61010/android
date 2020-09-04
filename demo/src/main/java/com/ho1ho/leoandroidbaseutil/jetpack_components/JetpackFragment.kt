@@ -1,28 +1,28 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components
 
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.LLog
+import com.ho1ho.leoandroidbaseutil.ColorBaseAdapter
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.common_components.examples.*
+import com.ho1ho.leoandroidbaseutil.common_components.examples.camera2.Camera2LiveActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayRawH265ByMediaCodecActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayVideoByMediaCodecActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.sharescreen.master.ScreenShareMasterActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.SocketActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketClientActivity
+import com.ho1ho.leoandroidbaseutil.common_components.examples.socket.WebSocketServerActivity
 
 class JetpackFragment : Fragment() {
-
-    companion object {
-        val mNicolasCageMovies = listOf(
-            Movie("Raising Arizona", 1987),
-            Movie("Vampire's Kiss", 1988),
-            Movie("Con Air", 1997),
-            Movie("Gone in 60 Seconds", 1997),
-            Movie("National Treasure", 2004),
-            Movie("The Wicker Man", 2006),
-            Movie("Ghost Rider", 2007),
-            Movie("Knowing", 2009)
-        )
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,38 +32,72 @@ class JetpackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
+        colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
+            override fun onItemClick(view: View, position: Int) {
+                val intent = Intent(requireContext(), featureList[position].second)
+                intent.putExtra("title", featureList[position].first)
+                startActivity(intent)
+            }
+        }
         view.findViewById<RecyclerView>(R.id.recyclerView).run {
+            setHasFixedSize(true)
 //            layoutManager = LinearLayoutManager(requireActivity())
-            adapter = ListAdapter(mNicolasCageMovies)
+            adapter = colorBaseAdapter
         }
     }
+
+    override fun onDestroy() {
+//        CustomApplication.instance.closeDebugOutputFile()
+        LLog.i(ITAG, "onDestroy()")
+        super.onDestroy()
+        // In some cases, if you use saved some parameters in Application, when app exits,
+        // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
+//        AppUtil.exitApp(this)
+    }
+
+    companion object {
+        private val featureList = arrayOf(
+            Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
+            Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
+            Pair("WebSocket Server", WebSocketServerActivity::class.java),
+            Pair("WebSocket Client", WebSocketClientActivity::class.java),
+            Pair("Socket Client", SocketActivity::class.java),
+            Pair("Device Info", DeviceInfoActivity::class.java),
+            Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
+            Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
+            Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
+            Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
+            Pair("Network Monitor", NetworkMonitorActivity::class.java),
+            Pair("Camera2Live", Camera2LiveActivity::class.java),
+            Pair("Audio", AudioActivity::class.java),
+            Pair("Coroutine", CoroutineActivity::class.java),
+            Pair("HTTP Related", HttpActivity::class.java),
+            Pair("Log", LogActivity::class.java),
+            Pair("Clipboard", ClipboardActivity::class.java),
+            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
+            Pair("KeepAlive", KeepAliveActivity::class.java)
+        )
+
+        val colors = arrayOf(
+            Color.parseColor("#80CBC4"),
+            Color.parseColor("#80DEEA"),
+            Color.parseColor("#81D4FA"),
+            Color.parseColor("#90CAF9"),
+            Color.parseColor("#9FA8DA"),
+            Color.parseColor("#A5D6A7"),
+            Color.parseColor("#B0BEC5"),
+            Color.parseColor("#B39DDB"),
+            Color.parseColor("#BCAAA4"),
+            Color.parseColor("#C5E1A5"),
+            Color.parseColor("#CE93D8"),
+            Color.parseColor("#E6EE9C"),
+            Color.parseColor("#EF9A9A"),
+            Color.parseColor("#F48FB1"),
+            Color.parseColor("#FFAB91"),
+            Color.parseColor("#FFCC80"),
+            Color.parseColor("#FFE082"),
+            Color.parseColor("#FFF59D")
+        )
+    }
 }
-
-class MovieViewHolder(inflater: LayoutInflater, parent: ViewGroup) :
-    RecyclerView.ViewHolder(inflater.inflate(R.layout.grid_item, parent, false)) {
-    private var mTitleView: TextView? = null
-
-    init {
-        mTitleView = itemView.findViewById(R.id.name)
-    }
-
-    fun bind(movie: Movie) {
-        mTitleView?.text = movie.title
-    }
-}
-
-class ListAdapter(private val list: List<Movie>) : RecyclerView.Adapter<MovieViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        return MovieViewHolder(inflater, parent)
-    }
-
-    override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
-        val movie: Movie = list[position]
-        holder.bind(movie)
-    }
-
-    override fun getItemCount(): Int = list.size
-}
-
-data class Movie(val title: String, val year: Int)

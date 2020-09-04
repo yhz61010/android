@@ -3,6 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".common_components.examples.AudioActivity">
+    tools:context=".basic_components.examples.AudioActivity">
 
 </androidx.constraintlayout.widget.ConstraintLayout>

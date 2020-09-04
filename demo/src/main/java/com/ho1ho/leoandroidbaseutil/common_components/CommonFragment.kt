@@ -1,19 +1,20 @@
 package com.ho1ho.leoandroidbaseutil.common_components
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.GridView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.common_components.CommonFragment.Companion.featureList
 import com.ho1ho.leoandroidbaseutil.common_components.examples.*
 import com.ho1ho.leoandroidbaseutil.common_components.examples.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.common_components.examples.media_player.PlayRawH265ByMediaCodecActivity
@@ -34,7 +35,11 @@ class CommonFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        view.findViewById<GridView>(R.id.gridView).adapter = ColorBaseAdapter(this)
+        view.findViewById<RecyclerView>(R.id.recyclerView).run {
+            setHasFixedSize(true)
+//            layoutManager = LinearLayoutManager(requireActivity())
+            adapter = ColorBaseAdapter(requireActivity())
+        }
     }
 
     override fun onDestroy() {
@@ -46,51 +51,8 @@ class CommonFragment : Fragment() {
 //        AppUtil.exitApp(this)
     }
 
-    class ColorBaseAdapter(private val ctx: Fragment) : BaseAdapter() {
-        internal class ViewHolder {
-            lateinit var textView: TextView
-            lateinit var cardView: CardView
-        }
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val viewHolder: ViewHolder
-            val noneConvertView: View
-
-            if (convertView == null) {
-                noneConvertView = LayoutInflater.from(parent?.context).inflate(R.layout.grid_item, parent, false)
-                viewHolder = ViewHolder()
-                viewHolder.cardView = noneConvertView.findViewById(R.id.cardView)
-                viewHolder.textView = noneConvertView.findViewById(R.id.name)
-                noneConvertView.tag = viewHolder
-            } else {
-                noneConvertView = convertView
-                viewHolder = noneConvertView.tag as ViewHolder
-            }
-            viewHolder.textView.text = featureList[position].first
-            viewHolder.cardView.setCardBackgroundColor(color[color.indices.random()])
-            viewHolder.cardView.setOnClickListener {
-                val intent = Intent(ctx.requireActivity(), featureList[position].second)
-                intent.putExtra("title", featureList[position].first)
-                ctx.startActivity(intent)
-            }
-            return noneConvertView
-        }
-
-        override fun getItem(position: Int): Any {
-            return featureList[position]
-        }
-
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
-
-        override fun getCount(): Int {
-            return featureList.size
-        }
-    }
-
     companion object {
-        private val featureList = arrayOf(
+        val featureList = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
@@ -112,7 +74,7 @@ class CommonFragment : Fragment() {
             Pair("KeepAlive", KeepAliveActivity::class.java)
         )
 
-        private val color = arrayOf(
+        val color = arrayOf(
             Color.parseColor("#80CBC4"),
             Color.parseColor("#80DEEA"),
             Color.parseColor("#81D4FA"),
@@ -132,5 +94,37 @@ class CommonFragment : Fragment() {
             Color.parseColor("#FFE082"),
             Color.parseColor("#FFF59D")
         )
+    }
+}
+
+class ColorBaseAdapter(private val ctx: Activity) : RecyclerView.Adapter<ColorBaseAdapter.ItemViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
+        return ItemViewHolder(LayoutInflater.from(parent.context), parent)
+    }
+
+    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
+        holder.bind(featureList[position].first)
+        holder.cardView.setOnClickListener {
+            val intent = Intent(ctx, featureList[position].second)
+            intent.putExtra("title", featureList[position].first)
+            ctx.startActivity(intent)
+        }
+    }
+
+    override fun getItemCount(): Int = featureList.size
+
+    override fun getItemId(position: Int) = position.toLong()
+
+    // =============================================
+
+    class ItemViewHolder(inflater: LayoutInflater, parent: ViewGroup) :
+        RecyclerView.ViewHolder(inflater.inflate(R.layout.grid_item, parent, false)) {
+        private val txtView: TextView = itemView.findViewById(R.id.name)
+        val cardView: CardView = itemView.findViewById(R.id.cardView)
+
+        fun bind(title: String) {
+            txtView.text = title
+            cardView.setCardBackgroundColor(CommonFragment.color[CommonFragment.color.indices.random()])
+        }
     }
 }

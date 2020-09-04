@@ -12,15 +12,8 @@ import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.ColorBaseAdapter
 import com.ho1ho.leoandroidbaseutil.R
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.*
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.SocketActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.WebSocketClientActivity
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.WebSocketServerActivity
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.RecyclerviewActivity
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.RoomActivity
 
 class JetpackFragment : Fragment() {
 
@@ -58,25 +51,8 @@ class JetpackFragment : Fragment() {
 
     companion object {
         private val featureList = arrayOf(
-            Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
-            Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
-            Pair("WebSocket Server", WebSocketServerActivity::class.java),
-            Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Socket Client", SocketActivity::class.java),
-            Pair("Device Info", DeviceInfoActivity::class.java),
-            Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
-            Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
-            Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
-            Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
-            Pair("Network Monitor", NetworkMonitorActivity::class.java),
-            Pair("Camera2Live", Camera2LiveActivity::class.java),
-            Pair("Audio", AudioActivity::class.java),
-            Pair("Coroutine", CoroutineActivity::class.java),
-            Pair("HTTP Related", HttpActivity::class.java),
-            Pair("Log", LogActivity::class.java),
-            Pair("Clipboard", ClipboardActivity::class.java),
-            Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
-            Pair("KeepAlive", KeepAliveActivity::class.java)
+            Pair("Room", RoomActivity::class.java),
+            Pair("Recyclerview", RecyclerviewActivity::class.java)
         )
 
         val colors = arrayOf(

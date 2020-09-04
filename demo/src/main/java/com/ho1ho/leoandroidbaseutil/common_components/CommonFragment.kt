@@ -1,6 +1,5 @@
 package com.ho1ho.leoandroidbaseutil.common_components
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -35,10 +34,18 @@ class CommonFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val colorBaseAdapter = ColorBaseAdapter()
+        colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
+            override fun onItemClick(view: View, position: Int) {
+                val intent = Intent(requireContext(), featureList[position].second)
+                intent.putExtra("title", featureList[position].first)
+                startActivity(intent)
+            }
+        }
         view.findViewById<RecyclerView>(R.id.recyclerView).run {
             setHasFixedSize(true)
 //            layoutManager = LinearLayoutManager(requireActivity())
-            adapter = ColorBaseAdapter(requireActivity())
+            adapter = colorBaseAdapter
         }
     }
 
@@ -97,17 +104,23 @@ class CommonFragment : Fragment() {
     }
 }
 
-class ColorBaseAdapter(private val ctx: Activity) : RecyclerView.Adapter<ColorBaseAdapter.ItemViewHolder>() {
+class ColorBaseAdapter : RecyclerView.Adapter<ColorBaseAdapter.ItemViewHolder>() {
+    var onItemClickListener: OnItemClickListener? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        return ItemViewHolder(LayoutInflater.from(parent.context), parent)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.grid_item, parent, false)
+        return ItemViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         holder.bind(featureList[position].first)
-        holder.cardView.setOnClickListener {
-            val intent = Intent(ctx, featureList[position].second)
-            intent.putExtra("title", featureList[position].first)
-            ctx.startActivity(intent)
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
+            true
         }
     }
 
@@ -116,11 +129,15 @@ class ColorBaseAdapter(private val ctx: Activity) : RecyclerView.Adapter<ColorBa
     override fun getItemId(position: Int) = position.toLong()
 
     // =============================================
+    interface OnItemClickListener {
+        fun onItemClick(view: View, position: Int)
+        fun onItemLongClick(view: View, position: Int) {}
+    }
+    // =============================================
 
-    class ItemViewHolder(inflater: LayoutInflater, parent: ViewGroup) :
-        RecyclerView.ViewHolder(inflater.inflate(R.layout.grid_item, parent, false)) {
+    class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val txtView: TextView = itemView.findViewById(R.id.name)
-        val cardView: CardView = itemView.findViewById(R.id.cardView)
+        private val cardView: CardView = itemView.findViewById(R.id.cardView)
 
         fun bind(title: String) {
             txtView.text = title

@@ -24,12 +24,24 @@ interface WordDao {
 
     /**
      * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     *
+     * Or you can do update like this below:
+     * ```kotlin
+     * @Query("UPDATE word_table SET word=:word WHERE id=:id")
+     * suspend fun delete(id: Int, word: String)
+     * ```
      */
     @Update
     suspend fun update(word: Word)
 
     /**
      * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     *
+     * Or you can do delete like this below:
+     * ```kotlin
+     * @Query("DELETE FROM word_table WHERE id = :id")
+     * suspend fun delete(id: Int)
+     * ```
      */
     @Delete
     suspend fun delete(word: Word)

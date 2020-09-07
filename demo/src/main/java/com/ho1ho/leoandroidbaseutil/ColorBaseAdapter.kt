@@ -38,7 +38,7 @@ class ColorBaseAdapter(private val dataArray: List<String>, private val colorArr
 
     // =============================================
     interface OnItemClickListener {
-        fun onItemClick(view: View, position: Int)
+        fun onItemClick(view: View, position: Int) {}
         fun onItemLongClick(view: View, position: Int) {}
     }
     // =============================================

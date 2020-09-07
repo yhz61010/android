@@ -21,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
-        <activity android:name=".jetpack_components.examples.RecyclerviewActivity" />
+        <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />
         <activity android:name=".jetpack_components.examples.room.RoomActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

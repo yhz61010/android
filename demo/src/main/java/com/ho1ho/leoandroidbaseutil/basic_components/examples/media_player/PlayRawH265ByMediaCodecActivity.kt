@@ -59,4 +59,9 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
         decoderManager.close()
         super.onStop()
     }
+
+    override fun onDestroy() {
+        uiScope.cancel()
+        super.onDestroy()
+    }
 }

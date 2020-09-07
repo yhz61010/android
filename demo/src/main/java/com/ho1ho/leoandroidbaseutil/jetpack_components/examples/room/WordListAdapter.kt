@@ -14,14 +14,11 @@ import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.room.entity.Word
  * Author: Michael Leo
  * Date: 2020/9/4 下午1:47
  */
-class WordListAdapter internal constructor(
-    context: Context
-) : RecyclerView.Adapter<WordListAdapter.WordViewHolder>() {
-
+class WordListAdapter internal constructor(context: Context) : RecyclerView.Adapter<WordListAdapter.WordViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
-    private var words = emptyList<Word>() // Cached copy of words
+    private var words = mutableListOf<Word>() // Cached copy of words
 
     class WordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val wordItemView: TextView = itemView.findViewById(R.id.textView)
@@ -49,11 +46,17 @@ class WordListAdapter internal constructor(
     }
 
     internal fun setWords(words: List<Word>) {
-        this.words = words
+        this.words = words.toMutableList()
         notifyDataSetChanged()
     }
 
     override fun getItemCount() = words.size
+
+    fun removeAt(pos: Int): Word {
+        val deletedWorld = words.removeAt(pos)
+        notifyDataSetChanged()
+        return deletedWorld
+    }
 
     // =============================================
     interface OnItemClickListener {

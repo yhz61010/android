@@ -22,6 +22,15 @@ interface WordDao {
     @Query("DELETE FROM word_table")
     suspend fun deleteAll()
 
+    /**
+     * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     */
     @Update
     suspend fun update(word: Word)
+
+    /**
+     * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     */
+    @Delete
+    suspend fun delete(word: Word)
 }

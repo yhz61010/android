@@ -65,4 +65,7 @@ ext {
 
     exifinterfaceVersion = '1.2.0'
     andPermissionVersion = '2.0.3'
+
+    materialDialogVersion = '3.3.0'
+    glideVersion = '4.11.0'
 }

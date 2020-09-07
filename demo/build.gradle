@@ -165,6 +165,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
 
+    implementation 'com.afollestad.material-dialogs:input:3.3.0'
     //    implementation "org.greenrobot:eventbus:3.1.1"
     implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
 

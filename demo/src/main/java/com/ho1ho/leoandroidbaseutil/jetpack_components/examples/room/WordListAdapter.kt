@@ -1,5 +1,6 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.room
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -17,10 +18,12 @@ class WordListAdapter internal constructor(
     context: Context
 ) : RecyclerView.Adapter<WordListAdapter.WordViewHolder>() {
 
+    var onItemClickListener: OnItemClickListener? = null
+
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private var words = emptyList<Word>() // Cached copy of words
 
-    inner class WordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class WordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val wordItemView: TextView = itemView.findViewById(R.id.textView)
     }
 
@@ -29,9 +32,20 @@ class WordListAdapter internal constructor(
         return WordViewHolder(itemView)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: WordViewHolder, position: Int) {
         val current = words[position]
         holder.wordItemView.text = current.word
+        holder.itemView.setTag(R.id.word_id, current.id)
+
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
+            true
+        }
     }
 
     internal fun setWords(words: List<Word>) {
@@ -40,4 +54,11 @@ class WordListAdapter internal constructor(
     }
 
     override fun getItemCount() = words.size
+
+    // =============================================
+    interface OnItemClickListener {
+        fun onItemClick(view: View, position: Int) {}
+        fun onItemLongClick(view: View, position: Int) {}
+    }
+    // =============================================
 }

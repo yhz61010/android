@@ -1,10 +1,7 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.room.dao
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.room.entity.Word
 
 /**
@@ -24,4 +21,7 @@ interface WordDao {
 
     @Query("DELETE FROM word_table")
     suspend fun deleteAll()
+
+    @Update
+    suspend fun update(word: Word)
 }

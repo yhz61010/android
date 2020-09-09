@@ -457,7 +457,8 @@ class Camera2ComponentHelper(
 
             override fun onDisconnected(device: CameraDevice) {
                 Log.w(TAG, "Camera $cameraId has been disconnected")
-                context.requireActivity().finish()
+                // FIXME In some cases, call this method will cause crash
+//                context.requireActivity().finish()
             }
 
             override fun onClosed(camera: CameraDevice) {

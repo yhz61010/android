@@ -19,12 +19,12 @@ class KeepAlive(private val context: Context) {
 //        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     }
 
-    private val mediaPlayer by lazy { MediaPlayer.create(context, R.raw.magic_undead) }
+    private val mediaPlayer by lazy { MediaPlayer.create(context, R.raw.single_note30) }
 
     fun keepAlive() {
         LLog.i(TAG, "Start keepAlive()")
         mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
-        mediaPlayer.setVolume(0.01F, 0.01F)
+//        mediaPlayer.setVolume(0.01F, 0.01F)
         mediaPlayer.isLooping = true
         mediaPlayer.start()
     }

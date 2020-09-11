@@ -1,14 +1,18 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base
 
 import android.annotation.SuppressLint
+import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.github.florent37.viewanimator.ViewAnimator
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
 import com.ho1ho.leoandroidbaseutil.R
@@ -22,6 +26,7 @@ import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.Ite
 class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView.Adapter<SimpleAdapter.ItemViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
     private var lastDeletedItem: Pair<Int, ItemBean>? = null
+    private var selectedItem = SparseArray<ItemBean>()
     var startDragListener: OnStartDragListener? = null
     var editMode: Boolean = false
         private set
@@ -42,12 +47,57 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
             true
         }
+
         holder.ivDrag.visibility = if (editMode) View.VISIBLE else View.GONE
         holder.ivDrag.setOnTouchListener { _, motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
                 startDragListener?.onStartDrag(holder)
             }
             false
+        }
+
+        holder.cb.visibility = if (editMode) View.VISIBLE else View.GONE
+        holder.cb.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                selectedItem.put(holder.layoutPosition, dataArray[holder.layoutPosition])
+            } else {
+                selectedItem.delete(holder.layoutPosition)
+            }
+        }
+        if (editMode) {
+            ViewAnimator
+                .animate(holder.cb)
+                .dp().fadeIn()
+                .start()
+
+            ViewAnimator
+                .animate(holder.primaryLL)
+                .dp().translationX(0F, 5F)
+                .decelerate()
+                .duration(200)
+                .start()
+
+            ViewAnimator
+                .animate(holder.ivDrag)
+                .fadeIn()
+                .start()
+        } else {
+            ViewAnimator
+                .animate(holder.cb)
+                .dp().fadeOut()
+                .start()
+
+            ViewAnimator
+                .animate(holder.primaryLL)
+                .dp().translationX(5F, 0F)
+                .decelerate()
+                .duration(200)
+                .start()
+
+            ViewAnimator
+                .animate(holder.ivDrag)
+                .fadeOut()
+                .start()
         }
     }
 
@@ -108,6 +158,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         private val txtView: TextView = itemView.findViewById(R.id.name)
         private val ivAlbum: ShapeableImageView = itemView.findViewById(R.id.ivAlbum)
         val ivDrag: ImageView = itemView.findViewById(R.id.ivDrag)
+        val cb: CheckBox = itemView.findViewById(R.id.cb)
+        val primaryLL: LinearLayout = itemView.findViewById(R.id.primaryLL)
 
         fun bind(item: ItemBean) {
             txtView.text = item.title

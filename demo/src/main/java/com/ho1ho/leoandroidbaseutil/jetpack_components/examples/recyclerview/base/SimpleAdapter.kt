@@ -3,6 +3,7 @@ package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.ba
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -26,7 +27,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        holder.bind(dataArray.get(position))
+        holder.bind(dataArray[position])
         holder.itemView.setOnClickListener {
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
@@ -68,15 +69,16 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
 
     class ItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         private val txtView: TextView = itemView.findViewById(R.id.name)
-        private val iv: ShapeableImageView = itemView.findViewById(R.id.ivAlbum)
+        private val ivAlbum: ShapeableImageView = itemView.findViewById(R.id.ivAlbum)
+        private val ivDrag: ImageView = itemView.findViewById(R.id.ivDrag)
 
         fun bind(item: ItemBean) {
             txtView.text = item.title
-            iv.shapeAppearanceModel = iv.shapeAppearanceModel
+            ivAlbum.shapeAppearanceModel = ivAlbum.shapeAppearanceModel
                 .toBuilder()
                 .setAllCorners(CornerFamily.ROUNDED, 30F)
                 .build()
-            Glide.with(view).load(item.imageUrl).into(iv)
+            Glide.with(view).load(item.imageUrl).into(ivAlbum)
         }
     }
 }

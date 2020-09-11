@@ -74,7 +74,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
             txtView.text = item.title
             iv.shapeAppearanceModel = iv.shapeAppearanceModel
                 .toBuilder()
-                .setAllCorners(CornerFamily.ROUNDED, 40F)
+                .setAllCorners(CornerFamily.ROUNDED, 30F)
                 .build()
             Glide.with(view).load(item.imageUrl).into(iv)
         }

@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview
+package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +9,7 @@ import com.bumptech.glide.Glide
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
 import com.ho1ho.leoandroidbaseutil.R
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.ItemBean
 
 /**
  * Author: Michael Leo
@@ -39,6 +40,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
     override fun getItemCount(): Int = dataArray.size
 
     override fun getItemId(position: Int) = position.toLong()
+
+    fun insertAdd(position: Int, item: ItemBean) {
+        dataArray.add(position, item)
+        notifyItemRangeInserted(position, 1)
+    }
 
     fun removeAt(position: Int) {
         lastDeletedItem = Pair(position, dataArray.removeAt(position))

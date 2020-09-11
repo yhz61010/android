@@ -3,4 +3,6 @@
 
     <string name="title_common">Common</string>
     <string name="title_jetpack">Jetpack</string>
+
+    <string name="recyclerview_demo_add_item">Add Item</string>
 </resources>

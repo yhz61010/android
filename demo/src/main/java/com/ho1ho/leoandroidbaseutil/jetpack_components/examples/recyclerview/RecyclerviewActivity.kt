@@ -9,6 +9,8 @@ import com.ho1ho.androidbase.exts.snack
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SimpleAdapter
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SwipeToDeleteCallback
 import kotlinx.android.synthetic.main.activity_recyclerview.*
 
 

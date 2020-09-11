@@ -1,4 +1,4 @@
-package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview
+package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base
 
 /**
  * Author: Michael Leo

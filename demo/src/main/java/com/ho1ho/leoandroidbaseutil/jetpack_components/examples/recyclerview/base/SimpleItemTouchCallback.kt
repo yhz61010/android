@@ -14,7 +14,7 @@ import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 
-abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleCallback(
+abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.SimpleCallback(
     ItemTouchHelper.UP or ItemTouchHelper.DOWN,
     ItemTouchHelper.LEFT/* or ItemTouchHelper.UP or ItemTouchHelper.DOWN*/
 ) {

@@ -46,6 +46,7 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
     api "androidx.lifecycle:lifecycle-livedata-core-ktx:$rootProject.ext.archLifecycleVersion"
+    implementation "com.google.android.material:material:$materialVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidTestRunnerVersion"

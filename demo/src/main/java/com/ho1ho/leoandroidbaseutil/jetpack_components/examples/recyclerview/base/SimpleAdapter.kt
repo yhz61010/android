@@ -82,7 +82,16 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         fun onItemLongClick(view: View, position: Int) {}
     }
 
+    /**
+     * Implement this interface will let you drag item directly on an icon.
+     */
     interface OnStartDragListener {
+        /**
+         * Call the following code in [onStartDrag]
+         * ```kotlin
+         * itemTouchHelper.startDrag(viewHolder)
+         * ```
+         */
         fun onStartDrag(viewHolder: RecyclerView.ViewHolder)
     }
     // =============================================

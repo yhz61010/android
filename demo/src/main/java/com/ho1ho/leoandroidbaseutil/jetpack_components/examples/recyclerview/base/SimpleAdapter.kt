@@ -23,6 +23,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     var onItemClickListener: OnItemClickListener? = null
     private var lastDeletedItem: Pair<Int, ItemBean>? = null
     var startDragListener: OnStartDragListener? = null
+    var editMode: Boolean = false
+        private set
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_demo_item, parent, false)
@@ -40,6 +42,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
             true
         }
+        holder.ivDrag.visibility = if (editMode) View.VISIBLE else View.GONE
         holder.ivDrag.setOnTouchListener { _, motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
                 startDragListener?.onStartDrag(holder)
@@ -51,6 +54,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun getItemCount(): Int = dataArray.size
 
     override fun getItemId(position: Int) = position.toLong()
+
+    fun toggleEditMode() {
+        notifyDataSetChanged()
+        editMode = !editMode
+    }
 
     fun insertAdd(position: Int, item: ItemBean) {
         dataArray.add(position, item)

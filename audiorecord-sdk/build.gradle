@@ -33,6 +33,15 @@ android {
             jniLibs.srcDirs = ['src/main/libs']
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
 }
 
 dependencies {

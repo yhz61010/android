@@ -33,12 +33,12 @@ abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleC
          * if (viewHolder?.adapterPosition == 0) return 0
          */
         LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
-        if (viewHolder.adapterPosition + 1 % 5 == 0) return 0
+        if ((viewHolder.adapterPosition + 1) % 5 == 0) return 0
         return super.getMovementFlags(recyclerView, viewHolder)
     }
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-        (recyclerView.adapter as SimpleAdapter).itemMove(viewHolder.adapterPosition, target.adapterPosition);
+        (recyclerView.adapter as SimpleAdapter).itemMove(viewHolder.adapterPosition, target.adapterPosition)
         return true
     }
 

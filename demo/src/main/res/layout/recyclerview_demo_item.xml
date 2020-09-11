@@ -28,4 +28,12 @@
         android:text="Title"
         android:layout_marginLeft="70dp"
         android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/ivDrag"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_gravity="right|end"
+        android:gravity="center_vertical"
+        android:src="@drawable/ic_baseline_drag_handle_24" />
 </androidx.cardview.widget.CardView>

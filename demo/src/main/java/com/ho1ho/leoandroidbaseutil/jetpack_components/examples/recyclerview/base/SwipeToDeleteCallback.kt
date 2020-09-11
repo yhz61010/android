@@ -10,6 +10,8 @@ import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 
 abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
@@ -27,7 +29,8 @@ abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleC
          * if (viewHolder?.itemViewType == YourAdapter.SOME_TYPE) return 0
          * if (viewHolder?.adapterPosition == 0) return 0
          */
-//        if (viewHolder?.adapterPosition == 10) return 0
+        LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
+        if (viewHolder.adapterPosition % 5 == 0) return 0
         return super.getMovementFlags(recyclerView, viewHolder)
     }
 

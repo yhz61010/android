@@ -65,7 +65,20 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.recyclerview_menu, menu)
-        return true
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val editItem = menu.findItem(R.id.edit)
+        val cancelItem = menu.findItem(R.id.cancel)
+        if (simpleAdapter.editMode) {
+            editItem.isVisible = false
+            cancelItem.isVisible = true
+        } else {
+            editItem.isVisible = true
+            cancelItem.isVisible = false
+        }
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -76,6 +89,10 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                     ItemBean("Add-${SystemClock.elapsedRealtime()}", "https://picsum.photos/80?random=${SystemClock.elapsedRealtime()}")
                 )
                 recyclerView.scrollToPosition(0)
+            }
+            R.id.edit, R.id.cancel -> {
+                simpleAdapter.toggleEditMode()
+                invalidateOptionsMenu()
             }
         }
         return true

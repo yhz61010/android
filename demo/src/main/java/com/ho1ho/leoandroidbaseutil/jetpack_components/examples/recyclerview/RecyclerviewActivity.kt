@@ -26,7 +26,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
 
         val featureList = mutableListOf<ItemBean>()
         for (i in 0..100) {
-            featureList.add(ItemBean("Demo String $i", "https://picsum.photos/80?random=$i"))
+            featureList.add(ItemBean("Demo String ${i + 1}", "https://picsum.photos/80?random=$i"))
         }
 
         simpleAdapter = SimpleAdapter(featureList)
@@ -56,6 +56,11 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
         itemTouchHelper.attachToRecyclerView(recyclerView)
+        simpleAdapter.startDragListener = object : SimpleAdapter.OnStartDragListener {
+            override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
+                itemTouchHelper.startDrag(viewHolder)
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

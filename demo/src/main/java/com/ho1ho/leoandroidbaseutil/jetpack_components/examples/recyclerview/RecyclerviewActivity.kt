@@ -42,7 +42,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.adapterPosition)
-                rootLL.snack("Undo delete?") {
+                rootLL.snack("Undo last delete?") {
                     action("Undo") { adapter.undo() }
                 }
             }

@@ -1,6 +1,9 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview
 
 import android.os.Bundle
+import android.os.SystemClock
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +18,8 @@ import kotlinx.android.synthetic.main.activity_recyclerview.*
 
 
 class RecyclerviewActivity : BaseDemonstrationActivity() {
+    private lateinit var simpleAdapter: SimpleAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recyclerview)
@@ -24,7 +29,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             featureList.add(ItemBean("Demo String $i", "https://picsum.photos/80?random=$i"))
         }
 
-        val simpleAdapter = SimpleAdapter(featureList)
+        simpleAdapter = SimpleAdapter(featureList)
         simpleAdapter.onItemClickListener = object : SimpleAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 ToastUtil.showToast("You click position: $position")
@@ -51,6 +56,24 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
         itemTouchHelper.attachToRecyclerView(recyclerView)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.recyclerview_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.add_item -> {
+                simpleAdapter.insertAdd(
+                    0,
+                    ItemBean("Add-${SystemClock.elapsedRealtime()}", "https://picsum.photos/80?random=${SystemClock.elapsedRealtime()}")
+                )
+                recyclerView.scrollToPosition(0)
+            }
+        }
+        return true
     }
 }
 

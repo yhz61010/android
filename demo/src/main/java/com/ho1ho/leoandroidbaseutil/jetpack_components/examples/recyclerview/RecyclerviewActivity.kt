@@ -30,6 +30,10 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             override fun onItemClick(view: View, position: Int) {
                 ToastUtil.showToast("You click position: $position")
             }
+
+            override fun onItemLongClick(view: View, position: Int) {
+                ToastUtil.showToast("Long click on position: $position")
+            }
         }
         recyclerView.run {
             setHasFixedSize(true)

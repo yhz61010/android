@@ -171,5 +171,5 @@ dependencies {
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
     //    implementation "org.greenrobot:eventbus:3.1.1"
     implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
-    implementation "io.karn:notify:1.3.0"
+    implementation "io.karn:notify:$karnNotifyVersion"
 }

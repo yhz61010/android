@@ -14,7 +14,10 @@ import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 
-abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleCallback(
+    ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+    ItemTouchHelper.LEFT/* or ItemTouchHelper.UP or ItemTouchHelper.DOWN*/
+) {
     private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_outline_delete_forever)!!
     private val intrinsicWidth = deleteIcon.intrinsicWidth
     private val intrinsicHeight = deleteIcon.intrinsicHeight
@@ -30,12 +33,13 @@ abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleC
          * if (viewHolder?.adapterPosition == 0) return 0
          */
         LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
-        if (viewHolder.adapterPosition % 5 == 0) return 0
+        if (viewHolder.adapterPosition + 1 % 5 == 0) return 0
         return super.getMovementFlags(recyclerView, viewHolder)
     }
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-        return false
+        (recyclerView.adapter as SimpleAdapter).itemMove(viewHolder.adapterPosition, target.adapterPosition);
+        return true
     }
 
     override fun onChildDraw(
@@ -47,7 +51,10 @@ abstract class SwipeToDeleteCallback(context: Context) : ItemTouchHelper.SimpleC
         actionState: Int,
         isCurrentlyActive: Boolean
     ) {
-
+        if (actionState != ItemTouchHelper.ACTION_STATE_SWIPE) {
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            return
+        }
         val itemView = viewHolder.itemView
         val itemHeight = itemView.bottom - itemView.top
         val isCanceled = dX == 0f && !isCurrentlyActive

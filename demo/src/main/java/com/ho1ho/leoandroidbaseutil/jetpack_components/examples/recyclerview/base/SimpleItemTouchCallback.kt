@@ -26,20 +26,27 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
     private val clearPaint = Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) }
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-        /**
-         * To disable "swipe" for specific item return 0 here.
-         * For example:
-         * if (viewHolder?.itemViewType == YourAdapter.SOME_TYPE) return 0
-         * if (viewHolder?.adapterPosition == 0) return 0
-         */
-        LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
-        if ((viewHolder.adapterPosition + 1) % 5 == 0) return 0
-        return super.getMovementFlags(recyclerView, viewHolder)
+        val adapter = recyclerView.adapter as SimpleAdapter
+        return if (adapter.editMode) {
+            /**
+             * To disable "swipe" for specific item return 0 here.
+             * For example:
+             * if (viewHolder?.itemViewType == YourAdapter.SOME_TYPE) return 0
+             * if (viewHolder?.adapterPosition == 0) return 0
+             */
+            LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
+            super.getMovementFlags(recyclerView, viewHolder)
+        } else 0
     }
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-        (recyclerView.adapter as SimpleAdapter).itemMove(viewHolder.adapterPosition, target.adapterPosition)
-        return true
+        val adapter = recyclerView.adapter as SimpleAdapter
+        return if (adapter.editMode) {
+            adapter.itemMove(viewHolder.adapterPosition, target.adapterPosition)
+            true
+        } else {
+            false
+        }
     }
 
     override fun onChildDraw(

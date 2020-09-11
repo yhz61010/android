@@ -67,7 +67,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         if (editMode) {
             ViewAnimator
                 .animate(holder.cb)
-                .dp().fadeIn()
+                .fadeIn()
                 .start()
 
             ViewAnimator
@@ -84,7 +84,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         } else {
             ViewAnimator
                 .animate(holder.cb)
-                .dp().fadeOut()
+                .fadeOut()
                 .start()
 
             ViewAnimator

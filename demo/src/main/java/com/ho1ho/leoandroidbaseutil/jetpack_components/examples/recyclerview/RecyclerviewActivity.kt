@@ -13,7 +13,7 @@ import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SimpleAdapter
-import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SwipeToDeleteCallback
+import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SimpleItemTouchCallback
 import kotlinx.android.synthetic.main.activity_recyclerview.*
 
 
@@ -45,7 +45,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             adapter = simpleAdapter
         }
 
-        val swipeHandler = object : SwipeToDeleteCallback(this) {
+        val itemTouchHandler = object : SimpleItemTouchCallback(this) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.adapterPosition)
@@ -54,7 +54,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 }
             }
         }
-        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        val itemTouchHelper = ItemTouchHelper(itemTouchHandler)
         itemTouchHelper.attachToRecyclerView(recyclerView)
         simpleAdapter.startDragListener = object : SimpleAdapter.OnStartDragListener {
             override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {

@@ -5,7 +5,9 @@ import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ho1ho.androidbase.exts.action
 import com.ho1ho.androidbase.exts.snack
@@ -40,7 +42,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             }
         }
         recyclerView.run {
-            setHasFixedSize(true)
+//            setHasFixedSize(true)
 //            layoutManager = LinearLayoutManager(requireActivity())
             adapter = simpleAdapter
         }
@@ -78,6 +80,16 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             editItem.isVisible = true
             cancelItem.isVisible = false
         }
+
+        val gridItem = menu.findItem(R.id.change_to_grid)
+        val listItem = menu.findItem(R.id.change_to_list)
+        if (simpleAdapter.displayStyle == SimpleAdapter.STYLE_LIST) {
+            listItem.isVisible = true
+            gridItem.isVisible = false
+        } else {
+            listItem.isVisible = false
+            gridItem.isVisible = true
+        }
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -94,8 +106,24 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 simpleAdapter.toggleEditMode()
                 invalidateOptionsMenu()
             }
+            R.id.change_to_grid, R.id.change_to_list -> {
+                simpleAdapter.toggleDisplayMode()
+                invalidateOptionsMenu()
+                changeDisplayStyle()
+            }
         }
         return true
+    }
+
+    private fun changeDisplayStyle() {
+        when (simpleAdapter.displayStyle) {
+            SimpleAdapter.STYLE_LIST -> {
+                recyclerView.layoutManager = LinearLayoutManager(this)
+            }
+            SimpleAdapter.STYLE_GRID -> {
+                recyclerView.layoutManager = GridLayoutManager(this, resources.getInteger(R.integer.grid_columns))
+            }
+        }
     }
 }
 

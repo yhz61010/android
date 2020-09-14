@@ -48,7 +48,6 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             true
         }
 
-        holder.ivDrag.visibility = if (editMode) View.VISIBLE else View.GONE
         holder.ivDrag.setOnTouchListener { _, motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
                 startDragListener?.onStartDrag(holder)
@@ -56,7 +55,6 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             false
         }
 
-        holder.cb.visibility = if (editMode) View.VISIBLE else View.GONE
         holder.cb.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 selectedItem.put(holder.layoutPosition, dataArray[holder.layoutPosition])
@@ -67,7 +65,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         if (editMode) {
             ViewAnimator
                 .animate(holder.cb)
-                .fadeIn()
+                .fadeIn().onStart { holder.cb.visibility = View.VISIBLE }
+                .duration(400)
                 .start()
 
             ViewAnimator
@@ -80,12 +79,15 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             ViewAnimator
                 .animate(holder.ivDrag)
                 .fadeIn()
+                .duration(400).onStart { holder.ivDrag.visibility = View.VISIBLE }
                 .start()
         } else {
-            ViewAnimator
-                .animate(holder.cb)
-                .fadeOut()
-                .start()
+            holder.cb.visibility = View.GONE
+//            ViewAnimator
+//                .animate(holder.cb)
+//                .fadeOut().onStop { holder.cb.visibility = View.GONE  }
+//                .duration(400)
+//                .start()
 
             ViewAnimator
                 .animate(holder.primaryLL)
@@ -96,7 +98,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
             ViewAnimator
                 .animate(holder.ivDrag)
-                .fadeOut()
+                .fadeOut().onStop { holder.ivDrag.visibility = View.GONE }
+                .duration(400)
                 .start()
         }
     }

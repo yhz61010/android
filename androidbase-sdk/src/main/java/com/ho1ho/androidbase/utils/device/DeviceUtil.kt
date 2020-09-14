@@ -35,7 +35,7 @@ object DeviceUtil {
     const val VENDOR_SAMSUNG = "samsung"
     const val VENDOR_OTHER = "other"
     private const val EXTREME_LARGE_SCREEN_THRESHOLD = 2560
-    var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
+    private var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
 
     fun getDensity(ctx: Context) = ctx.resources.displayMetrics.densityDpi
 
@@ -190,7 +190,7 @@ object DeviceUtil {
      *
      * @return
      */
-    private fun getNavigationBarName(): String? {
+    fun getNavigationBarName(): String? {
         val brand = Build.BRAND
         if (TextUtils.isEmpty(brand)) return "navigationbar_is_min"
         return if (brand.equals("HUAWEI", ignoreCase = true) || brand.equals("HONOR", ignoreCase = true)) {
@@ -365,7 +365,7 @@ object DeviceUtil {
         }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.max() ?: -1
     }.getOrDefault(-2)
 
-    fun getNavigationBarName(ctx: Context): String {
+    fun getDeviceInfo(ctx: Context): String {
         val memInfo = getMemInfoInMegs(ctx)
         val screenSize = getResolutionWithVirtualKey(ctx)
         return """

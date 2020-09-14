@@ -31,8 +31,7 @@
         android:id="@+id/change_to_list"
         android:icon="@drawable/ic_baseline_view_list_24"
         app:showAsAction="ifRoom"
-        android:title="@string/recyclerview_demo_change_to_list"
-        android:visible="false" />
+        android:title="@string/recyclerview_demo_change_to_list" />
 
 
 </menu>

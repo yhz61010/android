@@ -81,14 +81,14 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             cancelItem.isVisible = false
         }
 
-        val gridItem = menu.findItem(R.id.change_to_grid)
         val listItem = menu.findItem(R.id.change_to_list)
+        val gridItem = menu.findItem(R.id.change_to_grid)
         if (simpleAdapter.displayStyle == SimpleAdapter.STYLE_LIST) {
-            listItem.isVisible = true
-            gridItem.isVisible = false
-        } else {
             listItem.isVisible = false
             gridItem.isVisible = true
+        } else {
+            listItem.isVisible = true
+            gridItem.isVisible = false
         }
         return super.onPrepareOptionsMenu(menu)
     }

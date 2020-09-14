@@ -24,11 +24,18 @@ import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.Ite
  * Date: 2020/9/11 上午11:24
  */
 class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView.Adapter<SimpleAdapter.ItemViewHolder>() {
+    companion object {
+        const val STYLE_LIST = 1
+        const val STYLE_GRID = 2
+    }
+
     var onItemClickListener: OnItemClickListener? = null
     private var lastDeletedItem: Pair<Int, ItemBean>? = null
     private var selectedItem = SparseArray<ItemBean>()
     var startDragListener: OnStartDragListener? = null
     var editMode: Boolean = false
+        private set
+    var displayStyle: Int = STYLE_LIST
         private set
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -111,6 +118,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     fun toggleEditMode() {
         notifyDataSetChanged()
         editMode = !editMode
+    }
+
+    fun toggleDisplayMode() {
+        notifyDataSetChanged()
+        displayStyle = if (displayStyle == STYLE_LIST) STYLE_GRID else STYLE_LIST
     }
 
     fun insertAdd(position: Int, item: ItemBean) {

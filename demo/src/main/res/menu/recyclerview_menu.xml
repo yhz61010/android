@@ -10,7 +10,7 @@
 
     <item
         android:id="@+id/cancel"
-        android:icon="@drawable/ic_baseline_cancel_24"
+        android:icon="@drawable/ic_baseline_close_24"
         app:showAsAction="ifRoom"
         android:title="@string/recyclerview_demo_menu_cancel"
         android:visible="false" />
@@ -20,5 +20,19 @@
         android:icon="@drawable/ic_baseline_add_24"
         app:showAsAction="ifRoom"
         android:title="@string/recyclerview_demo_menu_add_item" />
+
+    <item
+        android:id="@+id/change_to_grid"
+        android:icon="@drawable/ic_baseline_view_module_24"
+        app:showAsAction="ifRoom"
+        android:title="@string/recyclerview_demo_change_to_grid" />
+
+    <item
+        android:id="@+id/change_to_list"
+        android:icon="@drawable/ic_baseline_view_list_24"
+        app:showAsAction="ifRoom"
+        android:title="@string/recyclerview_demo_change_to_list"
+        android:visible="false" />
+
 
 </menu>

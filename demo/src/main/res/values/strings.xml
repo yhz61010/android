@@ -7,4 +7,6 @@
     <string name="recyclerview_demo_menu_add_item">Add Item</string>
     <string name="recyclerview_demo_menu_edit_item">Edit</string>
     <string name="recyclerview_demo_menu_cancel">Cancel</string>
+    <string name="recyclerview_demo_change_to_grid">Grid</string>
+    <string name="recyclerview_demo_change_to_list">List</string>
 </resources>

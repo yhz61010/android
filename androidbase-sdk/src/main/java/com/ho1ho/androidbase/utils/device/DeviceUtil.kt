@@ -1,11 +1,18 @@
 package com.ho1ho.androidbase.utils.device
 
+import android.R
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Point
 import android.os.Build
+import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.view.View
+import android.view.Window
 import android.view.WindowManager
 import com.ho1ho.androidbase.utils.AppUtil
 import com.ho1ho.androidbase.utils.LLog
@@ -28,7 +35,7 @@ object DeviceUtil {
     const val VENDOR_SAMSUNG = "samsung"
     const val VENDOR_OTHER = "other"
     private const val EXTREME_LARGE_SCREEN_THRESHOLD = 2560
-    private var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
+    var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
 
     fun getDensity(ctx: Context) = ctx.resources.displayMetrics.densityDpi
 
@@ -85,21 +92,183 @@ object DeviceUtil {
         return result
     }
 
-    fun getRatio(ctx: Context): Float {
+    /**
+     * Action bar or Title bar height
+     */
+    fun getTitleHeight(activity: Activity) = activity.window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
+
+    //    //获取虚拟按键的高度
+    //    public static int getNavigationBarHeight(Context context) {
+    //        int result = 0;
+    //        if (hasNavBar(context)) {
+    //            Resources res = context.getResources();
+    //            int resourceId = res.getIdentifier("navigation_bar_height", "dimen", "android");
+    //            if (resourceId > 0) {
+    //                result = res.getDimensionPixelSize(resourceId);
+    //            }
+    //        }
+    //        return result;
+    //    }
+    //
+    //    /**
+    //     * 检查是否存在虚拟按键栏
+    //     *
+    //     * @param context
+    //     * @return
+    //     */
+    //    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    //    private static boolean hasNavBar(Context context) {
+    //        Resources res = context.getResources();
+    //        int resourceId = res.getIdentifier("config_showNavigationBar", "bool", "android");
+    //        if (resourceId != 0) {
+    //            boolean hasNav = res.getBoolean(resourceId);
+    //            // check override flag
+    //            String sNavBarOverride = getNavBarOverride();
+    //            if ("1".equals(sNavBarOverride)) {
+    //                hasNav = false;
+    //            } else if ("0".equals(sNavBarOverride)) {
+    //                hasNav = true;
+    //            }
+    //            return hasNav;
+    //        } else { // fallback
+    //            return !ViewConfiguration.get(context).hasPermanentMenuKey();
+    //        }
+    //    }
+    //
+    //    /**
+    //     * 判断虚拟按键栏是否重写
+    //     *
+    //     * @return
+    //     */
+    //    private static String getNavBarOverride() {
+    //        String sNavBarOverride = null;
+    //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+    //            try {
+    //                Class c = Class.forName("android.os.SystemProperties");
+    //                Method m = c.getDeclaredMethod("get", String.class);
+    //                m.setAccessible(true);
+    //                sNavBarOverride = (String) m.invoke(null, "qemu.hw.mainkeys");
+    //            } catch (Throwable e) {
+    //            }
+    //        }
+    //        return sNavBarOverride;
+    //    }
+    /**
+     * 获取虚拟按键的高度
+     * 1. 全面屏下
+     * 1.1 开启全面屏开关-返回0
+     * 1.2 关闭全面屏开关-执行非全面屏下处理方式
+     * 2. 非全面屏下
+     * 2.1 没有虚拟键-返回0
+     * 2.1 虚拟键隐藏-返回0
+     * 2.2 虚拟键存在且未隐藏-返回虚拟键实际高度
+     */
+    fun getNavigationBarHeightIfRoom(context: Context): Int {
+        return if (navigationGestureEnabled(context)) {
+            0
+        } else getCurrentNavigationBarHeight(context as Activity)
+    }
+
+    /**
+     * 全面屏（是否开启全面屏开关 0 关闭  1 开启）
+     *
+     * @param context
+     * @return
+     */
+    @SuppressLint("ObsoleteSdkInt")
+    fun navigationGestureEnabled(context: Context): Boolean {
+        val value = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            Settings.System.getInt(context.contentResolver, getNavigationBarName(), 0)
+        } else {
+            Settings.Global.getInt(context.contentResolver, getNavigationBarName(), 0)
+        }
+        return value != 0
+    }
+
+    /**
+     * 获取设备信息（目前支持几大主流的全面屏手机，亲测华为、小米、oppo、魅族、vivo都可以）
+     *
+     * @return
+     */
+    private fun getNavigationBarName(): String? {
+        val brand = Build.BRAND
+        if (TextUtils.isEmpty(brand)) return "navigationbar_is_min"
+        return if (brand.equals("HUAWEI", ignoreCase = true) || brand.equals("HONOR", ignoreCase = true)) {
+            "navigationbar_is_min"
+        } else if (brand.equals("XIAOMI", ignoreCase = true)) {
+            "force_fsg_nav_bar"
+        } else if (brand.equals("VIVO", ignoreCase = true)) {
+            "navigation_gesture_on"
+        } else if (brand.equals("OPPO", ignoreCase = true)) {
+            "navigation_gesture_on"
+        } else {
+            "navigationbar_is_min"
+        }
+    }
+
+    /**
+     * 非全面屏下 虚拟键实际高度(隐藏后高度为0)
+     *
+     * @param activity
+     * @return
+     */
+    fun getCurrentNavigationBarHeight(activity: Activity): Int {
+        return if (isNavigationBarShown(activity)) {
+            getNavigationBarHeight(activity)
+        } else {
+            0
+        }
+    }
+
+    /**
+     * 非全面屏下 虚拟按键是否打开
+     *
+     * @param activity
+     * @return
+     */
+    fun isNavigationBarShown(activity: Activity): Boolean {
+        //虚拟键的view,为空或者不可见时是隐藏状态
+        val view = activity.findViewById<View>(R.id.navigationBarBackground) ?: return false
+        val visible = view.visibility
+        return !(visible == View.GONE || visible == View.INVISIBLE)
+    }
+
+    /**
+     * 非全面屏下 虚拟键高度(无论是否隐藏)
+     *
+     * @param context
+     * @return
+     */
+    fun getNavigationBarHeight(context: Context): Int {
+        var result = 0
+        val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        if (resourceId > 0) {
+            result = context.resources.getDimensionPixelSize(resourceId)
+        }
+        return result
+    }
+
+    fun getScreenRatio(ctx: Context): Float {
         val p = getResolution(ctx)
         return 1.0f * p.x / p.y
     }
 
     val uuid: String = UUID.randomUUID().toString()
 
-    private fun getImei(ctx: Context, slotId: Int): String {
+    fun getImei(ctx: Context): String? {
+        val imei0 = getImei(ctx, 0)
+        val imei1 = getImei(ctx, 1)
+        return if (imei0.isNullOrBlank()) imei1 else imei0
+    }
+
+    private fun getImei(ctx: Context, slotId: Int): String? {
         return try {
             val manager = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
             method.invoke(manager, slotId) as String
         } catch (e: Exception) {
             LLog.e(TAG, "getIMEI error. msg=${e.message}")
-            ""
+            return null
         }
     }
 
@@ -196,7 +365,7 @@ object DeviceUtil {
         }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.max() ?: -1
     }.getOrDefault(-2)
 
-    fun getDeviceInfo(ctx: Context): String {
+    fun getNavigationBarName(ctx: Context): String {
         val memInfo = getMemInfoInMegs(ctx)
         val screenSize = getResolutionWithVirtualKey(ctx)
         return """

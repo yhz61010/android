@@ -62,7 +62,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             false
         }
 
-        holder.cb.setOnCheckedChangeListener { _, isChecked ->
+        holder.selectBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 selectedItem.put(holder.layoutPosition, dataArray[holder.layoutPosition])
             } else {
@@ -71,8 +71,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         }
         if (editMode) {
             ViewAnimator
-                .animate(holder.cb)
-                .fadeIn().onStart { holder.cb.visibility = View.VISIBLE }
+                .animate(holder.selectBtn)
+                .fadeIn().onStart { holder.selectBtn.visibility = View.VISIBLE }
                 .duration(400)
                 .start()
 
@@ -89,7 +89,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
                 .duration(400).onStart { holder.ivDrag.visibility = View.VISIBLE }
                 .start()
         } else {
-            holder.cb.visibility = View.GONE
+            holder.selectBtn.visibility = View.GONE
 //            ViewAnimator
 //                .animate(holder.cb)
 //                .fadeOut().onStop { holder.cb.visibility = View.GONE  }
@@ -116,8 +116,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun getItemId(position: Int) = position.toLong()
 
     fun toggleEditMode() {
-        notifyDataSetChanged()
         editMode = !editMode
+        if (editMode) {
+            selectedItem.clear()
+        }
+        notifyDataSetChanged()
     }
 
     fun toggleDisplayMode() {
@@ -173,7 +176,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         private val txtView: TextView = itemView.findViewById(R.id.name)
         private val ivAlbum: ShapeableImageView = itemView.findViewById(R.id.ivAlbum)
         val ivDrag: ImageView = itemView.findViewById(R.id.ivDrag)
-        val cb: CheckBox = itemView.findViewById(R.id.cb)
+        val selectBtn: CheckBox = itemView.findViewById(R.id.selectBtn)
         val primaryLL: LinearLayout = itemView.findViewById(R.id.primaryLL)
 
         fun bind(item: ItemBean) {

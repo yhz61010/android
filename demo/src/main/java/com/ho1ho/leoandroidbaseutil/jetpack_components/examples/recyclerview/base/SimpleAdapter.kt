@@ -47,6 +47,9 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         holder.bind(dataArray[position])
         holder.itemView.setOnClickListener {
+            if (editMode) {
+                holder.selectBtn.isChecked = !(holder.selectBtn.isChecked)
+            }
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
 

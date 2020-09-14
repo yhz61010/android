@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.activity_recyclerview.*
 
 class RecyclerviewActivity : BaseDemonstrationActivity() {
     private lateinit var simpleAdapter: SimpleAdapter
+    private lateinit var itemTouchHandler: SimpleItemTouchCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +48,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             adapter = simpleAdapter
         }
 
-        val itemTouchHandler = object : SimpleItemTouchCallback(this) {
+        itemTouchHandler = object : SimpleItemTouchCallback(this) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.adapterPosition)
@@ -86,9 +87,11 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         if (simpleAdapter.displayStyle == SimpleAdapter.STYLE_LIST) {
             listItem.isVisible = false
             gridItem.isVisible = true
+            itemTouchHandler.setDefaultDragDirs(ItemTouchHelper.UP or ItemTouchHelper.DOWN)
         } else {
             listItem.isVisible = true
             gridItem.isVisible = false
+            itemTouchHandler.setDefaultDragDirs(ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
         }
         return super.onPrepareOptionsMenu(menu)
     }

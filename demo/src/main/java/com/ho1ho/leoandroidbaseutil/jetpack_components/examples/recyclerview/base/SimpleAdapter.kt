@@ -55,7 +55,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         LLog.d(ITAG, "reuse 5tag=${holder.txtView.tag}")
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-        holder.bind(dataArray[holder.adapterPosition])
+        val currentItem = dataArray[holder.adapterPosition]
+        // In some cases, it will prevent unwanted situations
+        holder.selectBtn.setOnCheckedChangeListener(null);
+        holder.selectBtn.isChecked = currentItem.checked
+        holder.bind(currentItem)
         holder.itemView.setOnClickListener {
             if (editMode) {
                 holder.selectBtn.isChecked = !(holder.selectBtn.isChecked)
@@ -78,12 +82,15 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         }
 
         holder.selectBtn.setOnCheckedChangeListener { _, isChecked ->
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             val selectedItem = dataArray[holder.layoutPosition]
+            selectedItem.checked = isChecked
             if (isChecked) {
                 selectedItems.add(selectedItem)
             } else {
                 selectedItems.remove(selectedItems.first { it.id == selectedItem.id })
             }
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
         if (editMode) {
@@ -124,7 +131,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     override fun getItemCount(): Int = dataArray.size
 
-//    override fun getItemId(position: Int) = position.toLong()
+    override fun getItemId(position: Int) = position.toLong()
 
 //    override fun getItemViewType(position: Int) = position
 

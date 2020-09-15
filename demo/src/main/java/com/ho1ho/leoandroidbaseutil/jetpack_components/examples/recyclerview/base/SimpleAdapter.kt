@@ -57,7 +57,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.adapterPosition]
         // In some cases, it will prevent unwanted situations
-        holder.selectBtn.setOnCheckedChangeListener(null);
+        holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
         holder.bind(currentItem)
         holder.itemView.setOnClickListener {

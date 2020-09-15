@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -75,6 +76,12 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 itemTouchHelper.startDrag(viewHolder)
             }
         }
+
+        findViewById<Button>(R.id.select_all).setOnClickListener {
+            it.tag = (!((it.tag as? Boolean) ?: false))
+            findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
+        }
+        findViewById<Button>(R.id.btn_delete).setOnClickListener { simpleAdapter.multipleDelete() }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -35,7 +35,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         for (i in 0 until 300) {
             featureList.add(
                 ItemBean(
-                    SystemClock.elapsedRealtime(),
+                    SystemClock.elapsedRealtimeNanos(),
                     "Demo String ${i + 1}",
                     "http://temp.ho1ho.com/temp/number_counter/${i % 100 + 1}.png"
                 )
@@ -81,7 +81,10 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             it.tag = (!((it.tag as? Boolean) ?: false))
             findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
         }
-        findViewById<Button>(R.id.btn_delete).setOnClickListener { simpleAdapter.multipleDelete() }
+        findViewById<Button>(R.id.btn_delete).setOnClickListener {
+            simpleAdapter.multipleDelete()
+            findViewById<TextView>(R.id.tv_select_num).text = "0"
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -120,7 +123,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 simpleAdapter.insertAdd(
                     0,
                     ItemBean(
-                        SystemClock.elapsedRealtime(),
+                        SystemClock.elapsedRealtimeNanos(),
                         "Add-${SystemClock.elapsedRealtime()}",
                         "https://picsum.photos/80?random=${SystemClock.elapsedRealtime()}"
                     )

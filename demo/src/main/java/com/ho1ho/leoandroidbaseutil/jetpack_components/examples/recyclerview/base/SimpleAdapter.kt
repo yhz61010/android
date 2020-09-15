@@ -187,6 +187,22 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         }
     }
 
+    fun toggleSelectAll(cancelAll: Boolean): Int {
+        selectedItems.clear()
+        if (cancelAll) {
+            dataArray.forEach { it.checked = false }
+        } else {
+            dataArray.forEach { it.checked = true }
+            selectedItems.addAll(dataArray)
+        }
+        notifyDataSetChanged()
+        return selectedItems.size
+    }
+
+    fun multipleDelete() {
+
+    }
+
     // =============================================
     interface OnItemClickListener {
         fun onItemClick(view: View, position: Int) {}

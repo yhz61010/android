@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
+import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.action
 import com.ho1ho.androidbase.exts.snack
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -31,8 +33,10 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_recyclerview)
 
         val featureList = mutableListOf<ItemBean>()
-        for (i in 0..30) {
-            featureList.add(ItemBean(SystemClock.elapsedRealtime(), "Demo String ${i + 1}", "https://picsum.photos/80?random=$i"))
+        for (i in 0 until 300) {
+            val num = i % 100 + 1
+            LLog.d(ITAG, "i=$i num=$num")
+            featureList.add(ItemBean(SystemClock.elapsedRealtime(), "Demo String ${i + 1}", "http://temp.ho1ho.com/temp/number_counter/$num.png"))
         }
 
         simpleAdapter = SimpleAdapter(featureList)

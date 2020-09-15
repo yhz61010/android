@@ -199,8 +199,22 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         return selectedItems.size
     }
 
-    fun multipleDelete() {
-
+    fun multipleDelete(): Int {
+        val deletedCount = selectedItems.size
+        selectedItems.forEach { itemBean ->
+            LLog.w(ITAG, "To be deleted ${itemBean.id}:${itemBean.title}")
+            for (i in dataArray.size - 1 downTo 0) {
+                val currentItem = dataArray[i]
+                if (currentItem.id == itemBean.id) {
+                    LLog.w(ITAG, "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
+                    dataArray.removeAt(i)
+                    break
+                }
+            }
+        }
+        selectedItems.clear()
+        notifyDataSetChanged()
+        return deletedCount
     }
 
     // =============================================

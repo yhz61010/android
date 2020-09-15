@@ -172,5 +172,5 @@ dependencies {
     //    implementation "org.greenrobot:eventbus:3.1.1"
     implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
-    implementation "com.github.florent37:viewanimator:$viewanimatorVersion"
+    implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
 }

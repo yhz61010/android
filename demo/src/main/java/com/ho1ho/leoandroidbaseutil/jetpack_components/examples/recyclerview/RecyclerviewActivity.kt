@@ -5,10 +5,13 @@ import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.daimajia.androidanimations.library.Techniques
+import com.daimajia.androidanimations.library.YoYo
 import com.ho1ho.androidbase.exts.action
 import com.ho1ho.androidbase.exts.snack
 import com.ho1ho.androidbase.utils.ui.ToastUtil
@@ -28,14 +31,15 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_recyclerview)
 
         val featureList = mutableListOf<ItemBean>()
-        for (i in 0..100) {
-            featureList.add(ItemBean("Demo String ${i + 1}", "https://picsum.photos/80?random=$i"))
+        for (i in 0..30) {
+            featureList.add(ItemBean(SystemClock.elapsedRealtime(), "Demo String ${i + 1}", "https://picsum.photos/80?random=$i"))
         }
 
         simpleAdapter = SimpleAdapter(featureList)
         simpleAdapter.onItemClickListener = object : SimpleAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 ToastUtil.showToast("You click position: $position")
+                findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
             }
 
             override fun onItemLongClick(view: View, position: Int) {
@@ -52,6 +56,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.adapterPosition)
+                findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
                 rootLL.snack("Undo last delete?") {
                     action("Undo") { adapter.undo() }
                 }
@@ -101,13 +106,28 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             R.id.add_item -> {
                 simpleAdapter.insertAdd(
                     0,
-                    ItemBean("Add-${SystemClock.elapsedRealtime()}", "https://picsum.photos/80?random=${SystemClock.elapsedRealtime()}")
+                    ItemBean(
+                        SystemClock.elapsedRealtime(),
+                        "Add-${SystemClock.elapsedRealtime()}",
+                        "https://picsum.photos/80?random=${SystemClock.elapsedRealtime()}"
+                    )
                 )
                 recyclerView.scrollToPosition(0)
             }
             R.id.edit, R.id.cancel -> {
                 simpleAdapter.toggleEditMode()
                 invalidateOptionsMenu()
+                if (simpleAdapter.editMode) {
+                    YoYo.with(Techniques.SlideInUp)
+                        .duration(400)
+                        .onStart { ll_mycollection_bottom_dialog.visibility = View.VISIBLE }
+                        .playOn(ll_mycollection_bottom_dialog)
+                } else {
+                    YoYo.with(Techniques.SlideOutDown)
+                        .duration(400)
+                        .onEnd { ll_mycollection_bottom_dialog.visibility = View.GONE }
+                        .playOn(ll_mycollection_bottom_dialog)
+                }
             }
             R.id.change_to_grid, R.id.change_to_list -> {
                 simpleAdapter.toggleDisplayMode()
@@ -130,4 +150,4 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
     }
 }
 
-data class ItemBean(val title: String, val imageUrl: String)
+data class ItemBean(val id: Long, val title: String, val imageUrl: String)

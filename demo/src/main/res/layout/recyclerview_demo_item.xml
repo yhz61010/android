@@ -13,47 +13,40 @@
     app:cardMaxElevation="2dp"
     app:contentPadding="6dp">
 
+    <CheckBox
+        android:id="@+id/selectBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:background="@null"
+        android:button="@drawable/select_radio"
+        android:minWidth="0dp"
+        android:text="@null"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
     <LinearLayout
+        android:id="@+id/primaryLL"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
         android:orientation="horizontal">
 
-        <CheckBox
-            android:id="@+id/selectBtn"
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivAlbum"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="start|center_vertical"
+            app:srcCompat="@drawable/beauty"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
-            android:minWidth="0dp"
-            android:text="@null"
-            android:background="@null"
-            android:button="@drawable/select_radio"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <LinearLayout
-            android:id="@+id/primaryLL"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/ivAlbum"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_gravity="start|center_vertical"
-                app:srcCompat="@drawable/beauty"
-                tools:ignore="ContentDescription" />
-
-            <TextView
-                android:id="@+id/name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:text="Title"
-                android:textStyle="bold" />
-        </LinearLayout>
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:text="Title"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <ImageView

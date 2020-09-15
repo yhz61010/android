@@ -18,6 +18,8 @@ import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
+import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.ItemBean
 import java.util.concurrent.CopyOnWriteArrayList
@@ -51,13 +53,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
+        LLog.d(ITAG, "reuse 5tag=${holder.txtView.tag}")
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         holder.bind(dataArray[holder.adapterPosition])
         holder.itemView.setOnClickListener {
             if (editMode) {
                 holder.selectBtn.isChecked = !(holder.selectBtn.isChecked)
             }
-            // // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
 
@@ -121,7 +124,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     override fun getItemCount(): Int = dataArray.size
 
-    override fun getItemId(position: Int) = dataArray[position].id
+//    override fun getItemId(position: Int) = position.toLong()
+
+//    override fun getItemViewType(position: Int) = position
+
+    override fun onViewRecycled(holder: ItemViewHolder) {
+        LLog.d(ITAG, "onViewRecycled text=${holder.txtView.text} pos=${holder.adapterPosition} tag=${holder.txtView.tag}")
+        super.onViewRecycled(holder)
+    }
 
     fun toggleEditMode() {
         editMode = !editMode
@@ -191,7 +201,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     // =============================================
 
     class ItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
-        private val txtView: TextView = itemView.findViewById(R.id.name)
+        val txtView: TextView = itemView.findViewById(R.id.name)
         private val ivAlbum: ShapeableImageView = itemView.findViewById(R.id.ivAlbum)
         val ivDrag: ImageView = itemView.findViewById(R.id.ivDrag)
         val selectBtn: CheckBox = itemView.findViewById(R.id.selectBtn)
@@ -199,6 +209,9 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
         fun bind(item: ItemBean) {
             txtView.text = item.title
+            if (txtView.tag == null) {
+                txtView.tag = item.title
+            }
             ivAlbum.shapeAppearanceModel = ivAlbum.shapeAppearanceModel
                 .toBuilder()
                 .setAllCorners(CornerFamily.ROUNDED, 30F)

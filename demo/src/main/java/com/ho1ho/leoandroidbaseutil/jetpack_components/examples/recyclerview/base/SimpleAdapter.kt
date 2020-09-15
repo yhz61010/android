@@ -1,7 +1,8 @@
 package com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.base
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -10,13 +11,16 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.animation.addListener
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.github.florent37.viewanimator.ViewAnimator
+import com.daimajia.androidanimations.library.Techniques
+import com.daimajia.androidanimations.library.YoYo
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.jetpack_components.examples.recyclerview.ItemBean
+import java.util.concurrent.CopyOnWriteArrayList
 
 
 /**
@@ -31,12 +35,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     var onItemClickListener: OnItemClickListener? = null
     private var lastDeletedItem: Pair<Int, ItemBean>? = null
-    private var selectedItem = SparseArray<ItemBean>()
+    var selectedItems = CopyOnWriteArrayList<ItemBean>()
+        private set
     var startDragListener: OnStartDragListener? = null
     var editMode: Boolean = false
         private set
     var displayStyle: Int = STYLE_LIST
         private set
+    private var shouldRunEditCancelAnimation = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_demo_item, parent, false)
@@ -45,15 +51,18 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        holder.bind(dataArray[position])
+        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+        holder.bind(dataArray[holder.adapterPosition])
         holder.itemView.setOnClickListener {
             if (editMode) {
                 holder.selectBtn.isChecked = !(holder.selectBtn.isChecked)
             }
+            // // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
 
         holder.itemView.setOnLongClickListener {
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
             true
         }
@@ -66,62 +75,61 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         }
 
         holder.selectBtn.setOnCheckedChangeListener { _, isChecked ->
+            val selectedItem = dataArray[holder.layoutPosition]
             if (isChecked) {
-                selectedItem.put(holder.layoutPosition, dataArray[holder.layoutPosition])
+                selectedItems.add(selectedItem)
             } else {
-                selectedItem.delete(holder.layoutPosition)
+                selectedItems.remove(selectedItems.first { it.id == selectedItem.id })
             }
+            onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
         if (editMode) {
-            ViewAnimator
-                .animate(holder.selectBtn)
-                .fadeIn().onStart { holder.selectBtn.visibility = View.VISIBLE }
-                .duration(400)
-                .start()
+            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, 90F)
+            val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 0F, 1F)
+            AnimatorSet().apply {
+                play(translationX).with(alpha)
+                duration = 200
+                addListener(onStart = {
+                    holder.selectBtn.visibility = View.VISIBLE
+                })
+                start()
+            }
 
-            ViewAnimator
-                .animate(holder.primaryLL)
-                .dp().translationX(0F, 5F)
-                .decelerate()
+            YoYo.with(Techniques.SlideInRight)
                 .duration(200)
-                .start()
+                .onStart { holder.ivDrag.visibility = View.VISIBLE }
+                .playOn(holder.ivDrag)
+        }
+        if (shouldRunEditCancelAnimation) {
+            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 90F, 0F)
+            val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 1F, 0F)
+            AnimatorSet().apply {
+                play(translationX).with(alpha)
+                duration = 200
+                addListener(onEnd = {
+                    holder.selectBtn.visibility = View.GONE
+                })
+                start()
+            }
 
-            ViewAnimator
-                .animate(holder.ivDrag)
-                .fadeIn()
-                .duration(400).onStart { holder.ivDrag.visibility = View.VISIBLE }
-                .start()
-        } else {
-            holder.selectBtn.visibility = View.GONE
-//            ViewAnimator
-//                .animate(holder.cb)
-//                .fadeOut().onStop { holder.cb.visibility = View.GONE  }
-//                .duration(400)
-//                .start()
-
-            ViewAnimator
-                .animate(holder.primaryLL)
-                .dp().translationX(5F, 0F)
-                .decelerate()
+            YoYo.with(Techniques.SlideOutRight)
                 .duration(200)
-                .start()
-
-            ViewAnimator
-                .animate(holder.ivDrag)
-                .fadeOut().onStop { holder.ivDrag.visibility = View.GONE }
-                .duration(400)
-                .start()
+                .onEnd { holder.ivDrag.visibility = View.GONE }
+                .playOn(holder.ivDrag)
         }
     }
 
     override fun getItemCount(): Int = dataArray.size
 
-    override fun getItemId(position: Int) = position.toLong()
+    override fun getItemId(position: Int) = dataArray[position].id
 
     fun toggleEditMode() {
         editMode = !editMode
-        if (editMode) {
-            selectedItem.clear()
+        shouldRunEditCancelAnimation = if (editMode) {
+            selectedItems.clear()
+            false
+        } else {
+            true
         }
         notifyDataSetChanged()
     }
@@ -144,6 +152,13 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     fun removeAt(position: Int) {
         lastDeletedItem = Pair(position, dataArray.removeAt(position))
+        val maxIndex = selectedItems.size - 1
+        for (i in maxIndex downTo 0) {
+            if (selectedItems[i].id == lastDeletedItem?.second?.id) {
+                selectedItems.removeAt(i)
+                break
+            }
+        }
         notifyItemRemoved(position)
     }
 

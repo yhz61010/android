@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" filepath="$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/audiorecord-sdk/LeoAndroidBaseUtil.audiorecord-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/audiorecord-sdk/LeoAndroidBaseUtil.audiorecord-sdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/audio-sdk/LeoAndroidBaseUtil.audio-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/audio-sdk/LeoAndroidBaseUtil.audio-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/basenetty-sdk/LeoAndroidBaseUtil.basenetty-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/basenetty-sdk/LeoAndroidBaseUtil.basenetty-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camera2live-sdk/LeoAndroidBaseUtil.camera2live-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/camera2live-sdk/LeoAndroidBaseUtil.camera2live-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" />

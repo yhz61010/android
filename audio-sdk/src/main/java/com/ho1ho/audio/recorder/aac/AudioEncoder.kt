@@ -1,4 +1,4 @@
-package com.ho1ho.audiorecord.aac
+package com.ho1ho.audio.recorder.aac
 
 import android.media.MediaCodec
 import android.media.MediaCodecInfo

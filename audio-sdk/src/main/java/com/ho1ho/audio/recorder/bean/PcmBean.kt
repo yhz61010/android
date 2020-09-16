@@ -1,4 +1,4 @@
-package com.ho1ho.audiorecord.bean
+package com.ho1ho.audio.recorder.bean
 
 import androidx.annotation.Keep
 

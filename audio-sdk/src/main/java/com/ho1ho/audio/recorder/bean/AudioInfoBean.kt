@@ -1,4 +1,4 @@
-package com.ho1ho.audiorecord.bean
+package com.ho1ho.audio.recorder.bean
 
 import android.media.AudioFormat
 

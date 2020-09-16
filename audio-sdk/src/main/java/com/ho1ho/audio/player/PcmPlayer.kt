@@ -7,7 +7,7 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.audio.recorder.bean.AudioCodecInfo
+import com.ho1ho.audio.base.AudioCodecInfo
 
 /**
  * Author: Michael Leo

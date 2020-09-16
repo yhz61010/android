@@ -1,4 +1,4 @@
-package com.ho1ho.audiorecord.aac
+package com.ho1ho.audio.recorder.aac
 
 import android.media.*
 import android.os.Handler
@@ -6,9 +6,9 @@ import android.os.HandlerThread
 import android.os.SystemClock
 import com.ho1ho.androidbase.utils.JsonUtil.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.audiorecord.BuildConfig
-import com.ho1ho.audiorecord.aac.AudioEncoder.Companion.computePresentationTimeUs
-import com.webrtc.audioprocessing.AudioProcessing
+import com.ho1ho.audio.recorder.BuildConfig
+import com.ho1ho.audio.recorder.aac.AudioEncoder.Companion.computePresentationTimeUs
+import com.ho1ho.audio.webrtc.audioprocessing.AudioProcessing
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream

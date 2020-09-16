@@ -21,10 +21,8 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
         val bufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat)
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
-            // Speaker
-            setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
+            setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
             setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
-            setLegacyStreamType(AudioManager.STREAM_VOICE_CALL) // AudioManager.STREAM_MUSIC            AudioManager.STREAM_VOICE_CALL
         }
         val audioFormat = AudioFormat.Builder().setSampleRate(audioData.sampleRate)
             .setEncoding(audioData.audioFormat)

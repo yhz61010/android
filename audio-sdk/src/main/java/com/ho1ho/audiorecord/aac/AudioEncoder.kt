@@ -27,7 +27,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
             PROFILE_AAC_LC,
             sampleRate,
             channelCount
-        )
+        )!!
         audioEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
         val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
         with(mediaFormat) {
@@ -197,8 +197,9 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
 
     // https://cloud.tencent.com/developer/ask/61404
     @Suppress("SameParameterValue")
-    private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray {
+    private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
         val freqIdx = getSampleFrequencyIndex(sampleRate)
+        if (freqIdx == -1) return null
         val csd = ByteBuffer.allocate(2)
         csd.put(0, (aacProfile shl 3 or freqIdx shr 1).toByte())
         csd.put(1, (freqIdx and 0x01 shl 7 or channelCount shl 3).toByte())

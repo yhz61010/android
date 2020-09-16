@@ -1,4 +1,4 @@
-package com.ho1ho.audio.recorder.aac
+package com.ho1ho.audio.player.aac
 
 import android.media.*
 import android.os.Handler

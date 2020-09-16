@@ -88,7 +88,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             if (isChecked) {
                 selectedItems.add(selectedItem)
             } else {
-                selectedItems.remove(selectedItems.first { it.id == selectedItem.id })
+                if (selectedItems.isNotEmpty()) selectedItems.remove(selectedItems.first { it.id == selectedItem.id })
             }
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)

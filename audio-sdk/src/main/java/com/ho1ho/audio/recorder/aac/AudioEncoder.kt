@@ -43,8 +43,7 @@ class AudioEncoder(private val sampleRate: Int, bitrate: Int, private val channe
 
 
     /**
-     * Encode pcm data to aac.<br></br>
-     * <br></br>
+     * Encode pcm data to aac.
      *
      * @param pcmData PCM data.
      */

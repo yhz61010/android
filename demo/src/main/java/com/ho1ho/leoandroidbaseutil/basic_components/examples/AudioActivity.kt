@@ -6,9 +6,9 @@ import android.widget.Toast
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.file.FileUtil
+import com.ho1ho.audio.base.AudioCodecInfo
 import com.ho1ho.audio.player.PcmPlayer
 import com.ho1ho.audio.recorder.MicRecorder
-import com.ho1ho.audio.recorder.bean.AudioCodecInfo
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission

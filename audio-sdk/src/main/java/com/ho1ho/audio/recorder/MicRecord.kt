@@ -8,7 +8,7 @@ import android.media.audiofx.NoiseSuppressor
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.audio.recorder.bean.AudioCodecInfo
+import com.ho1ho.audio.base.AudioCodecInfo
 import kotlinx.coroutines.*
 
 /**

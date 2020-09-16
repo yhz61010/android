@@ -64,9 +64,10 @@ class AudioActivity : BaseDemonstrationActivity() {
         }
 
         btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
+            var playPcmThread: Thread? = null
             if (isChecked) {
                 pcmPlayer = PcmPlayer(applicationContext, audioPlayCodec)
-                Thread {
+                playPcmThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->
                         val bufferSize = 8 shl 10
@@ -78,8 +79,10 @@ class AudioActivity : BaseDemonstrationActivity() {
                         }
                         runOnUiThread { btn.isChecked = false }
                     }
-                }.start()
+                }
+                playPcmThread.start()
             } else {
+                playPcmThread?.interrupt()
                 if (::pcmPlayer.isInitialized) pcmPlayer.release()
             }
         }

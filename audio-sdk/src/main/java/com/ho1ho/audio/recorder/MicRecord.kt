@@ -1,4 +1,4 @@
-package com.ho1ho.audiorecord
+package com.ho1ho.audio.recorder
 
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -8,14 +8,14 @@ import android.media.audiofx.NoiseSuppressor
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.audiorecord.bean.AudioCodecInfo
+import com.ho1ho.audio.recorder.bean.AudioCodecInfo
 import kotlinx.coroutines.*
 
 /**
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
-class MicRecorder(encoderInfo: AudioCodecInfo) {
+class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private var audioRecord: AudioRecord
@@ -40,7 +40,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo) {
         initAdvancedFeatures()
     }
 
-    fun startRecord(f: (audioData: ByteArray) -> Unit) {
+    fun startRecord() {
         LLog.w(ITAG, "Do startRecord() audioRecord=$audioRecord")
         audioRecord.startRecording()
         ioScope.launch {
@@ -49,7 +49,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo) {
                 while (true) {
                     ensureActive()
                     audioRecord.read(pcmData, 0, pcmData.size)
-                    f.invoke(pcmData)
+                    callback.onRecording(pcmData)
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -78,19 +78,25 @@ class MicRecorder(encoderInfo: AudioCodecInfo) {
         }
     }
 
-    fun stopRecord(): Boolean {
+    fun stopRecord() {
         LLog.w(ITAG, "Stop recording audio")
+        var stopResult = true
         ioScope.cancel()
         runCatching {
             LLog.w(ITAG, "Stopping recording...")
             audioRecord.stop()
-        }.onFailure { it.printStackTrace(); return false }
+        }.onFailure { it.printStackTrace(); stopResult = false }
         runCatching {
             LLog.w(ITAG, "Releasing recording...")
             audioRecord.release()
-        }.onFailure { it.printStackTrace(); return false }
-        return true
+        }.onFailure { it.printStackTrace(); stopResult = false }
+        callback.onStop(stopResult)
     }
 
     fun getRecordingState() = audioRecord.recordingState
+
+    interface RecordCallback {
+        fun onRecording(pcmData: ByteArray)
+        fun onStop(stopResult: Boolean)
+    }
 }

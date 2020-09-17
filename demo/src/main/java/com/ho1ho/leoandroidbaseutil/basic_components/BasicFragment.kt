@@ -13,6 +13,7 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.leoandroidbaseutil.ColorBaseAdapter
 import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.*
+import com.ho1ho.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity

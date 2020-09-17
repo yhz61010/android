@@ -1,6 +1,7 @@
 package com.ho1ho.androidbase.exts
 
 import com.google.gson.Gson
+import com.ho1ho.androidbase.utils.JsonUtil
 import com.ho1ho.androidbase.utils.LLog
 
 /**
@@ -21,4 +22,8 @@ fun Any.toJsonString(): String {
         )
     }
     return ""
+}
+
+fun ByteArray.toHexadecimalString(): String {
+    return JsonUtil.toHexadecimalString(this)
 }

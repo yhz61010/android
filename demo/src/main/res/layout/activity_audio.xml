@@ -7,6 +7,18 @@
     tools:context=".basic_components.examples.AudioActivity">
 
     <ToggleButton
+        android:id="@+id/btnRecordAac"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textOff="Record AAC"
+        android:textOn="Stop Recording"
+        app:layout_constraintEnd_toEndOf="@+id/btnPlayPCM"
+        app:layout_constraintHorizontal_bias="0.464"
+        app:layout_constraintStart_toStartOf="@+id/btnPlayPCM"
+        app:layout_constraintTop_toBottomOf="@+id/btnPlayPCM" />
+
+    <ToggleButton
         android:id="@+id/btnRecordPcm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,4 +39,15 @@
         app:layout_constraintEnd_toEndOf="@+id/btnRecordPcm"
         app:layout_constraintStart_toStartOf="@+id/btnRecordPcm"
         app:layout_constraintTop_toBottomOf="@+id/btnRecordPcm" />
+
+    <ToggleButton
+        android:id="@+id/btnPlayAac"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textOff="Play AAC"
+        android:textOn="Stop Playing"
+        app:layout_constraintEnd_toEndOf="@+id/btnRecordAac"
+        app:layout_constraintStart_toStartOf="@+id/btnRecordAac"
+        app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
 </androidx.constraintlayout.widget.ConstraintLayout>

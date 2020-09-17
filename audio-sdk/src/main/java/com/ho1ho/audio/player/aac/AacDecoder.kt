@@ -7,7 +7,6 @@ import android.os.SystemClock
 import com.ho1ho.androidbase.utils.JsonUtil.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.audio.recorder.BuildConfig
-import com.ho1ho.audio.recorder.aac.AudioEncoder.Companion.computePresentationTimeUs
 import com.ho1ho.audio.webrtc.audioprocessing.AudioProcessing
 import java.io.BufferedOutputStream
 import java.io.File
@@ -21,15 +20,20 @@ import java.util.concurrent.atomic.AtomicLong
  * Author: Michael Leo
  * Date: 20-6-18 下午2:12
  */
-class AudioDecoder @JvmOverloads constructor(
+class AacDecoder @JvmOverloads constructor(
     private val sampleRate: Int,
-    private val channelCount: Int,
+    channelCount: Int,
     private val channelConfig: Int,
     private val audioFormat: Int,
-    private val csd0: ByteArray,
+    csd0: ByteArray,
     private val trackBufferSize: Int =
         AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat) * 2
 ) {
+    companion object {
+        private const val TAG = "AuDE"
+        private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
+    }
+
     private var mAacOs: BufferedOutputStream? = null
     private var presentationTimeUs = AtomicLong(0)
     var audioTrack: AudioTrack? = null
@@ -542,13 +546,15 @@ class AudioDecoder @JvmOverloads constructor(
 //        }
     }
 
-    companion object {
-        private const val TAG = "AuDE"
-        private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
-
-        // We ask for a native buffer size of BUFFER_SIZE_FACTOR * (minimum required
-        // buffer size). The extra space is allocated to guard against glitches under
-        // high load.
-        private const val BUFFER_SIZE_FACTOR = 1
+    /**
+     * Calculate PTS.
+     * Actually, it doesn't make any error if you return 0 directly.
+     *
+     * @return The calculated presentation time in microseconds.
+     */
+    private fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
+        val result = frameIndex * 1000000L / sampleRate
+//        LLog.d(TAG, "computePresentationTimeUs=$result")
+        return result
     }
 }

@@ -8,7 +8,7 @@ import com.ho1ho.androidbase.exts.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.audio.base.AudioCodecInfo
-import com.ho1ho.audio.player.AacPlayer
+import com.ho1ho.audio.player.AacStreamPlayer
 import com.ho1ho.audio.player.PcmPlayer
 import com.ho1ho.audio.recorder.MicRecorder
 import com.ho1ho.audio.recorder.aac.AacEncoder
@@ -31,7 +31,7 @@ class AudioActivity : BaseDemonstrationActivity() {
     private lateinit var micRecorder: MicRecorder
     private var aacEncoder: AacEncoder? = null
     private lateinit var pcmPlayer: PcmPlayer
-    private lateinit var aacPlayer: AacPlayer
+    private lateinit var aacPlayer: AacStreamPlayer
 
     private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
@@ -88,7 +88,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             var playAacThread: Thread? = null
             if (isChecked) {
-                aacPlayer = AacPlayer(applicationContext, audioPlayCodec)
+                aacPlayer = AacStreamPlayer(applicationContext, audioPlayCodec)
                 playAacThread = Thread {
                     val aacIs = BufferedInputStream(FileInputStream(aacFile))
                     aacIs.use { input ->

@@ -4,12 +4,11 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.widget.Toast
 import com.ho1ho.androidbase.exts.ITAG
-import com.ho1ho.androidbase.exts.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.audio.base.AudioCodecInfo
 import com.ho1ho.audio.player.PcmPlayer
-import com.ho1ho.audio.player.aac.AacStreamPlayer
+import com.ho1ho.audio.player.aac.AacFilePlayer
 import com.ho1ho.audio.recorder.MicRecorder
 import com.ho1ho.audio.recorder.aac.AacEncoder
 import com.ho1ho.leoandroidbaseutil.R
@@ -31,7 +30,7 @@ class AudioActivity : BaseDemonstrationActivity() {
     private lateinit var micRecorder: MicRecorder
     private var aacEncoder: AacEncoder? = null
     private lateinit var pcmPlayer: PcmPlayer
-    private lateinit var aacPlayer: AacStreamPlayer
+    private lateinit var aacFilePlayer: AacFilePlayer
 
     private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
@@ -86,36 +85,13 @@ class AudioActivity : BaseDemonstrationActivity() {
         }
 
         btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
-            var playAacThread: Thread? = null
             if (isChecked) {
-                aacPlayer = AacStreamPlayer(applicationContext, audioPlayCodec)
-                playAacThread = Thread {
-                    val aacIs = BufferedInputStream(FileInputStream(aacFile))
-                    aacIs.use { input ->
-                        val bufferSize = 8 shl 10
-                        val readBuffer = ByteArray(bufferSize)
-                        var readSize: Int
-                        var foundCsd = false
-                        while (input.read(readBuffer).also { readSize = it } != -1) {
-                            LLog.i(ITAG, "AacPlayer read size[$readSize]")
-                            if (!foundCsd && readSize > 8) {
-                                foundCsd = true
-                                val csd0 = readBuffer.copyOfRange(0, 9)
-                                LLog.w(ITAG, "Split csd=${csd0.toHexadecimalString()}")
-                                aacPlayer.startPlayingStream(csd0) {}
-                                val leftData = readBuffer.copyOfRange(9, readSize)
-                                aacPlayer.startPlayingStream(leftData) {}
-                            } else {
-                                aacPlayer.startPlayingStream(readBuffer) {}
-                            }
-                        }
-//                        runOnUiThread { btn.isChecked = false }
-                    }
+                aacFilePlayer = AacFilePlayer(applicationContext, audioPlayCodec)
+                aacFilePlayer.playAac(aacFile) {
+                    runOnUiThread { btn.isChecked = false }
                 }
-                playAacThread.start()
             } else {
-                playAacThread?.interrupt()
-                if (::aacPlayer.isInitialized) aacPlayer.stopPlaying()
+                aacFilePlayer.stop()
             }
         }
     }

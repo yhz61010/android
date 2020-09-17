@@ -17,7 +17,7 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
+class AacPlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
     companion object {
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
         private const val AUDIO_DATA_QUEUE_CAPACITY = 10
@@ -31,7 +31,6 @@ class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
     private var audioManager: AudioManager? = null
-    private lateinit var ctx: Context
 
     //    private var outputFormat: MediaFormat? = null
     private var frameCount = AtomicLong(0)
@@ -46,7 +45,6 @@ class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
 
     private fun initAudioTrack(ctx: Context, audioData: AudioCodecInfo) {
         runCatching {
-            this.ctx = ctx
             audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val bufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat)
             val sessionId = audioManager!!.generateAudioSessionId()
@@ -128,7 +126,7 @@ class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
                         ensureActive()
                         val audioData = rcvAudioDataQueue.poll()
 //                        if (frameCount.get() % 30 == 0L) {
-//                        LLog.i(ITAG, "Play AAC[${audioData?.size}]")
+                        LLog.i(ITAG, "Play AAC[${audioData?.size}]")
 //                        }
                         if (audioData != null && audioData.isNotEmpty()) {
                             decodeAndPlay(audioData)
@@ -171,6 +169,7 @@ class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
                 if (chunkPCM.isNotEmpty()) {
                     if (audioTrack == null || AudioTrack.STATE_UNINITIALIZED == audioTrack?.state) return
                     if (AudioTrack.PLAYSTATE_PLAYING == audioTrack?.playState) {
+                        LLog.i(ITAG, "Play PCM[${chunkPCM.size}]")
                         // Play decoded audio data in PCM
                         audioTrack?.write(chunkPCM, 0, chunkPCM.size)
                     }
@@ -334,6 +333,7 @@ class AacPlayer(private val audioDecodeInfo: AudioCodecInfo) {
             audioDecoder?.setCallback(null)
             audioDecoder?.release()
         }.onFailure {
+            it.printStackTrace()
             LLog.e(ITAG, "audioDecoder() release1 error. msg=${it.message}")
         }.also {
             audioDecoder = null

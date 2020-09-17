@@ -17,7 +17,7 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacPlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
+class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
     companion object {
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
         private const val AUDIO_DATA_QUEUE_CAPACITY = 10

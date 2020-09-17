@@ -45,7 +45,7 @@
         <activity android:name=".basic_components.examples.RecordSingleAppScreenActivity" />
         <activity android:name=".basic_components.examples.TakeScreenshotActivity" />
         <activity android:name=".basic_components.examples.CoroutineActivity" />
-        <activity android:name=".basic_components.examples.AudioActivity" />
+        <activity android:name=".basic_components.examples.audio.AudioActivity" />
         <activity android:name=".basic_components.examples.sharescreen.client.ScreenShareClientActivity" />
         <activity android:name=".basic_components.examples.sharescreen.master.ScreenShareMasterActivity" />
         <activity android:name=".basic_components.examples.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->

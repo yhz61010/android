@@ -1,7 +1,8 @@
-package com.ho1ho.leoandroidbaseutil.basic_components.examples
+package com.ho1ho.leoandroidbaseutil.basic_components.examples.audio
 
 import android.media.AudioFormat
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
@@ -20,6 +21,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.URI
 
 class AudioActivity : BaseDemonstrationActivity() {
     companion object {
@@ -147,5 +149,19 @@ class AudioActivity : BaseDemonstrationActivity() {
         if (::pcmPlayer.isInitialized) pcmPlayer.release()
         aacEncoder?.release()
         super.onStop()
+    }
+
+    fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        val audioSender = AudioSender()
+        val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
+        LLog.w(ITAG, "Send to $url")
+        audioSender.start(url)
+    }
+
+    fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        Thread {
+            val ar = AudioReceiver()
+            ar.startServer(this)
+        }.start()
     }
 }

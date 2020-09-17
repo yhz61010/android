@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.AudioActivity">
+    tools:context=".basic_components.examples.audio.AudioActivity">
 
     <ToggleButton
         android:id="@+id/btnRecordAac"
@@ -33,9 +33,9 @@
         android:id="@+id/btnPlayPCM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textOn="Stop Playing"
+        android:layout_marginTop="8dp"
         android:textOff="Play PCM"
+        android:textOn="Stop Playing"
         app:layout_constraintEnd_toEndOf="@+id/btnRecordPcm"
         app:layout_constraintStart_toStartOf="@+id/btnRecordPcm"
         app:layout_constraintTop_toBottomOf="@+id/btnRecordPcm" />
@@ -44,10 +44,54 @@
         android:id="@+id/btnPlayAac"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:textOff="Play AAC"
         android:textOn="Stop Playing"
         app:layout_constraintEnd_toEndOf="@+id/btnRecordAac"
         app:layout_constraintStart_toStartOf="@+id/btnRecordAac"
         app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
+
+    <EditText
+        android:id="@+id/etAudioReceiverIp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:ems="10"
+        android:inputType="text"
+        android:text="10.10.9.64"
+        android:hint="Input receiver IP"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPlayAac" />
+
+    <Button
+        android:id="@+id/btnAudioSender"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:onClick="onAudioSenderClick"
+        android:text="Audio Sender"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnAudioReceiver" />
+
+    <Button
+        android:id="@+id/btnAudioReceiver"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:onClick="onAudioReceiverClick"
+        android:text="Audio Receiver"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etAudioReceiverIp" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="First, start audio receiver\nSecond, start audio sender"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnAudioReceiver" />
 </androidx.constraintlayout.widget.ConstraintLayout>

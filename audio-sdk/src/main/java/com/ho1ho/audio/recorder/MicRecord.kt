@@ -41,7 +41,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     }
 
     fun startRecord() {
-        LLog.w(ITAG, "Do startRecord() audioRecord=$audioRecord")
+        LLog.w(ITAG, "Do startRecord()")
         audioRecord.startRecording()
         ioScope.launch {
             runCatching {

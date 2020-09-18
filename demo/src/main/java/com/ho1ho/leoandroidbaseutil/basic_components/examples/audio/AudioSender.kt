@@ -20,6 +20,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.URI
 import java.nio.charset.Charset
@@ -68,14 +69,12 @@ class AudioSender {
         webSocketClient = WebSocketClient(uri, connectionListener, ConstantRetry(10, 2000))
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
-
         webSocketClient.connect()
 
         micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
-            override fun onRecording(pcmData: ByteArray) {
+            override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
                 ioScope.launch {
 //                    LLog.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                    val st = SystemClock.elapsedRealtime()
                     val tsArray = st.toBytesLE()
                     val finalArray = ByteArray(pcmData.size + tsArray.size)
                     System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)
@@ -90,6 +89,12 @@ class AudioSender {
 
         })
         micRecorder.startRecord()
+    }
+
+    fun stop() {
+        if (::micRecorder.isInitialized) micRecorder.stopRecord()
+        ioScope.cancel()
+        webSocketClient.release()
     }
 
     class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :

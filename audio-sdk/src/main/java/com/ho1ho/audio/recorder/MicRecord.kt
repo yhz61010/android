@@ -5,6 +5,7 @@ import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
+import android.os.SystemClock
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toJsonString
 import com.ho1ho.androidbase.utils.LLog
@@ -46,9 +47,17 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
         ioScope.launch {
             runCatching {
                 val pcmData = ByteArray(bufferSizeInBytes)
+                var st: Long
+                var recordSize: Int
                 while (true) {
                     ensureActive()
-                    audioRecord.read(pcmData, 0, pcmData.size)
+                    st = SystemClock.elapsedRealtime()
+                    recordSize = audioRecord.read(pcmData, 0, pcmData.size)
+                    LLog.i(ITAG, "Record[$recordSize] cost ${SystemClock.elapsedRealtime() - st} ms.")
+//                    if (cost > 100) {
+//                        LLog.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
+//                        continue
+//                    }
                     callback.onRecording(pcmData)
                 }
             }.onFailure {

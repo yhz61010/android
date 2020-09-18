@@ -13,10 +13,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 /**
  * Author: Michael Leo
@@ -56,7 +53,10 @@ class AudioReceiver {
             val audioData = data[1] as ByteArray
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size} ts=$ts")
             ioScope.launch {
-                pcmPlayer.play(audioData)
+                runCatching {
+                    ensureActive()
+                    pcmPlayer.play(audioData)
+                }.onFailure { it.printStackTrace() }
             }
             netty.executeCommand(clientChannel, "$ts")
         }
@@ -99,8 +99,8 @@ class AudioReceiver {
     }
 
     fun stopServer() {
+        ioScope.cancel()
         if (::pcmPlayer.isInitialized) pcmPlayer.release()
         if (::webSocketServer.isInitialized) webSocketServer.stopServer()
-        ioScope.cancel()
     }
 }

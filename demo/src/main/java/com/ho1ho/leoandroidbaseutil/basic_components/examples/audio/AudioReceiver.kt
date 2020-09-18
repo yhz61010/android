@@ -45,11 +45,13 @@ class AudioReceiver {
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
         }
 
-
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
-            val audioData = data as ByteArray
-            LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: Length=${audioData.size}")
+            val array = data as Array<*>
+            val ts = array[0] as Long
+            val audioData = data[1] as ByteArray
+            LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size} ts=$ts")
             pcmPlayer.play(audioData)
+            netty.executeCommand(clientChannel, "$ts")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -69,9 +71,10 @@ class AudioReceiver {
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+            val ts = receivedByteBuf.readLongLE()
             val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
             receivedByteBuf.readBytes(dataByteArray)
-            netty.connectionListener.onReceivedData(netty, ctx.channel(), dataByteArray)
+            netty.connectionListener.onReceivedData(netty, ctx.channel(), arrayOf(ts, dataByteArray))
             receivedByteBuf.release()
         }
 

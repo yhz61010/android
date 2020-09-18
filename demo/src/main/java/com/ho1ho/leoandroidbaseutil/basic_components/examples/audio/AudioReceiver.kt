@@ -15,6 +15,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -95,6 +96,11 @@ class AudioReceiver {
         webSocketServerHandler = WebSocketServerHandler(webSocketServer)
         webSocketServer.initHandler(webSocketServerHandler)
         webSocketServer.startServer()
+    }
 
+    fun stopServer() {
+        if (::pcmPlayer.isInitialized) pcmPlayer.release()
+        ioScope.cancel()
+        webSocketServer.stopServer()
     }
 }

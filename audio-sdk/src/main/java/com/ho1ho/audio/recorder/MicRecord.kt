@@ -48,13 +48,15 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
             runCatching {
                 val pcmData = ByteArray(bufferSizeInBytes)
                 var st: Long
+                var ed: Long
                 var cost: Long
                 var recordSize: Int
                 while (true) {
                     ensureActive()
                     st = SystemClock.elapsedRealtime()
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
-                    cost = SystemClock.elapsedRealtime() - st
+                    ed = SystemClock.elapsedRealtime()
+                    cost = ed - st
                     LLog.i(ITAG, "Record[$recordSize] cost $cost ms.")
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.
@@ -64,7 +66,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
 //                        LLog.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
 //                        continue
 //                    }
-                    callback.onRecording(pcmData)
+                    callback.onRecording(pcmData, st, ed)
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -111,7 +113,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     fun getRecordingState() = audioRecord.recordingState
 
     interface RecordCallback {
-        fun onRecording(pcmData: ByteArray)
+        fun onRecording(pcmData: ByteArray, st: Long, ed: Long)
         fun onStop(stopResult: Boolean)
     }
 }

@@ -34,6 +34,9 @@ class AudioActivity : BaseDemonstrationActivity() {
     private lateinit var pcmPlayer: PcmPlayer
     private lateinit var aacFilePlayer: AacFilePlayer
 
+    private val audioReceiver by lazy { AudioReceiver() }
+    private val audioSender by lazy { AudioSender() }
+
     private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
 
@@ -120,7 +123,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                     }
                 }
                 micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
-                    override fun onRecording(pcmData: ByteArray) {
+                    override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
                         LLog.d(ITAG, "PCM data[${pcmData.size}]")
                         when (type) {
                             RECORD_TYPE_PCM -> runCatching { pcmOs?.write(pcmData) }.onFailure { it.printStackTrace() }
@@ -147,21 +150,20 @@ class AudioActivity : BaseDemonstrationActivity() {
     override fun onStop() {
         if (::micRecorder.isInitialized) micRecorder.stopRecord()
         if (::pcmPlayer.isInitialized) pcmPlayer.release()
+        if (::micRecorder.isInitialized) aacFilePlayer.stop()
         aacEncoder?.release()
+        audioSender.stop()
+        audioReceiver.stopServer()
         super.onStop()
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val audioSender = AudioSender()
         val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
         LLog.w(ITAG, "Send to $url")
         audioSender.start(url)
     }
 
     fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        Thread {
-            val ar = AudioReceiver()
-            ar.startServer(this)
-        }.start()
+        Thread { audioReceiver.startServer(this) }.start()
     }
 }

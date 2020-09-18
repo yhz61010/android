@@ -5,7 +5,6 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import android.os.SystemClock
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.audio.base.AudioCodecInfo
@@ -43,10 +42,10 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
         if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
         runCatching {
             if (AudioTrack.PLAYSTATE_PLAYING == audioTrack.playState) {
-                val st = SystemClock.elapsedRealtime()
+//                val st = SystemClock.elapsedRealtime()
                 // Play decoded audio data in PCM
                 audioTrack.write(chunkPcm, 0, chunkPcm.size)
-                LLog.i(ITAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
+//                LLog.i(ITAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
             }
         }.onFailure { it.printStackTrace() }
     }

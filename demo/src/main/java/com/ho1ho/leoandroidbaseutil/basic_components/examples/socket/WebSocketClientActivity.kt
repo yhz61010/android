@@ -146,6 +146,6 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     companion object {
-        const val TAG = "WebSocketClient"
+        private const val TAG = "WebSocketClient"
     }
 }

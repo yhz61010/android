@@ -13,6 +13,9 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -26,6 +29,7 @@ class AudioReceiver {
     private lateinit var webSocketServer: WebSocketServer
     private lateinit var webSocketServerHandler: WebSocketServerHandler
 
+    private val ioScope = CoroutineScope(Dispatchers.IO)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private lateinit var pcmPlayer: PcmPlayer
 
@@ -50,7 +54,9 @@ class AudioReceiver {
             val ts = array[0] as Long
             val audioData = data[1] as ByteArray
             LLog.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size} ts=$ts")
-            pcmPlayer.play(audioData)
+            ioScope.launch {
+                pcmPlayer.play(audioData)
+            }
             netty.executeCommand(clientChannel, "$ts")
         }
 

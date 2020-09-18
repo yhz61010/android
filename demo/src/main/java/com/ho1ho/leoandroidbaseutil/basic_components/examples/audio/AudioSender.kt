@@ -18,10 +18,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.net.URI
 import java.nio.charset.Charset
 
@@ -74,13 +71,15 @@ class AudioSender {
         micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
             override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
                 ioScope.launch {
+                    runCatching {
+                        ensureActive()
 //                    LLog.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                    val tsArray = st.toBytesLE()
-                    val finalArray = ByteArray(pcmData.size + tsArray.size)
-                    System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)
-                    System.arraycopy(pcmData, 0, finalArray, tsArray.size, pcmData.size)
-
-                    webSocketClientHandler.sendAudioToServer(finalArray)
+                        val tsArray = st.toBytesLE()
+                        val finalArray = ByteArray(pcmData.size + tsArray.size)
+                        System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)
+                        System.arraycopy(pcmData, 0, finalArray, tsArray.size, pcmData.size)
+                        webSocketClientHandler.sendAudioToServer(finalArray)
+                    }.onFailure { it.printStackTrace() }
                 }
             }
 

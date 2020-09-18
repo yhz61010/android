@@ -39,8 +39,8 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     }
 
     fun play(chunkPcm: ByteArray) {
-        if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
         runCatching {
+            if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
             if (AudioTrack.PLAYSTATE_PLAYING == audioTrack.playState) {
 //                val st = SystemClock.elapsedRealtime()
                 // Play decoded audio data in PCM

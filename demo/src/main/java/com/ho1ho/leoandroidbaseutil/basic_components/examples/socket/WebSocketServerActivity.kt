@@ -26,7 +26,7 @@ import java.nio.charset.Charset
 class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     companion object {
-        const val TAG = "WebSocketServerActivity"
+        private const val TAG = "WebSocketServerActivity"
     }
 
     private val cs = CoroutineScope(Dispatchers.IO)

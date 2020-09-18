@@ -48,16 +48,18 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
             runCatching {
                 val pcmData = ByteArray(bufferSizeInBytes)
                 var st: Long
+                var cost: Long
                 var recordSize: Int
                 while (true) {
                     ensureActive()
                     st = SystemClock.elapsedRealtime()
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
-                    LLog.i(ITAG, "Record[$recordSize] cost ${SystemClock.elapsedRealtime() - st} ms.")
-//                    if (cost > 100) {
-//                        LLog.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
-//                        continue
-//                    }
+                    cost = SystemClock.elapsedRealtime() - st
+                    LLog.i(ITAG, "Record[$recordSize] cost $cost ms.")
+                    if (cost > 100) {
+                        LLog.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
+                        continue
+                    }
                     callback.onRecording(pcmData)
                 }
             }.onFailure {

@@ -123,6 +123,6 @@ class SocketActivity : BaseDemonstrationActivity() {
     }
 
     companion object {
-        const val TAG = "SocketClient"
+        private const val TAG = "SocketClient"
     }
 }

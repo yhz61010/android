@@ -2,8 +2,8 @@ package com.ho1ho.leoandroidbaseutil.basic_components.examples.audio
 
 import android.annotation.SuppressLint
 import android.media.AudioFormat
-import com.ho1ho.androidbase.exts.ITAG
-import com.ho1ho.androidbase.exts.toJsonString
+import android.os.SystemClock
+import com.ho1ho.androidbase.exts.toBytesLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.audio.base.AudioCodecInfo
@@ -45,7 +45,9 @@ class AudioSender {
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
-            LLog.i(WebSocketClientActivity.TAG, "onReceivedData: ${data?.toJsonString()}")
+//            LLog.i(WebSocketClientActivity.TAG, "onReceivedData: ${data?.toJsonString()}")
+            val rcvTs = (data as String).toLong()
+            LLog.i(WebSocketClientActivity.TAG, "Loopback time=${SystemClock.elapsedRealtime() - rcvTs} ms")
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
@@ -69,8 +71,14 @@ class AudioSender {
         micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
             override fun onRecording(pcmData: ByteArray) {
                 ioScope.launch {
-                    LLog.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                    webSocketClientHandler.sendAudioToServer(pcmData)
+//                    LLog.i(ITAG, "PCM[${pcmData.size}] to be sent.")
+                    val st = SystemClock.elapsedRealtime()
+                    val tsArray = st.toBytesLE()
+                    val finalArray = ByteArray(pcmData.size + tsArray.size)
+                    System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)
+                    System.arraycopy(pcmData, 0, finalArray, tsArray.size, pcmData.size)
+
+                    webSocketClientHandler.sendAudioToServer(finalArray)
                 }
             }
 

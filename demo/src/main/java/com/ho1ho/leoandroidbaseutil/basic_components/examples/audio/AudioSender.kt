@@ -8,7 +8,6 @@ import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.audio.base.AudioCodecInfo
 import com.ho1ho.audio.recorder.MicRecorder
-import com.ho1ho.leoandroidbaseutil.basic_components.examples.socket.WebSocketClientActivity
 import com.ho1ho.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.ho1ho.socket_sdk.framework.client.BaseNettyClient
 import com.ho1ho.socket_sdk.framework.client.ClientConnectListener
@@ -30,6 +29,10 @@ import java.nio.charset.Charset
  * Date: 2020/9/17 下午6:00
  */
 class AudioSender {
+    companion object {
+        private const val TAG = "AudioSender"
+    }
+
     private lateinit var webSocketClient: WebSocketClient
     private lateinit var webSocketClientHandler: WebSocketClientHandler
 
@@ -39,24 +42,24 @@ class AudioSender {
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
-            LLog.i(WebSocketClientActivity.TAG, "onConnected")
+            LLog.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
         }
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
-//            LLog.i(WebSocketClientActivity.TAG, "onReceivedData: ${data?.toJsonString()}")
+//            LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
             val rcvTs = (data as String).toLong()
-            LLog.i(WebSocketClientActivity.TAG, "Loopback time=${SystemClock.elapsedRealtime() - rcvTs} ms")
+            LLog.i(TAG, "Loopback time=${SystemClock.elapsedRealtime() - rcvTs} ms")
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
-            LLog.w(WebSocketClientActivity.TAG, "onDisconnect")
+            LLog.w(TAG, "onDisconnect")
             ToastUtil.showDebugToast("onDisconnect")
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
-            LLog.w(WebSocketClientActivity.TAG, "onFailed code: $code message: $msg")
+            LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
         }
     }

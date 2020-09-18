@@ -100,7 +100,7 @@ class AudioReceiver {
 
     fun stopServer() {
         if (::pcmPlayer.isInitialized) pcmPlayer.release()
+        if (::webSocketServer.isInitialized) webSocketServer.stopServer()
         ioScope.cancel()
-        webSocketServer.stopServer()
     }
 }

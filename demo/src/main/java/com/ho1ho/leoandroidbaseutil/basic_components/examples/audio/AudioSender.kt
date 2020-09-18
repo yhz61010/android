@@ -93,8 +93,8 @@ class AudioSender {
 
     fun stop() {
         if (::micRecorder.isInitialized) micRecorder.stopRecord()
+        if (::webSocketClient.isInitialized) webSocketClient.release()
         ioScope.cancel()
-        webSocketClient.release()
     }
 
     class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :

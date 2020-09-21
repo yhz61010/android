@@ -114,7 +114,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         camera2Helper.outputH264ForDebug = true
         camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
-                Log.d(TAG, "Get encoded video data length=" + h264Data.size)
+                Log.d(TAG, "Get encoded video data length=${h264Data.size}")
             }
         })
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
@@ -143,6 +143,6 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     companion object {
         private val TAG = Camera2LiveFragment::class.java.simpleName
-        private val DESIGNED_CAMERA_SIZE = CAMERA_SIZE_HIGH
+        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_HIGH
     }
 }

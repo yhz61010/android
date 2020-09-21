@@ -137,7 +137,6 @@ abstract class BaseCamera2Fragment : Fragment() {
 
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
-                DeviceSound.playStartVideoRecording()
                 onRecordButtonClick()
                 camera2Helper.extraInitializeCameraForRecording()
                 camera2Helper.setImageReaderForRecording()
@@ -149,6 +148,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchCameraBtn.isEnabled = false
                     ivShot.isEnabled = false
                 }
+                DeviceSound.playStartVideoRecording()
             }
         }
 

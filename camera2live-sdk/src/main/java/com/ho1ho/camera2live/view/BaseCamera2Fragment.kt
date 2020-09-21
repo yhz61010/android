@@ -13,7 +13,6 @@ import android.widget.CompoundButton
 import android.widget.ImageView
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
@@ -72,7 +71,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             backPressListener?.onBackPressed()
         }
         cameraView = view.findViewById(R.id.cameraSurfaceView)
-        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK, view)
+        camera2Helper = Camera2ComponentHelper(requireActivity(), CameraMetadata.LENS_FACING_BACK, view)
         camera2Helper.enableRecordFeature = enableRecordFeature
         camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
         camera2Helper.enableGallery = enableGallery
@@ -164,7 +163,7 @@ abstract class BaseCamera2Fragment : Fragment() {
 
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
-            observe(viewLifecycleOwner, Observer { orientation ->
+            observe(viewLifecycleOwner, { orientation ->
                 Log.d(TAG, "Orientation changed: $orientation")
             })
         }

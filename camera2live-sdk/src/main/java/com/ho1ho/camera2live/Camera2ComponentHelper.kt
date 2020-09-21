@@ -563,7 +563,16 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 findViewById<View>(R.id.ivAlbum).visibility = View.GONE
             }
         }
+        setRecordRepeatingRequest()
+        cameraView?.postDelayed({
+            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
+            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
+        }, 1000)
 
+        accumulateRecordTime()
+    }
+
+    fun setRecordRepeatingRequest() {
         imageReader.setOnImageAvailableListener({ reader ->
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()
@@ -575,7 +584,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 try {
                     val width = image.width
                     val height = image.height
-                    LLog.v(TAG, "Image width=$width height=$height")
+//                    LLog.v(TAG, "Image width=$width height=$height")
 
                     if (outputYuvForDebug) {
                         videoYuvOsForDebug?.write(dataProcessContext.doProcess(image, lensFacing))
@@ -593,6 +602,19 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             }
         }, cameraHandler)
 
+        if (!::session.isInitialized) {
+            val targets = mutableListOf(imageReader.surface)
+            cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
+            context.lifecycleScope.launch(Dispatchers.Main) {
+                session = createCaptureSession(camera, targets, cameraHandler)
+                setRepeatingRequestForRecord()
+            }
+        } else {
+            setRepeatingRequestForRecord()
+        }
+    }
+
+    private fun setRepeatingRequestForRecord() {
         session.setRepeatingRequest(
             // Capture request holds references to target surfaces
             session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
@@ -612,13 +634,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
             }.build(), null, cameraHandler
         )
-
-        cameraView?.postDelayed({
-            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
-            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
-        }, 1000)
-
-        accumulateRecordTime()
     }
 
     private fun accumulateRecordTime() {

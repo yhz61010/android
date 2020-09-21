@@ -4,7 +4,6 @@ import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
-import android.util.Log
 import android.util.Size
 import android.view.SurfaceHolder
 import android.widget.Toast
@@ -68,16 +67,16 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         camera2Helper.outputH264ForDebug = true
         camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
-                Log.d(ITAG, "Get encoded video data length=" + h264Data.size)
+                LLog.d(ITAG, "Get encoded video data length=" + h264Data.size)
             }
         })
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
-                Log.w(ITAG, "lensFacing=$lensFacing")
+                LLog.w(ITAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
-                    Log.w(ITAG, "Front lens")
+                    LLog.w(ITAG, "Front lens")
                 } else {
-                    Log.w(ITAG, "Back lens")
+                    LLog.w(ITAG, "Back lens")
                 }
                 previousLensFacing = lensFacing
             }
@@ -135,7 +134,6 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
 
             camera2Helper.extraInitializeCameraForRecording()
             camera2Helper.setImageReaderForRecording()
-            camera2Helper.setPreviewRepeatingRequest()
             camera2Helper.startRecording()
         }
     }

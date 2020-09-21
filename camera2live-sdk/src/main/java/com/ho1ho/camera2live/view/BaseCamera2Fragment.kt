@@ -5,7 +5,6 @@ import android.hardware.camera2.CameraMetadata
 import android.media.MediaActionSound
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ import android.widget.ImageView
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.media.DeviceSound
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
@@ -97,7 +97,7 @@ abstract class BaseCamera2Fragment : Fragment() {
 
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
-                Log.w(TAG, "lensFacing=$lensFacing")
+                LLog.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
                     switchFlashBtn.isChecked = false
                     switchFlashBtn.visibility = View.GONE
@@ -125,7 +125,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchCameraBtn.isEnabled = true
                     ivShotRecord.isEnabled = true
                 }
-                Log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
+                LLog.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
 
@@ -176,7 +176,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
             observe(viewLifecycleOwner, { orientation ->
-                Log.d(TAG, "Orientation changed: $orientation")
+                LLog.d(TAG, "Orientation changed: $orientation")
             })
         }
     }

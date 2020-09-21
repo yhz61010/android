@@ -60,22 +60,23 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        camera2Helper.stopCameraThread()
+        if (::camera2Helper.isInitialized) camera2Helper.stopCameraThread()
         super.onDestroy()
     }
 
     private fun doStartRecord() {
-        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK)
-        camera2Helper.enableRecordFeature = false
-        camera2Helper.enableTakePhotoFeature = false
-        camera2Helper.enableGallery = false
+        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
+            enableRecordFeature = false
+            enableTakePhotoFeature = false
+            enableGallery = false
 
-        camera2Helper.encoderType = if (
-            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-        ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-        else DataProcessFactory.ENCODER_TYPE_NORMAL
+            encoderType = if (
+                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+            else DataProcessFactory.ENCODER_TYPE_NORMAL
+        }
 
         // Selects appropriate preview size and configures camera surface
         val previewSize = getPreviewOutputSize(
@@ -97,15 +98,16 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         // BITRATE_MODE_VBR: 84.929kB/s
         // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
         // BITRATE_MODE_CBR: 113.630kB/s
-        val camera2ComponentBuilder = camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)
+        camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
 //        camera2ComponentBuilder.previewInFullscreen = true
-        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_NORMAL
-        // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-        camera2ComponentBuilder.cameraFps = Camera2ComponentHelper.CAMERA_FPS_NORMAL
-        camera2ComponentBuilder.videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_HIGH
-        camera2ComponentBuilder.iFrameInterval = 1
-        camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        camera2ComponentBuilder.build()
+            quality = Camera2ComponentHelper.BITRATE_NORMAL
+            // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
+            cameraFps = Camera2ComponentHelper.CAMERA_FPS_NORMAL
+            videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_HIGH
+            iFrameInterval = 1
+            bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+            build()
+        }
         camera2Helper.outputH264ForDebug = true
         camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
@@ -125,14 +127,13 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         })
 
         camera2Helper.initDebugOutput()
+
+        camera2Helper.extraInitializeCameraForRecording()
+        camera2Helper.setImageReaderForRecording()
+        camera2Helper.startRecording()
     }
 
     private fun stopRecord() {
-        camera2Helper.closeDebugOutput()
-        if (camera2Helper.isRecording) {
-            camera2Helper.stopRecording()
-        } else {
-            camera2Helper.closeCamera()
-        }
+        if (::camera2Helper.isInitialized) camera2Helper.run { closeDebugOutput(); if (isRecording) stopRecording() else closeCamera() }
     }
 }

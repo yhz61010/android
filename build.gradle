@@ -62,7 +62,7 @@ ext {
     gsonVersion = '2.8.6'
     marsXlogVersion = '1.2.4'
 
-    exifinterfaceVersion = '1.2.0'
+    exifinterfaceVersion = '1.3.0'
     andPermissionVersion = '2.0.3'
 
     materialDialogVersion = '3.3.0'

@@ -8,7 +8,6 @@ import android.graphics.drawable.AnimationDrawable
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
-import android.media.MediaActionSound
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -549,7 +548,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         recordDuration = 0
         stopRepeating()
         closeCamera()
-        MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
     }
 
     fun startRecording() {
@@ -620,7 +618,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         }, 1000)
 
         accumulateRecordTime()
-        MediaActionSound().play(MediaActionSound.START_VIDEO_RECORDING)
     }
 
     private fun accumulateRecordTime() {
@@ -679,7 +676,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 result: TotalCaptureResult
             ) {
                 super.onCaptureCompleted(session, request, result)
-                MediaActionSound().play(MediaActionSound.SHUTTER_CLICK)
                 val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
                 Log.d(TAG, "Capture result received: $resultTimestamp")
 

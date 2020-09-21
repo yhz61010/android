@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
-import android.util.Log
 import android.util.Range
 import android.util.Size
 import android.view.Surface
@@ -430,7 +429,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      * - Sets up the still image capture listeners
      */
     fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
-        Log.i(TAG, "=====> initializeCamera($previewWidth x $previewHeight) <=====")
+        LLog.i(TAG, "=====> initializeCamera($previewWidth x $previewHeight) <=====")
         this@Camera2ComponentHelper.previewWidth = previewWidth
         this@Camera2ComponentHelper.previewHeight = previewHeight
         initializeParameters()
@@ -443,9 +442,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         if (enableTakePhotoFeature) {
             val st = SystemClock.elapsedRealtime()
             setImageReaderForPhoto(previewWidth, previewHeight)
-            Log.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
+            LLog.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
             setPreviewRepeatingRequest()
-            Log.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
+            LLog.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
         }
     }
 
@@ -460,13 +459,13 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             override fun onOpened(device: CameraDevice) = cont.resume(device)
 
             override fun onDisconnected(device: CameraDevice) {
-                Log.w(TAG, "Camera $cameraId has been disconnected")
+                LLog.w(TAG, "Camera $cameraId has been disconnected")
                 // FIXME In some cases, call this method will cause crash
 //                context.requireActivity().finish()
             }
 
             override fun onClosed(camera: CameraDevice) {
-                Log.w(TAG, "Camera $cameraId has been closed")
+                LLog.w(TAG, "Camera $cameraId has been closed")
                 super.onClosed(camera)
             }
 
@@ -481,7 +480,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 }
                 device.close()
                 val exc = IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
-                Log.e(TAG, exc.message, exc)
+                LLog.e(TAG, exc.message, exc)
                 if (cont.isActive) cont.resumeWithException(exc)
             }
         }, handler)
@@ -503,7 +502,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
             override fun onConfigureFailed(session: CameraCaptureSession) {
                 val exc = RuntimeException("Camera ${device.id} session configuration failed")
-                Log.e(TAG, exc.message, exc)
+                LLog.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
         }, handler)
@@ -524,6 +523,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     fun stopRecording() {
+        LLog.w(TAG, "stopRecording()")
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = false
         cameraView?.run {
@@ -552,6 +552,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     fun startRecording() {
+        LLog.w(TAG, "startRecording()")
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = true
         cameraView?.run {
@@ -644,7 +645,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val deviceRotation = context.windowManager.defaultDisplay.rotation
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
         val jpegOrientation = (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
-        Log.d(TAG, "jpegOrientation=$jpegOrientation")
+        LLog.d(TAG, "jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }
 
@@ -665,7 +666,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val imageQueue = ArrayBlockingQueue<Image>(IMAGE_BUFFER_SIZE)
         imageReader.setOnImageAvailableListener({ reader ->
             val image = reader.acquireNextImage()
-            Log.d(TAG, "Image available in queue: ${image.timestamp}")
+            LLog.d(TAG, "Image available in queue: ${image.timestamp}")
             imageQueue.add(image)
         }, imageReaderHandler)
 
@@ -693,7 +694,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             ) {
                 super.onCaptureCompleted(session, request, result)
                 val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                Log.d(TAG, "Capture result received: $resultTimestamp")
+                LLog.d(TAG, "Capture result received: $resultTimestamp")
 
                 // Set a timeout in case image captured is dropped from the pipeline
                 val exc = TimeoutException("Image dequeuing took too long")
@@ -713,7 +714,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                             image.format != ImageFormat.DEPTH_JPEG &&
                             image.timestamp != resultTimestamp
                         ) continue
-                        Log.d(TAG, "Matching image dequeued: ${image.timestamp}")
+                        LLog.d(TAG, "Matching image dequeued: ${image.timestamp}")
 
                         // Unset the image reader listener
                         imageReaderHandler.removeCallbacks(timeoutRunnable)
@@ -739,11 +740,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                         val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
-                        Log.d(
+                        LLog.d(
                             TAG,
                             "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                         )
-                        Log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
+                        LLog.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
 
                         // Build the result and resume progress
                         cont.resume(
@@ -771,7 +772,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             throw IllegalAccessError("You must initialize camera and session first.")
         }
         if (CameraMetadata.LENS_FACING_FRONT == lensFacing || !supportFlash) {
-            Log.w(TAG, "Do NOT support flash or lens facing is front camera.")
+            LLog.w(TAG, "Do NOT support flash or lens facing is front camera.")
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -784,7 +785,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, true);
             //                    }
-            Log.w(TAG, "Flash ON")
+            LLog.w(TAG, "Flash ON")
             true
         } catch (e: Exception) {
             false
@@ -796,7 +797,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             throw IllegalAccessError("You must initialize camera and session first.")
         }
         if (!supportFlash) {
-            Log.w(TAG, "Do NOT support flash.")
+            LLog.w(TAG, "Do NOT support flash.")
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -811,7 +812,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, false);
             //                    }
-            Log.w(TAG, "Flash OFF")
+            LLog.w(TAG, "Flash OFF")
             false
         } catch (e: Exception) {
             false
@@ -889,7 +890,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                     FileOutputStream(output).use { it.write(result.imageBytes) }
                     cont.resume(output)
                 } catch (exc: IOException) {
-                    Log.e(TAG, "Unable to write JPEG image to file", exc)
+                    LLog.e(TAG, "Unable to write JPEG image to file", exc)
                     cont.resumeWithException(exc)
                 }
             }
@@ -902,7 +903,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
 //                    cont.resume(output)
 //                } catch (exc: IOException) {
-//                    Log.e(TAG, "Unable to write DNG image to file", exc)
+//                    LLog.e(TAG, "Unable to write DNG image to file", exc)
 //                    cont.resumeWithException(exc)
 //                }
 //            }
@@ -910,7 +911,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             // No other formats are supported by this sample
             else -> {
                 val exc = RuntimeException("Unknown image format: ${result.format}")
-                Log.e(TAG, exc.message, exc)
+                LLog.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
         }
@@ -932,7 +933,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()
         } catch (e: InterruptedException) {
-            Log.e(TAG, "Interrupted while trying to lock camera closing.", e)
+            LLog.e(TAG, "Interrupted while trying to lock camera closing.", e)
         } finally {
             LLog.i(TAG, "closeCamera() - End")
         }
@@ -954,7 +955,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        Log.i(TAG, "=====> stopCameraThread() being called <=====")
+        LLog.i(TAG, "=====> stopCameraThread() being called <=====")
     }
 
     /** Handy method to release all the camera resources. */

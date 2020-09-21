@@ -2,7 +2,6 @@ package com.ho1ho.audio.player.aac
 
 import android.content.Context
 import android.media.*
-import android.util.Log
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.audio.base.AudioCodecInfo
@@ -119,7 +118,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
-                    Log.w(ITAG, "inputIndex=$inputIndex")
+                    LLog.w(ITAG, "inputIndex=$inputIndex")
                     if (inputIndex < 0) {
                         isFinish = true
                     }
@@ -130,7 +129,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         sampleSize = mediaExtractor.readSampleData(it, 0)
                         sampleData = ByteArray(it.remaining())
                         it.get(sampleData!!)
-                        Log.i(ITAG, "Sample aac data[${sampleData?.size}]")
+                        LLog.i(ITAG, "Sample aac data[${sampleData?.size}]")
                     }
 
                     if (sampleSize > 0) {
@@ -141,7 +140,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         isFinish = true
                     }
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
-                    Log.e(ITAG, "outputIndex=$outputIndex")
+                    LLog.e(ITAG, "outputIndex=$outputIndex")
                     var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {
@@ -150,12 +149,12 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         outputBuffer?.get(chunkPCM)
                         outputBuffer?.clear()
                         if (chunkPCM.isNotEmpty()) {
-//                                Log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
+//                                LLog.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
                             val shortPcmData = ShortArray(chunkPCM.size / 2)
                             for (i in shortPcmData.indices) {
                                 shortPcmData[i] = (chunkPCM[i * 2].toInt() and 0xFF or (chunkPCM[i * 2 + 1].toInt() shl 8)).toShort()
                             }
-                            Log.i(ITAG, "Finally PCM data[${shortPcmData.size}]")
+                            LLog.i(ITAG, "Finally PCM data[${shortPcmData.size}]")
                             audioTrack?.write(shortPcmData, 0, shortPcmData.size)
                         }
                         audioDecoder?.releaseOutputBuffer(outputIndex, false)

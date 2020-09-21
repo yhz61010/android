@@ -62,8 +62,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     var enableGallery = true
 
     // FIXME Set this vale properly
-    private var previewWidth: Int = 0
-    private var previewHeight: Int = 0
+    internal var previewWidth: Int = 0
+        private set
+    internal var previewHeight: Int = 0
+        private set
 
     private var supportFlash = false   // Support flash
     private var torchOn = false        // Flash continuously on
@@ -997,6 +999,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         const val BITRATE_NORMAL = 1f
         const val BITRATE_LOW = 0.75f
         const val BITRATE_VERY_LOW = 0.5f
+
+        val CAMERA_SIZE_EXTRA = Size(1080, 1920)
+        val CAMERA_SIZE_HIGH = Size(720, 1280)
+        val CAMERA_SIZE_NORMAL = Size(720, 960)
+        val CAMERA_SIZE_LOW = Size(480, 640)
 
         @JvmField
         val CAMERA_FPS_VERY_HIGH = Range(30, 30)    // [30, 30]

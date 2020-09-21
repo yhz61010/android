@@ -9,6 +9,7 @@ import android.util.Size
 import android.view.SurfaceHolder
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.LLog
@@ -20,6 +21,8 @@ import com.ho1ho.leoandroidbaseutil.R
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_camera2_without_preview.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class Camera2WithoutPreviewActivity : AppCompatActivity() {
     companion object {
@@ -33,38 +36,6 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera2_without_preview)
 
-        btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
-                    doStartRecord()
-                } else {
-                    AndPermission.with(this)
-                        .runtime()
-                        .permission(Permission.CAMERA)
-                        .onGranted {
-                            Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-                            doStartRecord()
-                        }
-                        .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
-                        .start()
-                }
-            } else {
-                stopRecord()
-            }
-        }
-    }
-
-    override fun onStop() {
-        stopRecord()
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        if (::camera2Helper.isInitialized) camera2Helper.stopCameraThread()
-        super.onDestroy()
-    }
-
-    private fun doStartRecord() {
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
             enableRecordFeature = false
             enableTakePhotoFeature = false
@@ -76,20 +47,6 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
                 || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
             ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
             else DataProcessFactory.ENCODER_TYPE_NORMAL
-        }
-
-        // Selects appropriate preview size and configures camera surface
-        val previewSize = getPreviewOutputSize(
-            Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
-            camera2Helper.characteristics,
-            SurfaceHolder::class.java
-        )
-        // To ensure that size is set, initialize camera in the view's thread
-        runCatching {
-            camera2Helper.initializeCamera(previewSize.width, previewSize.height)
-        }.getOrElse {
-            LLog.e(ITAG, "=====> Finally openCamera error <=====")
-            ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
         }
 
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
@@ -126,11 +83,61 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             }
         })
 
-        camera2Helper.initDebugOutput()
+        btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
+                    doStartRecord()
+                } else {
+                    AndPermission.with(this)
+                        .runtime()
+                        .permission(Permission.CAMERA)
+                        .onGranted {
+                            Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
+                            doStartRecord()
+                        }
+                        .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
+                        .start()
+                }
+            } else {
+                stopRecord()
+            }
+        }
+    }
 
-        camera2Helper.extraInitializeCameraForRecording()
-        camera2Helper.setImageReaderForRecording()
-        camera2Helper.startRecording()
+    override fun onStop() {
+        stopRecord()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        if (::camera2Helper.isInitialized) camera2Helper.stopCameraThread()
+        super.onDestroy()
+    }
+
+    private fun doStartRecord() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            // Selects appropriate preview size and configures camera surface
+            val previewSize = getPreviewOutputSize(
+                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                camera2Helper.characteristics,
+                SurfaceHolder::class.java
+            )
+            LLog.i(ITAG, "previewSize=$previewSize")
+            // To ensure that size is set, initialize camera in the view's thread
+            runCatching {
+                LLog.i(ITAG, "Prepare to call initializeCamera")
+                camera2Helper.initializeCamera(previewSize.width, previewSize.height)
+            }.getOrElse {
+                LLog.e(ITAG, "=====> Finally openCamera error <=====")
+                ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
+            }
+            camera2Helper.initDebugOutput()
+
+            camera2Helper.extraInitializeCameraForRecording()
+            camera2Helper.setImageReaderForRecording()
+            camera2Helper.setPreviewRepeatingRequest()
+            camera2Helper.startRecording()
+        }
     }
 
     private fun stopRecord() {

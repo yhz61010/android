@@ -54,11 +54,13 @@ class AudioSender {
         override fun onDisconnected(netty: BaseNettyClient) {
             LLog.w(TAG, "onDisconnect")
             ToastUtil.showDebugToast("onDisconnect")
+            if (::micRecorder.isInitialized) micRecorder.stopRecord()
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            if (::micRecorder.isInitialized) micRecorder.stopRecord()
         }
     }
 

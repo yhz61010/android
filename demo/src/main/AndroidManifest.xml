@@ -20,6 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.camera2.Camera2WithoutPreviewActivity" />
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
         <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />
         <activity android:name=".jetpack_components.examples.room.RoomActivity" />

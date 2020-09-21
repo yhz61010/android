@@ -15,6 +15,7 @@ import com.ho1ho.leoandroidbaseutil.R
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.*
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
+import com.ho1ho.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
 import com.ho1ho.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -67,17 +68,18 @@ class BasicFragment : Fragment() {
             Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
+            Pair("Camera2Live", Camera2LiveActivity::class.java),
+            Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
-            Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Audio", AudioActivity::class.java),
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("HTTP Related", HttpActivity::class.java),
             Pair("Log", LogActivity::class.java),
             Pair("Clipboard", ClipboardActivity::class.java),
             Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
-            Pair("KeepAlive", KeepAliveActivity::class.java)
+            Pair("KeepAlive", KeepAliveActivity::class.java),
         )
 
         val colors = arrayOf(

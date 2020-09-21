@@ -7,6 +7,7 @@ import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.toHexStringLE
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.ui.ToastUtil
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -113,6 +114,8 @@ class DecodeH265RawFile {
     companion object {
         private const val TAG = "DecodeH265RawFile"
     }
+
+    private val ioScope = CoroutineScope(Dispatchers.IO + Job())
 
     private lateinit var mediaCodec: MediaCodec
     private var outputFormat: MediaFormat? = null
@@ -267,7 +270,9 @@ class DecodeH265RawFile {
     }
 
     fun close() {
-        kotlin.runCatching {
+        queue.clear()
+        ioScope.cancel()
+        runCatching {
             LLog.d(TAG, "close start")
             mediaCodec.stop()
             mediaCodec.release()
@@ -275,24 +280,29 @@ class DecodeH265RawFile {
     }
 
     fun startDecoding() {
-        Thread {
+        // FIXME
+        // If use coroutines here, the video will be displayed. I don't know why!!!
+        ioScope.launch {
             val startIdx = 4
-            while (true) {
-                val bytes = getRawH265() ?: break
-                var previousStart = 0
-                for (i in startIdx until bytes.size) {
-                    if (findStartCode4(bytes, i)) {
-                        val frame = ByteArray(i - previousStart)
-                        System.arraycopy(bytes, previousStart, frame, 0, frame.size)
-                        queue.offer(frame)
-                        LLog.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
-                        previousStart = i
-                        // FIXME We'd better control the FPS by SpeedManager
-                        Thread.sleep(32)
+            runCatching {
+                while (true) {
+                    val bytes = getRawH265() ?: break
+                    var previousStart = 0
+                    for (i in startIdx until bytes.size) {
+                        ensureActive()
+                        if (findStartCode4(bytes, i)) {
+                            val frame = ByteArray(i - previousStart)
+                            System.arraycopy(bytes, previousStart, frame, 0, frame.size)
+                            queue.offer(frame)
+                            LLog.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
+                            previousStart = i
+                            // FIXME We'd better control the FPS by SpeedManager
+                            Thread.sleep(32)
+                        }
                     }
                 }
-            }
-        }.start()
+            }.onFailure { it.printStackTrace() }
+        }
         mediaCodec.start()
     }
 

@@ -390,6 +390,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     suspend fun setPreviewRepeatingRequest() {
+        LLog.i(TAG, "setPreviewRepeatingRequest()")
 //        session.stopRepeating()
 //        stopRepeating()
         // There is no need to call session.close() method. Please check its comment

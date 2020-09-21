@@ -5,7 +5,6 @@ import android.hardware.camera2.CameraMetadata
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
-import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -157,7 +156,15 @@ abstract class BaseCamera2Fragment : Fragment() {
                 camera2Helper.stopRecording()
                 onStopRecordButtonClick()
                 // Re-enable click listener after recording is taken
-                it.post { it.isEnabled = true; camera2Helper.initializeCamera(CAMERA_SIZE_HIGH.width, CAMERA_SIZE_HIGH.height) }
+                it.post {
+                    it.isEnabled = true
+                    switchCameraBtn.isEnabled = true
+                    ivShot.isEnabled = true
+                    camera2Helper.initializeCamera(
+                        camera2Helper.previewWidth,
+                        camera2Helper.previewHeight
+                    )
+                }
             }
         }
 
@@ -185,11 +192,6 @@ abstract class BaseCamera2Fragment : Fragment() {
 
     companion object {
         private val TAG = BaseCamera2Fragment::class.java.simpleName
-
-        val CAMERA_SIZE_EXTRA = Size(1080, 1920)
-        val CAMERA_SIZE_HIGH = Size(720, 1280)
-        val CAMERA_SIZE_NORMAL = Size(720, 960)
-        val CAMERA_SIZE_LOW = Size(480, 640)
     }
 }
 

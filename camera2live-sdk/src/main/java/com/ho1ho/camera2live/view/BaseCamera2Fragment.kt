@@ -2,6 +2,7 @@ package com.ho1ho.camera2live.view
 
 import android.annotation.SuppressLint
 import android.hardware.camera2.CameraMetadata
+import android.media.MediaActionSound
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -13,6 +14,7 @@ import android.widget.ImageView
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.ho1ho.androidbase.utils.media.DeviceSound
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.R
 import com.ho1ho.camera2live.utils.OrientationLiveData
@@ -116,6 +118,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
                 getCapturingImage(camera2Helper.takePhoto())
+                DeviceSound.playShutterClick()
                 // Re-enable click listener after photo is taken
                 it.post {
                     it.isEnabled = true
@@ -134,6 +137,7 @@ abstract class BaseCamera2Fragment : Fragment() {
 
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
+                DeviceSound.playStartVideoRecording()
                 onRecordButtonClick()
                 camera2Helper.extraInitializeCameraForRecording()
                 camera2Helper.setImageReaderForRecording()
@@ -165,6 +169,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                         camera2Helper.previewHeight
                     )
                 }
+                DeviceSound.playStopVideoRecording()
             }
         }
 
@@ -180,6 +185,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         super.onStop()
         if (camera2Helper.isRecording) {
             camera2Helper.stopRecording()
+            MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
         } else {
             camera2Helper.closeCamera()
         }

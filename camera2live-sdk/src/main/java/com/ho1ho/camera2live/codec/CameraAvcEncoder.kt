@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Author: Michael Leo
  * Date: 20-3-24 下午5:35
  */
-class CameraEncoder @JvmOverloads constructor(
+class CameraAvcEncoder @JvmOverloads constructor(
     private val width: Int, private val height: Int,
     private val bitrate: Int, private val frameRate: Int,
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,

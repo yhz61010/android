@@ -56,9 +56,7 @@ import kotlin.math.min
  * Date: 20-6-24 下午5:05
  */
 @Suppress("unused")
-class Camera2ComponentHelper(
-    private val context: FragmentActivity, private var lensFacing: Int, private val cameraView: View
-) {
+class Camera2ComponentHelper(private val context: FragmentActivity, private var lensFacing: Int, private val cameraView: View? = null) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
     var enableGallery = true
@@ -96,7 +94,7 @@ class Camera2ComponentHelper(
         val second = duration % 60
         val minute = duration / 60 % 60
         val hour = duration / 3600 % 60
-        cameraView.findViewById<TextView>(R.id.txtRecordTime).text = "%02d:%02d:%02d".format(hour, minute, second)
+        cameraView?.findViewById<TextView>(R.id.txtRecordTime)?.text = "%02d:%02d:%02d".format(hour, minute, second)
         accumulateRecordTime()
     }
     private lateinit var builder: Builder
@@ -335,15 +333,17 @@ class Camera2ComponentHelper(
         /**
          * Overlay on top of the camera preview
          */
-        val overlay = cameraView.findViewById<View>(R.id.overlay)
+        val overlay = cameraView?.findViewById<View>(R.id.overlay)
         Runnable {
-            // Flash white animation
-            overlay.background = Color.argb(150, 66, 66, 66).toDrawable()
-            // Wait for ANIMATION_FAST_MILLIS
-            overlay.postDelayed({
-                // Remove white flash animation
-                overlay.background = null
-            }, ANIMATION_FAST_MILLIS)
+            overlay?.let {
+                // Flash white animation
+                it.background = Color.argb(150, 66, 66, 66).toDrawable()
+                // Wait for ANIMATION_FAST_MILLIS
+                it.postDelayed({
+                    // Remove white flash animation
+                    it.background = null
+                }, ANIMATION_FAST_MILLIS)
+            }
         }
     }
 
@@ -393,15 +393,19 @@ class Camera2ComponentHelper(
 //        stopRepeating()
         // There is no need to call session.close() method. Please check its comment
 //        if (::session.isInitialized) session.close()
-        val targets = listOf(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface, imageReader.surface)
+        val targets = mutableListOf(imageReader.surface)
+        cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
+
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
 
         // Capture request holds references to target surfaces
         capturePreviewRequestBuilder =
             session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                // Add the preview surface target
-                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                cameraView?.let {
+                    // Add the preview surface target
+                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                }
                 // Auto focus
                 set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
                 // Auto exposure. The flash will be open automatically in dark.
@@ -520,24 +524,26 @@ class Camera2ComponentHelper(
     fun stopRecording() {
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = false
-        cameraView.post {
-            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
-            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).stop()
-            cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.VISIBLE
-            if (enableTakePhotoFeature) {
-                cameraView.findViewById<View>(R.id.ivShot).visibility = View.VISIBLE
-            } else {
-                cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
+        cameraView?.run {
+            post {
+                findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
+                (findViewById<View>(R.id.vRedDot).background as AnimationDrawable).stop()
+                findViewById<View>(R.id.ivShotRecord).visibility = View.VISIBLE
+                if (enableTakePhotoFeature) {
+                    findViewById<View>(R.id.ivShot).visibility = View.VISIBLE
+                } else {
+                    findViewById<View>(R.id.ivShot).visibility = View.GONE
+                }
+                if (enableGallery) {
+                    findViewById<View>(R.id.ivAlbum).visibility = View.VISIBLE
+                } else {
+                    findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+                }
+                findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
+                findViewById<View>(R.id.switchFacing).visibility = View.VISIBLE
             }
-            if (enableGallery) {
-                cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.VISIBLE
-            } else {
-                cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
-            }
-            cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
-            cameraView.findViewById<View>(R.id.switchFacing).visibility = View.VISIBLE
+            removeCallbacks(recordTimerRunnable)
         }
-        cameraView.removeCallbacks(recordTimerRunnable)
         recordDuration = 0
         stopRepeating()
         closeCamera()
@@ -547,12 +553,14 @@ class Camera2ComponentHelper(
     fun startRecording() {
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = true
-        cameraView.post {
-            cameraView.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
-            cameraView.findViewById<View>(R.id.ivShot).visibility = View.GONE
-            cameraView.findViewById<View>(R.id.ivRecordStop).visibility = View.VISIBLE
-            cameraView.findViewById<View>(R.id.switchFacing).visibility = View.GONE
-            cameraView.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+        cameraView?.run {
+            post {
+                findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
+                findViewById<View>(R.id.ivShot).visibility = View.GONE
+                findViewById<View>(R.id.ivRecordStop).visibility = View.VISIBLE
+                findViewById<View>(R.id.switchFacing).visibility = View.GONE
+                findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+            }
         }
 
         imageReader.setOnImageAvailableListener({ reader ->
@@ -587,8 +595,10 @@ class Camera2ComponentHelper(
         session.setRepeatingRequest(
             // Capture request holds references to target surfaces
             session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                // Add the preview and recording surface targets
-                addTarget(cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                cameraView?.let {
+                    // Add the preview and recording surface targets
+                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                }
                 addTarget(imageReader.surface)
                 LLog.w(TAG, "Camera FPS=${builder.cameraFps}")
                 // Sets user requested FPS for all targets
@@ -602,7 +612,7 @@ class Camera2ComponentHelper(
             }.build(), null, cameraHandler
         )
 
-        cameraView.postDelayed({
+        cameraView?.postDelayed({
             cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
             (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
         }, 1000)
@@ -612,7 +622,7 @@ class Camera2ComponentHelper(
     }
 
     private fun accumulateRecordTime() {
-        cameraView.postDelayed(recordTimerRunnable, 1000)
+        cameraView?.postDelayed(recordTimerRunnable, 1000)
     }
 
     private fun getJpegOrientation(): Int {
@@ -658,7 +668,7 @@ class Camera2ComponentHelper(
                 frameNumber: Long
             ) {
                 super.onCaptureStarted(session, request, timestamp, frameNumber)
-                cameraView.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).post(animationTask)
+                cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)?.post(animationTask)
             }
 
             override fun onCaptureCompleted(

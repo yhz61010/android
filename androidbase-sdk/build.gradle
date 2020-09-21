@@ -46,6 +46,14 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
     api "androidx.lifecycle:lifecycle-livedata-core-ktx:$rootProject.ext.archLifecycleVersion"
+    // ViewModel
+    api "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.ext.archLifecycleVersion"
+    // Saved state module for ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$rootProject.ext.archLifecycleVersion"
+    // optional - helpers for implementing LifecycleOwner in a Service
+    implementation "androidx.lifecycle:lifecycle-service:$rootProject.ext.archLifecycleVersion"
+    // optional - ProcessLifecycleOwner provides a lifecycle for the whole application process
+    implementation "androidx.lifecycle:lifecycle-process:$rootProject.ext.archLifecycleVersion"
     implementation "com.google.android.material:material:$materialVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

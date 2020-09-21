@@ -23,7 +23,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.core.graphics.drawable.toDrawable
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.computeExifOrientation
 import com.ho1ho.androidbase.exts.fail
@@ -35,7 +35,6 @@ import com.ho1ho.camera2live.base.DataProcessContext
 import com.ho1ho.camera2live.base.DataProcessFactory
 import com.ho1ho.camera2live.codec.CameraAvcEncoder
 import com.ho1ho.camera2live.listeners.CallbackListener
-import com.ho1ho.camera2live.view.BaseCamera2Fragment
 import com.ho1ho.camera2live.view.CameraSurfaceView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,7 +57,7 @@ import kotlin.math.min
  */
 @Suppress("unused")
 class Camera2ComponentHelper(
-    private val context: Fragment, private var lensFacing: Int, private val cameraView: View
+    private val context: FragmentActivity, private var lensFacing: Int, private val cameraView: View
 ) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
@@ -76,7 +75,6 @@ class Camera2ComponentHelper(
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
-        val context = context.requireContext().applicationContext
         context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
 
@@ -131,11 +129,11 @@ class Camera2ComponentHelper(
 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
-        val screenSize = DeviceUtil.getResolution(context.requireContext())
+        val screenSize = DeviceUtil.getResolution(context)
         max(screenSize.x, screenSize.y)
     }
     private val cameraSupportedMaxPreviewHeight: Int by lazy {
-        val screenSize = DeviceUtil.getResolution(context.requireContext())
+        val screenSize = DeviceUtil.getResolution(context)
         min(screenSize.x, screenSize.y)
     }
 
@@ -189,7 +187,7 @@ class Camera2ComponentHelper(
         try {
             if (outputH264ForDebug || outputYuvForDebug) {
                 baseOutputFolderForDebug =
-                    context.requireContext().getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
+                    context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
                 val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
@@ -232,7 +230,7 @@ class Camera2ComponentHelper(
     private fun initializeRecordingParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
-        val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
+        val deviceRotation = context.windowManager.defaultDisplay.rotation
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
         var swapDimension = false
         LLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
@@ -618,7 +616,7 @@ class Camera2ComponentHelper(
     }
 
     private fun getJpegOrientation(): Int {
-        val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
+        val deviceRotation = context.windowManager.defaultDisplay.rotation
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
         val jpegOrientation = (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
         Log.d(TAG, "jpegOrientation=$jpegOrientation")
@@ -709,10 +707,12 @@ class Camera2ComponentHelper(
                         // DO NOT forget for close Image object
                         image.close()
 
-                        val deviceRotation = context.requireActivity().windowManager.defaultDisplay.rotation
+                        val deviceRotation = context.windowManager.defaultDisplay.rotation
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
-                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
+                        // FIXME Maybe you will want to use rotation in someday
+                        val rotation = 0
+//                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                         val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
                         Log.d(
@@ -861,7 +861,7 @@ class Camera2ComponentHelper(
                 // So I can not mirror image in the general way like this below:
                 //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {
-                    val output = FileUtil.createImageFile(context.requireContext(), "jpg")
+                    val output = FileUtil.createImageFile(context, "jpg")
                     FileOutputStream(output).use { it.write(result.imageBytes) }
                     cont.resume(output)
                 } catch (exc: IOException) {

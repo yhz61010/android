@@ -33,7 +33,7 @@ import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.file.FileUtil
 import com.ho1ho.camera2live.base.DataProcessContext
 import com.ho1ho.camera2live.base.DataProcessFactory
-import com.ho1ho.camera2live.codec.CameraEncoder
+import com.ho1ho.camera2live.codec.CameraAvcEncoder
 import com.ho1ho.camera2live.listeners.CallbackListener
 import com.ho1ho.camera2live.view.BaseCamera2Fragment
 import com.ho1ho.camera2live.view.CameraSurfaceView
@@ -111,8 +111,8 @@ class Camera2ComponentHelper(
         var quality: Float = BITRATE_NORMAL
         var cameraFps: Range<Int> = CAMERA_FPS_NORMAL
         var videoFps: Int = VIDEO_FPS_FREQUENCY_HIGH
-        var iFrameInterval: Int = CameraEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
-        var bitrateMode: Int = CameraEncoder.DEFAULT_BITRATE_MODE
+        var iFrameInterval: Int = CameraAvcEncoder.DEFAULT_KEY_I_FRAME_INTERVAL
+        var bitrateMode: Int = CameraAvcEncoder.DEFAULT_BITRATE_MODE
         fun build() {
             builder = this
         }
@@ -158,7 +158,7 @@ class Camera2ComponentHelper(
         fun onUpdate(h264Data: ByteArray)
     }
 
-    private lateinit var cameraEncoder: CameraEncoder
+    private lateinit var cameraEncoder: CameraAvcEncoder
     private var encodeListener: EncodeDataUpdateListener? = null
     fun setEncodeListener(listener: EncodeDataUpdateListener) {
         encodeListener = listener
@@ -172,7 +172,7 @@ class Camera2ComponentHelper(
         iFrameInterval: Int,
         bitrateMode: Int
     ) {
-        cameraEncoder = CameraEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
+        cameraEncoder = CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         cameraEncoder.setDataUpdateCallback(object :
             CallbackListener {
             override fun onCallback(h264Data: ByteArray) {

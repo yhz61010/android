@@ -35,6 +35,15 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera2_without_preview)
 
+        AndPermission.with(this@Camera2WithoutPreviewActivity)
+            .runtime()
+            .permission(Permission.CAMERA)
+            .onGranted {
+                Toast.makeText(this@Camera2WithoutPreviewActivity, "Grant camera permission", Toast.LENGTH_SHORT).show()
+            }
+            .onDenied { Toast.makeText(this@Camera2WithoutPreviewActivity, "Deny camera permission", Toast.LENGTH_SHORT).show() }
+            .start()
+
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
             enableRecordFeature = false
             enableTakePhotoFeature = false
@@ -48,58 +57,8 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             else DataProcessFactory.ENCODER_TYPE_NORMAL
         }
 
-        // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
-        // BITRATE_MODE_CQ: 348.399kB/s
-        // BITRATE_MODE_CBR: 85.875kB/s
-        // BITRATE_MODE_VBR: 84.929kB/s
-        // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
-        // BITRATE_MODE_CBR: 113.630kB/s
-        camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
-//        camera2ComponentBuilder.previewInFullscreen = true
-            quality = Camera2ComponentHelper.BITRATE_LOW
-            // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-            cameraFps = Camera2ComponentHelper.CAMERA_FPS_NORMAL
-            videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_NORMAL
-            iFrameInterval = 1
-            bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-            build()
-        }
-        camera2Helper.outputH264ForDebug = true
-        camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
-            override fun onUpdate(h264Data: ByteArray) {
-                LLog.d(ITAG, "Get encoded video data length=" + h264Data.size)
-            }
-        })
-        camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
-            override fun onSwitch(lensFacing: Int) {
-                LLog.w(ITAG, "lensFacing=$lensFacing")
-                if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
-                    LLog.w(ITAG, "Front lens")
-                } else {
-                    LLog.w(ITAG, "Back lens")
-                }
-                previousLensFacing = lensFacing
-            }
-        })
-
         btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
-                    doStartRecord()
-                } else {
-                    AndPermission.with(this)
-                        .runtime()
-                        .permission(Permission.CAMERA)
-                        .onGranted {
-                            Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-                            doStartRecord()
-                        }
-                        .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
-                        .start()
-                }
-            } else {
-                stopRecord()
-            }
+            if (isChecked) doStartRecord() else stopRecord()
         }
     }
 
@@ -121,15 +80,48 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
                 camera2Helper.characteristics,
                 SurfaceHolder::class.java
             )
-            LLog.i(ITAG, "previewSize=$previewSize")
             // To ensure that size is set, initialize camera in the view's thread
             runCatching {
-                LLog.i(ITAG, "Prepare to call initializeCamera")
+                LLog.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
                 camera2Helper.initializeCamera(previewSize.width, previewSize.height)
             }.getOrElse {
                 LLog.e(ITAG, "=====> Finally openCamera error <=====")
                 ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
             }
+
+            // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
+            // BITRATE_MODE_CQ: 348.399kB/s
+            // BITRATE_MODE_CBR: 85.875kB/s
+            // BITRATE_MODE_VBR: 84.929kB/s
+            // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
+            // BITRATE_MODE_CBR: 113.630kB/s
+            camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
+//        camera2ComponentBuilder.previewInFullscreen = true
+                quality = Camera2ComponentHelper.BITRATE_LOW
+                // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
+                cameraFps = Camera2ComponentHelper.CAMERA_FPS_NORMAL
+                videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_NORMAL
+                iFrameInterval = 1
+                bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+                build()
+            }
+            camera2Helper.outputH264ForDebug = true
+            camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
+                override fun onUpdate(h264Data: ByteArray) {
+                    LLog.d(ITAG, "Get encoded video data length=" + h264Data.size)
+                }
+            })
+            camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
+                override fun onSwitch(lensFacing: Int) {
+                    LLog.w(ITAG, "lensFacing=$lensFacing")
+                    if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
+                        LLog.w(ITAG, "Front lens")
+                    } else {
+                        LLog.w(ITAG, "Back lens")
+                    }
+                    previousLensFacing = lensFacing
+                }
+            })
             camera2Helper.initDebugOutput()
 
             camera2Helper.extraInitializeCameraForRecording()
@@ -139,6 +131,12 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
     }
 
     private fun stopRecord() {
-        if (::camera2Helper.isInitialized) camera2Helper.run { closeDebugOutput(); if (isRecording) stopRecording() else closeCamera() }
+        if (::camera2Helper.isInitialized) {
+            camera2Helper.run {
+                closeDebugOutput()
+                if (isRecording) stopRecording() else closeCamera()
+                initializeCamera(previewWidth, previewHeight)
+            }
+        }
     }
 }

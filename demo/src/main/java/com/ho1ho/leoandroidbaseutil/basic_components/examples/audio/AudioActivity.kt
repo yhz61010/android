@@ -29,14 +29,6 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val RECORD_TYPE_AAC = 2
     }
 
-    private lateinit var micRecorder: MicRecorder
-    private var aacEncoder: AacEncoder? = null
-    private lateinit var pcmPlayer: PcmPlayer
-    private lateinit var aacFilePlayer: AacFilePlayer
-
-    private val audioReceiver by lazy { AudioReceiver() }
-    private val audioSender by lazy { AudioSender() }
-
     private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
 
@@ -44,6 +36,14 @@ class AudioActivity : BaseDemonstrationActivity() {
     private val aacFile by lazy { FileUtil.createFile(this, "audio.aac") }
     private var pcmOs: BufferedOutputStream? = null
     private var aacOs: BufferedOutputStream? = null
+
+    private var micRecorder: MicRecorder? = null
+    private var aacEncoder: AacEncoder? = null
+    private var pcmPlayer: PcmPlayer? = null
+    private var aacFilePlayer: AacFilePlayer? = null
+
+    private var audioReceiver: AudioReceiver? = null
+    private var audioSender: AudioSender? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +53,7 @@ class AudioActivity : BaseDemonstrationActivity() {
             if (isChecked) {
                 record(RECORD_TYPE_PCM)
             } else {
-                micRecorder.stopRecord()
+                micRecorder?.stopRecord()
             }
         }
 
@@ -61,7 +61,7 @@ class AudioActivity : BaseDemonstrationActivity() {
             if (isChecked) {
                 record(RECORD_TYPE_AAC)
             } else {
-                micRecorder.stopRecord()
+                micRecorder?.stopRecord()
             }
         }
 
@@ -77,7 +77,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                         var readSize: Int
                         while (input.read(readBuffer).also { readSize = it } != -1) {
                             LLog.i(ITAG, "PcmPlayer read size[$readSize]")
-                            pcmPlayer.play(readBuffer)
+                            pcmPlayer?.play(readBuffer)
                         }
                         runOnUiThread { btn.isChecked = false }
                     }
@@ -85,18 +85,18 @@ class AudioActivity : BaseDemonstrationActivity() {
                 playPcmThread.start()
             } else {
                 playPcmThread?.interrupt()
-                if (::pcmPlayer.isInitialized) pcmPlayer.release()
+                pcmPlayer?.release()
             }
         }
 
         btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
                 aacFilePlayer = AacFilePlayer(applicationContext, audioPlayCodec)
-                aacFilePlayer.playAac(aacFile) {
+                aacFilePlayer?.playAac(aacFile) {
                     runOnUiThread { btn.isChecked = false }
                 }
             } else {
-                aacFilePlayer.stop()
+                aacFilePlayer?.stop()
             }
         }
     }
@@ -141,29 +141,31 @@ class AudioActivity : BaseDemonstrationActivity() {
                         aacEncoder?.release()
                     }
                 })
-                micRecorder.startRecord()
+                micRecorder?.startRecord()
             }
             .onDenied { Toast.makeText(this, "Deny record permission", Toast.LENGTH_SHORT).show();finish() }
             .start()
     }
 
     override fun onStop() {
-        if (::micRecorder.isInitialized) micRecorder.stopRecord()
-        if (::pcmPlayer.isInitialized) pcmPlayer.release()
-        if (::micRecorder.isInitialized) aacFilePlayer.stop()
+        micRecorder?.stopRecord()
+        pcmPlayer?.release()
+        aacFilePlayer?.stop()
         aacEncoder?.release()
-        audioSender.stop()
-        audioReceiver.stopServer()
+        audioSender?.stop()
+        audioReceiver?.stopServer()
         super.onStop()
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
         LLog.w(ITAG, "Send to $url")
-        audioSender.start(url)
+        audioSender = AudioSender()
+        audioSender?.start(url)
     }
 
     fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        Thread { audioReceiver.startServer(this) }.start()
+        audioReceiver = AudioReceiver()
+        Thread { audioReceiver?.startServer(this) }.start()
     }
 }

@@ -100,7 +100,10 @@ class AudioReceiver {
 
     fun stopServer() {
         ioScope.cancel()
-        // You must release AudioTrack first, otherwise, you will crash due to following exception:
+        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
+        // Please check the initializing of AudioTrack in [PcmPlayer]
+        //
+        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
         // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
         // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
         // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)

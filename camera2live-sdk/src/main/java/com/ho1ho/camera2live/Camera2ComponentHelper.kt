@@ -60,9 +60,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     var enableGallery = true
 
     // FIXME Set this vale properly
-    internal var previewWidth: Int = 0
+    var previewWidth: Int = 0
         private set
-    internal var previewHeight: Int = 0
+    var previewHeight: Int = 0
         private set
 
     private var supportFlash = false   // Support flash
@@ -510,6 +510,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     private fun stopRepeating() {
         if (::session.isInitialized) {
+            LLog.w(TAG, "stopRepeating()")
             session.stopRepeating()
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 session.abortCaptures()
@@ -566,14 +567,16 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         }
         setRecordRepeatingRequest()
         cameraView?.postDelayed({
-            cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
-            (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
+            if (isRecording) {
+                cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
+                (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
+            }
         }, 1000)
 
         accumulateRecordTime()
     }
 
-    fun setRecordRepeatingRequest() {
+    private fun setRecordRepeatingRequest() {
         imageReader.setOnImageAvailableListener({ reader ->
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()

@@ -108,7 +108,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            def apkFileName = "LeoDemo-${variant.flavorName}-${buildType.name}-v${variant.versionName}-${variant.versionCode}-.apk"
+            def apkFileName = "LeoDemo-${variant.flavorName}-${buildType.name}-v${variant.versionName}(${variant.versionCode}).apk"
             outputFileName = apkFileName
         }
     }

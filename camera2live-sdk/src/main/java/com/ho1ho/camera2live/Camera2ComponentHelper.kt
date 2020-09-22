@@ -586,8 +586,8 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             }
             cameraHandler.post {
                 try {
-                    val width = image.width
-                    val height = image.height
+//                    val width = image.width
+//                    val height = image.height
 //                    LLog.v(TAG, "Image width=$width height=$height")
 
                     if (outputYuvForDebug) {
@@ -606,38 +606,31 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             }
         }, cameraHandler)
 
-        if (!::session.isInitialized) {
-            val targets = mutableListOf(imageReader.surface)
-            cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
-            context.lifecycleScope.launch(Dispatchers.Main) {
-                session = createCaptureSession(camera, targets, cameraHandler)
-                setRepeatingRequestForRecord()
-            }
-        } else {
-            setRepeatingRequestForRecord()
-        }
-    }
-
-    private fun setRepeatingRequestForRecord() {
-        session.setRepeatingRequest(
-            // Capture request holds references to target surfaces
-            session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                cameraView?.let {
-                    // Add the preview and recording surface targets
-                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-                }
-                addTarget(imageReader.surface)
-                LLog.w(TAG, "Camera FPS=${builder.cameraFps}")
-                // Sets user requested FPS for all targets
-                set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-                // Auto focus
-                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
-                // AWB
+        val targets = mutableListOf(imageReader.surface)
+        cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
+        context.lifecycleScope.launch(Dispatchers.Main) {
+            session = createCaptureSession(camera, targets, cameraHandler)
+            LLog.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
+            session.setRepeatingRequest(
+                // Capture request holds references to target surfaces
+                session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                    cameraView?.let {
+                        // Add the preview and recording surface targets
+                        addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                    }
+                    addTarget(imageReader.surface)
+                    LLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+                    // Sets user requested FPS for all targets
+                    set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+                    // Auto focus
+                    set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+                    // AWB
 //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
 //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
 
-            }.build(), null, cameraHandler
-        )
+                }.build(), null, cameraHandler
+            )
+        }
     }
 
     private fun accumulateRecordTime() {

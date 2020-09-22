@@ -1,6 +1,7 @@
 package com.ho1ho.camera2live.base
 
 import android.media.Image
+import com.ho1ho.camera2live.base.iters.CameraSensorOrientation
 import com.ho1ho.camera2live.base.iters.IDataProcessStrategy
 
 /**
@@ -8,9 +9,7 @@ import com.ho1ho.camera2live.base.iters.IDataProcessStrategy
  * Date: 20-4-1 上午11:06
  */
 class DataProcessContext(private var strategy: IDataProcessStrategy) {
-
-    fun doProcess(image: Image, lensFacing: Int): ByteArray {
-        return strategy.doProcess(image, lensFacing)
+    fun doProcess(image: Image, lensFacing: Int, @CameraSensorOrientation cameraSensorOrientation: Int): ByteArray {
+        return strategy.doProcess(image, lensFacing, cameraSensorOrientation)
     }
-
 }

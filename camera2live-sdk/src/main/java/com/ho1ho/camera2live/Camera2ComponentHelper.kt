@@ -1014,6 +1014,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val CAMERA_SIZE_NORMAL = Size(720, 960)
         val CAMERA_SIZE_LOW = Size(480, 640)
 
+        /**
+         * This is the desired size.
+         * In order to use it for camera preview size and avc encode size, this value will be changed to a appropriate size which area is near desired size.
+         */
+        val CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL = Size(360, 640)
+
         @JvmField
         val CAMERA_FPS_VERY_HIGH = Range(30, 30)    // [30, 30]
 

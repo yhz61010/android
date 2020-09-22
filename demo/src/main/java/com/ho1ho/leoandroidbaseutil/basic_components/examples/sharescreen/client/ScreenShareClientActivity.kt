@@ -4,6 +4,7 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
 import com.ho1ho.androidbase.exts.ITAG
+import com.ho1ho.androidbase.exts.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.androidbase.utils.device.DeviceUtil
 import com.ho1ho.androidbase.utils.media.H264Util
@@ -83,7 +84,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         val decodedData = ByteArray(info.size)
                         it.get(decodedData)
-                        LLog.w(ITAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
+                        LLog.w(ITAG, "Found SPS/PPS frame: ${decodedData.toHexadecimalString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {

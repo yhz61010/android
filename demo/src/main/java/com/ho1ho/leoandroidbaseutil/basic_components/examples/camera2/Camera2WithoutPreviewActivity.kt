@@ -48,6 +48,17 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             enableRecordFeature = false
             enableTakePhotoFeature = false
             enableGallery = false
+            setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
+                override fun onSwitch(lensFacing: Int) {
+                    LLog.w(ITAG, "lensFacing=$lensFacing")
+                    if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
+                        LLog.w(ITAG, "Front lens")
+                    } else {
+                        LLog.w(ITAG, "Back lens")
+                    }
+                    previousLensFacing = lensFacing
+                }
+            })
 
             encoderType = if (
                 CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
@@ -55,6 +66,21 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
                 || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
             ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
             else DataProcessFactory.ENCODER_TYPE_NORMAL
+
+            // Selects appropriate preview size and configures camera surface
+            val previewSize = getPreviewOutputSize(
+                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                characteristics,
+                SurfaceHolder::class.java
+            )
+            // To ensure that size is set, initialize camera in the view's thread
+            runCatching {
+                LLog.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
+                initializeCamera(previewSize.width, previewSize.height)
+            }.getOrElse {
+                LLog.e(ITAG, "=====> Finally openCamera error <=====")
+                ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
+            }
         }
 
         btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
@@ -74,21 +100,6 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
 
     private fun doStartRecord() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Selects appropriate preview size and configures camera surface
-            val previewSize = getPreviewOutputSize(
-                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
-                camera2Helper.characteristics,
-                SurfaceHolder::class.java
-            )
-            // To ensure that size is set, initialize camera in the view's thread
-            runCatching {
-                LLog.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
-                camera2Helper.initializeCamera(previewSize.width, previewSize.height)
-            }.getOrElse {
-                LLog.e(ITAG, "=====> Finally openCamera error <=====")
-                ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
-            }
-
             // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
             // BITRATE_MODE_CQ: 348.399kB/s
             // BITRATE_MODE_CBR: 85.875kB/s
@@ -108,18 +119,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             camera2Helper.outputH264ForDebug = true
             camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
                 override fun onUpdate(h264Data: ByteArray) {
-                    LLog.d(ITAG, "Get encoded video data length=" + h264Data.size)
-                }
-            })
-            camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
-                override fun onSwitch(lensFacing: Int) {
-                    LLog.w(ITAG, "lensFacing=$lensFacing")
-                    if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
-                        LLog.w(ITAG, "Front lens")
-                    } else {
-                        LLog.w(ITAG, "Back lens")
-                    }
-                    previousLensFacing = lensFacing
+                    LLog.d(ITAG, "Get encoded video data length=${h264Data.size}")
                 }
             })
             camera2Helper.initDebugOutput()

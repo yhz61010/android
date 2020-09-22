@@ -20,14 +20,14 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
     private val bitrateMode: Int = DEFAULT_BITRATE_MODE
 ) {
-    init {
-        initEncoder()
-    }
-
     val queue = ConcurrentLinkedQueue<ByteArray>()
     private var dataUpdateCallback: CallbackListener? = null
     private lateinit var h264Encoder: MediaCodec
     private var outputFormat: MediaFormat? = null
+
+    init {
+        initEncoder()
+    }
 
     @SuppressWarnings("unused")
     var csd: ByteArray? = null

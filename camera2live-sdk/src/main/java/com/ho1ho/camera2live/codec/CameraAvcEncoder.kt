@@ -35,14 +35,12 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
     @SuppressLint("InlinedApi")
     private fun initEncoder() {
-        val validWidth = width / 16 * 16
-        val validHeight = height / 16 * 16
         LLog.i(
             TAG,
-            "initEncoder width=$width($validWidth) height=$height(${validHeight / 16 * 16}) bitrate=$bitrate kb/s frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
+            "initEncoder width=$width height=$height bitrate=$bitrate kb/s frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
 
-        val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, validWidth, validHeight)
+        val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
         with(mediaFormat) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
             setInteger(MediaFormat.KEY_BIT_RATE, bitrate)

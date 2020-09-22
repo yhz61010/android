@@ -120,7 +120,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     var encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
         set(value) {
             dataProcessContext =
-                DataProcessFactory.getConcreteObject(value) ?: com.ho1ho.camera2live.extensions.fail("unsupported encoding type=$value")
+                DataProcessFactory.getConcreteObject(value) ?: fail("unsupported encoding type=$value")
         }
 
     private lateinit var capturePreviewRequestBuilder: CaptureRequest.Builder
@@ -211,12 +211,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun closeDebugOutput() {
         try {
             if (outputYuvForDebug) {
-                LLog.i(TAG, "release videoYuvOs")
+                LLog.i(TAG, "output debug yuv file")
                 videoYuvOsForDebug?.flush()
                 videoYuvOsForDebug?.close()
             }
             if (outputH264ForDebug) {
-                LLog.i(TAG, "release videoH264Os")
+                LLog.i(TAG, "output debug h264 file")
                 videoH264OsForDebug?.flush()
                 videoH264OsForDebug?.close()
             }

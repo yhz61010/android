@@ -53,7 +53,6 @@ import kotlin.math.min
  * Author: Michael Leo
  * Date: 20-6-24 下午5:05
  */
-@Suppress("unused")
 class Camera2ComponentHelper(private val context: FragmentActivity, private var lensFacing: Int, private val cameraView: View? = null) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true

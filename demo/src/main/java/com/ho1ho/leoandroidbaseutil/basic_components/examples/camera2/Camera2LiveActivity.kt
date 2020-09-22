@@ -29,7 +29,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_camera2_live)
 
         CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            .forEach { LLog.e(TAG, "H264 Encoder: ${it.name}") }
+            .forEach { LLog.i(TAG, "H264 Encoder: ${it.name}") }
         val hasTopazEncoder =
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
         LLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")

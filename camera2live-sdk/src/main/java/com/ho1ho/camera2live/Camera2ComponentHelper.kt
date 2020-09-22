@@ -591,11 +591,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //                    LLog.v(TAG, "Image width=$width height=$height")
 
                     if (outputYuvForDebug) {
-                        videoYuvOsForDebug?.write(dataProcessContext.doProcess(image, lensFacing))
                         return@post
                     }
 
-                    val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing)
+                    val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+                    val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing, cameraSensorOrientation)
                     cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
 
                 } catch (e: Exception) {

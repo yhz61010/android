@@ -298,6 +298,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     private fun initializeParameters() {
         cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
+        LLog.w(TAG, "cameraId=$cameraId")
         characteristics = cameraManager.getCameraCharacteristics(cameraId)
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
@@ -429,7 +430,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      * - Sets up the still image capture listeners
      */
     fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
-        LLog.i(TAG, "=====> initializeCamera(${previewWidth}x$previewHeight) <=====")
+        LLog.i(TAG, "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <=====")
         this@Camera2ComponentHelper.previewWidth = previewWidth
         this@Camera2ComponentHelper.previewHeight = previewHeight
         initializeParameters()
@@ -852,6 +853,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
         }
+        LLog.w(TAG, "switchCamera to $lensFacing")
 
         closeCamera()
         this.lensFacing = lensFacing

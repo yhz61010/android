@@ -37,12 +37,15 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
         cameraView.holder?.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                camera2Helper.encoderType = if (
-                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-                else DataProcessFactory.ENCODER_TYPE_NORMAL
+//                camera2Helper.encoderType = if (
+//                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+//                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+//                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+//                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+//                else DataProcessFactory.ENCODER_TYPE_NORMAL
+                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
+
+                CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LLog.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
                 val previewSize = getPreviewOutputSize(
@@ -50,7 +53,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     camera2Helper.characteristics,
                     SurfaceHolder::class.java
                 )
-                LLog.d(TAG, "CameraSurfaceView size: ${cameraView.width} x ${cameraView.height}")
+                LLog.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
                 LLog.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread

@@ -21,6 +21,10 @@ import com.ho1ho.camera2live.view.BaseCamera2Fragment
  * Date: 20-6-29 上午9:50
  */
 class Camera2LiveFragment : BaseCamera2Fragment() {
+    companion object {
+        private val TAG = Camera2LiveFragment::class.java.simpleName
+        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,11 +107,11 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         // BITRATE_MODE_CBR: 113.630kB/s
         val camera2ComponentBuilder = camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)
 //        camera2ComponentBuilder.previewInFullscreen = true
-        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_NORMAL
+        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_HIGH
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-        camera2ComponentBuilder.cameraFps = Camera2ComponentHelper.CAMERA_FPS_VERY_HIGH
-        camera2ComponentBuilder.videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_HIGH
-        camera2ComponentBuilder.iFrameInterval = 1
+        camera2ComponentBuilder.cameraFps = Camera2ComponentHelper.CAMERA_FPS_LOW
+        camera2ComponentBuilder.videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_NORMAL
+        camera2ComponentBuilder.iFrameInterval = 5
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         camera2ComponentBuilder.build()
         camera2Helper.outputH264ForDebug = true
@@ -138,10 +142,5 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     override fun onOpenGallery() {
         CameraUtil.openGallery(requireActivity(), false)
-    }
-
-    companion object {
-        private val TAG = Camera2LiveFragment::class.java.simpleName
-        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_HIGH
     }
 }

@@ -39,7 +39,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
         val validHeight = height / 16 * 16
         LLog.i(
             TAG,
-            "initEncoder width=$width($validWidth) height=$height(${validHeight / 16 * 16}) bitrate=$bitrate frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
+            "initEncoder width=$width($validWidth) height=$height(${validHeight / 16 * 16}) bitrate=$bitrate kb/s frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
 
         val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, validWidth, validHeight)

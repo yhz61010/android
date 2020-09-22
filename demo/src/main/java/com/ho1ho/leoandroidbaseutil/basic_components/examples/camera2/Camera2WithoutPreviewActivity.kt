@@ -42,7 +42,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             .onDenied { Toast.makeText(this@Camera2WithoutPreviewActivity, "Deny camera permission", Toast.LENGTH_SHORT).show() }
             .start()
 
-        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
+        camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_FRONT).apply {
             enableRecordFeature = false
             enableTakePhotoFeature = false
             enableGallery = false

@@ -1,5 +1,6 @@
 package com.ho1ho.camera2live.codec
 
+import android.annotation.SuppressLint
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
@@ -32,13 +33,16 @@ class CameraAvcEncoder @JvmOverloads constructor(
         private set
     private var mFrameCount: Long = 0
 
+    @SuppressLint("InlinedApi")
     private fun initEncoder() {
+        val validWidth = width / 16 * 16
+        val validHeight = height / 16 * 16
         LLog.i(
             TAG,
-            String.format("initEncoder width=%d height=%d bitrate=%d frameRate=%d", width, height, bitrate, frameRate)
+            "initEncoder width=$width($validWidth) height=$height(${validHeight / 16 * 16}) bitrate=$bitrate frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
 
-        val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
+        val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, validWidth, validHeight)
         with(mediaFormat) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
             setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
@@ -52,6 +56,11 @@ class CameraAvcEncoder @JvmOverloads constructor(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Actually, this key has been used in Android 6.0+ so you can use it safely only if your device is Android 6.0+.
+                // It's merely being opened as of Android 10.
+                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, frameRate.toFloat())
             }
         }
 

@@ -2,7 +2,6 @@ package com.ho1ho.leoandroidbaseutil.basic_components.examples.camera2
 
 import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
-import android.media.MediaFormat
 import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
@@ -12,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.ho1ho.androidbase.exts.ITAG
 import com.ho1ho.androidbase.exts.getPreviewOutputSize
 import com.ho1ho.androidbase.utils.LLog
-import com.ho1ho.androidbase.utils.media.CodecUtil
 import com.ho1ho.androidbase.utils.ui.ToastUtil
 import com.ho1ho.camera2live.Camera2ComponentHelper
 import com.ho1ho.camera2live.base.DataProcessFactory
@@ -60,12 +58,13 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
                 }
             })
 
-            encoderType = if (
-                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-            else DataProcessFactory.ENCODER_TYPE_NORMAL
+//            encoderType = if (
+//                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+//                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+//                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+//            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+//            else DataProcessFactory.ENCODER_TYPE_NORMAL
+            camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(

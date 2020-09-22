@@ -3,6 +3,7 @@ package com.ho1ho.camera2live.base
 import android.hardware.camera2.CameraMetadata
 import android.media.Image
 import com.ho1ho.androidbase.utils.media.YuvUtil
+import com.ho1ho.camera2live.base.iters.CameraSensorOrientation
 import com.ho1ho.camera2live.base.iters.IDataProcessStrategy
 
 /**
@@ -10,7 +11,7 @@ import com.ho1ho.camera2live.base.iters.IDataProcessStrategy
  * Date: 20-4-1 上午11:12
  */
 class YuvEncoderStrategy : IDataProcessStrategy {
-    override fun doProcess(image: Image, lensFacing: Int): ByteArray {
+    override fun doProcess(image: Image, lensFacing: Int, @CameraSensorOrientation cameraSensorOrientation: Int): ByteArray {
         val width = image.width
         val height = image.height
 

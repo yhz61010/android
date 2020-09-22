@@ -1001,13 +1001,13 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         const val TEMPLATE_TYPE_RECORD = 1
         const val TEMPLATE_TYPE_PHOTO = 2
 
-        const val BITRATE_INSANE_HIGH = 8f
-        const val BITRATE_EXTREME_HIGH = 5f
-        const val BITRATE_VERY_HIGH = 3f
-        const val BITRATE_HIGH = 2f
-        const val BITRATE_NORMAL = 1f
-        const val BITRATE_LOW = 0.75f
-        const val BITRATE_VERY_LOW = 0.5f
+        const val BITRATE_INSANE_HIGH = 4f
+        const val BITRATE_EXTREME_HIGH = 2f
+        const val BITRATE_VERY_HIGH = 1.5f
+        const val BITRATE_HIGH = 1f
+        const val BITRATE_NORMAL = 0.75f
+        const val BITRATE_LOW = 0.5f
+        const val BITRATE_VERY_LOW = 0.25f
 
         val CAMERA_SIZE_EXTRA = Size(1080, 1920)
         val CAMERA_SIZE_HIGH = Size(720, 1280)

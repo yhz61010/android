@@ -64,7 +64,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
 //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
 //            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
 //            else DataProcessFactory.ENCODER_TYPE_NORMAL
-            camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
+            encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(

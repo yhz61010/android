@@ -107,7 +107,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         // BITRATE_MODE_CBR: 113.630kB/s
         val camera2ComponentBuilder = camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)
 //        camera2ComponentBuilder.previewInFullscreen = true
-        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_HIGH
+        camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_LOW
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
         camera2ComponentBuilder.cameraFps = Camera2ComponentHelper.CAMERA_FPS_LOW
         camera2ComponentBuilder.videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_NORMAL

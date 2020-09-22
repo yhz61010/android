@@ -5,6 +5,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
+import com.ho1ho.androidbase.exts.toHexadecimalString
 import com.ho1ho.androidbase.utils.LLog
 import com.ho1ho.camera2live.listeners.CallbackListener
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -73,6 +74,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
                     codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     LLog.e(TAG, "You can ignore this error safely.")
                 }
             }
@@ -89,7 +91,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
-                            LLog.w(TAG, "Found SPS/PPS frame: ${csd!!.contentToString()}")
+                            LLog.w(TAG, "Found SPS/PPS frame: ${csd?.toHexadecimalString()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {

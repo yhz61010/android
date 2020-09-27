@@ -99,12 +99,6 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
 
     private fun doStartRecord() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
-            // BITRATE_MODE_CQ: 348.399kB/s
-            // BITRATE_MODE_CBR: 85.875kB/s
-            // BITRATE_MODE_VBR: 84.929kB/s
-            // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
-            // BITRATE_MODE_CBR: 113.630kB/s
             camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
 //        camera2ComponentBuilder.previewInFullscreen = true
                 quality = Camera2ComponentHelper.BITRATE_LOW

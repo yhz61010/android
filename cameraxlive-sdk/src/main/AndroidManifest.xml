@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.ho1ho.cameraxlive_sdk"
+<manifest package="com.leovp.cameraxlive_sdk"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Declare features -->

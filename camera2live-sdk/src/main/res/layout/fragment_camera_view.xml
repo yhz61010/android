@@ -7,7 +7,7 @@
     android:id="@+id/rootLayout"
     tools:context=".view.BaseCamera2Fragment">
 
-    <com.ho1ho.camera2live.view.CameraSurfaceView
+    <com.leovp.camera2live.view.CameraSurfaceView
         android:id="@+id/cameraSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

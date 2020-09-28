@@ -53,9 +53,9 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        LLog.d(ITAG, "reuse 5tag=${holder.txtView.tag}")
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.adapterPosition]
+        LLog.d(ITAG, "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
         // In some cases, it will prevent unwanted situations
         holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
@@ -136,7 +136,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 //    override fun getItemViewType(position: Int) = position
 
     override fun onViewRecycled(holder: ItemViewHolder) {
-        LLog.d(ITAG, "onViewRecycled text=${holder.txtView.text} pos=${holder.adapterPosition} tag=${holder.txtView.tag}")
+        LLog.d(ITAG, "onViewRecycled text=${holder.txtView.text}    pos=${holder.adapterPosition}    tag=${holder.txtView.tag}")
         super.onViewRecycled(holder)
     }
 

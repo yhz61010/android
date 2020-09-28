@@ -63,7 +63,7 @@ object AudioPlayManager {
                 val format = mediaExtractor!!.getTrackFormat(i)
                 val mime = format.getString(MediaFormat.KEY_MIME)
                 LLog.d(TAG, "mime: $mime")
-                if (mime.startsWith("audio")) {
+                if (mime!!.startsWith("audio")) {
                     mediaFormat = format
                     mediaExtractor!!.selectTrack(i)
                 }

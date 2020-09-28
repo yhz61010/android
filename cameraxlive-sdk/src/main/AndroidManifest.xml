@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.ho1ho.cameraxlive_sdk">
+<manifest package="com.ho1ho.cameraxlive_sdk"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Declare features -->
+    <uses-feature android:name="android.hardware.camera.any" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <!-- Declare permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
 
 </manifest>

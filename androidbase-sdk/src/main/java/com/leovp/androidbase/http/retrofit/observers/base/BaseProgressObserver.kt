@@ -42,20 +42,19 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         var statusCode = -1
         when (e) {
             is ConnectException -> {
-                // 无法连接服务器
+                // Can not connect to server
                 LLog.e(javaClass.simpleName, "Can not connect to server. ConnectException")
             }
             is SocketTimeoutException -> {
-                // 连接超时
+                // Timeout
                 LLog.e(javaClass.simpleName, "Connect timeout.")
             }
             is UnknownHostException -> {
                 // java.net.UnknownHostException: Unable to resolve host "dummy.dummy": No address associated with hostname
-                // 无法连接服务器
                 LLog.e(javaClass.simpleName, "Can not connect to server. UnknownHostException")
             }
             is MalformedJsonException -> {
-                // 数据格式不正确。
+                // Malformed JSON
                 LLog.e(javaClass.simpleName, "MalformedJsonException")
             }
             is HttpException -> {

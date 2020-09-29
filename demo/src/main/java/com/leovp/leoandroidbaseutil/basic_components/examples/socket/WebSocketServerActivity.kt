@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.listeners.OnSingleClickListener
+import com.leovp.androidbase.exts.setOnSingleClickListener
 import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
@@ -83,14 +83,12 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_socket_server)
 
-        btnStop.setOnClickListener(object : OnSingleClickListener() {
-            override fun onSingleClick(view: View) {
-                LLog.d(TAG, "Stop button clicked.")
-                cs.launch {
-                    if (::webSocketServer.isInitialized) webSocketServer.stopServer()
-                }
+        btnStop.setOnSingleClickListener {
+            LLog.d(TAG, "Stop button clicked.")
+            cs.launch {
+                if (::webSocketServer.isInitialized) webSocketServer.stopServer()
             }
-        })
+        }
     }
 
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {

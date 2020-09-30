@@ -69,4 +69,6 @@ ext {
     glideVersion = '4.11.0'
     karnNotifyVersion = '1.3.0'
     viewanimatorVersion = '2.4'
+
+    kodeinVersion = '7.1.0'
 }

@@ -360,14 +360,13 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     /** Internal reference to the ongoing [CameraCaptureSession] configured with our parameters */
     private lateinit var session: CameraCaptureSession
 
-    fun extraInitializeCameraForRecording() {
+    fun extraInitializeCameraForRecording(bitrate: Int = -1) {
         initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
+        val autoBitrate = bitrate <= 0
+
         /** [previewSize] is initialized in [initializeRecordingParameters] */
-        initCameraEncoder(
-            previewSize!!.width, previewSize!!.height,
-            (previewSize!!.width * previewSize!!.height * builder.quality).toInt(),
-            builder.videoFps, builder.iFrameInterval, builder.bitrateMode
-        )
+        val usedBitrate = if (autoBitrate) (previewSize!!.width * previewSize!!.height * builder.quality).toInt() else bitrate
+        initCameraEncoder(previewSize!!.width, previewSize!!.height, usedBitrate, builder.videoFps, builder.iFrameInterval, builder.bitrateMode)
     }
 
     fun setImageReaderForRecording() {

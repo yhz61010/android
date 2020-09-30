@@ -2,7 +2,6 @@ package com.leovp.androidbase.exts
 
 import com.google.gson.Gson
 import com.leovp.androidbase.utils.JsonUtil
-import com.leovp.androidbase.utils.LLog
 
 /**
  * Author: Michael Leo
@@ -11,19 +10,17 @@ import com.leovp.androidbase.utils.LLog
 internal val gson
     get() = Gson()
 
-fun Any.toJsonString(): String {
-    try {
-        return gson.toJson(this)
-    } catch (ex: Exception) {
-        LLog.e(
-            "JsonExt",
-            "Can not toJson. Generally, you can ignore this exception. Exception",
-            ex
-        )
-    }
-    return ""
-}
+fun Any.toJsonString(): String = runCatching { gson.toJson(this) }.getOrDefault("")
 
-fun ByteArray.toHexadecimalString(): String {
-    return JsonUtil.toHexadecimalString(this)
-}
+fun ByteArray.toHexadecimalString(): String = JsonUtil.toHexadecimalString(this)
+
+/**
+ * Convert json string to object
+ *
+ * @param json  the string from which the object is to be deserialized
+ * @param clazz the class of T
+ * @param <T>   the type of the desired object
+ * @return an object of type T from the string. Returns `null` if `json` is `null`
+ * or if `json` is empty.
+</T> */
+fun <T> String.toObject(json: String?, clazz: Class<T>): T? = JsonUtil.toObject(json, clazz)

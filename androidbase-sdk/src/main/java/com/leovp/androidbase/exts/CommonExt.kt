@@ -24,26 +24,6 @@ val Any.ITAG: String
         return if (tag.length <= 23) tag else tag.substring(0, 23)
     }
 
-fun Any.verbLog(msg: String) {
-    LLog.v("$ITAG-auto", msg)
-}
-
-fun Any.debugLog(msg: String) {
-    LLog.d("$ITAG-auto", msg)
-}
-
-fun Any.infoLog(msg: String) {
-    LLog.i("$ITAG-auto", msg)
-}
-
-fun Any.warnLog(msg: String) {
-    LLog.w("$ITAG-auto", msg)
-}
-
-fun Any.errorLog(msg: String) {
-    LLog.e("$ITAG-auto", msg)
-}
-
 // ==============================
 
 fun String.vLog() {

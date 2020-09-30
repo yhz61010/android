@@ -4,12 +4,18 @@ import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.androidbase.utils.ui.ToastUtil
 import io.reactivex.plugins.RxJavaPlugins
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.android.x.androidXModule
 
 /**
  * Author: Michael Leo
  * Date: 20-5-18 下午5:33
  */
-class CustomApplication : MultiDexApplication() {
+class CustomApplication : MultiDexApplication(), DIAware {
+    override val di = DI.lazy {
+        import(androidXModule(this@CustomApplication))
+    }
 
     override fun onCreate() {
         super.onCreate()

@@ -174,4 +174,5 @@ dependencies {
     implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
+    implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
 }

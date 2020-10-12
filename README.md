@@ -1,13 +1,13 @@
 # TODO List
-1. Camera2Live
-When you initialize `Camera2Component`, you must specify the *encoder* type manually.
+~~1. Camera2Live~~(Solved)
+~~When you initialize `Camera2Component`, you must specify the *encoder* type manually.
 This is not a wise way to do it. In the next version, I will identity the *encoder* automatically
-according to the camera characteristics.
+according to the camera characteristics.~~
 
-2. Network Monitor
-Now, I do not show you a way to get the network traffic and ping by implementing a listener.
+~~2. Network Monitor~~(Solved)
+~~Now, I do not show you a way to get the network traffic and ping by implementing a listener.
 That means you can just check the network traffic and ping in log but you can not get them in your code.
-In the next version, I will provide you a listener that you can use them freely when network traffic and ping are changed.
+In the next version, I will provide you a listener that you can use them freely when network traffic and ping are changed.~~
 
 # About Log
 By default, I used [Xlog](https://github.com/Tencent/mars) as default Log system.  

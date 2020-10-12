@@ -6,6 +6,7 @@ import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.player.PcmPlayer
+import com.leovp.audio.recorder.MicRecorder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
 import com.leovp.socket_sdk.framework.server.ServerConnectListener
@@ -29,7 +30,13 @@ class AudioReceiver {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
-    private lateinit var pcmPlayer: PcmPlayer
+    private var pcmPlayer: PcmPlayer? = null
+
+    private var micRecorder: MicRecorder? = null
+    private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
+
+    @Volatile
+    private var startRecording = false
 
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
@@ -48,6 +55,25 @@ class AudioReceiver {
         }
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
+            if (!startRecording) {
+                startRecording = true
+
+                micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
+                    override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
+                        ioScope.launch {
+                            runCatching {
+                                ensureActive()
+//                                LLog.i(TAG, "Rec pcm[${pcmData.size}]")
+                                netty.executeCommand(clientChannel, pcmData, false)
+                            }.onFailure { it.printStackTrace() }
+                        }
+                    }
+
+                    override fun onStop(stopResult: Boolean) {
+                    }
+
+                }).apply { startRecord() }
+            }
             val array = data as Array<*>
             val ts = array[0] as Long
             val audioData = data[1] as ByteArray
@@ -55,7 +81,7 @@ class AudioReceiver {
             ioScope.launch {
                 runCatching {
                     ensureActive()
-                    pcmPlayer.play(audioData)
+                    pcmPlayer?.play(audioData)
                 }.onFailure { it.printStackTrace() }
             }
             netty.executeCommand(clientChannel, "$ts")
@@ -64,12 +90,28 @@ class AudioReceiver {
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LLog.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
+            stopRecordingAndPlaying()
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LLog.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            stopRecordingAndPlaying()
         }
+    }
+
+    private fun stopRecordingAndPlaying() {
+        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
+        // Please check the initializing of AudioTrack in [PcmPlayer]
+        //
+        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
+        // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
+        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
+        // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
+        pcmPlayer?.release()
+
+        micRecorder?.stopRecord()
+        startRecording = false
     }
 
     class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
@@ -100,14 +142,7 @@ class AudioReceiver {
 
     fun stopServer() {
         ioScope.cancel()
-        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
-        // Please check the initializing of AudioTrack in [PcmPlayer]
-        //
-        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
-        // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
-        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
-        // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
-        if (::pcmPlayer.isInitialized) pcmPlayer.release()
+        stopRecordingAndPlaying()
         if (::webSocketServer.isInitialized) webSocketServer.stopServer()
     }
 }

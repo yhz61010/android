@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.toast
 import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.audio.base.AudioCodecInfo
@@ -48,6 +49,15 @@ class AudioActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
+
+        AndPermission.with(this)
+            .runtime()
+            .permission(Permission.RECORD_AUDIO)
+            .onGranted {
+                toast("Grand recording permission")
+            }
+            .onDenied { toast("Deny record permission");finish() }
+            .start()
 
         btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -161,7 +171,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
         LLog.w(ITAG, "Send to $url")
         audioSender = AudioSender()
-        audioSender?.start(url)
+        audioSender?.start(this, url)
     }
 
     fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {

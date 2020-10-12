@@ -114,7 +114,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             else -> "Unknown Exception"
         }
         LLog.e(tag, "===== Caught $exceptionType =====")
-        LLog.e(tag, "Exception: ${cause.message}")
+        LLog.e(tag, "Exception: ${cause.message}", cause)
 
 //        val channel = ctx.channel()
 //        val isChannelActive = channel.isActive

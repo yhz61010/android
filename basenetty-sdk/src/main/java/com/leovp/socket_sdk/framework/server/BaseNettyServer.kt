@@ -195,7 +195,7 @@ abstract class BaseNettyServer protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean, isPing: Boolean): Boolean {
+    private fun executeUnifiedCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean, isPing: Boolean): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmd)) {
             return false
         }
@@ -207,13 +207,15 @@ abstract class BaseNettyServer protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showLog) LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
+                if (showContent) LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
+                else LLog.i(tag, "exeCmd[${cmd.length}]")
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showLog) LLog.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
+                if (showContent) LLog.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
+                else LLog.i(tag, "exeCmd HEX[${cmd.size}]")
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
@@ -228,11 +230,12 @@ abstract class BaseNettyServer protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showLog, false)
+    fun executeCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showContent, false)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(clientChannel: Channel, cmd: Any?, showLog: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showLog, true)
+    fun executePingCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean = true) =
+        executeUnifiedCommand(clientChannel, cmd, showContent, true)
 
     // ================================================
 }

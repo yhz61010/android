@@ -358,7 +358,7 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showLog: Boolean, isPing: Boolean): Boolean {
+    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean, isPing: Boolean): Boolean {
         if (!isValidExecuteCommandEnv(cmd)) {
             return false
         }
@@ -370,13 +370,15 @@ abstract class BaseNettyClient protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showLog) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
+                if (showContent) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
+                else LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showLog) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                if (showContent) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                else LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
@@ -391,13 +393,13 @@ abstract class BaseNettyClient protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showLog, false)
+    fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, false)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showLog, true)
+    fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, true)
 
     // ================================================
 }

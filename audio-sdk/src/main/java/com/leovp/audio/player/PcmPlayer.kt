@@ -30,7 +30,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
             .build()
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
-        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize * 4, AudioTrack.MODE_STREAM, sessionId)
+        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize * 2, AudioTrack.MODE_STREAM, sessionId)
 
         if (AudioTrack.STATE_INITIALIZED == audioTrack.state) {
             LLog.w(ITAG, "Start playing audio...")

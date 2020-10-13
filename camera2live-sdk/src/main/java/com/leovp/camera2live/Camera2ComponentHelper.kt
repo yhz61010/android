@@ -734,7 +734,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         val deviceRotation = context.display?.rotation ?: -1
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
-                        // FIXME Maybe you want to use rotation in someday
+                        // TODO Maybe you want to use rotation in someday
                         val rotation = 0
 //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT

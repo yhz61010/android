@@ -228,7 +228,8 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     private fun initializeRecordingParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
-        val deviceRotation = context.windowManager.defaultDisplay.rotation
+//        val deviceRotation = context.windowManager.defaultDisplay.rotation
+        val deviceRotation = context.display?.rotation ?: -1
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
         var swapDimension = false
         LLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
@@ -584,23 +585,23 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 LLog.w(TAG, "Recording: image is null")
                 return@setOnImageAvailableListener
             }
+//            val width = image.width
+//            val height = image.height
+//            LLog.v(TAG, "Image format=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}")
+//            if (image.planes.isNotEmpty()) {
+//                for ((i, plane) in image.planes.withIndex()) {
+//                    LLog.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
+//                }
+//            }
+            if (outputYuvForDebug) {
+                return@setOnImageAvailableListener
+            }
             cameraHandler.post {
-                try {
-//                    val width = image.width
-//                    val height = image.height
-//                    LLog.v(TAG, "Image width=$width height=$height")
-
-                    if (outputYuvForDebug) {
-                        return@post
-                    }
-
+                runCatching {
                     val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
                     val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing, cameraSensorOrientation)
                     cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                } finally {
+                }.onFailure { it.printStackTrace() }.also {
                     image.close()
                 }
             }
@@ -638,10 +639,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     private fun getJpegOrientation(): Int {
-        val deviceRotation = context.windowManager.defaultDisplay.rotation
+//        val deviceRotation = context.windowManager.defaultDisplay.rotation
+        val deviceRotation = context.display?.rotation ?: -1
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
         val jpegOrientation = (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
-        LLog.d(TAG, "jpegOrientation=$jpegOrientation")
+        LLog.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }
 
@@ -728,10 +730,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         // DO NOT forget for close Image object
                         image.close()
 
-                        val deviceRotation = context.windowManager.defaultDisplay.rotation
+//                        val deviceRotation = context.windowManager.defaultDisplay.rotation
+                        val deviceRotation = context.display?.rotation ?: -1
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
-                        // FIXME Maybe you will want to use rotation in someday
+                        // FIXME Maybe you want to use rotation in someday
                         val rotation = 0
 //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
@@ -874,12 +877,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      *
      * Helper function used to save a [CombinedCaptureResult] into a [File]
      */
+    // @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
         when (result.format) {
-
             // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
             ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                // FIXME The buffer that is just the JPEG data not the original camera image.
+                // TODO The buffer that is just the JPEG data not the original camera image.
                 // So I can not mirror image in the general way like this below:
                 //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                 try {

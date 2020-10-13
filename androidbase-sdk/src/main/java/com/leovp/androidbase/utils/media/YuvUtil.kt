@@ -55,7 +55,7 @@ object YuvUtil {
     }
 
     // byte[] data = getYuvDataFromImage(image, COLOR_FormatI420);
-    // Save data in YYYYVVUU
+    // FIXME Save data in YYYYVVUU(YV12)(Need to check it)
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
         require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
         if (!isImageFormatSupported(image)) {
@@ -76,19 +76,23 @@ object YuvUtil {
                     channelOffset = 0
                     outputStride = 1
                 }
-                1 -> if (colorFormat == COLOR_FORMAT_I420) {
-                    channelOffset = width * height
-                    outputStride = 1
-                } else if (colorFormat == COLOR_FORMAT_NV21) {
-                    channelOffset = width * height + 1
-                    outputStride = 2
+                1 -> {
+                    if (colorFormat == COLOR_FORMAT_I420) {
+                        channelOffset = width * height
+                        outputStride = 1
+                    } else if (colorFormat == COLOR_FORMAT_NV21) {
+                        channelOffset = width * height + 1
+                        outputStride = 2
+                    }
                 }
-                2 -> if (colorFormat == COLOR_FORMAT_I420) {
-                    channelOffset = (width * height * 1.25).toInt()
-                    outputStride = 1
-                } else if (colorFormat == COLOR_FORMAT_NV21) {
-                    channelOffset = width * height
-                    outputStride = 2
+                2 -> {
+                    if (colorFormat == COLOR_FORMAT_I420) {
+                        channelOffset = (width * height * 1.25).toInt()
+                        outputStride = 1
+                    } else if (colorFormat == COLOR_FORMAT_NV21) {
+                        channelOffset = width * height
+                        outputStride = 2
+                    }
                 }
             }
             val buffer = planes[i].buffer

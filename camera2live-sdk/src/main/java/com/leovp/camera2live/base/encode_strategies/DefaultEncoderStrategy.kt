@@ -1,4 +1,4 @@
-package com.leovp.camera2live.base
+package com.leovp.camera2live.base.encode_strategies
 
 import android.hardware.camera2.CameraMetadata
 import android.media.Image

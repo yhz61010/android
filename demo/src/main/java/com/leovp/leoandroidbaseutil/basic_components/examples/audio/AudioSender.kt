@@ -91,9 +91,10 @@ class AudioSender {
     }
 
     private fun stopRecordingAndPlaying() {
-        micRecorder?.stopRecord()
         startPlaying = false
         pcmPlayer?.release()
+
+        micRecorder?.stopRecord()
     }
 
     fun start(ctx: Context, uri: URI) {

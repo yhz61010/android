@@ -882,16 +882,18 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         when (result.format) {
             // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
             ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                // TODO The buffer that is just the JPEG data not the original camera image.
-                // So I can not mirror image in the general way like this below:
-                //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
-                try {
-                    val output = FileUtil.createImageFile(context, "jpg")
-                    FileOutputStream(output).use { it.write(result.imageBytes) }
-                    cont.resume(output)
-                } catch (exc: IOException) {
-                    LLog.e(TAG, "Unable to write JPEG image to file", exc)
-                    cont.resumeWithException(exc)
+                context.lifecycleScope.launch(Dispatchers.IO) {
+                    // TODO The buffer that is just the JPEG data not the original camera image.
+                    // So I can not mirror image in the general way like this below:
+                    //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
+                    try {
+                        val output = FileUtil.createImageFile(context, "jpg")
+                        FileOutputStream(output).use { it.write(result.imageBytes) }
+                        cont.resume(output)
+                    } catch (exc: IOException) {
+                        LLog.e(TAG, "Unable to write JPEG image to file", exc)
+                        cont.resumeWithException(exc)
+                    }
                 }
             }
 

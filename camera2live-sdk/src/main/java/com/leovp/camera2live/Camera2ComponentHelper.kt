@@ -877,7 +877,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      *
      * Helper function used to save a [CombinedCaptureResult] into a [File]
      */
-    // @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
         when (result.format) {
             // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is

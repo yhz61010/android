@@ -10,7 +10,6 @@ import android.media.Image
  * Date: 20-3-25 上午11:20
  */
 object YuvUtil {
-    @Suppress("unused")
     const val COLOR_FORMAT_I420 = 1
 
     @Suppress("unused")
@@ -467,6 +466,7 @@ object YuvUtil {
         }
     }
 
+    @Suppress("unused")
     fun frameMirror(data: ByteArray, width: Int, height: Int) {
         var tempData: Byte
         for (i in 0 until height * 3 / 2) {

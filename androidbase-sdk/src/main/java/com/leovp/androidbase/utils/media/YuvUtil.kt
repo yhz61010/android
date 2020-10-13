@@ -22,6 +22,7 @@ object YuvUtil {
         return false
     }
 
+    @Suppress("unused")
     fun getFormatName(format: Int) = when (format) {
         ImageFormat.JPEG -> "JPEG"
         ImageFormat.YUV_420_888 -> "YUV_420_888"

@@ -22,6 +22,20 @@ object YuvUtil {
         return false
     }
 
+    fun getFormatName(format: Int) = when (format) {
+        ImageFormat.JPEG -> "JPEG"
+        ImageFormat.YUV_420_888 -> "YUV_420_888"
+        ImageFormat.YUV_422_888 -> "YUV_422_888"
+        ImageFormat.YUV_444_888 -> "YUV_444_888"
+        ImageFormat.NV16 -> "NV16"
+        ImageFormat.NV21 -> "NV21"
+        ImageFormat.HEIC -> "HEIC"
+        ImageFormat.RGB_565 -> "RGB_565"
+        ImageFormat.YUY2 -> "YUY2"
+        ImageFormat.YV12 -> "YV12"
+        else -> format.toString()
+    }
+
     @Suppress("unused")
     fun cropYUV420(data: ByteArray, imageW: Int, imageH: Int, newImageH: Int): ByteArray {
         var i: Int
@@ -55,7 +69,7 @@ object YuvUtil {
     }
 
     // byte[] data = getYuvDataFromImage(image, COLOR_FormatI420);
-    // FIXME Save data in YYYYVVUU(YV12)(Need to check it)
+    // FIXME Save data in YYYYYYYYVVUU(YV12)(Need to check it)
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
         require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
         if (!isImageFormatSupported(image)) {

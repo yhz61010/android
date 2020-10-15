@@ -29,6 +29,7 @@ import com.leovp.androidbase.exts.getPreviewOutputSize
 import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.media.YuvUtil
 import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
@@ -585,14 +586,16 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 LLog.w(TAG, "Recording: image is null")
                 return@setOnImageAvailableListener
             }
-//            val width = image.width
-//            val height = image.height
-//            LLog.v(TAG, "Image format=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}")
-//            if (image.planes.isNotEmpty()) {
-//                for ((i, plane) in image.planes.withIndex()) {
-//                    LLog.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
-//                }
-//            }
+            if (BuildConfig.DEBUG) {
+                val width = image.width
+                val height = image.height
+                LLog.v(TAG, "Image format=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}")
+                if (image.planes.isNotEmpty()) {
+                    for ((i, plane) in image.planes.withIndex()) {
+                        LLog.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
+                    }
+                }
+            }
             if (outputYuvForDebug) {
                 return@setOnImageAvailableListener
             }

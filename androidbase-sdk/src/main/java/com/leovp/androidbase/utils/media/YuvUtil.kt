@@ -174,15 +174,11 @@ object YuvUtil {
         }
         // Rotate the U and V color components
         i = imageWidth * imageHeight * 3 / 2 - 1
-        var x = imageWidth - 1
-        while (x > 0) {
+        for (x in imageWidth - 1 downTo 0 step 2) {
             for (y in 0 until imageHeight / 2) {
-                yuv[i] = imageBytes[imageWidth * imageHeight + y * imageWidth + x]
-                i--
-                yuv[i] = imageBytes[imageWidth * imageHeight + y * imageWidth + (x - 1)]
-                i--
+                yuv[i--] = imageBytes[imageWidth * imageHeight + y * imageWidth + x]
+                yuv[i--] = imageBytes[imageWidth * imageHeight + y * imageWidth + (x - 1)]
             }
-            x -= 2
         }
         return yuv
     }

@@ -163,13 +163,12 @@ object YuvUtil {
     // -----------------------------------------------
 
     fun rotateYUV420Degree90(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
-        val yuv = ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8)
+        val yuv = ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3)
         // Rotate the Y luma
         var i = 0
         for (x in 0 until imageWidth) {
             for (y in imageHeight - 1 downTo 0) {
-                yuv[i] = imageBytes[y * imageWidth + x]
-                i++
+                yuv[i++] = imageBytes[y * imageWidth + x]
             }
         }
         // Rotate the U and V color components

@@ -70,7 +70,7 @@ object YuvUtil {
     }
 
     // byte[] data = getYuvDataFromImage(image, COLOR_FormatI420);
-    // FIXME Save data in YYYYYYYYVVUU(YV12)(Need to check it)
+    // Save data in YYYYYYYYUUVV(I420/YU12)
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
         require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
         if (!isImageFormatSupported(image)) {

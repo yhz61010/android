@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.media
 
+import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 
 /**
@@ -18,5 +19,5 @@ object CodecUtil {
             .indexOfFirst { it.name.equals(codecName, true) } > -1
 
     @Suppress("unused")
-    fun getAllSupportedCodecList() = MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos
+    fun getAllSupportedCodecList(): Array<MediaCodecInfo> = MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos
 }

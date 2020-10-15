@@ -589,7 +589,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             if (BuildConfig.DEBUG) {
                 val width = image.width
                 val height = image.height
-                LLog.v(TAG, "Image format=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}")
+                LLog.v(
+                    TAG,
+                    "Image format[${image.format}]=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
+                )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {
                         LLog.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")

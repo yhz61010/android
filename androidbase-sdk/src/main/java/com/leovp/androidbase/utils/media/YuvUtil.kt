@@ -143,7 +143,7 @@ object YuvUtil {
      * Get bytes from original Image which you can get from ImageReader
      * https://www.jianshu.com/p/da10007797b1
      *
-     * // Return data in YYYYYYYYUVUV(NV12)
+     * Return data in YYYYYYYYUVUV(NV12)
      */
     fun getBytesFromImage(image: Image): ByteArray {
         val planes = image.planes

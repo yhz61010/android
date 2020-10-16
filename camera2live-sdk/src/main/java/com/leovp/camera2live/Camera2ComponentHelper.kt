@@ -8,6 +8,8 @@ import android.graphics.drawable.AnimationDrawable
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
+import android.media.MediaCodecInfo
+import android.media.MediaFormat
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -60,7 +62,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     var enableRecordFeature = true
     var enableGallery = true
 
-    // FIXME Set this vale properly
     var previewWidth: Int = 0
         private set
     var previewHeight: Int = 0
@@ -116,13 +117,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     // The context to process data
-    private var dataProcessContext: DataProcessContext =
-        DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_NORMAL)!!
-    var encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
-        set(value) {
-            dataProcessContext =
-                DataProcessFactory.getConcreteObject(value) ?: fail("unsupported encoding type=$value")
-        }
+    private var dataProcessContext: DataProcessContext? = null
 
     private lateinit var capturePreviewRequestBuilder: CaptureRequest.Builder
 
@@ -170,6 +165,15 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         bitrateMode: Int
     ) {
         cameraEncoder = CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
+        // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
+        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
+                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
+        ) {
+            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
+        } else {
+            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
+        }
+
         cameraEncoder.setDataUpdateCallback(object :
             CallbackListener {
             override fun onCallback(h264Data: ByteArray) {
@@ -462,7 +466,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
             override fun onDisconnected(device: CameraDevice) {
                 LLog.w(TAG, "Camera $cameraId has been disconnected")
-                // FIXME In some cases, call this method will cause crash
+                // TODO In some cases, call this method will cause crash
 //                context.requireActivity().finish()
             }
 
@@ -605,7 +609,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             cameraHandler.post {
                 runCatching {
                     val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
-                    val rotatedYuv420Data = dataProcessContext.doProcess(image, lensFacing, cameraSensorOrientation)
+                    val rotatedYuv420Data = dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
                     cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
                 }.onFailure { it.printStackTrace() }.also {
                     image.close()

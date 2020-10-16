@@ -9,11 +9,11 @@ import com.leovp.camera2live.base.iters.IDataProcessStrategy
  * Author: Michael Leo
  * Date: 20-4-1 上午11:12
  */
-class YuvEncoderStrategy : IDataProcessStrategy {
+class Yuv420PEncoderStrategy : IDataProcessStrategy {
     override fun doProcess(image: Image, lensFacing: Int, cameraSensorOrientation: Int): ByteArray {
         val width = image.width
         val height = image.height
-
+        // Get I420/YU12(YUV420P) data YYYYYYYYUUVV
         val yuvData = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
             // LENS_FACING_BACK

@@ -22,7 +22,8 @@ class CameraAvcEncoder @JvmOverloads constructor(
 ) {
     val queue = ConcurrentLinkedQueue<ByteArray>()
     private var dataUpdateCallback: CallbackListener? = null
-    private lateinit var h264Encoder: MediaCodec
+    lateinit var h264Encoder: MediaCodec
+        private set
     private var outputFormat: MediaFormat? = null
 
     init {

@@ -15,6 +15,7 @@ import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.view.BaseCamera2Fragment
+import com.leovp.leoandroidbaseutil.BuildConfig
 
 /**
  * Author: Michael Leo
@@ -30,6 +31,10 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         super.onCreate(savedInstanceState)
         enableRecordFeature = true
         enableTakePhotoFeature = true
+
+        if (BuildConfig.DEBUG) {
+            LLog.d(TAG, "Supported image format for avc: ${CodecUtil.showSupportedColorFormat(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")}")
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

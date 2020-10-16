@@ -70,7 +70,7 @@ object YuvUtil {
     }
 
     // byte[] data = getYuvDataFromImage(image, COLOR_FormatI420);
-    // Save data in YYYYYYYYUUVV(I420/YU12)
+    // Return data in YYYYYYYYUUVV(I420/YU12)
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
         require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
         if (!isImageFormatSupported(image)) {
@@ -142,6 +142,8 @@ object YuvUtil {
     /**
      * Get bytes from original Image which you can get from ImageReader
      * https://www.jianshu.com/p/da10007797b1
+     *
+     * // Return data in YYYYYYYYUVUV(NV12)
      */
     fun getBytesFromImage(image: Image): ByteArray {
         val planes = image.planes
@@ -162,6 +164,8 @@ object YuvUtil {
 
     // -----------------------------------------------
 
+    // The input imageBytes is in YYYYYYYYUVUV(NV12)
+    // Return data in YYYYYYYYUVUV(NV12)
     fun rotateYUV420Degree90(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
         val yuv = ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3)
         // Rotate the Y luma
@@ -284,6 +288,7 @@ object YuvUtil {
 
     // ============================================================
     // Lens back. 90 degree clockwise rotation.
+    // Input yuvSrc is in YYYYYYYYUUVV
     fun yuvRotate90(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
         val desYuv = ByteArray(width * height * 3 / 2)
 

@@ -13,7 +13,6 @@ import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
-import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.view.BaseCamera2Fragment
 import com.leovp.leoandroidbaseutil.BuildConfig
 
@@ -33,7 +32,12 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         enableTakePhotoFeature = true
 
         if (BuildConfig.DEBUG) {
-            LLog.d(TAG, "Supported image format for avc: ${CodecUtil.showSupportedColorFormat(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")}")
+            LLog.d(
+                TAG,
+                "Supported image format for avc encoder: ${
+                    CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
+                }"
+            )
         }
     }
 
@@ -48,7 +52,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
 //                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
-                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
+//                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
                 CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LLog.i(TAG, "Encoder: ${it.name}") }
 

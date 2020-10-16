@@ -29,7 +29,7 @@ import com.leovp.androidbase.exts.getPreviewOutputSize
 import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.media.YuvUtil
+import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
@@ -591,7 +591,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 val height = image.height
                 LLog.v(
                     TAG,
-                    "Image format[${image.format}]=${YuvUtil.getFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
+                    "Image format[${image.format}]=${CodecUtil.getImageFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
                 )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {

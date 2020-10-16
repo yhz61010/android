@@ -27,9 +27,10 @@ object CodecUtil {
     /**
      * The result is the color format defined in MediaCodecInfo.CodecCapabilities.COLOR_Formatxxx
      */
-    fun showSupportedColorFormat(codec: MediaCodec, mime: String): IntArray = showSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
-    fun showSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
-    fun showSupportedColorFormat(mime: String): IntArray = showSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
+    fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray = getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
+    fun getSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
+    fun getSupportedColorFormatForEncoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
+    fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
 
     @Suppress("unused")
     fun getImageFormatName(imageFormat: Int) = when (imageFormat) {

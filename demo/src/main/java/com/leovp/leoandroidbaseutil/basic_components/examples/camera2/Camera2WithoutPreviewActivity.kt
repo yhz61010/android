@@ -13,7 +13,6 @@ import com.leovp.androidbase.exts.getPreviewOutputSize
 import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
-import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.leoandroidbaseutil.R
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
@@ -64,7 +63,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
 //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
 //            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
 //            else DataProcessFactory.ENCODER_TYPE_NORMAL
-            encoderType = DataProcessFactory.ENCODER_TYPE_NORMAL
+//            encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(

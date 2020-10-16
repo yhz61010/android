@@ -24,6 +24,9 @@ object CodecUtil {
     @Suppress("unused")
     fun getAllSupportedCodecList(): Array<MediaCodecInfo> = MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos
 
+    /**
+     * The result is the color format defined in MediaCodecInfo.CodecCapabilities.COLOR_Formatxxx
+     */
     fun showSupportedColorFormat(codec: MediaCodec, mime: String): IntArray = showSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
     fun showSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
     fun showSupportedColorFormat(mime: String): IntArray = showSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)

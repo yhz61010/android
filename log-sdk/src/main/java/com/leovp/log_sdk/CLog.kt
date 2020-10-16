@@ -57,7 +57,7 @@ object CLog {
     }
 
     private fun getTagName(tag: String): String {
-        return BASE_TAG + tag
+        return "$BASE_TAG$tag"
     }
 
     @Suppress("unused")

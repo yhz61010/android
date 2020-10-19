@@ -8,7 +8,7 @@ import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
 import com.leovp.androidbase.exts.getPreviewOutputSize
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.ui.ToastUtil
@@ -32,7 +32,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         enableTakePhotoFeature = true
 
         if (BuildConfig.DEBUG) {
-            LLog.d(
+            LogContext.log.d(
                 TAG,
                 "Supported image format for avc encoder: ${
                     CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
@@ -54,7 +54,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
 //                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
-                CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LLog.i(TAG, "Encoder: ${it.name}") }
+                CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
                 val previewSize = getPreviewOutputSize(
@@ -62,15 +62,15 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     camera2Helper.characteristics,
                     SurfaceHolder::class.java
                 )
-                LLog.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
-                LLog.d(TAG, "Selected preview size: $previewSize")
+                LogContext.log.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
+                LogContext.log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread
                 view.post {
                     runCatching {
                         camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
-                        LLog.e(TAG, "=====> Finally openCamera error <=====")
+                        LogContext.log.e(TAG, "=====> Finally openCamera error <=====")
                         ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
                     }
                 }
@@ -85,14 +85,14 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
         // Save the result to disk
         val output = camera2Helper.saveResult(result)
-        LLog.d(TAG, "Image saved: ${output.absolutePath}")
+        LogContext.log.d(TAG, "Image saved: ${output.absolutePath}")
 
         // If the result is a JPEG file, update EXIF metadata with orientation info
 //            if (output.extension == "jpg") {
 //                val exif = ExifInterface(output.absolutePath)
 //                exif.setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
 //                exif.saveAttributes()
-//                LLog.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
+//                LogContext.log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
 //            }
 
         // Display the photo taken to user
@@ -110,7 +110,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
     }
 
     override suspend fun onRecordButtonClick() {
-        LLog.w(TAG, "onRecordButtonClick")
+        LogContext.log.w(TAG, "onRecordButtonClick")
         // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
         // BITRATE_MODE_CBR: 85.875kB/s
@@ -129,12 +129,12 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         camera2Helper.outputH264ForDebug = true
         camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
-                LLog.d(TAG, "Get encoded video data length=${h264Data.size}")
+                LogContext.log.d(TAG, "Get encoded video data length=${h264Data.size}")
             }
         })
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
-                LLog.w(TAG, "lensFacing=$lensFacing")
+                LogContext.log.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
                     switchFlashBtn.isChecked = false
                     switchFlashBtn.visibility = View.GONE

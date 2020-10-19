@@ -2,6 +2,7 @@ package com.leovp.androidbase.utils
 
 import com.google.gson.Gson
 import com.leovp.androidbase.exts.toHexString
+import com.leovp.androidbase.utils.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -24,7 +25,7 @@ object JsonUtil {
         try {
             return GSON.fromJson(json, clazz)
         } catch (ex: Exception) {
-            LLog.e(
+            LogContext.log.e(
                 TAG,
                 "Can not toObject. Generally, you can ignore this exception. Exception",
                 ex
@@ -43,7 +44,7 @@ object JsonUtil {
         try {
             return GSON.toJson(obj)
         } catch (ex: Exception) {
-            LLog.e(
+            LogContext.log.e(
                 TAG,
                 "Can not toJson. Generally, you can ignore this exception. Exception",
                 ex
@@ -73,7 +74,7 @@ object JsonUtil {
             sb.append(']')
             return sb.toString()
         } catch (ex: Exception) {
-            LLog.e(
+            LogContext.log.e(
                 TAG,
                 "Can not toHexadecimalString. Generally, you can ignore this exception.",
                 ex

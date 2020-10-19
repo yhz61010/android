@@ -12,8 +12,8 @@ import android.os.IBinder
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.exception
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -31,7 +31,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private var bound: Boolean = false
     private var serviceConn = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder) {
-            LLog.i(ITAG, "===== onServiceConnected($name) =====")
+            LogContext.log.i(ITAG, "===== onServiceConnected($name) =====")
             bound = true
             mediaProjectService = (service as MediaProjectionService.CustomBinder).service.also {
                 it.outputH264File = false
@@ -41,10 +41,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         val dataArray = data as ByteArray
                         webSocket?.let { ws ->
                             if (ws.isClosed || ws.isClosing) {
-                                LLog.i(ITAG, "WebSocket is not available. Do nothing.")
+                                LogContext.log.i(ITAG, "WebSocket is not available. Do nothing.")
                                 return
                             }
-                            LLog.i(ITAG, "Data length=${dataArray.size}")
+                            LogContext.log.i(ITAG, "Data length=${dataArray.size}")
                             runOnUiThread {
                                 txtInfo.text = "Data length=${dataArray.size}"
                             }
@@ -56,7 +56,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         } // ServiceConnection
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            LLog.w(ITAG, "===== onServiceDisconnected($name) =====")
+            LogContext.log.w(ITAG, "===== onServiceDisconnected($name) =====")
             bound = false
         }
     }
@@ -89,7 +89,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             override fun requestResult(result: Int, resultCode: Int, data: Intent?) {
                 when (result) {
                     ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
-                        LLog.w(ITAG, "Prepare to record...")
+                        LogContext.log.w(ITAG, "Prepare to record...")
                         startServer()
                         checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
                         mediaProjectService?.setData(
@@ -112,17 +112,17 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         mediaProjectService?.startScreenShare(setting)
                     }
                     ScreenCapture.SCREEN_CAPTURE_RESULT_DENY -> {
-                        LLog.w(ITAG, "Permission denied!")
+                        LogContext.log.w(ITAG, "Permission denied!")
                         ToastUtil.showErrorToast("Permission denied!")
                     }
-                    else -> LLog.d(ITAG, "Not screen capture request")
+                    else -> LogContext.log.d(ITAG, "Not screen capture request")
                 }
             }
         })
     }
 
     override fun onDestroy() {
-        LLog.w(ITAG, "onDestroy(bound=$bound)")
+        LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {
             unbindService(serviceConn)
@@ -139,7 +139,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     inner class ScreenShareWebSocketServer(port: Int) :
         WebSocketServer(InetSocketAddress(port)) {
         override fun onOpen(webSocket: WebSocket?, clientHandshake: ClientHandshake?) {
-            LLog.w(ITAG, "onOpen")
+            LogContext.log.w(ITAG, "onOpen")
             this@ScreenShareMasterActivity.webSocket = webSocket
 
             webSocket?.send(mediaProjectService?.spsPps)
@@ -147,17 +147,17 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         }
 
         override fun onClose(webSocket: WebSocket?, i: Int, s: String?, b: Boolean) {
-            LLog.w(ITAG, "onClose")
+            LogContext.log.w(ITAG, "onClose")
             runOnUiThread { toggleButton.isChecked = false }
         }
 
         override fun onMessage(webSocket: WebSocket?, s: String?) {
-            LLog.i(ITAG, "onMessage")
+            LogContext.log.i(ITAG, "onMessage")
         }
 
         override fun onError(webSocket: WebSocket?, e: Exception?) {
             e?.printStackTrace()
-            LLog.e(ITAG, "onError")
+            LogContext.log.e(ITAG, "onError")
         }
     }
 

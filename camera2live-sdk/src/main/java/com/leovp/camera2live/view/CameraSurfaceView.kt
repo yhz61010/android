@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import android.view.SurfaceView
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -34,7 +34,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             realHeight = max(width, height)
             aspectRatio = realHeight.toFloat() / realWidth.toFloat()
         }
-        LLog.d(TAG, "setDimension width=$width height=$height ratio=$aspectRatio")
+        LogContext.log.d(TAG, "setDimension width=$width height=$height ratio=$aspectRatio")
 
         holder.setFixedSize(realWidth, realHeight)
         requestLayout()
@@ -44,7 +44,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val height = MeasureSpec.getSize(heightMeasureSpec)
-        LLog.d(TAG, "onMeasure width=$width height=$height aspectRatio=$aspectRatio")
+        LogContext.log.d(TAG, "onMeasure width=$width height=$height aspectRatio=$aspectRatio")
         if (0f == aspectRatio) {
             setMeasuredDimension(width, height)
         } else {
@@ -59,7 +59,7 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                 newWidth = width
                 newHeight = (width / actualRatio).roundToInt()
             }
-            LLog.d(TAG, "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio")
+            LogContext.log.d(TAG, "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio")
             setMeasuredDimension(newWidth, newHeight)
         }
     }

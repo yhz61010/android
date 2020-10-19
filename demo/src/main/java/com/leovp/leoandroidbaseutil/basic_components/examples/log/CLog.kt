@@ -38,7 +38,7 @@ class CLog : ILog {
         val cacheDir = getLogDir(context, "x-cache-dir")
 
         // this is necessary, or may crash for SIGBUS
-        val cachePath = "${context.filesDir}/xlog"
+//        val cachePath = "${context.filesDir}/xlog"
 
         //init xlog
         val logConfig = Xlog.XLogConfig()

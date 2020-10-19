@@ -1,10 +1,10 @@
 package com.leovp.leoandroidbaseutil
 
 import androidx.multidex.MultiDexApplication
+import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.leoandroidbaseutil.basic_components.examples.log.CLog
 import io.reactivex.plugins.RxJavaPlugins
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -31,8 +31,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
         ToastUtil.init(this)
 
-//        LogContext.setLogImp(LLog())
-        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        LogContext.setLogImp(LLog())
+//        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
 
 //        val file = File(FileUtil.getBaseDirString(this, "output"))
 //        file.mkdirs()

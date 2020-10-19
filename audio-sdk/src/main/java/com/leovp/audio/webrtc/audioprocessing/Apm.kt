@@ -1,6 +1,6 @@
 package com.leovp.audio.webrtc.audioprocessing
 
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -301,7 +301,7 @@ class Apm(
                 experimentalAgc
             )
         ) {
-            LLog.e(TAG, "Create APM failed")
+            LogContext.log.e(TAG, "Create APM failed")
             throw Exception("Create APM failed")
         }
         init = true

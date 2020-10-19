@@ -7,7 +7,7 @@ import android.os.Environment
 import android.view.Surface
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -31,7 +31,7 @@ class DecoderVideoFileManager {
         kotlin.runCatching {
             mediaExtractor = MediaExtractor()
             mediaExtractor.setDataSource(videoFile)
-            LLog.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
+            LogContext.log.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
             for (i in 0 until mediaExtractor.trackCount) {
                 val format = mediaExtractor.getTrackFormat(i)
                 val mime = format.getString(MediaFormat.KEY_MIME)!!
@@ -46,13 +46,13 @@ class DecoderVideoFileManager {
 //                val csd1ByteArray = ByteArray(csd1.remaining())
                 copiedCsd0.get(csd0ByteArray)
 //                csd1.get(csd1ByteArray)
-                LLog.w(TAG, "csd0=${csd0ByteArray.toHexString()}")
-//                LLog.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
+                LogContext.log.w(TAG, "csd0=${csd0ByteArray.toHexString()}")
+//                LogContext.log.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
                 outputVideoRawDataFile.write(csd0ByteArray)
 //                videoRawDataFile.write(csd1ByteArray)
                 videoWidth = width
                 videoHeight = height
-                LLog.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
+                LogContext.log.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
                 if (mime.startsWith("video")) {
                     mediaExtractor.selectTrack(i)
                     mediaCodec = MediaCodec.createDecoderByType(mime) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
@@ -76,48 +76,48 @@ class DecoderVideoFileManager {
                         outputVideoRawDataFile.write(outByteArray)
                     }
                     val time = mediaExtractor.sampleTime
-                    LLog.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
+                    LogContext.log.d(TAG, "sampleSize=$sampleSize\tsampleTime=$time")
                     if (sampleSize > 0 && time > 0) {
                         codec.queueInputBuffer(index, 0, sampleSize, time, 0)
                         mediaExtractor.advance()
                     } else {
-                        LLog.w(TAG, "Decode done")
+                        LogContext.log.w(TAG, "Decode done")
                         outputVideoRawDataFile.flush()
                         outputVideoRawDataFile.close()
                     }
                 }
             }.onFailure {
-                LLog.e(TAG, "decode mp4 error", it)
+                LogContext.log.e(TAG, "decode mp4 error", it)
             }
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
             kotlin.runCatching {
-                LLog.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
+                LogContext.log.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
                 mSpeedController.preRender(info.presentationTimeUs)
                 codec.releaseOutputBuffer(index, true)
-            }.onFailure { LLog.e(TAG, "onOutputBufferAvailable error", it) }
+            }.onFailure { LogContext.log.e(TAG, "onOutputBufferAvailable error", it) }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LLog.w(ITAG, "onOutputFormatChanged format=$format")
+            LogContext.log.w(ITAG, "onOutputFormatChanged format=$format")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LLog.e(ITAG, "onError e=${e.message}")
+            LogContext.log.e(ITAG, "onError e=${e.message}")
         }
     }
 
     fun close() {
         kotlin.runCatching {
-            LLog.d(TAG, "close start")
+            LogContext.log.d(TAG, "close start")
             mediaCodec.stop()
             mediaCodec.release()
             mSpeedController.reset()
-        }.onFailure { LLog.e(TAG, "close error") }
+        }.onFailure { LogContext.log.e(TAG, "close error") }
     }
 
     fun startDecoding() {

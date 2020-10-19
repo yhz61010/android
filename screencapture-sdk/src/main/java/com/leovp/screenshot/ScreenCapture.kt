@@ -7,7 +7,7 @@ import android.content.Intent
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.screenshot.base.*
 
 /**
@@ -79,7 +79,7 @@ object ScreenCapture {
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
-            LLog.i(
+            LogContext.log.i(
                 TAG,
                 "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize"
             )

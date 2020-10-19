@@ -6,9 +6,9 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexString
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -30,9 +30,9 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         override fun onDataUpdate(buffer: Any, flags: Int) {
             val buf = buffer as ByteArray
             when (flags) {
-                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString()}")
-                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
-                else -> LLog.i(ITAG, "Get h264 data[${buf.size}]")
+                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString()}")
+                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
+                else -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]")
             }
             videoH264OsForDebug.write(buf)
         }

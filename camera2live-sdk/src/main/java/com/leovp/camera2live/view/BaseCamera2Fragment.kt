@@ -13,7 +13,7 @@ import android.widget.ImageView
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.R
@@ -97,7 +97,7 @@ abstract class BaseCamera2Fragment : Fragment() {
 
         camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
             override fun onSwitch(lensFacing: Int) {
-                LLog.w(TAG, "lensFacing=$lensFacing")
+                LogContext.log.w(TAG, "lensFacing=$lensFacing")
                 if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
                     switchFlashBtn.isChecked = false
                     switchFlashBtn.visibility = View.GONE
@@ -125,7 +125,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchCameraBtn.isEnabled = true
                     ivShotRecord.isEnabled = true
                 }
-                LLog.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
+                LogContext.log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
 
@@ -176,7 +176,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
             observe(viewLifecycleOwner, { orientation ->
-                LLog.d(TAG, "Orientation changed: $orientation")
+                LogContext.log.d(TAG, "Orientation changed: $orientation")
             })
         }
     }

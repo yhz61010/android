@@ -28,9 +28,9 @@ import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.exts.computeExifOrientation
 import com.leovp.androidbase.exts.fail
 import com.leovp.androidbase.exts.getPreviewOutputSize
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
@@ -194,7 +194,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
-                    LLog.d(TAG, "$baseOutputFolderForDebug=$mkdirStatus")
+                    LogContext.log.d(TAG, "$baseOutputFolderForDebug=$mkdirStatus")
                 }
                 if (outputYuvForDebug) {
                     val videoYuvFile = File(baseOutputFolderForDebug, "camera.yuv")
@@ -216,12 +216,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun closeDebugOutput() {
         try {
             if (outputYuvForDebug) {
-                LLog.i(TAG, "output debug yuv file")
+                LogContext.log.i(TAG, "output debug yuv file")
                 videoYuvOsForDebug?.flush()
                 videoYuvOsForDebug?.close()
             }
             if (outputH264ForDebug) {
-                LLog.i(TAG, "output debug h264 file")
+                LogContext.log.i(TAG, "output debug h264 file")
                 videoH264OsForDebug?.flush()
                 videoH264OsForDebug?.close()
             }
@@ -233,32 +233,35 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     private fun initializeRecordingParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
-//        val deviceRotation = context.windowManager.defaultDisplay.rotation
-        val deviceRotation = context.display?.rotation ?: -1
+        val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display?.rotation ?: -1
+        } else {
+            context.windowManager.defaultDisplay.rotation
+        }
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
         var swapDimension = false
-        LLog.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
-        LLog.w(TAG, "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
+        LogContext.log.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
+        LogContext.log.w(TAG, "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
         when (deviceRotation) {
             Surface.ROTATION_0, Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
-                LLog.w(TAG, "swapDimension set true")
+                LogContext.log.w(TAG, "swapDimension set true")
                 swapDimension = true
             }
             Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
                 swapDimension = true
             }
-            else -> LLog.e(TAG, "Display rotation is invalid: $deviceRotation")
+            else -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
         }
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
-        LLog.w(TAG, "allCameraSupportSize: ${allCameraSupportSize?.contentToString()}")
+        LogContext.log.w(TAG, "allCameraSupportSize: ${allCameraSupportSize?.contentToString()}")
 
         // The device is normally in portrait by default.
         // Actually, the camera orientation is just 90 degree anticlockwise.
         var cameraWidth = desiredVideoHeight
         var cameraHeight = desiredVideoWidth
-        LLog.w(TAG, "cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
+        LogContext.log.w(TAG, "cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Landscape: true. Portrait: false
         if (swapDimension) {
@@ -267,19 +270,19 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         }
         if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
         if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
-        LLog.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
+        LogContext.log.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Calculate ImageReader input preview size from supported size list by camera.
         // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
         // Attention: The returned value is in camera orientation. NOT in device orientation.
         selectedSizeFromCamera = getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
         // Take care of the result value. It's in camera orientation.
-        LLog.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
+        LogContext.log.w(TAG, "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
         // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
         previewSize = if (swapDimension) Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width) else {
             selectedSizeFromCamera
         }
-        LLog.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
+        LogContext.log.w(TAG, "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
     }
 
     // ===== Debug code =======================
@@ -304,26 +307,26 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     private fun initializeParameters() {
         cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
-        LLog.w(TAG, "cameraId=$cameraId")
+        LogContext.log.w(TAG, "cameraId=$cameraId")
         characteristics = cameraManager.getCameraCharacteristics(cameraId)
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
-        LLog.w(TAG, "isFlashSupported=$isFlashSupported")
+        LogContext.log.w(TAG, "isFlashSupported=$isFlashSupported")
         this.supportFlash = isFlashSupported ?: false
 
         // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
         val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-        LLog.w(TAG, "hardwareLevel=$hardwareLevel")
+        LogContext.log.w(TAG, "hardwareLevel=$hardwareLevel")
 
         // Get camera supported fps. It will be used to create CaptureRequest
         cameraSupportedFpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-        LLog.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
+        LogContext.log.w(TAG, "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
 
         val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-        LLog.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
+        LogContext.log.w(TAG, "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
         val highSpeedVideoSizes = configMap.highSpeedVideoSizes
-        LLog.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
+        LogContext.log.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
     }
 
     /** Readers used as buffers for camera still shots */
@@ -395,7 +398,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     suspend fun setPreviewRepeatingRequest() {
-        LLog.i(TAG, "setPreviewRepeatingRequest()")
+        LogContext.log.i(TAG, "setPreviewRepeatingRequest()")
 //        session.stopRepeating()
 //        stopRepeating()
         // There is no need to call session.close() method. Please check its comment
@@ -435,7 +438,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      * - Sets up the still image capture listeners
      */
     fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
-        LLog.i(TAG, "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <=====")
+        LogContext.log.i(TAG, "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <=====")
         this@Camera2ComponentHelper.previewWidth = previewWidth
         this@Camera2ComponentHelper.previewHeight = previewHeight
         initializeParameters()
@@ -448,9 +451,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         if (enableTakePhotoFeature) {
             val st = SystemClock.elapsedRealtime()
             setImageReaderForPhoto(previewWidth, previewHeight)
-            LLog.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
+            LogContext.log.d(TAG, "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
             setPreviewRepeatingRequest()
-            LLog.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
+            LogContext.log.d(TAG, "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
         }
     }
 
@@ -465,13 +468,13 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             override fun onOpened(device: CameraDevice) = cont.resume(device)
 
             override fun onDisconnected(device: CameraDevice) {
-                LLog.w(TAG, "Camera $cameraId has been disconnected")
+                LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
                 // TODO In some cases, call this method will cause crash
 //                context.requireActivity().finish()
             }
 
             override fun onClosed(camera: CameraDevice) {
-                LLog.w(TAG, "Camera $cameraId has been closed")
+                LogContext.log.w(TAG, "Camera $cameraId has been closed")
                 super.onClosed(camera)
             }
 
@@ -486,7 +489,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 }
                 device.close()
                 val exc = IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
-                LLog.e(TAG, exc.message, exc)
+                LogContext.log.e(TAG, exc.message, exc)
                 if (cont.isActive) cont.resumeWithException(exc)
             }
         }, handler)
@@ -508,7 +511,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
             override fun onConfigureFailed(session: CameraCaptureSession) {
                 val exc = RuntimeException("Camera ${device.id} session configuration failed")
-                LLog.e(TAG, exc.message, exc)
+                LogContext.log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
         }, handler)
@@ -516,7 +519,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     private fun stopRepeating() {
         if (::session.isInitialized) {
-            LLog.w(TAG, "stopRepeating()")
+            LogContext.log.w(TAG, "stopRepeating()")
             session.stopRepeating()
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 session.abortCaptures()
@@ -530,7 +533,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     fun stopRecording() {
-        LLog.w(TAG, "stopRecording()")
+        LogContext.log.w(TAG, "stopRecording()")
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = false
         cameraView?.run {
@@ -559,7 +562,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     fun startRecording() {
-        LLog.w(TAG, "startRecording()")
+        LogContext.log.w(TAG, "startRecording()")
         if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
         isRecording = true
         cameraView?.run {
@@ -587,19 +590,19 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()
             if (image == null) {
-                LLog.w(TAG, "Recording: image is null")
+                LogContext.log.w(TAG, "Recording: image is null")
                 return@setOnImageAvailableListener
             }
             if (BuildConfig.DEBUG) {
                 val width = image.width
                 val height = image.height
-                LLog.v(
+                LogContext.log.v(
                     TAG,
                     "Image format[${image.format}]=${CodecUtil.getImageFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
                 )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {
-                        LLog.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
+                        LogContext.log.v(TAG, "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
                     }
                 }
             }
@@ -621,7 +624,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
         context.lifecycleScope.launch(Dispatchers.Main) {
             session = createCaptureSession(camera, targets, cameraHandler)
-            LLog.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
+            LogContext.log.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
             session.setRepeatingRequest(
                 // Capture request holds references to target surfaces
                 session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
@@ -630,7 +633,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
                     }
                     addTarget(imageReader.surface)
-                    LLog.w(TAG, "Camera FPS=${builder.cameraFps}")
+                    LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
                     // Sets user requested FPS for all targets
                     set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
                     // Auto focus
@@ -649,11 +652,14 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     private fun getJpegOrientation(): Int {
-//        val deviceRotation = context.windowManager.defaultDisplay.rotation
-        val deviceRotation = context.display?.rotation ?: -1
+        val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display?.rotation ?: -1
+        } else {
+            context.windowManager.defaultDisplay.rotation
+        }
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
         val jpegOrientation = (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
-        LLog.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
+        LogContext.log.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }
 
@@ -674,7 +680,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val imageQueue = ArrayBlockingQueue<Image>(IMAGE_BUFFER_SIZE)
         imageReader.setOnImageAvailableListener({ reader ->
             val image = reader.acquireNextImage()
-            LLog.d(TAG, "Image available in queue: ${image.timestamp}")
+            LogContext.log.d(TAG, "Image available in queue: ${image.timestamp}")
             imageQueue.add(image)
         }, imageReaderHandler)
 
@@ -702,7 +708,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             ) {
                 super.onCaptureCompleted(session, request, result)
                 val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                LLog.d(TAG, "Capture result received: $resultTimestamp")
+                LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
 
                 // Set a timeout in case image captured is dropped from the pipeline
                 val exc = TimeoutException("Image dequeuing took too long")
@@ -722,7 +728,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                             image.format != ImageFormat.DEPTH_JPEG &&
                             image.timestamp != resultTimestamp
                         ) continue
-                        LLog.d(TAG, "Matching image dequeued: ${image.timestamp}")
+                        LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
 
                         // Unset the image reader listener
                         imageReaderHandler.removeCallbacks(timeoutRunnable)
@@ -740,8 +746,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         // DO NOT forget for close Image object
                         image.close()
 
-//                        val deviceRotation = context.windowManager.defaultDisplay.rotation
-                        val deviceRotation = context.display?.rotation ?: -1
+                        val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            context.display?.rotation ?: -1
+                        } else {
+                            context.windowManager.defaultDisplay.rotation
+                        }
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                         // Compute EXIF orientation metadata
                         // TODO Maybe you want to use rotation in someday
@@ -749,11 +758,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                         val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
-                        LLog.d(
+                        LogContext.log.d(
                             TAG,
                             "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                         )
-                        LLog.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
+                        LogContext.log.d(TAG, "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
 
                         // Build the result and resume progress
                         cont.resume(
@@ -781,7 +790,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             throw IllegalAccessError("You must initialize camera and session first.")
         }
         if (CameraMetadata.LENS_FACING_FRONT == lensFacing || !supportFlash) {
-            LLog.w(TAG, "Do NOT support flash or lens facing is front camera.")
+            LogContext.log.w(TAG, "Do NOT support flash or lens facing is front camera.")
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -794,7 +803,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, true);
             //                    }
-            LLog.w(TAG, "Flash ON")
+            LogContext.log.w(TAG, "Flash ON")
             true
         } catch (e: Exception) {
             false
@@ -806,7 +815,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             throw IllegalAccessError("You must initialize camera and session first.")
         }
         if (!supportFlash) {
-            LLog.w(TAG, "Do NOT support flash.")
+            LogContext.log.w(TAG, "Do NOT support flash.")
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
@@ -821,7 +830,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, false);
             //                    }
-            LLog.w(TAG, "Flash OFF")
+            LogContext.log.w(TAG, "Flash OFF")
             false
         } catch (e: Exception) {
             false
@@ -865,7 +874,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
         }
-        LLog.w(TAG, "switchCamera to $lensFacing")
+        LogContext.log.w(TAG, "switchCamera to $lensFacing")
 
         closeCamera()
         this.lensFacing = lensFacing
@@ -900,7 +909,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         FileOutputStream(output).use { it.write(result.imageBytes) }
                         cont.resume(output)
                     } catch (exc: IOException) {
-                        LLog.e(TAG, "Unable to write JPEG image to file", exc)
+                        LogContext.log.e(TAG, "Unable to write JPEG image to file", exc)
                         cont.resumeWithException(exc)
                     }
                 }
@@ -914,7 +923,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 //                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
 //                    cont.resume(output)
 //                } catch (exc: IOException) {
-//                    LLog.e(TAG, "Unable to write DNG image to file", exc)
+//                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
 //                    cont.resumeWithException(exc)
 //                }
 //            }
@@ -922,7 +931,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             // No other formats are supported by this sample
             else -> {
                 val exc = RuntimeException("Unknown image format: ${result.format}")
-                LLog.e(TAG, exc.message, exc)
+                LogContext.log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
         }
@@ -934,7 +943,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      * Or just call the handy method [release] to finish the job.
      */
     fun closeCamera() {
-        LLog.i(TAG, "closeCamera() - Start")
+        LogContext.log.i(TAG, "closeCamera() - Start")
 
         try {
             // There is no need to call session.close() method. Please check its comment
@@ -944,9 +953,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()
         } catch (e: InterruptedException) {
-            LLog.e(TAG, "Interrupted while trying to lock camera closing.", e)
+            LogContext.log.e(TAG, "Interrupted while trying to lock camera closing.", e)
         } finally {
-            LLog.i(TAG, "closeCamera() - End")
+            LogContext.log.i(TAG, "closeCamera() - End")
         }
     }
 
@@ -966,7 +975,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        LLog.i(TAG, "=====> stopCameraThread() being called <=====")
+        LogContext.log.i(TAG, "=====> stopCameraThread() being called <=====")
     }
 
     /** Handy method to release all the camera resources. */

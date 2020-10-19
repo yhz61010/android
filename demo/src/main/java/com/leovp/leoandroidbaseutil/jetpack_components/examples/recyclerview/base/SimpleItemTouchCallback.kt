@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 
 abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.SimpleCallback(
@@ -35,7 +35,7 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
              * if (viewHolder?.adapterPosition == 0) return 0
              */
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-            LLog.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
+            LogContext.log.d(ITAG, "viewHolder.adapterPosition=${viewHolder.adapterPosition}")
             super.getMovementFlags(recyclerView, viewHolder)
         } else 0
     }

@@ -19,7 +19,7 @@ import io.reactivex.schedulers.Schedulers
  * fun test() {
  *     val observer: ObserverOnNextListener<Map<String, String>> = object : ObserverOnNextListener<Map<String, String>> {
  *         override fun onNext(t: Map<String, String>) {
- *         t.forEach { LLog.e(TAG, "Response ${it.key}=$${it.value}") }
+ *         t.forEach { LogContext.log.e(TAG, "Response ${it.key}=$${it.value}") }
  *         }
  *     }
  *     val service = ApiService.getService("http://t.weather.sojson.com", CommonService::class.java)

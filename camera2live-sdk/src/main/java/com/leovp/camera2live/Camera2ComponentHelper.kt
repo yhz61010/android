@@ -169,8 +169,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
                 .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
         ) {
+            LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
         } else {
+            LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
         }
 

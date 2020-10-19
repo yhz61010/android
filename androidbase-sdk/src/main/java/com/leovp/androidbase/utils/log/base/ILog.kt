@@ -35,4 +35,21 @@ interface ILog {
         elements.forEach { sb.append('\n').append(it.toString()) }
         return sb.toString()
     }
+
+    fun getMessage(message: String?, throwable: Throwable?): String {
+        if (message == null && throwable == null) return "[Empty Message]"
+
+        val sb = StringBuilder()
+        if (!message.isNullOrBlank()) {
+            sb.append(message)
+        }
+        if (throwable == null) {
+            return sb.toString()
+        }
+        return if (message == null) {
+            sb.append(getStackTraceString(throwable)).toString()
+        } else {
+            sb.append(" : ").append(getStackTraceString(throwable)).toString()
+        }
+    }
 }

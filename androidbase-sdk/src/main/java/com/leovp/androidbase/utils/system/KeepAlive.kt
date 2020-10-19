@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.os.PowerManager
 import com.leovp.androidbase.R
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 
 
 /**
@@ -22,7 +22,7 @@ class KeepAlive(private val context: Context) {
     private val mediaPlayer by lazy { MediaPlayer.create(context, R.raw.single_note30) }
 
     fun keepAlive() {
-        LLog.i(TAG, "Start keepAlive()")
+        LogContext.log.i(TAG, "Start keepAlive()")
         mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
 //        mediaPlayer.setVolume(0.01F, 0.01F)
         mediaPlayer.isLooping = true
@@ -30,7 +30,7 @@ class KeepAlive(private val context: Context) {
     }
 
     fun release() {
-        LLog.i(TAG, "Release keepAlive()")
+        LogContext.log.i(TAG, "Release keepAlive()")
         mediaPlayer.release()
     }
 

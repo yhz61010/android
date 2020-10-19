@@ -5,7 +5,7 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -79,16 +79,16 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         checkRunnable?.let { handler.removeCallbacks(checkRunnable!!) }
 
         if (wasBackground) {
-            LLog.i(TAG, "Went FG")
+            LogContext.log.i(TAG, "Went FG")
             listeners.forEach {
                 try {
                     it.onBecameForeground()
                 } catch (e: Exception) {
-                    LLog.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
                 }
             }
         } else {
-            LLog.i(TAG, "Still FG")
+            LogContext.log.i(TAG, "Still FG")
         }
     }
 
@@ -100,16 +100,16 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         handler.postDelayed(Runnable {
             if (isForeground && paused) {
                 isForeground = false
-                LLog.i(TAG, "Went BG")
+                LogContext.log.i(TAG, "Went BG")
                 listeners.forEach {
                     try {
                         it.onBecameBackground()
                     } catch (e: Exception) {
-                        LLog.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
                     }
                 }
             } else {
-                LLog.i(TAG, "Still BG")
+                LogContext.log.i(TAG, "Still BG")
             }
         }.also { checkRunnable = it }, becameBackgroundDelay)
     }
@@ -121,9 +121,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {
         try {
-            LLog.i(TAG, "=====> onActivityDestroyed($activity) <=====")
+            LogContext.log.i(TAG, "=====> onActivityDestroyed($activity) <=====")
         } catch (e: Exception) {
-            LLog.e(TAG, "onActivityDestroyed error=${e.message}")
+            LogContext.log.e(TAG, "onActivityDestroyed error=${e.message}")
         }
     }
 

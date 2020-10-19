@@ -8,7 +8,7 @@ import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toJsonString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 import kotlinx.coroutines.*
 
@@ -24,7 +24,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private var bufferSizeInBytes = 0
 
     init {
-        LLog.w(ITAG, "recordAudio=${encoderInfo.toJsonString()}")
+        LogContext.log.w(ITAG, "recordAudio=${encoderInfo.toJsonString()}")
         bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat)
 
         audioRecord = AudioRecord(
@@ -42,7 +42,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     }
 
     fun startRecord() {
-        LLog.w(ITAG, "Do startRecord()")
+        LogContext.log.w(ITAG, "Do startRecord()")
         audioRecord.startRecording()
         ioScope.launch {
             runCatching {
@@ -57,13 +57,13 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
                     ed = SystemClock.elapsedRealtime()
                     cost = ed - st
-                    LLog.i(ITAG, "Record[$recordSize] cost $cost ms.")
+                    LogContext.log.i(ITAG, "Record[$recordSize] cost $cost ms.")
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
 //                    if (cost > 100) {
-//                        LLog.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
+//                        LogContext.log.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
 //                        continue
 //                    }
                     callback.onRecording(pcmData, st, ed)
@@ -77,33 +77,33 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private fun initAdvancedFeatures() {
         if (AcousticEchoCanceler.isAvailable()) {
             AcousticEchoCanceler.create(audioRecord.audioSessionId)?.run {
-                LLog.w(ITAG, "Enable AcousticEchoCanceler")
+                LogContext.log.w(ITAG, "Enable AcousticEchoCanceler")
                 enabled = true
             }
         }
         if (AutomaticGainControl.isAvailable()) {
             AutomaticGainControl.create(audioRecord.audioSessionId)?.run {
-                LLog.w(ITAG, "Enable AutomaticGainControl")
+                LogContext.log.w(ITAG, "Enable AutomaticGainControl")
                 enabled = true
             }
         }
         if (NoiseSuppressor.isAvailable()) {
             NoiseSuppressor.create(audioRecord.audioSessionId)?.run {
-                LLog.w(ITAG, "Enable NoiseSuppressor")
+                LogContext.log.w(ITAG, "Enable NoiseSuppressor")
                 enabled = true
             }
         }
     }
 
     fun stopRecord() {
-        LLog.w(ITAG, "Stop recording audio")
+        LogContext.log.w(ITAG, "Stop recording audio")
         var stopResult = true
         runCatching {
-            LLog.w(ITAG, "Stopping recording...")
+            LogContext.log.w(ITAG, "Stopping recording...")
             audioRecord.stop()
         }.onFailure { it.printStackTrace(); stopResult = false }
         runCatching {
-            LLog.w(ITAG, "Releasing recording...")
+            LogContext.log.w(ITAG, "Releasing recording...")
             audioRecord.release()
         }.onFailure { it.printStackTrace(); stopResult = false }
         ioScope.cancel()

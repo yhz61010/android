@@ -3,7 +3,7 @@ package com.leovp.androidbase.utils.network
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.util.concurrent.TimeUnit
 
 /**
@@ -105,7 +105,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
      * The data will be sent in every *freq* second(s)
      */
     fun startMonitor(freq: Int = 1) {
-        LLog.i(TAG, "startMonitor()")
+        LogContext.log.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq
         this.freq = interval
         trafficStat = TrafficStatHelper.getInstance(ctx)
@@ -113,12 +113,12 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
     }
 
     fun stopMonitor() {
-        LLog.i(TAG, "stopMonitor()")
+        LogContext.log.i(TAG, "stopMonitor()")
         releaseMonitorThread()
     }
 
     private fun releaseMonitorThread() {
-        LLog.w(TAG, "releaseMonitorThread()")
+        LogContext.log.w(TAG, "releaseMonitorThread()")
         runCatching {
             monitorHandler.removeCallbacksAndMessages(null)
             monitorThread.interrupt()

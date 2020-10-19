@@ -44,7 +44,7 @@ class LogActivity : BaseDemonstrationActivity() {
     }
 
     override fun onStop() {
-        (LogContext.log as CLog).flushLog()
+//        (LogContext.log as CLog).flushLog()
         super.onStop()
     }
 

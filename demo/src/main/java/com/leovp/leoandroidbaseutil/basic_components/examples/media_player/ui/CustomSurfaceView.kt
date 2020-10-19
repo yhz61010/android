@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import android.view.SurfaceView
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.max
 import kotlin.math.min
 
@@ -33,7 +33,7 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             realHeight = max(width, height)
             aspectRatio = realHeight.toFloat() / realWidth.toFloat()
         }
-        LLog.d(TAG, "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth realHeight=$realHeight ")
+        LogContext.log.d(TAG, "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth realHeight=$realHeight ")
 
         holder.setFixedSize(realWidth, realHeight)
         requestLayout()
@@ -42,7 +42,7 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var finalWidth = widthMeasureSpec
         var finalHeight = heightMeasureSpec
-        LLog.d(
+        LogContext.log.d(
             TAG, "onMeasure target=" + aspectRatio +
                     " width=[" + MeasureSpec.toString(widthMeasureSpec) +
                     "] height=[" + MeasureSpec.toString(heightMeasureSpec) + "]"
@@ -68,7 +68,7 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                 // We're very close already.  We don't want to risk switching from e.g. non-scaled
                 // 1280x720 to scaled 1280x719 because of some floating-point round-off error,
                 // so if we're really close just leave it alone.
-                LLog.d(
+                LogContext.log.d(
                     TAG, "aspect ratio is good (target=" + aspectRatio +
                             ", view=" + initialWidth + "x" + initialHeight + ")"
                 )
@@ -80,7 +80,7 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                     // limited by short height; restrict width
                     initialWidth = (initialHeight * aspectRatio).toInt()
                 }
-                LLog.d(
+                LogContext.log.d(
                     TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
                             horizPadding + "x" + vertPadding
                 )
@@ -91,10 +91,10 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             }
         }
 
-        //LLog.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
+        //LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
         //        "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
 
-        //LLog.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
+        //LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
         //        "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
         super.onMeasure(finalWidth, finalHeight)
     }

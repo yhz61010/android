@@ -12,7 +12,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
@@ -285,7 +285,7 @@ object Falcon {
                 currentClass = currentClass!!.superclass
             }.onFailure { return null }
         }
-        LLog.e(TAG, "Field $name not found for class $clazz")
+        LogContext.log.e(TAG, "Field $name not found for class $clazz")
         return null
     }
 

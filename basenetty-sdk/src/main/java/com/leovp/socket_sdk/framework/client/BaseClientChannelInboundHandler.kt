@@ -1,6 +1,6 @@
 package com.leovp.socket_sdk.framework.client
 
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.base.ReadSocketDataListener
 import io.netty.channel.ChannelHandlerContext
@@ -29,7 +29,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     abstract fun release()
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== handlerAdded =====")
+        LogContext.log.i(tag, "===== handlerAdded =====")
         if (netty.isWebSocket) {
             handshaker = WebSocketClientHandshakerFactory.newHandshaker(
                 netty.webSocketUri,
@@ -45,12 +45,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     }
 
     override fun channelRegistered(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is registered to EventLoop =====")
+        LogContext.log.i(tag, "===== Channel is registered to EventLoop =====")
         super.channelRegistered(ctx)
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
+        LogContext.log.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
         caughtException = false
         if (netty.isWebSocket) {
             handshaker?.handshake(ctx.channel())
@@ -60,10 +60,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
     @Throws(Exception::class)
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        LLog.w(
+        LogContext.log.w(
             tag,
-            "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel()
-                .remoteAddress()} | Channel is inactive and reached its end of lifetime ====="
+            "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${
+                ctx.channel()
+                    .remoteAddress()
+            } | Channel is inactive and reached its end of lifetime ====="
         )
         if (netty.isWebSocket) {
             handshaker?.close(ctx.channel(), CloseWebSocketFrame())
@@ -79,9 +81,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
                 netty.doRetry()
             }
-            LLog.w(tag, "=====> Socket disconnected <=====")
+            LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {
-            LLog.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
+            LogContext.log.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
         }
     }
 
@@ -90,12 +92,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
      * reconnect it here.
      */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== Channel is unregistered from EventLoop =====")
+        LogContext.log.i(tag, "===== Channel is unregistered from EventLoop =====")
         super.channelUnregistered(ctx)
     }
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LLog.i(tag, "===== handlerRemoved =====")
+        LogContext.log.i(tag, "===== handlerRemoved =====")
         super.handlerRemoved(ctx)
     }
 
@@ -104,7 +106,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (caughtException) {
-            LLog.e(tag, "exceptionCaught had been triggered. Do not fire it again.")
+            LogContext.log.e(tag, "exceptionCaught had been triggered. Do not fire it again.")
             return
         }
         caughtException = true
@@ -113,12 +115,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             is IllegalArgumentException -> "IllegalArgumentException"
             else -> "Unknown Exception"
         }
-        LLog.e(tag, "===== Caught $exceptionType =====")
-        LLog.e(tag, "Exception: ${cause.message}", cause)
+        LogContext.log.e(tag, "===== Caught $exceptionType =====")
+        LogContext.log.e(tag, "Exception: ${cause.message}", cause)
 
 //        val channel = ctx.channel()
 //        val isChannelActive = channel.isActive
-//        LLog.e(tagName, "Channel is active: $isChannelActive")
+//        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
 //        if (isChannelActive) {
 //            ctx.close()
 //        }
@@ -133,11 +135,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error")
         }
 
-        LLog.e(tag, "============================")
+        LogContext.log.e(tag, "============================")
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
-        LLog.i(tag, "===== userEventTriggered ($evt)=====")
+        LogContext.log.i(tag, "===== userEventTriggered ($evt)=====")
         super.userEventTriggered(ctx, evt)
     }
 
@@ -147,11 +149,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
         if (netty.isWebSocket) {
             if (msg is FullHttpResponse) {
-                LLog.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+                LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
                 if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
                     val exceptionInfo =
                         "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
-                    LLog.e(tag, exceptionInfo)
+                    LogContext.log.e(tag, exceptionInfo)
                     throw IllegalStateException(exceptionInfo)
                 }
             }
@@ -159,10 +161,10 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             if (handshaker?.isHandshakeComplete == false) {
                 try {
                     handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
-                    LLog.w(tag, "=====> WebSocket client connected <=====")
+                    LogContext.log.w(tag, "=====> WebSocket client connected <=====")
                     channelPromise?.setSuccess()
                 } catch (e: WebSocketHandshakeException) {
-                    LLog.e(tag, "=====> WebSocket client failed to connect <=====")
+                    LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
                     channelPromise?.setFailure(e)
                 }
                 return
@@ -170,7 +172,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
             val frame = msg as WebSocketFrame
             if (frame is CloseWebSocketFrame) {
-                LLog.w(tag, "=====> WebSocket Client received close frame <=====")
+                LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
                 ctx.channel().close()
                 return
             }

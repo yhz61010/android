@@ -1,6 +1,6 @@
 package com.leovp.androidbase.exts
 
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -27,21 +27,21 @@ val Any.ITAG: String
 // ==============================
 
 fun String.vLog() {
-    LLog.v("$ITAG-str", this)
+    LogContext.log.v("$ITAG-str", this)
 }
 
 fun String.dLog() {
-    LLog.d("$ITAG-str", this)
+    LogContext.log.d("$ITAG-str", this)
 }
 
 fun String.iLog() {
-    LLog.i("$ITAG-str", this)
+    LogContext.log.i("$ITAG-str", this)
 }
 
 fun String.wLog() {
-    LLog.w("$ITAG-str", this)
+    LogContext.log.w("$ITAG-str", this)
 }
 
 fun String.fLog() {
-    LLog.e("$ITAG-str", this)
+    LogContext.log.e("$ITAG-str", this)
 }

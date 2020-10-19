@@ -10,8 +10,8 @@ import com.leovp.androidbase.http.retrofit.ApiService
 import com.leovp.androidbase.http.retrofit.ApiSubscribe
 import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
 import com.leovp.androidbase.http.retrofit.observers.NoProgressObserver
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -55,7 +55,7 @@ class HttpActivity : BaseDemonstrationActivity() {
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val observer: ObserverOnNextListener<WeatherInfoResult> = object : ObserverOnNextListener<WeatherInfoResult> {
             override fun onNext(t: WeatherInfoResult) {
-                LLog.w(ITAG, "Response bean=${t.toJsonString()}")
+                LogContext.log.w(ITAG, "Response bean=${t.toJsonString()}")
                 txtResult.text = t.toJsonString()
             }
         }
@@ -67,12 +67,12 @@ class HttpActivity : BaseDemonstrationActivity() {
         txtResult.text = "It will cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String> {
             override fun onNext(t: String) {
-                LLog.w(ITAG, "Response=$t")
+                LogContext.log.w(ITAG, "Response=$t")
                 txtResult.text = t
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LLog.w(ITAG, "Request error. code=$code msg=$msg")
+                LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
                 txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
@@ -87,12 +87,12 @@ class HttpActivity : BaseDemonstrationActivity() {
         txtResult.text = "It may cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String> {
             override fun onNext(t: String) {
-                LLog.w(ITAG, "Response=$t")
+                LogContext.log.w(ITAG, "Response=$t")
                 txtResult.text = "Upload Done"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LLog.w(ITAG, "Request error. code=$code msg=$msg")
+                LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
                 txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
@@ -101,7 +101,7 @@ class HttpActivity : BaseDemonstrationActivity() {
         val sourceFile = File(fileFullPath)
         val mimeType = getMimeType(sourceFile)
         if (mimeType == null) {
-            LLog.e("File upload error", "Not able to get mime type")
+            LogContext.log.e("File upload error", "Not able to get mime type")
             return
         }
         val requestBody: RequestBody =
@@ -125,12 +125,12 @@ class HttpActivity : BaseDemonstrationActivity() {
             override fun onNext(t: ResponseBody) {
                 val filePath = FileUtil.createFile(this@HttpActivity, "download.pdf").absolutePath
                 FileUtil.copyInputStreamToFile(t.byteStream(), filePath)
-                LLog.w(ITAG, "Downloaded to $filePath")
+                LogContext.log.w(ITAG, "Downloaded to $filePath")
                 txtResult.text = "Downloaded to $filePath"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LLog.w(ITAG, "Download error. code=$code msg=$msg")
+                LogContext.log.w(ITAG, "Download error. code=$code msg=$msg")
                 txtResult.text = "Download error. code=$code msg=$msg"
             }
         }

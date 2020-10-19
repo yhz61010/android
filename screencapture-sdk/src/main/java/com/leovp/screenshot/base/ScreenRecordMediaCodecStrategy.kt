@@ -11,7 +11,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.androidbase.exts.exception
 import com.leovp.androidbase.exts.toJsonString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.nio.ByteBuffer
 
 /**
@@ -64,7 +64,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LLog.d(TAG, "onError error=${e.message}", e)
+            LogContext.log.d(TAG, "onError error=${e.message}", e)
         }
     }
 
@@ -93,7 +93,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         fun build(): ScreenRecordMediaCodecStrategy {
-            LLog.i(
+            LogContext.log.i(
                 TAG,
                 "width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval"
             )
@@ -141,7 +141,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         if (!videoEncoderLoop) {
             return
         }
-        LLog.i(TAG, "onRelease()")
+        LogContext.log.i(TAG, "onRelease()")
         onStop()
         h264Encoder?.release()
         virtualDisplay?.release()
@@ -151,7 +151,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         if (!videoEncoderLoop) {
             return
         }
-        LLog.i(TAG, "onStop()")
+        LogContext.log.i(TAG, "onStop()")
         videoEncoderLoop = false
         releaseHandler()
         h264Encoder?.stop()
@@ -160,11 +160,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     override fun onStart() {
         if (videoEncoderLoop) {
-            LLog.e(TAG, "Your previous recording is not finished. Stop it automatically.")
+            LogContext.log.e(TAG, "Your previous recording is not finished. Stop it automatically.")
             onStop()
         }
 
-        LLog.i(TAG, "onStart()")
+        LogContext.log.i(TAG, "onStart()")
         initHandler()
         h264Encoder?.start() ?: exception("You must initialize Video Encoder.")
         videoEncoderLoop = true
@@ -194,7 +194,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
         if (MediaCodec.BUFFER_FLAG_CODEC_CONFIG == flags) {
             spsPpsBuf = bytes.copyOf()
-            LLog.w(TAG, "Found SPS/PPS=${spsPpsBuf?.toJsonString()}")
+            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.toJsonString()}")
         }
 
 //        val naluTypeStr = when (naluType) {

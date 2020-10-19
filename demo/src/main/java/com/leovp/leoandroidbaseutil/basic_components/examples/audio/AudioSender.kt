@@ -5,7 +5,7 @@ import android.content.Context
 import android.media.AudioFormat
 import android.os.SystemClock
 import com.leovp.androidbase.exts.toBytesLE
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.player.PcmPlayer
@@ -50,23 +50,23 @@ class AudioSender {
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
-            LLog.i(TAG, "onConnected")
+            LogContext.log.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
         }
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
-//            LLog.i(TAG, "onReceivedData: ${data?.toJsonString()}")
+//            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
             when (data) {
                 is String -> {
-                    LLog.i(TAG, "Loopback time=${SystemClock.elapsedRealtime() - data.toLong()} ms")
+                    LogContext.log.i(TAG, "Loopback time=${SystemClock.elapsedRealtime() - data.toLong()} ms")
                 }
                 is ByteArray -> {
                     if (!startPlaying) {
                         startPlaying = true
                         pcmPlayer = PcmPlayer(ctx!!, audioPlayCodec)
                     }
-                    LLog.i(TAG, "onReceivedData PCM[${data.size}]")
+                    LogContext.log.i(TAG, "onReceivedData PCM[${data.size}]")
                     ioScope.launch {
                         runCatching {
                             ensureActive()
@@ -78,13 +78,13 @@ class AudioSender {
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
-            LLog.w(TAG, "onDisconnect")
+            LogContext.log.w(TAG, "onDisconnect")
             ToastUtil.showDebugToast("onDisconnect")
             stopRecordingAndPlaying()
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
-            LLog.w(TAG, "onFailed code: $code message: $msg")
+            LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             stopRecordingAndPlaying()
         }
@@ -109,7 +109,7 @@ class AudioSender {
                 ioScope.launch {
                     runCatching {
                         ensureActive()
-//                    LLog.i(ITAG, "PCM[${pcmData.size}] to be sent.")
+//                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
                         val tsArray = st.toBytesLE()
                         val finalArray = ByteArray(pcmData.size + tsArray.size)
                         System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)

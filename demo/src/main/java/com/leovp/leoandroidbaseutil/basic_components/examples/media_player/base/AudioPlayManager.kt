@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 import android.content.Context
 import android.media.*
 import android.os.Environment
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -58,11 +58,11 @@ object AudioPlayManager {
             mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, mSampleRate, channelCount)
             mediaExtractor = MediaExtractor()
             mediaExtractor!!.setDataSource(videoFile.absolutePath)
-            LLog.d(TAG, "getTrackCount: " + mediaExtractor!!.trackCount)
+            LogContext.log.d(TAG, "getTrackCount: " + mediaExtractor!!.trackCount)
             for (i in 0 until mediaExtractor!!.trackCount) {
                 val format = mediaExtractor!!.getTrackFormat(i)
                 val mime = format.getString(MediaFormat.KEY_MIME)
-                LLog.d(TAG, "mime: $mime")
+                LogContext.log.d(TAG, "mime: $mime")
                 if (mime!!.startsWith("audio")) {
                     mediaFormat = format
                     mediaExtractor!!.selectTrack(i)
@@ -93,7 +93,7 @@ object AudioPlayManager {
             mAudioTrack!!.play()
             while (!isDecodeFinish) {
                 val inputIndex = mediaCodec!!.dequeueInputBuffer(-1)
-                LLog.d(TAG, "inputIndex: $inputIndex")
+                LogContext.log.d(TAG, "inputIndex: $inputIndex")
                 if (inputIndex >= 0) {
                     val byteBuffer = mediaCodec!!.getInputBuffer(inputIndex)
                     //读取一片或者一帧数据

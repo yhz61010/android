@@ -15,7 +15,7 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import com.leovp.androidbase.utils.AppUtil
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.shell.ShellUtil
 import java.io.File
 import java.util.*
@@ -78,7 +78,7 @@ object DeviceUtil {
             size.x = dm.widthPixels
             size.y = dm.heightPixels
         } catch (e: Exception) {
-            LLog.e(TAG, "getResolutionWithVirtualKey error msg=${e.message}")
+            LogContext.log.e(TAG, "getResolutionWithVirtualKey error msg=${e.message}")
         }
         return size
     }
@@ -267,14 +267,14 @@ object DeviceUtil {
             val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
             method.invoke(manager, slotId) as String
         } catch (e: Exception) {
-            LLog.e(TAG, "getIMEI error. msg=${e.message}")
+            LogContext.log.e(TAG, "getIMEI error. msg=${e.message}")
             return null
         }
     }
 
     private fun isExtremeLargeScreen(screenSize: Point?): Boolean {
         if (screenSize == null) {
-            LLog.e(TAG, "screenSize is null")
+            LogContext.log.e(TAG, "screenSize is null")
             return false
         }
         return max(screenSize.x, screenSize.y) > EXTREME_LARGE_SCREEN_THRESHOLD

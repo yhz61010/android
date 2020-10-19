@@ -1,8 +1,8 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -15,10 +15,10 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
 
         val deviceInfo = DeviceUtil.getDeviceInfo(this)
         tv.text = deviceInfo
-        LLog.i(TAG, deviceInfo)
+        LogContext.log.i(TAG, deviceInfo)
 
-//        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LLog.i(TAG, "Name: ${it.name}") }
-        CodecUtil.getAllSupportedCodecList().forEach { LLog.i(TAG, "Name: ${it.name}") }
+//        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
+        CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
     }
 
     companion object {

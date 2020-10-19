@@ -8,7 +8,6 @@ import android.graphics.drawable.AnimationDrawable
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
 import android.os.Handler
@@ -166,8 +165,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     ) {
         cameraEncoder = CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
-        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
-                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
+        dataProcessContext = if (
+            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
@@ -175,6 +176,15 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
         }
+//        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
+//                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
+//        ) {
+//            LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
+//            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
+//        } else {
+//            LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
+//            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
+//        }
 
         cameraEncoder.setDataUpdateCallback(object :
             CallbackListener {

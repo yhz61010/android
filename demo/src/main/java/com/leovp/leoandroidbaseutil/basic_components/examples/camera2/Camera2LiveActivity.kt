@@ -28,10 +28,8 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_camera2_live)
 
-        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            .forEach { LogContext.log.i(TAG, "H264 Encoder: ${it.name}") }
-        val hasTopazEncoder =
-            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "H264 Encoder: ${it.name}") }
+        val hasTopazEncoder = CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
         LogContext.log.d(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
         cameraViewFragment.backPressListener = object :

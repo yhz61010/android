@@ -5,7 +5,7 @@ import android.media.MediaFormat
 import android.view.Surface
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexStringLE
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import kotlinx.coroutines.*
 import java.io.File
@@ -127,18 +127,18 @@ class DecodeH265RawFile {
     fun init(videoFile: String, width: Int, height: Int, surface: Surface) {
         kotlin.runCatching {
             rf = RandomAccessFile(File(videoFile), "r")
-            LLog.w(TAG, "File length=${rf.length()}")
+            LogContext.log.w(TAG, "File length=${rf.length()}")
 
             val vps = getNalu()!!
             val sps = getNalu()!!
             val pps = getNalu()!!
 
-            LLog.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
-            LLog.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
-            LLog.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
+            LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
+            LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
+            LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
 
             val csd0 = vps + sps + pps
-            LLog.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE()}")
+            LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE()}")
             csd0Size = csd0.size
             currentIndex = csd0Size.toLong()
 
@@ -161,7 +161,7 @@ class DecodeH265RawFile {
                 val data = queue.poll()?.also {
 //                CLog.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
-                    LLog.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
+                    LogContext.log.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
             }.onFailure {
@@ -178,7 +178,7 @@ class DecodeH265RawFile {
                 outputBuffer?.let {
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> Unit
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
                         else -> Unit
@@ -189,14 +189,14 @@ class DecodeH265RawFile {
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LLog.w(ITAG, "onOutputFormatChanged format=$format")
+            LogContext.log.w(ITAG, "onOutputFormatChanged format=$format")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LLog.e(ITAG, "onError e=${e.message}")
+            LogContext.log.e(ITAG, "onError e=${e.message}")
         }
     }
 
@@ -208,7 +208,7 @@ class DecodeH265RawFile {
     private fun getRawH265(): ByteArray? {
         val bufferSize = 100_000
         val bb = ByteArray(bufferSize)
-        LLog.e(TAG, "Current file pos=$currentIndex")
+        LogContext.log.e(TAG, "Current file pos=$currentIndex")
         rf.seek(currentIndex)
         var readSize = rf.read(bb, 0, bufferSize)
         if (readSize == -1) {
@@ -239,7 +239,7 @@ class DecodeH265RawFile {
         while (!findNALStartCode) {
             val hex = rf.read()
 //            val naluType = getNaluType(hex.toByte())
-//                LLog.w(TAG, "NALU Type=$naluType")
+//                LogContext.log.w(TAG, "NALU Type=$naluType")
             if (curIndex >= bb.size) {
                 return null
             }
@@ -273,10 +273,10 @@ class DecodeH265RawFile {
         queue.clear()
         ioScope.cancel()
         runCatching {
-            LLog.d(TAG, "close start")
+            LogContext.log.d(TAG, "close start")
             mediaCodec.stop()
             mediaCodec.release()
-        }.onFailure { LLog.e(TAG, "close error") }
+        }.onFailure { LogContext.log.e(TAG, "close error") }
     }
 
     fun startDecoding() {
@@ -294,7 +294,7 @@ class DecodeH265RawFile {
                             val frame = ByteArray(i - previousStart)
                             System.arraycopy(bytes, previousStart, frame, 0, frame.size)
                             queue.offer(frame)
-                            LLog.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
+                            LogContext.log.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
                             previousStart = i
                             // FIXME We'd better control the FPS by SpeedManager
                             Thread.sleep(32)

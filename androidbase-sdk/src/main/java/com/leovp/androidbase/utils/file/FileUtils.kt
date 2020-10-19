@@ -11,7 +11,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import java.io.FileOutputStream
 
@@ -231,13 +231,13 @@ class FileUtils(var context: Context) {
             while (inputStream.read(buffers).also { read = it } != -1) {
                 outputStream.write(buffers, 0, read)
             }
-            LLog.e("File Size", "Size " + file.length())
+            LogContext.log.e("File Size", "Size " + file.length())
             inputStream.close()
             outputStream.close()
-            LLog.e("File Path", "Path " + file.path)
-            LLog.e("File Size", "Size " + file.length())
+            LogContext.log.e("File Path", "Path " + file.path)
+            LogContext.log.e("File Size", "Size " + file.length())
         } catch (e: Exception) {
-            LLog.e("Exception", e.message!!)
+            LogContext.log.e("Exception", e.message!!)
         }
         return file.path
     }
@@ -288,7 +288,7 @@ class FileUtils(var context: Context) {
             inputStream.close()
             outputStream.close()
         } catch (e: Exception) {
-            LLog.e("Exception", e.message!!)
+            LogContext.log.e("Exception", e.message!!)
         }
         return output.path
     }

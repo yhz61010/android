@@ -10,8 +10,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.CaptureUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.ImageUtil
 import com.leovp.screenshot.TextureRenderer
 import kotlinx.coroutines.CoroutineScope
@@ -74,10 +74,10 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         spsPpsBytes = encodedBytes.copyOf()
-//                        LLog.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
+//                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-//                        LLog.i(TAG, "Found Key Frame[" + info.size + "]")
+//                        LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                     }
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                         // Do nothing
@@ -104,7 +104,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LLog.d(TAG, "onError error=${e.message}", e)
+            LogContext.log.d(TAG, "onError error=${e.message}", e)
         }
     }
 
@@ -139,7 +139,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         fun build(): ScreenshotStrategy {
-            LLog.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
+            LogContext.log.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
             return ScreenshotStrategy(this)
         }
     }
@@ -152,13 +152,13 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
     }
 
     private fun encodeImages(bitmap: Bitmap) {
-//        LLog.d(TAG, "encodeImages")
+//        LogContext.log.d(TAG, "encodeImages")
 
 //        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
 //            bitmap.width,
 //            bitmap.height
 //        )
-//        LLog.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
+//        LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
 
         // Render the bitmap/texture here
 //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)

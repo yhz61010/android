@@ -9,13 +9,14 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -51,7 +52,7 @@ class BasicFragment : Fragment() {
 
     override fun onDestroy() {
 //        CustomApplication.instance.closeDebugOutputFile()
-        LLog.i(ITAG, "onDestroy()")
+        LogContext.log.i(ITAG, "onDestroy()")
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)

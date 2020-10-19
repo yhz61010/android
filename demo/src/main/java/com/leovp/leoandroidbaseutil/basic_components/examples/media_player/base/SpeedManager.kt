@@ -1,6 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 
 /**
  * Movie player callback.
@@ -58,7 +58,7 @@ class SpeedManager {
                 frameDelta = mFixedFrameDurationUsec
             } else {
                 frameDelta = presentationTimeUs - mPrevPresentUsec
-                LLog.d(TAG, "frameDelta: $frameDelta")
+                LogContext.log.d(TAG, "frameDelta: $frameDelta")
             }
             if (frameDelta < 0) {
                 //LogManager.w("Weird, video times went backward");
@@ -93,7 +93,7 @@ class SpeedManager {
                         Thread.sleep(sleepTimeUsec / 1000, (sleepTimeUsec % 1000).toInt() * 1000)
                     } else {
                         val time = sleepTimeUsec / 1000
-                        LLog.d(TAG, "time: $time")
+                        LogContext.log.d(TAG, "time: $time")
                         Thread.sleep(time, (sleepTimeUsec % 1000).toInt() * 1000)
                     }
                 } catch (ie: InterruptedException) {

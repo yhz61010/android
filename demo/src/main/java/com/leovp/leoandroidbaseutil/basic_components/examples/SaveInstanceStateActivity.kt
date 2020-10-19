@@ -3,13 +3,13 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.content.res.Configuration
 import android.os.Bundle
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 class SaveInstanceStateActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        LLog.w(ITAG, "=====> onCreate <=====")
+        LogContext.log.w(ITAG, "=====> onCreate <=====")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_save_instance_state)
     }
@@ -23,42 +23,42 @@ class SaveInstanceStateActivity : BaseDemonstrationActivity() {
      * ```
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
-        LLog.w(ITAG, "=====> onConfigurationChanged <=====")
+        LogContext.log.w(ITAG, "=====> onConfigurationChanged <=====")
         super.onConfigurationChanged(newConfig)
     }
 
     override fun onUserLeaveHint() {
-        LLog.w(ITAG, "=====> onUserLeaveHint <=====")
+        LogContext.log.w(ITAG, "=====> onUserLeaveHint <=====")
         super.onUserLeaveHint()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        LLog.w(ITAG, "=====> onSaveInstanceState <=====")
+        LogContext.log.w(ITAG, "=====> onSaveInstanceState <=====")
         super.onSaveInstanceState(outState)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        LLog.w(ITAG, "=====> onRestoreInstanceState <=====")
+        LogContext.log.w(ITAG, "=====> onRestoreInstanceState <=====")
         super.onRestoreInstanceState(savedInstanceState)
     }
 
     override fun onStart() {
-        LLog.w(ITAG, "=====> onStart <=====")
+        LogContext.log.w(ITAG, "=====> onStart <=====")
         super.onStart()
     }
 
     override fun onResume() {
-        LLog.w(ITAG, "=====> onResume <=====")
+        LogContext.log.w(ITAG, "=====> onResume <=====")
         super.onResume()
     }
 
     override fun onStop() {
-        LLog.w(ITAG, "=====> onStop <=====")
+        LogContext.log.w(ITAG, "=====> onStop <=====")
         super.onStop()
     }
 
     override fun onDestroy() {
-        LLog.w(ITAG, "=====> onDestroy <=====")
+        LogContext.log.w(ITAG, "=====> onDestroy <=====")
         super.onDestroy()
     }
 }

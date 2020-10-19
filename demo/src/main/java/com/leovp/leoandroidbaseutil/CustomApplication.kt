@@ -1,6 +1,8 @@
 package com.leovp.leoandroidbaseutil
 
 import androidx.multidex.MultiDexApplication
+import com.leovp.androidbase.utils.log.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.androidbase.utils.ui.ToastUtil
 import io.reactivex.plugins.RxJavaPlugins
@@ -28,6 +30,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
         RxJavaPlugins.setErrorHandler { }
 
         ToastUtil.init(this)
+
+        LogContext.setLogImp(LLog())
 
 //        val file = File(FileUtil.getBaseDirString(this, "output"))
 //        file.mkdirs()
@@ -84,9 +88,9 @@ class CustomApplication : MultiDexApplication(), DIAware {
 //        override fun onDataUpdate(buffer: Any, flags: Int) {
 //            val buf = buffer as ByteArray
 //            when (flags) {
-//                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LLog.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
-//                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
-//                else -> LLog.i(ITAG, "Get h264 data[${buf.size}]")
+//                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString(",")}")
+//                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
+//                else -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]")
 //            }
 //            videoH264OsForDebug.write(buf)
 //        }

@@ -19,7 +19,7 @@ package com.leovp.androidbase.exts
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 
 private const val TAG: String = "ExifUtils"
 
@@ -64,7 +64,7 @@ fun decodeExifOrientation(exifOrientation: Int): Matrix {
         }
 
         // Error out if the EXIF orientation is invalid
-        else -> LLog.e(TAG, "Invalid orientation: $exifOrientation")
+        else -> LogContext.log.e(TAG, "Invalid orientation: $exifOrientation")
     }
 
     // Return the resulting matrix

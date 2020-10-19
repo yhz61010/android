@@ -10,8 +10,8 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import java.util.*
 
 /**
@@ -36,7 +36,7 @@ object CameraUtil {
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
             val imageFile = FileUtil.createImageFile(ctx, "jpg")
-            LLog.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
+            LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
             imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -76,7 +76,7 @@ object CameraUtil {
             //start the activity - we handle returning in onActivityResult
 //             startActivityForResult(cropIntent, PIC_CROP);
             val croppedImageFile = FileUtil.createImageFile(ctx, "jpg")
-            LLog.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
+            LogContext.log.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            Log.w(TAG, "deleteFlag=" + deleteFlag);
 
@@ -86,7 +86,7 @@ object CameraUtil {
             cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, croppedImageUri)
             ctx.startActivityForResult(cropIntent, REQUEST_CODE_CAMERA_CROP)
         } catch (e: ActivityNotFoundException) {
-            LLog.e(TAG, "performCrop error", e)
+            LogContext.log.e(TAG, "performCrop error", e)
         }
         return croppedImageUri
     }

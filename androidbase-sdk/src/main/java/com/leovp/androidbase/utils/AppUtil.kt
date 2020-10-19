@@ -21,6 +21,7 @@ import android.view.inputmethod.InputMethodManager
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -204,7 +205,7 @@ object AppUtil {
             metaData = ""
             return metaData
         } finally {
-            LLog.d(TAG, "metaData=$metaData")
+            LogContext.log.d(TAG, "metaData=$metaData")
         }
         return metaData
     }
@@ -213,7 +214,7 @@ object AppUtil {
     @Suppress("unused")
     fun installApk(ctx: Context, file: File) {
         try {
-            LLog.i(TAG, "installApk uri: $file")
+            LogContext.log.i(TAG, "installApk uri: $file")
             val intent = Intent(Intent.ACTION_VIEW)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val downloadedApkUri = FileUtil.getFileUri(ctx, file)
@@ -226,14 +227,14 @@ object AppUtil {
             }
             ctx.startActivity(intent)
         } catch (e: Exception) {
-            LLog.e(TAG, "installApk error", e)
+            LogContext.log.e(TAG, "installApk error", e)
         }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Suppress("unused")
     fun exitApp(ctx: Context) {
-        LLog.w(TAG, "=====> exitApp() <=====")
+        LogContext.log.w(TAG, "=====> exitApp() <=====")
         try {
             val activityManager = ctx.applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val appTaskList = activityManager.appTasks
@@ -242,7 +243,7 @@ object AppUtil {
             }
             exitProcess(0)
         } catch (e: Exception) {
-            LLog.e(TAG, "exitApp error.", e)
+            LogContext.log.e(TAG, "exitApp error.", e)
         }
     }
 
@@ -271,10 +272,10 @@ object AppUtil {
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
     fun closeAndroidPDialog() {
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.P) {
-            LLog.w(TAG, "Not Android 9. Do not closeAndroidPDialog")
+            LogContext.log.w(TAG, "Not Android 9. Do not closeAndroidPDialog")
             return
         }
-        LLog.w(TAG, "closeAndroidPDialog on Android 9")
+        LogContext.log.w(TAG, "closeAndroidPDialog on Android 9")
         try {
             val aClass =
                 Class.forName("android.content.pm.PackageParser\$Package")

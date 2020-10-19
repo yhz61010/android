@@ -3,7 +3,7 @@ package com.leovp.androidbase.utils.media
 import android.media.MediaCodec
 import android.os.Bundle
 import com.leovp.androidbase.exts.toHexString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import kotlin.experimental.and
 
 
@@ -77,7 +77,7 @@ object H264Util {
             // If current frame data does not contain NALU_TYPE_PPS, it indicates this frame is just NALU_TYPE_SPS.
             data
         } catch (e: Exception) {
-            LLog.e(
+            LogContext.log.e(
                 TAG,
                 "getSps error msg=${e.message}"
             )
@@ -107,7 +107,7 @@ object H264Util {
             // If current frame data does not contain NALU_TYPE_PPS, it indicates this frame is just NALU_TYPE_SPS.
             data
         } catch (e: Exception) {
-            LLog.e(
+            LogContext.log.e(
                 TAG,
                 "getPps error msg=${e.message}"
             )
@@ -118,18 +118,18 @@ object H264Util {
     @Suppress("unused")
     fun getNaluType(data: ByteArray): Int {
         if (data.size < 5) {
-            if (DEBUG) LLog.d(TAG, "Invalid H264 data length. Length: ${data.size}")
+            if (DEBUG) LogContext.log.d(TAG, "Invalid H264 data length. Length: ${data.size}")
             return -1
         }
 
         if (DEBUG) {
-            LLog.d(
+            LogContext.log.d(
                 TAG,
                 "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
-            LLog.d(TAG, "Not valid H264 data.")
+            LogContext.log.d(TAG, "Not valid H264 data.")
             -1
         } else {
             // https://blog.csdn.net/tantion/article/details/82703228
@@ -179,7 +179,7 @@ object H264Util {
     fun getNaluTypeInStr(data: ByteArray) = getNaluTypeInStr(getNaluType(data))
 
     fun sendIdrFrameByManual(mediaCodec: MediaCodec) {
-        LLog.w(TAG, "sendIdrFrameByManual()")
+        LogContext.log.w(TAG, "sendIdrFrameByManual()")
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
         val param = Bundle()
         param.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)

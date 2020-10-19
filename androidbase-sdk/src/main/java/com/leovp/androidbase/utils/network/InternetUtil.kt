@@ -2,7 +2,7 @@ package com.leovp.androidbase.utils.network
 
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.iters.EventCallBack
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.net.InetAddress
 import kotlin.concurrent.thread
 
@@ -17,7 +17,7 @@ object InternetUtil {
             InetAddress.getAllByName(host?.trim())?.forEach { inetAddr -> ipAddressArr.add(inetAddr.hostAddress) }
             ipAddressArr
         } catch (e: Exception) {
-            LLog.e(ITAG, "getIpsByName error=${e.message}")
+            LogContext.log.e(ITAG, "getIpsByName error=${e.message}")
             emptyList()
         }
     }

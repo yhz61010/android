@@ -6,7 +6,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
 import com.leovp.androidbase.exts.toHexadecimalString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.camera2live.listeners.CallbackListener
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -37,7 +37,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
     @SuppressLint("InlinedApi")
     private fun initEncoder() {
-        LLog.i(
+        LogContext.log.i(
             TAG,
             "initEncoder width=$width height=$height bitrate=$bitrate kb/s frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
@@ -75,7 +75,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
                     codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
                 } catch (e: Exception) {
-                    LLog.e(TAG, "You can ignore this error safely.", e)
+                    LogContext.log.e(TAG, "You can ignore this error safely.", e)
                 }
             }
 
@@ -91,9 +91,9 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
-                            LLog.w(TAG, "Found SPS/PPS frame: ${csd?.toHexadecimalString()}")
+                            LogContext.log.w(TAG, "Found SPS/PPS frame: ${csd?.toHexadecimalString()}")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LLog.i(TAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
@@ -110,14 +110,14 @@ class CameraAvcEncoder @JvmOverloads constructor(
             }
 
             override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-                LLog.w(TAG, "onOutputFormatChanged format=$format")
+                LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
                 // Subsequent data will conform to new format.
                 // Can ignore if using getOutputFormat(outputBufferId)
                 outputFormat = format // option B
             }
 
             override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-                LLog.e(TAG, "onError e=${e.message}")
+                LogContext.log.e(TAG, "onError e=${e.message}")
             }
         }
 

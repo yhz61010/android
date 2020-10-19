@@ -5,7 +5,7 @@ import android.media.*
 import android.os.SystemClock
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.JsonUtil
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
@@ -61,16 +61,16 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
 
             if (AudioTrack.STATE_INITIALIZED == audioTrack!!.state) {
-                LLog.w(ITAG, "Start playing audio...")
+                LogContext.log.w(ITAG, "Start playing audio...")
                 audioTrack!!.play()
             } else {
-                LLog.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
+                LogContext.log.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
             }
-        }.onFailure { LLog.e(ITAG, "initAudioTrack error msg=${it.message}") }
+        }.onFailure { LogContext.log.e(ITAG, "initAudioTrack error msg=${it.message}") }
     }
 
     fun useSpeaker(ctx: Context, on: Boolean) {
-        LLog.w(ITAG, "useSpeaker=$on")
+        LogContext.log.w(ITAG, "useSpeaker=$on")
         val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (on) {
             audioManager.mode = AudioManager.MODE_NORMAL
@@ -83,7 +83,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 
     private fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
-            LLog.i(ITAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecodeInfo)}")
+            LogContext.log.i(ITAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecodeInfo)}")
             audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
             val mediaFormat =
                 MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
@@ -126,7 +126,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                         ensureActive()
                         val audioData = rcvAudioDataQueue.poll()
 //                        if (frameCount.get() % 30 == 0L) {
-                        LLog.i(ITAG, "Play AAC[${audioData?.size}]")
+                        LogContext.log.i(ITAG, "Play AAC[${audioData?.size}]")
 //                        }
                         if (audioData != null && audioData.isNotEmpty()) {
                             decodeAndPlay(audioData)
@@ -135,7 +135,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                     }
                 }.onFailure { it.printStackTrace() }
             }
-        }.onFailure { LLog.e(ITAG, "initAudioDecoder error msg=${it.message}") }
+        }.onFailure { LogContext.log.e(ITAG, "initAudioDecoder error msg=${it.message}") }
     }
 
     /**
@@ -169,7 +169,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                 if (chunkPCM.isNotEmpty()) {
                     if (audioTrack == null || AudioTrack.STATE_UNINITIALIZED == audioTrack?.state) return
                     if (AudioTrack.PLAYSTATE_PLAYING == audioTrack?.playState) {
-                        LLog.i(ITAG, "Play PCM[${chunkPCM.size}]")
+                        LogContext.log.i(ITAG, "Play PCM[${chunkPCM.size}]")
                         // Play decoded audio data in PCM
                         audioTrack?.write(chunkPCM, 0, chunkPCM.size)
                     }
@@ -179,7 +179,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                 outputIndex = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
             }
         } catch (e: Exception) {
-            LLog.e(ITAG, "You can ignore this message safely. decodeAndPlay error")
+            LogContext.log.e(ITAG, "You can ignore this message safely. decodeAndPlay error")
         }
     }
 
@@ -195,11 +195,11 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //                val dataSize = data?.size ?: 0
 //                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
 ////                if (BuildConfig.DEBUG) {
-////                    LLog.d(ITAG, "Data len=$dataSize\t pts=$pts")
+////                    LogContext.log.d(ITAG, "Data len=$dataSize\t pts=$pts")
 ////                }
 //                codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
 //            } catch (e: Exception) {
-//                LLog.e(ITAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
+//                LogContext.log.e(ITAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
 //            }
 //        }
 //
@@ -212,10 +212,10 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //                outputBuffer?.let {
 //                    val decodedData = ByteArray(info.size)
 //                    it.get(decodedData)
-////                LLog.w(ITAG, "PCM[${decodedData.size}]")
+////                LogContext.log.w(ITAG, "PCM[${decodedData.size}]")
 //                    when (info.flags) {
 //                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-//                            LLog.w(ITAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
+//                            LogContext.log.w(ITAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
 //                        }
 //                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
 //                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
@@ -228,12 +228,12 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //                }
 //                codec.releaseOutputBuffer(outputBufferId, false)
 //            } catch (e: Exception) {
-//                LLog.e(ITAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
+//                LogContext.log.e(ITAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
 //            }
 //        }
 //
 //        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            LLog.w(ITAG, "onOutputFormatChanged format=$format")
+//            LogContext.log.w(ITAG, "onOutputFormatChanged format=$format")
 //            // Subsequent data will conform to new format.
 //            // Can ignore if using getOutputFormat(outputBufferId)
 //            outputFormat = format // option B
@@ -241,7 +241,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //
 //        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
 //            e.printStackTrace()
-//            LLog.e(ITAG, "onError e=${e.message}", e)
+//            LogContext.log.e(ITAG, "onError e=${e.message}", e)
 //        }
 //    }
 
@@ -251,43 +251,43 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             runCatching {
                 synchronized(this) {
                     audioDecoder?.run {
-                        LLog.w(ITAG, "Found exist AAC Audio Decoder. Release it first")
+                        LogContext.log.w(ITAG, "Found exist AAC Audio Decoder. Release it first")
                         stop()
                         release()
                     }
                     audioTrack?.run {
-                        LLog.w(ITAG, "Found exist AudioTrack. Release it first")
+                        LogContext.log.w(ITAG, "Found exist AudioTrack. Release it first")
                         stop()
                         release()
                     }
                     frameCount.set(0)
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
-                    LLog.w(ITAG, "Audio csd0=${JsonUtil.toHexadecimalString(csd0)}")
+                    LogContext.log.w(ITAG, "Audio csd0=${JsonUtil.toHexadecimalString(csd0)}")
                     initAudioDecoder(csd0!!)
                     initAudioTrack(ctx, audioDecodeInfo)
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
                     ioScope.launch {
                         delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
                         audioLatencyThresholdInMs = AUDIO_ALLOW_LATENCY_LIMIT_IN_MS
-                        LLog.w(ITAG, "Change latency limit to $AUDIO_ALLOW_LATENCY_LIMIT_IN_MS")
+                        LogContext.log.w(ITAG, "Change latency limit to $AUDIO_ALLOW_LATENCY_LIMIT_IN_MS")
                     }
-                    LLog.w(ITAG, "Play audio at: $playStartTimeInUs")
+                    LogContext.log.w(ITAG, "Play audio at: $playStartTimeInUs")
                 }
-            }.onFailure { LLog.e(ITAG, "startPlayingStream error. msg=${it.message}") }
+            }.onFailure { LogContext.log.e(ITAG, "startPlayingStream error. msg=${it.message}") }
             return
         }
         if (csd0 == null) {
-            LLog.e(ITAG, "csd0 is null. Can not play!")
+            LogContext.log.e(ITAG, "csd0 is null. Can not play!")
             return
         }
         val latencyInMs = (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
-//        LLog.d(
+//        LogContext.log.d(
 //            ITAG,
 //            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
 //        )
         if (rcvAudioDataQueue.size >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
             dropFrameTimes.incrementAndGet()
-            LLog.w(
+            LogContext.log.w(
                 ITAG,
                 "Drop[${dropFrameTimes.get()}]|full[${rcvAudioDataQueue.size}] latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
@@ -305,13 +305,13 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
         }
         if (frameCount.get() % 50 == 0L) {
-            LLog.i(ITAG, "AU[${audioData.size}][$latencyInMs]")
+            LogContext.log.i(ITAG, "AU[${audioData.size}][$latencyInMs]")
         }
         rcvAudioDataQueue.offer(audioData)
     }
 
     fun stopPlaying() {
-        LLog.w(ITAG, "Stop playing audio")
+        LogContext.log.w(ITAG, "Stop playing audio")
         runCatching {
             ioScope.cancel()
             rcvAudioDataQueue.clear()
@@ -322,25 +322,25 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             audioTrack?.stop()
             audioTrack?.release()
         }.onFailure {
-            LLog.e(ITAG, "audioTrack stop or release error. msg=${it.message}")
+            LogContext.log.e(ITAG, "audioTrack stop or release error. msg=${it.message}")
         }.also {
             audioTrack = null
         }
 
-        LLog.w(ITAG, "Releasing AudioDecoder...")
+        LogContext.log.w(ITAG, "Releasing AudioDecoder...")
         runCatching {
             // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
             audioDecoder?.setCallback(null)
             audioDecoder?.release()
         }.onFailure {
             it.printStackTrace()
-            LLog.e(ITAG, "audioDecoder() release1 error. msg=${it.message}")
+            LogContext.log.e(ITAG, "audioDecoder() release1 error. msg=${it.message}")
         }.also {
             audioDecoder = null
             csd0 = null
         }
 
-        LLog.w(ITAG, "stopPlaying() done")
+        LogContext.log.w(ITAG, "stopPlaying() done")
     }
 
     fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED

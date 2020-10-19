@@ -1,7 +1,7 @@
 package com.leovp.socket_sdk.framework.client
 
 import com.leovp.androidbase.exts.toHexStringLE
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
@@ -62,7 +62,7 @@ abstract class BaseNettyClient protected constructor(
         retryStrategy: RetryStrategy = ConstantRetry()
     ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
         this.webSocketUri = webSocketUri
-        LLog.w(
+        LogContext.log.w(
             tag,
             "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port} retry_strategy=${retryStrategy::class.simpleName}"
         )
@@ -100,7 +100,7 @@ abstract class BaseNettyClient protected constructor(
     private var retryTimes = AtomicInteger(0)
 
     init {
-        LLog.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+        LogContext.log.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
@@ -112,7 +112,7 @@ abstract class BaseNettyClient protected constructor(
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
                         if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                            LLog.w(tag, "Working in wss mode")
+                            LogContext.log.w(tag, "Working in wss mode")
                             val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
                             addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
                         }
@@ -144,9 +144,9 @@ abstract class BaseNettyClient protected constructor(
 //        if (future.isSuccess) {
 //            stopRetryHandler()
 //            channel = future.syncUninterruptibly().channel()
-//            LLog.i(TAG, "===== Connect success =====")
+//            LogContext.log.i(TAG, "===== Connect success =====")
 //        } else {
-//            LLog.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
+//            LogContext.log.e(TAG, "Retry due to connect failed. Reason: ${future.cause()}")
 //            doRetry()
 //        }
 //    }
@@ -155,13 +155,13 @@ abstract class BaseNettyClient protected constructor(
      * If netty client has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
     fun connect() {
-        LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
+        LogContext.log.i(tag, "===== connect() current state=${connectState.get().name} =====")
         synchronized(this) {
             if (connectState.get() == ClientConnectStatus.CONNECTING || connectState.get() == ClientConnectStatus.CONNECTED) {
-                LLog.w(tag, "===== Connecting or already connected =====")
+                LogContext.log.w(tag, "===== Connecting or already connected =====")
                 return
             } else {
-                LLog.i(tag, "===== Prepare to connect to server =====")
+                LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
             connectState.set(ClientConnectStatus.CONNECTING)
         }
@@ -182,7 +182,7 @@ abstract class BaseNettyClient protected constructor(
             disconnectManually = false
             if (isWebSocket) {
                 defaultInboundHandler?.channelPromise?.addListener { _ ->
-                    LLog.i(tag, "===== Connect success =====")
+                    LogContext.log.i(tag, "===== Connect success =====")
                     connectState.set(ClientConnectStatus.CONNECTED)
                     connectionListener.onConnected(this@BaseNettyClient)
                 }
@@ -190,14 +190,14 @@ abstract class BaseNettyClient protected constructor(
                 // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
                 // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
 //            bootstrap.connect(host, port).addListener(connectFutureListener)
-                LLog.i(tag, "===== Connect success =====")
+                LogContext.log.i(tag, "===== Connect success =====")
                 connectState.set(ClientConnectStatus.CONNECTED)
                 connectionListener.onConnected(this@BaseNettyClient)
             }
         } catch (e: RejectedExecutionException) {
-            LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====")
+            LogContext.log.e(tag, "===== RejectedExecutionException: ${e.message} =====")
 //            e.printStackTrace()
-            LLog.e(tag, "Netty client had already been released. You must re-initialize it again.")
+            LogContext.log.e(tag, "Netty client had already been released. You must re-initialize it again.")
             // If connection has been connected before, [channelInactive] will be called, so the status and
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.
@@ -205,13 +205,13 @@ abstract class BaseNettyClient protected constructor(
             connectState.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: ConnectException) {
-            LLog.e(tag, "===== ConnectException: ${e.message} =====")
+            LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
 //            e.printStackTrace()
             connectState.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
             doRetry()
         } catch (e: Exception) {
-            LLog.e(tag, "===== Exception: ${e.message} =====")
+            LogContext.log.e(tag, "===== Exception: ${e.message} =====")
 //            e.printStackTrace()
             connectState.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
@@ -228,9 +228,9 @@ abstract class BaseNettyClient protected constructor(
      * **Remember**, If you call this method, it will not trigger retry process.
      */
     fun disconnectManually(): Boolean {
-        LLog.w(tag, "===== disconnectManually() current state=${connectState.get().name} =====")
+        LogContext.log.w(tag, "===== disconnectManually() current state=${connectState.get().name} =====")
         if (ClientConnectStatus.DISCONNECTED == connectState.get() || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
-            LLog.w(tag, "Socket is not connected or already disconnected or not initialized.")
+            LogContext.log.w(tag, "Socket is not connected or already disconnected or not initialized.")
             return false
         }
         disconnectManually = true
@@ -241,15 +241,15 @@ abstract class BaseNettyClient protected constructor(
 
         stopRetryHandler()
         defaultInboundHandler?.release()
-        runCatching { channel.disconnect().syncUninterruptibly() }.onFailure { LLog.e(tag, "disconnectManually error.", it) }
-        LLog.w(tag, "===== disconnectManually() done =====")
+        runCatching { channel.disconnect().syncUninterruptibly() }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
+        LogContext.log.w(tag, "===== disconnectManually() done =====")
         return true
     }
 
     fun doRetry() {
         retryTimes.getAndIncrement()
         if (retryTimes.get() > retryStrategy.getMaxTimes()) {
-            LLog.e(tag, "===== Connect failed - Exceed max retry times. =====")
+            LogContext.log.e(tag, "===== Connect failed - Exceed max retry times. =====")
             stopRetryHandler()
             connectState.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(
@@ -258,7 +258,7 @@ abstract class BaseNettyClient protected constructor(
                 "Exceed max retry times."
             )
         } else {
-            LLog.w(
+            LogContext.log.w(
                 tag,
                 "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectState.get().name}"
             )
@@ -268,7 +268,7 @@ abstract class BaseNettyClient protected constructor(
                     delay(retryStrategy.getDelayInMillSec(retryTimes.get()))
                     ensureActive()
                     connect()
-                }.onFailure { LLog.e(tag, "Do retry failed.", it) }
+                }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
             }
         }
     }
@@ -283,50 +283,50 @@ abstract class BaseNettyClient protected constructor(
      * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and any exception will be ignored.
      */
     fun release(): Boolean {
-        LLog.w(tag, "===== release() current state=${connectState.get().name} =====")
+        LogContext.log.w(tag, "===== release() current state=${connectState.get().name} =====")
         synchronized(this) {
             if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectState.get()) {
-                LLog.w(tag, "Already release or not initialized")
+                LogContext.log.w(tag, "Already release or not initialized")
                 return false
             }
             connectState.set(ClientConnectStatus.UNINITIALIZED)
         }
         disconnectManually = true
-        LLog.w(tag, "Releasing retry handler...")
+        LogContext.log.w(tag, "Releasing retry handler...")
         stopRetryHandler()
 //        retryThread.quitSafely()
 
-        LLog.w(tag, "Releasing default socket handler first...")
+        LogContext.log.w(tag, "Releasing default socket handler first...")
         defaultInboundHandler?.release()
         defaultInboundHandler = null
         channelInitializer = null
 
         channel.run {
-            LLog.w(tag, "Closing channel...")
+            LogContext.log.w(tag, "Closing channel...")
             runCatching {
                 pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
                 closeFuture()
                 close().syncUninterruptibly()
-            }.onFailure { LLog.e(tag, "Close channel error.", it) }
+            }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
         }
 
         runCatching {
-            LLog.w(tag, "Releasing socket...")
+            LogContext.log.w(tag, "Releasing socket...")
             workerGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-            LLog.w(tag, "Release socket done!!!")
-        }.onFailure { LLog.e(tag, "Release socket error.", it) }
-        LLog.w(tag, "=====> Socket released <=====")
+            LogContext.log.w(tag, "Release socket done!!!")
+        }.onFailure { LogContext.log.e(tag, "Release socket error.", it) }
+        LogContext.log.w(tag, "=====> Socket released <=====")
         return true
     }
 
     private fun stopRetryHandler() {
-        LLog.i(tag, "stopRetryHandler()")
+        LogContext.log.i(tag, "stopRetryHandler()")
 //        retryHandler.removeCallbacksAndMessages(null)
 //        retryThread.interrupt()
         runCatching {
             retryScope.cancel()
-        }.onFailure { LLog.e(tag, "Cancel retry coroutine error.", it) }
+        }.onFailure { LogContext.log.e(tag, "Cancel retry coroutine error.", it) }
         retryTimes.set(0)
     }
 
@@ -334,22 +334,22 @@ abstract class BaseNettyClient protected constructor(
 
     private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
         if (!::channel.isInitialized) {
-            LLog.e(tag, "Channel is not initialized. Stop processing.")
+            LogContext.log.e(tag, "Channel is not initialized. Stop processing.")
             return false
         }
         if (cmd == null) {
-            LLog.e(tag, "The command is null. Stop processing.")
+            LogContext.log.e(tag, "The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectState.get()) {
-            LLog.e(tag, "Socket is not connected. Can not send command.")
+            LogContext.log.e(tag, "Socket is not connected. Can not send command.")
             return false
         }
         if (!channel.isActive) {
-            LLog.e(tag, "Can not execute cmd because of Channel is not active.")
+            LogContext.log.e(tag, "Can not execute cmd because of Channel is not active.")
             return false
         }
         return true
@@ -370,15 +370,15 @@ abstract class BaseNettyClient protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showContent) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
-                else LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
+                if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
+                else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showContent) LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
-                else LLog.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
+                if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }

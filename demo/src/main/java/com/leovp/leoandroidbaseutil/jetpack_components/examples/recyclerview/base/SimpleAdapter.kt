@@ -19,7 +19,7 @@ import com.daimajia.androidanimations.library.YoYo
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.ItemBean
 import java.util.concurrent.CopyOnWriteArrayList
@@ -55,7 +55,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.adapterPosition]
-        LLog.d(ITAG, "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
+        LogContext.log.d(ITAG, "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
         // In some cases, it will prevent unwanted situations
         holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
@@ -136,7 +136,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 //    override fun getItemViewType(position: Int) = position
 
     override fun onViewRecycled(holder: ItemViewHolder) {
-        LLog.d(ITAG, "onViewRecycled text=${holder.txtView.text}    pos=${holder.adapterPosition}    tag=${holder.txtView.tag}")
+        LogContext.log.d(ITAG, "onViewRecycled text=${holder.txtView.text}    pos=${holder.adapterPosition}    tag=${holder.txtView.tag}")
         super.onViewRecycled(holder)
     }
 
@@ -202,11 +202,11 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     fun multipleDelete(): Int {
         val deletedCount = selectedItems.size
         selectedItems.forEach { itemBean ->
-            LLog.w(ITAG, "To be deleted ${itemBean.id}:${itemBean.title}")
+            LogContext.log.w(ITAG, "To be deleted ${itemBean.id}:${itemBean.title}")
             for (i in dataArray.size - 1 downTo 0) {
                 val currentItem = dataArray[i]
                 if (currentItem.id == itemBean.id) {
-                    LLog.w(ITAG, "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
+                    LogContext.log.w(ITAG, "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
                     dataArray.removeAt(i)
                     break
                 }

@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.getPreviewOutputSize
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.leoandroidbaseutil.R
@@ -47,11 +47,11 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             enableGallery = false
             setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
                 override fun onSwitch(lensFacing: Int) {
-                    LLog.w(ITAG, "lensFacing=$lensFacing")
+                    LogContext.log.w(ITAG, "lensFacing=$lensFacing")
                     if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
-                        LLog.w(ITAG, "Front lens")
+                        LogContext.log.w(ITAG, "Front lens")
                     } else {
-                        LLog.w(ITAG, "Back lens")
+                        LogContext.log.w(ITAG, "Back lens")
                     }
                     previousLensFacing = lensFacing
                 }
@@ -73,10 +73,10 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             )
             // To ensure that size is set, initialize camera in the view's thread
             runCatching {
-                LLog.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
+                LogContext.log.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
                 initializeCamera(previewSize.width, previewSize.height)
             }.getOrElse {
-                LLog.e(ITAG, "=====> Finally openCamera error <=====")
+                LogContext.log.e(ITAG, "=====> Finally openCamera error <=====")
                 ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
             }
         }
@@ -111,7 +111,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             camera2Helper.outputH264ForDebug = true
             camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
                 override fun onUpdate(h264Data: ByteArray) {
-                    LLog.d(ITAG, "Get encoded video data length=${h264Data.size}")
+                    LogContext.log.d(ITAG, "Get encoded video data length=${h264Data.size}")
                 }
             })
             camera2Helper.initDebugOutput()

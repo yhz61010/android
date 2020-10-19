@@ -2,7 +2,7 @@ package com.leovp.androidbase.http.retrofit.observers.base
 
 import com.google.gson.stream.MalformedJsonException
 import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
 import retrofit2.HttpException
@@ -18,17 +18,17 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
     Observer<T> {
     private var mDisposable: Disposable? = null
     override fun onSubscribe(d: Disposable) {
-        LLog.d(javaClass.simpleName, "onSubscribe()")
+        LogContext.log.d(javaClass.simpleName, "onSubscribe()")
         mDisposable = d
     }
 
     override fun onNext(t: T) {
-        LLog.d(javaClass.simpleName, "onNext()")
+        LogContext.log.d(javaClass.simpleName, "onNext()")
         mListener.onNext(t)
     }
 
     override fun onError(e: Throwable) {
-        LLog.e(javaClass.simpleName, "onError: ${e.message}")
+        LogContext.log.e(javaClass.simpleName, "onError: ${e.message}")
         // ----------------------
         // Connection timeout
         // java.net.SocketTimeoutException: connect timed out
@@ -43,31 +43,31 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         when (e) {
             is ConnectException -> {
                 // Can not connect to server
-                LLog.e(javaClass.simpleName, "Can not connect to server. ConnectException")
+                LogContext.log.e(javaClass.simpleName, "Can not connect to server. ConnectException")
             }
             is SocketTimeoutException -> {
                 // Timeout
-                LLog.e(javaClass.simpleName, "Connect timeout.")
+                LogContext.log.e(javaClass.simpleName, "Connect timeout.")
             }
             is UnknownHostException -> {
                 // java.net.UnknownHostException: Unable to resolve host "dummy.dummy": No address associated with hostname
-                LLog.e(javaClass.simpleName, "Can not connect to server. UnknownHostException")
+                LogContext.log.e(javaClass.simpleName, "Can not connect to server. UnknownHostException")
             }
             is MalformedJsonException -> {
                 // Malformed JSON
-                LLog.e(javaClass.simpleName, "MalformedJsonException")
+                LogContext.log.e(javaClass.simpleName, "MalformedJsonException")
             }
             is HttpException -> {
                 statusCode = e.code()
                 when (statusCode) {
                     in 400..499 -> {
-                        LLog.e(javaClass.simpleName, "Response status code[4xx]: $statusCode")
+                        LogContext.log.e(javaClass.simpleName, "Response status code[4xx]: $statusCode")
                     }
                     in 500..599 -> {
-                        LLog.e(javaClass.simpleName, "Response status code[5xx]: $statusCode")
+                        LogContext.log.e(javaClass.simpleName, "Response status code[5xx]: $statusCode")
                     }
                     else -> {
-                        LLog.e(
+                        LogContext.log.e(
                             javaClass.simpleName,
                             "Response status code[neither 4xx nor 5xx]: $statusCode"
                         )
@@ -79,7 +79,7 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
     }
 
     override fun onComplete() {
-        LLog.d(javaClass.simpleName, "onComplete()")
+        LogContext.log.d(javaClass.simpleName, "onComplete()")
         mListener.onComplete()
     }
 }

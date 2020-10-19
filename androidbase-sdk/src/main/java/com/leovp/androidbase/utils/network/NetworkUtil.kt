@@ -6,7 +6,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -132,7 +132,7 @@ object NetworkUtil {
                 socket.close()
             }
         }.onFailure {
-            LLog.e(ITAG, "isHostReachable error", it)
+            LogContext.log.e(ITAG, "isHostReachable error", it)
         }
         return connected
     }

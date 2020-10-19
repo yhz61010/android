@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.humanReadableByteCount
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.leoandroidbaseutil.R
@@ -46,11 +46,11 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
             }
             val infoStr =
                 "S:$downloadSpeedStr/$uploadSpeedStr\t\tP:${info.ping}${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}\t\tL:${info.linkSpeed}Mbps\tR:${info.rssi} ${info.wifiScoreIn5} ${info.wifiScore} ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
-            LLog.i(ITAG, infoStr)
-            txtNetworkStatus.text = infoStr
+            LogContext.log.i(ITAG, infoStr)
+            runOnUiThread { txtNetworkStatus.text = infoStr }
             scrollView2.post { scrollView2.fullScroll(View.FOCUS_DOWN) }
         }
-        networkMonitor.startMonitor(3)
+        networkMonitor.startMonitor(2)
     }
 
     override fun onDestroy() {

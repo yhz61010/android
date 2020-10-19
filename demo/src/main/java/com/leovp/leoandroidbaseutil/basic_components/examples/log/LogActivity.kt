@@ -1,9 +1,9 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples
+package com.leovp.leoandroidbaseutil.basic_components.examples.log
 
 import android.os.Bundle
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.device.DeviceUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
@@ -14,22 +14,22 @@ class LogActivity : BaseDemonstrationActivity() {
 
         // CLog is the wrapper of Xlog
         // Before using it, you must initialize it by calling CLog.init(ctx) in Application
-        // After CLog initializing, the usage of CLog is just the same as LLog.
+        // After CLog initializing, the usage of CLog is just the same as LogContext.log.
 //        CLog.w(ITAG, "1Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
 
         // LLog is the wrapper of Android default log
         // No need to do any initializing before using it
-        LLog.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
+        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
     }
 
     override fun onStop() {
-        // It's better to call LLog.flushLog(boolean) in onStop() to make sure flush all memory logs into file.
+        // It's better to call LogContext.log.flushLog(boolean) in onStop() to make sure flush all memory logs into file.
 //        CLog.flushLog(false)
         super.onStop()
     }
 
     override fun onDestroy() {
-        LLog.w(ITAG, "=====> onDestroy <=====")
+        LogContext.log.w(ITAG, "=====> onDestroy <=====")
         // When you no need to use CLog, please close it.
         // Generally speaking, this method should be called before you exit app.
         // As demonstration, we do not close it here. Instead, we call it in MainActivity.

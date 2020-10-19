@@ -6,7 +6,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 
 /**
@@ -33,10 +33,10 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
         audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize * 2, AudioTrack.MODE_STREAM, sessionId)
 
         if (AudioTrack.STATE_INITIALIZED == audioTrack.state) {
-            LLog.w(ITAG, "Start playing audio...")
+            LogContext.log.w(ITAG, "Start playing audio...")
             audioTrack.play()
         } else {
-            LLog.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
+            LogContext.log.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
         }
     }
 
@@ -47,7 +47,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
 //                val st = SystemClock.elapsedRealtime()
                 // Play decoded audio data in PCM
                 audioTrack.write(chunkPcm, 0, chunkPcm.size)
-//                LLog.i(ITAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
+//                LogContext.log.i(ITAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
             }
         }.onFailure { it.printStackTrace() }
     }
@@ -64,7 +64,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun resume() {
-        LLog.w(ITAG, "resume()")
+        LogContext.log.w(ITAG, "resume()")
         runCatching {
             audioTrack.play()
         }.onFailure { it.printStackTrace() }
@@ -82,7 +82,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun pause() {
-        LLog.w(ITAG, "pause()")
+        LogContext.log.w(ITAG, "pause()")
         runCatching {
             audioTrack.pause()
             audioTrack.flush()
@@ -101,13 +101,13 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun stop() {
-        LLog.w(ITAG, "stop()")
+        LogContext.log.w(ITAG, "stop()")
         pause()
         runCatching { audioTrack.stop() }.onFailure { it.printStackTrace() }
     }
 
     fun release() {
-        LLog.w(ITAG, "release()")
+        LogContext.log.w(ITAG, "release()")
         stop()
         runCatching { audioTrack.release() }.onFailure { it.printStackTrace() }
     }

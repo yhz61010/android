@@ -8,7 +8,7 @@ import android.os.Environment
 import android.view.WindowManager
 import android.widget.Toast
 import com.leovp.androidbase.utils.AppUtil
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
@@ -29,10 +29,10 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_camera2_live)
 
         CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            .forEach { LLog.i(TAG, "H264 Encoder: ${it.name}") }
+            .forEach { LogContext.log.i(TAG, "H264 Encoder: ${it.name}") }
         val hasTopazEncoder =
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-        LLog.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
+        LogContext.log.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
         cameraViewFragment.backPressListener = object :
             BackPressedListener {
@@ -59,7 +59,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
-            LLog.i(TAG, "OPEN_GALLERY onActivityResult")
+            LogContext.log.i(TAG, "OPEN_GALLERY onActivityResult")
 //            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
             // The following code is just for demo. The exception is not considered.
             data?.data?.let {
@@ -72,7 +72,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
                 val inputStream = contentResolver.openInputStream(it)!!
                 val outputStream = FileOutputStream(File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg"))
                 inputStream.copyTo(outputStream)
-                LLog.i(TAG, "Image stream has been copy to FileOutputStream")
+                LogContext.log.i(TAG, "Image stream has been copy to FileOutputStream")
             }
         }
     }

@@ -4,7 +4,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.androidbase.exts.toHexadecimalString
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
@@ -29,9 +29,9 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
         private set
 
     fun start() {
-        LLog.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
+        LogContext.log.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
 //        csd0 = getAudioEncodingCsd0(PROFILE_AAC_LC, sampleRate, channelCount)!!
-//        LLog.w(TAG, "Audio csd0=${csd0.toHexadecimalString()}")
+//        LogContext.log.w(TAG, "Audio csd0=${csd0.toHexadecimalString()}")
         aacEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
         val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
         with(mediaFormat) {
@@ -77,12 +77,12 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-                    LLog.i(TAG, "onOutputBufferAvailable length=${info.size}")
+                    LogContext.log.i(TAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)
                             outputBuffer.get(csd0!!)
-                            LLog.i(TAG, "CODEC_CONFIG=${csd0?.toHexadecimalString()}")
+                            LogContext.log.i(TAG, "CODEC_CONFIG=${csd0?.toHexadecimalString()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
@@ -108,14 +108,14 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LLog.w(TAG, "onOutputFormatChanged format=$format")
+            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LLog.e(TAG, "onError e=${e.message}")
+            LogContext.log.e(TAG, "onError e=${e.message}")
         }
     }
 
@@ -167,7 +167,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
      * @param outAacDataLenWithAdts The length of audio data with ADTS header.
      */
     private fun addAdtsToDataWithoutCRC(outAacDataWithAdts: ByteArray, outAacDataLenWithAdts: Int) {
-        LLog.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
 
         // ByteBuffer key
         // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -185,7 +185,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
         // int channels = (csd_data[1] >> 3) & 0xF;
 
         if (csd0 == null) {
-            LLog.e(TAG, "csd0 can not be null")
+            LogContext.log.e(TAG, "csd0 can not be null")
         }
         csd0?.let {
             // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while config MediaCodec
@@ -194,7 +194,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
             // 1: single_channel_element 2: CPE(channel_pair_element)
             val channelCfg: Int = (it[1].toInt() shr 3) and 0xF
-            LLog.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
+            LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
 
             // https://www.jianshu.com/p/5c770a22e8f8
             outAacDataWithAdts[0] = 0xFF.toByte()
@@ -230,7 +230,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
      * @return The calculated presentation time in microseconds.
      */
     private fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
-        //        LLog.d(TAG, "computePresentationTimeUs=$result")
+        //        LogContext.log.d(TAG, "computePresentationTimeUs=$result")
         return frameIndex * 1000000L / sampleRate
     }
 

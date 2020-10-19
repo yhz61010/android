@@ -1,7 +1,7 @@
 package com.leovp.socket_sdk.framework.server
 
 import com.leovp.androidbase.exts.toHexStringLE
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ServerConnectStatus
 import io.netty.bootstrap.ServerBootstrap
@@ -77,7 +77,7 @@ abstract class BaseNettyServer protected constructor(
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
 //                        if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-//                            LLog.w(tag, "Working in wss mode")
+//                            LogContext.log.w(tag, "Working in wss mode")
 //                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
 //                            // FIXME
 ////                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
@@ -109,23 +109,23 @@ abstract class BaseNettyServer protected constructor(
 //    @Throws(RejectedExecutionException::class)
     @Synchronized
     fun startServer() {
-        LLog.i(tag, "===== connect() current state=${connectState.get().name} =====")
+        LogContext.log.i(tag, "===== connect() current state=${connectState.get().name} =====")
         if (connectState.get() == ServerConnectStatus.STARTED) {
-            LLog.w(tag, "===== Already started or not initialized =====")
+            LogContext.log.w(tag, "===== Already started or not initialized =====")
             return
         }
         try {
             serverChannel = bootstrap.bind(port).sync().channel()
             connectState.set(ServerConnectStatus.STARTED)
-            LLog.i(tag, "===== Start successfully =====")
+            LogContext.log.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
             // After running this line below, the process will stuck there and waiting client connection
             serverChannel.closeFuture().sync()
             // When serverChannel.close be executed, the process will continue to run.
-            LLog.i(tag, "===== Stopping server... =====")
+            LogContext.log.i(tag, "===== Stopping server... =====")
         } catch (e: RejectedExecutionException) {
-            LLog.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
-            LLog.e(tag, "Netty server had already been released. You must re-initialize it again.")
+            LogContext.log.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
+            LogContext.log.e(tag, "Netty server had already been released. You must re-initialize it again.")
             connectState.set(ServerConnectStatus.FAILED)
             connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
         } catch (e: Exception) {
@@ -141,35 +141,35 @@ abstract class BaseNettyServer protected constructor(
      * If you want to start server again, you must recreate the Server Netty object.
      */
     fun stopServer(): Boolean {
-        LLog.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
+        LogContext.log.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
         if (!::serverChannel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
-            LLog.w(tag, "Already release or not initialized")
+            LogContext.log.w(tag, "Already release or not initialized")
             return false
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
 
-        LLog.w(tag, "Releasing default server inbound handler first...")
+        LogContext.log.w(tag, "Releasing default server inbound handler first...")
         defaultServerInboundHandler?.release()
         defaultServerInboundHandler = null
         channelInitializer = null
 
         serverChannel.run {
-            LLog.w(tag, "Closing channel...")
+            LogContext.log.w(tag, "Closing channel...")
             kotlin.runCatching {
                 pipeline().removeAll { true }
                 close().syncUninterruptibly()
-            }.onFailure { LLog.e(tag, "Close channel error.", it) }
+            }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
         }
 
         bossGroup.run {
-            LLog.w(tag, "Releasing bossGroup...")
+            LogContext.log.w(tag, "Releasing bossGroup...")
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
         }
         workerGroup.run {
-            LLog.w(tag, "Releasing workerGroup...")
+            LogContext.log.w(tag, "Releasing workerGroup...")
             shutdownGracefully().syncUninterruptibly() // Will not stuck here.
         }
-        LLog.w(tag, "=====> Server released <=====")
+        LogContext.log.w(tag, "=====> Server released <=====")
         connectState.set(ServerConnectStatus.STOPPED)
         connectionListener.onStopped()
         return true
@@ -179,14 +179,14 @@ abstract class BaseNettyServer protected constructor(
 
     private fun isValidExecuteCommandEnv(clientChannel: Channel, cmd: Any?): Boolean {
         if (cmd == null) {
-            LLog.e(tag, "The command is null. Stop processing.")
+            LogContext.log.e(tag, "The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("Command must be either String or ByteArray.")
         }
         if (!clientChannel.isActive) {
-            LLog.e(tag, "Client channel is not active. Can not send command.")
+            LogContext.log.e(tag, "Client channel is not active. Can not send command.")
             return false
         }
         return true
@@ -207,15 +207,15 @@ abstract class BaseNettyServer protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showContent) LLog.i(tag, "exeCmd[${cmd.length}]=$cmd")
-                else LLog.i(tag, "exeCmd[${cmd.length}]")
+                if (showContent) LogContext.log.i(tag, "exeCmd[${cmd.length}]=$cmd")
+                else LogContext.log.i(tag, "exeCmd[${cmd.length}]")
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showContent) LLog.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
-                else LLog.i(tag, "exeCmd HEX[${cmd.size}]")
+                if (showContent) LogContext.log.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
+                else LogContext.log.i(tag, "exeCmd HEX[${cmd.size}]")
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }

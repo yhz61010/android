@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.ClipboardUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -19,7 +19,7 @@ class ClipboardActivity : BaseDemonstrationActivity() {
         super.onResume()
         ClipboardUtil.getClipboardText(this) {
             edTxt.setText(it)
-            LLog.i(ITAG, "ClipboardText=$it")
+            LogContext.log.i(ITAG, "ClipboardText=$it")
         }
     }
 
@@ -27,7 +27,7 @@ class ClipboardActivity : BaseDemonstrationActivity() {
         ClipboardUtil.clear(this)
         ClipboardUtil.getClipboardText(this) {
             edTxt.setText(it)
-            LLog.i(ITAG, "ClipboardText=$it")
+            LogContext.log.i(ITAG, "ClipboardText=$it")
         }
     }
 
@@ -35,7 +35,7 @@ class ClipboardActivity : BaseDemonstrationActivity() {
         ClipboardUtil.setTextToClipboard(this, "Welcome Leo")
         ClipboardUtil.getClipboardText(this) {
             edTxt.setText(it)
-            LLog.i(ITAG, "ClipboardText=$it")
+            LogContext.log.i(ITAG, "ClipboardText=$it")
         }
     }
 }

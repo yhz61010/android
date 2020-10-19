@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.Toast
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toast
-import com.leovp.androidbase.utils.LLog
 import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.player.PcmPlayer
 import com.leovp.audio.player.aac.AacFilePlayer
@@ -86,7 +86,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                         val readBuffer = ByteArray(bufferSize)
                         var readSize: Int
                         while (input.read(readBuffer).also { readSize = it } != -1) {
-                            LLog.i(ITAG, "PcmPlayer read size[$readSize]")
+                            LogContext.log.i(ITAG, "PcmPlayer read size[$readSize]")
                             pcmPlayer?.play(readBuffer)
                         }
                         runOnUiThread { btn.isChecked = false }
@@ -126,7 +126,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                             audioEncoderCodec.channelCount,
                             object : AacEncoder.AacEncodeCallback {
                                 override fun onEncoded(aacData: ByteArray) {
-                                    LLog.i(ITAG, "AAC Data[${aacData.size}]")
+                                    LogContext.log.i(ITAG, "AAC Data[${aacData.size}]")
                                     runCatching { aacOs?.write(aacData) }.onFailure { it.printStackTrace() }
                                 }
                             }).apply { start() }
@@ -134,7 +134,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                 }
                 micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
                     override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                        LLog.d(ITAG, "PCM data[${pcmData.size}]")
+                        LogContext.log.d(ITAG, "PCM data[${pcmData.size}]")
                         when (type) {
                             RECORD_TYPE_PCM -> runCatching { pcmOs?.write(pcmData) }.onFailure { it.printStackTrace() }
                             RECORD_TYPE_AAC -> aacEncoder?.queue?.offer(pcmData)
@@ -169,7 +169,7 @@ class AudioActivity : BaseDemonstrationActivity() {
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
-        LLog.w(ITAG, "Send to $url")
+        LogContext.log.w(ITAG, "Send to $url")
         audioSender = AudioSender()
         audioSender?.start(this, url)
     }

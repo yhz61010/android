@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.AppUtil
-import com.leovp.androidbase.utils.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.system.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
@@ -24,7 +24,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_video)
-        CodecUtil.getAllSupportedCodecList().forEach { LLog.i(ITAG, "Codec name=${it.name}") }
+        CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
 
         val videoSurfaceView = surfaceView as CustomSurfaceView
         val surface = videoSurfaceView.holder.surface

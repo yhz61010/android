@@ -156,6 +156,8 @@ dependencies {
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
 
+    implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
+
     implementation project(':androidbase-sdk')
     implementation project(':audio-sdk')
     implementation project(':basenetty-sdk')

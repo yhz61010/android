@@ -32,7 +32,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             .forEach { LogContext.log.i(TAG, "H264 Encoder: ${it.name}") }
         val hasTopazEncoder =
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-        LogContext.log.e(TAG, "hasTopazEncoder=$hasTopazEncoder")
+        LogContext.log.d(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
         cameraViewFragment.backPressListener = object :
             BackPressedListener {

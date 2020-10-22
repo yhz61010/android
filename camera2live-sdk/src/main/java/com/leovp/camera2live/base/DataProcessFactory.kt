@@ -1,7 +1,7 @@
 package com.leovp.camera2live.base
 
-import com.leovp.camera2live.base.encode_strategies.Yuv420PEncoderStrategy
-import com.leovp.camera2live.base.encode_strategies.Yuv420SpEncoderStrategy
+import com.leovp.camera2live.base.encode_strategies.EncoderStrategyYuv420P
+import com.leovp.camera2live.base.encode_strategies.EncoderStrategyYuv420Sp
 
 /**
  * Author: Michael Leo
@@ -14,8 +14,8 @@ object DataProcessFactory {
 
     fun getConcreteObject(type: Int): DataProcessContext? {
         return when (type) {
-            ENCODER_TYPE_YUV420P -> DataProcessContext(Yuv420PEncoderStrategy())
-            ENCODER_TYPE_YUV420SP -> DataProcessContext(Yuv420SpEncoderStrategy())
+            ENCODER_TYPE_YUV420P -> DataProcessContext(EncoderStrategyYuv420P())
+            ENCODER_TYPE_YUV420SP -> DataProcessContext(EncoderStrategyYuv420Sp())
             else -> null
         }
     }

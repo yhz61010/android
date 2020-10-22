@@ -32,6 +32,11 @@ object CodecUtil {
     fun getSupportedColorFormatForEncoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
     fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
 
+    fun getSupportedProfileLevels(codec: MediaCodec, mime: String) = getSupportedProfileLevels(codec.codecInfo.getCapabilitiesForType(mime))
+    fun getSupportedProfileLevels(caps: CodecCapabilities) = caps.profileLevels
+    fun getSupportedProfileLevelsForEncoder(mime: String) = getSupportedProfileLevels(MediaCodec.createEncoderByType(mime), mime)
+    fun getSupportedProfileLevelsForDecoder(mime: String) = getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
+
     @Suppress("unused")
     fun getImageFormatName(imageFormat: Int) = when (imageFormat) {
         ImageFormat.JPEG -> "JPEG"

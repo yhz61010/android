@@ -324,3 +324,38 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 `[4032, 3024][4000, 3000][4032, 2268][4032, 2016][3840, 2160][2880, 2156][2688, 1512][2592, 1296][1920, 1440][1920, 1080][1600, 1200][1280, 960][1280, 720][1280, 640][800, 600][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[2880, 2156][2688, 1512][2592, 1296][1920, 1440][1920, 1080][1600, 1200][1280, 960][1280, 720][1280, 640][800, 600][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144]`
+
+
+### RedMi 8(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H264 Encoder
+`OMX.qcom.video.encoder.avc`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [7, 20], [20, 20], [7, 24], [24, 24], [7, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [20, 20], [7, 24], [24, 24], [7, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032x3016, 4000x3000, 4032x2268, 4000x2000, 3264x2448, 4032x1908, 3200x2400, 3200x1800, 3200x1516, 2592x1944, 2688x1512, 2592x1296, 2048x1536, 1920x1080, 1600x1200, 1600x900, 1600x758, 1440x1080, 1520x1140, 1520x720, 1280x960, 1440x720, 1280x720, 960x720, 800x600, 720x480, 640x480, 640x360, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3200x2400, 3200x1800, 3200x1516, 2592x1944, 2688x1512, 2592x1296, 2048x1536, 1920x1080, 1600x1200, 1600x900, 1600x758, 1440x1080, 1520x1140, 1520x720, 1280x960, 1440x720, 1280x720, 960x720, 800x600, 720x480, 640x480, 640x360, 352x288, 320x240, 176x144]`
+
+### RedMi 6A(Android 9)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LEGACY(2)
+##### Lens Front: LEVEL_LEGACY(2)
+#### H264 Encoder
+`OMX.MTK.VIDEO.ENCODER.AVC`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[5, 15], [20, 20], [24, 24], [10, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[5, 15], [20, 20], [24, 24], [10, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[1440x1080, 1440x720, 1280x720, 960x720, 960x540, 800x600, 864x480, 800x480, 720x480, 640x480, 640x360, 640x320, 480x368, 480x320, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[1440x1080, 1440x720, 1280x720, 960x720, 960x540, 800x600, 864x480, 800x480, 720x480, 640x480, 640x360, 640x320, 480x368, 480x320, 352x288, 320x240, 176x144]`

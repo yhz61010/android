@@ -9,7 +9,7 @@ import com.leovp.camera2live.base.iters.IDataProcessStrategy
  * Author: Michael Leo
  * Date: 20-4-1 上午11:12
  */
-class Yuv420SpEncoderStrategy : IDataProcessStrategy {
+class EncoderStrategyYuv420Sp : IDataProcessStrategy {
     override fun doProcess(image: Image, lensFacing: Int, cameraSensorOrientation: Int): ByteArray {
         val width = image.width
         val height = image.height

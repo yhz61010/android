@@ -19,7 +19,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 
 # About Camera2Live Module(Device Camera Information List)
 
-**Notice**: All devices below support `OMX.google.h264.encoder` H264 encoder
+**Notice**: All devices below are supported `OMX.google.h264.encoder` H.264 encoder
 
 ## Nexus
 
@@ -29,7 +29,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_FULL(1)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -48,7 +48,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -71,7 +71,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LEGACY(2)
 ##### Lens Front: LEVEL_LEGACY(2)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.Exynos.AVC.Encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -90,7 +90,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LEGACY(2)
 ##### Lens Front: LEVEL_LEGACY(2)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.MTK.VIDEO.ENCODER.AVC`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -113,7 +113,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_FULL(1)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -132,7 +132,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc` and `c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -155,7 +155,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.IMG.TOPAZ.VIDEO.Encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -174,7 +174,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.IMG.TOPAZ.VIDEO.Encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -193,7 +193,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -212,7 +212,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.IMG.TOPAZ.VIDEO.Encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -231,7 +231,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.hisi.video.encoder.avc` and `c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -247,18 +247,43 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 ------
 
 ### HuaWei Mate 30 Pro(LIO-AL00)(Android 10)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.hisi.video.encoder.avc` and `c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
 `[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30]]`
-##### Lens Front(Camera Sensor Orientation: )
-``
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30]]`
 #### Camera supported size
 ##### Lens Back(Camera Sensor Orientation: 90)
 `[3648, 2736][3648, 2056][3648, 1712][2736, 2736][3840, 2160][3840, 1648][3120, 2340][2560, 1080][2288, 1080][2160, 1080][3280, 2448][3264, 2448][3264, 1840][3008, 2256][2688, 2016][2448, 2448][2592, 1952][2048, 1536][1920, 1080][1440, 1080][1600, 1080][1536, 864][1456, 1456][1664, 768][1680, 720][1520, 720][1440, 720][1280, 960][1280, 720][1088, 1080][1088, 720][960, 720][960, 540][720, 720][720, 540][640, 480][640, 360][736, 412][544, 408][480, 360][400, 400][352, 288][320, 240][208, 144][176, 144]`
-##### Lens Front(Camera Sensor Orientation: )
-``
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1836, 3264x1504, 2288x1080, 2160x1080, 1920x1080, 1920x960, 1664x768, 1552x720, 1440x1080, 1440x720, 1280x960, 1280x720, 960x720, 960x544, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144]`
+
+------
+
+## OPPO
+
+------
+
+### OPPO A72 5G(PDYM20)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.MTK.VIDEO.ENCODER.AVC`
+`OMX.oppo.h264.encoder`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[10, 10], [15, 15], [15, 20], [20, 20], [5, 30], [15, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[10, 10], [15, 15], [15, 20], [20, 20], [5, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4096x3072, 4096x2304, 4096x1840, 3840x2160, 3456x3456, 3360x1512, 3264x2448, 3264x1840, 3264x1632, 3264x1572, 3264x1504, 3264x1472, 2912x1344, 2560x1920, 2560x1080, 2340x1080, 2304x1728, 2280x1080, 2160x1080, 1920x1920, 1920x1440, 1920x1080, 1872x864, 1600x1200, 1600x720, 1560x720, 1560x702, 1440x1088, 1440x1080, 1280x960, 1280x720, 1088x1088, 960x544, 800x400, 720x480, 640x480, 640x360, 352x288, 320x240, 192x144, 192x108, 176x144, 160x96]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1840, 3264x1632, 3264x1572, 3264x1504, 3264x1472, 2912x1344, 2560x1920, 2560x1080, 2448x2448, 2340x1080, 2304x1728, 2280x1080, 2160x1080, 1920x1920, 1920x1440, 1920x1080, 1872x864, 1600x1200, 1600x720, 1560x720, 1560x702, 1440x1088, 1440x1080, 1280x960, 1280x720, 1088x1088, 960x544, 800x400, 720x480, 640x480, 640x360, 352x288, 320x240, 192x144, 192x108, 176x144, 160x96]`
 
 ------
 
@@ -270,7 +295,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -289,7 +314,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -312,7 +337,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_FULL(1)
 ##### Lens Front: LEVEL_FULL(1)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -330,7 +355,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.qcom.video.encoder.avc`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
@@ -347,7 +372,7 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LEGACY(2)
 ##### Lens Front: LEVEL_LEGACY(2)
-#### H264 Encoder
+#### H.264 Encoder
 `OMX.MTK.VIDEO.ENCODER.AVC`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)

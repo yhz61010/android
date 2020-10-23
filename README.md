@@ -291,6 +291,26 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 
 ------
 
+### VIVO G1(V1962BA)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LIMITED(0)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.Exynos.AVC.Encoder`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [8, 30], [10, 30], [15, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [8, 30], [10, 30], [15, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4000x3000, 4000x2256, 4000x1856, 4000x1808, 2992x2992, 3840x2160, 3264x2448, 3264x1836, 3264x1520, 3264x1472, 3232x1536, 2448x2448, 2560x1920, 2560x1440, 2560x1184, 2560x1152, 1920x1920, 1920x816, 1632x760, 1600x1200, 1600x900, 1600x752, 1200x1200, 2400x1080, 2336x1080, 1920x1080, 1920x896, 1600x720, 1552x720, 1440x1080, 1088x1088, 1280x720, 1024x768, 960x720, 960x540, 720x720, 640x480, 320x240, 256x144, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1836, 3264x1520, 3264x1472, 2448x2448, 2560x1920, 2560x1440, 2560x1184, 2560x1152, 1920x1920, 1632x1224, 1632x918, 1632x760, 1600x1200, 1600x900, 1600x752, 1200x1200, 2400x1080, 2336x1080, 1920x1080, 1920x896, 1920x816, 1600x720, 1552x720, 1440x1080, 1088x1088, 1280x720, 1024x768, 960x720, 720x720, 640x480, 320x240, 256x144, 176x144]`
+
+------
+
 ### VIVO iQOO(V1824A)(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)

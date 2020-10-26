@@ -155,7 +155,7 @@ abstract class BaseNettyServer protected constructor(
 
         serverChannel.run {
             LogContext.log.w(tag, "Closing channel...")
-            kotlin.runCatching {
+            runCatching {
                 pipeline().removeAll { true }
                 close().syncUninterruptibly()
             }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }

@@ -332,24 +332,24 @@ abstract class BaseNettyClient protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(cmdTypeAndId: String, cmd: Any?): Boolean {
         if (!::channel.isInitialized) {
-            LogContext.log.e(tag, "Channel is not initialized. Stop processing.")
+            LogContext.log.e(tag, "$cmdTypeAndId: Channel is not initialized. Stop processing.")
             return false
         }
         if (cmd == null) {
-            LogContext.log.e(tag, "The command is null. Stop processing.")
+            LogContext.log.e(tag, "$cmdTypeAndId: The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
-            throw IllegalArgumentException("Command must be either String or ByteArray.")
+            throw IllegalArgumentException("$cmdTypeAndId: Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectState.get()) {
-            LogContext.log.e(tag, "Socket is not connected. Can not send command.")
+            LogContext.log.e(tag, "$cmdTypeAndId: Socket is not connected. Can not send command.")
             return false
         }
         if (!channel.isActive) {
-            LogContext.log.e(tag, "Can not execute cmd because of Channel is not active.")
+            LogContext.log.e(tag, "$cmdTypeAndId: Can not execute cmd because of Channel is not active.")
             return false
         }
         return true
@@ -359,7 +359,7 @@ abstract class BaseNettyClient protected constructor(
      * @param isPing Only works in WebSocket mode
      */
     private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean, isPing: Boolean): Boolean {
-        if (!isValidExecuteCommandEnv(cmd)) {
+        if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
         val stringCmd: String?

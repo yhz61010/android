@@ -51,13 +51,14 @@ class CameraAvcEncoder @JvmOverloads constructor(
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
             setInteger(MediaFormat.KEY_BITRATE_MODE, bitrateMode)
 
-            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).maxByOrNull { it.profile }
-            val maxProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            val maxLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
+            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                LogContext.log.w(TAG, "KEY_PROFILE: $maxProfile")
-                setInteger(MediaFormat.KEY_PROFILE, maxProfile)
+                LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
+                setInteger(MediaFormat.KEY_PROFILE, usedProfile)
             } else {
                 LogContext.log.w(TAG, "KEY_PROFILE: AVCProfileBaseline")
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
@@ -67,8 +68,8 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 // You must specify KEY_LEVEL on Android 6.0+
                 // AVCLevel51
                 // AVCLevel4
-                LogContext.log.w(TAG, "KEY_LEVEL: $maxLevel")
-                setInteger(MediaFormat.KEY_LEVEL, maxLevel)
+                LogContext.log.w(TAG, "KEY_LEVEL: $usedLevel")
+                setInteger(MediaFormat.KEY_LEVEL, usedLevel)
             } else {
                 LogContext.log.w(TAG, "KEY_LEVEL: AVCLevel4")
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)

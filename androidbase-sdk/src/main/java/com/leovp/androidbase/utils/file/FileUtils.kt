@@ -14,6 +14,7 @@ import android.text.TextUtils
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -21,9 +22,9 @@ import java.io.FileOutputStream
  *
  * [Check this post](https://stackoverflow.com/a/50664805)
  */
-class FileUtils(var context: Context) {
-    @SuppressLint("NewApi")
-    fun getPath(uri: Uri): String? {
+object FileUtils {
+    @SuppressLint("NewApi", "ObsoleteSdkInt")
+    fun getPath(context: Context, uri: Uri): String? {
         // check here to KITKAT or new version
         val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
         var selection: String? = null
@@ -34,7 +35,7 @@ class FileUtils(var context: Context) {
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray()
-                val type = split[0]
+//                val type = split[0]
                 val fullPath = getPathFromExtSD(split)
                 return if (fullPath !== "") {
                     fullPath
@@ -43,11 +44,9 @@ class FileUtils(var context: Context) {
                 }
             }
 
-
             // DownloadsProvider
             if (isDownloadsDocument(uri)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val id: String
                     var cursor: Cursor? = null
                     try {
                         cursor = context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
@@ -61,7 +60,7 @@ class FileUtils(var context: Context) {
                     } finally {
                         cursor?.close()
                     }
-                    id = DocumentsContract.getDocumentId(uri)
+                    val id: String = DocumentsContract.getDocumentId(uri)
                     if (!TextUtils.isEmpty(id)) {
                         if (id.startsWith("raw:")) {
                             return id.replaceFirst("raw:".toRegex(), "")
@@ -86,18 +85,15 @@ class FileUtils(var context: Context) {
                         return id.replaceFirst("raw:".toRegex(), "")
                     }
                     try {
-                        contentUri = ContentUris.withAppendedId(
+                        val contentUri = ContentUris.withAppendedId(
                             Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
                         )
+                        return getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
                         e.printStackTrace()
                     }
-                    if (contentUri != null) {
-                        return getDataColumn(context, contentUri, null, null)
-                    }
                 }
             }
-
 
             // MediaProvider
             if (isMediaDocument(uri)) {
@@ -105,12 +101,16 @@ class FileUtils(var context: Context) {
                 val split = docId.split(":").toTypedArray()
                 val type = split[0]
                 var contentUri: Uri? = null
-                if ("image" == type) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                } else if ("video" == type) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                } else if ("audio" == type) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                when (type) {
+                    "image" -> {
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "video" -> {
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "audio" -> {
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    }
                 }
                 selection = "_id=?"
                 selectionArgs = arrayOf(split[1])
@@ -120,22 +120,22 @@ class FileUtils(var context: Context) {
                 )
             }
             if (isGoogleDriveUri(uri)) {
-                return getDriveFilePath(uri)
+                return getDriveFilePath(context, uri)
             }
             if (isWhatsAppFile(uri)) {
-                return getFilePathForWhatsApp(uri)
+                return getFilePathForWhatsApp(context, uri)
             }
             if ("content".equals(uri.scheme, ignoreCase = true)) {
                 if (isGooglePhotosUri(uri)) {
                     return uri.lastPathSegment
                 }
                 if (isGoogleDriveUri(uri)) {
-                    return getDriveFilePath(uri)
+                    return getDriveFilePath(context, uri)
                 }
                 return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
                     // return getFilePathFromURI(context,uri);
-                    copyFileToInternalStorage(uri, "userfiles")
+                    copyFileToInternalStorage(context, uri, "userfiles")
                     // return getRealPathFromURI(context,uri);
                 } else {
                     getDataColumn(context, uri, null, null)
@@ -146,19 +146,18 @@ class FileUtils(var context: Context) {
             }
         } else {
             if (isWhatsAppFile(uri)) {
-                return getFilePathForWhatsApp(uri)
+                return getFilePathForWhatsApp(context, uri)
             }
             if ("content".equals(uri.scheme, ignoreCase = true)) {
                 val projection = arrayOf(
                     MediaStore.Images.Media.DATA
                 )
-                var cursor: Cursor? = null
                 try {
-                    cursor = context.contentResolver
-                        .query(uri, projection, selection, selectionArgs, null)
-                    val column_index = cursor!!.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                    if (cursor.moveToFirst()) {
-                        return cursor.getString(column_index)
+                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use {
+                        val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                        if (it.moveToFirst()) {
+                            return it.getString(columnIndex)
+                        }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -195,51 +194,53 @@ class FileUtils(var context: Context) {
         //
         // instead, for each possible path, check if file exists
         // we'll start with secondary storage as this could be our (physically) removable sd card
-        fullPath = System.getenv("SECONDARY_STORAGE") + relativePath
+        fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
         if (fileExists(fullPath)) {
             return fullPath
         }
-        fullPath = System.getenv("EXTERNAL_STORAGE") + relativePath
+        fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
         return if (fileExists(fullPath)) {
             fullPath
         } else fullPath
     }
 
-    private fun getDriveFilePath(uri: Uri): String {
-        val returnCursor = context.contentResolver.query(uri, null, null, null, null)
-        /*
+    private fun getDriveFilePath(context: Context, uri: Uri): String {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            /*
          * Get the column indexes of the data in the Cursor,
          *     * move to the first row in the Cursor, get the data,
-         *     * and display it.
+         *     * and display cursor.
          * */
-        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        val sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE)
-        returnCursor.moveToFirst()
-        val name = returnCursor.getString(nameIndex)
-        val size = java.lang.Long.toString(returnCursor.getLong(sizeIndex))
-        val file = File(context.cacheDir, name)
-        try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(file)
-            var read = 0
-            val maxBufferSize = 1 * 1024 * 1024
-            val bytesAvailable = inputStream!!.available()
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+//            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            cursor.moveToFirst()
+            val name = cursor.getString(nameIndex)
+//            val size = cursor.getLong(sizeIndex).toString()
+            val file = File(context.cacheDir, name)
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val outputStream = FileOutputStream(file)
+                var read: Int
+                val maxBufferSize = 1 * 1024 * 1024
+                val bytesAvailable = inputStream!!.available()
 
-            //int bufferSize = 1024;
-            val bufferSize = Math.min(bytesAvailable, maxBufferSize)
-            val buffers = ByteArray(bufferSize)
-            while (inputStream.read(buffers).also { read = it } != -1) {
-                outputStream.write(buffers, 0, read)
+                //int bufferSize = 1024;
+                val bufferSize = min(bytesAvailable, maxBufferSize)
+                val buffers = ByteArray(bufferSize)
+                while (inputStream.read(buffers).also { read = it } != -1) {
+                    outputStream.write(buffers, 0, read)
+                }
+                LogContext.log.e("File Size", "Size " + file.length())
+                inputStream.close()
+                outputStream.close()
+                LogContext.log.e("File Path", "Path " + file.path)
+                LogContext.log.e("File Size", "Size " + file.length())
+            } catch (e: Exception) {
+                LogContext.log.e("Exception", e.message!!)
             }
-            LogContext.log.e("File Size", "Size " + file.length())
-            inputStream.close()
-            outputStream.close()
-            LogContext.log.e("File Path", "Path " + file.path)
-            LogContext.log.e("File Size", "Size " + file.length())
-        } catch (e: Exception) {
-            LogContext.log.e("Exception", e.message!!)
+            return file.path
         }
-        return file.path
+        return ""
     }
 
     /***
@@ -248,53 +249,51 @@ class FileUtils(var context: Context) {
      * @param newDirName if you want to create a directory, you can set this variable
      * @return
      */
-    private fun copyFileToInternalStorage(uri: Uri, newDirName: String): String {
+    private fun copyFileToInternalStorage(context: Context, uri: Uri, newDirName: String): String {
         val returnCursor = context.contentResolver.query(
-            uri, arrayOf(
-                OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE
-            ), null, null, null
-        )
-
-
-        /*
-         * Get the column indexes of the data in the Cursor,
-         *     * move to the first row in the Cursor, get the data,
-         *     * and display it.
-         * */
-        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        val sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE)
-        returnCursor.moveToFirst()
-        val name = returnCursor.getString(nameIndex)
-        val size = java.lang.Long.toString(returnCursor.getLong(sizeIndex))
-        val output: File
-        output = if (newDirName != "") {
-            val dir = File(context.filesDir.toString() + "/" + newDirName)
-            if (!dir.exists()) {
-                dir.mkdir()
+            uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null
+        )?.use { cursor ->
+            /*
+             * Get the column indexes of the data in the Cursor,
+             *     * move to the first row in the Cursor, get the data,
+             *     * and display it.
+             * */
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            cursor.moveToFirst()
+            val name = cursor.getString(nameIndex)
+//            val size = cursor.getLong(sizeIndex).toString()
+            val output: File
+            output = if (newDirName != "") {
+                val dir = File(context.filesDir.toString() + "/" + newDirName)
+                if (!dir.exists()) {
+                    dir.mkdir()
+                }
+                File(context.filesDir.toString() + "/" + newDirName + "/" + name)
+            } else {
+                File(context.filesDir.toString() + "/" + name)
             }
-            File(context.filesDir.toString() + "/" + newDirName + "/" + name)
-        } else {
-            File(context.filesDir.toString() + "/" + name)
-        }
-        try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(output)
-            var read = 0
-            val bufferSize = 1024
-            val buffers = ByteArray(bufferSize)
-            while (inputStream!!.read(buffers).also { read = it } != -1) {
-                outputStream.write(buffers, 0, read)
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val outputStream = FileOutputStream(output)
+                var read: Int
+                val bufferSize = 1024
+                val buffers = ByteArray(bufferSize)
+                while (inputStream!!.read(buffers).also { read = it } != -1) {
+                    outputStream.write(buffers, 0, read)
+                }
+                inputStream.close()
+                outputStream.close()
+            } catch (e: Exception) {
+                LogContext.log.e("Exception", e.message!!)
             }
-            inputStream.close()
-            outputStream.close()
-        } catch (e: Exception) {
-            LogContext.log.e("Exception", e.message!!)
+            return output.path
         }
-        return output.path
+        return ""
     }
 
-    private fun getFilePathForWhatsApp(uri: Uri): String {
-        return copyFileToInternalStorage(uri, "whatsapp")
+    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String {
+        return copyFileToInternalStorage(context, uri, "whatsapp")
     }
 
     private fun getDataColumn(context: Context, uri: Uri?, selection: String?, selectionArgs: Array<String>?): String? {
@@ -338,9 +337,5 @@ class FileUtils(var context: Context) {
 
     private fun isGoogleDriveUri(uri: Uri): Boolean {
         return "com.google.android.apps.docs.storage" == uri.authority || "com.google.android.apps.docs.storage.legacy" == uri.authority
-    }
-
-    companion object {
-        private var contentUri: Uri? = null
     }
 }

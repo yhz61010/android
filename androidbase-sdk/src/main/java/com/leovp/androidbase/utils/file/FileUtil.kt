@@ -62,6 +62,12 @@ object FileUtil {
         return createFile(ctx, "tmp", "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}")
     }
 
+    fun getExternalFolder(baseFolder: String): File {
+        val dir = File(Environment.getExternalStorageDirectory().absolutePath, baseFolder)
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
     @Suppress("unused")
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(

@@ -35,7 +35,7 @@ object DeviceUtil {
     const val VENDOR_SAMSUNG = "samsung"
     const val VENDOR_OTHER = "other"
     private const val EXTREME_LARGE_SCREEN_THRESHOLD = 2560
-    private var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
+    var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
 
     fun getDensity(ctx: Context) = ctx.resources.displayMetrics.densityDpi
 
@@ -164,9 +164,11 @@ object DeviceUtil {
      * 2.2 虚拟键存在且未隐藏-返回虚拟键实际高度
      */
     fun getNavigationBarHeightIfRoom(context: Context): Int {
-        return if (navigationGestureEnabled(context)) {
-            0
-        } else getCurrentNavigationBarHeight(context as Activity)
+        return runCatching {
+            if (navigationGestureEnabled(context)) {
+                0
+            } else getCurrentNavigationBarHeight(context as Activity)
+        }.getOrDefault(0)
     }
 
     /**

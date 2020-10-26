@@ -120,7 +120,6 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
         private var lastState = TelephonyManager.CALL_STATE_IDLE
         private var callStartTime: Date? = null
         private var isIncoming = false
-        private var savedNumber: String? =
-            null //because the passed incoming is only valid in ringing
+        private var savedNumber: String? = null //because the passed incoming is only valid in ringing
     }
 }

@@ -22,7 +22,7 @@ class KeepAlive(private val context: Context) {
     private val mediaPlayer by lazy { MediaPlayer.create(context, R.raw.single_note30) }
 
     fun keepAlive() {
-        LogContext.log.i(TAG, "Start keepAlive()")
+        LogContext.log.w(TAG, "Start keepAlive()")
         mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
 //        mediaPlayer.setVolume(0.01F, 0.01F)
         mediaPlayer.isLooping = true
@@ -30,7 +30,7 @@ class KeepAlive(private val context: Context) {
     }
 
     fun release() {
-        LogContext.log.i(TAG, "Release keepAlive()")
+        LogContext.log.w(TAG, "Release keepAlive()")
         mediaPlayer.release()
     }
 
@@ -45,7 +45,7 @@ class KeepAlive(private val context: Context) {
 //    private var sessionId = 0
 //
 //    fun keepAlive() {
-//        CLog.w(TAG, "Start keepAlive()")
+//        LogContext.log.w(TAG, "Start keepAlive()")
 //        ioScope.launch {
 //            runCatching {
 //                inputStream = context.resources.openRawResource(R.raw.magic)
@@ -53,8 +53,8 @@ class KeepAlive(private val context: Context) {
 //                init()
 //                while (true) {
 //                    ensureActive()
-//                    if (CLog.DEBUG_MODE) {
-//                        CLog.d(TAG, "Keep alive play()")
+//                    if (LogContext.log.DEBUG_MODE) {
+//                        LogContext.log.d(TAG, "Keep alive play()")
 //                    }
 //                    play()
 //                }
@@ -63,7 +63,7 @@ class KeepAlive(private val context: Context) {
 //    }
 //
 //    fun release() {
-//        CLog.w(TAG, "Release keepAlive()")
+//        LogContext.log.w(TAG, "Release keepAlive()")
 //        ioScope.launch { stop() }
 //        ioScope.cancel()
 //    }

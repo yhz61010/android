@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.network
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
+import androidx.annotation.Keep
 import com.leovp.androidbase.utils.log.LogContext
 import java.util.concurrent.TimeUnit
 
@@ -125,6 +126,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
         }.getOrNull()
     }
 
+    @Keep
     data class NetworkMonitorResult(
         val downloadSpeed: Long,
         val uploadSpeed: Long,

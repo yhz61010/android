@@ -55,7 +55,7 @@ class AudioSender {
         }
 
         @SuppressLint("SetTextI18n")
-        override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
+        override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
 //            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
             when (data) {
                 is String -> {

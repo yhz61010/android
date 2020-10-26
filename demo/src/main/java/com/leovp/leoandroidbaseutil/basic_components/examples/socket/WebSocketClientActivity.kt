@@ -44,7 +44,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             }
 
             @SuppressLint("SetTextI18n")
-            override fun onReceivedData(netty: BaseNettyClient, data: Any?) {
+            override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
                 LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
                 runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
             }

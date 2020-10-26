@@ -13,13 +13,12 @@ import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
-import com.leovp.androidbase.utils.notification.NotificationUtil
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import com.leovp.screenshot.base.ScreenRecordMediaCodecStrategy
+import io.karn.notify.Notify
 import okhttp3.internal.closeQuietly
 import java.io.BufferedOutputStream
 import java.io.File
@@ -126,44 +125,29 @@ class MediaProjectionService : Service() {
     }
 
     private fun startForeground() {
-        var channelId: String? = null
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            channelId = NotificationUtil.createNotificationChannel(
-                this,
-                false,
-                "default-foreground-notification",
-                "Foreground Service"
-            )
-        }
-
-        val notifyIntent = Intent(this, BasicFragment::class.java)
-        val mainPendingIntent = PendingIntent.getActivity(
-            this,
-            SystemClock.elapsedRealtime().toInt(),
-            notifyIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val notification = NotificationUtil.generateBigTextStyleNotification(
-            this,
-            channelId,
-            R.mipmap.ic_launcher,
-            R.mipmap.ic_launcher,
-            getString(R.string.app_name),
-            "App is running...",
-            null,
-            true,
-            NotificationCompat.BADGE_ICON_SMALL,
-            NotificationCompat.PRIORITY_DEFAULT,
-            NotificationCompat.VISIBILITY_PUBLIC,
-            null,
-            mainPendingIntent
-        )
+        val notify = Notify.with(this)
+            .alerting("update-app-notification") {
+                channelName = "Foreground service channel name"
+                channelDescription = "Foreground service channel desc"
+                lockScreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+                channelImportance = Notify.IMPORTANCE_NORMAL
+            }
+            .content {
+                title = "App is running..."
+            }.meta {
+                clickIntent = PendingIntent.getActivity(
+                    this@MediaProjectionService,
+                    SystemClock.elapsedRealtime().toInt(),
+                    Intent(this@MediaProjectionService, BasicFragment::class.java),
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                cancelOnClick = false
+            }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(10086, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            startForeground(10086, notify.asBuilder().build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
         } else {
-            startForeground(10086, notification)
+            startForeground(10086, notify.asBuilder().build())
         }
     }
 

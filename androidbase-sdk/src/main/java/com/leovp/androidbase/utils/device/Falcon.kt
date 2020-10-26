@@ -9,7 +9,6 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import com.leovp.androidbase.utils.log.LogContext
@@ -49,12 +48,12 @@ object Falcon {
             writeBitmap(bitmap, toFile)
         } catch (e: Exception) {
             val message = ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
-            Log.e(TAG, message, e)
+            LogContext.log.e(TAG, message, e)
             throw UnableToTakeScreenshotException(message, e)
         } finally {
             bitmap?.recycle()
         }
-        Log.d(TAG, "Screenshot captured to " + toFile.absolutePath)
+        LogContext.log.d(TAG, "Screenshot captured to " + toFile.absolutePath)
     }
 
     /**
@@ -69,7 +68,7 @@ object Falcon {
         } catch (e: Exception) {
             val message = ("Unable to take screenshot to bitmap of activity "
                     + activity.javaClass.name)
-            Log.e(TAG, message, e)
+            LogContext.log.e(TAG, message, e)
 //            throw UnableToTakeScreenshotException(message, e)
             null
         }
@@ -109,7 +108,7 @@ object Falcon {
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
-            kotlin.runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }.also { latch.countDown() }
+            runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }.also { latch.countDown() }
         } ?: latch.countDown()
         latch.await()
         errorInMainThread.get()?.let {
@@ -198,7 +197,7 @@ object Falcon {
 
             // fixes https://github.com/jraska/Falcon/issues/10
             if (rootView == null) {
-                Log.e(TAG, "null View stored as root in Global window manager, skipping")
+                LogContext.log.e(TAG, "null View stored as root in Global window manager, skipping")
                 continue
             }
             if (!rootView.isShown) {
@@ -259,13 +258,13 @@ object Falcon {
     }
 
     private fun getFieldValue(fieldName: String, target: Any?): Any? {
-        return kotlin.runCatching {
+        return runCatching {
             getFieldValueUnchecked(fieldName, target)
         }.getOrNull()
     }
 
     private fun getFieldValueUnchecked(fieldName: String, target: Any?): Any? {
-        return kotlin.runCatching {
+        return runCatching {
             findField(fieldName, target?.javaClass)?.let {
                 it.isAccessible = true
                 it[target]
@@ -276,7 +275,7 @@ object Falcon {
     private fun findField(name: String, clazz: Class<*>?): Field? {
         var currentClass: Class<*>? = clazz
         while (currentClass != Any::class.java) {
-            kotlin.runCatching {
+            runCatching {
                 for (field in currentClass!!.declaredFields) {
                     if (name == field.name) {
                         return field

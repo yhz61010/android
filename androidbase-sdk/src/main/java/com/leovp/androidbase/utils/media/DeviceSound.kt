@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.MediaActionSound
 import android.media.RingtoneManager
 import android.net.Uri
+import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.utils.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -27,6 +29,7 @@ object DeviceSound {
     }
 
     fun playDefaultNotification(ctx: Context) {
+        LogContext.log.w(ITAG, "playDefaultNotification")
         runCatching {
             val notification: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             RingtoneManager.getRingtone(ctx, notification).play()

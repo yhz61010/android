@@ -5,6 +5,7 @@ import android.media.*
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
+import com.leovp.audio.recorder.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -118,7 +119,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
-                    LogContext.log.w(ITAG, "inputIndex=$inputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "inputIndex=$inputIndex")
                     if (inputIndex < 0) {
                         isFinish = true
                     }
@@ -140,7 +141,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         isFinish = true
                     }
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
-                    LogContext.log.e(ITAG, "outputIndex=$outputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "outputIndex=$outputIndex")
                     var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {

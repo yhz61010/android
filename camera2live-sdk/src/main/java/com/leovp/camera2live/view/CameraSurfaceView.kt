@@ -64,6 +64,11 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
         }
     }
 
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
+    }
+
     companion object {
         private const val TAG = "CameraSurfaceView"
     }

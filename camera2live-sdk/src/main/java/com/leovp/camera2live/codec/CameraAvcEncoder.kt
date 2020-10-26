@@ -7,6 +7,7 @@ import android.media.MediaFormat
 import android.os.Build
 import com.leovp.androidbase.exts.toHexadecimalString
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.listeners.CallbackListener
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -49,13 +50,28 @@ class CameraAvcEncoder @JvmOverloads constructor(
             setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
             setInteger(MediaFormat.KEY_BITRATE_MODE, bitrateMode)
+
+            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).maxByOrNull { it.profile }
+            val maxProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+            val maxLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
+
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                LogContext.log.w(TAG, "KEY_PROFILE: $maxProfile")
+                setInteger(MediaFormat.KEY_PROFILE, maxProfile)
+            } else {
+                LogContext.log.w(TAG, "KEY_PROFILE: AVCProfileBaseline")
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
 //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
-                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+                // AVCLevel51
+                // AVCLevel4
+                LogContext.log.w(TAG, "KEY_LEVEL: $maxLevel")
+                setInteger(MediaFormat.KEY_LEVEL, maxLevel)
+            } else {
+                LogContext.log.w(TAG, "KEY_LEVEL: AVCLevel4")
+                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Actually, this key has been used in Android 6.0+ so you can use it safely only if your device is Android 6.0+.

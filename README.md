@@ -287,6 +287,26 @@ This is just a wrapper of android default `Log`. These is no need to initialize 
 
 ------
 
+### OPPO Reno4 5G(PDPM00)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [17, 24], [24, 24], [9, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [10, 24], [24, 24], [10, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4000x3000, 4000x2250, 4000x2248, 4000x1800, 3840x2160, 3264x2448, 3264x1836, 3200x2400, 3200x1440, 2448x2448, 3000x3000, 2688x1512, 2592x1944, 2400x1080, 2340x1080, 2304x1728, 2048x1536, 2240x1008, 2280x1080, 2264x1080, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1440x1080, 1560x720, 1280x960, 1280x768, 1280x720, 1080x1080, 1024x768, 864x480, 800x400, 800x600, 800x480, 720x480, 640x480, 640x400, 480x640, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1836, 3200x2400, 3200x1440, 2448x2448, 2688x1512, 2592x1944, 2400x1080, 2340x1080, 2304x1728, 2048x1536, 2240x1008, 2280x1080, 2264x1080, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1440x1080, 1560x720, 1280x960, 1280x768, 1280x720, 1080x1080, 1024x768, 864x480, 800x400, 800x600, 800x480, 720x480, 640x480, 640x400, 480x640, 352x288, 320x240, 176x144]`
+
+------
+
 ## VIVO
 
 ------

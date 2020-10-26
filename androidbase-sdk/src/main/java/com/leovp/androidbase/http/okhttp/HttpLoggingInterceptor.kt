@@ -94,18 +94,11 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         }
     }
 
-    @Volatile
-    var level = Level.NONE
-
     /**
      * Change the level at which this interceptor logs.
      */
-    @Suppress("unused")
-    fun setLevel(level: Level?): HttpLoggingInterceptor {
-        if (level == null) throw NullPointerException("level == null. Use Level.NONE instead.")
-        this.level = level
-        return this
-    }
+    @Volatile
+    var level = Level.NONE
 
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

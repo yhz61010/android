@@ -52,7 +52,7 @@ object MD5Util {
         }
         val buffer = ByteArray(8 shl 10)
         var len: Int
-        return kotlin.runCatching {
+        return runCatching {
             FileInputStream(file).use { fis ->
                 val digest = MessageDigest.getInstance("MD5")
                 while (fis.read(buffer, 0, buffer.size).also { len = it } != -1) {

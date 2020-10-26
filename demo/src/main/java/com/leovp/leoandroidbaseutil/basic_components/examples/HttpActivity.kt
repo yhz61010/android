@@ -1,5 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
@@ -53,20 +54,21 @@ class HttpActivity : BaseDemonstrationActivity() {
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val observer: ObserverOnNextListener<WeatherInfoResult> = object : ObserverOnNextListener<WeatherInfoResult> {
-            override fun onNext(t: WeatherInfoResult) {
-                LogContext.log.w(ITAG, "Response bean=${t.toJsonString()}")
-                txtResult.text = t.toJsonString()
+        val observer: ObserverOnNextListener<WeatherInfoResult> = object : ObserverOnNextListener<WeatherInfoResult?> {
+            override fun onNext(t: WeatherInfoResult?) {
+                LogContext.log.w(ITAG, "Response bean=${t?.toJsonString()}")
+                txtResult.text = t?.toJsonString()
             }
         }
         val service = ApiService.getService("http://www.weather.com.cn", CommonService::class.java)
         ApiSubscribe.subscribe(service.getData("101070201"), NoProgressObserver(observer))
     }
 
+    @SuppressLint("SetTextI18n")
     fun onPostClick(@Suppress("UNUSED_PARAMETER") view: View) {
         txtResult.text = "It will cost several seconds. Please be patient..."
-        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String> {
-            override fun onNext(t: String) {
+        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+            override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
                 txtResult.text = t
             }
@@ -83,10 +85,11 @@ class HttpActivity : BaseDemonstrationActivity() {
         )
     }
 
+    @SuppressLint("SetTextI18n")
     fun onUploadClick(@Suppress("UNUSED_PARAMETER") view: View) {
         txtResult.text = "It may cost several seconds. Please be patient..."
-        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String> {
-            override fun onNext(t: String) {
+        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+            override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
                 txtResult.text = "Upload Done"
             }
@@ -119,12 +122,13 @@ class HttpActivity : BaseDemonstrationActivity() {
         ApiSubscribe.subscribe(service.uploadFile(parameters, body), NoProgressObserver(observer))
     }
 
+    @SuppressLint("SetTextI18n")
     fun onDownloadClick(@Suppress("UNUSED_PARAMETER") view: View) {
         txtResult.text = "Downloading..."
-        val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody> {
-            override fun onNext(t: ResponseBody) {
+        val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody?> {
+            override fun onNext(t: ResponseBody?) {
                 val filePath = FileUtil.createFile(this@HttpActivity, "download.pdf").absolutePath
-                FileUtil.copyInputStreamToFile(t.byteStream(), filePath)
+                FileUtil.copyInputStreamToFile(t!!.byteStream(), filePath)
                 LogContext.log.w(ITAG, "Downloaded to $filePath")
                 txtResult.text = "Downloaded to $filePath"
             }
@@ -151,7 +155,7 @@ class HttpActivity : BaseDemonstrationActivity() {
     }
 
     @Keep
-    data class WeatherInfoResult(val weatherinfo: WeatherInfo)
+    data class WeatherInfoResult(val weatherInfo: WeatherInfo)
 
     @Keep
     data class WeatherInfo(

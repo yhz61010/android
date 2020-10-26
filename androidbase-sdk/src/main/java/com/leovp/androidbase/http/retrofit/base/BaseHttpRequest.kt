@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
  * Date: 20-5-27 下午8:41
  */
 abstract class BaseHttpRequest {
-    protected val okHttpClient: OkHttpClient
+    val okHttpClient: OkHttpClient
         get() {
             val httpClientBuilder = OkHttpClient.Builder()
             httpClientBuilder

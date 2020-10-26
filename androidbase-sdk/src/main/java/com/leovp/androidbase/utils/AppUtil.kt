@@ -115,7 +115,7 @@ object AppUtil {
     }
 
     @SuppressLint("ObsoleteSdkInt")
-    private fun hideNavigationBar(win: Window) {
+    fun hideNavigationBar(win: Window) {
         // Translucent virtual NavigationBar
         win.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
 
@@ -312,8 +312,7 @@ object AppUtil {
     fun closeSoftKeyboard(context: Activity) {
         val view = context.window.peekDecorView()
         if (view != null) {
-            val imm =
-                context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }

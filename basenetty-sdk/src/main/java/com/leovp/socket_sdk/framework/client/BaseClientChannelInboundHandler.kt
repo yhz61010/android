@@ -18,7 +18,7 @@ import java.io.IOException
  */
 abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyClient) : SimpleChannelInboundHandler<T>(),
     ReadSocketDataListener<T> {
-    private val tag = javaClass.simpleName
+    private val tag = netty.tag
 
     internal var channelPromise: ChannelPromise? = null
     private var handshaker: WebSocketClientHandshaker? = null
@@ -63,8 +63,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.w(
             tag,
             "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${
-                ctx.channel()
-                    .remoteAddress()
+                ctx.channel().remoteAddress()
             } | Channel is inactive and reached its end of lifetime ====="
         )
         if (netty.isWebSocket) {
@@ -76,9 +75,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             if (netty.disconnectManually) {
                 netty.connectState.set(ClientConnectStatus.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
-            } else { // Server down
+            } else {
                 netty.connectState.set(ClientConnectStatus.FAILED)
-                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SERVER_DOWN, "Server down")
+                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECTION_DISCONNECT, "Disconnect")
                 netty.doRetry()
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
@@ -124,7 +123,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 //        if (isChannelActive) {
 //            ctx.close()
 //        }
-        ctx.close().syncUninterruptibly()
+        runCatching {
+            ctx.close().syncUninterruptibly()
+        }.onFailure {
+            LogContext.log.e(tag, "close channel error.", it)
+            it.printStackTrace()
+        }
 
         if ("IOException" == exceptionType) {
             netty.connectState.set(ClientConnectStatus.FAILED)

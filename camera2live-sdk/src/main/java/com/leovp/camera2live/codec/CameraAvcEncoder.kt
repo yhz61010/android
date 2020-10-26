@@ -51,8 +51,19 @@ class CameraAvcEncoder @JvmOverloads constructor(
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
             setInteger(MediaFormat.KEY_BITRATE_MODE, bitrateMode)
 
+            // Traffic statistic Image in 1920X1080
+            // Profile/Level                Traffic(KB/s)
+            // 2130706434/65536(0x10000)    24K/s
+            // 8/65536(0x10000)             76K/s
+            // 2/65536(0x10000)             76K/s
+            // 1/65536(0x10000)             76K/s
+            // 1/2048(800)                  76K/s
             val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
                 .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+//                .maxByOrNull { it.profile }
             val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
             val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
 
@@ -60,7 +71,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
                 setInteger(MediaFormat.KEY_PROFILE, usedProfile)
             } else {
-                LogContext.log.w(TAG, "KEY_PROFILE: AVCProfileBaseline")
+                LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
 //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
@@ -71,7 +82,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 LogContext.log.w(TAG, "KEY_LEVEL: $usedLevel")
                 setInteger(MediaFormat.KEY_LEVEL, usedLevel)
             } else {
-                LogContext.log.w(TAG, "KEY_LEVEL: AVCLevel4")
+                LogContext.log.w(TAG, "KEY_LEVEL static: AVCLevel4")
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

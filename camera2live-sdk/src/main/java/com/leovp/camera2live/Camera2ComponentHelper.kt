@@ -24,6 +24,7 @@ import androidx.annotation.Keep
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.computeExifOrientation
 import com.leovp.androidbase.exts.fail
 import com.leovp.androidbase.exts.getPreviewOutputSize

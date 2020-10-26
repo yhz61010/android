@@ -22,7 +22,7 @@ import com.leovp.camera2live.view.BaseCamera2Fragment
 class Camera2LiveFragment : BaseCamera2Fragment() {
     companion object {
         private val TAG = Camera2LiveFragment::class.java.simpleName
-        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL
+        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,9 +32,13 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
         LogContext.log.w(
             TAG, "Supported image format for avc encoder: ${
-                CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
+                CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
             }"
         )
+
+        CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)?.forEach { it ->
+            LogContext.log.w(TAG, "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

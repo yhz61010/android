@@ -51,7 +51,7 @@ object SslUtils {
     }
 
     fun systemDefaultTrustManager(): X509TrustManager {
-        return kotlin.runCatching {
+        return runCatching {
             val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
             trustManagerFactory.init(null as KeyStore?)
             val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers

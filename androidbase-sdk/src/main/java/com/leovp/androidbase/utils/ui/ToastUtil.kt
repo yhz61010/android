@@ -78,19 +78,19 @@ object ToastUtil {
 
     // ============================================
     fun showDebugToast(message: String?) {
-        if (BuildConfig.DEBUG) showToast("DEBUG: $message")
+        if (BuildConfig.DEBUG) showNormalToast("DEBUG: $message")
     }
 
     fun showDebugLongToast(message: String?) {
-        if (BuildConfig.DEBUG) showLongToast("DEBUG: $message")
+        if (BuildConfig.DEBUG) showNormalLongToast("DEBUG: $message")
     }
 
     fun showDebugErrorToast(message: String?) {
-        if (BuildConfig.DEBUG) showErrorToast("DEBUG: $message")
+        if (BuildConfig.DEBUG) showNormalToast("DEBUG: $message")
     }
 
     fun showDebugErrorLongToast(message: String?) {
-        if (BuildConfig.DEBUG) showErrorLongToast("DEBUG: $message")
+        if (BuildConfig.DEBUG) showNormalLongToast("DEBUG: $message")
     }
 
     // ------------
@@ -110,7 +110,6 @@ object ToastUtil {
     fun showDebugErrorLongToast(@StringRes resId: Int) {
         showDebugErrorLongToast(mApplicationCtx.getString(resId))
     }
-
 
     // ============================================
     private fun showToast(
@@ -156,7 +155,7 @@ object ToastUtil {
 
         sToast = Toast(context).also {
             it.view = view
-            it.setGravity(Gravity.BOTTOM, 0, AppUtil.dp2px(context, 60F))
+            it.setGravity(Gravity.CENTER, 0, AppUtil.dp2px(context, -50F))
             it.duration = duration
         }
 

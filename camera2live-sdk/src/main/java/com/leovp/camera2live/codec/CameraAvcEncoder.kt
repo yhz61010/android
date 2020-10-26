@@ -53,11 +53,10 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
             // Traffic statistic Image in 1920X1080
             // Profile/Level                Traffic(KB/s)
-            // 2130706434/65536(0x10000)    24K/s
+            // 2130706434/65536(0x10000)    24K/s   (Only works in Samsung SM-9350)
             // 8/65536(0x10000)             76K/s
             // 2/65536(0x10000)             76K/s
             // 1/65536(0x10000)             76K/s
-            // 1/2048(800)                  76K/s
             val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
 //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
 //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }

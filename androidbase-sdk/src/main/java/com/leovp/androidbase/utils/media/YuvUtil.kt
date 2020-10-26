@@ -611,10 +611,10 @@ object YuvUtil {
     //    // Very slow
     //    private static byte[] convertYUV420ToNV21_ALL_PLANES(Image imgYUV420) {
     //        assert (imgYUV420.getFormat() == ImageFormat.YUV_420_888);
-    //        Log.d(TAG, "image: " + imgYUV420.getWidth() + "x" + imgYUV420.getHeight() + " " + imgYUV420.getFormat());
-    //        Log.d(TAG, "planes: " + imgYUV420.getPlanes().length);
+    //        LogContext.log.d(TAG, "image: " + imgYUV420.getWidth() + "x" + imgYUV420.getHeight() + " " + imgYUV420.getFormat());
+    //        LogContext.log.d(TAG, "planes: " + imgYUV420.getPlanes().length);
     //        for (int nPlane = 0; nPlane < imgYUV420.getPlanes().length; nPlane++) {
-    //            Log.d(TAG, "plane[" + nPlane + "]: length " + imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " + imgYUV420.getPlanes()[nPlane].getPixelStride() + " " + imgYUV420.getPlanes()[nPlane].getRowStride());
+    //            LogContext.log.d(TAG, "plane[" + nPlane + "]: length " + imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " + imgYUV420.getPlanes()[nPlane].getPixelStride() + " " + imgYUV420.getPlanes()[nPlane].getRowStride());
     //        }
     //
     //        byte[] rez = new byte[imgYUV420.getWidth() * imgYUV420.getHeight() * 3 / 2];
@@ -646,7 +646,7 @@ object YuvUtil {
     //            }
     //        }
     //
-    //        Log.w(TAG, "total: " + rez.length);
+    //        LogContext.log.w(TAG, "total: " + rez.length);
     //        return rez;
     //    }
     //
@@ -654,10 +654,10 @@ object YuvUtil {
     //    // https://stackoverflow.com/a/45014917
     //    private static byte[] rotateYUV420ToNV21(Image imgYUV420) {
     //
-    //        Log.d(TAG, "image: " + imgYUV420.getWidth() + "x" + imgYUV420.getHeight() + " " + imgYUV420.getFormat());
-    //        Log.d(TAG, "planes: " + imgYUV420.getPlanes().length);
+    //        LogContext.log.d(TAG, "image: " + imgYUV420.getWidth() + "x" + imgYUV420.getHeight() + " " + imgYUV420.getFormat());
+    //        LogContext.log.d(TAG, "planes: " + imgYUV420.getPlanes().length);
     //        for (int nPlane = 0; nPlane < imgYUV420.getPlanes().length; nPlane++) {
-    //            Log.d(TAG, "plane[" + nPlane + "]: length " + imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " + imgYUV420.getPlanes()[nPlane].getPixelStride() + " " + imgYUV420.getPlanes()[nPlane].getRowStride());
+    //            LogContext.log.d(TAG, "plane[" + nPlane + "]: length " + imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " + imgYUV420.getPlanes()[nPlane].getPixelStride() + " " + imgYUV420.getPlanes()[nPlane].getRowStride());
     //        }
     //
     //        byte[] rez = new byte[imgYUV420.getWidth() * imgYUV420.getHeight() * 3 / 2];
@@ -690,7 +690,7 @@ object YuvUtil {
     //            }
     //        }
     //
-    //        Log.w(TAG, "total rotated: " + rez.length);
+    //        LogContext.log.w(TAG, "total rotated: " + rez.length);
     //        return rez;
     //    }
     //

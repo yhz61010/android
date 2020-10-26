@@ -38,7 +38,7 @@ object CameraUtil {
             val imageFile = FileUtil.createImageFile(ctx, "jpg")
             LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
-//            Log.w(TAG, "deleteFlag=" + deleteFlag);
+//            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
             imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 // Above Android 7.0, we need convert File to Uri through FileProvider.
                 FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", imageFile)
@@ -78,7 +78,7 @@ object CameraUtil {
             val croppedImageFile = FileUtil.createImageFile(ctx, "jpg")
             LogContext.log.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
-//            Log.w(TAG, "deleteFlag=" + deleteFlag);
+//            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
 
             // Only Uri.fromeFile can be used for cropping output Uri.
             // You CAN NOT use FileProvider.getUriForFile

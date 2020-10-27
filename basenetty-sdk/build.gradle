@@ -30,8 +30,8 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
     api group: 'io.netty', name: 'netty-all', version: "$rootProject.ext.nettyVersion"
     api project(':androidbase-sdk')

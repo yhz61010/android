@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    api fileTree(dir: 'libs', include: ['*.jar'])
     api project(':androidbase-sdk')
     api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
 }

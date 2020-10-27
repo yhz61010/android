@@ -33,6 +33,9 @@
 #mars
 -keep class com.tencent.mars.** { *; }
 
+#leovp
+-keep class com.leovp.camera2live.** { *; }
+
 #rx
 -keep class rx.internal.util.unsafe.** { *; }
 -keep class android.databinding.** { *; }

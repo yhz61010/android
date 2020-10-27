@@ -358,7 +358,14 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean, isPing: Boolean): Boolean {
+    private fun executeUnifiedCommand(
+        cmdTypeAndId: String,
+        cmdDesc: String,
+        cmd: Any?,
+        showContent: Boolean,
+        isPing: Boolean,
+        showLog: Boolean = true
+    ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
@@ -370,15 +377,19 @@ abstract class BaseNettyClient protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
-                else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
+                if (showLog) {
+                    if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
+                    else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
+                }
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
-                else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
+                if (showLog) {
+                    if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                    else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
+                }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
@@ -393,13 +404,13 @@ abstract class BaseNettyClient protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, false)
+    fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, false, showLog)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, true)
+    fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, true, showLog)
 
     // ================================================
 }

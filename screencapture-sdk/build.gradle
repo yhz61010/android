@@ -36,8 +36,8 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
     api project(':androidbase-sdk')
 }

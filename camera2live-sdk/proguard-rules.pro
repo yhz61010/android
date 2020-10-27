@@ -1,12 +1,5 @@
--optimizationpasses 30
--mergeinterfacesaggressively
--dontpreverify
--optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
--repackageclasses 'a.b'
+-flattenpackagehierarchy
 -allowaccessmodification
--useuniqueclassmembernames
--keeppackagenames doNotKeepAThing
-
 -keepattributes Exceptions,InnerClasses,Signature,SourceFile,LineNumberTable,
 -dontskipnonpubliclibraryclassmembers
 -ignorewarnings
@@ -39,6 +32,9 @@
 
 #mars
 -keep class com.tencent.mars.** { *; }
+
+#leovp
+-keep class com.leovp.camera2live.** { *; }
 
 #rx
 -keep class rx.internal.util.unsafe.** { *; }

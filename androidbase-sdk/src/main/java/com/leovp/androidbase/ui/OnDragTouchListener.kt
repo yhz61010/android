@@ -1,4 +1,4 @@
-package com.leovp.androidbase.ui
+package com.ho1ho.androidbase.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -11,6 +11,8 @@ import android.view.ViewGroup.MarginLayoutParams
 import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import androidx.core.view.isVisible
+import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -66,19 +68,25 @@ class OnDragTouchListener(
                 param.rightMargin = 0
                 if (onDraggableClickListener != null) {
                     val childCount = (v as LinearLayout).childCount
-                    if (childCount < 1) {
+                    var visibleBtnIndexList = ArrayList<Int>()
+                    for (i in 0 until childCount) {
+                        if (v.getChildAt(i).isVisible) {
+                            visibleBtnIndexList.add(i)
+                        }
+                    }
+                    if (visibleBtnIndexList.isEmpty()) {
                         return true
                     }
-                    mFocusedCtlBtn = v.getChildAt(0)
+                    mFocusedCtlBtn = v.getChildAt(visibleBtnIndexList.get(0))
                     val eachBtnHeightInPixel = mFocusedCtlBtn?.height!!
                     if (0 <= mDistanceY && mDistanceY <= eachBtnHeightInPixel) {
                         mFocusedCtlBtn?.alpha = BTN_PRESSED_ALPHA
                         return true
                     }
                     var i = 1
-                    while (i < childCount) {
+                    while (i < visibleBtnIndexList.size) {
                         if ((eachBtnHeightInPixel + gapHeightInPixel) * i <= mDistanceY && mDistanceY <= (eachBtnHeightInPixel + gapHeightInPixel) * i + eachBtnHeightInPixel) {
-                            mFocusedCtlBtn = v.getChildAt(i)
+                            mFocusedCtlBtn = v.getChildAt(visibleBtnIndexList.get(i))
                             mFocusedCtlBtn?.alpha = BTN_PRESSED_ALPHA
                             return true
                         }
@@ -132,7 +140,7 @@ class OnDragTouchListener(
                 //如果移动距离过小，则判定为点击
                 if (abs(event.rawX - mOriginalX) < MOVE_THRESHOLD && abs(event.rawY - mOriginalY) < MOVE_THRESHOLD) {
                     if (onDraggableClickListener != null) {
-//                        LogContext.log.i(TAG, "Focused Button=${mFocusedCtlBtn}")
+                        LogContext.log.i(TAG, "Focused Button=${mFocusedCtlBtn}")
                         onDraggableClickListener!!.onClick(mFocusedCtlBtn!!)
                     }
                 } else {

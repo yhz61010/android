@@ -18,7 +18,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     private var audioTrack: AudioTrack
 
     init {
-        val minBufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat)
+        val minBufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat) * 8
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
             setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
@@ -30,7 +30,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
             .build()
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
-        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize * 2, AudioTrack.MODE_STREAM, sessionId)
+        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, AudioTrack.MODE_STREAM, sessionId)
 
         if (AudioTrack.STATE_INITIALIZED == audioTrack.state) {
             LogContext.log.w(ITAG, "Start playing audio...")

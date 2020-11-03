@@ -6,7 +6,6 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
@@ -17,6 +16,10 @@ import kotlinx.coroutines.*
  * Date: 20-8-20 下午3:51
  */
 class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
+    companion object {
+        private const val TAG = "PCM-Player"
+    }
+
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private var audioRecord: AudioRecord
@@ -24,7 +27,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private var bufferSizeInBytes = 0
 
     init {
-        LogContext.log.w(ITAG, "recordAudio=${encoderInfo.toJsonString()}")
+        LogContext.log.w(TAG, "recordAudio=${encoderInfo.toJsonString()}")
         bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat)
 
         audioRecord = AudioRecord(
@@ -42,7 +45,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     }
 
     fun startRecord() {
-        LogContext.log.w(ITAG, "Do startRecord()")
+        LogContext.log.w(TAG, "Do startRecord()")
         audioRecord.startRecording()
         ioScope.launch {
             runCatching {
@@ -58,14 +61,14 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
                     ed = SystemClock.elapsedRealtime()
                     cost = ed - st
                     if (BuildConfig.DEBUG) {
-                        LogContext.log.d(ITAG, "Record[$recordSize] cost $cost ms.")
+                        LogContext.log.d(TAG, "Record[$recordSize] cost $cost ms.")
                     }
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
 //                    if (cost > 100) {
-//                        LogContext.log.w(ITAG, "Drop the generate audio data which cost over 100 ms.")
+//                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
 //                        continue
 //                    }
                     callback.onRecording(pcmData, st, ed)
@@ -79,19 +82,19 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private fun initAdvancedFeatures() {
         if (AcousticEchoCanceler.isAvailable()) {
             AcousticEchoCanceler.create(audioRecord.audioSessionId)?.run {
-                LogContext.log.w(ITAG, "Enable AcousticEchoCanceler")
+                LogContext.log.w(TAG, "Enable AcousticEchoCanceler")
                 enabled = true
             }
         }
         if (AutomaticGainControl.isAvailable()) {
             AutomaticGainControl.create(audioRecord.audioSessionId)?.run {
-                LogContext.log.w(ITAG, "Enable AutomaticGainControl")
+                LogContext.log.w(TAG, "Enable AutomaticGainControl")
                 enabled = true
             }
         }
         if (NoiseSuppressor.isAvailable()) {
             NoiseSuppressor.create(audioRecord.audioSessionId)?.run {
-                LogContext.log.w(ITAG, "Enable NoiseSuppressor")
+                LogContext.log.w(TAG, "Enable NoiseSuppressor")
                 enabled = true
             }
         }
@@ -99,17 +102,17 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
 
     fun stopRecord() {
         ioScope.cancel()
-        LogContext.log.i(ITAG, "Stop recording audio")
+        LogContext.log.i(TAG, "Stop recording audio")
         var stopResult = true
         runCatching {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                LogContext.log.i(ITAG, "Stopping recording...")
+                LogContext.log.i(TAG, "Stopping recording...")
                 audioRecord.stop()
             }
         }.onFailure { it.printStackTrace(); stopResult = false }
         runCatching {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                LogContext.log.w(ITAG, "Releasing recording...")
+                LogContext.log.w(TAG, "Releasing recording...")
                 audioRecord.release()
             }
         }.onFailure { it.printStackTrace(); stopResult = false }

@@ -5,7 +5,6 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 
@@ -14,6 +13,10 @@ import com.leovp.audio.base.AudioCodecInfo
  * Date: 2020/9/16 下午5:03
  */
 class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
+    companion object {
+        private const val TAG = "PCM-Player"
+    }
+
     private var audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioTrack: AudioTrack
 
@@ -33,10 +36,10 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
         audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, AudioTrack.MODE_STREAM, sessionId)
 
         if (AudioTrack.STATE_INITIALIZED == audioTrack.state) {
-            LogContext.log.w(ITAG, "Start playing audio...")
+            LogContext.log.i(TAG, "Start playing audio...")
             audioTrack.play()
         } else {
-            LogContext.log.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
+            LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
         }
     }
 
@@ -47,7 +50,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
 //                val st = SystemClock.elapsedRealtime()
                 // Play decoded audio data in PCM
                 audioTrack.write(chunkPcm, 0, chunkPcm.size)
-//                LogContext.log.i(ITAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
+//                LogContext.log.i(TAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
             }
         }.onFailure { it.printStackTrace() }
     }
@@ -64,7 +67,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun resume() {
-        LogContext.log.w(ITAG, "resume()")
+        LogContext.log.w(TAG, "resume()")
         runCatching {
             audioTrack.play()
         }.onFailure { it.printStackTrace() }
@@ -82,7 +85,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun pause() {
-        LogContext.log.w(ITAG, "pause()")
+        LogContext.log.w(TAG, "pause()")
         runCatching {
             if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {
                 audioTrack.pause()
@@ -103,7 +106,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
      * ```
      */
     fun stop() {
-        LogContext.log.w(ITAG, "stop()")
+        LogContext.log.w(TAG, "stop()")
         pause()
         runCatching {
             if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {
@@ -113,7 +116,7 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     }
 
     fun release() {
-        LogContext.log.w(ITAG, "release()")
+        LogContext.log.w(TAG, "release()")
         stop()
         runCatching {
             if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {

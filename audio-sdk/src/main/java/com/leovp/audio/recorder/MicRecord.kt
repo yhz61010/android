@@ -57,7 +57,9 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
                     ed = SystemClock.elapsedRealtime()
                     cost = ed - st
-                    LogContext.log.i(ITAG, "Record[$recordSize] cost $cost ms.")
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.d(ITAG, "Record[$recordSize] cost $cost ms.")
+                    }
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
@@ -97,11 +99,11 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
 
     fun stopRecord() {
         ioScope.cancel()
-        LogContext.log.w(ITAG, "Stop recording audio")
+        LogContext.log.i(ITAG, "Stop recording audio")
         var stopResult = true
         runCatching {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                LogContext.log.w(ITAG, "Stopping recording...")
+                LogContext.log.i(ITAG, "Stopping recording...")
                 audioRecord.stop()
             }
         }.onFailure { it.printStackTrace(); stopResult = false }

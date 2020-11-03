@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.MediaActionSound
 import android.media.RingtoneManager
 import android.net.Uri
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 
 /**
@@ -12,6 +11,8 @@ import com.leovp.androidbase.utils.log.LogContext
  * Date: 2020/9/4 下午7:48
  */
 object DeviceSound {
+    private const val TAG = "DeviceSound"
+
     fun playShutterClick() {
         MediaActionSound().play(MediaActionSound.SHUTTER_CLICK)
     }
@@ -29,7 +30,7 @@ object DeviceSound {
     }
 
     fun playDefaultNotification(ctx: Context) {
-        LogContext.log.w(ITAG, "playDefaultNotification")
+        LogContext.log.w(TAG, "playDefaultNotification")
         runCatching {
             val notification: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             RingtoneManager.getRingtone(ctx, notification).play()

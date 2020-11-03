@@ -2,7 +2,6 @@ package com.leovp.audio.player.aac
 
 import android.content.Context
 import android.media.*
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.recorder.BuildConfig
@@ -20,6 +19,10 @@ import java.nio.ByteBuffer
  * Date: 2020/9/17 下午5:01
  */
 class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
+    companion object {
+        private const val TAG = "AacFilePlayer"
+    }
+
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
     private var audioManager: AudioManager? = null
 
@@ -92,12 +95,12 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
             audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
 
             if (AudioTrack.STATE_INITIALIZED == audioTrack!!.state) {
-                LogContext.log.w(ITAG, "Start playing audio...")
+                LogContext.log.i(TAG, "Start playing audio...")
                 audioTrack!!.play()
             } else {
-                LogContext.log.w(ITAG, "AudioTrack state is not STATE_INITIALIZED")
+                LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
             }
-        }.onFailure { LogContext.log.e(ITAG, "initAudioTrack error msg=${it.message}") }
+        }.onFailure { LogContext.log.e(TAG, "initAudioTrack error msg=${it.message}") }
     }
 
     fun playAac(aacFile: File, f: () -> Unit) {
@@ -119,7 +122,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
-                    if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "inputIndex=$inputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
                     if (inputIndex < 0) {
                         isFinish = true
                     }
@@ -130,7 +133,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         sampleSize = mediaExtractor.readSampleData(it, 0)
                         sampleData = ByteArray(it.remaining())
                         it.get(sampleData!!)
-                        LogContext.log.i(ITAG, "Sample aac data[${sampleData?.size}]")
+                        LogContext.log.i(TAG, "Sample aac data[${sampleData?.size}]")
                     }
 
                     if (sampleSize > 0) {
@@ -141,7 +144,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         isFinish = true
                     }
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
-                    if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "outputIndex=$outputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {
@@ -155,7 +158,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                             for (i in shortPcmData.indices) {
                                 shortPcmData[i] = (chunkPCM[i * 2].toInt() and 0xFF or (chunkPCM[i * 2 + 1].toInt() shl 8)).toShort()
                             }
-                            LogContext.log.i(ITAG, "Finally PCM data[${shortPcmData.size}]")
+                            LogContext.log.i(TAG, "Finally PCM data[${shortPcmData.size}]")
                             audioTrack?.write(shortPcmData, 0, shortPcmData.size)
                         }
                         audioDecoder?.releaseOutputBuffer(outputIndex, false)

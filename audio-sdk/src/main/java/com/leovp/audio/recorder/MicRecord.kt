@@ -96,6 +96,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     }
 
     fun stopRecord() {
+        ioScope.cancel()
         LogContext.log.w(ITAG, "Stop recording audio")
         var stopResult = true
         runCatching {
@@ -106,7 +107,6 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
             LogContext.log.w(ITAG, "Releasing recording...")
             audioRecord.release()
         }.onFailure { it.printStackTrace(); stopResult = false }
-        ioScope.cancel()
         callback.onStop(stopResult)
     }
 

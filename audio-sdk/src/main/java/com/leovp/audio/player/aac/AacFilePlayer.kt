@@ -119,7 +119,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
-                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "inputIndex=$inputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "inputIndex=$inputIndex")
                     if (inputIndex < 0) {
                         isFinish = true
                     }
@@ -141,7 +141,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         isFinish = true
                     }
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
-                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "outputIndex=$outputIndex")
+                    if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "outputIndex=$outputIndex")
                     var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {

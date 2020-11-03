@@ -100,12 +100,16 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
         LogContext.log.w(ITAG, "Stop recording audio")
         var stopResult = true
         runCatching {
-            LogContext.log.w(ITAG, "Stopping recording...")
-            audioRecord.stop()
+            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
+                LogContext.log.w(ITAG, "Stopping recording...")
+                audioRecord.stop()
+            }
         }.onFailure { it.printStackTrace(); stopResult = false }
         runCatching {
-            LogContext.log.w(ITAG, "Releasing recording...")
-            audioRecord.release()
+            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
+                LogContext.log.w(ITAG, "Releasing recording...")
+                audioRecord.release()
+            }
         }.onFailure { it.printStackTrace(); stopResult = false }
         callback.onStop(stopResult)
     }

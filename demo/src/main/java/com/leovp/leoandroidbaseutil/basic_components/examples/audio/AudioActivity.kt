@@ -18,6 +18,9 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_audio.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
@@ -29,6 +32,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val RECORD_TYPE_PCM = 1
         private const val RECORD_TYPE_AAC = 2
     }
+
+    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
@@ -158,10 +163,16 @@ class AudioActivity : BaseDemonstrationActivity() {
     }
 
     override fun onStop() {
-        micRecorder?.stopRecord()
-        pcmPlayer?.release()
-        audioReceiver?.stopServer()
-        audioSender?.stop()
+        ioScope.launch {
+            audioReceiver?.stopServer()
+        }
+        ioScope.launch {
+            audioSender?.stop()
+        }
+        ioScope.launch {
+            micRecorder?.stopRecord()
+            pcmPlayer?.release()
+        }
         aacFilePlayer?.stop()
         aacEncoder?.release()
         super.onStop()

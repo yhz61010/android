@@ -34,7 +34,7 @@ object AudioPlayManager {
     fun setContext(context: Context?) {
         mContext = context
         init()
-        initMediaExactor()
+        initMediaExtractor()
     }
 
     private fun init() {
@@ -52,7 +52,7 @@ object AudioPlayManager {
         mAudioTrack = AudioTrack(audioAttributes, audioFormat, bufferSize * 2, AudioTrack.MODE_STREAM, sessionId)
     }
 
-    private fun initMediaExactor() {
+    private fun initMediaExtractor() {
         try {
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
             mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, mSampleRate, channelCount)

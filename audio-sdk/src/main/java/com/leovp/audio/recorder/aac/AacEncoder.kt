@@ -5,6 +5,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.androidbase.exts.toHexadecimalString
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.audio.recorder.BuildConfig
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
@@ -77,12 +78,14 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-                    LogContext.log.i(TAG, "onOutputBufferAvailable length=${info.size}")
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
+                    }
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)
                             outputBuffer.get(csd0!!)
-                            LogContext.log.i(TAG, "CODEC_CONFIG=${csd0?.toHexadecimalString()}")
+                            LogContext.log.i(TAG, "csd0=${csd0?.toHexadecimalString()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
@@ -108,7 +111,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
+            LogContext.log.i(TAG, "onOutputFormatChanged format=$format")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
@@ -167,7 +170,9 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
      * @param outAacDataLenWithAdts The length of audio data with ADTS header.
      */
     private fun addAdtsToDataWithoutCRC(outAacDataWithAdts: ByteArray, outAacDataLenWithAdts: Int) {
-        LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        if (BuildConfig.DEBUG) {
+            LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        }
 
         // ByteBuffer key
         // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -194,7 +199,9 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
             // 1: single_channel_element 2: CPE(channel_pair_element)
             val channelCfg: Int = (it[1].toInt() shr 3) and 0xF
-            LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
+            if (BuildConfig.DEBUG) {
+                LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
+            }
 
             // https://www.jianshu.com/p/5c770a22e8f8
             outAacDataWithAdts[0] = 0xFF.toByte()

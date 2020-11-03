@@ -160,10 +160,10 @@ class AudioActivity : BaseDemonstrationActivity() {
     override fun onStop() {
         micRecorder?.stopRecord()
         pcmPlayer?.release()
+        audioReceiver?.stopServer()
+        audioSender?.stop()
         aacFilePlayer?.stop()
         aacEncoder?.release()
-        audioSender?.stop()
-        audioReceiver?.stopServer()
         super.onStop()
     }
 

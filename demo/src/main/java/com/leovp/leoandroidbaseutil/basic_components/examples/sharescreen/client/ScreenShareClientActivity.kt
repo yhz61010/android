@@ -5,6 +5,7 @@ import android.media.MediaFormat
 import android.os.Bundle
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexadecimalString
+import com.leovp.androidbase.utils.AppUtil
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
@@ -28,6 +29,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private val queue = ConcurrentLinkedQueue<ByteArray>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screen_share_client)
 
@@ -40,6 +42,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 disconnect()
             }
         }
+    }
+
+    override fun onResume() {
+        AppUtil.hideNavigationBar(this)
+        super.onResume()
     }
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray) {

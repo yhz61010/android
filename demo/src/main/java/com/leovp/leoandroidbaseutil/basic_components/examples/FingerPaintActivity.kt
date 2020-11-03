@@ -28,17 +28,17 @@ class FingerPaintActivity : BaseDemonstrationActivity(), SeekBar.OnSeekBarChange
         blur.setOnClickListener(this)
     }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        if (seekBar?.id == red.id || seekBar?.id == green.id || seekBar?.id == blue.id) {
+    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+        if (seekBar.id == red.id || seekBar.id == green.id || seekBar.id == blue.id) {
             val r = red.progress
             val g = green.progress
             val b = blue.progress
             val color = Color.argb(255, r, g, b)
             finger.strokeColor = color
             colorPreview.setBackgroundColor(color)
-        } else if (seekBar?.id == tolerance.id) {
+        } else if (seekBar.id == tolerance.id) {
             finger.touchTolerance = progress.toFloat()
-        } else if (seekBar?.id == width.id) {
+        } else if (seekBar.id == width.id) {
             finger.strokeWidth = progress.toFloat()
         }
     }
@@ -64,10 +64,10 @@ class FingerPaintActivity : BaseDemonstrationActivity(), SeekBar.OnSeekBarChange
         previewContainer.visibility = View.INVISIBLE
     }
 
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    override fun onStartTrackingTouch(seekBar: SeekBar) {
     }
 
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+    override fun onStopTrackingTouch(seekBar: SeekBar) {
     }
 
     override fun onBackPressed() {

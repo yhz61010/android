@@ -160,16 +160,20 @@ class AudioSender {
             if (receivedString != null) {
                 netty.connectionListener.onReceivedData(netty, receivedString)
             } else {
-                val receivedByteBuf = msg.content().retain()
-                val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
-                receivedByteBuf.readBytes(dataByteArray)
-                netty.connectionListener.onReceivedData(netty, dataByteArray)
-                receivedByteBuf.release()
+                runCatching {
+                    val receivedByteBuf = msg.content().retain()
+                    val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
+                    receivedByteBuf.readBytes(dataByteArray)
+                    netty.connectionListener.onReceivedData(netty, dataByteArray)
+                    receivedByteBuf.release()
+                }.onFailure { it.printStackTrace() }
             }
         }
 
         fun sendAudioToServer(audioData: ByteArray): Boolean {
-            return netty.executeCommand("AudioPCM", "SendAudio", audioData, false)
+            return kotlin.runCatching {
+                netty.executeCommand("AudioPCM", "SendAudio", audioData, false)
+            }.getOrDefault(false)
         }
 
         override fun release() {

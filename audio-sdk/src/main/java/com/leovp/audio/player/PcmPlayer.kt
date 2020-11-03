@@ -84,8 +84,10 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     fun pause() {
         LogContext.log.w(ITAG, "pause()")
         runCatching {
-            audioTrack.pause()
-            audioTrack.flush()
+            if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {
+                audioTrack.pause()
+                audioTrack.flush()
+            }
         }.onFailure { it.printStackTrace() }
     }
 
@@ -103,12 +105,20 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     fun stop() {
         LogContext.log.w(ITAG, "stop()")
         pause()
-        runCatching { audioTrack.stop() }.onFailure { it.printStackTrace() }
+        runCatching {
+            if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {
+                audioTrack.stop()
+            }
+        }.onFailure { it.printStackTrace() }
     }
 
     fun release() {
         LogContext.log.w(ITAG, "release()")
         stop()
-        runCatching { audioTrack.release() }.onFailure { it.printStackTrace() }
+        runCatching {
+            if (audioTrack.state == AudioTrack.STATE_INITIALIZED) {
+                audioTrack.release()
+            }
+        }.onFailure { it.printStackTrace() }
     }
 }

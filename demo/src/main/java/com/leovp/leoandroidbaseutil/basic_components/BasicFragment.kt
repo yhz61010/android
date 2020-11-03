@@ -81,6 +81,7 @@ class BasicFragment : Fragment() {
             Pair("Clipboard", ClipboardActivity::class.java),
             Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),
             Pair("KeepAlive", KeepAliveActivity::class.java),
+            Pair("Finger Paint", FingerPaintActivity::class.java),
         )
 
         val colors = arrayOf(

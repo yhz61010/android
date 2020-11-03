@@ -1,5 +1,6 @@
 package com.leovp.screenshot.base
 
+import android.annotation.SuppressLint
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaCodec
@@ -85,12 +86,15 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             private set
         var iFrameInterval = 1
             private set
+        var useGoogleEncoder = false
+            private set
 
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
+        fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
@@ -101,6 +105,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
     }
 
+    @SuppressLint("InlinedApi")
     @Throws(Exception::class)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
@@ -123,8 +128,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
-        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-//        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        h264Encoder = if (builder.useGoogleEncoder) {
+            MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        } else {
+            MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        }
         h264Encoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         outputFormat = h264Encoder?.outputFormat // option B
         h264Encoder?.setCallback(mediaCodecCallback)

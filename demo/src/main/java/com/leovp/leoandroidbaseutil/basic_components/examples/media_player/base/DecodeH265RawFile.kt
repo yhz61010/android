@@ -125,7 +125,7 @@ class DecodeH265RawFile {
     private var csd0Size: Int = 0
 
     fun init(videoFile: String, width: Int, height: Int, surface: Surface) {
-        kotlin.runCatching {
+        runCatching {
             rf = RandomAccessFile(File(videoFile), "r")
             LogContext.log.w(TAG, "File length=${rf.length()}")
 
@@ -154,7 +154,7 @@ class DecodeH265RawFile {
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-            kotlin.runCatching {
+            runCatching {
                 val inputBuffer = codec.getInputBuffer(inputBufferId)
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
@@ -170,7 +170,7 @@ class DecodeH265RawFile {
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            kotlin.runCatching {
+            runCatching {
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat

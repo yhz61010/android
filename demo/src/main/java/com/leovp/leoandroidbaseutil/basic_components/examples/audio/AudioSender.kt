@@ -171,7 +171,7 @@ class AudioSender {
         }
 
         fun sendAudioToServer(audioData: ByteArray): Boolean {
-            return kotlin.runCatching {
+            return runCatching {
                 netty.executeCommand("AudioPCM", "SendAudio", audioData, false)
             }.getOrDefault(false)
         }

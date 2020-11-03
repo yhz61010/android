@@ -157,18 +157,21 @@ abstract class BaseNettyServer protected constructor(
             LogContext.log.w(tag, "Closing channel...")
             runCatching {
                 pipeline().removeAll { true }
+                closeFuture()
                 close().syncUninterruptibly()
             }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
         }
 
-        bossGroup.run {
+        runCatching {
             LogContext.log.w(tag, "Releasing bossGroup...")
-            shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-        }
-        workerGroup.run {
+            bossGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+        }.onFailure { LogContext.log.e(tag, "Shutdown bossGroup error.", it) }
+
+        runCatching {
             LogContext.log.w(tag, "Releasing workerGroup...")
-            shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-        }
+            workerGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+        }.onFailure { LogContext.log.e(tag, "Shutdown workerGroup error.", it) }
+
         LogContext.log.w(tag, "=====> Server released <=====")
         connectState.set(ServerConnectStatus.STOPPED)
         connectionListener.onStopped()

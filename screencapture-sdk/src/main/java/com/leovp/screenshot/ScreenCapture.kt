@@ -55,6 +55,7 @@ object ScreenCapture {
         private var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         private var keyFrameRate = 20
         private var iFrameInterval = 1
+        private var useGoogleEncoder = false
 
         // Screenshot setting
         private var sampleSize = 1
@@ -68,6 +69,7 @@ object ScreenCapture {
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
+        fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         // ==================================================
         // ===== For Image
@@ -81,7 +83,7 @@ object ScreenCapture {
         fun build(): ScreenProcessor {
             LogContext.log.i(
                 TAG,
-                "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize"
+                "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
                 BY_IMAGE ->
@@ -101,6 +103,7 @@ object ScreenCapture {
                         .setBitrateMode(bitrateMode)
                         .setKeyFrameRate(keyFrameRate)
                         .setIFrameInterval(iFrameInterval)
+                        .setGoogleEncoder(useGoogleEncoder)
                         .build()
                 else ->
                     ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)

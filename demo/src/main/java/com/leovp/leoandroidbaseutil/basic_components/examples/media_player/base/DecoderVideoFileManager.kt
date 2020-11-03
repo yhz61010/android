@@ -28,7 +28,7 @@ class DecoderVideoFileManager {
     var videoHeight: Int = 0
 
     fun init(videoFile: String, surface: Surface) {
-        kotlin.runCatching {
+        runCatching {
             mediaExtractor = MediaExtractor()
             mediaExtractor.setDataSource(videoFile)
             LogContext.log.d(TAG, "getTrackCount: " + mediaExtractor.trackCount)
@@ -67,7 +67,7 @@ class DecoderVideoFileManager {
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
-            kotlin.runCatching {
+            runCatching {
                 codec.getInputBuffer(index)?.let {
                     val sampleSize = mediaExtractor.readSampleData(it, 0)
                     if (sampleSize > 0) {
@@ -92,7 +92,7 @@ class DecoderVideoFileManager {
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-            kotlin.runCatching {
+            runCatching {
                 LogContext.log.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
                 mSpeedController.preRender(info.presentationTimeUs)
                 codec.releaseOutputBuffer(index, true)
@@ -112,7 +112,7 @@ class DecoderVideoFileManager {
     }
 
     fun close() {
-        kotlin.runCatching {
+        runCatching {
             LogContext.log.d(TAG, "close start")
             mediaCodec.stop()
             mediaCodec.release()

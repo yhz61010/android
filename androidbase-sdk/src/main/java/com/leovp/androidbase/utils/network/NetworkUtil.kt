@@ -5,7 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.BufferedReader
 import java.io.IOException
@@ -22,6 +21,7 @@ import java.util.*
  *
  */
 object NetworkUtil {
+    private const val TAG = "NetworkUtil"
 
     const val NETWORK_PING_DELAY_HIGH = 130
     const val NETWORK_PING_DELAY_VERY_HIGH = 200
@@ -132,7 +132,7 @@ object NetworkUtil {
                 socket.close()
             }
         }.onFailure {
-            LogContext.log.e(ITAG, "isHostReachable error", it)
+            LogContext.log.e(TAG, "isHostReachable error", it)
         }
         return connected
     }

@@ -23,7 +23,8 @@
         <activity android:name=".basic_components.examples.WatermarkActivity" />
         <activity
             android:name=".basic_components.examples.FingerPaintActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".basic_components.examples.camera2.Camera2WithoutPreviewActivity" />
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
         <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />

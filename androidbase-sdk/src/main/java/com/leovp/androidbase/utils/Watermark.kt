@@ -132,8 +132,8 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             canvas.rotate(rotation, width / 2f, height / 2f)
             var count = 0
             for ((index, positionY) in (0..diagonal step (textHeight * lineSpacerMultiple).toInt()).withIndex()) {
-                for (positionX in (-width + index % 2 * textWidth).toInt()..(width + textWidth * wordSpacerMultiple).toInt() step (textWidth * wordSpacerMultiple).toInt()) {
-                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "watermark loop time: ${++count}")
+                for (positionX in (-textWidth * wordSpacerMultiple + index % 2 * textWidth * 0.5f).toInt()..(width + textWidth * wordSpacerMultiple).toInt() step (textWidth * wordSpacerMultiple).toInt()) {
+                    if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "watermark loop time: ${++count}")
                     canvas.drawText(text, positionX.toFloat(), positionY.toFloat(), paint)
                 }
             }

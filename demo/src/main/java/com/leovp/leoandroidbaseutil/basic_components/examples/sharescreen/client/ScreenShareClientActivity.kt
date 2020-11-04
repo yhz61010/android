@@ -1,8 +1,10 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client
 
+import android.graphics.Color
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
+import android.view.View
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexadecimalString
 import com.leovp.androidbase.utils.AppUtil
@@ -41,6 +43,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             } else {
                 disconnect()
             }
+        }
+
+        finger.strokeColor = Color.RED
+        finger.inEditMode = false
+
+        switchDraw.setOnCheckedChangeListener { _, isChecked ->
+            finger.inEditMode = isChecked
         }
     }
 
@@ -184,5 +193,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private fun disconnect() {
         webSocketClient?.closeBlocking()
         webSocketClient?.close()
+    }
+
+    fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        finger.clear()
+    }
+
+    fun onUndoClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        finger.undo()
     }
 }

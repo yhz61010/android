@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    // "type" must be "id"
+    <item type="id" name="TAG_WATERMARK_IN_USE" />
+    <item type="id" name="TAG_WATERMARK_LAYOUT" />
+</resources>

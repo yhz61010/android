@@ -6,8 +6,11 @@ import android.graphics.drawable.Drawable
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.IntRange
+import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
+import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.getToday
+import com.leovp.androidbase.utils.log.LogContext
 import java.util.*
 import kotlin.math.sqrt
 
@@ -66,9 +69,19 @@ object Watermark {
         var textSize: Float = 16F,
 
         /**
-         * Watermark text rotation
+         * Watermark text rotation in degree
          */
-        var rotation: Float = -25f
+        var rotation: Float = -25f,
+
+        /**
+         * Watermark text line spacer multiple
+         */
+        var lineSpacerMultiple: Float = 4.5f,
+
+        /**
+         * Watermark text line word multiple
+         */
+        var wordSpacerMultiple: Float = 1.3f
     )
 }
 
@@ -86,6 +99,8 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
         drawable.textColor = default.textColor
         drawable.textSize = default.textSize
         drawable.rotation = default.rotation
+        drawable.lineSpacerMultiple = default.lineSpacerMultiple
+        drawable.wordSpacerMultiple = default.wordSpacerMultiple
         layout.background = drawable
     }
 
@@ -100,6 +115,9 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
         var textSize: Float = 0F
         var rotation: Float = 0F
 
+        var lineSpacerMultiple = 4.5f
+        var wordSpacerMultiple = 1.3f
+
         override fun draw(canvas: Canvas) {
             val width = bounds.right
             val height = bounds.bottom
@@ -107,20 +125,17 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             paint.color = textColor
             paint.textSize = AppUtil.sp2px(textSize).toFloat()
             paint.isAntiAlias = true
+            val fontMetrics = paint.fontMetrics
+            val textHeight = fontMetrics.descent - fontMetrics.ascent
             val textWidth = paint.measureText(text)
             canvas.drawColor(Color.TRANSPARENT)
-            canvas.rotate(rotation,  width / 2f, height / 2f)
-            var index = 0
-            var fromX: Float
-            var positionY = diagonal / 10
-            while (positionY <= diagonal) {
-                fromX = -width + index++ % 2 * textWidth
-                var positionX = fromX
-                while (positionX < width) {
-                    canvas.drawText(text, positionX, positionY.toFloat(), paint)
-                    positionX += textWidth * 2
+            canvas.rotate(rotation, width / 2f, height / 2f)
+            var count = 0
+            for ((index, positionY) in (0..diagonal step (textHeight * lineSpacerMultiple).toInt()).withIndex()) {
+                for (positionX in (-width + index % 2 * textWidth).toInt()..(width + textWidth * wordSpacerMultiple).toInt() step (textWidth * wordSpacerMultiple).toInt()) {
+                    if (BuildConfig.DEBUG) LogContext.log.d(ITAG, "watermark loop time: ${++count}")
+                    canvas.drawText(text, positionX.toFloat(), positionY.toFloat(), paint)
                 }
-                positionY += diagonal / 10
             }
             canvas.save()
             canvas.restore()

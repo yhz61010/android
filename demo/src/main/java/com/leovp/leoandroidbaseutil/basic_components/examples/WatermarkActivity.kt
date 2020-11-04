@@ -35,9 +35,9 @@ class WatermarkActivity : BaseDemonstrationActivity() {
 
                 // Custom watermark before using it
                 Watermark.with(this@WatermarkActivity).init {
-                    text = "Custom your text here"
-                    textColor = Color.parseColor("#40FF00FF")
-                    textSize = 20F
+                    text = "Michael Leo"
+                    textColor = Color.parseColor("#3000FFFF")
+                    textSize = 14F
                     rotation = usedRotation.toFloat()
                 }.show()
             }
@@ -75,7 +75,8 @@ class WatermarkActivity : BaseDemonstrationActivity() {
         Watermark.with(this).init {
             text = "Custom your text here"
             textColor = Color.parseColor("#40FF00FF")
-            textSize = 20F
+            textSize = 20f
+            wordSpacerMultiple = 1.1f
         }.show()
     }
 }

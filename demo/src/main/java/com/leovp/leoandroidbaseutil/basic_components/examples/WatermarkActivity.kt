@@ -3,9 +3,15 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.utils.Watermark
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import kotlinx.android.synthetic.main.activity_watermark.*
+
 
 class WatermarkActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +25,29 @@ class WatermarkActivity : BaseDemonstrationActivity() {
         }
 
         Watermark.with(this).show()
+
+        sbRotation.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val usedRotation = progress - 180
+                LogContext.log.i(ITAG, "rotation=$usedRotation")
+
+                Watermark.remove(this@WatermarkActivity)
+
+                // Custom watermark before using it
+                Watermark.with(this@WatermarkActivity).init {
+                    text = "Custom your text here"
+                    textColor = Color.parseColor("#40FF00FF")
+                    textSize = 20F
+                    rotation = usedRotation.toFloat()
+                }.show()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+        })
     }
 
     fun onRemoveWatermark(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -45,6 +74,7 @@ class WatermarkActivity : BaseDemonstrationActivity() {
         // Custom watermark before using it
         Watermark.with(this).init {
             text = "Custom your text here"
+            textColor = Color.parseColor("#40FF00FF")
             textSize = 20F
         }.show()
     }

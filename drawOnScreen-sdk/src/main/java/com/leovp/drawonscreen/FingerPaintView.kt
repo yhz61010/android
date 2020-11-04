@@ -150,7 +150,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
                 }
             }
         }
-        return true
+        return inEditMode
     }
 
     private fun handleTouchStart(event: MotionEvent) {

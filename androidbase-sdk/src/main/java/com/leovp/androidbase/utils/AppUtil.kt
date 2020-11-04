@@ -10,10 +10,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Process
+import android.util.TypedValue
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -24,6 +26,7 @@ import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import kotlin.system.exitProcess
+
 
 /**
  * Author: Michael Leo
@@ -144,9 +147,19 @@ object AppUtil {
         }
     }
 
+    // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
     fun dp2px(ctx: Context, dipValue: Float) = (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
 
     fun px2dp(ctx: Context, pxValue: Float) = (pxValue / ctx.resources.displayMetrics.density + 0.5f).toInt()
+
+    fun sp2px(spValue: Float, ctx: Context? = null): Int {
+        return if (ctx == null) {
+            val fontScale: Float = Resources.getSystem().displayMetrics.scaledDensity
+            (spValue * fontScale + 0.5f).toInt()
+        } else {
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, spValue, ctx.resources.displayMetrics).toInt()
+        }
+    }
 
     /**
      * Get meta data in Activity or Application.<br></br>

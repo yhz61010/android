@@ -185,7 +185,7 @@ class MediaProjectionService : Service() {
             ScreenCapture.BY_MEDIA_CODEC,
             screenDataListener
         )
-            .setGoogleEncoder(true)
+            .setGoogleEncoder(false)
             .setFps(setting.fps)
             // For H264 and x264
             .setBitrate(setting.bitrate)

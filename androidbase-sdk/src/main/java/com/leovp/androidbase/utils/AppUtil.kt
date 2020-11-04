@@ -97,7 +97,7 @@ object AppUtil {
         act.requestWindowFeature(Window.FEATURE_NO_TITLE)
         act.window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         // or
-        // act.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        act.window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
 
     /**

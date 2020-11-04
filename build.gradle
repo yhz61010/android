@@ -49,7 +49,7 @@ ext {
     recyclerviewVersion = '1.1.0'
     materialVersion = '1.2.1'
     cardviewVersion = '1.0.0'
-    constraintlayoutVersion = '2.0.2'
+    constraintlayoutVersion = '2.0.4'
     multidexVersion = '2.0.1'
     navVersion = '2.3.1'
     roomVersion = '2.2.5'

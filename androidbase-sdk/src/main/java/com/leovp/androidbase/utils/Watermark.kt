@@ -109,7 +109,7 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             paint.isAntiAlias = true
             val textWidth = paint.measureText(text)
             canvas.drawColor(Color.TRANSPARENT)
-            canvas.rotate(rotation)
+            canvas.rotate(rotation,  width / 2f, height / 2f)
             var index = 0
             var fromX: Float
             var positionY = diagonal / 10

@@ -1,5 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.media.MediaCodec
 import android.media.MediaFormat
@@ -14,15 +15,28 @@ import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
+import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
+import com.leovp.socket_sdk.framework.client.BaseNettyClient
+import com.leovp.socket_sdk.framework.client.ClientConnectListener
+import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
+import com.leovp.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
+import io.netty.buffer.ByteBufUtil
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_screen_share_client.*
-import org.java_websocket.client.WebSocketClient
-import org.java_websocket.handshake.ServerHandshake
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ScreenShareClientActivity : BaseDemonstrationActivity() {
+
+    private val cs = CoroutineScope(Dispatchers.IO)
 
     private var decoder: MediaCodec? = null
     private var outputFormat: MediaFormat? = null
@@ -41,7 +55,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             if (isChecked) {
                 connectToServer()
             } else {
-                disconnect()
+                releaseConnection()
             }
         }
 
@@ -58,7 +72,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onResume()
     }
 
+    override fun onDestroy() {
+        releaseConnection()
+        super.onDestroy()
+    }
+
     private fun initDecoder(sps: ByteArray, pps: ByteArray) {
+        LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexadecimalString()} pps=${pps.toHexadecimalString()}")
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
 //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
         val screenInfo = DeviceUtil.getResolution(this)
@@ -80,7 +100,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-//                CLog.i(ITAG, "onInputBufferAvailable length=${it.size}")
+//                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
@@ -95,7 +115,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             // bufferFormat is equivalent to member variable outputFormat
             // outputBuffer is ready to be processed or rendered.
             outputBuffer?.let {
-//                CLog.i(ITAG, "onOutputBufferAvailable length=${info.size}")
+//                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         val decodedData = ByteArray(info.size)
@@ -132,67 +152,110 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 20
 
     // ============================================
-    private var webSocketClient: WebSocketClient? = null
+    private lateinit var webSocketClient: WebSocketClient
+    private lateinit var webSocketClientHandler: WebSocketClientHandler
 
-    inner class ScreenShareWebSocketClient(serverURI: URI) : WebSocketClient(serverURI) {
-        private var firstData = AtomicBoolean(false)
+    class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
+        BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
+        override fun getTagName() = "ScreenShareClientActivity"
+    }
 
-        override fun onOpen(serverHandshake: ServerHandshake) {
-            LogContext.log.d(ITAG, "onOpen")
+    @ChannelHandler.Sharable
+    class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
+            val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+            val cmdId = receivedByteBuf.readIntLE()
+            val bodyMessage = ByteBufUtil.getBytes(receivedByteBuf, 4, receivedByteBuf.capacity() - 4, false)
+            receivedByteBuf.release()
+            netty.connectionListener.onReceivedData(netty, bodyMessage, cmdId)
         }
 
-        override fun onMessage(s: String) {
-            LogContext.log.d(ITAG, "onMessage: $s")
+        fun sendMsgToServer(msg: String): Boolean {
+            return netty.executeCommand("WebSocketCmd", "Send msg to server", msg)
         }
 
-        override fun onMessage(bytes: ByteBuffer) {
-            val data = ByteArray(bytes.remaining())
-            bytes.get(data)
-            LogContext.log.i(ITAG, "onMessage length=${data.size}")
-
-            if (!firstData.get()) {
-                LogContext.log.w(ITAG, "first data=${data.contentToString()}")
-                firstData.set(true)
-                val sps = H264Util.getSps(data)
-                val pps = H264Util.getPps(data)
-                LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
-                if (sps != null && pps != null) {
-                    initDecoder(sps, pps)
-                    return
-                } else {
-                    ToastUtil.showErrorLongToast("Get SPS/PPS error.")
-                    return
-                }
-            }
-
-            queue.offer(data)
-        }
-
-        override fun onClose(i: Int, s: String, b: Boolean) {
-            LogContext.log.d(ITAG, "onClose")
-            runOnUiThread { toggleButton.isChecked = false }
-        }
-
-        override fun onError(e: Exception) {
-            LogContext.log.e(ITAG, "onError")
-            e.printStackTrace()
+        override fun release() {
         }
     }
 
     private fun connectToServer() {
+        val connectionListener = object : ClientConnectListener<BaseNettyClient> {
+            private val foundCsd = AtomicBoolean(false)
+
+            override fun onConnected(netty: BaseNettyClient) {
+                LogContext.log.i(ITAG, "onConnected")
+            }
+
+            @SuppressLint("SetTextI18n")
+            override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
+                val dataArray = data as ByteArray
+                LogContext.log.i(ITAG, "CMD=$action onReceivedData[${dataArray.size}]")
+
+                if (ScreenShareMasterActivity.CMD_GRAPHIC_CSD == action) {
+                    foundCsd.set(true)
+                    queue.offer(dataArray)
+                    LogContext.log.w(ITAG, "csd=${dataArray.contentToString()}")
+                    val sps = H264Util.getSps(dataArray)
+                    val pps = H264Util.getPps(dataArray)
+                    LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
+                    if (sps != null && pps != null) {
+                        initDecoder(sps, pps)
+                        return
+                    } else {
+                        ToastUtil.showErrorLongToast("Get SPS/PPS error.")
+                        return
+                    }
+                }
+
+                if (foundCsd.get()) {
+                    queue.offer(dataArray)
+                } else {
+                    LogContext.log.i(ITAG, "Not found csd. Ignore video data.")
+                }
+            }
+
+            override fun onDisconnected(netty: BaseNettyClient) {
+                LogContext.log.w(ITAG, "onDisconnect")
+                lostConnection()
+            }
+
+            override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
+                LogContext.log.w(ITAG, "onFailed code: $code message: $msg")
+                lostConnection()
+            }
+
+            private fun lostConnection() {
+                foundCsd.set(false)
+                queue.clear()
+                runCatching {
+                    decoder?.release()
+                }.onFailure { it.printStackTrace() }
+                cs.launch { webSocketClient.disconnectManually() }
+                runOnUiThread { toggleButton.isChecked = false }
+
+            }
+        }
+
         // This ip is remote phone ip.
         // You can get this value as following:
         // 1. adb shell (Login your server phone)
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
-        val url = URI("ws://${etServerIp.text}:10086")
-        webSocketClient = ScreenShareWebSocketClient(url)
-        webSocketClient?.connectBlocking()
+        val url = URI("ws://${etServerIp.text}:10086/ws")
+        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000))
+        webSocketClientHandler = WebSocketClientHandler(webSocketClient)
+        webSocketClient.initHandler(webSocketClientHandler)
+        cs.launch {
+            webSocketClient.connect()
+        }
     }
 
-    private fun disconnect() {
-        webSocketClient?.closeBlocking()
-        webSocketClient?.close()
+    private fun releaseConnection() {
+        queue.clear()
+        runCatching {
+            decoder?.release()
+        }.onFailure { it.printStackTrace() }
+        cs.launch { if (::webSocketClient.isInitialized) webSocketClient.release() }
     }
 
     fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {

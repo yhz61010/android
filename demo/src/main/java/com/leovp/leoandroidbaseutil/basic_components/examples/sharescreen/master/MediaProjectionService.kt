@@ -69,7 +69,7 @@ class MediaProjectionService : Service() {
                     e.printStackTrace()
                 }
             }
-            screenDataUpdateListener?.onUpdate(buffer)
+            screenDataUpdateListener?.onUpdate(buffer, flags)
             // Bitmap for screenshot
 //            val bitmap = buffer as Bitmap
 //            FileUtil.writeBitmapToFile(bitmap, 0)
@@ -236,5 +236,5 @@ class MediaProjectionService : Service() {
 }
 
 interface ScreenDataUpdateListener {
-    fun onUpdate(data: Any)
+    fun onUpdate(data: Any, flags: Int)
 }

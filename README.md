@@ -10,12 +10,17 @@ That means you can just check the network traffic and ping in log but you can no
 In the next version, I will provide you a listener that you can use them freely when network traffic and ping are changed.~~
 
 # About Log
-By default, I used [Xlog](https://github.com/Tencent/mars) as default Log system.  
-You can use it easily by calling `CLog.d()` or other handy methods in `CLog`.  
-**DO NOT** forget to initialize it first in `Application` by calling `CLog.init(ctx)`.
+Almost every project will use a log wrapper to manage your log. So does this library.
+Here comes a question: how to save this library logs in your project if you need it?
+In order to solve this problem, I implement a log system by using `LogContext`.
+You just need to initiate `LogContext` with your custom log wrapper and output your log by using `LogContext`
+I have already implement the `LLog` which is a wrapper of Android default log as default implementation for `LogContext`.
+Of course, you can implement your log wrapper by implement `ILog`.
+**DO NOT** forget to initialize it first in `Application`.
 
-If you do not want to use [Xlog](https://github.com/Tencent/mars), you can use `LLog` instead.  
-This is just a wrapper of android default `Log`. These is no need to initialize it before using it.
+Please check the `LogActivity` for details.
+
+FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper implements. It is an efficient and powerful log.
 
 # About Camera2Live Module(Device Camera Information List)
 

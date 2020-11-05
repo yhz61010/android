@@ -9,7 +9,14 @@ import com.leovp.socket_sdk.framework.base.BaseNetty
 interface ClientConnectListener<in T : BaseNetty> {
 
     fun onConnected(netty: T)
-    fun onReceivedData(netty: T, data: Any?, action: Int = -1)
+
+    /**
+     * Note that, this method **DOES NOT** indicate the receiving data from socket.
+     *
+     * This interface should be used in your specified command
+     * so that you can pass the data whatever you want to your upper business layer.
+     */
+    fun onReceivedData(netty: T, data: Any?, action: Int = -1) {}
     fun onDisconnected(netty: T)
     fun onFailed(netty: T, code: Int, msg: String?)
 

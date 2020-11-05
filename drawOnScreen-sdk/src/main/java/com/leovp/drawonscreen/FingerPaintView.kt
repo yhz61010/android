@@ -266,4 +266,10 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
         countDrawn = 0
         invalidate()
     }
+
+    fun drawUserPath(userPath: MutableList<Pair<Path, Paint>>) {
+        clear()
+        paths.addAll(0, userPath)
+        invalidate()
+    }
 }

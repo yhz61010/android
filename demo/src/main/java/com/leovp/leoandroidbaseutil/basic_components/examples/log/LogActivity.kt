@@ -8,32 +8,23 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 /**
- * CLog is the wrapper of XlogCLog is the wrapper of Xlog
- * Before using it, you must initialize it in `Application` by calling:
+ * You can implement your log wrapper by implement `ILog` or else the default log wrapper `LLog` will be used.
+ * `LLog` is the wrapper of Android default log
+ *
+ * After implementing your log wrapper, you must initialize it in `Application` by calling:
+ * Assume that `CLog` is your custom log wrapper.
  * ```kotlin
  * LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
  * ```
+ * The default implementation is like this below:
+ * ```kotlin
+ * LogContext.setLogImp(LLog())
+ * ```
  *
- * After CLog initializing, the usage of CLog is just the same as LogContext.log.
+ * After initializing, the usage is very simple:
  * ```kotlin
  * LogContext.log.w(ITAG, "Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
  * ```
- *
- * It's better to call
- * ```kotlin
- * (LogContext.log as CLog).flushLog()
- * ```
- * in `onStop()` to make sure flush all memory logs into file.
- *
- * When you no need to use CLog, please close it.
- * ```kotlin
- * (LogContext.log as CLog).closeLog()
- * ```
- * Generally speaking, this method should be called before you exit app.
- *
- *
- * LLog is the wrapper of Android default log
- * No need to do any initializing before using it.
  */
 class LogActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

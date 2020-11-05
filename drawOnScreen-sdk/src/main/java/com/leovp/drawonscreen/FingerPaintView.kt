@@ -58,14 +58,14 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     var touchTolerance = defaultTouchTolerance
 
-    private val pathPaint = Paint().also {
-        it.isAntiAlias = true
-        it.isDither = true
-        it.color = strokeColor
-        it.style = Paint.Style.STROKE
-        it.strokeJoin = Paint.Join.ROUND
-        it.strokeCap = Paint.Cap.ROUND
-        it.strokeWidth = strokeWidth
+    private val pathPaint = Paint().apply {
+        isAntiAlias = true
+        isDither = true
+        color = strokeColor
+        style = Paint.Style.STROKE
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        strokeWidth = strokeWidth
     }
 
     private var currentX = 0f
@@ -73,18 +73,14 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var paths: MutableList<Pair<Path, Paint>> = mutableListOf()
 
     init {
-        if (attrs != null) {
-            val typedArray = context.theme.obtainStyledAttributes(
-                attrs,
-                R.styleable.FingerPaintImageView, defStyleAttr, defStyleRes
-            )
-            try {
-                strokeColor = typedArray.getColor(R.styleable.FingerPaintImageView_strokeColor, defaultStrokeColor)
-                strokeWidth = typedArray.getDimension(R.styleable.FingerPaintImageView_strokeWidth, defaultStrokeWidth)
-                inEditMode = typedArray.getBoolean(R.styleable.FingerPaintImageView_inEditMode, false)
-                touchTolerance = typedArray.getFloat(R.styleable.FingerPaintImageView_touchTolerance, defaultTouchTolerance)
-            } finally {
-                typedArray.recycle()
+        attrs?.let {
+            context.theme.obtainStyledAttributes(it, R.styleable.FingerPaintImageView, defStyleAttr, defStyleRes).run {
+                runCatching {
+                    strokeColor = getColor(R.styleable.FingerPaintImageView_strokeColor, defaultStrokeColor)
+                    strokeWidth = getDimension(R.styleable.FingerPaintImageView_strokeWidth, defaultStrokeWidth)
+                    inEditMode = getBoolean(R.styleable.FingerPaintImageView_inEditMode, false)
+                    touchTolerance = getFloat(R.styleable.FingerPaintImageView_touchTolerance, defaultTouchTolerance)
+                }.also { recycle() }
             }
         }
     }
@@ -94,11 +90,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        brushBitmap = Bitmap.createBitmap(
-            w,
-            h,
-            Bitmap.Config.ARGB_8888
-        ).also { brushCanvas = Canvas(it) }
+        brushBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { brushCanvas = Canvas(it) }
     }
 
     /**

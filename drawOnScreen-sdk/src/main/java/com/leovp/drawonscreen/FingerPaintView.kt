@@ -58,14 +58,14 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     var touchTolerance = defaultTouchTolerance
 
-    private val pathPaint = Paint().also {
-        it.isAntiAlias = true
-        it.isDither = true
-        it.color = strokeColor
-        it.style = Paint.Style.STROKE
-        it.strokeJoin = Paint.Join.ROUND
-        it.strokeCap = Paint.Cap.ROUND
-        it.strokeWidth = strokeWidth
+    private val pathPaint = Paint().apply {
+        isAntiAlias = true
+        isDither = true
+        color = strokeColor
+        style = Paint.Style.STROKE
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        strokeWidth = this@FingerPaintView.strokeWidth
     }
 
     private var currentX = 0f

@@ -58,7 +58,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (CameraUtil.REQUEST_CODE_OPEN_GALLERY == requestCode && resultCode == Activity.RESULT_OK) {
             LogContext.log.i(TAG, "OPEN_GALLERY onActivityResult")
-//            CameraUtil.handleImageAboveKitKat(this, data).forEach { CLog.i(TAG, "Selected image=$it") }
+//            CameraUtil.handleImageAboveKitKat(this, data).forEach { LogContext.log.i(TAG, "Selected image=$it") }
             // The following code is just for demo. The exception is not considered.
             data?.data?.let {
                 // In Android 10+, I really do not know how to get the file real path.

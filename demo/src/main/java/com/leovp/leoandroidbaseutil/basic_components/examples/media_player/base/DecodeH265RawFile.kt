@@ -159,7 +159,7 @@ class DecodeH265RawFile {
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-//                CLog.i(ITAG, "onInputBufferAvailable length=${it.size}")
+//                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                     LogContext.log.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
                 }

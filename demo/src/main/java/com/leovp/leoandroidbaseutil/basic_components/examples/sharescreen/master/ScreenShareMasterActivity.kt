@@ -12,19 +12,35 @@ import android.os.IBinder
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.exception
+import com.leovp.androidbase.exts.toBytesLE
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.screenshot.ScreenCapture
+import com.leovp.socket_sdk.framework.server.BaseNettyServer
+import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
+import com.leovp.socket_sdk.framework.server.ServerConnectListener
+import io.netty.channel.Channel
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_screen_share_master.*
-import org.java_websocket.WebSocket
-import org.java_websocket.handshake.ClientHandshake
-import org.java_websocket.server.WebSocketServer
-import java.net.InetSocketAddress
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.nio.charset.Charset
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
+    companion object {
+        const val CMD_GRAPHIC_CSD: Int = 1
+        const val CMD_GRAPHIC_DATA: Int = 2
+    }
+
+    private val cs = CoroutineScope(Dispatchers.IO)
 
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
@@ -37,19 +53,16 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.outputH264File = false
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
-                    override fun onUpdate(data: Any) {
-                        val dataArray = data as ByteArray
-                        webSocket?.let { ws ->
-                            if (ws.isClosed || ws.isClosing) {
-                                LogContext.log.i(ITAG, "WebSocket is not available. Do nothing.")
-                                return
-                            }
-                            LogContext.log.i(ITAG, "Data length=${dataArray.size}")
+                    override fun onUpdate(data: Any, flags: Int) {
+                        if (clientChannel != null) {
+                            val dataArray = data as ByteArray
                             runOnUiThread {
-                                txtInfo.text = "Data length=${dataArray.size}"
+                                txtInfo.text = "flags=$flags Data length=${dataArray.size}"
                             }
-                            ws.send(dataArray)
-                        } // webSocket let
+                            runCatching {
+                                clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, dataArray) }
+                            }.onFailure { e -> e.printStackTrace() }
+                        } // if
                     } // onUpdate
                 } // ScreenDataUpdateListener
             } // mediaProjectService also
@@ -81,6 +94,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 mediaProjectService?.stopScreenShare()
             }
         }
+
+        finger.inEditMode = false
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -123,6 +138,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
+        stopServer()
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {
             unbindService(serviceConn)
@@ -133,44 +149,87 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     // =========================================
 
-    private var webSocketServer: ScreenShareWebSocketServer? = null
-    private var webSocket: WebSocket? = null
+    private lateinit var webSocketServer: WebSocketServer
+    private lateinit var webSocketServerHandler: WebSocketServerHandler
 
-    inner class ScreenShareWebSocketServer(port: Int) :
-        WebSocketServer(InetSocketAddress(port)) {
-        override fun onOpen(webSocket: WebSocket?, clientHandshake: ClientHandshake?) {
-            LogContext.log.w(ITAG, "onOpen")
-            this@ScreenShareMasterActivity.webSocket = webSocket
+    private var clientChannel: Channel? = null
 
-            webSocket?.send(mediaProjectService?.spsPps)
-            mediaProjectService?.triggerIFrame()
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
+
+    @ChannelHandler.Sharable
+    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
+            val receivedString: String?
+            val frame = msg as WebSocketFrame
+            receivedString = when (frame) {
+                is TextWebSocketFrame -> frame.text()
+                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
+                else -> null
+            }
+            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }
 
-        override fun onClose(webSocket: WebSocket?, i: Int, s: String?, b: Boolean) {
-            LogContext.log.w(ITAG, "onClose")
+        fun sendVideoData(clientChannel: Channel, cmdId: Int, data: ByteArray): Boolean {
+            return netty.executeCommand(clientChannel, cmdId.toBytesLE() + data, showContent = false)
+        }
+
+        override fun release() {
+        }
+    }
+
+    private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
+        override fun onStarted(netty: BaseNettyServer) {
+            LogContext.log.i(ITAG, "onStarted")
+        }
+
+        override fun onStopped() {
+            LogContext.log.i(ITAG, "onStop")
+        }
+
+        override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
+            LogContext.log.w(ITAG, "onClientConnected: ${clientChannel.remoteAddress()}")
+            cs.launch {
+                webSocketServerHandler.sendVideoData(clientChannel, CMD_GRAPHIC_CSD, mediaProjectService?.spsPps!!)
+                mediaProjectService?.triggerIFrame()
+                this@ScreenShareMasterActivity.clientChannel = clientChannel
+            }
+        }
+
+        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
+            LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
+        }
+
+        override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
+            LogContext.log.w(ITAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
+            lostClientDisconnection()
+        }
+
+        override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
+            LogContext.log.w(ITAG, "onFailed code: $code message: $msg")
+            lostClientDisconnection()
+        }
+
+        private fun lostClientDisconnection() {
+            this@ScreenShareMasterActivity.clientChannel = null
             runOnUiThread { toggleButton.isChecked = false }
-        }
-
-        override fun onMessage(webSocket: WebSocket?, s: String?) {
-            LogContext.log.i(ITAG, "onMessage")
-        }
-
-        override fun onError(webSocket: WebSocket?, e: Exception?) {
-            e?.printStackTrace()
-            LogContext.log.e(ITAG, "onError")
+            stopServer()
         }
     }
 
     private fun startServer() {
-        webSocketServer = ScreenShareWebSocketServer(10086)
-        webSocketServer?.start()
+        cs.launch {
+            webSocketServer = WebSocketServer(10086, connectionListener)
+            webSocketServerHandler = WebSocketServerHandler(webSocketServer)
+            webSocketServer.initHandler(webSocketServerHandler)
+            webSocketServer.startServer()
+        }
     }
 
     private fun stopServer() {
-        webSocket?.close()
-        webSocket = null
-        webSocketServer?.stop()
-        webSocketServer = null
+        clientChannel = null
+        cs.launch {
+            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
+        }
     }
 }
 

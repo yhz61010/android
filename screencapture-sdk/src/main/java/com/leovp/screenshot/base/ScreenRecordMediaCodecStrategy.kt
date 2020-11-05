@@ -40,12 +40,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //            // fill inputBuffer with valid data
 //
 //            codec.queueInputBuffer(inputBufferId,)
-//            CLog.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
+//            LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
             try {
-//            CLog.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
+//            LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
@@ -58,7 +58,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            CLog.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+//            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
@@ -221,7 +221,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //            }
 //        }
 //        if (BuildConfig.DEBUG) {
-//            CLog.d(
+//            LogContext.log.d(
 //                TAG,
 //                "$naluTypeStr:Len=${bytes.size}${if (NAL_SPS == naluType) "[" + bytes.toHexStringLE() + "]" else ""}"
 //            )

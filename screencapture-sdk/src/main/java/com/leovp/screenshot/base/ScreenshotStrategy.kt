@@ -97,7 +97,7 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            CLog.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+//            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B

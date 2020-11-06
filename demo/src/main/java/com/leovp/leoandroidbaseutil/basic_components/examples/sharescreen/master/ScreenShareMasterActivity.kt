@@ -200,7 +200,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        val userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
+        var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
@@ -220,6 +220,16 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also { it.moveTo(paintBean.x + 1, paintBean.y + 1) } to Paint(pathPaint))
                     ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
                     ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
+                    ScreenShareClientActivity.TouchType.CLEAR -> {
+                        userPath.clear()
+                        finger.clear()
+                        return@launch
+                    }
+                    ScreenShareClientActivity.TouchType.UNDO -> {
+                        finger.undo()
+                        userPath = finger.getPaths()
+                        return@launch
+                    }
                 }
                 finger.drawUserPath(userPath)
             }
@@ -253,9 +263,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     private fun stopServer() {
         clientChannel = null
-        cs.launch {
-            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
-        }
+        cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }
 }
 

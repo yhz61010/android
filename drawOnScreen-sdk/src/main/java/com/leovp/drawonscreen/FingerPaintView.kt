@@ -17,6 +17,8 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
         BLUR, /*EMBOSS,*/ NORMAL
     }
 
+    var touchUpCallback: TouchUpCallback? = null
+
     private val defaultStrokeColor = Color.RED
     private val defaultStrokeWidth = 12f
     private val defaultTouchTolerance = 4f
@@ -124,21 +126,24 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
     private fun getCurrentPath() = paths.lastOrNull()?.first
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
         if (inEditMode) {
-            when (event?.action) {
+            when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     handleTouchStart(event)
                     invalidate()
+                    touchUpCallback?.onTouchDown(event.x, event.y, pathPaint)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     handleTouchMove(event)
                     invalidate()
+                    touchUpCallback?.onTouchMove(event.x, event.y, pathPaint)
                 }
                 MotionEvent.ACTION_UP -> {
                     handleTouchEnd()
                     countDrawn++
                     invalidate()
+                    touchUpCallback?.onTouchUp(event.x, event.y, pathPaint)
                 }
             }
         }
@@ -189,24 +194,32 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun handleTouchEnd() = getCurrentPath()?.lineTo(currentX, currentY)
 
+    interface TouchUpCallback {
+        fun onTouchDown(x: Float, y: Float, paint: Paint)
+        fun onTouchMove(x: Float, y: Float, paint: Paint)
+        fun onTouchUp(x: Float, y: Float, paint: Paint)
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         brushBitmap?.eraseColor(Color.TRANSPARENT)
         brushCanvas?.drawColor(Color.TRANSPARENT)
         canvas.save()
-        for (index in paths.indices) {
-            val path = paths[index]
-            if (index >= countDrawn) {
-                path.second.maskFilter =
-                    when (currentBrush) {
+        runCatching {
+            for (index in paths.indices) {
+                val path = paths[index]
+                if (index >= countDrawn) {
+                    path.second.maskFilter =
+                        when (currentBrush) {
 //                        BrushType.EMBOSS -> defaultEmboss
-                        BrushType.BLUR -> defaultBlur
-                        BrushType.NORMAL -> null
-                    }
+                            BrushType.BLUR -> defaultBlur
+                            BrushType.NORMAL -> null
+                        }
+                }
+                brushCanvas?.drawPath(paths[index].first, paths[index].second)
             }
-            brushCanvas?.drawPath(paths[index].first, paths[index].second)
-        }
-        brushBitmap?.let { canvas.drawBitmap(it, 0f, 0f, defaultBitmapPaint) }
+            brushBitmap?.let { canvas.drawBitmap(it, 0f, 0f, defaultBitmapPaint) }
+        }.onFailure { /* You can ignore this error. */ }
         canvas.restore()
     }
 
@@ -261,15 +274,19 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
     /**
      * Clears all existing paths from the image.
      */
+    @Synchronized
     fun clear() {
         paths.clear()
         countDrawn = 0
         invalidate()
     }
 
+    @Synchronized
     fun drawUserPath(userPath: MutableList<Pair<Path, Paint>>) {
         clear()
         paths.addAll(0, userPath)
         invalidate()
     }
+
+    fun getPaths() = paths.toMutableList()
 }

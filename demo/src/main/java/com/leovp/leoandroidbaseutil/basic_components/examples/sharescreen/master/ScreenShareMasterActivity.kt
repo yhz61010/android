@@ -5,6 +5,8 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Paint
+import android.graphics.Path
 import android.media.MediaCodecInfo
 import android.os.Build
 import android.os.Bundle
@@ -13,11 +15,13 @@ import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.exception
 import com.leovp.androidbase.exts.toBytesLE
+import com.leovp.androidbase.exts.toObject
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
@@ -33,6 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.charset.Charset
+
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     companion object {
@@ -195,8 +200,29 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
+        val userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
+            cs.launch {
+                val stringData = data as String
+                val paintBean = stringData.toObject(ScreenShareClientActivity.PaintBean::class.java)!!
+                val pathPaint = Paint().apply {
+                    isAntiAlias = true
+                    isDither = true
+                    color = paintBean.paintColor
+                    style = paintBean.paintStyle
+                    strokeJoin = Paint.Join.ROUND
+                    strokeCap = Paint.Cap.ROUND
+                    strokeWidth = paintBean.strokeWidth
+                }
+
+                when (paintBean.touchType) {
+                    ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also { it.moveTo(paintBean.x + 1, paintBean.y + 1) } to Paint(pathPaint))
+                    ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
+                    ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
+                }
+                finger.drawUserPath(userPath)
+            }
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {

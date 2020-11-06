@@ -2,17 +2,21 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.clien
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.Paint
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.toHexadecimalString
+import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.AppUtil
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.ui.ToastUtil
+import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
@@ -44,6 +48,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var frameCount: Long = 0
     private val queue = ConcurrentLinkedQueue<ByteArray>()
 
+    @Keep
+    enum class TouchType {
+        DOWN, MOVE, UP
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
@@ -61,6 +70,20 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         finger.strokeColor = Color.RED
         finger.inEditMode = false
+
+        finger.touchUpCallback = object : FingerPaintView.TouchUpCallback {
+            override fun onTouchDown(x: Float, y: Float, paint: Paint) {
+                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.DOWN, x, y, paint)
+            }
+
+            override fun onTouchMove(x: Float, y: Float, paint: Paint) {
+                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.MOVE, x, y, paint)
+            }
+
+            override fun onTouchUp(x: Float, y: Float, paint: Paint) {
+                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.UP, x, y, paint)
+            }
+        }
 
         switchDraw.setOnCheckedChangeListener { _, isChecked ->
             finger.inEditMode = isChecked
@@ -170,13 +193,17 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             netty.connectionListener.onReceivedData(netty, bodyMessage, cmdId)
         }
 
-        fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand("WebSocketCmd", "Send msg to server", msg)
+        fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
+            val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
+            return netty.executeCommand("WebSocketCmd", "Send paint data to server", paintBean.toJsonString())
         }
 
         override fun release() {
         }
     }
+
+    @Keep
+    data class PaintBean(val touchType: TouchType, val x: Float, val y: Float, val paintColor: Int, val paintStyle: Paint.Style, val strokeWidth: Float)
 
     private fun connectToServer() {
         val connectionListener = object : ClientConnectListener<BaseNettyClient> {

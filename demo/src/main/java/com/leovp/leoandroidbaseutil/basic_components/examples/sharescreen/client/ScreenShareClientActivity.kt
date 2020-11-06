@@ -50,7 +50,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     @Keep
     enum class TouchType {
-        DOWN, MOVE, UP
+        DOWN, MOVE, UP, CLEAR, UNDO
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +82,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onTouchUp(x: Float, y: Float, paint: Paint) {
                 if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.UP, x, y, paint)
+            }
+
+            override fun onClear() {
+                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.clearCanvas()
+            }
+
+            override fun onUndo() {
+                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.undoDraw()
             }
         }
 
@@ -195,7 +203,17 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
             val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
-            return netty.executeCommand("WebSocketCmd", "Send paint data to server", paintBean.toJsonString())
+            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", paintBean.toJsonString())
+        }
+
+        fun clearCanvas(): Boolean {
+            val paintBean = PaintBean(TouchType.CLEAR)
+            return netty.executeCommand("WebSocketCmd", "Clear canvas", paintBean.toJsonString())
+        }
+
+        fun undoDraw(): Boolean {
+            val paintBean = PaintBean(TouchType.UNDO)
+            return netty.executeCommand("WebSocketCmd", "Undo draw", paintBean.toJsonString())
         }
 
         override fun release() {
@@ -203,7 +221,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     @Keep
-    data class PaintBean(val touchType: TouchType, val x: Float, val y: Float, val paintColor: Int, val paintStyle: Paint.Style, val strokeWidth: Float)
+    data class PaintBean(
+        val touchType: TouchType,
+        val x: Float = 0f,
+        val y: Float = 0f,
+        val paintColor: Int = 0,
+        val paintStyle: Paint.Style = Paint.Style.STROKE,
+        val strokeWidth: Float = 0f
+    )
 
     private fun connectToServer() {
         val connectionListener = object : ClientConnectListener<BaseNettyClient> {

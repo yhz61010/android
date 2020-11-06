@@ -18,7 +18,7 @@ import kotlin.math.abs
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-class FloatViewManager constructor(private val context: Context, @LayoutRes private val layoutId: Int, val enableDrag: Boolean = true) {
+class FloatViewManager constructor(private val context: Context, @LayoutRes private val layoutId: Int, @Suppress("WeakerAccess") val enableDrag: Boolean = true) {
 
     private var windowManager: WindowManager? = null
         get() {

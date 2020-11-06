@@ -18,7 +18,11 @@ import kotlin.math.abs
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-class FloatViewManager constructor(private val context: Context, @LayoutRes private val layoutId: Int, @Suppress("WeakerAccess") val enableDrag: Boolean = true) {
+class FloatViewManager constructor(
+    private val context: Context,
+    @LayoutRes private val layoutId: Int,
+    @Suppress("WeakerAccess") val enableDrag: Boolean = true
+) {
 
     private var windowManager: WindowManager? = null
         get() {
@@ -39,6 +43,7 @@ class FloatViewManager constructor(private val context: Context, @LayoutRes priv
 
     private var isShowing = false
     private var touchConsumedByMove = false
+
 
     private val onTouchListener = View.OnTouchListener { view, event ->
         if (!enableDrag) return@OnTouchListener false
@@ -86,7 +91,11 @@ class FloatViewManager constructor(private val context: Context, @LayoutRes priv
 
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
-            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            flags = if (enableDrag) {
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            } else {
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            }
             @Suppress("DEPRECATION")
             type = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY

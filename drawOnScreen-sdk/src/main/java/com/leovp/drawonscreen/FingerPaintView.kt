@@ -198,6 +198,8 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
         fun onTouchDown(x: Float, y: Float, paint: Paint)
         fun onTouchMove(x: Float, y: Float, paint: Paint)
         fun onTouchUp(x: Float, y: Float, paint: Paint)
+        fun onClear()
+        fun onUndo()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -252,6 +254,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
      * Removes the last full path from the view.
      */
     fun undo() {
+        touchUpCallback?.onUndo()
         paths.takeIf { it.isNotEmpty() }?.removeAt(paths.lastIndex)
         countDrawn--
         invalidate()
@@ -276,6 +279,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
      */
     @Synchronized
     fun clear() {
+        touchUpCallback?.onClear()
         paths.clear()
         countDrawn = 0
         invalidate()

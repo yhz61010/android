@@ -141,31 +141,33 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            val outputBuffer = codec.getOutputBuffer(outputBufferId)
-            // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-            // bufferFormat is equivalent to member variable outputFormat
-            // outputBuffer is ready to be processed or rendered.
-            outputBuffer?.let {
+            runCatching {
+                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+                // bufferFormat is equivalent to member variable outputFormat
+                // outputBuffer is ready to be processed or rendered.
+                outputBuffer?.let {
 //                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
-                when (info.flags) {
-                    MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                        val decodedData = ByteArray(info.size)
-                        it.get(decodedData)
-                        LogContext.log.w(ITAG, "Found SPS/PPS frame: ${decodedData.toHexadecimalString()}")
-                    }
-                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
-                    MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
-                        // Do nothing
-                    }
-                    MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
-                        // Do nothing
-                    }
-                    else -> {
-                        // Do nothing
+                    when (info.flags) {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                            val decodedData = ByteArray(info.size)
+                            it.get(decodedData)
+                            LogContext.log.w(ITAG, "Found SPS/PPS frame: ${decodedData.toHexadecimalString()}")
+                        }
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
+                            // Do nothing
+                        }
+                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
+                            // Do nothing
+                        }
+                        else -> {
+                            // Do nothing
+                        }
                     }
                 }
-            }
-            codec.releaseOutputBuffer(outputBufferId, true)
+                codec.releaseOutputBuffer(outputBufferId, true)
+            }.onFailure { it.printStackTrace() }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

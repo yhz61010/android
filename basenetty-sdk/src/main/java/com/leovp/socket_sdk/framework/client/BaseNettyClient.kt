@@ -48,7 +48,6 @@ abstract class BaseNettyClient protected constructor(
 ) : BaseNetty() {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
-        private const val TAG_SEND_CMD = "cmd"
     }
 
     val tag: String by lazy { getTagName() }
@@ -378,8 +377,8 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]=$cmd")
-                    else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.length}]")
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.length}]=$cmd")
+                    else LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.length}]")
                 }
             }
             is ByteArray -> {
@@ -387,8 +386,8 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
-                    if (showContent) LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
-                    else LogContext.log.i(TAG_SEND_CMD, "exe[$cmdTypeAndId:$cmdDesc][${cmd.size}]")
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                    else LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.size}]")
                 }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")

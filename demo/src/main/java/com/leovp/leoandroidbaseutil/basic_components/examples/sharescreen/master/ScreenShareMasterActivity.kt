@@ -8,17 +8,19 @@ import android.content.ServiceConnection
 import android.graphics.Paint
 import android.graphics.Path
 import android.media.MediaCodecInfo
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.exception
-import com.leovp.androidbase.exts.toBytesLE
-import com.leovp.androidbase.exts.toObject
+import com.leovp.androidbase.exts.*
+import com.leovp.androidbase.ui.FloatViewManager
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
+import com.leovp.drawonscreen.FingerPaintView
+import com.leovp.leoandroidbaseutil.CustomApplication
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -36,6 +38,7 @@ import kotlinx.android.synthetic.main.activity_screen_share_master.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.charset.Charset
 
 
@@ -43,9 +46,13 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     companion object {
         const val CMD_GRAPHIC_CSD: Int = 1
         const val CMD_GRAPHIC_DATA: Int = 2
+
+        private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
 
     private val cs = CoroutineScope(Dispatchers.IO)
+
+    private var floatCanvas: FloatViewManager? = null
 
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
@@ -100,11 +107,38 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        finger.inEditMode = false
+        floatCanvas = FloatViewManager(CustomApplication.instance, R.layout.component_screen_share_float_canvas, enableDrag = false)
+
+        if (canDrawOverlays) {
+            floatCanvas?.show()
+        } else {
+            startManageDrawOverlaysPermission()
+        }
+    }
+
+    private fun startManageDrawOverlaysPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${applicationContext.packageName}")
+            ).let {
+                startActivityForResult(it, REQUEST_CODE_DRAW_OVERLAY_PERMISSION)
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_CODE_DRAW_OVERLAY_PERMISSION -> {
+                if (canDrawOverlays) {
+                    floatCanvas?.show()
+                } else {
+                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
+                }
+                return
+            }
+        }
         ScreenCapture.onActivityResult(requestCode, resultCode, data, object : ScreenCapture.ScreenCaptureListener {
             override fun requestResult(result: Int, resultCode: Int, data: Intent?) {
                 when (result) {
@@ -216,22 +250,27 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     strokeWidth = paintBean.strokeWidth
                 }
 
-                when (paintBean.touchType) {
-                    ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also { it.moveTo(paintBean.x + 1, paintBean.y + 1) } to Paint(pathPaint))
-                    ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
-                    ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
-                    ScreenShareClientActivity.TouchType.CLEAR -> {
-                        userPath.clear()
-                        finger.clear()
-                        return@launch
+                withContext(Dispatchers.Main) {
+                    val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
+                    when (paintBean.touchType) {
+                        ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
+                            it.moveTo(paintBean.x + 1, paintBean.y + 1)
+                        } to Paint(pathPaint))
+                        ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
+                        ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
+                        ScreenShareClientActivity.TouchType.CLEAR -> {
+                            userPath.clear()
+                            fingerPaintView?.clear()
+                            return@withContext
+                        }
+                        ScreenShareClientActivity.TouchType.UNDO -> {
+                            fingerPaintView?.undo()
+                            userPath = fingerPaintView?.getPaths()!!
+                            return@withContext
+                        }
                     }
-                    ScreenShareClientActivity.TouchType.UNDO -> {
-                        finger.undo()
-                        userPath = finger.getPaths()
-                        return@launch
-                    }
+                    fingerPaintView?.drawUserPath(userPath)
                 }
-                finger.drawUserPath(userPath)
             }
         }
 

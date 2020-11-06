@@ -305,6 +305,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     private fun releaseConnection() {
+        finger.clear()
         queue.clear()
         runCatching {
             decoder?.release()

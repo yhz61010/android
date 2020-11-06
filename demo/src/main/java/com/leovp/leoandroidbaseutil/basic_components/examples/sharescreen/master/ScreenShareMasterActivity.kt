@@ -303,6 +303,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private fun stopServer() {
         val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
         fingerPaintView?.clear()
+        floatCanvas?.dismiss()
         clientChannel = null
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }

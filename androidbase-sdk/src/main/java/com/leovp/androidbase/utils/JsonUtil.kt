@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils
 import com.google.gson.Gson
 import com.leovp.androidbase.exts.toHexString
 import com.leovp.androidbase.utils.log.LogContext
+import java.lang.reflect.Type
 
 /**
  * Author: Michael Leo
@@ -20,7 +21,7 @@ object JsonUtil {
      * @param <T>   the type of the desired object
      * @return an object of type T from the string. Returns `null` if `json` is `null`
      * or if `json` is empty.
-    </T> */
+     */
     fun <T> toObject(json: String?, clazz: Class<T>): T? {
         try {
             return GSON.fromJson(json, clazz)
@@ -28,6 +29,32 @@ object JsonUtil {
             LogContext.log.e(
                 TAG,
                 "Can not toObject. Generally, you can ignore this exception. Exception",
+                ex
+            )
+        }
+        return null
+    }
+
+    /**
+     * Convert json string to object
+     *
+     * Example:
+     * ```kotlin
+     * val listType  = object : TypeToken<MutableList<Pair<Path, Paint>>>() {}.type
+     * val paths: MutableList<Pair<Path, Paint>> = jsonString.toObject(listType)!!
+     * ```
+     *
+     * @param type the type of the desired object
+     * @return an object of type T from the string. Returns `null` if `json` is `null`
+     * or if `json` is empty.
+     */
+    fun <T> toObject(json: String?, type: Type): T? {
+        try {
+            return GSON.fromJson(json, type)
+        } catch (ex: Exception) {
+            LogContext.log.e(
+                TAG,
+                "Can not toObject with Type. Generally, you can ignore this exception. Exception",
                 ex
             )
         }

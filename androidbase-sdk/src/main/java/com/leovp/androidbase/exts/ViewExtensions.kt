@@ -1,5 +1,8 @@
 package com.leovp.androidbase.exts
 
+import android.content.Context
+import android.os.Build
+import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
@@ -95,3 +98,6 @@ fun AlertDialog.showImmersive() {
     // Set the dialog to focusable again
     window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
 }
+
+val Context.canDrawOverlays: Boolean
+    get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)

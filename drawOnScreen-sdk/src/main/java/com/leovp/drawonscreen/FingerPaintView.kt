@@ -106,20 +106,22 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
             val inverse = Matrix().apply { imageMatrix.invert(this) }
             val scale = FloatArray(9).apply { inverse.getValues(this) }[Matrix.MSCALE_X]
 
-            // draw original bitmap
-            val result = Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(result)
-            it.draw(canvas)
+            runCatching {
+                // draw original bitmap
+                val result = Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(result)
+                it.draw(canvas)
 
-            val transformedPath = Path()
-            val transformedPaint = Paint()
-            paths.forEach { (path, paint) ->
-                path.transform(inverse, transformedPath)
-                transformedPaint.set(paint)
-                transformedPaint.strokeWidth *= scale
-                canvas.drawPath(transformedPath, transformedPaint)
-            }
-            BitmapDrawable(resources, result)
+                val transformedPath = Path()
+                val transformedPaint = Paint()
+                paths.forEach { (path, paint) ->
+                    path.transform(inverse, transformedPath)
+                    transformedPaint.set(paint)
+                    transformedPaint.strokeWidth *= scale
+                    canvas.drawPath(transformedPath, transformedPaint)
+                }
+                BitmapDrawable(resources, result)
+            }.getOrNull()
         }
     }
 

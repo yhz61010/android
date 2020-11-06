@@ -13,6 +13,8 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 20-3-3 下午3:40
  *
+ * Need permission: `<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />`
+ *
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */

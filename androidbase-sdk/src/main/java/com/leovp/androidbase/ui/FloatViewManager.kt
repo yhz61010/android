@@ -94,6 +94,8 @@ class FloatViewManager constructor(
             flags = if (enableDrag) {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             } else {
+                // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
+                // However the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
             }
             @Suppress("DEPRECATION")

@@ -24,6 +24,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TOUCH_EVENT
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TRIGGER_I_FRAME
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
@@ -70,7 +71,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
-                if (sps != null && pps != null) initDecoder(sps!!, pps!!)
+                if (sps != null && pps != null) {
+                    initDecoder(sps!!, pps!!)
+                    webSocketClientHandler?.triggerIFrame()
+                }
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -95,23 +99,23 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         finger.touchUpCallback = object : FingerPaintView.TouchUpCallback {
             override fun onTouchDown(x: Float, y: Float, paint: Paint) {
-                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.DOWN, x, y, paint)
+                webSocketClientHandler?.sendPaintData(TouchType.DOWN, x, y, paint)
             }
 
             override fun onTouchMove(x: Float, y: Float, paint: Paint) {
-                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.MOVE, x, y, paint)
+                webSocketClientHandler?.sendPaintData(TouchType.MOVE, x, y, paint)
             }
 
             override fun onTouchUp(x: Float, y: Float, paint: Paint) {
-                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.sendPaintData(TouchType.UP, x, y, paint)
+                webSocketClientHandler?.sendPaintData(TouchType.UP, x, y, paint)
             }
 
             override fun onClear() {
-                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.clearCanvas()
+                webSocketClientHandler?.clearCanvas()
             }
 
             override fun onUndo() {
-                if (::webSocketClientHandler.isInitialized) webSocketClientHandler.undoDraw()
+                webSocketClientHandler?.undoDraw()
             }
         }
 
@@ -209,8 +213,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 20
 
     // ============================================
-    private lateinit var webSocketClient: WebSocketClient
-    private lateinit var webSocketClientHandler: WebSocketClientHandler
+    private var webSocketClient: WebSocketClient? = null
+    private var webSocketClientHandler: WebSocketClientHandler? = null
 
     class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
         BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
@@ -225,6 +229,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val bodyMessage = ByteBufUtil.getBytes(receivedByteBuf, 4, receivedByteBuf.capacity() - 4, false)
             receivedByteBuf.release()
             netty.connectionListener.onReceivedData(netty, bodyMessage, cmdId)
+        }
+
+        fun triggerIFrame(): Boolean {
+            val cmd = CmdBean(CMD_TRIGGER_I_FRAME, null, null)
+            return netty.executeCommand("TriggerIFrame", "Acquire I Frame", cmd.toJsonString())
         }
 
         fun sendDeviceScreenInfoToServer(point: Point): Boolean {
@@ -273,8 +282,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onConnected(netty: BaseNettyClient) {
                 LogContext.log.i(ITAG, "onConnected")
-
-                webSocketClientHandler.sendDeviceScreenInfoToServer(DeviceUtil.getResolutionWithVirtualKey(this@ScreenShareClientActivity))
+                webSocketClientHandler?.sendDeviceScreenInfoToServer(DeviceUtil.getResolutionWithVirtualKey(this@ScreenShareClientActivity))
             }
 
             @SuppressLint("SetTextI18n")
@@ -325,7 +333,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 runCatching {
                     decoder?.release()
                 }.onFailure { it.printStackTrace() }
-                cs.launch { webSocketClient.disconnectManually() }
+                cs.launch { webSocketClient?.disconnectManually() }
                 runOnUiThread { toggleButton.isChecked = false }
 
             }
@@ -337,11 +345,12 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
         val url = URI("ws://${etServerIp.text}:10086/ws")
-        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000))
-        webSocketClientHandler = WebSocketClientHandler(webSocketClient)
-        webSocketClient.initHandler(webSocketClientHandler)
-        cs.launch {
-            webSocketClient.connect()
+        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also{
+            webSocketClientHandler = WebSocketClientHandler(it)
+            it.initHandler(webSocketClientHandler)
+            cs.launch {
+                it.connect()
+            }
         }
     }
 
@@ -353,7 +362,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         runCatching {
             decoder?.release()
         }.onFailure { it.printStackTrace() }
-        cs.launch { if (::webSocketClient.isInitialized) webSocketClient.release() }
+        cs.launch {webSocketClient?.release() }
     }
 
     fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {

@@ -64,7 +64,7 @@ class AudioSender {
                 is ByteArray -> {
                     if (!startPlaying) {
                         startPlaying = true
-                        pcmPlayer = PcmPlayer(ctx!!, audioPlayCodec)
+                        pcmPlayer = PcmPlayer(ctx!!, audioPlayCodec, 5)
                     }
                     LogContext.log.i(TAG, "onReceivedData PCM[${data.size}]")
                     ioScope.launch {

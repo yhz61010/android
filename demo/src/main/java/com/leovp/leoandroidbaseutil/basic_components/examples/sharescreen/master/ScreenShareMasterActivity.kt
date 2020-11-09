@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Point
 import android.media.MediaCodecInfo
 import android.net.Uri
 import android.os.Build
@@ -46,6 +47,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     companion object {
         const val CMD_GRAPHIC_CSD: Int = 1
         const val CMD_GRAPHIC_DATA: Int = 2
+        const val CMD_TOUCH_EVENT: Int = 3
+        const val CMD_DEVICE_SCREEN_INFO: Int = 4
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
@@ -232,42 +235,52 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
+        var clientScreenInfo: Point? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
+        val currentScreen = DeviceUtil.getResolutionWithVirtualKey(CustomApplication.instance)
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
                 val stringData = data as String
-                val paintBean = stringData.toObject(ScreenShareClientActivity.PaintBean::class.java)!!
-                val pathPaint = Paint().apply {
-                    isAntiAlias = true
-                    isDither = true
-                    color = paintBean.paintColor
-                    style = paintBean.paintStyle
-                    strokeJoin = Paint.Join.ROUND
-                    strokeCap = Paint.Cap.ROUND
-                    strokeWidth = paintBean.strokeWidth
-                }
-
-                withContext(Dispatchers.Main) {
-                    val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
-                    when (paintBean.touchType) {
-                        ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
-                            it.moveTo(paintBean.x, paintBean.y)
-                        } to Paint(pathPaint))
-                        ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
-                        ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
-                        ScreenShareClientActivity.TouchType.CLEAR -> {
-                            userPath.clear()
-                            fingerPaintView?.clear()
-                            return@withContext
+                val cmdBean = stringData.toObject(ScreenShareClientActivity.CmdBean::class.java)!!
+                when (cmdBean.cmdId) {
+                    CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
+                    CMD_TOUCH_EVENT -> {
+                        val paintBean = cmdBean.paintBean!!
+                        val pathPaint = Paint().apply {
+                            isAntiAlias = true
+                            isDither = true
+                            color = paintBean.paintColor
+                            style = paintBean.paintStyle
+                            strokeJoin = Paint.Join.ROUND
+                            strokeCap = Paint.Cap.ROUND
+                            strokeWidth = paintBean.strokeWidth
                         }
-                        ScreenShareClientActivity.TouchType.UNDO -> {
-                            fingerPaintView?.undo()
-                            userPath = fingerPaintView?.getPaths()!!
-                            return@withContext
+
+                        withContext(Dispatchers.Main) {
+                            val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
+                            val calX = currentScreen.x / clientScreenInfo!!.x.toFloat() * paintBean.x
+                            val calY = currentScreen.y / clientScreenInfo!!.y.toFloat() * paintBean.y
+                            when (paintBean.touchType) {
+                                ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
+                                    it.moveTo(calX, calY)
+                                } to Paint(pathPaint))
+                                ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
+                                ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
+                                ScreenShareClientActivity.TouchType.CLEAR -> {
+                                    userPath.clear()
+                                    fingerPaintView?.clear()
+                                    return@withContext
+                                }
+                                ScreenShareClientActivity.TouchType.UNDO -> {
+                                    fingerPaintView?.undo()
+                                    userPath = fingerPaintView?.getPaths()!!
+                                    return@withContext
+                                }
+                            }
+                            fingerPaintView?.drawUserPath(userPath)
                         }
                     }
-                    fingerPaintView?.drawUserPath(userPath)
                 }
             }
         }

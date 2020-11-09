@@ -16,13 +16,16 @@ import kotlin.math.abs
  *
  * Need permission: `<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />`
  *
+ * if `enableFullScreen` is `true`, the `enableDrag` parameter will be ignored.
+ *
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
 class FloatViewManager constructor(
     private val context: Context,
     @LayoutRes private val layoutId: Int,
-    @Suppress("WeakerAccess") val enableDrag: Boolean = true
+    @Suppress("WeakerAccess") val enableDrag: Boolean = true,
+    @Suppress("WeakerAccess") val enableFullScreen: Boolean = false
 ) {
 
     private var windowManager: WindowManager? = null
@@ -47,7 +50,7 @@ class FloatViewManager constructor(
 
 
     private val onTouchListener = View.OnTouchListener { view, event ->
-        if (!enableDrag) return@OnTouchListener false
+        if (!enableDrag or enableFullScreen) return@OnTouchListener false
         val totalDeltaX = lastX - firstX
         val totalDeltaY = lastY - firstY
 
@@ -106,8 +109,8 @@ class FloatViewManager constructor(
             }
 
             gravity = Gravity.CENTER
-            width = WindowManager.LayoutParams.MATCH_PARENT
-            height = WindowManager.LayoutParams.MATCH_PARENT
+            width = if (enableFullScreen) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            height = if (enableFullScreen) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
 

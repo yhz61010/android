@@ -3,6 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.clien
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
@@ -19,7 +20,9 @@ import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TOUCH_EVENT
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
@@ -203,19 +206,27 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             netty.connectionListener.onReceivedData(netty, bodyMessage, cmdId)
         }
 
+        fun sendDeviceScreenInfoToServer(point: Point): Boolean {
+            val cmd = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point)
+            return netty.executeCommand("ScreenInfo", "Send screen info to server", cmd.toJsonString())
+        }
+
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
             val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
-            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", paintBean.toJsonString())
+            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
+            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", cmd.toJsonString())
         }
 
         fun clearCanvas(): Boolean {
             val paintBean = PaintBean(TouchType.CLEAR)
-            return netty.executeCommand("WebSocketCmd", "Clear canvas", paintBean.toJsonString())
+            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
+            return netty.executeCommand("WebSocketCmd", "Clear canvas", cmd.toJsonString())
         }
 
         fun undoDraw(): Boolean {
             val paintBean = PaintBean(TouchType.UNDO)
-            return netty.executeCommand("WebSocketCmd", "Undo draw", paintBean.toJsonString())
+            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
+            return netty.executeCommand("WebSocketCmd", "Undo draw", cmd.toJsonString())
         }
 
         override fun release() {
@@ -223,10 +234,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     @Keep
+    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Point?)
+
+    @Keep
     data class PaintBean(
         val touchType: TouchType,
-        var x: Float = 0f,
-        var y: Float = 0f,
+        val x: Float = 0f,
+        val y: Float = 0f,
         val paintColor: Int = 0,
         val paintStyle: Paint.Style = Paint.Style.STROKE,
         val strokeWidth: Float = 0f
@@ -238,6 +252,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onConnected(netty: BaseNettyClient) {
                 LogContext.log.i(ITAG, "onConnected")
+
+                webSocketClientHandler.sendDeviceScreenInfoToServer(DeviceUtil.getResolutionWithVirtualKey(this@ScreenShareClientActivity))
             }
 
             @SuppressLint("SetTextI18n")
@@ -245,19 +261,23 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 val dataArray = data as ByteArray
                 LogContext.log.i(ITAG, "CMD=$action onReceivedData[${dataArray.size}]")
 
-                if (ScreenShareMasterActivity.CMD_GRAPHIC_CSD == action) {
-                    foundCsd.set(true)
-                    queue.offer(dataArray)
-                    LogContext.log.w(ITAG, "csd=${dataArray.contentToString()}")
-                    val sps = H264Util.getSps(dataArray)
-                    val pps = H264Util.getPps(dataArray)
-                    LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
-                    if (sps != null && pps != null) {
-                        initDecoder(sps, pps)
-                        return
-                    } else {
-                        ToastUtil.showErrorLongToast("Get SPS/PPS error.")
-                        return
+                when (action) {
+                    CMD_DEVICE_SCREEN_INFO -> {
+                    }
+                    CMD_GRAPHIC_CSD -> {
+                        foundCsd.set(true)
+                        queue.offer(dataArray)
+                        LogContext.log.w(ITAG, "csd=${dataArray.contentToString()}")
+                        val sps = H264Util.getSps(dataArray)
+                        val pps = H264Util.getPps(dataArray)
+                        LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
+                        if (sps != null && pps != null) {
+                            initDecoder(sps, pps)
+                            return
+                        } else {
+                            ToastUtil.showErrorLongToast("Get SPS/PPS error.")
+                            return
+                        }
                     }
                 }
 

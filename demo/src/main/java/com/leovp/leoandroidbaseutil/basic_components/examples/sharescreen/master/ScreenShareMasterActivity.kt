@@ -68,9 +68,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     override fun onUpdate(data: Any, flags: Int) {
                         if (clientChannel != null) {
                             val dataArray = data as ByteArray
-                            runOnUiThread {
-                                txtInfo.text = "flags=$flags Data length=${dataArray.size}"
-                            }
+                            runOnUiThread { txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
                             runCatching {
                                 clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, dataArray) }
                             }.onFailure { e -> e.printStackTrace() }
@@ -292,6 +290,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun startServer() {
+        floatCanvas?.show()
         cs.launch {
             webSocketServer = WebSocketServer(10086, connectionListener)
             webSocketServerHandler = WebSocketServerHandler(webSocketServer)

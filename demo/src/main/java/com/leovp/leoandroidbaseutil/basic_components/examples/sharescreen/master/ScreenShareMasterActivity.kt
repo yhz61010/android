@@ -49,6 +49,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         const val CMD_GRAPHIC_DATA: Int = 2
         const val CMD_TOUCH_EVENT: Int = 3
         const val CMD_DEVICE_SCREEN_INFO: Int = 4
+        const val CMD_TRIGGER_I_FRAME: Int = 5
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
@@ -244,6 +245,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 val stringData = data as String
                 val cmdBean = stringData.toObject(ScreenShareClientActivity.CmdBean::class.java)!!
                 when (cmdBean.cmdId) {
+                    CMD_TRIGGER_I_FRAME -> mediaProjectService?.triggerIFrame()
                     CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
                     CMD_TOUCH_EVENT -> {
                         val paintBean = cmdBean.paintBean!!

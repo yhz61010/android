@@ -254,7 +254,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
                     when (paintBean.touchType) {
                         ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
-                            it.moveTo(paintBean.x + 1, paintBean.y + 1)
+                            it.moveTo(paintBean.x, paintBean.y)
                         } to Paint(pathPaint))
                         ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)
                         ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(paintBean.x, paintBean.y)

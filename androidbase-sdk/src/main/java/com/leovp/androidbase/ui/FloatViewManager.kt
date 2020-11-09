@@ -96,11 +96,11 @@ class FloatViewManager constructor(
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = if (enableDrag) {
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             } else {
                 // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
                 // However the float layer itself can not be touched anymore.
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             @Suppress("DEPRECATION")
             type = when {

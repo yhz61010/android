@@ -9,6 +9,7 @@ import androidx.annotation.LayoutRes
 import com.leovp.androidbase.exts.canDrawOverlays
 import kotlin.math.abs
 
+
 /**
  * Author: Michael Leo
  * Date: 20-3-3 下午3:40
@@ -105,8 +106,8 @@ class FloatViewManager constructor(
             }
 
             gravity = Gravity.CENTER
-            width = WindowManager.LayoutParams.WRAP_CONTENT
-            height = WindowManager.LayoutParams.WRAP_CONTENT
+            width = WindowManager.LayoutParams.MATCH_PARENT
+            height = WindowManager.LayoutParams.MATCH_PARENT
         }
     }
 

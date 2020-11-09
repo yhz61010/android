@@ -67,10 +67,10 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, pri
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
-                    if (cost > 100) {
-                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
-                        continue
-                    }
+//                    if (cost > 100) {
+//                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
+//                        continue
+//                    }
                     callback.onRecording(pcmData, st, ed)
                 }
             }.onFailure {

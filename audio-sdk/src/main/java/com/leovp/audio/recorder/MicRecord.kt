@@ -15,7 +15,7 @@ import kotlinx.coroutines.*
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
-class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
+class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, private val recordMinBufferRatio: Int = 1) {
     companion object {
         private const val TAG = "PCM-Player"
     }
@@ -27,8 +27,8 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
     private var bufferSizeInBytes = 0
 
     init {
-        LogContext.log.w(TAG, "recordAudio=${encoderInfo.toJsonString()}")
-        bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat)
+        bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat) * recordMinBufferRatio
+        LogContext.log.w(TAG, "recordAudio=${encoderInfo.toJsonString()} recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
 
         audioRecord = AudioRecord(
             // MediaRecorder.AudioSource.MIC
@@ -67,10 +67,10 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback) {
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
-//                    if (cost > 100) {
-//                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
-//                        continue
-//                    }
+                    if (cost > 100) {
+                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
+                        continue
+                    }
                     callback.onRecording(pcmData, st, ed)
                 }
             }.onFailure {

@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 
@@ -12,7 +13,7 @@ import com.leovp.audio.base.AudioCodecInfo
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
-class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
+class PcmPlayer(ctx: Context, audioData: AudioCodecInfo, private val minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "PCM-Player"
     }
@@ -21,7 +22,8 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo) {
     private var audioTrack: AudioTrack
 
     init {
-        val minBufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat) * 8
+        val minBufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat) * minPlayBufferSizeRatio
+        LogContext.log.w(TAG, "PCM Codec=${audioData.toJsonString()} minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
             setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION

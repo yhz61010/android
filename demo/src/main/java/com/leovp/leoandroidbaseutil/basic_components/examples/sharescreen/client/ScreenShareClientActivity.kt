@@ -225,8 +225,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     @Keep
     data class PaintBean(
         val touchType: TouchType,
-        val x: Float = 0f,
-        val y: Float = 0f,
+        var x: Float = 0f,
+        var y: Float = 0f,
         val paintColor: Int = 0,
         val paintStyle: Paint.Style = Paint.Style.STROKE,
         val strokeWidth: Float = 0f

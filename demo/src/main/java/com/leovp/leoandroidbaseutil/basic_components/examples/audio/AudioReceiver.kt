@@ -132,7 +132,7 @@ class AudioReceiver {
     }
 
     fun startServer(ctx: Context) {
-        pcmPlayer = PcmPlayer(ctx, audioPlayCodec)
+        pcmPlayer = PcmPlayer(ctx, audioPlayCodec, 5)
 
         webSocketServer = WebSocketServer(10020, connectionListener)
         webSocketServerHandler = WebSocketServerHandler(webSocketServer)

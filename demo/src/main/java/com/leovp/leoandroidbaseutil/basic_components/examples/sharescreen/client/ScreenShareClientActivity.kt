@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
+import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
@@ -56,6 +57,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         DOWN, MOVE, UP, CLEAR, UNDO
     }
 
+    private var sps: ByteArray? = null
+    private var pps: ByteArray? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AppUtil.requestFullScreen(this)
         super.onCreate(savedInstanceState)
@@ -63,6 +67,21 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         val screenInfo = DeviceUtil.getResolution(this)
         surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
+        surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
+                if (sps != null && pps != null) initDecoder(sps!!, pps!!)
+            }
+
+            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+                LogContext.log.w(ITAG, "=====> surfaceChanged <=====")
+            }
+
+            override fun surfaceDestroyed(holder: SurfaceHolder) {
+                LogContext.log.w(ITAG, "=====> surfaceDestroyed <=====")
+            }
+
+        })
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 connectToServer()
@@ -113,6 +132,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray) {
         LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexadecimalString()} pps=${pps.toHexadecimalString()}")
+        this.sps = sps
+        this.pps = pps
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
 //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
         val screenInfo = DeviceUtil.getResolution(this)
@@ -181,7 +202,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LogContext.log.e(ITAG, "onError e=${e.message}")
+            LogContext.log.e(ITAG, "onError e=${e.message}", e)
         }
     }
 
@@ -325,6 +346,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     private fun releaseConnection() {
+        sps = null
+        pps = null
         finger.clear()
         queue.clear()
         runCatching {

@@ -17,7 +17,7 @@ import kotlinx.coroutines.*
  */
 class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, private val recordMinBufferRatio: Int = 1) {
     companion object {
-        private const val TAG = "PCM-Player"
+        private const val TAG = "MicRec"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)

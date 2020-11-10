@@ -53,13 +53,8 @@ class AudioReceiver {
             if (!startRecording) {
                 startMicRecording(netty, clientChannel)
             }
-            val array = data as Array<*>
-            val ts = array[0] as Long
-            val audioData = data[1] as ByteArray
-            LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size} ts=$ts")
-            ioScope.launch {
-                netty.executeCommand(clientChannel, "$ts")
-            }
+            val audioData = data as ByteArray
+            LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size}")
             ioScope.launch {
                 runCatching {
                     ensureActive()

@@ -14,6 +14,7 @@ import com.leovp.socket_sdk.framework.client.ClientConnectListener
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
 import kotlinx.coroutines.*
 import java.net.URI
+import java.util.concurrent.ArrayBlockingQueue
 
 
 /**
@@ -34,35 +35,38 @@ class AudioSender {
     private var micRecorder: MicRecorder? = null
     private var pcmPlayer: PcmPlayer? = null
 
-    @Volatile
-    private var startPlaying = false
+    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
+            pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 2)
+            playAudioThread()
+            sendRecAudioThread()
         }
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
             val pcmData = data as ByteArray
-            if (!startPlaying) {
-                startPlaying = true
-                pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 5)
-            }
             LogContext.log.i(TAG, "onReceivedData PCM[${pcmData.size}]")
-            ioScope.launch {
-                runCatching {
-                    ensureActive()
+            receiveAudioQueue.offer(pcmData)
+        }
 
+        private fun playAudioThread() {
+            ioScope.launch {
+                while (true) {
+                    ensureActive()
+                    val audioData = receiveAudioQueue.poll()
 //                    val readBuffer = ByteArray(2560)
-//                    val arrayInputStream = ByteArrayInputStream(pcmData)
+//                    val arrayInputStream = ByteArrayInputStream(audioData)
 //                    val inputStream = InflaterInputStream(arrayInputStream)
 //                    val read = inputStream.read(readBuffer)
 //                    val originalPcmData = readBuffer.copyOf(read)
-
-                    pcmPlayer?.play(pcmData)
-                }.onFailure { it.printStackTrace() }
+                    audioData?.let { pcmPlayer?.play(audioData) }
+                    delay(10)
+                }
             }
         }
 
@@ -80,7 +84,6 @@ class AudioSender {
     }
 
     private fun stopRecordingAndPlaying() {
-        startPlaying = false
         pcmPlayer?.release()
 
         micRecorder?.stopRecord()
@@ -96,6 +99,18 @@ class AudioSender {
 
         micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
             override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
+                recAudioQueue.offer(pcmData)
+            }
+
+            override fun onStop(stopResult: Boolean) {
+            }
+        }).apply { startRecord() }
+    }
+
+    private fun sendRecAudioThread() {
+        ioScope.launch {
+            while (true) {
+                ensureActive()
                 runCatching {
 //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
 //                    val targetOs = ByteArrayOutputStream(pcmData.size)
@@ -105,13 +120,12 @@ class AudioSender {
 //                        it.finish()
 //                    }
 //                    val compressedData = targetOs.toByteArray()
-                    senderHandler?.sendAudioToServer(pcmData)
+                    val audioData = recAudioQueue.poll()
+                    audioData?.let { senderHandler?.sendAudioToServer(it) }
+                    delay(10)
                 }.onFailure { it.printStackTrace() }
             }
-
-            override fun onStop(stopResult: Boolean) {
-            }
-        }).apply { startRecord() }
+        }
     }
 
     fun stop() {

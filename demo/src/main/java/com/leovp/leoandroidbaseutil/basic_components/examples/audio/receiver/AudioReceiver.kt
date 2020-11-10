@@ -1,19 +1,16 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples.audio
+package com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver
 
 import android.content.Context
-import android.media.AudioFormat
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.player.PcmPlayer
 import com.leovp.audio.recorder.MicRecorder
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.base.AudioReceiverWebSocket
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.base.AudioReceiverWebSocketHandler
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
-import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
 import com.leovp.socket_sdk.framework.server.ServerConnectListener
 import io.netty.channel.Channel
-import io.netty.channel.ChannelHandler
-import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.coroutines.*
 
 /**
@@ -25,15 +22,13 @@ class AudioReceiver {
         private const val TAG = "AudioReceiver"
     }
 
-    private lateinit var webSocketServer: WebSocketServer
-    private lateinit var webSocketServerHandler: WebSocketServerHandler
+    private lateinit var receiverServer: AudioReceiverWebSocket
+    private lateinit var receiverHandler: AudioReceiverWebSocketHandler
+
+    private var pcmPlayer: PcmPlayer? = null
+    private var micRecorder: MicRecorder? = null
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
-    private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
-    private var pcmPlayer: PcmPlayer? = null
-
-    private var micRecorder: MicRecorder? = null
-    private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
 
     @Volatile
     private var startRecording = false
@@ -56,35 +51,28 @@ class AudioReceiver {
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             if (!startRecording) {
-                startRecording = true
-
-                micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
-                    override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                        ioScope.launch {
-                            runCatching {
-                                ensureActive()
-//                                LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                                netty.executeCommand(clientChannel, pcmData, false)
-                            }.onFailure { it.printStackTrace() }
-                        }
-                    }
-
-                    override fun onStop(stopResult: Boolean) {
-                    }
-
-                }).apply { startRecord() }
+                startMicRecording(netty, clientChannel)
             }
             val array = data as Array<*>
             val ts = array[0] as Long
             val audioData = data[1] as ByteArray
             LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()} Length=${audioData.size} ts=$ts")
             ioScope.launch {
+                netty.executeCommand(clientChannel, "$ts")
+            }
+            ioScope.launch {
                 runCatching {
                     ensureActive()
+
+//                    val readBuffer = ByteArray(2560)
+//                    val arrayInputStream = ByteArrayInputStream(audioData)
+//                    val inputStream = InflaterInputStream(arrayInputStream)
+//                    val read = inputStream.read(readBuffer)
+//                    val originalPcmData = readBuffer.copyOf(read)
+
                     pcmPlayer?.play(audioData)
                 }.onFailure { it.printStackTrace() }
             }
-            netty.executeCommand(clientChannel, "$ts")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -97,6 +85,31 @@ class AudioReceiver {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             stopRecordingAndPlaying()
+        }
+
+        private fun startMicRecording(netty: BaseNettyServer, clientChannel: Channel) {
+            startRecording = true
+            micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
+                override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
+                    ioScope.launch {
+                        runCatching {
+                            ensureActive()
+//                                LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
+//                            val targetOs = ByteArrayOutputStream(pcmData.size)
+//                            DeflaterOutputStream(targetOs).use {
+//                                it.write(pcmData)
+//                                it.flush()
+//                                it.finish()
+//                            }
+//                            val compressedData = targetOs.toByteArray()
+                            netty.executeCommand(clientChannel, pcmData, false)
+                        }.onFailure { it.printStackTrace() }
+                    }
+                }
+
+                override fun onStop(stopResult: Boolean) {
+                }
+            }).apply { startRecord() }
         }
     }
 
@@ -114,35 +127,18 @@ class AudioReceiver {
         startRecording = false
     }
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
-
-    @ChannelHandler.Sharable
-    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
-        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-            val receivedByteBuf = (msg as WebSocketFrame).content().retain()
-            val ts = receivedByteBuf.readLongLE()
-            val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
-            receivedByteBuf.readBytes(dataByteArray)
-            netty.connectionListener.onReceivedData(netty, ctx.channel(), arrayOf(ts, dataByteArray))
-            receivedByteBuf.release()
-        }
-
-        override fun release() {
-        }
-    }
-
     fun startServer(ctx: Context) {
-        pcmPlayer = PcmPlayer(ctx, audioPlayCodec, 5)
+        pcmPlayer = PcmPlayer(ctx, AudioActivity.audioPlayCodec, 5)
 
-        webSocketServer = WebSocketServer(10020, connectionListener)
-        webSocketServerHandler = WebSocketServerHandler(webSocketServer)
-        webSocketServer.initHandler(webSocketServerHandler)
-        webSocketServer.startServer()
+        receiverServer = AudioReceiverWebSocket(10020, connectionListener)
+        receiverHandler = AudioReceiverWebSocketHandler(receiverServer)
+        receiverServer.initHandler(receiverHandler)
+        receiverServer.startServer()
     }
 
     fun stopServer() {
         ioScope.cancel()
         stopRecordingAndPlaying()
-        if (::webSocketServer.isInitialized) webSocketServer.stopServer()
+        if (::receiverServer.isInitialized) receiverServer.stopServer()
     }
 }

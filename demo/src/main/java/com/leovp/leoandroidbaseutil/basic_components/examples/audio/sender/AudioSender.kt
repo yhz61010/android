@@ -2,8 +2,6 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.SystemClock
-import com.leovp.androidbase.exts.toBytesLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.player.PcmPlayer
@@ -48,19 +46,15 @@ class AudioSender {
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
 //            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-            when (data) {
-                is String -> {
-                    LogContext.log.i(TAG, "Loopback time=${SystemClock.elapsedRealtime() - data.toLong()} ms")
-                }
-                is ByteArray -> {
-                    if (!startPlaying) {
-                        startPlaying = true
-                        pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 5)
-                    }
-                    LogContext.log.i(TAG, "onReceivedData Compressed PCM[${data.size}]")
-                    ioScope.launch {
-                        runCatching {
-                            ensureActive()
+            val pcmData = data as ByteArray
+            if (!startPlaying) {
+                startPlaying = true
+                pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 5)
+            }
+            LogContext.log.i(TAG, "onReceivedData Compressed PCM[${pcmData.size}]")
+            ioScope.launch {
+                runCatching {
+                    ensureActive()
 
 //                            val readBuffer = ByteArray(2560)
 //                            val arrayInputStream = ByteArrayInputStream(data)
@@ -68,10 +62,8 @@ class AudioSender {
 //                            val read = inputStream.read(readBuffer)
 //                            val originalPcmData = readBuffer.copyOf(read)
 
-                            pcmPlayer?.play(data)
-                        }.onFailure { it.printStackTrace() }
-                    }
-                }
+                    pcmPlayer?.play(pcmData)
+                }.onFailure { it.printStackTrace() }
             }
         }
 
@@ -108,7 +100,6 @@ class AudioSender {
                     runCatching {
                         ensureActive()
 //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                        val tsArray = st.toBytesLE()
 
 //                        val targetOs = ByteArrayOutputStream(pcmData.size)
 //                        DeflaterOutputStream(targetOs).use {
@@ -118,10 +109,7 @@ class AudioSender {
 //                        }
 //                        val compressedData = targetOs.toByteArray()
 
-                        val finalArray = ByteArray(tsArray.size + pcmData.size)
-                        System.arraycopy(tsArray, 0, finalArray, 0, tsArray.size)
-                        System.arraycopy(pcmData, 0, finalArray, tsArray.size, pcmData.size)
-                        senderHandler.sendAudioToServer(finalArray)
+                        senderHandler.sendAudioToServer(pcmData)
                     }.onFailure { it.printStackTrace() }
                 }
             }

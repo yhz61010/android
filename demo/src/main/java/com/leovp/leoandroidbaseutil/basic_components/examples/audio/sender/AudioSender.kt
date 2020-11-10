@@ -42,7 +42,7 @@ class AudioSender {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
-            pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 2)
+            pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 1)
             playAudioThread()
             sendRecAudioThread()
         }
@@ -73,20 +73,14 @@ class AudioSender {
         override fun onDisconnected(netty: BaseNettyClient) {
             LogContext.log.w(TAG, "onDisconnect")
             ToastUtil.showDebugToast("onDisconnect")
-            stopRecordingAndPlaying()
+            stop()
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            stopRecordingAndPlaying()
+            stop()
         }
-    }
-
-    private fun stopRecordingAndPlaying() {
-        pcmPlayer?.release()
-
-        micRecorder?.stopRecord()
     }
 
     fun start(ctx: Context, uri: URI) {
@@ -129,9 +123,10 @@ class AudioSender {
     }
 
     fun stop() {
-        stopRecordingAndPlaying()
+        ioScope.cancel()
+        pcmPlayer?.release()
+        micRecorder?.stopRecord()
         senderClient?.disconnectManually()
         senderClient?.release()
-        ioScope.cancel()
     }
 }

@@ -28,8 +28,8 @@ class AudioSender {
     private var ctx: Context? = null
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var senderClient: AudioSenderWebSocket
-    private lateinit var senderHandler: AudioSenderWebSocketHandler
+    private var senderClient: AudioSenderWebSocket? = null
+    private var senderHandler: AudioSenderWebSocketHandler? = null
 
     private var micRecorder: MicRecorder? = null
     private var pcmPlayer: PcmPlayer? = null
@@ -45,22 +45,21 @@ class AudioSender {
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
-//            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
             val pcmData = data as ByteArray
             if (!startPlaying) {
                 startPlaying = true
                 pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 5)
             }
-            LogContext.log.i(TAG, "onReceivedData Compressed PCM[${pcmData.size}]")
+            LogContext.log.i(TAG, "onReceivedData PCM[${pcmData.size}]")
             ioScope.launch {
                 runCatching {
                     ensureActive()
 
-//                            val readBuffer = ByteArray(2560)
-//                            val arrayInputStream = ByteArrayInputStream(data)
-//                            val inputStream = InflaterInputStream(arrayInputStream)
-//                            val read = inputStream.read(readBuffer)
-//                            val originalPcmData = readBuffer.copyOf(read)
+//                    val readBuffer = ByteArray(2560)
+//                    val arrayInputStream = ByteArrayInputStream(pcmData)
+//                    val inputStream = InflaterInputStream(arrayInputStream)
+//                    val read = inputStream.read(readBuffer)
+//                    val originalPcmData = readBuffer.copyOf(read)
 
                     pcmPlayer?.play(pcmData)
                 }.onFailure { it.printStackTrace() }
@@ -89,43 +88,36 @@ class AudioSender {
 
     fun start(ctx: Context, uri: URI) {
         this.ctx = ctx
-        senderClient = AudioSenderWebSocket(uri, connectionListener, ConstantRetry(10, 2000))
-        senderHandler = AudioSenderWebSocketHandler(senderClient)
-        senderClient.initHandler(senderHandler)
-        senderClient.connect()
+        senderClient = AudioSenderWebSocket(uri, connectionListener, ConstantRetry(10, 2000)).also {
+            senderHandler = AudioSenderWebSocketHandler(it)
+            it.initHandler(senderHandler)
+            it.connect()
+        }
 
         micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
             override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                ioScope.launch {
-                    runCatching {
-                        ensureActive()
+                runCatching {
 //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-
-//                        val targetOs = ByteArrayOutputStream(pcmData.size)
-//                        DeflaterOutputStream(targetOs).use {
-//                            it.write(pcmData)
-//                            it.flush()
-//                            it.finish()
-//                        }
-//                        val compressedData = targetOs.toByteArray()
-
-                        senderHandler.sendAudioToServer(pcmData)
-                    }.onFailure { it.printStackTrace() }
-                }
+//                    val targetOs = ByteArrayOutputStream(pcmData.size)
+//                    DeflaterOutputStream(targetOs).use {
+//                        it.write(pcmData)
+//                        it.flush()
+//                        it.finish()
+//                    }
+//                    val compressedData = targetOs.toByteArray()
+                    senderHandler?.sendAudioToServer(pcmData)
+                }.onFailure { it.printStackTrace() }
             }
 
             override fun onStop(stopResult: Boolean) {
             }
-
         }).apply { startRecord() }
     }
 
     fun stop() {
         stopRecordingAndPlaying()
-        if (::senderClient.isInitialized) {
-            senderClient.disconnectManually()
-            senderClient.release()
-        }
+        senderClient?.disconnectManually()
+        senderClient?.release()
         ioScope.cancel()
     }
 }

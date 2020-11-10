@@ -246,7 +246,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //    }
 
     fun startPlayingStream(audioData: ByteArray, f: () -> Unit) {
-        // We have a better way to check CSD0
+        // We should use a better way to check CSD0
         if (audioData.size < 10) {
             runCatching {
                 synchronized(this) {
@@ -298,7 +298,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             runCatching { audioTrack?.flush() }.getOrNull()
             runCatching { audioTrack?.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
-                // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, do need to do sync again.
+                // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
                 dropFrameTimes.set(0)
                 f.invoke()
             }

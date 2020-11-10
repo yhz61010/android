@@ -83,13 +83,13 @@ class AudioReceiver {
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
-            stopRecordingAndPlaying()
+            stopServer()
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            stopRecordingAndPlaying()
+            stopServer()
         }
 
         private fun startMicRecording() {
@@ -125,21 +125,8 @@ class AudioReceiver {
         }
     }
 
-    private fun stopRecordingAndPlaying() {
-        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
-        // Please check the initializing of AudioTrack in [PcmPlayer]
-        //
-        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
-        // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
-        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
-        // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
-        pcmPlayer?.release()
-
-        micRecorder?.stopRecord()
-    }
-
     fun startServer(ctx: Context) {
-        pcmPlayer = PcmPlayer(ctx, AudioActivity.audioPlayCodec, 2)
+        pcmPlayer = PcmPlayer(ctx, AudioActivity.audioPlayCodec, 1)
 
         receiverServer = AudioReceiverWebSocket(10020, connectionListener).also {
             receiverHandler = AudioReceiverWebSocketHandler(it)
@@ -150,7 +137,15 @@ class AudioReceiver {
 
     fun stopServer() {
         ioScope.cancel()
-        stopRecordingAndPlaying()
+        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
+        // Please check the initializing of AudioTrack in [PcmPlayer]
+        //
+        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
+        // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
+        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
+        // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
+        pcmPlayer?.release()
+        micRecorder?.stopRecord()
         receiverServer?.stopServer()
     }
 }

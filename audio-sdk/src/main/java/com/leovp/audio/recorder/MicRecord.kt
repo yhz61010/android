@@ -71,7 +71,9 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, pri
 //                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
 //                        continue
 //                    }
-                    callback.onRecording(pcmData, st, ed)
+                    ioScope.launch {
+                        callback.onRecording(pcmData, st, ed)
+                    }
                 }
             }.onFailure {
                 it.printStackTrace()

@@ -15,6 +15,8 @@ import com.leovp.audio.recorder.MicRecorder
 import com.leovp.audio.recorder.aac.AacEncoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.AudioSender
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_audio.*
@@ -31,12 +33,12 @@ class AudioActivity : BaseDemonstrationActivity() {
     companion object {
         private const val RECORD_TYPE_PCM = 1
         private const val RECORD_TYPE_AAC = 2
+
+        val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
-
-    private val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
-    private val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
 
     private val pcmFile by lazy { FileUtil.createFile(this, "audio.pcm") }
     private val aacFile by lazy { FileUtil.createFile(this, "audio.aac") }

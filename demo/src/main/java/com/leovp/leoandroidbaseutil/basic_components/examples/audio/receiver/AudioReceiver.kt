@@ -22,8 +22,8 @@ class AudioReceiver {
         private const val TAG = "AudioReceiver"
     }
 
-    private lateinit var receiverServer: AudioReceiverWebSocket
-    private lateinit var receiverHandler: AudioReceiverWebSocketHandler
+    private var receiverServer: AudioReceiverWebSocket? = null
+    private var receiverHandler: AudioReceiverWebSocketHandler? = null
 
     private var pcmPlayer: PcmPlayer? = null
     private var micRecorder: MicRecorder? = null
@@ -86,9 +86,7 @@ class AudioReceiver {
             startRecording = true
             micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
                 override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                    ioScope.launch {
-                        runCatching {
-                            ensureActive()
+                    runCatching {
 //                                LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
 //                            val targetOs = ByteArrayOutputStream(pcmData.size)
 //                            DeflaterOutputStream(targetOs).use {
@@ -97,9 +95,8 @@ class AudioReceiver {
 //                                it.finish()
 //                            }
 //                            val compressedData = targetOs.toByteArray()
-                            netty.executeCommand(clientChannel, pcmData, false)
-                        }.onFailure { it.printStackTrace() }
-                    }
+                        netty.executeCommand(clientChannel, pcmData, false)
+                    }.onFailure { it.printStackTrace() }
                 }
 
                 override fun onStop(stopResult: Boolean) {
@@ -125,15 +122,16 @@ class AudioReceiver {
     fun startServer(ctx: Context) {
         pcmPlayer = PcmPlayer(ctx, AudioActivity.audioPlayCodec, 5)
 
-        receiverServer = AudioReceiverWebSocket(10020, connectionListener)
-        receiverHandler = AudioReceiverWebSocketHandler(receiverServer)
-        receiverServer.initHandler(receiverHandler)
-        receiverServer.startServer()
+        receiverServer = AudioReceiverWebSocket(10020, connectionListener).also {
+            receiverHandler = AudioReceiverWebSocketHandler(it)
+            it.initHandler(receiverHandler)
+            it.startServer()
+        }
     }
 
     fun stopServer() {
         ioScope.cancel()
         stopRecordingAndPlaying()
-        if (::receiverServer.isInitialized) receiverServer.stopServer()
+        receiverServer?.stopServer()
     }
 }

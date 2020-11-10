@@ -4,10 +4,7 @@ import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import java.nio.charset.Charset
 
 /**
  * Author: Michael Leo
@@ -16,31 +13,13 @@ import java.nio.charset.Charset
 @ChannelHandler.Sharable
 class AudioSenderWebSocketHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
     override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-        val receivedString: String?
-        val frame = msg as WebSocketFrame
-        receivedString = when (frame) {
-            is TextWebSocketFrame -> {
-                frame.text()
-            }
-            is PongWebSocketFrame -> {
-                frame.content().toString(Charset.forName("UTF-8"))
-            }
-            else -> {
-                null
-            }
-        }
-
-        if (receivedString != null) {
-            netty.connectionListener.onReceivedData(netty, receivedString)
-        } else {
-            runCatching {
-                val receivedByteBuf = msg.content().retain()
-                val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
-                receivedByteBuf.readBytes(dataByteArray)
-                receivedByteBuf.release()
-                netty.connectionListener.onReceivedData(netty, dataByteArray)
-            }.onFailure { it.printStackTrace() }
-        }
+        runCatching {
+            val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+            val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
+            receivedByteBuf.readBytes(dataByteArray)
+            receivedByteBuf.release()
+            netty.connectionListener.onReceivedData(netty, dataByteArray)
+        }.onFailure { it.printStackTrace() }
     }
 
     fun sendAudioToServer(audioData: ByteArray): Boolean {

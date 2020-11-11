@@ -13,6 +13,7 @@ import android.os.HandlerThread
 import com.leovp.androidbase.exts.exception
 import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.androidbase.utils.media.CodecUtil
 import java.nio.ByteBuffer
 
 /**
@@ -120,12 +121,31 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 @Suppress("unchecked")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
+            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
+                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+//                .maxByOrNull { it.profile }
+            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
+                setInteger(MediaFormat.KEY_PROFILE, usedProfile)
+            } else {
+                LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
+//            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
-                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+                // AVCLevel51
+                // AVCLevel4
+                LogContext.log.w(TAG, "KEY_LEVEL: $usedLevel")
+                setInteger(MediaFormat.KEY_LEVEL, usedLevel)
+            } else {
+                LogContext.log.w(TAG, "KEY_LEVEL static: AVCLevel4")
+                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             }
         }
         h264Encoder = if (builder.useGoogleEncoder) {

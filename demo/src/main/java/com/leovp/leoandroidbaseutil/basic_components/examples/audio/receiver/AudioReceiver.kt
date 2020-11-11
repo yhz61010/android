@@ -1,6 +1,11 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver
 
 import android.content.Context
+import com.leovp.androidbase.exts.asByteAndForceToBytes
+import com.leovp.androidbase.exts.compress
+import com.leovp.androidbase.exts.decompress
+import com.leovp.androidbase.exts.toBytesLE
+import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.player.PcmPlayer
@@ -68,13 +73,7 @@ class AudioReceiver {
             ioScope.launch {
                 while (true) {
                     ensureActive()
-                    val audioData = receiveAudioQueue.poll()
-//                    val readBuffer = ByteArray(2560)
-//                    val arrayInputStream = ByteArrayInputStream(audioData)
-//                    val inputStream = InflaterInputStream(arrayInputStream)
-//                    val read = inputStream.read(readBuffer)
-//                    val originalPcmData = readBuffer.copyOf(read)
-                    audioData?.let { pcmPlayer?.play(audioData) }
+                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress()) }
                     delay(10)
                 }
             }
@@ -108,16 +107,17 @@ class AudioReceiver {
                 while (true) {
                     ensureActive()
                     runCatching {
+                        recAudioQueue.poll()?.let { comp ->
 //                                LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-//                            val targetOs = ByteArrayOutputStream(pcmData.size)
-//                            DeflaterOutputStream(targetOs).use {
-//                                it.write(pcmData)
-//                                it.flush()
-//                                it.finish()
-//                            }
-//                            val compressedData = targetOs.toByteArray()
-                        val recAudio = recAudioQueue.poll()
-                        recAudio?.let { nettyServer?.executeCommand(clientChannel!!, it, false) }
+                            comp.compress().let { pcm ->
+                                val cmd = 1.asByteAndForceToBytes()
+                                val protoVer = 1.asByteAndForceToBytes()
+
+                                val contentLen = (cmd.size + protoVer.size + pcm.size).toBytesLE()
+                                val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, pcm)
+                                nettyServer?.executeCommand(clientChannel!!, command, false)
+                            }
+                        }
                         delay(10)
                     }.onFailure { it.printStackTrace() }
                 }

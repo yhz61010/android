@@ -2,6 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.leovp.androidbase.exts.compress
+import com.leovp.androidbase.exts.decompress
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.player.PcmPlayer
@@ -58,13 +60,7 @@ class AudioSender {
             ioScope.launch {
                 while (true) {
                     ensureActive()
-                    val audioData = receiveAudioQueue.poll()
-//                    val readBuffer = ByteArray(2560)
-//                    val arrayInputStream = ByteArrayInputStream(audioData)
-//                    val inputStream = InflaterInputStream(arrayInputStream)
-//                    val read = inputStream.read(readBuffer)
-//                    val originalPcmData = readBuffer.copyOf(read)
-                    audioData?.let { pcmPlayer?.play(audioData) }
+                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress()) }
                     delay(10)
                 }
             }
@@ -107,15 +103,7 @@ class AudioSender {
                 ensureActive()
                 runCatching {
 //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-//                    val targetOs = ByteArrayOutputStream(pcmData.size)
-//                    DeflaterOutputStream(targetOs).use {
-//                        it.write(pcmData)
-//                        it.flush()
-//                        it.finish()
-//                    }
-//                    val compressedData = targetOs.toByteArray()
-                    val audioData = recAudioQueue.poll()
-                    audioData?.let { senderHandler?.sendAudioToServer(it) }
+                    recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it.compress()) }
                     delay(10)
                 }.onFailure { it.printStackTrace() }
             }

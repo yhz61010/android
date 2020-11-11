@@ -14,10 +14,20 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame
 class AudioReceiverWebSocketHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
     override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
         val receivedByteBuf = (msg as WebSocketFrame).content().retain()
-        val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
-        receivedByteBuf.readBytes(dataByteArray)
-        receivedByteBuf.release()
-        netty.connectionListener.onReceivedData(netty, ctx.channel(), dataByteArray)
+        // Data Length
+        receivedByteBuf.readIntLE()
+        // Command ID
+        receivedByteBuf.readByte()
+        // Protocol version
+        receivedByteBuf.readByte()
+
+        runCatching {
+            val bodyBytes = ByteArray(receivedByteBuf.readableBytes())
+            receivedByteBuf.getBytes(6, bodyBytes)
+            receivedByteBuf.release()
+
+            netty.connectionListener.onReceivedData(netty, ctx.channel(), bodyBytes)
+        }
     }
 
     override fun release() {

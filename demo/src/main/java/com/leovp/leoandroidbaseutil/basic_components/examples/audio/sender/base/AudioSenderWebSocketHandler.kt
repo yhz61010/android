@@ -1,5 +1,8 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base
 
+import com.leovp.androidbase.exts.asByteAndForceToBytes
+import com.leovp.androidbase.exts.toBytesLE
+import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import io.netty.channel.ChannelHandler
@@ -13,18 +16,31 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame
 @ChannelHandler.Sharable
 class AudioSenderWebSocketHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
     override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
+        val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+        // Data Length
+        receivedByteBuf.readIntLE()
+        // Command ID
+        receivedByteBuf.readByte()
+        // Protocol version
+        receivedByteBuf.readByte()
+
         runCatching {
-            val receivedByteBuf = (msg as WebSocketFrame).content().retain()
-            val dataByteArray = ByteArray(receivedByteBuf.readableBytes())
-            receivedByteBuf.readBytes(dataByteArray)
+            val bodyBytes = ByteArray(receivedByteBuf.readableBytes())
+            receivedByteBuf.getBytes(6, bodyBytes)
             receivedByteBuf.release()
-            netty.connectionListener.onReceivedData(netty, dataByteArray)
-        }.onFailure { it.printStackTrace() }
+
+            netty.connectionListener.onReceivedData(netty, bodyBytes)
+        }
     }
 
     fun sendAudioToServer(audioData: ByteArray): Boolean {
         return runCatching {
-            netty.executeCommand("AudioPCM", "SendAudio", audioData, false)
+            val cmd = 1.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+
+            val contentLen = (cmd.size + protoVer.size + audioData.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, audioData)
+            netty.executeCommand("AudioPCM", "SendAudio", command, false)
         }.getOrDefault(false)
     }
 

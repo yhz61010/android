@@ -1,8 +1,10 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base
 
+import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
 import com.leovp.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
+import io.netty.channel.ChannelPipeline
 import java.net.URI
 
 /**
@@ -12,4 +14,8 @@ import java.net.URI
 class AudioSenderWebSocket(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
     BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
     override fun getTagName() = "AudioSenderWS"
+
+    override fun addLastToPipeline(pipeline: ChannelPipeline) {
+        pipeline.addLast("messageDecoder", CustomSocketByteStreamDecoder())
+    }
 }

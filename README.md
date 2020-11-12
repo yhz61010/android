@@ -395,6 +395,7 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[2880, 2156][2688, 1512][2592, 1296][1920, 1440][1920, 1080][1600, 1200][1280, 960][1280, 720][1280, 640][800, 600][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144]`
 
+------
 
 ### RedMi 8(Android 10)
 #### Camera supported hardware level
@@ -413,6 +414,8 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[3264x2448, 3200x2400, 3200x1800, 3200x1516, 2592x1944, 2688x1512, 2592x1296, 2048x1536, 1920x1080, 1600x1200, 1600x900, 1600x758, 1440x1080, 1520x1140, 1520x720, 1280x960, 1440x720, 1280x720, 960x720, 800x600, 720x480, 640x480, 640x360, 352x288, 320x240, 176x144]`
 
+------
+
 ### RedMi 6A(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LEGACY(2)
@@ -429,3 +432,25 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[1440x1080, 1440x720, 1280x720, 960x720, 960x540, 800x600, 864x480, 800x480, 720x480, 640x480, 640x360, 640x320, 480x368, 480x320, 352x288, 320x240, 176x144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[1440x1080, 1440x720, 1280x720, 960x720, 960x540, 800x600, 864x480, 800x480, 720x480, 640x480, 640x360, 640x320, 480x368, 480x320, 352x288, 320x240, 176x144]`
+
+## OnePlus
+
+------
+
+### OnePlus 8T(KB2000)(Android 11)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [8, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [8, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4000x3000, 4000x2250, 4000x1818, 4000x1800, 3840x2160, 3840x1644, 3456x2592, 3280x2464, 3264x2448, 3264x1836, 3264x1472, 3200x2400, 3168x1440, 3000x3000, 2880x2160, 2592x1944, 2448x2448, 2688x1512, 2592x1168, 2376x1080, 2304x1728, 2160x1080, 1944x1944, 1920x1080, 1920x864, 1920x822, 1600x1200, 1600x800, 1600x720, 1584x720, 1440x1080, 1280x960, 1280x768, 1024x768, 1280x720, 1200x1200, 1188x540, 1200x540, 1080x1080, 840x360, 800x400, 792x360, 720x540, 720x480, 640x640, 640x480, 640x360, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[2328x1748, 2304x1728, 2160x1080, 1920x1080, 1920x864, 1920x822, 1600x1200, 1600x800, 1600x720, 1584x720, 1440x1080, 1280x960, 1280x768, 1024x768, 1280x720, 1200x1200, 1188x540, 1200x540, 1080x1080, 840x360, 800x400, 792x360, 720x540, 720x480, 640x640, 640x480, 640x360, 352x288, 320x240, 176x144]`

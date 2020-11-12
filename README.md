@@ -374,6 +374,25 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
+### VIVO U3x(V1928A)(Android 9)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [20, 20], [7, 24], [24, 24], [7, 30], [24, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [20, 20], [7, 24], [24, 24], [7, 30], [24, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4160x3120, 4000x3000, 3840x2160, 3264x2448, 3200x2400, 2320x1080, 1920x1080, 2560x800, 1600x1200, 1440x1080, 1280x960, 1280x720, 1200x1200, 1280x480, 1280x400, 1024x768, 800x600, 864x480, 720x480, 640x640, 640x480, 640x360, 480x360, 480x320, 352x288, 320x240, 176x144, 160x120]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3200x2400, 2320x1080, 1920x1080, 2560x800, 1600x1200, 1440x1080, 1280x960, 1280x720, 1200x1200, 1280x480, 1280x400, 1024x768, 800x600, 864x480, 720x480, 640x640, 640x480, 640x360, 480x360, 480x320, 352x288, 320x240, 176x144, 160x120]`
+
+------
+
 ## XiaoMi
 
 ------

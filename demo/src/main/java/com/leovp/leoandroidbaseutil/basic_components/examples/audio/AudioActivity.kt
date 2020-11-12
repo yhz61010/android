@@ -34,6 +34,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val RECORD_TYPE_PCM = 1
         private const val RECORD_TYPE_AAC = 2
 
+        // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
         val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
         val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     }

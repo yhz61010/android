@@ -1,11 +1,8 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver
 
 import android.content.Context
-import com.leovp.androidbase.exts.asByteAndForceToBytes
 import com.leovp.androidbase.exts.compress
 import com.leovp.androidbase.exts.decompress
-import com.leovp.androidbase.exts.toBytesLE
-import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.player.PcmPlayer
@@ -107,17 +104,8 @@ class AudioReceiver {
                 while (true) {
                     ensureActive()
                     runCatching {
-                        recAudioQueue.poll()?.let { comp ->
-//                                LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                            comp.compress().let { pcm ->
-                                val cmd = 1.asByteAndForceToBytes()
-                                val protoVer = 1.asByteAndForceToBytes()
-
-                                val contentLen = (cmd.size + protoVer.size + pcm.size).toBytesLE()
-                                val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, pcm)
-                                nettyServer?.executeCommand(clientChannel!!, command, false)
-                            }
-                        }
+//                      LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
+                        recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it.compress()) }
                         delay(10)
                     }.onFailure { it.printStackTrace() }
                 }

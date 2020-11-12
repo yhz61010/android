@@ -13,7 +13,7 @@ import com.leovp.audio.base.AudioCodecInfo
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
-class PcmPlayer(ctx: Context, audioData: AudioCodecInfo, private val minPlayBufferSizeRatio: Int = 1) {
+class PcmPlayer(ctx: Context, audioData: AudioCodecInfo, minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "PCM-Player"
     }

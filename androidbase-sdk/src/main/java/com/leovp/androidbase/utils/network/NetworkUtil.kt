@@ -54,7 +54,7 @@ object NetworkUtil {
         if (isOffline(ctx)) {
             return (-2).toDouble()
         }
-        var inputLine: String? = null
+        var inputLine: String?
         try {
             val pingCommand = String.format(Locale.getDefault(), "/system/bin/ping -c %d %s", numberOfPackages, ipAddress)
             // Execute the command on the environment interface

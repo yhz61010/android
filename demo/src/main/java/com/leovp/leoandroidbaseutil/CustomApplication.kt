@@ -58,8 +58,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
 //    val screenProcessor: ScreenProcessor by lazy {
 //        val screenInfo = DeviceUtil.getResolution(this)
 //        val setting = ScreenShareSetting(
-//            (screenInfo.x * 0.8F).toInt() / 16 * 16,
-//            (screenInfo.y * 0.8F).toInt() / 16 * 16,
+//            (screenInfo.x * 0.8F / 16).toInt() * 16,
+//            (screenInfo.y * 0.8F / 16).toInt() * 16,
 //            DeviceUtil.getDensity(this)
 //        )
 //        // Seems does not work. Check bellow setKeyFrameRate

@@ -4,6 +4,8 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import com.leovp.androidbase.exts.toByteArrayLE
+import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.exts.toast
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -35,8 +37,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val RECORD_TYPE_AAC = 2
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioPlayCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
-        val audioEncoderCodec = AudioCodecInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
+        val audioPlayCodec = AudioCodecInfo(16000, 48000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderCodec = AudioCodecInfo(16000, 48000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -95,7 +97,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                         var readSize: Int
                         while (input.read(readBuffer).also { readSize = it } != -1) {
                             LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
-                            pcmPlayer?.play(readBuffer)
+                            pcmPlayer?.play(readBuffer.toShortArrayLE())
                         }
                         runOnUiThread { btn.isChecked = false }
                     }
@@ -141,11 +143,12 @@ class AudioActivity : BaseDemonstrationActivity() {
                     }
                 }
                 micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
-                    override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                        LogContext.log.d(TAG, "PCM data[${pcmData.size}]")
+                    override fun onRecording(pcmData: ShortArray, st: Long, ed: Long) {
+                        val pcmBytes = pcmData.toByteArrayLE()
+                        LogContext.log.d(TAG, "PCM data[${pcmBytes.size}]")
                         when (type) {
-                            RECORD_TYPE_PCM -> runCatching { pcmOs?.write(pcmData) }.onFailure { it.printStackTrace() }
-                            RECORD_TYPE_AAC -> aacEncoder?.queue?.offer(pcmData)
+                            RECORD_TYPE_PCM -> runCatching { pcmOs?.write(pcmBytes) }.onFailure { it.printStackTrace() }
+                            RECORD_TYPE_AAC -> aacEncoder?.queue?.offer(pcmBytes)
                         }
                     }
 
@@ -185,11 +188,11 @@ class AudioActivity : BaseDemonstrationActivity() {
         val url = URI("ws://${etAudioReceiverIp.text}:10020/ws")
         LogContext.log.w(TAG, "Send to $url")
         audioSender = AudioSender()
-        audioSender?.start(this, url)
+        ioScope.launch { audioSender?.start(this@AudioActivity, url) }
     }
 
     fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {
         audioReceiver = AudioReceiver()
-        Thread { audioReceiver?.startServer(this) }.start()
+        ioScope.launch { audioReceiver?.startServer(this@AudioActivity) }
     }
 }

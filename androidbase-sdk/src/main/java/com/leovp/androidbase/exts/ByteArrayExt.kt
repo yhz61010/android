@@ -129,3 +129,27 @@ fun ByteBuffer.toByteArray(): ByteArray {
     get(data)   // Copy the buffer into a byte array
     return data // Return the byte array
 }
+
+/**
+ * The length of byte array must be an even number.
+ */
+fun ByteArray.toShortArray() = ShortArray(this.size ushr 1) {
+    // You can replace `+` with 'or'
+    ((this[it shl 1].toInt() shl 8) + (this[(it shl 1) + 1].toInt() and 0xFF)).toShort()
+}
+
+/**
+ * The length of byte array must be an even number.
+ */
+fun ByteArray.toShortArrayLE() = ShortArray(this.size ushr 1) {
+    // You can replace `+` with 'or'
+    ((this[it shl 1].toInt() and 0xFF) + (this[(it shl 1) + 1].toInt() shl 8)).toShort()
+}
+
+fun ShortArray.toByteArrayLE() = ByteArray(this.size shl 1) {
+    ((this[it / 2].toInt() ushr (if (it % 2 == 0) 0 else 8)) and 0xFF).toByte()
+}
+
+fun ShortArray.toByteArray() = ByteArray(this.size shl 1) {
+    ((this[it / 2].toInt() ushr (if (it % 2 == 0) 8 else 0)) and 0xFF).toByte()
+}

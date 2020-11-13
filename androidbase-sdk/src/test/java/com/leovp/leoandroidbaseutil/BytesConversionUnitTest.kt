@@ -6,6 +6,57 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BytesConversionUnitTest {
+
+    @Test
+    fun shortArray2ByteArray() {
+        assertArrayEquals(byteArrayOf(0, 1, 2, 3, 4, 5), shortArrayOf(0x0100, 0x0302, 0x0504).toByteArrayLE())
+        assertArrayEquals(byteArrayOf(0xA, 0xB, 0xC, 0xD, 0xE, 0xF), shortArrayOf(0x0B0A, 0x0D0C, 0x0F0E).toByteArrayLE())
+        assertArrayEquals(
+            byteArrayOf(0x30, 0x31, 0x42, 0x43, 0xA5.toByte(), 0xDE.toByte(), 0x5A, 0xBA.toByte()),
+            shortArrayOf(0x3130, 0x4342, 0xDEA5.toShort(), 0xBA5A.toShort()).toByteArrayLE()
+        )
+        assertArrayEquals(
+            byteArrayOf(0xDD.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xFF.toByte()),
+            shortArrayOf(0xEEDD.toShort(), 0xEEFF.toShort(), 0xFFFF.toShort()).toByteArrayLE()
+        )
+
+        assertArrayEquals(byteArrayOf(0, 1, 2, 3, 4, 5).toShortArray(), shortArrayOf(0x0001, 0x0203, 0x0405))
+        assertArrayEquals(byteArrayOf(0xA, 0xB, 0xC, 0xD, 0xE, 0xF).toShortArray(), shortArrayOf(0x0A0B, 0x0C0D, 0x0E0F))
+        assertArrayEquals(
+            byteArrayOf(0x30, 0x31, 0x42, 0x43, 0xA5.toByte(), 0xDE.toByte(), 0x5A, 0xBA.toByte()).toShortArray(),
+            shortArrayOf(0x3031, 0x4243, 0xA5DE.toShort(), 0x5ABA)
+        )
+        assertArrayEquals(
+            byteArrayOf(0xDD.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xFF.toByte()).toShortArray(),
+            shortArrayOf(0xDDEE.toShort(), 0xFFEE.toShort(), 0xFFFF.toShort())
+        )
+    }
+
+    @Test
+    fun byteArray2ShortArray() {
+        assertArrayEquals(shortArrayOf(0x0100, 0x0302, 0x0504), byteArrayOf(0, 1, 2, 3, 4, 5).toShortArrayLE())
+        assertArrayEquals(shortArrayOf(0x0B0A, 0x0D0C, 0x0F0E), byteArrayOf(0xA, 0xB, 0xC, 0xD, 0xE, 0xF).toShortArrayLE())
+        assertArrayEquals(
+            shortArrayOf(0x3130, 0x4342, 0xDEA5.toShort(), 0xBA5A.toShort()),
+            byteArrayOf(0x30, 0x31, 0x42, 0x43, 0xA5.toByte(), 0xDE.toByte(), 0x5A, 0xBA.toByte()).toShortArrayLE()
+        )
+        assertArrayEquals(
+            shortArrayOf(0xEEDD.toShort(), 0xEEFF.toShort(), 0xFFFF.toShort()),
+            byteArrayOf(0xDD.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xFF.toByte()).toShortArrayLE()
+        )
+
+        assertArrayEquals(shortArrayOf(0x0001, 0x0203, 0x0405), byteArrayOf(0, 1, 2, 3, 4, 5).toShortArray())
+        assertArrayEquals(shortArrayOf(0x0A0B, 0x0C0D, 0x0E0F), byteArrayOf(0xA, 0xB, 0xC, 0xD, 0xE, 0xF).toShortArray())
+        assertArrayEquals(
+            shortArrayOf(0x3031, 0x4243, 0xA5DE.toShort(), 0x5ABA),
+            byteArrayOf(0x30, 0x31, 0x42, 0x43, 0xA5.toByte(), 0xDE.toByte(), 0x5A, 0xBA.toByte()).toShortArray()
+        )
+        assertArrayEquals(
+            shortArrayOf(0xDDEE.toShort(), 0xFFEE.toShort(), 0xFFFF.toShort()),
+            byteArrayOf(0xDD.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xEE.toByte(), 0xFF.toByte(), 0xFF.toByte()).toShortArray()
+        )
+    }
+
     @Test
     fun numberToBytes() {
         assertArrayEquals(byteArrayOf(0), 0.asByteAndForceToBytes())
@@ -106,6 +157,8 @@ class BytesConversionUnitTest {
         assertArrayEquals(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x4A), 586L.toBytes())
         assertArrayEquals(byteArrayOf(0x4A, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), 586L.toBytesLE())
 
+        assertArrayEquals(byteArrayOf(0xDE.toByte(), 0xA5.toByte()), ((0xDEA5).toShort()).toBytes())
+        assertArrayEquals(byteArrayOf(0xA5.toByte(), 0xDE.toByte()), (0xDEA5.toShort()).toBytesLE())
         assertArrayEquals(byteArrayOf(0xFF.toByte(), 0xFF.toByte()), (65535.toShort()).toBytes())
         assertArrayEquals(byteArrayOf(0xFF.toByte(), 0xFF.toByte()), (65535.toShort()).toBytesLE())
         assertArrayEquals(byteArrayOf(0x00, 0x00, 0xFF.toByte(), 0xFF.toByte()), 65535.toBytes())

@@ -2,6 +2,7 @@ package com.leovp.audio.player.aac
 
 import android.content.Context
 import android.media.*
+import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
 import com.leovp.audio.recorder.BuildConfig
@@ -133,7 +134,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         sampleSize = mediaExtractor.readSampleData(it, 0)
                         sampleData = ByteArray(it.remaining())
                         it.get(sampleData!!)
-                        LogContext.log.i(TAG, "Sample aac data[${sampleData?.size}]")
+                        if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
                     }
 
                     if (sampleSize > 0) {
@@ -147,6 +148,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                     if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
+                    var shortPcmData: ShortArray
                     while (outputIndex >= 0) {
                         chunkPCM = ByteArray(decodeBufferInfo.size)
                         outputBuffer = audioDecoder?.getOutputBuffer(outputIndex)
@@ -154,10 +156,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         outputBuffer?.clear()
                         if (chunkPCM.isNotEmpty()) {
 //                                LogContext.log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
-                            val shortPcmData = ShortArray(chunkPCM.size / 2)
-                            for (i in shortPcmData.indices) {
-                                shortPcmData[i] = (chunkPCM[i * 2].toInt() and 0xFF or (chunkPCM[i * 2 + 1].toInt() shl 8)).toShort()
-                            }
+                            shortPcmData = chunkPCM.toShortArrayLE()
                             LogContext.log.i(TAG, "Finally PCM data[${shortPcmData.size}]")
                             audioTrack?.write(shortPcmData, 0, shortPcmData.size)
                         }

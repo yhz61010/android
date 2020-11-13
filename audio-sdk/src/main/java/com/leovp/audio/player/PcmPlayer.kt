@@ -45,6 +45,18 @@ class PcmPlayer(ctx: Context, audioData: AudioCodecInfo, minPlayBufferSizeRatio:
         }
     }
 
+    fun play(chunkPcm: ShortArray) {
+        runCatching {
+            if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
+            if (AudioTrack.PLAYSTATE_PLAYING == audioTrack.playState) {
+//                val st = SystemClock.elapsedRealtime()
+                // Play decoded audio data in PCM
+                audioTrack.write(chunkPcm, 0, chunkPcm.size)
+//                LogContext.log.i(TAG, "Play pcm cost=${SystemClock.elapsedRealtime() - st} ms.")
+            }
+        }.onFailure { it.printStackTrace() }
+    }
+
     fun play(chunkPcm: ByteArray) {
         runCatching {
             if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return

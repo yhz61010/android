@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.leovp.androidbase.exts.compress
 import com.leovp.androidbase.exts.decompress
+import com.leovp.androidbase.exts.toByteArrayLE
+import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.player.PcmPlayer
@@ -60,7 +62,7 @@ class AudioSender {
             ioScope.launch {
                 while (true) {
                     ensureActive()
-                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress()) }
+                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress().toShortArrayLE()) }
                     delay(10)
                 }
             }
@@ -88,8 +90,8 @@ class AudioSender {
         }
 
         micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
-            override fun onRecording(pcmData: ByteArray, st: Long, ed: Long) {
-                recAudioQueue.offer(pcmData)
+            override fun onRecording(pcmData: ShortArray, st: Long, ed: Long) {
+                recAudioQueue.offer(pcmData.toByteArrayLE())
             }
 
             override fun onStop(stopResult: Boolean) {

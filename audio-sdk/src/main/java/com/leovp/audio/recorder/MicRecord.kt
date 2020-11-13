@@ -66,7 +66,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, rec
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
 //                    if (cost > 100) {
-//                        LogContext.log.w(TAG, "Drop the generated audio data which cost over 100 ms.")
+//                        LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
 //                        continue
 //                    }
                     ioScope.launch {

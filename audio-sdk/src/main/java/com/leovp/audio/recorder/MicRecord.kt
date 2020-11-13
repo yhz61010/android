@@ -15,7 +15,7 @@ import kotlinx.coroutines.*
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
-class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, private val recordMinBufferRatio: Int = 1) {
+class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, recordMinBufferRatio: Int = 1) {
     companion object {
         private const val TAG = "MicRec"
     }
@@ -49,26 +49,24 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, pri
         audioRecord.startRecording()
         ioScope.launch {
             runCatching {
-                val pcmData = ByteArray(bufferSizeInBytes)
+                val pcmData = ShortArray(bufferSizeInBytes / 2)
                 var st: Long
                 var ed: Long
-                var cost: Long
                 var recordSize: Int
                 while (true) {
                     ensureActive()
                     st = SystemClock.elapsedRealtime()
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
                     ed = SystemClock.elapsedRealtime()
-                    cost = ed - st
                     if (BuildConfig.DEBUG) {
-                        LogContext.log.d(TAG, "Record[$recordSize] cost $cost ms.")
+                        LogContext.log.d(TAG, "Record[${recordSize * 2}] cost ${ed - st} ms.")
                     }
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
 //                    if (cost > 100) {
-//                        LogContext.log.w(TAG, "Drop the generate audio data which cost over 100 ms.")
+//                        LogContext.log.w(TAG, "Drop the generated audio data which cost over 100 ms.")
 //                        continue
 //                    }
                     ioScope.launch {
@@ -124,7 +122,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, pri
     fun getRecordingState() = audioRecord.recordingState
 
     interface RecordCallback {
-        fun onRecording(pcmData: ByteArray, st: Long, ed: Long)
+        fun onRecording(pcmData: ShortArray, st: Long, ed: Long)
         fun onStop(stopResult: Boolean)
     }
 }

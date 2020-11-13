@@ -1,7 +1,11 @@
+# Known Issues
+1. Can not play AAC file in Audio demo on OnePlus 8T device.
+2. In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2 channels, the volume of receiver is too small to hear.
+
 # TODO List
 ~~1. Camera2Live~~(Solved)
 ~~When you initialize `Camera2Component`, you must specify the *encoder* type manually.
-This is not a wise way to do it. In the next version, I will identity the *encoder* automatically
+This is not a wise way. In the next version, I will identity the *encoder* automatically
 according to the camera characteristics.~~
 
 ~~2. Network Monitor~~(Solved)

@@ -2,6 +2,7 @@ package com.leovp.audio.player.aac
 
 import android.content.Context
 import android.media.*
+import android.media.AudioTrack.STATE_UNINITIALIZED
 import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioCodecInfo
@@ -10,10 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.nio.ByteBuffer
 
 /**
  * Author: Michael Leo
@@ -32,50 +30,57 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
     private var audioTrack: AudioTrack? = null
     private var audioDecoder: MediaCodec? = null
 
-    private lateinit var mediaExtractor: MediaExtractor
+    private var mediaExtractor: MediaExtractor? = null
 
-    private fun initAudioDecoder(aacFile: File, csd0: ByteArray) {
+    private fun initAudioDecoder(aacFile: File) {
         runCatching {
-            mediaExtractor = MediaExtractor()
-            mediaExtractor.setDataSource(aacFile.absolutePath)
+            mediaExtractor = MediaExtractor().apply { setDataSource(aacFile.absolutePath) }
 
-            var format = mediaExtractor.getTrackFormat(0)
-            val mime = format.getString(MediaFormat.KEY_MIME)!!
-            if (mime.startsWith("audio")) {
-                mediaExtractor.selectTrack(0)
-                audioDecoder = MediaCodec.createDecoderByType(mime)
-                format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
+            var mediaFormat: MediaFormat? = null
+            var mime: String? = null
+            for (i in 0 until mediaExtractor!!.trackCount) {
+                val format = mediaExtractor?.getTrackFormat(i)
+                mime = format?.getString(MediaFormat.KEY_MIME)
+                if (mime!!.startsWith("audio/")) {
+                    mediaExtractor?.selectTrack(i)
+                    mediaFormat = format
+                    break
+                }
+            }
+            if (mediaFormat == null || mime.isNullOrBlank()) return
 
-                // ByteBuffer key
-                // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-                // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-                // Convert them to binary value: 0b10, 0b100, 0b1
-                // According to AAC required, convert theirs values to binary bits:
-                // 00010 0100 0001 000
-                // The corresponding hex value：
-                // 0001 0010 0000 1000
-                // So the csd_0 value is 0x12,0x08
-                // https://developer.android.com/reference/android/media/MediaCodec
-                // AAC CSD: Decoder-specific information from ESDS
+            // ByteBuffer key
+            // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
+            // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+            // Convert them to binary value: 0b10, 0b100, 0b1
+            // According to AAC required, convert theirs values to binary bits:
+            // 00010 0100 0001 000
+            // The corresponding hex value：
+            // 0001 0010 0000 1000
+            // So the csd_0 value is 0x12,0x08
+            // https://developer.android.com/reference/android/media/MediaCodec
+            // AAC CSD: Decoder-specific information from ESDS
 
-                // ByteBuffer key
-                // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-                // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-                // Convert them to binary value: 0b10, 0b100, 0b1
-                // According to AAC required, convert theirs values to binary bits:
-                // 00010 0100 0001 000
-                // The corresponding hex value：
-                // 0001 0010 0000 1000
-                // So the csd_0 value is 0x12,0x08
-                // https://developer.android.com/reference/android/media/MediaCodec
-                // AAC CSD: Decoder-specific information from ESDS
-                format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
-                audioDecoder?.configure(format, null, null, 0)
-            } else {
-                return
+            // ByteBuffer key
+            // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
+            // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+            // Convert them to binary value: 0b10, 0b100, 0b1
+            // According to AAC required, convert theirs values to binary bits:
+            // 00010 0100 0001 000
+            // The corresponding hex value：
+            // 0001 0010 0000 1000
+            // So the csd_0 value is 0x12,0x08
+
+            // https://developer.android.com/reference/android/media/MediaCodec
+            // AAC CSD: Decoder-specific information from ESDS
+//                mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
+//                mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+
+            audioDecoder = MediaCodec.createDecoderByType(mime).apply {
+                configure(mediaFormat, null, null, 0)
+                start()
             }
         }.onFailure { it.printStackTrace() }
-        audioDecoder?.start()
     }
 
     private fun initAudioTrack(ctx: Context, audioData: AudioCodecInfo) {
@@ -106,16 +111,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
 
     fun playAac(aacFile: File, f: () -> Unit) {
         isPlaying = true
-
-        val csd0WithAdts = ByteArray(9)
-        val csd0 = ByteArray(2)
-        BufferedInputStream(FileInputStream(aacFile)).use { input ->
-            input.read(csd0WithAdts, 0, 9)
-            csd0[0] = csd0WithAdts[7]
-            csd0[1] = csd0WithAdts[8]
-        }
-
-        initAudioDecoder(aacFile, csd0)
+        initAudioDecoder(aacFile)
         initAudioTrack(ctx, audioDecodeInfo)
         ioScope.launch {
             try {
@@ -124,36 +120,47 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
                     if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
-                    if (inputIndex < 0) {
-                        isFinish = true
-                    }
-                    var sampleSize = -1
-                    var sampleData: ByteArray?
-                    audioDecoder?.getInputBuffer(inputIndex)?.let {
-                        it.clear()
-                        sampleSize = mediaExtractor.readSampleData(it, 0)
-                        sampleData = ByteArray(it.remaining())
-                        it.get(sampleData!!)
-                        if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
+                    if (inputIndex > -1) {
+                        var sampleSize = -1
+                        var sampleData: ByteArray?
+                        try {
+                            audioDecoder?.getInputBuffer(inputIndex)?.let {
+                                it.clear()
+                                sampleSize = mediaExtractor?.readSampleData(it, 0) ?: -1
+                                if (sampleSize < 0) {
+                                    isFinish = true
+                                } else {
+                                    sampleData = ByteArray(it.remaining())
+                                    it.get(sampleData!!)
+                                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            if (BuildConfig.DEBUG) LogContext.log.e(TAG, "inputIndex=$inputIndex sampleSize=$sampleSize")
+                            e.printStackTrace()
+                        }
+                        if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
+                        if (sampleSize < 0) {
+                            audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            isFinish = true
+                        } else {
+                            audioDecoder?.queueInputBuffer(inputIndex, 0, sampleSize, mediaExtractor?.sampleTime ?: 0, 0)
+                            mediaExtractor?.advance()
+                        }
                     }
 
-                    if (sampleSize > 0) {
-                        audioDecoder?.queueInputBuffer(inputIndex, 0, sampleSize, 0 /*mediaExtractor.getSampleTime()*/, 0)
-                        mediaExtractor.advance()
-                    } else {
-                        audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                        isFinish = true
-                    }
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
                     if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
-                    var outputBuffer: ByteBuffer?
                     var chunkPCM: ByteArray
                     var shortPcmData: ShortArray
                     while (outputIndex >= 0) {
                         chunkPCM = ByteArray(decodeBufferInfo.size)
-                        outputBuffer = audioDecoder?.getOutputBuffer(outputIndex)
-                        outputBuffer?.get(chunkPCM)
-                        outputBuffer?.clear()
+                        audioDecoder?.getOutputBuffer(outputIndex)?.apply {
+                            position(decodeBufferInfo.offset)
+                            limit(decodeBufferInfo.offset + decodeBufferInfo.size)
+                            get(chunkPCM)
+                            clear()
+                        }
                         if (chunkPCM.isNotEmpty()) {
 //                                LogContext.log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
                             shortPcmData = chunkPCM.toShortArrayLE()
@@ -164,20 +171,27 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                         outputIndex = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
                     }
                 }
-                f.invoke()
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                stop()
+                f.invoke()
             }
         }
     }
 
     fun stop() {
+        isPlaying = false
         runCatching {
-            audioTrack?.pause()
-            audioTrack?.flush()
-            audioTrack?.stop()
-            audioTrack?.release()
-
+            if (STATE_UNINITIALIZED != audioTrack!!.state) {
+                audioTrack?.pause()
+                audioTrack?.flush()
+                audioTrack?.stop()
+                audioTrack?.release()
+            }
+        }.onFailure { it.printStackTrace() }
+        runCatching {
+            mediaExtractor?.release()
         }.onFailure { it.printStackTrace() }
         runCatching {
             audioDecoder?.stop()

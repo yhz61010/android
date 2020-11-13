@@ -1,5 +1,5 @@
 # Known Issues
-1. Can not play AAC file in Audio demo on OnePlus 8T device.
+(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~1. Can not play AAC file in Audio demo on OnePlus 8T device.~~
 2. In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2 channels, the volume of receiver is too small to hear.
 
 # TODO List

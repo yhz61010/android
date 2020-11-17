@@ -4,16 +4,14 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import com.leovp.androidbase.exts.toByteArrayLE
-import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.exts.toast
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.AudioCodecInfo
-import com.leovp.audio.player.PcmPlayer
-import com.leovp.audio.player.aac.AacFilePlayer
-import com.leovp.audio.recorder.MicRecorder
-import com.leovp.audio.recorder.aac.AacEncoder
+import com.leovp.audio.AudioPlayer
+import com.leovp.audio.MicRecorder
+import com.leovp.audio.aac.AacFilePlayer
+import com.leovp.audio.base.AudioType
+import com.leovp.audio.base.bean.AudioCodecInfo
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
@@ -33,8 +31,6 @@ import java.net.URI
 class AudioActivity : BaseDemonstrationActivity() {
     companion object {
         private const val TAG = "AudioActivity"
-        private const val RECORD_TYPE_PCM = 1
-        private const val RECORD_TYPE_AAC = 2
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
         val audioPlayCodec = AudioCodecInfo(16000, 48000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
@@ -49,8 +45,7 @@ class AudioActivity : BaseDemonstrationActivity() {
     private var aacOs: BufferedOutputStream? = null
 
     private var micRecorder: MicRecorder? = null
-    private var aacEncoder: AacEncoder? = null
-    private var pcmPlayer: PcmPlayer? = null
+    private var audioPlayer: AudioPlayer? = null
     private var aacFilePlayer: AacFilePlayer? = null
 
     private var audioReceiver: AudioReceiver? = null
@@ -71,7 +66,7 @@ class AudioActivity : BaseDemonstrationActivity() {
 
         btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                record(RECORD_TYPE_PCM)
+                record(AudioType.PCM)
             } else {
                 micRecorder?.stopRecord()
             }
@@ -79,7 +74,7 @@ class AudioActivity : BaseDemonstrationActivity() {
 
         btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                record(RECORD_TYPE_AAC)
+                record(AudioType.AAC)
             } else {
                 micRecorder?.stopRecord()
             }
@@ -88,7 +83,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             var playPcmThread: Thread? = null
             if (isChecked) {
-                pcmPlayer = PcmPlayer(applicationContext, audioPlayCodec)
+                audioPlayer = AudioPlayer(applicationContext, audioPlayCodec, AudioType.PCM)
                 playPcmThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->
@@ -97,7 +92,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                         var readSize: Int
                         while (input.read(readBuffer).also { readSize = it } != -1) {
                             LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
-                            pcmPlayer?.play(readBuffer.toShortArrayLE())
+                            audioPlayer?.play(readBuffer)
                         }
                         runOnUiThread { btn.isChecked = false }
                     }
@@ -105,7 +100,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                 playPcmThread.start()
             } else {
                 playPcmThread?.interrupt()
-                pcmPlayer?.release()
+                audioPlayer?.release()
             }
         }
 
@@ -121,34 +116,28 @@ class AudioActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private fun record(type: Int) {
+    private fun record(type: AudioType) {
         AndPermission.with(this)
             .runtime()
             .permission(Permission.RECORD_AUDIO)
             .onGranted {
                 when (type) {
-                    RECORD_TYPE_PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
-                    RECORD_TYPE_AAC -> {
-                        aacOs = BufferedOutputStream(FileOutputStream(aacFile))
-                        aacEncoder = AacEncoder(
-                            audioEncoderCodec.sampleRate,
-                            audioEncoderCodec.bitrate,
-                            audioEncoderCodec.channelCount,
-                            object : AacEncoder.AacEncodeCallback {
-                                override fun onEncoded(aacData: ByteArray) {
-                                    LogContext.log.i(TAG, "Get encoded AAC Data[${aacData.size}]")
-                                    runCatching { aacOs?.write(aacData) }.onFailure { it.printStackTrace() }
-                                }
-                            }).apply { start() }
-                    }
+                    AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
+                    AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
+                    else -> Unit
                 }
                 micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
-                    override fun onRecording(pcmData: ShortArray, st: Long, ed: Long) {
-                        val pcmBytes = pcmData.toByteArrayLE()
-                        LogContext.log.d(TAG, "PCM data[${pcmBytes.size}]")
+                    override fun onRecording(data: ByteArray) {
                         when (type) {
-                            RECORD_TYPE_PCM -> runCatching { pcmOs?.write(pcmBytes) }.onFailure { it.printStackTrace() }
-                            RECORD_TYPE_AAC -> aacEncoder?.queue?.offer(pcmBytes)
+                            AudioType.PCM -> runCatching {
+                                LogContext.log.d(TAG, "PCM data[${data.size}]")
+                                pcmOs?.write(data)
+                            }.onFailure { it.printStackTrace() }
+                            AudioType.AAC -> {
+                                LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
+                                runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
+                            }
+                            else -> Unit
                         }
                     }
 
@@ -159,9 +148,8 @@ class AudioActivity : BaseDemonstrationActivity() {
                             aacOs?.flush()
                             aacOs?.close()
                         }.onFailure { it.printStackTrace() }
-                        aacEncoder?.release()
                     }
-                })
+                }, type)
                 micRecorder?.startRecord()
             }
             .onDenied { Toast.makeText(this, "Deny record permission", Toast.LENGTH_SHORT).show();finish() }
@@ -169,18 +157,13 @@ class AudioActivity : BaseDemonstrationActivity() {
     }
 
     override fun onStop() {
-        ioScope.launch {
-            audioReceiver?.stopServer()
-        }
-        ioScope.launch {
-            audioSender?.stop()
-        }
+        ioScope.launch { audioReceiver?.stopServer() }
+        ioScope.launch { audioSender?.stop() }
         ioScope.launch {
             micRecorder?.stopRecord()
-            pcmPlayer?.release()
+            audioPlayer?.release()
         }
         aacFilePlayer?.stop()
-        aacEncoder?.release()
         super.onStop()
     }
 

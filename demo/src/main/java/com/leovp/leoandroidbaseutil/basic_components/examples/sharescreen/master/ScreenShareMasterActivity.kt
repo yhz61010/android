@@ -150,8 +150,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = DeviceUtil.getResolution(this@ScreenShareMasterActivity)
                         val setting = ScreenShareSetting(
-                            (screenInfo.x * 0.6F / 16).toInt() * 16,
-                            (screenInfo.y * 0.6F / 16).toInt() * 16,
+                            (screenInfo.x * 0.5F / 16).toInt() * 16,
+                            (screenInfo.y * 0.5F / 16).toInt() * 16,
                             DeviceUtil.getDensity(this@ScreenShareMasterActivity)
                         )
 //                        setting.fps = 20F
@@ -348,7 +348,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 @Keep
 data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var fps: Float = 15F
-    var bitrate = (width * height * 0.8f * 1.9f).toInt()
+    var bitrate = (width * height * 1.8f).toInt()
     var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
     var keyFrameRate = 8
     var iFrameInterval = 4

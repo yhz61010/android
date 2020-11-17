@@ -1,11 +1,11 @@
-package com.leovp.audio.player.aac
+package com.leovp.audio.aac
 
 import android.content.Context
 import android.media.*
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioCodecInfo
 import com.leovp.audio.recorder.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

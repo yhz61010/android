@@ -1,4 +1,4 @@
-package com.leovp.audio.base
+package com.leovp.audio.base.bean
 
 import androidx.annotation.Keep
 

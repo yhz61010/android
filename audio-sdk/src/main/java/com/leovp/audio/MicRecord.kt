@@ -1,4 +1,4 @@
-package com.leovp.audio.recorder
+package com.leovp.audio
 
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -6,16 +6,27 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
+import com.leovp.androidbase.exts.toByteArrayLE
 import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.AudioCodecInfo
+import com.leovp.audio.base.AudioEncoderManager
+import com.leovp.audio.base.AudioType
+import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.iters.AudioEncoderWrapper
+import com.leovp.audio.base.iters.OutputCallback
+import com.leovp.audio.recorder.BuildConfig
 import kotlinx.coroutines.*
 
 /**
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
-class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, recordMinBufferRatio: Int = 1) {
+class MicRecorder(
+    encoderInfo: AudioCodecInfo,
+    val callback: RecordCallback,
+    type: AudioType = AudioType.COMPRESSED_PCM,
+    recordMinBufferRatio: Int = 1
+) {
     companion object {
         private const val TAG = "MicRec"
     }
@@ -23,12 +34,20 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, rec
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private var audioRecord: AudioRecord
-
     private var bufferSizeInBytes = 0
+
+    private var encodeWrapper: AudioEncoderWrapper?
 
     init {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat) * recordMinBufferRatio
         LogContext.log.w(TAG, "recordAudio=${encoderInfo.toJsonString()} recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
+
+        encodeWrapper = AudioEncoderManager.getWrapper(type, encoderInfo, object : OutputCallback {
+            override fun output(out: ByteArray) {
+                callback.onRecording(out)
+            }
+        })
+        LogContext.log.w(TAG, "encodeWrapper=$encodeWrapper")
 
         audioRecord = AudioRecord(
             // MediaRecorder.AudioSource.MIC
@@ -69,9 +88,7 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, rec
 //                        LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
 //                        continue
 //                    }
-                    ioScope.launch {
-                        callback.onRecording(pcmData, st, ed)
-                    }
+                    ioScope.launch { encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(pcmData.toByteArrayLE()) }
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -116,13 +133,15 @@ class MicRecorder(encoderInfo: AudioCodecInfo, val callback: RecordCallback, rec
                 audioRecord.release()
             }
         }.onFailure { it.printStackTrace(); stopResult = false }
+        encodeWrapper?.release()
         callback.onStop(stopResult)
     }
 
+    @Suppress("unused")
     fun getRecordingState() = audioRecord.recordingState
 
     interface RecordCallback {
-        fun onRecording(pcmData: ShortArray, st: Long, ed: Long)
+        fun onRecording(data: ByteArray)
         fun onStop(stopResult: Boolean)
     }
 }

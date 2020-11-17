@@ -17,6 +17,7 @@ import android.provider.Settings
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.ui.FloatViewManager
+import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
@@ -26,21 +27,20 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.screenshot.ScreenCapture
+import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
 import com.leovp.socket_sdk.framework.server.ServerConnectListener
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_screen_share_master.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.nio.charset.Charset
 
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
@@ -133,11 +133,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             REQUEST_CODE_DRAW_OVERLAY_PERMISSION -> {
-                if (canDrawOverlays) {
-                    floatCanvas?.show()
-                } else {
-                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
-                }
+                if (canDrawOverlays) floatCanvas?.show() else toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
                 return
             }
         }
@@ -154,17 +150,17 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = DeviceUtil.getResolution(this@ScreenShareMasterActivity)
                         val setting = ScreenShareSetting(
-                            (screenInfo.x * 0.8F / 16).toInt() * 16,
-                            (screenInfo.y * 0.8F / 16).toInt() * 16,
+                            (screenInfo.x * 0.6F / 16).toInt() * 16,
+                            (screenInfo.y * 0.6F / 16).toInt() * 16,
                             DeviceUtil.getDensity(this@ScreenShareMasterActivity)
                         )
-                        setting.fps = 20F
-                        setting.bitrate = setting.width * setting.height
+//                        setting.fps = 20F
+//                        setting.bitrate = setting.width * setting.height
                         // !!! Attention !!!
                         // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
-                        setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-                        setting.keyFrameRate = 2
-                        setting.iFrameInterval = 3
+//                        setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+//                        setting.keyFrameRate = 2
+//                        setting.iFrameInterval = 3
                         mediaProjectService?.startScreenShare(setting)
                     }
                     ScreenCapture.SCREEN_CAPTURE_RESULT_DENY -> {
@@ -195,23 +191,49 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     private var clientChannel: Channel? = null
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+        override fun addLastToPipeline(pipeline: ChannelPipeline) {
+            pipeline.addLast("messageDecoder", CustomSocketByteStreamDecoder())
+        }
+    }
 
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-            val receivedString: String?
-            val frame = msg as WebSocketFrame
-            receivedString = when (frame) {
-                is TextWebSocketFrame -> frame.text()
-                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
-                else -> null
+//            val receivedString: String?
+//            val frame = msg as WebSocketFrame
+//            receivedString = when (frame) {
+//                is TextWebSocketFrame -> frame.text()
+//                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
+//                else -> null
+//            }
+//            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
+
+            val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+            // Data Length
+            receivedByteBuf.readIntLE()
+            // Command ID
+            receivedByteBuf.readByte()
+            // Protocol version
+            receivedByteBuf.readByte()
+
+            runCatching {
+                val bodyBytes = ByteArray(receivedByteBuf.readableBytes())
+                receivedByteBuf.getBytes(6, bodyBytes)
+                receivedByteBuf.release()
+
+                netty.connectionListener.onReceivedData(netty, ctx.channel(), bodyBytes.decodeToString())
             }
-            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }
 
         fun sendVideoData(clientChannel: Channel, cmdId: Int, data: ByteArray): Boolean {
-            return netty.executeCommand(clientChannel, cmdId.toBytesLE() + data, showContent = false)
+            val cId = cmdId.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+
+            val contentLen = (cId.size + protoVer.size + data.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, data)
+
+            return netty.executeCommand(clientChannel, command, showContent = false)
         }
 
         override fun release() {
@@ -325,11 +347,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
 @Keep
 data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
-    var fps: Float = 20F
-    var bitrate = width * height
+    var fps: Float = 15F
+    var bitrate = (width * height * 0.8f * 1.9f).toInt()
     var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-    var keyFrameRate = 20
-    var iFrameInterval = 3
+    var keyFrameRate = 8
+    var iFrameInterval = 4
 
     /**
      * Only used in **ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE** mode

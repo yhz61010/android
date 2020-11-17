@@ -1,6 +1,6 @@
 package com.leovp.audio.base
 
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.decoderWrapper.CompressedPcmDecoderWrapper
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
@@ -10,10 +10,10 @@ import com.leovp.audio.base.iters.OutputCallback
  * Date: 20-11-14 下午4:37
  */
 object AudioDecoderManager {
-    fun getWrapper(type: AudioType, encoderInfo: AudioCodecInfo, outputCallback: OutputCallback): AudioDecoderWrapper? {
+    fun getWrapper(type: AudioType, decoderInfo: AudioDecoderInfo, outputCallback: OutputCallback): AudioDecoderWrapper? {
         return when (type) {
             AudioType.PCM -> null
-            AudioType.COMPRESSED_PCM -> CompressedPcmDecoderWrapper(encoderInfo, outputCallback)
+            AudioType.COMPRESSED_PCM -> CompressedPcmDecoderWrapper(decoderInfo, outputCallback)
             AudioType.AAC -> null
         }
     }

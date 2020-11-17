@@ -5,7 +5,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.androidbase.utils.JsonUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -17,7 +17,8 @@ import java.util.concurrent.atomic.AtomicLong
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacDecoder(private val audioDecodeInfo: AudioCodecInfo, private val callback: AacDecodeCallback) {
+@Suppress("unused")
+class AacDecoder(private val audioDecodeInfo: AudioDecoderInfo, private val callback: AacDecodeCallback) {
     companion object {
         private const val TAG = "AacDecoder"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
@@ -28,6 +29,7 @@ class AacDecoder(private val audioDecodeInfo: AudioCodecInfo, private val callba
     //    private var outputFormat: MediaFormat? = null
     private var frameCount = AtomicLong(0)
     private var audioDecoder: MediaCodec? = null
+    @Suppress("WeakerAccess")
     var csd0: ByteArray? = null
         private set
 
@@ -54,6 +56,7 @@ class AacDecoder(private val audioDecodeInfo: AudioCodecInfo, private val callba
     // So the csd_0 value is 0x12,0x08
     // https://developer.android.com/reference/android/media/MediaCodec
     // AAC CSD: Decoder-specific information from ESDS
+    @Suppress("unused")
     fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
             this.csd0 = csd0
@@ -76,6 +79,7 @@ class AacDecoder(private val audioDecodeInfo: AudioCodecInfo, private val callba
     /**
      * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
      */
+    @Suppress("unused")
     fun decode(audioData: ByteArray) {
         try {
             val bufferInfo = MediaCodec.BufferInfo()

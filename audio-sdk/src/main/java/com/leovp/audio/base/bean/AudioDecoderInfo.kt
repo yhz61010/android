@@ -9,7 +9,6 @@ import androidx.annotation.Keep
  * Example:
  * ```
  * sampleRate: 44100Hz
- * bitrate: 32000bps
  * channelConfig:
  *              AudioFormat.CHANNEL_IN_MONO(16=0x10)
  *              AudioFormat.CHANNEL_IN_STEREO(12=0xc)
@@ -23,4 +22,10 @@ import androidx.annotation.Keep
  * ```
  */
 @Keep
-data class AudioCodecInfo(val sampleRate: Int, val bitrate: Int, val channelConfig: Int, val channelCount: Int, val audioFormat: Int)
+data class AudioDecoderInfo(val sampleRate: Int, val channelConfig: Int, val audioFormat: Int) {
+    val channelCount: Int = when (channelConfig) {
+        android.media.AudioFormat.CHANNEL_OUT_MONO -> 1
+        android.media.AudioFormat.CHANNEL_OUT_STEREO -> 2
+        else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=${channelConfig}")
+    }
+}

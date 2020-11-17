@@ -1,4 +1,4 @@
-package com.leovp.audio.recorder.aac
+package com.leovp.audio.aac
 
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -67,6 +67,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                 val data = queue.poll()?.also {
                     inputBuffer?.put(it)
                 }
+//                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount, sampleRate), 0)
             }.onFailure { it.printStackTrace() }
         }
@@ -78,9 +79,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-                    if (BuildConfig.DEBUG) {
-                        LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
-                    }
+                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)

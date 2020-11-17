@@ -5,7 +5,7 @@ import android.media.*
 import android.os.SystemClock
 import com.leovp.androidbase.utils.JsonUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -16,7 +16,7 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
+class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: AudioDecoderInfo) {
     companion object {
         private const val TAG = "AacStreamPlayer"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
@@ -43,10 +43,10 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 
     private var csd0: ByteArray? = null
 
-    private fun initAudioTrack(ctx: Context, audioData: AudioCodecInfo) {
+    private fun initAudioTrack(ctx: Context) {
         runCatching {
             audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat)
+            val bufferSize = AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat)
             val sessionId = audioManager!!.generateAudioSessionId()
             val audioAttributesBuilder = AudioAttributes.Builder().apply {
                 // Speaker
@@ -59,9 +59,9 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
 //                setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
             }
-            val audioFormat = AudioFormat.Builder().setSampleRate(audioData.sampleRate)
-                .setEncoding(audioData.audioFormat)
-                .setChannelMask(audioData.channelConfig)
+            val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
+                .setEncoding(audioDecoderInfo.audioFormat)
+                .setChannelMask(audioDecoderInfo.channelConfig)
                 .build()
             audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
 
@@ -74,6 +74,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
         }.onFailure { LogContext.log.e(TAG, "initAudioTrack error msg=${it.message}") }
     }
 
+    @Suppress("unused")
     fun useSpeaker(ctx: Context, on: Boolean) {
         LogContext.log.w(TAG, "useSpeaker=$on")
         val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -111,10 +112,10 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
     // AAC CSD: Decoder-specific information from ESDS
     private fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
-            LogContext.log.i(TAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecodeInfo)}")
+            LogContext.log.i(TAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecoderInfo)}")
             val csd0BB = ByteBuffer.wrap(csd0)
             audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-            val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount).apply {
+            val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount).apply {
                 setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
                 setInteger(MediaFormat.KEY_IS_ADTS, 1)
                 // Set ADTS decoder information.
@@ -267,7 +268,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
                     LogContext.log.w(TAG, "Audio csd0=${JsonUtil.toHexadecimalString(csd0)}")
                     initAudioDecoder(csd0!!)
-                    initAudioTrack(ctx, audioDecodeInfo)
+                    initAudioTrack(ctx)
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
                     ioScope.launch {
                         delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
@@ -346,12 +347,13 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
         LogContext.log.w(TAG, "stopPlaying() done")
     }
 
+    @Suppress("unused")
     fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecodeInfo.sampleRate
+    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     private fun getAudioTimeUs(): Long = runCatching {
         val numFramesPlayed: Int = audioTrack?.playbackHeadPosition ?: 0
-        numFramesPlayed * 1_000_000L / audioDecodeInfo.sampleRate
+        numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)
 }

@@ -12,7 +12,7 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.aac.AacStreamPlayer
 import com.leovp.audio.base.AudioDecoderManager
 import com.leovp.audio.base.AudioType
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.recorder.BuildConfig
@@ -21,7 +21,7 @@ import com.leovp.audio.recorder.BuildConfig
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
-class AudioPlayer(ctx: Context, audioCodecData: AudioCodecInfo, private val type: AudioType = AudioType.COMPRESSED_PCM, minPlayBufferSizeRatio: Int = 1) {
+class AudioPlayer(ctx: Context, audioDecoderInfo: AudioDecoderInfo, private val type: AudioType = AudioType.COMPRESSED_PCM, minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "AudioPlayer"
     }
@@ -34,16 +34,16 @@ class AudioPlayer(ctx: Context, audioCodecData: AudioCodecInfo, private val type
 
     init {
         val minBufferSize =
-            AudioTrack.getMinBufferSize(audioCodecData.sampleRate, audioCodecData.channelConfig, audioCodecData.audioFormat) * minPlayBufferSizeRatio
-        LogContext.log.w(TAG, "PCM Codec=${audioCodecData.toJsonString()} minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
+            AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat) * minPlayBufferSizeRatio
+        LogContext.log.w(TAG, "PCM Codec=${audioDecoderInfo.toJsonString()} minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
             setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
             setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
         }
-        val audioFormat = AudioFormat.Builder().setSampleRate(audioCodecData.sampleRate)
-            .setEncoding(audioCodecData.audioFormat)
-            .setChannelMask(audioCodecData.channelConfig)
+        val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
+            .setEncoding(audioDecoderInfo.audioFormat)
+            .setChannelMask(audioDecoderInfo.channelConfig)
             .build()
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
@@ -58,9 +58,9 @@ class AudioPlayer(ctx: Context, audioCodecData: AudioCodecInfo, private val type
 
         if (type == AudioType.AAC) {
             LogContext.log.w(TAG, "AAC Decoder")
-            aacStreamPlayer = AacStreamPlayer(ctx, audioCodecData)
+            aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
         } else {
-            decoderWrapper = AudioDecoderManager.getWrapper(type, audioCodecData, object : OutputCallback {
+            decoderWrapper = AudioDecoderManager.getWrapper(type, audioDecoderInfo, object : OutputCallback {
                 override fun output(out: ByteArray) {
                     val st = SystemClock.elapsedRealtime()
                     audioTrack.write(out.toShortArrayLE(), 0, out.size / 2)
@@ -103,6 +103,7 @@ class AudioPlayer(ctx: Context, audioCodecData: AudioCodecInfo, private val type
      * pcmPlayer.play(pcmDataBytes)
      * ```
      */
+    @Suppress("WeakerAccess")
     fun resume() {
         LogContext.log.w(TAG, "resume()")
         runCatching { audioTrack.play() }.onFailure { it.printStackTrace() }
@@ -119,6 +120,7 @@ class AudioPlayer(ctx: Context, audioCodecData: AudioCodecInfo, private val type
      * pcmPlayer.play(pcmDataBytes)
      * ```
      */
+    @Suppress("WeakerAccess")
     fun pause() {
         LogContext.log.w(TAG, "pause()")
         runCatching {

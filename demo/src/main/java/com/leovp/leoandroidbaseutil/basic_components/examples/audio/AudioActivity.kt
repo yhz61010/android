@@ -33,8 +33,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioPlayCodec = AudioCodecInfo(16000, 48000, AudioFormat.CHANNEL_OUT_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
-        val audioEncoderCodec = AudioCodecInfo(16000, 48000, AudioFormat.CHANNEL_IN_MONO, 1, AudioFormat.ENCODING_PCM_16BIT)
+        val audioPlayCodec = AudioCodecInfo(8000, 48000, AudioFormat.CHANNEL_OUT_STEREO, 2, AudioFormat.ENCODING_PCM_16BIT)
+        val audioRecCodec = AudioCodecInfo(8000, 48000, AudioFormat.CHANNEL_IN_STEREO, 2, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -126,7 +126,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                     AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
                     else -> Unit
                 }
-                micRecorder = MicRecorder(audioEncoderCodec, object : MicRecorder.RecordCallback {
+                micRecorder = MicRecorder(audioRecCodec, object : MicRecorder.RecordCallback {
                     override fun onRecording(data: ByteArray) {
                         when (type) {
                             AudioType.PCM -> runCatching {

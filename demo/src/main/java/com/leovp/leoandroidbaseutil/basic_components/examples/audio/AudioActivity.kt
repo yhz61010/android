@@ -11,7 +11,8 @@ import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.audio.aac.AacFilePlayer
 import com.leovp.audio.base.AudioType
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
@@ -33,8 +34,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioPlayCodec = AudioCodecInfo(8000, 48000, AudioFormat.CHANNEL_OUT_STEREO, 2, AudioFormat.ENCODING_PCM_16BIT)
-        val audioRecCodec = AudioCodecInfo(8000, 48000, AudioFormat.CHANNEL_IN_STEREO, 2, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(8000, 48000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo = AudioDecoderInfo(8000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -83,7 +84,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             var playPcmThread: Thread? = null
             if (isChecked) {
-                audioPlayer = AudioPlayer(applicationContext, audioPlayCodec, AudioType.PCM)
+                audioPlayer = AudioPlayer(applicationContext, audioDecoderInfo, AudioType.PCM)
                 playPcmThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->
@@ -106,7 +107,7 @@ class AudioActivity : BaseDemonstrationActivity() {
 
         btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                aacFilePlayer = AacFilePlayer(applicationContext, audioPlayCodec)
+                aacFilePlayer = AacFilePlayer(applicationContext, audioDecoderInfo)
                 aacFilePlayer?.playAac(aacFile) {
                     runOnUiThread { btn.isChecked = false }
                 }
@@ -126,7 +127,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                     AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
                     else -> Unit
                 }
-                micRecorder = MicRecorder(audioRecCodec, object : MicRecorder.RecordCallback {
+                micRecorder = MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
                     override fun onRecording(data: ByteArray) {
                         when (type) {
                             AudioType.PCM -> runCatching {

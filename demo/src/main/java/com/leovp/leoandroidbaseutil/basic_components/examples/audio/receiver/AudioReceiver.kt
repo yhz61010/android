@@ -82,7 +82,7 @@ class AudioReceiver {
         }
 
         private fun startMicRecording() {
-            micRecorder = MicRecorder(AudioActivity.audioRecCodec, object : MicRecorder.RecordCallback {
+            micRecorder = MicRecorder(AudioActivity.audioEncoderInfo, object : MicRecorder.RecordCallback {
                 override fun onRecording(data: ByteArray) {
                     recAudioQueue.offer(data)
                     if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
@@ -120,7 +120,7 @@ class AudioReceiver {
     }
 
     fun startServer(ctx: Context) {
-        audioPlayer = AudioPlayer(ctx, AudioActivity.audioPlayCodec, defaultAudioType)
+        audioPlayer = AudioPlayer(ctx, AudioActivity.audioDecoderInfo, defaultAudioType)
 //        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
 //        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
 

@@ -1,11 +1,11 @@
-package com.leovp.audio.player.aac
+package com.leovp.audio.aac
 
 import android.content.Context
 import android.media.*
 import android.os.SystemClock
 import com.leovp.androidbase.utils.JsonUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioCodecInfo
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -53,6 +53,11 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
                 setUsage(AudioAttributes.USAGE_MEDIA)              // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
                 setContentType(AudioAttributes.CONTENT_TYPE_MUSIC) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
                 setLegacyStreamType(AudioManager.STREAM_MUSIC)
+
+                // Earphone
+//                setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION) // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
+//                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+//                setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
             }
             val audioFormat = AudioFormat.Builder().setSampleRate(audioData.sampleRate)
                 .setEncoding(audioData.audioFormat)
@@ -81,41 +86,40 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
         }
     }
 
+    // ByteBuffer key
+    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
+    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+    // Convert them to binary value: 0b10, 0b100, 0b1
+    // According to AAC required, convert theirs values to binary bits:
+    // 00010 0100 0001 000
+    // The corresponding hex value：
+    // 0001 0010 0000 1000
+    // So the csd_0 value is 0x12,0x08
+    // https://developer.android.com/reference/android/media/MediaCodec
+    // AAC CSD: Decoder-specific information from ESDS
+    //
+    // ByteBuffer key
+    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
+    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+    // Convert them to binary value: 0b10, 0b100, 0b1
+    // According to AAC required, convert theirs values to binary bits:
+    // 00010 0100 0001 000
+    // The corresponding hex value：
+    // 0001 0010 0000 1000
+    // So the csd_0 value is 0x12,0x08
+    // https://developer.android.com/reference/android/media/MediaCodec
+    // AAC CSD: Decoder-specific information from ESDS
     private fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
             LogContext.log.i(TAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecodeInfo)}")
-            audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-            val mediaFormat =
-                MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
-            mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
-            mediaFormat.setInteger(MediaFormat.KEY_IS_ADTS, 1)
-
-            // ByteBuffer key
-            // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-            // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-            // Convert them to binary value: 0b10, 0b100, 0b1
-            // According to AAC required, convert theirs values to binary bits:
-            // 00010 0100 0001 000
-            // The corresponding hex value：
-            // 0001 0010 0000 1000
-            // So the csd_0 value is 0x12,0x08
-            // https://developer.android.com/reference/android/media/MediaCodec
-            // AAC CSD: Decoder-specific information from ESDS
-
-            // ByteBuffer key
-            // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-            // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-            // Convert them to binary value: 0b10, 0b100, 0b1
-            // According to AAC required, convert theirs values to binary bits:
-            // 00010 0100 0001 000
-            // The corresponding hex value：
-            // 0001 0010 0000 1000
-            // So the csd_0 value is 0x12,0x08
-            // https://developer.android.com/reference/android/media/MediaCodec
-            // AAC CSD: Decoder-specific information from ESDS
             val csd0BB = ByteBuffer.wrap(csd0)
-            // Set ADTS decoder information.
-            mediaFormat.setByteBuffer("csd-0", csd0BB)
+            audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
+            val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount).apply {
+                setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
+                setInteger(MediaFormat.KEY_IS_ADTS, 1)
+                // Set ADTS decoder information.
+                setByteBuffer("csd-0", csd0BB)
+            }
             audioDecoder!!.configure(mediaFormat, null, null, 0)
 //            outputFormat = audioDecoder?.outputFormat // option B
 //            audioDecoder?.setCallback(mediaCodecCallback)
@@ -147,17 +151,16 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
             val inputIndex: Int = audioDecoder?.dequeueInputBuffer(0) ?: -1
-            if (inputIndex < 0) {
-                return
+            if (inputIndex > -1) {
+                audioDecoder?.getInputBuffer(inputIndex)?.run {
+                    // Clear exist data.
+                    clear()
+                    // Put pcm audio data to encoder.
+                    put(audioData)
+                }
+                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
+                audioDecoder?.queueInputBuffer(inputIndex, 0, audioData.size, pts, 0)
             }
-            audioDecoder?.getInputBuffer(inputIndex)?.run {
-                // Clear exist data.
-                clear()
-                // Put pcm audio data to encoder.
-                put(audioData)
-            }
-            val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-            audioDecoder?.queueInputBuffer(inputIndex, 0, audioData.size, pts, 0)
 
             // Start decoding and get output index
             var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
@@ -245,7 +248,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
 //        }
 //    }
 
-    fun startPlayingStream(audioData: ByteArray, f: () -> Unit) {
+    fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
         // We should use a better way to check CSD0
         if (audioData.size < 10) {
             runCatching {
@@ -300,7 +303,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecodeInfo: Aud
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
                 // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
                 dropFrameTimes.set(0)
-                f.invoke()
+                dropFrameCallback.invoke()
             }
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
         }

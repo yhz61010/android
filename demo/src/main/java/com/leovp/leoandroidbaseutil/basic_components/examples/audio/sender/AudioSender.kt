@@ -2,15 +2,13 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.leovp.androidbase.exts.compress
-import com.leovp.androidbase.exts.decompress
-import com.leovp.androidbase.exts.toByteArrayLE
-import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.audio.player.PcmPlayer
-import com.leovp.audio.recorder.MicRecorder
+import com.leovp.audio.AudioPlayer
+import com.leovp.audio.MicRecorder
+import com.leovp.leoandroidbaseutil.BuildConfig
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver.Companion.defaultAudioType
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base.AudioSenderWebSocket
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base.AudioSenderWebSocketHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
@@ -37,35 +35,25 @@ class AudioSender {
     private var senderHandler: AudioSenderWebSocketHandler? = null
 
     private var micRecorder: MicRecorder? = null
-    private var pcmPlayer: PcmPlayer? = null
+    private var audioPlayer: AudioPlayer? = null
 
-    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
-            pcmPlayer = PcmPlayer(ctx!!, AudioActivity.audioPlayCodec, 1)
-            playAudioThread()
+            audioPlayer = AudioPlayer(ctx!!, AudioActivity.audioPlayCodec, defaultAudioType)
             sendRecAudioThread()
+            startPlayThread()
         }
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
-            val pcmData = data as ByteArray
-            LogContext.log.i(TAG, "onReceivedData PCM[${pcmData.size}]")
-            receiveAudioQueue.offer(pcmData)
-        }
-
-        private fun playAudioThread() {
-            ioScope.launch {
-                while (true) {
-                    ensureActive()
-                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress().toShortArrayLE()) }
-                    delay(10)
-                }
-            }
+            val audioData = data as ByteArray
+            LogContext.log.i(TAG, "onReceivedData Length[${audioData.size}]")
+            receiveAudioQueue.offer(audioData)
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
@@ -90,13 +78,14 @@ class AudioSender {
         }
 
         micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
-            override fun onRecording(pcmData: ShortArray, st: Long, ed: Long) {
-                recAudioQueue.offer(pcmData.toByteArrayLE())
+            override fun onRecording(data: ByteArray) {
+                recAudioQueue.offer(data)
+                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
             }
 
             override fun onStop(stopResult: Boolean) {
             }
-        }).apply { startRecord() }
+        }, defaultAudioType).apply { startRecord() }
     }
 
     private fun sendRecAudioThread() {
@@ -105,16 +94,27 @@ class AudioSender {
                 ensureActive()
                 runCatching {
 //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                    recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it.compress()) }
+                    recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it) }
                     delay(10)
                 }.onFailure { it.printStackTrace() }
             }
         }
     }
 
+    private fun startPlayThread() {
+        LogContext.log.i(TAG, "Start decodeThread()")
+        ioScope.launch {
+            while (true) {
+                ensureActive()
+                receiveAudioQueue.poll()?.let { audioPlayer?.play(it) }
+                delay(10)
+            }
+        }
+    }
+
     fun stop() {
         ioScope.cancel()
-        pcmPlayer?.release()
+        audioPlayer?.release()
         micRecorder?.stopRecord()
         senderClient?.disconnectManually()
         senderClient?.release()

@@ -1,14 +1,12 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver
 
 import android.content.Context
-import com.leovp.androidbase.exts.compress
-import com.leovp.androidbase.exts.decompress
-import com.leovp.androidbase.exts.toByteArrayLE
-import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.audio.player.PcmPlayer
-import com.leovp.audio.recorder.MicRecorder
+import com.leovp.audio.AudioPlayer
+import com.leovp.audio.MicRecorder
+import com.leovp.audio.base.AudioType
+import com.leovp.leoandroidbaseutil.BuildConfig
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.base.AudioReceiverWebSocket
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.base.AudioReceiverWebSocketHandler
@@ -25,16 +23,19 @@ import java.util.concurrent.ArrayBlockingQueue
 class AudioReceiver {
     companion object {
         private const val TAG = "AudioReceiver"
+        val defaultAudioType = AudioType.COMPRESSED_PCM
     }
 
     private var receiverServer: AudioReceiverWebSocket? = null
     private var receiverHandler: AudioReceiverWebSocketHandler? = null
 
-    private var pcmPlayer: PcmPlayer? = null
+    private var audioPlayer: AudioPlayer? = null
     private var micRecorder: MicRecorder? = null
+//    private var micOs: BufferedOutputStream? = null
+//    private var rcvOs: BufferedOutputStream? = null
 
-    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -58,24 +59,14 @@ class AudioReceiver {
             LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
             startMicRecording()
-            playAudioThread()
             sendRecAudioThread()
+            startPlayThread()
         }
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             val audioData = data as ByteArray
             LogContext.log.i(TAG, "onReceivedData Length=${audioData.size} from ${clientChannel.remoteAddress()}")
             receiveAudioQueue.offer(audioData)
-        }
-
-        private fun playAudioThread() {
-            ioScope.launch {
-                while (true) {
-                    ensureActive()
-                    receiveAudioQueue.poll()?.let { pcmPlayer?.play(it.decompress().toShortArrayLE()) }
-                    delay(10)
-                }
-            }
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -92,13 +83,15 @@ class AudioReceiver {
 
         private fun startMicRecording() {
             micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
-                override fun onRecording(pcmData: ShortArray, st: Long, ed: Long) {
-                    recAudioQueue.offer(pcmData.toByteArrayLE())
+                override fun onRecording(data: ByteArray) {
+                    recAudioQueue.offer(data)
+                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
+//                    runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 
                 override fun onStop(stopResult: Boolean) {
                 }
-            }).apply { startRecord() }
+            }, defaultAudioType).apply { startRecord() }
         }
 
         private fun sendRecAudioThread() {
@@ -107,16 +100,29 @@ class AudioReceiver {
                     ensureActive()
                     runCatching {
 //                      LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                        recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it.compress()) }
+                        recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it) }
                         delay(10)
                     }.onFailure { it.printStackTrace() }
+                }
+            }
+        }
+
+        private fun startPlayThread() {
+            LogContext.log.i(TAG, "Start decodeThread()")
+            ioScope.launch {
+                while (true) {
+                    ensureActive()
+                    receiveAudioQueue.poll()?.let { audioPlayer?.play(it) }
+                    delay(10)
                 }
             }
         }
     }
 
     fun startServer(ctx: Context) {
-        pcmPlayer = PcmPlayer(ctx, AudioActivity.audioPlayCodec, 1)
+        audioPlayer = AudioPlayer(ctx, AudioActivity.audioPlayCodec, defaultAudioType)
+//        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
+//        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
 
         receiverServer = AudioReceiverWebSocket(10020, connectionListener).also {
             receiverHandler = AudioReceiverWebSocketHandler(it)
@@ -126,6 +132,8 @@ class AudioReceiver {
     }
 
     fun stopServer() {
+//        micOs?.closeQuietly()
+//        rcvOs?.closeQuietly()
         ioScope.cancel()
         // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
         // Please check the initializing of AudioTrack in [PcmPlayer]
@@ -134,7 +142,7 @@ class AudioReceiver {
         // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
         // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
         // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
-        pcmPlayer?.release()
+        audioPlayer?.release()
         micRecorder?.stopRecord()
         receiverServer?.stopServer()
     }

@@ -11,7 +11,7 @@ import com.leovp.androidbase.exts.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioEncoderManager
 import com.leovp.audio.base.AudioType
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.recorder.BuildConfig
@@ -22,7 +22,7 @@ import kotlinx.coroutines.*
  * Date: 20-8-20 下午3:51
  */
 class MicRecorder(
-    encoderInfo: AudioCodecInfo,
+    encoderInfo: AudioEncoderInfo,
     val callback: RecordCallback,
     type: AudioType = AudioType.COMPRESSED_PCM,
     recordMinBufferRatio: Int = 1

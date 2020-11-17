@@ -1,7 +1,7 @@
 package com.leovp.audio.base.encoderWrapper
 
 import com.leovp.audio.aac.AacEncoder
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 
@@ -9,7 +9,7 @@ import com.leovp.audio.base.iters.OutputCallback
  * Author: Michael Leo
  * Date: 20-11-14 上午11:03
  */
-class AacEncoderWrapper(encoderInfo: AudioCodecInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
+class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
     private var aacEncoder: AacEncoder
 
     init {

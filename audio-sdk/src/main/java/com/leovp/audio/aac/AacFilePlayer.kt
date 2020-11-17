@@ -5,7 +5,7 @@ import android.media.*
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import com.leovp.androidbase.exts.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.base.bean.AudioCodecInfo
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.recorder.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,7 @@ import java.io.File
  * Author: Michael Leo
  * Date: 2020/9/17 下午5:01
  */
-class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: AudioCodecInfo) {
+class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: AudioDecoderInfo) {
     companion object {
         private const val TAG = "AacFilePlayer"
     }
@@ -83,10 +83,10 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
         }.onFailure { it.printStackTrace() }
     }
 
-    private fun initAudioTrack(ctx: Context, audioData: AudioCodecInfo) {
+    private fun initAudioTrack(ctx: Context) {
         runCatching {
             audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize = AudioTrack.getMinBufferSize(audioData.sampleRate, audioData.channelConfig, audioData.audioFormat)
+            val bufferSize = AudioTrack.getMinBufferSize(audioDecodeInfo.sampleRate, audioDecodeInfo.channelConfig, audioDecodeInfo.audioFormat)
             val sessionId = audioManager!!.generateAudioSessionId()
             val audioAttributesBuilder = AudioAttributes.Builder().apply {
                 // Speaker
@@ -94,9 +94,9 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                 setContentType(AudioAttributes.CONTENT_TYPE_MUSIC) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
                 setLegacyStreamType(AudioManager.STREAM_MUSIC)
             }
-            val audioFormat = AudioFormat.Builder().setSampleRate(audioData.sampleRate)
-                .setEncoding(audioData.audioFormat)
-                .setChannelMask(audioData.channelConfig)
+            val audioFormat = AudioFormat.Builder().setSampleRate(audioDecodeInfo.sampleRate)
+                .setEncoding(audioDecodeInfo.audioFormat)
+                .setChannelMask(audioDecodeInfo.channelConfig)
                 .build()
             audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
 
@@ -112,7 +112,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
     fun playAac(aacFile: File, f: () -> Unit) {
         isPlaying = true
         initAudioDecoder(aacFile)
-        initAudioTrack(ctx, audioDecodeInfo)
+        initAudioTrack(ctx)
         ioScope.launch {
             try {
                 var isFinish = false

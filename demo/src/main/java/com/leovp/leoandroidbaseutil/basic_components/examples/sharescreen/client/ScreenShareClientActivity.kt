@@ -10,10 +10,9 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.toHexadecimalString
-import com.leovp.androidbase.exts.toJsonString
+import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.utils.AppUtil
+import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
@@ -25,14 +24,15 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TOUCH_EVENT
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TRIGGER_I_FRAME
+import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
 import com.leovp.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
-import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_screen_share_client.*
 import kotlinx.coroutines.CoroutineScope
@@ -71,10 +71,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
-                if (sps != null && pps != null) {
-                    initDecoder(sps!!, pps!!)
-                    webSocketClientHandler?.triggerIFrame()
-                }
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -84,14 +80,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             override fun surfaceDestroyed(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceDestroyed <=====")
             }
-
         })
+
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                connectToServer()
-            } else {
-                releaseConnection()
-            }
+            if (isChecked) connectToServer() else releaseConnection()
         }
 
         finger.strokeColor = Color.RED
@@ -219,44 +211,85 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
         BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
         override fun getTagName() = "ScreenShareClientActivity"
+
+        override fun addLastToPipeline(pipeline: ChannelPipeline) {
+            pipeline.addLast("messageDecoder", CustomSocketByteStreamDecoder())
+        }
     }
 
     @ChannelHandler.Sharable
     class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedByteBuf = (msg as WebSocketFrame).content().retain()
-            val cmdId = receivedByteBuf.readIntLE()
-            val bodyMessage = ByteBufUtil.getBytes(receivedByteBuf, 4, receivedByteBuf.capacity() - 4, false)
+            // Data length
+            receivedByteBuf.readIntLE()
+            // Command ID
+            val cmdId = receivedByteBuf.readByte().toInt()
+            // Protocol version
+            receivedByteBuf.readByte()
+
+            val bodyBytes = ByteArray(receivedByteBuf.readableBytes())
+            receivedByteBuf.getBytes(6, bodyBytes)
             receivedByteBuf.release()
-            netty.connectionListener.onReceivedData(netty, bodyMessage, cmdId)
+            netty.connectionListener.onReceivedData(netty, bodyBytes, cmdId)
         }
 
         fun triggerIFrame(): Boolean {
-            val cmd = CmdBean(CMD_TRIGGER_I_FRAME, null, null)
-            return netty.executeCommand("TriggerIFrame", "Acquire I Frame", cmd.toJsonString())
+            val cmdArray = CmdBean(CMD_TRIGGER_I_FRAME, null, null).toJsonString().encodeToByteArray()
+
+            val cId = CMD_TRIGGER_I_FRAME.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + cmdArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, cmdArray)
+
+            return netty.executeCommand("TriggerIFrame", "Acquire I Frame", command)
         }
 
         fun sendDeviceScreenInfoToServer(point: Point): Boolean {
-            val cmd = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point)
-            return netty.executeCommand("ScreenInfo", "Send screen info to server", cmd.toJsonString())
+            val paintArray = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point).toJsonString().encodeToByteArray()
+
+            val cId = CMD_DEVICE_SCREEN_INFO.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
+
+            return netty.executeCommand("ScreenInfo", "Send screen info to server", command)
         }
 
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
             val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
-            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
-            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", cmd.toJsonString())
+            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+
+            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
+
+            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", command, false)
         }
 
         fun clearCanvas(): Boolean {
             val paintBean = PaintBean(TouchType.CLEAR)
-            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
-            return netty.executeCommand("WebSocketCmd", "Clear canvas", cmd.toJsonString())
+            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+
+            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
+
+            return netty.executeCommand("WebSocketCmd", "Clear canvas", command)
         }
 
         fun undoDraw(): Boolean {
             val paintBean = PaintBean(TouchType.UNDO)
-            val cmd = CmdBean(CMD_TOUCH_EVENT, paintBean, null)
-            return netty.executeCommand("WebSocketCmd", "Undo draw", cmd.toJsonString())
+            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+
+            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
+
+            return netty.executeCommand("WebSocketCmd", "Undo", command)
         }
 
         override fun release() {
@@ -291,8 +324,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 LogContext.log.i(ITAG, "CMD=$action onReceivedData[${dataArray.size}]")
 
                 when (action) {
-                    CMD_DEVICE_SCREEN_INFO -> {
-                    }
+                    CMD_DEVICE_SCREEN_INFO -> Unit
                     CMD_GRAPHIC_CSD -> {
                         foundCsd.set(true)
                         queue.offer(dataArray)
@@ -302,6 +334,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                         LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
                         if (sps != null && pps != null) {
                             initDecoder(sps, pps)
+                            webSocketClientHandler?.triggerIFrame()
                             return
                         } else {
                             ToastUtil.showErrorLongToast("Get SPS/PPS error.")
@@ -345,7 +378,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
         val url = URI("ws://${etServerIp.text}:10086/ws")
-        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also{
+        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)
             cs.launch {
@@ -362,7 +395,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         runCatching {
             decoder?.release()
         }.onFailure { it.printStackTrace() }
-        cs.launch {webSocketClient?.release() }
+        cs.launch { webSocketClient?.release() }
     }
 
     fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {

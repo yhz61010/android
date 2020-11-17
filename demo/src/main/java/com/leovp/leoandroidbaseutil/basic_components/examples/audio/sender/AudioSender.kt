@@ -77,7 +77,7 @@ class AudioSender {
             it.connect()
         }
 
-        micRecorder = MicRecorder(AudioActivity.audioEncoderCodec, object : MicRecorder.RecordCallback {
+        micRecorder = MicRecorder(AudioActivity.audioRecCodec, object : MicRecorder.RecordCallback {
             override fun onRecording(data: ByteArray) {
                 recAudioQueue.offer(data)
                 if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")

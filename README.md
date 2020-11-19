@@ -480,6 +480,25 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
+### RedMi Note8 Pro(Android 9)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_FULL(1)
+##### Lens Front: LEVEL_FULL(1)
+#### H.264 Encoder
+`OMX.MTK.VIDEO.ENCODER.AVC`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[10, 10], [15, 15], [15, 20], [20, 20], [5, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[10, 10], [15, 15], [15, 20], [20, 20], [5, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4640x3472, 4624x3472, 4624x2600, 4624x2136, 3840x2160, 3472x3472, 2560x1920, 1920x1440, 2340x1080, 1920x1080, 1440x1080, 1080x1080, 1440x720, 1280x720, 960x720, 720x480, 640x480, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[2592x1940, 2592x1460, 2592x1196, 1944x1944, 2560x1920, 1920x1440, 2340x1080, 1920x1080, 1440x1080, 1280x720, 960x720, 720x480, 640x480, 352x288, 320x240, 176x144]`
+
+------
+
 ### RedMi 6A(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LEGACY(2)

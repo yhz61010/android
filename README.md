@@ -120,25 +120,6 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
-### Samsung Galaxy S7 Edge(SM-G9350)(Android 8.0)
-#### Camera supported hardware level
-##### Lens Back: LEVEL_FULL(1)
-##### Lens Front: LEVEL_LIMITED(0)
-#### H.264 Encoder
-`OMX.qcom.video.encoder.avc`
-#### Camera supported FPS
-##### Lens Back(Camera Sensor Orientation: 90)
-`[[15, 15], [20, 20], [24, 24], [30, 30], [7, 30]]`
-##### Lens Front(Camera Sensor Orientation: 270)
-`[[15, 15], [20, 20], [24, 24], [30, 30], [7, 30]]`
-#### Camera supported size
-##### Lens Back(Camera Sensor Orientation: 90)
-`[4032, 3024][4032, 2268][3984, 2988][3264, 2448][3264, 1836][3024, 3024][2976, 2976][2880, 2160][2592, 1944][2560, 1920][2560, 1440][2560, 1080][2160, 2160][2048, 1536][2048, 1152][1936, 1936][1920, 1080][1440, 1080][1280, 960][1280, 720][960, 720][720, 480][640, 480][320, 240][176, 144]`
-##### Lens Front(Camera Sensor Orientation: 270)
-`[2592, 1944][2560, 1920][2560, 1440][2560, 1080][2048, 1536][2048, 1152][1936, 1936][1920, 1080][1440, 1080][1280, 960][1280, 720][960, 720][720, 480][640, 480][320, 240][176, 144]`
-
-------
-
 ### Samsung Galaxy S10(SM-G9730)(Android 9.0)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
@@ -155,6 +136,44 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[4032, 3024][4032, 2268][4032, 1908][3024, 3024][3840, 2160][2560, 1440][1920, 1080][1280, 720][1920, 910][960, 540][1440, 1080][1280, 960][1088, 1088][960, 720][720, 480][640, 480][352, 288][320, 240][176, 144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[2944, 2208][2944, 1656][2944, 1396][2208, 2208][1920, 1080][1280, 720][2288, 1080][1920, 910][960, 540][1440, 1080][1280, 960][1088, 1088][960, 720][720, 480][640, 480][352, 288][320, 240][176, 144]`
+
+------
+
+### Samsung Galaxy Note8(SM-N9500)(Android 9)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_FULL(1)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [20, 20], [24, 24], [7, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [20, 20], [24, 24], [7, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032x3024, 4032x2268, 3984x2988, 3264x2448, 3264x1836, 3024x3024, 2976x2976, 2880x2160, 2560x1920, 2560x1440, 2560x1080, 2448x2448, 2160x2160, 2048x1152, 1920x1080, 1440x1080, 1280x960, 1280x720, 720x480, 640x480, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1836, 2880x2160, 2560x1920, 2560x1440, 2560x1080, 2448x2448, 2160x2160, 2048x1152, 1920x1080, 1440x1080, 1280x960, 1280x720, 720x480, 640x480, 320x240, 176x144]`
+
+------
+
+### Samsung Galaxy S7 Edge(SM-G9350)(Android 8.0)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_FULL(1)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [20, 20], [24, 24], [30, 30], [7, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [20, 20], [24, 24], [30, 30], [7, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032, 3024][4032, 2268][3984, 2988][3264, 2448][3264, 1836][3024, 3024][2976, 2976][2880, 2160][2592, 1944][2560, 1920][2560, 1440][2560, 1080][2160, 2160][2048, 1536][2048, 1152][1936, 1936][1920, 1080][1440, 1080][1280, 960][1280, 720][960, 720][720, 480][640, 480][320, 240][176, 144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[2592, 1944][2560, 1920][2560, 1440][2560, 1080][2048, 1536][2048, 1152][1936, 1936][1920, 1080][1440, 1080][1280, 960][1280, 720][960, 720][720, 480][640, 480][320, 240][176, 144]`
 
 ------
 
@@ -315,6 +334,26 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[4000x3000, 4000x2250, 4000x2248, 4000x1800, 3840x2160, 3264x2448, 3264x1836, 3200x2400, 3200x1440, 2448x2448, 3000x3000, 2688x1512, 2592x1944, 2400x1080, 2340x1080, 2304x1728, 2048x1536, 2240x1008, 2280x1080, 2264x1080, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1440x1080, 1560x720, 1280x960, 1280x768, 1280x720, 1080x1080, 1024x768, 864x480, 800x400, 800x600, 800x480, 720x480, 640x480, 640x400, 480x640, 352x288, 320x240, 176x144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[3264x2448, 3264x1836, 3200x2400, 3200x1440, 2448x2448, 2688x1512, 2592x1944, 2400x1080, 2340x1080, 2304x1728, 2048x1536, 2240x1008, 2280x1080, 2264x1080, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1440x1080, 1560x720, 1280x960, 1280x768, 1280x720, 1080x1080, 1024x768, 864x480, 800x400, 800x600, 800x480, 720x480, 640x480, 640x400, 480x640, 352x288, 320x240, 176x144]`
+
+------
+
+### OPPO R15 梦镜版(PAAM00)(Android 8.1.0)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LEGACY(2)
+##### Lens Front: LEVEL_LEGACY(2)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+`OMX.oppo.h264.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [20, 20], [10, 24], [24, 24], [10, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [7, 20], [20, 20], [7, 24], [24, 24], [7, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[1440x1080, 1280x960, 1520x720, 1280x720, 960x720, 720x480, 640x480, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[1440x1080, 1280x960, 1520x720, 1280x720, 960x720, 720x480, 640x480, 352x288, 320x240, 176x144]`
 
 ------
 

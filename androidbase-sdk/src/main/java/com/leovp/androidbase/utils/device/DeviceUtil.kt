@@ -368,12 +368,12 @@ object DeviceUtil {
     }.getOrDefault(-2)
 
     fun getDeviceInfo(ctx: Context): String {
-        val memInfo = getMemInfoInMegs(ctx)
-        val screenSize = getResolutionWithVirtualKey(ctx)
-        return """
+        return runCatching {
+            val memInfo = getMemInfoInMegs(ctx)
+            val screenSize = getResolutionWithVirtualKey(ctx)
+            """
             Device basic information:
-            App version: ${AppUtil.getVersionName(ctx)}
-            App code: ${AppUtil.getVersionCode(ctx)}
+            App version: ${AppUtil.getVersionName(ctx)}(${AppUtil.getVersionCode(ctx)})
             Manufacturer: $manufacturer
             Brand: $brand
             OsVersion: $osVersion($osVersionSdkInt)
@@ -385,6 +385,7 @@ object DeviceUtil {
             Display: $display(${screenSize.x}x${screenSize.y}-${getDensity(ctx)})
             MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
             """.trimIndent()
+        }.getOrDefault("")
     }
 
     /**

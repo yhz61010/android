@@ -357,11 +357,11 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
-## VIVO
+## vivo
 
 ------
 
-### VIVO G1(V1962BA)(Android 10)
+### vivo G1(V1962BA)(Android 10)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
@@ -381,7 +381,27 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
-### VIVO iQOO(V1824A)(Android 9)
+### vivo X50(V2001A)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.Exynos.AVC.Encoder`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[4, 15], [15, 15], [8, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[4, 15], [15, 15], [6, 24], [24, 24], [8, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4000x3000, 4000x2256, 4000x1824, 3264x2448, 3264x1840, 3264x1488, 2048x1536, 2048x1152, 2048x944, 2000x1500, 1500x1500, 2000x912, 3840x2160, 3264x1836, 2560x1920, 2560x1440, 1920x1920, 2376x1080, 1920x1080, 1632x1224, 1600x1200, 1600x900, 1600x736, 1188x540, 1440x1080, 1280x960, 1280x720, 960x540, 800x600, 800x480, 720x480, 640x480, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3264x1840, 3264x1488, 2048x1536, 2048x1152, 2048x944, 2000x1500, 1500x1500, 2000x912, 3264x1836, 2560x1920, 2560x1440, 1920x1920, 2376x1080, 1920x1080, 1632x1224, 1600x1200, 1600x900, 1600x736, 1188x540, 1440x1080, 1280x960, 1280x720, 960x540, 800x600, 800x480, 720x480, 640x480, 352x288, 320x240, 176x144]`
+
+------
+
+### vivo iQOO(V1824A)(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)
@@ -400,7 +420,7 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
-### VIVO NEX 3(V1923A)(Android 9)
+### vivo NEX 3(V1923A)(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
@@ -419,7 +439,7 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
-### VIVO U3x(V1928A)(Android 9)
+### vivo U3x(V1928A)(Android 9)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_3(3)

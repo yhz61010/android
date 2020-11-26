@@ -74,4 +74,7 @@ dependencies {
     api "com.squareup.retrofit2:converter-gson:$rootProject.ext.retrofit2Version"
     api "com.squareup.retrofit2:adapter-rxjava2:$rootProject.ext.retrofit2Version"
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
+
+    // https://github.com/hyuwah/DraggableView
+    implementation "com.github.hyuwah:DraggableView:$draggableViewVersion"
 }

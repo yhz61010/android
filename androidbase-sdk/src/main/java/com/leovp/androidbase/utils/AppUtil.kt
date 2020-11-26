@@ -72,7 +72,7 @@ object AppUtil {
         val rs = ctx.resources
         val id = rs.getIdentifier("config_showNavigationBar", "bool", "android")
         if (id > 0) hasNavigationBar = rs.getBoolean(id)
-        val navBarOverride = DeviceProp.getAndroidProperty("qemu.hw.mainkeys")
+        val navBarOverride = DeviceProp.getSystemProperty("qemu.hw.mainkeys")
         if ("1" == navBarOverride) {
             hasNavigationBar = false
         } else if ("0" == navBarOverride) {

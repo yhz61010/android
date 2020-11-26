@@ -140,16 +140,12 @@ object DeviceUtil {
     private fun getNavigationBarName(): String {
         val brand = Build.BRAND
         if (TextUtils.isEmpty(brand)) return "navigationbar_is_min"
-        return if (brand.equals("HUAWEI", ignoreCase = true) || brand.equals("HONOR", ignoreCase = true)) {
-            "navigationbar_is_min"
-        } else if (brand.equals("XIAOMI", ignoreCase = true)) {
-            "force_fsg_nav_bar"
-        } else if (brand.equals("VIVO", ignoreCase = true)) {
-            "navigation_gesture_on"
-        } else if (brand.equals("OPPO", ignoreCase = true)) {
-            "navigation_gesture_on"
-        } else {
-            "navigationbar_is_min"
+        return when {
+            isHuaWei -> "navigationbar_is_min"
+            isXiaoMi -> "force_fsg_nav_bar"
+            isVivo -> "navigation_gesture_on"
+            isOppo -> "navigation_gesture_on"
+            else -> "navigationbar_is_min"
         }
     }
 
@@ -167,6 +163,7 @@ object DeviceUtil {
         } else false
     }
 
+    @SuppressLint("PrivateApi")
     fun hasNavigationBar(): Boolean {
         return runCatching {
             // IWindowManager windowManagerService = WindowManagerGlobal.getWindowManagerService();
@@ -174,7 +171,7 @@ object DeviceUtil {
             val getWmServiceMethod: Method = windowManagerGlobalClass.getDeclaredMethod("getWindowManagerService")
             getWmServiceMethod.isAccessible = true
             // getWindowManagerService is a static method, so invoke with null
-            val iWindowManager: Any = getWmServiceMethod.invoke(null)
+            val iWindowManager: Any = getWmServiceMethod.invoke(null)!!
 
             val iWindowManagerClass: Class<*> = iWindowManager.javaClass
             val hasNavBarMethod: Method = iWindowManagerClass.getDeclaredMethod("hasNavigationBar")
@@ -236,20 +233,6 @@ object DeviceUtil {
         else return false
     }
 
-
-    /**
-     * Get notch position
-     *
-     * @return The result is like "0,0:104,72" which means the top left position and bottom right position
-     */
-    fun getNotchPosition(): String? {
-        if (isOppo) {
-            return DeviceProp.getSystemProperty("ro.oppo.screen.heteromorphism")
-        } else {
-            return null
-        }
-    }
-
     fun getScreenRatio(ctx: Context): Float {
         val p = getRealResolution(ctx)
         return 1.0f * p.y / p.x
@@ -272,6 +255,11 @@ object DeviceUtil {
             LogContext.log.e(TAG, "getIMEI error. msg=${e.message}")
             return null
         }
+    }
+
+    fun getDimenInPixel(ctx: Context, name: String): Int {
+        val resourceId = ctx.resources.getIdentifier(name, "dimen", "android")
+        return if (resourceId > 0) ctx.resources.getDimensionPixelSize(resourceId) else -1
     }
 
     private fun isExtremeLargeScreen(screenSize: Point?): Boolean {
@@ -392,7 +380,7 @@ object DeviceUtil {
             Display: $display
             Screen: ${screenSize.x}x${screenSize.y}(${getDensity(ctx)})(${getScreenRatio(ctx)})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             Has notch: ${hasNotch(ctx)}
-            Notch: (${getNotchPosition()})  ${getNotchWidth(ctx)}x${getNotchHeight(ctx)}
+            Notch: ${getNotchWidth(ctx)}x${getNotchHeight(ctx)}
             MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
             IMEI:
                     slot0: ${getImei(ctx, 0) ?: "NA"}

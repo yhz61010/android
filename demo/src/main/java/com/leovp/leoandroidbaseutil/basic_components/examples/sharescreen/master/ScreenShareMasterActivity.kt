@@ -148,7 +148,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                             resultCode,
                             data ?: exception("Intent data is null. Can not capture screen!")
                         )
-                        val screenInfo = DeviceUtil.getResolution(this@ScreenShareMasterActivity)
+                        val screenInfo = DeviceUtil.getAvailableResolution(this@ScreenShareMasterActivity)
                         val setting = ScreenShareSetting(
                             (screenInfo.x * 0.5F / 16).toInt() * 16,
                             (screenInfo.y * 0.5F / 16).toInt() * 16,
@@ -260,7 +260,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         var clientScreenInfo: Point? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
-        val currentScreen = DeviceUtil.getResolutionWithVirtualKey(CustomApplication.instance)
+        val currentScreen = DeviceUtil.getRealResolution(CustomApplication.instance)
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {

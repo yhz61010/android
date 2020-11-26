@@ -170,6 +170,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
             || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
             || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)

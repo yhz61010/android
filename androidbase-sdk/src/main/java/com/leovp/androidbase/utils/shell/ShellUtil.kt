@@ -2,6 +2,7 @@ package com.leovp.androidbase.utils.shell
 
 import android.annotation.TargetApi
 import android.os.Build
+import androidx.annotation.Keep
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -9,115 +10,104 @@ import java.util.*
 /**
  * Shell Utils
  */
-class ShellUtil private constructor() {
-    init {
-        throw UnsupportedOperationException("cannot be instantiated")
+@Suppress("WeakerAccess", "unused", "UNUSED_PARAMETER")
+object ShellUtil {
+    private const val SH_BIN = "sh"
+    private const val SU_BIN = "su"
+    private const val MOUNT_BIN = "mount"
+    private const val SYSTEM_MOUNT_POINT = "/system"
+    private const val CMD_PS = "ps"
+    private const val CMD_MOUNT = "/system/bin/mount"
+    private const val CMD_EXIT = "exit"
+    private val LINE_SEP = System.getProperty("line.separator")!!
+
+    /**
+     * check whether has root permission
+     *
+     * @return root for true otherwise false
+     */
+    fun checkRootPermission(): Boolean {
+        return execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
     }
 
-    class CommandResult(
-        val result: Int,
-        val successMsg: String,
-        val errorMsg: String
-    )
+    fun execCmd(command: String, isRoot: Boolean): CommandResult {
+        return execCmd(listOf(command), isRoot, true)
+    }
 
-    companion object {
-        private const val SH_BIN = "sh"
-        private const val SU_BIN = "su"
-        private const val MOUNT_BIN = "mount"
-        private const val SYSTEM_MOUNT_POINT = "/system"
-        private const val CMD_PS = "ps"
-        private const val CMD_MOUNT = "/system/bin/mount"
-        private const val CMD_EXIT = "exit"
-        private val LINE_SEP = System.getProperty("line.separator")!!
+    fun execCmd(commands: List<String>, isRoot: Boolean): CommandResult {
+        return execCmd(commands, isRoot, true)
+    }
 
-        /**
-         * check whether has root permission
-         *
-         * @return root for true otherwise false
-         */
-        fun checkRootPermission(): Boolean {
-            return execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
+    fun execCmd(command: String, isRoot: Boolean, isNeedResultMsg: Boolean): CommandResult {
+        return execCmd(listOf(command), isRoot, isNeedResultMsg)
+    }
+
+    fun forceStop(pkgName: String) {
+        execCmd("am force-stop $pkgName", true)
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    fun execCmd(commands: List<String>, isRoot: Boolean, isNeedResultMsg: Boolean = true): CommandResult {
+        var result = -1
+        if (commands.isEmpty()) {
+            return CommandResult(result, "", "")
         }
-
-        fun execCmd(command: String, isRoot: Boolean): CommandResult {
-            return execCmd(listOf(command), isRoot, true)
-        }
-
-        fun execCmd(commands: List<String>, isRoot: Boolean): CommandResult {
-            return execCmd(commands, isRoot, true)
-        }
-
-        fun execCmd(command: String, isRoot: Boolean, isNeedResultMsg: Boolean): CommandResult {
-            return execCmd(listOf(command), isRoot, isNeedResultMsg)
-        }
-
-        fun forceStop(pkgName: String) {
-            execCmd("am force-stop $pkgName", true)
-        }
-
-        @TargetApi(Build.VERSION_CODES.KITKAT)
-        fun execCmd(commands: List<String>, isRoot: Boolean, isNeedResultMsg: Boolean = true): CommandResult {
-            var result = -1
-            if (commands.isEmpty()) {
-                return CommandResult(result, "", "")
-            }
-            var successMsg: StringBuilder? = null
-            var errorMsg: StringBuilder? = null
-            val process: Process
-            try {
-                process = Runtime.getRuntime().exec(if (isRoot) SU_BIN else SH_BIN)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return CommandResult(
-                    result,
-                    "",
-                    e.toString()
-                )
-            }
-
-            DataOutputStream(process.outputStream).use {
-                for (command in commands) {
-                    it.write(command.toByteArray())
-                    it.writeBytes(LINE_SEP)
-                    it.flush()
-                }
-                it.writeBytes(CMD_EXIT + LINE_SEP)
-                it.flush()
-            }
-
-            result = process.waitFor()
-            if (isNeedResultMsg) {
-                successMsg = StringBuilder()
-                errorMsg = StringBuilder()
-                BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { successResult ->
-                    var line: String?
-                    if (successResult.readLine().also { line = it } != null) {
-                        successMsg.append(line)
-                        while (successResult.readLine().also { line = it } != null) {
-                            successMsg.append(LINE_SEP).append(line)
-                        }
-                    }
-                }
-
-                BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8)).use { errorResult ->
-                    var line: String?
-                    if (errorResult.readLine().also { line = it } != null) {
-                        errorMsg.append(line)
-                        while (errorResult.readLine().also { line = it } != null) {
-                            errorMsg.append(LINE_SEP).append(line)
-                        }
-                    }
-                }
-            }
-
-            process.destroy()
-
+        var successMsg: StringBuilder? = null
+        var errorMsg: StringBuilder? = null
+        val process: Process
+        try {
+            process = Runtime.getRuntime().exec(if (isRoot) SU_BIN else SH_BIN)
+        } catch (e: Exception) {
+            e.printStackTrace()
             return CommandResult(
                 result,
-                successMsg.toString(),
-                errorMsg.toString()
+                "",
+                e.toString()
             )
         }
+
+        DataOutputStream(process.outputStream).use {
+            for (command in commands) {
+                it.write(command.toByteArray())
+                it.writeBytes(LINE_SEP)
+                it.flush()
+            }
+            it.writeBytes(CMD_EXIT + LINE_SEP)
+            it.flush()
+        }
+
+        result = process.waitFor()
+        if (isNeedResultMsg) {
+            successMsg = StringBuilder()
+            errorMsg = StringBuilder()
+            BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { successResult ->
+                var line: String?
+                if (successResult.readLine().also { line = it } != null) {
+                    successMsg.append(line)
+                    while (successResult.readLine().also { line = it } != null) {
+                        successMsg.append(LINE_SEP).append(line)
+                    }
+                }
+            }
+
+            BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8)).use { errorResult ->
+                var line: String?
+                if (errorResult.readLine().also { line = it } != null) {
+                    errorMsg.append(line)
+                    while (errorResult.readLine().also { line = it } != null) {
+                        errorMsg.append(LINE_SEP).append(line)
+                    }
+                }
+            }
+        }
+
+        process.destroy()
+
+        return CommandResult(
+            result,
+            successMsg.toString(),
+            errorMsg.toString()
+        )
     }
 
     // ========================================================================
@@ -166,13 +156,13 @@ class ShellUtil private constructor() {
      * @param name   Specific process named
      * @return Return found process list or return empty list.
      */
-    fun findProcessByName(name: String?, isRoot: Boolean): List<LinuxProcess> {
+    fun findProcessByName(name: String, isRoot: Boolean): List<LinuxProcess> {
         return getProcessesList(isRoot)
             .filter { process -> name.equals(process.name, true) }
             .toCollection(arrayListOf())
     }
 
-    fun killProcessByName(processName: String?, isRoot: Boolean) {
+    fun killProcessByName(processName: String, isRoot: Boolean) {
         findProcessByName(
             processName,
             isRoot
@@ -186,10 +176,6 @@ class ShellUtil private constructor() {
         }
     }
 
-    fun forceStop(pkgName: String) {
-        execCmd("am force-stop $pkgName", true)
-    }
-
     // unverified
     fun killSelf() {
         android.os.Process.killProcess(android.os.Process.myPid())
@@ -197,12 +183,12 @@ class ShellUtil private constructor() {
     }
 
     // unverified
-    fun uninstallApk(pkgName: String?) {
+    fun uninstallApk(pkgName: String) {
         execCmd(String.format("pm uninstall %s", pkgName), true)
     }
 
     // unverified
-    fun isProcessRunning(processName: String?, isRoot: Boolean): Boolean {
+    fun isProcessRunning(processName: String, isRoot: Boolean): Boolean {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
         val reader = BufferedReader(StringReader(processesListString), 4 * 1024)
         try {
@@ -254,3 +240,10 @@ class ShellUtil private constructor() {
         }
     }
 }
+
+@Keep
+data class CommandResult(
+    val result: Int,
+    val successMsg: String,
+    val errorMsg: String
+)

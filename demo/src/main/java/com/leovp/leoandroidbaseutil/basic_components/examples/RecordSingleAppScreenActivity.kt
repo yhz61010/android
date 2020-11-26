@@ -45,7 +45,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         val file = FileUtil.getBaseDirString(this, "output")
         videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
 
-        val screenInfo = DeviceUtil.getResolution(this)
+        val screenInfo = DeviceUtil.getAvailableResolution(this)
         val setting = ScreenShareSetting(
             (screenInfo.x * 0.8F / 16).toInt() * 16,
             (screenInfo.y * 0.8F / 16).toInt() * 16,

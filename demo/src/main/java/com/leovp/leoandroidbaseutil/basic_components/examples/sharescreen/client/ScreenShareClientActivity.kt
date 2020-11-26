@@ -66,7 +66,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screen_share_client)
 
-        val screenInfo = DeviceUtil.getResolution(this)
+        val screenInfo = DeviceUtil.getAvailableResolution(this)
         surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -138,7 +138,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         this.pps = pps
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
 //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
-        val screenInfo = DeviceUtil.getResolution(this)
+        val screenInfo = DeviceUtil.getAvailableResolution(this)
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, screenInfo.x, screenInfo.y)
 //        val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
 //        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
@@ -321,7 +321,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onConnected(netty: BaseNettyClient) {
                 LogContext.log.i(ITAG, "onConnected")
-                webSocketClientHandler?.sendDeviceScreenInfoToServer(DeviceUtil.getResolutionWithVirtualKey(this@ScreenShareClientActivity))
+                webSocketClientHandler?.sendDeviceScreenInfoToServer(DeviceUtil.getRealResolution(this@ScreenShareClientActivity))
             }
 
             @SuppressLint("SetTextI18n")

@@ -3,7 +3,9 @@ package com.leovp.androidbase.utils.device
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Point
+import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
@@ -36,6 +38,10 @@ object DeviceUtil {
     const val VENDOR_OTHER = "other"
     private const val EXTREME_LARGE_SCREEN_THRESHOLD = 2560
     var EXTREME_LARGE_SCREEN_MULTIPLE_TIMES = 0
+
+    fun isPortrait(ctx: Context) = ctx.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+
+    fun isLandscape(ctx: Context) = ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     fun getDensity(ctx: Context) = ctx.resources.displayMetrics.densityDpi
 
@@ -186,6 +192,28 @@ object DeviceUtil {
         return result
     }
 
+    fun calculateNotchRect(ctx: Context, notchWidth: Int, notchHeight: Int): Rect {
+        val screenSize = getRealResolution(ctx)
+        val screenWidth = screenSize.x
+        val screenHeight = screenSize.y
+        val left: Int
+        val top: Int
+        val right: Int
+        val bottom: Int
+        if (isPortrait(ctx)) {
+            left = (screenWidth - notchWidth) / 2
+            top = 0
+            right = left + notchWidth
+            bottom = notchHeight
+        } else {
+            left = 0
+            top = (screenHeight - notchWidth) / 2
+            right = notchHeight
+            bottom = top + notchWidth
+        }
+        return Rect(left, top, right, bottom)
+    }
+
     // XiaoMi
     fun getNotchHeight(ctx: Context): Int {
         val resourceId = ctx.resources.getIdentifier("notch_height", "dimen", "android")
@@ -216,7 +244,7 @@ object DeviceUtil {
      */
     fun getNotchPosition(): String? {
         if (isOppo) {
-            return DeviceProp.getAndroidProperty("ro.oppo.screen.heteromorphism")
+            return DeviceProp.getSystemProperty("ro.oppo.screen.heteromorphism")
         } else {
             return null
         }

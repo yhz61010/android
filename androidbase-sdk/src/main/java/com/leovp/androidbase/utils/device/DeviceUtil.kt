@@ -166,7 +166,7 @@ object DeviceUtil {
     }
 
     @SuppressLint("PrivateApi")
-    fun hasNavigationBar(): Boolean {
+    fun deviceHasNavigationBar(): Boolean {
         return runCatching {
             // IWindowManager windowManagerService = WindowManagerGlobal.getWindowManagerService();
             val windowManagerGlobalClass = Class.forName("android.view.WindowManagerGlobal")
@@ -365,7 +365,7 @@ object DeviceUtil {
                     slot1: ${getImei(ctx, 1) ?: "NA"}
             Device Features:
                     Full screen device        : ${isFullScreenDevice(ctx)}
-                    Has navigation bar        : ${hasNavigationBar()}
+                    Device has navigation bar : ${deviceHasNavigationBar()}
                     Navigation bar is showing : ${isNavigationBarShown(ctx)} (PS: In full screen(AKA all screen) device, this value is always 'true'.)
                     Navigation gesture enable : ${navigationGestureEnabled(ctx)}
 

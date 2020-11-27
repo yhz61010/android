@@ -49,7 +49,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         val setting = ScreenShareSetting(
             (screenInfo.x * 0.8F / 16).toInt() * 16,
             (screenInfo.y * 0.8F / 16).toInt() * 16,
-            DeviceUtil.getDensity(this)
+            DeviceUtil.getDensityDpi(this)
         )
         // FIXME: Seems does not work. Check bellow setKeyFrameRate
         setting.fps = 5f

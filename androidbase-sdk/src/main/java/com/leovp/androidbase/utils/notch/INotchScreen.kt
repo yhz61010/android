@@ -20,11 +20,5 @@ interface INotchScreen {
         fun onResult(notchScreenInfo: NotchScreenInfo)
     }
 
-    class NotchScreenInfo {
-        @JvmField
-        var hasNotch = false
-
-        @JvmField
-        var notchRects: List<Rect>? = null
-    }
+    data class NotchScreenInfo(var hasNotch: Boolean = false, var notchRects: List<Rect>? = null)
 }

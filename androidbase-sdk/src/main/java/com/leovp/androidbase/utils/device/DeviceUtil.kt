@@ -43,7 +43,9 @@ object DeviceUtil {
 
     fun isLandscape(ctx: Context) = ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    fun getDensity(ctx: Context) = ctx.resources.displayMetrics.densityDpi
+    fun getDensityDpi(ctx: Context) = ctx.resources.displayMetrics.densityDpi
+
+    fun getDensity(ctx: Context) = ctx.resources.displayMetrics.density
 
     val isHuaWei: Boolean
         get() = VENDOR_HUAWEI.equals(manufacturer, ignoreCase = true)
@@ -211,28 +213,6 @@ object DeviceUtil {
         return Rect(left, top, right, bottom)
     }
 
-    // XiaoMi
-    fun getNotchHeight(ctx: Context): Int {
-        val resourceId = ctx.resources.getIdentifier("notch_height", "dimen", "android")
-        return if (resourceId > 0) {
-            ctx.resources.getDimensionPixelSize(resourceId)
-        } else 0
-    }
-
-    // XiaoMi
-    fun getNotchWidth(ctx: Context): Int {
-        val resourceId = ctx.resources.getIdentifier("notch_width", "dimen", "android")
-        return if (resourceId > 0) {
-            ctx.resources.getDimensionPixelSize(resourceId)
-        } else 0
-    }
-
-    fun hasNotch(ctx: Context): Boolean {
-        if (isOppo)
-            return runCatching { ctx.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism") }.getOrDefault(false)
-        else return false
-    }
-
     fun getScreenRatio(ctx: Context): Float {
         val p = getRealResolution(ctx)
         return 1.0f * p.y / p.x
@@ -287,7 +267,7 @@ object DeviceUtil {
 
     fun getSafetyScreenWidth(ctx: Context) = getSafetyScreenSize(getRealResolution(ctx)).x
     fun getSafetyScreenHeight(ctx: Context) = getSafetyScreenSize(getRealResolution(ctx)).y
-    fun getSafetyDensity(ctx: Context) = getSafetyDensity(ctx, getDensity(ctx))
+    fun getSafetyDensityDpi(ctx: Context) = getSafetyDensityDpi(ctx, getDensityDpi(ctx))
 
     private fun getExtremeLargeScreenMultipleTimes(ctx: Context): Int {
         val maxCurrentDimension = max(getRealResolution(ctx).x, getRealResolution(ctx).y)
@@ -295,7 +275,7 @@ object DeviceUtil {
         return maxCurrentDimension / Math.max(calDimension.x, calDimension.y)
     }
 
-    private fun getSafetyDensity(ctx: Context, dimension: Int): Int {
+    private fun getSafetyDensityDpi(ctx: Context, dimension: Int): Int {
         EXTREME_LARGE_SCREEN_MULTIPLE_TIMES =
             getExtremeLargeScreenMultipleTimes(ctx)
         return if (EXTREME_LARGE_SCREEN_MULTIPLE_TIMES > 1) dimension / EXTREME_LARGE_SCREEN_MULTIPLE_TIMES else dimension
@@ -378,9 +358,7 @@ object DeviceUtil {
             CPU: $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
             Supported ABIS: ${supportedCpuArchs.contentToString()}
             Display: $display
-            Screen: ${screenSize.x}x${screenSize.y}(${getDensity(ctx)})(${getScreenRatio(ctx)})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
-            Has notch: ${hasNotch(ctx)}
-            Notch: ${getNotchWidth(ctx)}x${getNotchHeight(ctx)}
+            Screen: ${screenSize.x}x${screenSize.y}(${getDensityDpi(ctx)}:${getDensity(ctx)})(${getScreenRatio(ctx)})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
             IMEI:
                     slot0: ${getImei(ctx, 0) ?: "NA"}

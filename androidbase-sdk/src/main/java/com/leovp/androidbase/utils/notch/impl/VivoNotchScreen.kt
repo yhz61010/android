@@ -42,9 +42,9 @@ class VivoNotchScreen : INotchScreen {
             }
 
         /** According to the vivo official document, we use fixed value 27dp. */
-        fun getNotchHeight(ctx: Context) = (27 * DeviceUtil.getDensity(ctx)).toInt()
+        fun getNotchHeight(ctx: Context) = (27 * DeviceUtil.getDensityDpi(ctx)).toInt()
 
         /** According to the vivo official document, we use fixed value 100dp. */
-        fun getNotchWidth(context: Context) = (100 * DeviceUtil.getDensity(context)).toInt()
+        fun getNotchWidth(context: Context) = (100 * DeviceUtil.getDensityDpi(context)).toInt()
     }
 }

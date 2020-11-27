@@ -39,7 +39,7 @@ object NotchScreenManager {
         if (notchScreen != null && notchScreen.hasNotch(activity)) {
             notchScreen.getNotchRect(activity, object : NotchSizeCallback {
                 override fun onResult(notchRects: List<Rect>?) {
-                    if (notchRects != null && notchRects.size > 0) {
+                    if (notchRects != null && notchRects.isNotEmpty()) {
                         notchScreenInfo.hasNotch = true
                         notchScreenInfo.notchRects = notchRects
                     }

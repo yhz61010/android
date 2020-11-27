@@ -26,6 +26,7 @@ import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
  * Author: Michael Leo
  * Date: 20-11-26 下午7:39
  */
+@Suppress("unused")
 object NotchScreenManager {
 
     private val notchScreen: INotchScreen? = getNotchScreen()
@@ -56,14 +57,11 @@ object NotchScreenManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             notchScreen = AndroidPNotchScreen()
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (isHuaWei) {
-                notchScreen = HuaweiNotchScreen()
-            } else if (isOppo) {
-                notchScreen = OppoNotchScreen()
-            } else if (isVivo) {
-                notchScreen = HuaweiNotchScreen()
-            } else if (isXiaoMi) {
-                notchScreen = MiNotchScreen()
+            when {
+                isHuaWei -> notchScreen = HuaweiNotchScreen()
+                isOppo -> notchScreen = OppoNotchScreen()
+                isVivo -> notchScreen = HuaweiNotchScreen()
+                isXiaoMi -> notchScreen = MiNotchScreen()
             }
         }
         return notchScreen

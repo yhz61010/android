@@ -152,7 +152,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         val setting = ScreenShareSetting(
                             (screenInfo.x * 0.5F / 16).toInt() * 16,
                             (screenInfo.y * 0.5F / 16).toInt() * 16,
-                            DeviceUtil.getDensity(this@ScreenShareMasterActivity)
+                            DeviceUtil.getDensityDpi(this@ScreenShareMasterActivity)
                         )
 //                        setting.fps = 20F
 //                        setting.bitrate = setting.width * setting.height

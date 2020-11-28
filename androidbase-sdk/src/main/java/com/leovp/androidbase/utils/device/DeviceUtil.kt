@@ -87,6 +87,12 @@ object DeviceUtil {
         }
     }
 
+    fun getScreenWidth(ctx: Context) = getRealResolution(ctx).x
+
+    fun getScreenRealHeight(ctx: Context) = getRealResolution(ctx).y
+
+    fun getScreenAvailableHeight(ctx: Context) = getAvailableResolution(ctx).y
+
     fun getRealResolution(ctx: Context): Point {
         val size = Point()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

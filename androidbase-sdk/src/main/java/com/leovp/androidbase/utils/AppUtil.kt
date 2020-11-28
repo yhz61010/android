@@ -21,7 +21,6 @@ import android.view.Window
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import com.leovp.androidbase.BuildConfig
-import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
@@ -32,7 +31,7 @@ import kotlin.system.exitProcess
  * Author: Michael Leo
  * Date: 19-7-22 下午7:34
  */
-@Suppress("unused")
+@Suppress("unused", "DEPRECATION")
 object AppUtil {
     private const val TAG = "AppUtil"
 
@@ -66,21 +65,6 @@ object AppUtil {
         } else false
     }
 
-    @SuppressLint("PrivateApi")
-    fun hasNavigationBar(ctx: Context): Boolean {
-        var hasNavigationBar = false
-        val rs = ctx.resources
-        val id = rs.getIdentifier("config_showNavigationBar", "bool", "android")
-        if (id > 0) hasNavigationBar = rs.getBoolean(id)
-        val navBarOverride = DeviceProp.getSystemProperty("qemu.hw.mainkeys")
-        if ("1" == navBarOverride) {
-            hasNavigationBar = false
-        } else if ("0" == navBarOverride) {
-            hasNavigationBar = true
-        }
-        return hasNavigationBar
-    }
-
     /**
      * This method must be called before setContentView.
      *
@@ -88,9 +72,11 @@ object AppUtil {
      *
      * Example:
      * ```kotlin
+     * // Call this method in `onCreate` before `setContentView`
      * AppUtil.requestFullScreen(this)
+     *
+     * // Generally, call this method in `onResume` to let navigation bar always hide
      * AppUtil.hideNavigationBar(this)
-     * setContentView(R.layout.activity_splash)
      * ```
      */
     fun requestFullScreen(act: Activity) {

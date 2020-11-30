@@ -1,8 +1,8 @@
 package com.leovp.leoandroidbaseutil
 
 import android.util.Log
-import com.leovp.androidbase.exts.compress
-import com.leovp.androidbase.exts.decompress
+import com.leovp.androidbase.exts.kotlin.compress
+import com.leovp.androidbase.exts.kotlin.decompress
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -9,7 +9,7 @@ import androidx.annotation.IntRange
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.getToday
+import com.leovp.androidbase.exts.kotlin.getToday
 import com.leovp.androidbase.utils.log.LogContext
 import java.util.*
 import kotlin.math.sqrt

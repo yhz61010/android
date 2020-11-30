@@ -1,6 +1,7 @@
 package com.leovp.leoandroidbaseutil
 
 import androidx.multidex.MultiDexApplication
+import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
@@ -21,6 +22,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
     override fun onCreate() {
         super.onCreate()
+        app = this
         instance = this
 
         ForegroundComponent.init(this, 0L)

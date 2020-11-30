@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.kotlin
 
 import com.google.gson.Gson
 import com.leovp.androidbase.utils.JsonUtil

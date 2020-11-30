@@ -10,7 +10,7 @@ import android.media.projection.MediaProjectionManager
 import android.os.*
 import androidx.core.app.NotificationCompat
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.toJsonString
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment

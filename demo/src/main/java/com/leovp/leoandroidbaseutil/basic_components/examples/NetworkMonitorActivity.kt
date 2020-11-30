@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.humanReadableByteCount
+import com.leovp.androidbase.exts.kotlin.humanReadableByteCount
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.network.NetworkUtil

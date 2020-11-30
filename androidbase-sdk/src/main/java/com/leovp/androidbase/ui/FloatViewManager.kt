@@ -6,7 +6,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.view.*
 import androidx.annotation.LayoutRes
-import com.leovp.androidbase.exts.canDrawOverlays
+import com.leovp.androidbase.exts.android.canDrawOverlays
 import kotlin.math.abs
 
 

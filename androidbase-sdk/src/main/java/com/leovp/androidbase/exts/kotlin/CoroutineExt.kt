@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.kotlin
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

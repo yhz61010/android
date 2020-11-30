@@ -9,6 +9,7 @@ import androidx.annotation.IntRange
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.android.sp2px
 import com.leovp.androidbase.exts.kotlin.getToday
 import com.leovp.androidbase.utils.log.LogContext
 import java.util.*
@@ -123,7 +124,7 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             val height = bounds.bottom
             val diagonal = sqrt(width * width + height * height.toDouble()).toInt()
             paint.color = textColor
-            paint.textSize = AppUtil.sp2px(textSize).toFloat()
+            paint.textSize = sp2px(textSize).toFloat()
             paint.isAntiAlias = true
             val fontMetrics = paint.fontMetrics
             val textHeight = fontMetrics.descent - fontMetrics.ascent

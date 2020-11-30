@@ -6,7 +6,7 @@ import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.kotlin.toHexString
+import com.leovp.androidbase.exts.kotlin.toHexadecimalString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import java.io.File
@@ -18,7 +18,7 @@ import java.io.FileOutputStream
  */
 class DecoderVideoFileManager {
     private lateinit var mediaExtractor: MediaExtractor
-    private lateinit var mediaCodec: MediaCodec
+    private var mediaCodec: MediaCodec? = null
     private var outputFormat: MediaFormat? = null
     private val mSpeedController: SpeedManager = SpeedManager()
 
@@ -46,7 +46,7 @@ class DecoderVideoFileManager {
 //                val csd1ByteArray = ByteArray(csd1.remaining())
                 copiedCsd0.get(csd0ByteArray)
 //                csd1.get(csd1ByteArray)
-                LogContext.log.w(TAG, "csd0=${csd0ByteArray.toHexString()}")
+                LogContext.log.w(TAG, "csd0=${csd0ByteArray.toHexadecimalString()}")
 //                LogContext.log.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
                 outputVideoRawDataFile.write(csd0ByteArray)
 //                videoRawDataFile.write(csd1ByteArray)
@@ -55,9 +55,11 @@ class DecoderVideoFileManager {
                 LogContext.log.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
                 if (mime.startsWith("video")) {
                     mediaExtractor.selectTrack(i)
-                    mediaCodec = MediaCodec.createDecoderByType(mime) // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
-                    mediaCodec.configure(format, surface, null, 0)
-                    mediaCodec.setCallback(mediaCodecCallback)
+                    // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
+                    mediaCodec = MediaCodec.createDecoderByType(mime).apply{
+                        configure(format, surface, null, 0)
+                        setCallback(mediaCodecCallback)
+                    }
                     break
                 }
             }
@@ -114,14 +116,14 @@ class DecoderVideoFileManager {
     fun close() {
         runCatching {
             LogContext.log.d(TAG, "close start")
-            mediaCodec.stop()
-            mediaCodec.release()
+            mediaCodec?.stop()
+            mediaCodec?.release()
             mSpeedController.reset()
         }.onFailure { LogContext.log.e(TAG, "close error") }
     }
 
     fun startDecoding() {
-        mediaCodec.start()
+        mediaCodec?.start()
     }
 
     companion object {

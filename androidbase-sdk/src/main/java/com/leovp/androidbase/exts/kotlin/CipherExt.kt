@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.kotlin
 
 import com.leovp.androidbase.utils.cipher.MD5Util
 import java.util.*

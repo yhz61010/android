@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.kotlin
 
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat

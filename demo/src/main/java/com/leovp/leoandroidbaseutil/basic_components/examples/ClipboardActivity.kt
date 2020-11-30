@@ -2,7 +2,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.ClipboardUtil
 import com.leovp.leoandroidbaseutil.R

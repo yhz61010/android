@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.Watermark
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R

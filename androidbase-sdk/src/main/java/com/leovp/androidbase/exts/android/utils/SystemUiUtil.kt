@@ -7,7 +7,7 @@ import android.view.View
 import android.view.Window
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
-import com.leovp.androidbase.exts.android.API
+import com.leovp.androidbase.utils.system.API
 
 
 /**

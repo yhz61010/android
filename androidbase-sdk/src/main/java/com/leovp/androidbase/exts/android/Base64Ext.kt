@@ -3,6 +3,7 @@ package com.leovp.androidbase.exts.android
 import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.toUTF8
+import com.leovp.androidbase.utils.system.API
 
 /** Convert String to base64 ByteArray(Default) */
 val String.toBase64: String get() = Base64.encodeToString(this.toByteArray(), Base64.DEFAULT)

@@ -1,7 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.log
 
 import android.os.Bundle
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R

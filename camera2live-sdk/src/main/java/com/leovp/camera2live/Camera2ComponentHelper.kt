@@ -28,7 +28,7 @@ import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
 import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
-import com.leovp.androidbase.exts.fail
+import com.leovp.androidbase.exts.kotlin.fail
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil

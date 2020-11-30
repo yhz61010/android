@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R

@@ -1,4 +1,4 @@
-package com.leovp.androidbase.density
+package com.leovp.androidbase.utils.ui
 
 import android.app.Activity
 import android.content.ComponentCallbacks
@@ -105,8 +105,8 @@ object DensityUtil : ComponentCallbacks {
     private fun init(metrics: DisplayMetrics, density: Float) {
         metrics.density = density
         metrics.densityDpi = (160 * density).toInt()
-        metrics.scaledDensity = density * (scaledDensity / this.density)
-        scale = this.density / density
+        metrics.scaledDensity = density * (scaledDensity / DensityUtil.density)
+        scale = DensityUtil.density / density
 
         setBitmapDensity(metrics.densityDpi)
     }

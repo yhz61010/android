@@ -7,7 +7,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.WindowManager
 import android.widget.Toast
-import com.leovp.androidbase.utils.AppUtil
+import com.leovp.androidbase.exts.android.hideNavigationBar
+import com.leovp.androidbase.exts.android.requestFullScreen
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -23,7 +24,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppUtil.requestFullScreen(this)
+        requestFullScreen()
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_camera2_live)
@@ -83,7 +84,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        AppUtil.hideNavigationBar(this)
+        hideNavigationBar()
         super.onResume()
     }
 

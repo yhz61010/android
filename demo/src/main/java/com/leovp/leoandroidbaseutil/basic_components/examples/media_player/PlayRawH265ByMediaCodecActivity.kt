@@ -4,7 +4,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.utils.AppUtil
+import com.leovp.androidbase.exts.android.hideNavigationBar
+import com.leovp.androidbase.exts.android.requestFullScreen
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.system.ResourcesUtil.saveRawResourceToFile
@@ -21,7 +22,7 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
     private val decoderManager = DecodeH265RawFile()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppUtil.requestFullScreen(this)
+        requestFullScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_video)
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
@@ -51,7 +52,7 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        AppUtil.hideNavigationBar(this)
+        hideNavigationBar()
         super.onResume()
     }
 

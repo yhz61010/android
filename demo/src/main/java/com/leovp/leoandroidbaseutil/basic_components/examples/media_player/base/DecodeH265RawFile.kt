@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.Surface
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil

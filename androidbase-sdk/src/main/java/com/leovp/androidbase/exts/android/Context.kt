@@ -92,6 +92,9 @@ val Context.isLandscape get() = this.resources.configuration.orientation == Conf
 val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
 fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, AppCompatActivity.MODE_PRIVATE)!!
 
+val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
+val Context.density get(): Float = this.resources.displayMetrics.density
+
 val Context.accessibilityManager get() = this.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 val Context.accountManager get() = this.getSystemService(Context.ACCOUNT_SERVICE) as AccountManager
 val Context.activityManager get() = this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

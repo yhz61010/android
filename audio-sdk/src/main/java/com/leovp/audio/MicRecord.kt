@@ -6,8 +6,8 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
-import com.leovp.androidbase.exts.toByteArrayLE
-import com.leovp.androidbase.exts.toJsonString
+import com.leovp.androidbase.exts.kotlin.toByteArrayLE
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioEncoderManager
 import com.leovp.audio.base.AudioType

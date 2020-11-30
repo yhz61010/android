@@ -3,7 +3,7 @@ package com.leovp.audio.aac
 import android.content.Context
 import android.media.*
 import android.media.AudioTrack.STATE_UNINITIALIZED
-import com.leovp.androidbase.exts.toShortArrayLE
+import com.leovp.androidbase.exts.kotlin.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.recorder.BuildConfig

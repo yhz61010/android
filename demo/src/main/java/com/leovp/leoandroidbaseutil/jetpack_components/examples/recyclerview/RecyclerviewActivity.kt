@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
-import com.leovp.androidbase.exts.action
-import com.leovp.androidbase.exts.snack
+import com.leovp.androidbase.exts.android.action
+import com.leovp.androidbase.exts.android.snack
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity

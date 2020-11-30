@@ -3,7 +3,7 @@ package com.leovp.audio.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.androidbase.exts.toHexadecimalString
+import com.leovp.androidbase.exts.kotlin.toHexadecimalString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.recorder.BuildConfig
 import java.nio.ByteBuffer

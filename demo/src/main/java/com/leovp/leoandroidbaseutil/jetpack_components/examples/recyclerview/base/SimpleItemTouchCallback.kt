@@ -10,7 +10,7 @@ import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 

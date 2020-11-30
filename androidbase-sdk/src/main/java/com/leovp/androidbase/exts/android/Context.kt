@@ -13,6 +13,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.RestrictionsManager
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.content.pm.ShortcutManager
 import android.content.res.Configuration
 import android.hardware.ConsumerIrManager
@@ -56,8 +57,36 @@ import androidx.appcompat.app.AppCompatActivity
  */
 lateinit var app: Application
 
+/**
+ * Get the package name
+ */
 val Context.id get() = this.packageName!!
-val Context.uri get() = Uri.fromParts("package", this.packageName!!, null)!!
+
+/**
+ * Get package uri
+ */
+val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null)!!
+
+/**
+ * Return the version name of empty string if can't get version string.
+ */
+val Context.versionName get() = this.packageManager.getPackageInfo(this.packageName, PackageManager.GET_CONFIGURATIONS).versionName ?: ""
+
+/**
+ * Return the version code or 0 if can't get version code.
+ */
+val Context.versionCode
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        this.packageManager.getPackageInfo(
+            this.packageName,
+            PackageManager.GET_CONFIGURATIONS
+        ).longVersionCode
+    } else {
+        this.packageManager.getPackageInfo(
+            this.packageName,
+            PackageManager.GET_CONFIGURATIONS
+        ).versionCode.toLong()
+    }
 val Context.isPortrait get() = this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 val Context.isLandscape get() = this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)

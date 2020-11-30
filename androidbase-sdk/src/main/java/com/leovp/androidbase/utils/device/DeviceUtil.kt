@@ -13,7 +13,8 @@ import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.view.WindowManager
-import com.leovp.androidbase.utils.AppUtil
+import com.leovp.androidbase.exts.android.versionCode
+import com.leovp.androidbase.exts.android.versionName
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.shell.ShellUtil
 import java.io.File
@@ -354,7 +355,7 @@ object DeviceUtil {
             val navBarHeight = getNavigationBarHeight(ctx)
             """
             Device basic information:
-            App version: ${AppUtil.getVersionName(ctx)}(${AppUtil.getVersionCode(ctx)})
+            App version: ${ctx.versionName}(${ctx.versionCode})
             Manufacturer: $manufacturer
             Brand: $brand
             OsVersion: $osVersion($osVersionSdkInt)

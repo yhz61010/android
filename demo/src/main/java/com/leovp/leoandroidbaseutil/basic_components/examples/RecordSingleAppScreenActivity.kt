@@ -5,8 +5,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.android.densityDpi
+import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.kotlin.toHexString
-import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
@@ -45,11 +46,11 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         val file = FileUtil.getBaseDirString(this, "output")
         videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
 
-        val screenInfo = DeviceUtil.getAvailableResolution(this)
+        val screenInfo = getAvailableResolution()
         val setting = ScreenShareSetting(
             (screenInfo.x * 0.8F / 16).toInt() * 16,
             (screenInfo.y * 0.8F / 16).toInt() * 16,
-            DeviceUtil.getDensityDpi(this)
+            densityDpi
         )
         // FIXME: Seems does not work. Check bellow setKeyFrameRate
         setting.fps = 5f

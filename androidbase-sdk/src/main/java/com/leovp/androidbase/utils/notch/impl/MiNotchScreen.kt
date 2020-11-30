@@ -2,13 +2,12 @@ package com.leovp.androidbase.utils.notch.impl
 
 import android.annotation.TargetApi
 import android.app.Activity
-import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.view.Window
+import com.leovp.androidbase.exts.android.calculateNotchRect
+import com.leovp.androidbase.exts.android.getDimenInPixel
 import com.leovp.androidbase.utils.device.DeviceProp
-import com.leovp.androidbase.utils.device.DeviceUtil
-import com.leovp.androidbase.utils.device.DeviceUtil.calculateNotchRect
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import java.util.*
@@ -26,7 +25,7 @@ class MiNotchScreen : INotchScreen {
     }
 
     override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
-        val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
+        val rect = calculateNotchRect(activity, getNotchWidth(), getNotchHeight())
         val rects = ArrayList<Rect>()
         rects.add(rect)
         callback.onResult(rects)
@@ -34,7 +33,7 @@ class MiNotchScreen : INotchScreen {
 
     companion object {
         private val isNotch: Boolean = runCatching { DeviceProp.getSystemProperty("ro.miui.notch").toInt() == 1 }.getOrDefault(false)
-        fun getNotchHeight(ctx: Context) = DeviceUtil.getDimenInPixel(ctx, "notch_height")
-        fun getNotchWidth(ctx: Context) = DeviceUtil.getDimenInPixel(ctx, "notch_width")
+        fun getNotchHeight() = getDimenInPixel("notch_height")
+        fun getNotchWidth() = getDimenInPixel("notch_width")
     }
 }

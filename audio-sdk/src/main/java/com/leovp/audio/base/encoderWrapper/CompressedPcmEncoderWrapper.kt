@@ -1,6 +1,6 @@
 package com.leovp.audio.base.encoderWrapper
 
-import com.leovp.androidbase.exts.compress
+import com.leovp.androidbase.exts.kotlin.compress
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.OutputCallback

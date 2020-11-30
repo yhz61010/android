@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.toJsonString
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R

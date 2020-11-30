@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.android
 
 import android.view.View
 import androidx.annotation.StringRes

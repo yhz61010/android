@@ -6,8 +6,8 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import android.os.Build
-import com.leovp.androidbase.utils.device.DeviceUtil
-import com.leovp.androidbase.utils.device.DeviceUtil.calculateNotchRect
+import com.leovp.androidbase.exts.android.calculateNotchRect
+import com.leovp.androidbase.exts.android.densityDpi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import java.util.*
@@ -42,9 +42,9 @@ class VivoNotchScreen : INotchScreen {
             }
 
         /** According to the vivo official document, we use fixed value 27dp. */
-        fun getNotchHeight(ctx: Context) = (27 * DeviceUtil.getDensityDpi(ctx)).toInt()
+        fun getNotchHeight(ctx: Context) = 27 * ctx.densityDpi
 
         /** According to the vivo official document, we use fixed value 100dp. */
-        fun getNotchWidth(context: Context) = (100 * DeviceUtil.getDensityDpi(context)).toInt()
+        fun getNotchWidth(ctx: Context) = 100 * ctx.densityDpi
     }
 }

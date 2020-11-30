@@ -10,7 +10,9 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.*
+import com.leovp.androidbase.exts.ITAG
+import com.leovp.androidbase.exts.android.getAvailableResolution
+import com.leovp.androidbase.exts.android.getRealResolution
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
 import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
@@ -18,7 +20,6 @@ import com.leovp.androidbase.exts.kotlin.toBytesLE
 import com.leovp.androidbase.exts.kotlin.toHexadecimalString
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.ui.ToastUtil
@@ -71,7 +72,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screen_share_client)
 
-        val screenInfo = DeviceUtil.getAvailableResolution(this)
+        val screenInfo = getAvailableResolution()
         surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -143,7 +144,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         this.pps = pps
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
 //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
-        val screenInfo = DeviceUtil.getAvailableResolution(this)
+        val screenInfo = getAvailableResolution()
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, screenInfo.x, screenInfo.y)
 //        val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
 //        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
@@ -326,7 +327,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onConnected(netty: BaseNettyClient) {
                 LogContext.log.i(ITAG, "onConnected")
-                webSocketClientHandler?.sendDeviceScreenInfoToServer(DeviceUtil.getRealResolution(this@ScreenShareClientActivity))
+                webSocketClientHandler?.sendDeviceScreenInfoToServer(getRealResolution())
             }
 
             @SuppressLint("SetTextI18n")

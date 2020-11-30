@@ -16,14 +16,12 @@ import android.os.IBinder
 import android.provider.Settings
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
-import com.leovp.androidbase.exts.android.canDrawOverlays
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
 import com.leovp.androidbase.exts.kotlin.toBytesLE
 import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.ui.FloatViewManager
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
@@ -153,11 +151,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                             resultCode,
                             data ?: exception("Intent data is null. Can not capture screen!")
                         )
-                        val screenInfo = DeviceUtil.getAvailableResolution(this@ScreenShareMasterActivity)
+                        val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
                             (screenInfo.x * 0.5F / 16).toInt() * 16,
                             (screenInfo.y * 0.5F / 16).toInt() * 16,
-                            DeviceUtil.getDensityDpi(this@ScreenShareMasterActivity)
+                            densityDpi
                         )
 //                        setting.fps = 20F
 //                        setting.bitrate = setting.width * setting.height
@@ -265,7 +263,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         var clientScreenInfo: Point? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
-        val currentScreen = DeviceUtil.getRealResolution(CustomApplication.instance)
+        val currentScreen = getRealResolution()
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {

@@ -26,9 +26,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
+import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.fail
-import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -123,11 +123,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
-        val screenSize = DeviceUtil.getAvailableResolution(context)
+        val screenSize = context.getAvailableResolution()
         max(screenSize.x, screenSize.y)
     }
     private val cameraSupportedMaxPreviewHeight: Int by lazy {
-        val screenSize = DeviceUtil.getAvailableResolution(context)
+        val screenSize = context.getAvailableResolution()
         min(screenSize.x, screenSize.y)
     }
 

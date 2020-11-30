@@ -5,7 +5,7 @@ import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.view.WindowManager
-import com.leovp.androidbase.utils.device.DeviceUtil.calculateNotchRect
+import com.leovp.androidbase.exts.android.calculateNotchRect
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import java.util.*

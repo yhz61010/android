@@ -246,13 +246,12 @@ class BytesConversionUnitTest {
         assertEquals(255L, byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF.toByte()).readLong())
         assertEquals(255L, byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
 
-        assertEquals(-1, byteArrayOf(0xFF.toByte()).readByte())
-        assertEquals(61234.toByte(), byteArrayOf(0xFF.toByte()).readByte())
+        assertEquals((-1).toByte(), byteArrayOf(0xFF.toByte()).readByte())
         assertEquals(61234.toShort(), byteArrayOf(0xEF.toByte(), 0x32).readShort())
         assertEquals(61234.toShort(), byteArrayOf(0x32, 0xEF.toByte()).readShortLE())
-        assertEquals(61234, byteArrayOf(0x00, 0x00, 0x00, 0xFF.toByte()).readInt())
-        assertEquals(61234, byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00).readIntLE())
-        assertEquals(61234L, byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF.toByte()).readLong())
-        assertEquals(61234L, byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
+        assertEquals(255, byteArrayOf(0x00, 0x00, 0x00, 0xFF.toByte()).readInt())
+        assertEquals(255, byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00).readIntLE())
+        assertEquals(255, byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF.toByte()).readLong())
+        assertEquals(255, byteArrayOf(0xFF.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).readLongLE())
     }
 }

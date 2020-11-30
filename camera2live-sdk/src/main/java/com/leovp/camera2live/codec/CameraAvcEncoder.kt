@@ -5,7 +5,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
-import com.leovp.androidbase.exts.toHexadecimalString
+import com.leovp.androidbase.exts.kotlin.toHexadecimalString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.listeners.CallbackListener

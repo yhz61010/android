@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.getPreviewOutputSize
+import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper

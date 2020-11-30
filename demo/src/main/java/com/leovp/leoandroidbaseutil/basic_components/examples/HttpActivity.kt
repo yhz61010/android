@@ -6,7 +6,7 @@ import android.view.View
 import android.webkit.MimeTypeMap
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.ITAG
-import com.leovp.androidbase.exts.toJsonString
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.http.retrofit.ApiService
 import com.leovp.androidbase.http.retrofit.ApiSubscribe
 import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener

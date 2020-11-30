@@ -1,7 +1,7 @@
 package com.leovp.leoandroidbaseutil
 
 import android.util.Log
-import com.leovp.androidbase.exts.toMd5
+import com.leovp.androidbase.exts.kotlin.toMd5
 import com.leovp.androidbase.utils.cipher.MD5Util
 import org.junit.Assert
 import org.junit.Test

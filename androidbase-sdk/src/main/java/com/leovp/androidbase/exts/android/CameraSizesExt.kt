@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.leovp.androidbase.exts
+package com.leovp.androidbase.exts.android
 
 import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics

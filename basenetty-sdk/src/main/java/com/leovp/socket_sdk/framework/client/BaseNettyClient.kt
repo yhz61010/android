@@ -1,6 +1,6 @@
 package com.leovp.socket_sdk.framework.client
 
-import com.leovp.androidbase.exts.toHexStringLE
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus

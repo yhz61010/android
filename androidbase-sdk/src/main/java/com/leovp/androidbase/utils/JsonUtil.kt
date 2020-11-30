@@ -1,7 +1,7 @@
 package com.leovp.androidbase.utils
 
 import com.google.gson.Gson
-import com.leovp.androidbase.exts.toHexString
+import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.log.LogContext
 import java.lang.reflect.Type
 

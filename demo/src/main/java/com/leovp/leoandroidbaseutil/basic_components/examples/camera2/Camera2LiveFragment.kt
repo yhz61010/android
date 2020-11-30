@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
-import com.leovp.androidbase.exts.getPreviewOutputSize
+import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil

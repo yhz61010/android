@@ -11,6 +11,10 @@ import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
+import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
+import com.leovp.androidbase.exts.kotlin.toBytesLE
+import com.leovp.androidbase.exts.kotlin.toHexadecimalString
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.AppUtil
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.device.DeviceUtil

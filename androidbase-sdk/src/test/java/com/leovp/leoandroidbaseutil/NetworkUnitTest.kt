@@ -1,6 +1,8 @@
 package com.leovp.leoandroidbaseutil
 
 import android.util.Log
+import com.leovp.androidbase.utils.log.LLog
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.InternetUtil
 import org.junit.Assert.assertArrayEquals
 import org.junit.Before
@@ -15,13 +17,19 @@ import org.powermock.modules.junit4.PowerMockRunner
 @RunWith(PowerMockRunner::class)
 @PrepareForTest(Log::class)
 class NetworkUnitTest {
+
+    @Before
+    fun preTest() {
+        LogContext.setLogImp(LLog())
+    }
+
     @Test
     fun getIpsByName() {
         var ips = InternetUtil.getIpsByName("leovp.com").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
         ips = InternetUtil.getIpsByName("lib.leovp.com").toTypedArray()
-        assertArrayEquals(arrayOf("36.248.208.251"), ips)
+        assertArrayEquals(arrayOf("113.229.252.241"), ips)
 
         ips = InternetUtil.getIpsByName("ho1 ho.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
@@ -36,7 +44,7 @@ class NetworkUnitTest {
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
         ips = InternetUtil.getIpsByName("203.1 7.43.165").toTypedArray()
-        assertArrayEquals(arrayOf("203.0.0.1"), ips)
+        assertArrayEquals(emptyArray(), ips)
 
         ips = InternetUtil.getIpsByName("203..43.165").toTypedArray()
         assertArrayEquals(emptyArray(), ips)

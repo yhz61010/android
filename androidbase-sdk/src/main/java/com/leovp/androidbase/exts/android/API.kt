@@ -27,4 +27,9 @@ object API {
     val ABOVE_P = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
     const val Q = Build.VERSION_CODES.Q
     val ABOVE_Q = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+    val isOsVersionHigherThenGingerbread: Boolean
+        get() = !(Build.VERSION.RELEASE.startsWith("1.") || Build.VERSION.RELEASE.startsWith("2.0")
+                || Build.VERSION.RELEASE.startsWith("2.1") || Build.VERSION.RELEASE.startsWith("2.2")
+                || Build.VERSION.RELEASE.startsWith("2.3"))
 }

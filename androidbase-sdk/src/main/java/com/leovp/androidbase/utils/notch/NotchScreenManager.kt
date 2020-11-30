@@ -3,10 +3,10 @@ package com.leovp.androidbase.utils.notch
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
-import com.leovp.androidbase.utils.device.DeviceUtil.isHuaWei
-import com.leovp.androidbase.utils.device.DeviceUtil.isOppo
-import com.leovp.androidbase.utils.device.DeviceUtil.isVivo
-import com.leovp.androidbase.utils.device.DeviceUtil.isXiaoMi
+import com.leovp.androidbase.exts.android.isHuaWei
+import com.leovp.androidbase.exts.android.isOppo
+import com.leovp.androidbase.exts.android.isVivo
+import com.leovp.androidbase.exts.android.isXiaoMi
 import com.leovp.androidbase.utils.notch.INotchScreen.*
 import com.leovp.androidbase.utils.notch.impl.AndroidPNotchScreen
 import com.leovp.androidbase.utils.notch.impl.HuaweiNotchScreen

@@ -11,11 +11,12 @@ import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
+import com.leovp.androidbase.exts.android.hideNavigationBar
+import com.leovp.androidbase.exts.android.requestFullScreen
 import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
 import com.leovp.androidbase.exts.kotlin.toBytesLE
 import com.leovp.androidbase.exts.kotlin.toHexadecimalString
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.AppUtil
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -66,7 +67,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var pps: ByteArray? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppUtil.requestFullScreen(this)
+        requestFullScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_screen_share_client)
 
@@ -127,7 +128,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        AppUtil.hideNavigationBar(this)
+        hideNavigationBar()
         super.onResume()
     }
 

@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.androidbase.utils.system
 
 import android.annotation.SuppressLint
 import android.os.Build

@@ -10,15 +10,11 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.ITAG
 import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.getRealResolution
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
-import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
-import com.leovp.androidbase.exts.kotlin.toBytesLE
-import com.leovp.androidbase.exts.kotlin.toHexadecimalString
-import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util

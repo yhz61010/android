@@ -5,8 +5,8 @@ import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.text.TextUtils
+import com.leovp.androidbase.exts.android.isPortrait
 import com.leovp.androidbase.utils.device.DeviceProp
-import com.leovp.androidbase.utils.device.DeviceUtil.isPortrait
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import java.util.*
@@ -32,7 +32,7 @@ class OppoNotchScreen : INotchScreen {
                 val top: Int
                 val right: Int
                 val bottom: Int
-                if (isPortrait(activity)) {
+                if (activity.isPortrait) {
                     left = Integer.valueOf(leftAndTop[0])
                     top = Integer.valueOf(leftAndTop[1])
                     right = Integer.valueOf(rightAndBottom[0])

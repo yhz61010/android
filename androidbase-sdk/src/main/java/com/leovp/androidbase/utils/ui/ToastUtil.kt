@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
-import com.leovp.androidbase.utils.AppUtil
+import com.leovp.androidbase.exts.android.dp2px
 
 /**
  * Author: Michael Leo
@@ -155,7 +155,7 @@ object ToastUtil {
 
         sToast = Toast(context).also {
             it.view = view
-            it.setGravity(Gravity.CENTER, 0, AppUtil.dp2px(context, -50F))
+            it.setGravity(Gravity.CENTER, 0, dp2px(-50F))
             it.duration = duration
         }
 
@@ -165,7 +165,7 @@ object ToastUtil {
             view.setBackgroundResource(R.drawable.toast_bg_normal)
         }
 
-        sToast!!.show()
+        sToast?.show()
     }
 
     fun clearAllToast() {

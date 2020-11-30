@@ -5,9 +5,9 @@ import android.content.res.Resources
 import android.graphics.Point
 import android.util.DisplayMetrics
 import android.util.TypedValue
-import com.leovp.androidbase.exts.android.API
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.windowManager
+import com.leovp.androidbase.utils.system.API
 import kotlin.math.max
 
 class DimenUtil(private val context: Context) {

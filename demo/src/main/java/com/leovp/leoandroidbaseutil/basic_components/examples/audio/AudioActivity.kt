@@ -3,7 +3,9 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio
 import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
+import com.hjq.permissions.OnPermission
+import com.hjq.permissions.Permission
+import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -17,8 +19,6 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.AudioSender
-import com.yanzhenjie.permission.AndPermission
-import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_audio.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,14 +56,17 @@ class AudioActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
 
-        AndPermission.with(this)
-            .runtime()
+        XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
-            .onGranted {
-                toast("Grand recording permission")
-            }
-            .onDenied { toast("Deny record permission");finish() }
-            .start()
+            .request(object : OnPermission {
+                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+                    toast("Grand recording permission")
+                }
+
+                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                    toast("Deny record permission");finish()
+                }
+            })
 
         btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -118,43 +121,47 @@ class AudioActivity : BaseDemonstrationActivity() {
     }
 
     private fun record(type: AudioType) {
-        AndPermission.with(this)
-            .runtime()
+        XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
-            .onGranted {
-                when (type) {
-                    AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
-                    AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
-                    else -> Unit
-                }
-                micRecorder = MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
-                    override fun onRecording(data: ByteArray) {
-                        when (type) {
-                            AudioType.PCM -> runCatching {
-                                LogContext.log.d(TAG, "PCM data[${data.size}]")
-                                pcmOs?.write(data)
-                            }.onFailure { it.printStackTrace() }
-                            AudioType.AAC -> {
-                                LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
-                                runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
+            .request(object : OnPermission {
+                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+                    when (type) {
+                        AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
+                        AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
+                        else -> Unit
+                    }
+                    micRecorder = MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
+                        override fun onRecording(data: ByteArray) {
+                            when (type) {
+                                AudioType.PCM -> runCatching {
+                                    LogContext.log.d(TAG, "PCM data[${data.size}]")
+                                    pcmOs?.write(data)
+                                }.onFailure { it.printStackTrace() }
+                                AudioType.AAC -> {
+                                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
+                                    runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
+                                }
+                                else -> Unit
                             }
-                            else -> Unit
                         }
-                    }
 
-                    override fun onStop(stopResult: Boolean) {
-                        runCatching {
-                            pcmOs?.flush()
-                            pcmOs?.close()
-                            aacOs?.flush()
-                            aacOs?.close()
-                        }.onFailure { it.printStackTrace() }
-                    }
-                }, type)
-                micRecorder?.startRecord()
-            }
-            .onDenied { Toast.makeText(this, "Deny record permission", Toast.LENGTH_SHORT).show();finish() }
-            .start()
+                        override fun onStop(stopResult: Boolean) {
+                            runCatching {
+                                pcmOs?.flush()
+                                pcmOs?.close()
+                                aacOs?.flush()
+                                aacOs?.close()
+                            }.onFailure { it.printStackTrace() }
+                        }
+                    }, type)
+                    micRecorder?.startRecord()
+                }
+
+                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                    toast("Deny record permission")
+                    finish()
+                }
+            })
     }
 
     override fun onStop() {

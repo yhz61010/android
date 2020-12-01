@@ -35,8 +35,8 @@ val isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.manufacturer, ignoreCa
 val isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.manufacturer, ignoreCase = true)
 
 fun Context.getAvailableResolution(): Point {
-    val wm = this.windowManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val wm = app.windowManager
         val width = wm.currentWindowMetrics.bounds.width()
         val height = wm.currentWindowMetrics.bounds.height()
         Point(width, height)
@@ -64,7 +64,7 @@ fun Activity.getRealResolution(): Point {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         this.display?.getRealSize(size)
     } else {
-        val wm = this.windowManager
+        val wm = app.windowManager
         val display = wm.defaultDisplay
         val displayMetrics = DisplayMetrics()
         display.getRealMetrics(displayMetrics)

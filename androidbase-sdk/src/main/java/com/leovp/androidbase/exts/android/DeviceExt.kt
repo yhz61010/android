@@ -1,6 +1,7 @@
 package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
@@ -34,7 +35,7 @@ val isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.manufacturer, ignoreCa
 val isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.manufacturer, ignoreCase = true)
 
 fun Context.getAvailableResolution(): Point {
-    val wm = app.windowManager
+    val wm = this.windowManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val width = wm.currentWindowMetrics.bounds.width()
         val height = wm.currentWindowMetrics.bounds.height()
@@ -55,12 +56,15 @@ fun Context.getAvailableResolution(): Point {
     }
 }
 
-fun Context.getRealResolution(): Point {
+/**
+ * As of API 30(Android 11), you must use Activity context to retrieve screen real size
+ */
+fun Activity.getRealResolution(): Point {
     val size = Point()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         this.display?.getRealSize(size)
     } else {
-        val wm = app.windowManager
+        val wm = this.windowManager
         val display = wm.defaultDisplay
         val displayMetrics = DisplayMetrics()
         display.getRealMetrics(displayMetrics)
@@ -70,9 +74,9 @@ fun Context.getRealResolution(): Point {
     return size
 }
 
-val Context.screenWidth get() = getRealResolution().x
+val Activity.screenWidth get() = getRealResolution().x
 
-val Context.screenRealHeight get() = getRealResolution().y
+val Activity.screenRealHeight get() = getRealResolution().y
 
 val Context.screenAvailableHeight get() = getAvailableResolution().y
 
@@ -87,7 +91,7 @@ val Context.statusBarHeight
     }
 
 
-val Context.isFullScreenDevice
+val Activity.isFullScreenDevice
     @SuppressLint("ObsoleteSdkInt")
     get(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -170,15 +174,15 @@ val Context.navigationBarHeight
         return result
     }
 
-fun calculateNotchRect(ctx: Context, notchWidth: Int, notchHeight: Int): Rect {
-    val screenSize = ctx.getRealResolution()
+fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
+    val screenSize = act.getRealResolution()
     val screenWidth = screenSize.x
     val screenHeight = screenSize.y
     val left: Int
     val top: Int
     val right: Int
     val bottom: Int
-    if (ctx.isPortrait) {
+    if (act.isPortrait) {
         left = (screenWidth - notchWidth) / 2
         top = 0
         right = left + notchWidth
@@ -192,7 +196,7 @@ fun calculateNotchRect(ctx: Context, notchWidth: Int, notchHeight: Int): Rect {
     return Rect(left, top, right, bottom)
 }
 
-val Context.screenRatio
+val Activity.screenRatio
     get(): Float {
         val p = getRealResolution()
         return 1.0f * p.y / p.x

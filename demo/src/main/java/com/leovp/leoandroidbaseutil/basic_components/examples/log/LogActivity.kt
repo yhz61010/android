@@ -31,7 +31,7 @@ class LogActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log)
 
-        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo()}")
+        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
     }
 
     override fun onStop() {

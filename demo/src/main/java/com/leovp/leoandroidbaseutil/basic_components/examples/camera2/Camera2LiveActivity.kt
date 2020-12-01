@@ -6,17 +6,18 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.os.Environment
 import android.view.WindowManager
-import android.widget.Toast
+import com.hjq.permissions.OnPermission
+import com.hjq.permissions.Permission
+import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.yanzhenjie.permission.AndPermission
-import com.yanzhenjie.permission.runtime.Permission
 import java.io.File
 import java.io.FileOutputStream
 
@@ -40,18 +41,22 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             }
         }
 
-        if (AndPermission.hasPermissions(this, Permission.CAMERA)) {
+        if (XXPermissions.hasPermission(this, Permission.CAMERA)) {
             addFragment()
         } else {
-            AndPermission.with(this)
-                .runtime()
+            XXPermissions.with(this)
                 .permission(Permission.CAMERA)
-                .onGranted {
-                    Toast.makeText(this, "Grant camera permission", Toast.LENGTH_SHORT).show()
-                    addFragment()
-                }
-                .onDenied { Toast.makeText(this, "Deny camera permission", Toast.LENGTH_SHORT).show();finish() }
-                .start()
+                .request(object : OnPermission {
+                    override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+                        toast("Grant camera permission")
+                        addFragment()
+                    }
+
+                    override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                        toast("Deny camera permission")
+                        finish()
+                    }
+                })
         }
     }
 

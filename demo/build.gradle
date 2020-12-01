@@ -173,9 +173,10 @@ dependencies {
     annotationProcessor "com.github.bumptech.glide:compiler:$glideVersion"
     
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
+    implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
     //    implementation "org.greenrobot:eventbus:3.1.1"
-    implementation "com.yanzhenjie:permission:$rootProject.ext.andPermissionVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
-    implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
+
+    implementation "com.hjq:xxpermissions:$xxPermissionVersion"
 }

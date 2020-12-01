@@ -5,17 +5,18 @@ import android.media.MediaCodecInfo
 import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.hjq.permissions.OnPermission
+import com.hjq.permissions.Permission
+import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.leoandroidbaseutil.R
-import com.yanzhenjie.permission.AndPermission
-import com.yanzhenjie.permission.runtime.Permission
 import kotlinx.android.synthetic.main.activity_camera2_without_preview.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,14 +33,18 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera2_without_preview)
 
-        AndPermission.with(this@Camera2WithoutPreviewActivity)
-            .runtime()
+        XXPermissions.with(this@Camera2WithoutPreviewActivity)
             .permission(Permission.CAMERA)
-            .onGranted {
-                Toast.makeText(this@Camera2WithoutPreviewActivity, "Grant camera permission", Toast.LENGTH_SHORT).show()
-            }
-            .onDenied { Toast.makeText(this@Camera2WithoutPreviewActivity, "Deny camera permission", Toast.LENGTH_SHORT).show() }
-            .start()
+            .request(object : OnPermission {
+                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+                    toast("Grant camera permission")
+                }
+
+                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                    toast("Deny camera permission")
+                    finish()
+                }
+            })
 
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
             enableRecordFeature = false

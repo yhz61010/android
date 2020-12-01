@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.device
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.os.Build
 import android.os.SystemClock
@@ -66,11 +67,14 @@ object DeviceUtil {
         return arrayOf(totalMegs - availableMegs, totalMegs, percentUsed)
     }
 
-    fun getDeviceInfo(): String {
+    /**
+     * As of API 30(Android 11), you must use Activity context to retrieve screen real size
+     */
+    fun getDeviceInfo(act: Activity): String {
         return runCatching {
             val st = SystemClock.elapsedRealtimeNanos()
             val memInfo = getMemInfoInMegs()
-            val screenSize = app.getRealResolution()
+            val screenSize = act.getRealResolution()
             val availableSize = app.getAvailableResolution()
             val statusBarHeight = app.statusBarHeight
             val navBarHeight = app.navigationBarHeight
@@ -86,13 +90,13 @@ object DeviceUtil {
             CPU: $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
             Supported ABIS: ${supportedCpuArchs.contentToString()}
             Display: $display
-            Screen: ${screenSize.x}x${screenSize.y}(${app.densityDpi}):${app.density})(${app.screenRatio})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
+            Screen: ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}
             Device Features:
-                    Full screen device        : ${app.isFullScreenDevice}
+                    Full screen device        : ${act.isFullScreenDevice}
                     Device has navigation bar : ${doesDeviceHasNavigationBar()}
                     Navigation bar is showing : ${app.isNavigationBarShown} (PS: In full screen(AKA all screen) device, this value is always 'true'.)
                     Navigation gesture enable : ${app.isNavigationGestureEnabled}

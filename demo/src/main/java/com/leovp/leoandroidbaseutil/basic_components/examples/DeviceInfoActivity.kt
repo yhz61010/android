@@ -16,7 +16,7 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_info)
 
-        val deviceInfo = DeviceUtil.getDeviceInfo()
+        val deviceInfo = DeviceUtil.getDeviceInfo(this)
         tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 

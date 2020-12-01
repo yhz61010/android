@@ -262,7 +262,8 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 ##### Lens Back: LEVEL_LIMITED(0)
 ##### Lens Front: LEVEL_LIMITED(0)
 #### H.264 Encoder
-`OMX.hisi.video.encoder.avc` and `c2.android.avc.encoder`
+`OMX.hisi.video.encoder.avc`  
+`c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
 `[[12, 15], [15, 15], [14, 20], [20, 20], [14, 25], [25, 25], [14, 30], [30, 30]]`
@@ -278,7 +279,8 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ### HuaWei Mate 30 Pro(LIO-AL00)(Android 10)
 #### H.264 Encoder
-`OMX.hisi.video.encoder.avc` and `c2.android.avc.encoder`
+`OMX.hisi.video.encoder.avc`
+`c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
 `[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30]]`

@@ -72,6 +72,7 @@ dependencies {
     api group: 'com.squareup.retrofit2', name: 'retrofit', version: "$rootProject.ext.retrofit2Version"
     api "com.squareup.retrofit2:converter-scalars:$rootProject.ext.retrofit2Version"
     api "com.squareup.retrofit2:converter-gson:$rootProject.ext.retrofit2Version"
+    api "com.squareup.retrofit2:converter-moshi:$rootProject.ext.retrofit2Version"
     api "com.squareup.retrofit2:adapter-rxjava2:$rootProject.ext.retrofit2Version"
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
 

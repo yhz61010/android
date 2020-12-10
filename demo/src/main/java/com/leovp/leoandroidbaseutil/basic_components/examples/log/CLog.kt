@@ -11,12 +11,13 @@ import java.io.File
  * Author: Michael Leo
  * Date: 20-4-20 上午11:39
  */
+@Suppress("unused")
 class CLog : ILog {
     private val debugMode = BuildConfig.DEBUG
 
-    companion object {
-        private const val BASE_TAG = "LEO-"
-    }
+    override fun getTagName(tag: String) = "LEO-$tag"
+
+    override var enableLog = true
 
     private fun getLogDir(ctx: Context, baseFolderName: String): File {
         val builder = getBaseDirString(ctx, baseFolderName) + File.separator + "log"
@@ -60,79 +61,62 @@ class CLog : ILog {
         Log.setLogImp(Xlog())
     }
 
-    override fun getTagName(tag: String): String {
-        return "$BASE_TAG$tag"
-    }
-
-    @Suppress("unused")
     override fun v(tag: String, message: String?) {
-        Log.v(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.v(getTagName(tag), message ?: "[null]")
     }
 
-    @Suppress("unused")
     override fun d(tag: String, message: String?) {
-        Log.d(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.d(getTagName(tag), message ?: "[null]")
     }
 
-    @Suppress("unused")
     override fun i(tag: String, message: String?) {
-        Log.i(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.i(getTagName(tag), message ?: "[null]")
     }
 
     override fun w(tag: String, message: String?) {
-        Log.w(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.w(getTagName(tag), message ?: "[null]")
     }
 
     override fun e(tag: String, message: String?) {
-        Log.e(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.e(getTagName(tag), message ?: "[null]")
     }
 
-    @Suppress("unused")
     override fun e(tag: String, throwable: Throwable?) {
-        e(tag, null, throwable)
+        if (enableLog) e(tag, null, throwable)
     }
 
-    @Suppress("unused")
     override fun f(tag: String, message: String?) {
-        Log.f(getTagName(tag), message ?: "[null]")
+        if (enableLog) Log.f(getTagName(tag), message ?: "[null]")
     }
 
-    @Suppress("unused")
     override fun v(tag: String, message: String?, throwable: Throwable?) {
-        Log.v(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.v(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     override fun d(tag: String, message: String?, throwable: Throwable?) {
-        Log.d(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.d(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     override fun i(tag: String, message: String?, throwable: Throwable?) {
-        Log.i(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.i(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     override fun w(tag: String, message: String?, throwable: Throwable?) {
-        Log.w(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.w(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     override fun e(tag: String, message: String?, throwable: Throwable?) {
-        Log.e(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.e(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     override fun f(tag: String, message: String?, throwable: Throwable?) {
-        Log.f(getTagName(tag), getMessage(message, throwable))
+        if (enableLog) Log.f(getTagName(tag), getMessage(message, throwable))
     }
 
-    @Suppress("unused")
     fun flushLog(isSync: Boolean = true) {
         Log.appenderFlush(isSync)
     }
 
-    @Suppress("unused")
     fun closeLog() {
         Log.appenderClose()
     }

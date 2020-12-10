@@ -7,6 +7,13 @@ import com.leovp.androidbase.utils.log.base.ILog
  * Date: 2020/10/16 下午6:15
  */
 object LogContext {
+    var enableLog = true
+        set(value) {
+            field = value
+            if (!::log.isInitialized) throw IllegalAccessException("You must call setLogImp() first")
+            log.enableLog = value
+        }
+
     lateinit var log: ILog
         private set
 

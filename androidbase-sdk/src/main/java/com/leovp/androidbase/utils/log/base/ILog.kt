@@ -5,6 +5,8 @@ package com.leovp.androidbase.utils.log.base
  * Date: 2020/10/16 下午5:33
  */
 interface ILog {
+    var enableLog: Boolean
+
     fun getTagName(tag: String): String
 
     fun v(tag: String, message: String?)

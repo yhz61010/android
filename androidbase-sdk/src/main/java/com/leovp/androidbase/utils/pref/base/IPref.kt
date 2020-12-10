@@ -11,6 +11,7 @@ interface IPref {
     fun put(key: String, v: Boolean)
     fun put(key: String, v: String)
     fun put(key: String, v: Any)
+    fun put(key: String, v: Set<String>)
 
     fun getInt(key: String, default: Int = 0): Int
     fun getLong(key: String, default: Long = 0L): Long
@@ -18,4 +19,5 @@ interface IPref {
     fun getFloat(key: String, default: Float = 0F): Float
     fun getString(key: String, default: String? = null): String?
     fun <T> getObject(key: String, clazz: Class<T>): T?
+    fun getStringSet(key: String, default: Set<String>? = null): Set<String>?
 }

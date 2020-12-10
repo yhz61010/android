@@ -179,4 +179,5 @@ dependencies {
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
 
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
+    implementation "com.tencent:mmkv-static:$mmkvVersion"
 }

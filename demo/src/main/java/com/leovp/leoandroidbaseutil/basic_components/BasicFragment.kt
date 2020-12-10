@@ -19,6 +19,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2Wit
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketActivity
@@ -83,6 +84,7 @@ class BasicFragment : Fragment() {
             Pair("KeepAlive", KeepAliveActivity::class.java),
             Pair("Finger Paint", FingerPaintActivity::class.java),
             Pair("Watermark", WatermarkActivity::class.java),
+            Pair("Preference", PrefActivity::class.java),
         )
 
         val colors = arrayOf(

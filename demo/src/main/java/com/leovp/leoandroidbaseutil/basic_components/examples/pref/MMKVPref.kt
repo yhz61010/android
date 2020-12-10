@@ -51,6 +51,10 @@ class MMKVPref : IPref {
         mmkv.encode(key, v.toJsonString())
     }
 
+    override fun put(key: String, v: Set<String>) {
+        mmkv.encode(key, v)
+    }
+
     override fun getInt(key: String, default: Int) = mmkv.decodeInt(key, default)
 
     override fun getLong(key: String, default: Long) = mmkv.decodeLong(key, default)
@@ -62,4 +66,6 @@ class MMKVPref : IPref {
     override fun getString(key: String, default: String?): String? = mmkv.decodeString(key, default)
 
     override fun <T> getObject(key: String, clazz: Class<T>) = getString(key, null)?.toObject(clazz)
+
+    override fun getStringSet(key: String, default: Set<String>?): Set<String>? = mmkv.decodeStringSet(key, default)
 }

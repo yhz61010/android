@@ -61,6 +61,14 @@ class LPref : IPref {
         }
     }
 
+    override fun put(key: String, v: Set<String>) {
+        pref.edit().apply {
+            putStringSet(key, v)
+            apply()
+        }
+    }
+
+
     override fun getInt(key: String, default: Int) = pref.getInt(key, default)
 
     override fun getLong(key: String, default: Long) = pref.getLong(key, default)
@@ -73,4 +81,5 @@ class LPref : IPref {
 
     override fun <T> getObject(key: String, clazz: Class<T>): T? = getString(key, null)?.toObject(clazz)
 
+    override fun getStringSet(key: String, default: Set<String>?): Set<String>? = pref.getStringSet(key, default)
 }

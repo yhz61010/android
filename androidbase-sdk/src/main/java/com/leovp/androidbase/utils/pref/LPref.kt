@@ -10,8 +10,8 @@ import com.leovp.androidbase.utils.pref.base.IPref
  * Author: Michael Leo
  * Date: 20-12-10 上午10:01
  */
-class LPref : IPref {
-    private val pref = app.sharedPrefs(app.packageName)
+class LPref(name: String = app.packageName) : IPref {
+    private val pref = app.sharedPrefs(name)
 
     @Synchronized
     override fun put(key: String, v: Int) {

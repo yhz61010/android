@@ -32,6 +32,12 @@ class LogActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_log)
 
         LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
+
+        LogContext.enableLog = false
+        LogContext.log.w(ITAG, "This log will NOT be outputted")
+
+        LogContext.enableLog = true
+        LogContext.log.w(ITAG, "This log will be outputted")
     }
 
     override fun onStop() {

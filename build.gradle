@@ -70,4 +70,5 @@ ext {
     viewanimatorVersion = '2.4'
     draggableViewVersion = '0.5.0'
     xxPermissionVersion = '9.2'
+    mmkvVersion = '1.2.6'
 }

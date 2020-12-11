@@ -2,8 +2,13 @@
 #
 # 基本指令区域（没什么别的需求不需要动）
 # https://www.guardsquare.com/en/products/proguard/manual/examples
+# https://www.guardsquare.com/en/products/proguard/manual/usage#keepoverview
 #
 #############################################
+#-injars      bin/classes
+#-injars      bin/resources.ap_
+#-injars      libs
+
 # 代码混淆压缩比，在0~7之间，默认为5，一般不做修改
 -optimizationpasses 5
 
@@ -442,10 +447,13 @@ public static java.lang.String TABLENAME;
 
 # OPPO - Push - Start
 -keep public class * extends android.app.Service
--keep class com.heytap.msp.** { *;}
+-keep class com.heytap.msp.** {*;}
 # OPPO - Push - End
 
--keep class com.webrtc.audioprocessing.** { *;}
+-keep class com.webrtc.audioprocessing.** {*;}
+
+#-outjars     bin/application.apk
+#-libraryjars /usr/local/android-sdk/platforms/android-28/android.jar
 
 #-----------处理反射类---------------
 

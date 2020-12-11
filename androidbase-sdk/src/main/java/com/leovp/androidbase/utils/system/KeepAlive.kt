@@ -3,15 +3,16 @@ package com.leovp.androidbase.utils.system
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.PowerManager
-import com.leovp.androidbase.R
+import androidx.annotation.RawRes
 import com.leovp.androidbase.utils.log.LogContext
 
-
 /**
+ * Need `<uses-permission android:name="android.permission.WAKE_LOCK" />` permission
+ *
  * Author: Michael Leo
  * Date: 20-8-28 下午1:40
  */
-class KeepAlive(private val context: Context) {
+class KeepAlive(private val context: Context, @RawRes val undeadAudioResId: Int) {
     companion object {
         private const val TAG = "KA"
 //        private const val SAMPLE_RATE = 44100
@@ -19,7 +20,7 @@ class KeepAlive(private val context: Context) {
 //        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     }
 
-    private val mediaPlayer by lazy { MediaPlayer.create(context, R.raw.single_note30) }
+    private val mediaPlayer by lazy { MediaPlayer.create(context, undeadAudioResId) }
 
     fun keepAlive() {
         LogContext.log.w(TAG, "Start keepAlive()")

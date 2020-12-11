@@ -1018,6 +1018,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         }
     }
 
+    @Keep
     companion object {
         private val TAG = Camera2ComponentHelper::class.java.simpleName
 

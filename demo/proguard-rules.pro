@@ -11,7 +11,7 @@
 #-flattenpackagehierarchy 'l'
 
 # Alternatively, the -repackageclasses option obfuscates the entire packaging, by combining obfuscated classes into a single package:
--repackageclasses 'p'
+-repackageclasses ''
 # Additionally specifying the-allowaccessmodification option allows access permissions of classes and class members to be broadened, opening up the opportunity to repackage all obfuscated classes:
 -allowaccessmodification
 

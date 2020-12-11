@@ -116,6 +116,13 @@
 -keep class **.R$* {*;}
 -keepclassmembers enum * { *;}
 
+#-keep class <class>$Companion { *; }
+
+#-keepclassmembers class * {
+#    static final % *;
+#    static final java.lang.String *;
+#}
+
 # 保留support下的所有类及其内部类
 -keep class android.support.** {*;}
 

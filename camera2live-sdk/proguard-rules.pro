@@ -89,11 +89,6 @@
 }
 -keepattributes MethodParameters
 
-# Keep all static
--keepclassmembers class ** {
-   public static <methods>;
-}
-
 # kotlin
 -keep class kotlin.** { *; }
 -keep class kotlin.Metadata { *; }
@@ -467,6 +462,7 @@ public static java.lang.String TABLENAME;
     public *;
     protected *;
 }
+
 -keep class com.leovp.camera2live.Camera2ComponentHelper {
     public *;
     protected *;

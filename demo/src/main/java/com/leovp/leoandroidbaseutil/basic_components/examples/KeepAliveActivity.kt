@@ -8,7 +8,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 class KeepAliveActivity : BaseDemonstrationActivity() {
 
-    private val keepAlive: KeepAlive by lazy { KeepAlive(this) }
+    private val keepAlive: KeepAlive by lazy { KeepAlive(this, R.raw.single_note30) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

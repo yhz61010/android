@@ -101,6 +101,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
     private lateinit var builder: Builder
 
+    @Keep
     inner class Builder(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         var desiredVideoWidth = desiredVideoWidth
             private set

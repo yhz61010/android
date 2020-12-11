@@ -83,6 +83,12 @@
 -keep class androidx.** { *; }
 -keep interface androidx.** { *; }
 
+# Keep all interface
+-keep interface * {
+  <methods>;
+}
+-keepattributes MethodParameters
+
 # kotlin
 -keep class kotlin.** { *; }
 -keep class kotlin.Metadata { *; }

@@ -89,6 +89,11 @@
 }
 -keepattributes MethodParameters
 
+# Keep all static
+-keepclassmembers class ** {
+   public static <methods>;
+}
+
 # kotlin
 -keep class kotlin.** { *; }
 -keep class kotlin.Metadata { *; }

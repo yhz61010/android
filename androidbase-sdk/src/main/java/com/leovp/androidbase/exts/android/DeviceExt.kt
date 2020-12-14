@@ -216,7 +216,7 @@ fun getImei(ctx: Context, slotId: Int): String? {
         val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
         method.invoke(manager, slotId) as String
     } catch (e: Exception) {
-        e.printStackTrace()
+//        e.printStackTrace()
         return null
     }
 }

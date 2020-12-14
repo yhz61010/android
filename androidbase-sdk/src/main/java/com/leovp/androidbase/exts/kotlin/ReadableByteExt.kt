@@ -6,92 +6,92 @@ import kotlin.math.pow
 /**
  * Util for converting Byte to (X)B/(X)iB according to the <IEEE 1541-2002> standard
  */
-const val KB = 1000
-const val MB = 1000_000
-const val GB = 1000_000_000
-const val TB = 1000_000_000_000
-const val PB = 1000_000_000_000_000
-const val EB = 1000_000_000_000_000_000
+const val KB: Long = 1000
+const val MB: Long = 1000_000
+const val GB: Long = 1000_000_000
+const val TB: Long = 1000_000_000_000
+const val PB: Long = 1000_000_000_000_000
+const val EB: Long = 1000_000_000_000_000_000
 
-const val KiB = 1 shl 10
-const val MiB = 1 shl 20
-const val GiB = 1 shl 30
-const val TiB = 1 shl 40
-const val PiB = 1 shl 50
-const val EiB = 1 shl 60
+const val KiB: Long = 1L shl 10
+const val MiB: Long = 1L shl 20
+const val GiB: Long = 1L shl 30
+const val TiB: Long = 1L shl 40
+const val PiB: Long = 1L shl 50
+const val EiB: Long = 1L shl 60
 
 /**
  * B -> KB
  * Convert Byte to KB (1KB = 1000B).
  */
-fun Long.toKB() = this / KB
+fun Long.toKB() = this * 1.0F / KB
 
 /**
  * B -> MB
  * Convert Byte to MB (1KB = 1000B).
  */
-fun Long.toMB() = this / MB
+fun Long.toMB() = this * 1.0F / MB
 
 /**
  * B -> GB
  * Convert Byte to GB (1KB = 1000B).
  */
-fun Long.toGB() = this / GB
+fun Long.toGB() = this * 1.0F / GB
 
 /**
  * B -> TB
  * Convert Byte to TB (1KB = 1000B).
  */
-fun Long.toTB() = this / TB
+fun Long.toTB() = this * 1.0F / TB
 
 /**
  * B -> PB
  * Convert Byte to PB (1KB = 1000B).
  */
-fun Long.toPB() = this / PB
+fun Long.toPB() = this * 1.0F / PB
 
 /**
  * B -> EB
  * Convert Byte to EB (1KB = 1000B).
  */
-fun Long.toEB() = this / EB
+fun Long.toEB() = this * 1.0F / EB
 
 
 /**
  * B -> KiB
  * Convert Byte to KiB (1KiB = 1024B).
  */
-fun Long.toKiB() = this / KiB
+fun Long.toKiB() = this * 1.0F / KiB
 
 /**
  * B -> MiB
  * Convert Byte to MiB (1KiB = 1024B).
  */
-fun Long.toMiB() = this / MiB
+fun Long.toMiB() = this * 1.0F / MiB
 
 /**
  * B -> GiB
  * Convert Byte to GiB (1KiB = 1024B).
  */
-fun Long.toGiB() = this / GiB
+fun Long.toGiB() = this * 1.0F / GiB
 
 /**
  * B -> TiB
  * Convert Byte to TiB (1KiB = 1024B).
  */
-fun Long.toTiB() = this / TiB
+fun Long.toTiB() = this * 1.0F / TiB
 
 /**
  * B -> PiB
  * Convert Byte to PiB (1KiB = 1024B).
  */
-fun Long.toPiB() = this / PiB
+fun Long.toPiB() = this * 1.0F / PiB
 
 /**
  * B -> EiB
  * Convert Byte to EiB (1KiB = 1024B).
  */
-fun Long.toEiB() = this / EiB
+fun Long.toEiB() = this * 1.0F / EiB
 
 /**
  * B -> XiB
@@ -130,6 +130,7 @@ fun Long.autoDecimal() = when {
  */
 fun Long.auto(decimal: Boolean) = if (decimal) autoDecimal() else autoBinary()
 
+// Formatter.formatShortFileSize(ctx, bytes)
 fun Long.humanReadableByteCount(si: Boolean = false): String {
     val unit = if (si) 1000 else 1024
     if (this < unit) return "${this}B"

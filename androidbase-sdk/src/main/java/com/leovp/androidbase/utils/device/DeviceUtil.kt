@@ -3,10 +3,15 @@ package com.leovp.androidbase.utils.device
 import android.app.Activity
 import android.app.ActivityManager
 import android.os.Build
+import android.os.StatFs
 import android.os.SystemClock
+import androidx.core.content.ContextCompat
 import com.leovp.androidbase.exts.android.*
+import com.leovp.androidbase.exts.kotlin.autoBinary
+import com.leovp.androidbase.exts.kotlin.round
 import com.leovp.androidbase.utils.shell.ShellUtil
 import java.io.File
+
 
 /**
  * Author: Michael Leo
@@ -54,18 +59,48 @@ object DeviceUtil {
 
     /**
      * The result is:
-     * [0]: Used memory in megs
-     * [1]: Total memory in megs
-     * [2]: Used memory in percents
+     * [0]: Available memory in bytes
+     * [1]: Total memory in bytes
+     * [2]: Used memory in bytes
      */
-    fun getMemInfoInMegs(): Array<Any> {
+    fun getMemInfoInBytes(): Triple<Long, Long, Float> {
         val mi = ActivityManager.MemoryInfo()
         app.activityManager.getMemoryInfo(mi)
-        val availableMegs = mi.availMem / 0x100000L
-        val totalMegs = mi.totalMem / 0x100000L
+        val availableBytes = mi.availMem
+        val totalBytes = mi.totalMem
         val percentUsed = (mi.totalMem - mi.availMem) * 100.0F / mi.totalMem
-        return arrayOf(totalMegs - availableMegs, totalMegs, percentUsed)
+        return Triple(availableBytes, totalBytes, percentUsed)
     }
+
+    /**
+     * The triple content in array is:
+     * [0]: Available size in bytes
+     * [1]: Total size in bytes
+     * [2]: Used size in percents
+     */
+    fun getExternalStorageInBytes(): ArrayList<Triple<Long, Long, Float>> {
+        val bytesAvailable: ArrayList<Triple<Long, Long, Float>> = ArrayList()
+        val externalStorageDirs = ContextCompat.getExternalFilesDirs(app, null)
+        for (storageDir in externalStorageDirs) {
+            val availableSizeInBytes = StatFs(storageDir.path).availableBytes
+            val totalSizeInBytes = StatFs(storageDir.path).totalBytes
+            val percentUsed = (totalSizeInBytes - availableSizeInBytes) * 100.0F / totalSizeInBytes
+            bytesAvailable.add(Triple(availableSizeInBytes, totalSizeInBytes, percentUsed))
+        }
+        return bytesAvailable
+    }
+
+    val externalStorageBytesInReadable: String
+        get() {
+            val sb = StringBuilder()
+            getExternalStorageInBytes().forEachIndexed { index, pair ->
+                val used = pair.second - pair.first
+                val usedPercent: Float = used * 100F / pair.second
+                sb.append("[$index]=${used.autoBinary()}/${pair.second.autoBinary()}  ${usedPercent.round()}% Used")
+                sb.append("\n")
+            }
+            return sb.deleteAt(sb.length - 1).toString()
+        }
 
     /**
      * As of API 30(Android 11), you must use Activity context to retrieve screen real size
@@ -73,7 +108,7 @@ object DeviceUtil {
     fun getDeviceInfo(act: Activity): String {
         return runCatching {
             val st = SystemClock.elapsedRealtimeNanos()
-            val memInfo = getMemInfoInMegs()
+            val memInfo = getMemInfoInBytes()
             val screenSize = act.getRealResolution()
             val availableSize = app.getAvailableResolution()
             val statusBarHeight = app.statusBarHeight
@@ -91,7 +126,8 @@ object DeviceUtil {
             Supported ABIS: ${supportedCpuArchs.contentToString()}
             Display: $display
             Screen: ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
-            MemoryUsage: ${memInfo[0]}MB/${memInfo[1]}MB  ${memInfo[2]}% Used
+            MemoryUsage: ${(memInfo.second - memInfo.first).autoBinary()}/${memInfo.second.autoBinary()}  ${memInfo.third.round()}% Used
+            External Storage: $externalStorageBytesInReadable
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}
@@ -103,6 +139,9 @@ object DeviceUtil {
 
             Cost: ${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us 
             """.trimIndent()
-        }.getOrDefault("")
+        }.getOrElse {
+            it.printStackTrace()
+            ""
+        }
     }
 }

@@ -16,12 +16,12 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_info)
 
+        //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
+        CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
+
         val deviceInfo = DeviceUtil.getDeviceInfo(this)
         tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
-
-//        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
-        CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
         NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
             override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {

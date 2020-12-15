@@ -120,12 +120,33 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
+### Samsung Galaxy A51 5G(SM-A5160)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LIMITED(0)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.Exynos.AVC.Encoder`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [15, 20], [20, 20], [24, 24], [8, 30], [10, 30], [15, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [15, 20], [20, 20], [24, 24], [8, 30], [10, 30], [15, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4000x3000, 4000x2250, 4000x1800, 3840x2160, 3264x2448, 2992x2992, 2576x1932, 2400x1080, 1920x1080, 1440x1080, 1088x1088, 1280x720, 960x720, 800x450, 720x720, 720x480, 640x480, 640x360, 352x288, 320x240, 256x144, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[2640x1980, 2640x1488, 2640x1188, 1968x1968, 2400x1080, 2144x1200, 1920x1080, 1440x1080, 1088x1088, 1280x720, 960x720, 800x450, 720x720, 720x480, 640x480, 352x288, 320x240, 256x144, 176x144]`
+
+------
+
 ### Samsung Galaxy S10(SM-G9730)(Android 9.0)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_3(3)
 ##### Lens Front: LEVEL_LIMITED(0)
 #### H.264 Encoder
-`OMX.qcom.video.encoder.avc` and `c2.android.avc.encoder`
+`OMX.qcom.video.encoder.avc`  
+`c2.android.avc.encoder`
 #### Camera supported FPS
 ##### Lens Back(Camera Sensor Orientation: 90)
 `[[15, 15], [7, 24], [24, 24], [8, 30], [30, 30]]`
@@ -291,6 +312,26 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[3648, 2736][3648, 2056][3648, 1712][2736, 2736][3840, 2160][3840, 1648][3120, 2340][2560, 1080][2288, 1080][2160, 1080][3280, 2448][3264, 2448][3264, 1840][3008, 2256][2688, 2016][2448, 2448][2592, 1952][2048, 1536][1920, 1080][1440, 1080][1600, 1080][1536, 864][1456, 1456][1664, 768][1680, 720][1520, 720][1440, 720][1280, 960][1280, 720][1088, 1080][1088, 720][960, 720][960, 540][720, 720][720, 540][640, 480][640, 360][736, 412][544, 408][480, 360][400, 400][352, 288][320, 240][208, 144][176, 144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[3264x2448, 3264x1836, 3264x1504, 2288x1080, 2160x1080, 1920x1080, 1920x960, 1664x768, 1552x720, 1440x1080, 1440x720, 1280x960, 1280x720, 960x720, 960x544, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144]`
+
+------
+
+### HuaWei P40(ANA-AN00)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LIMITED(0)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.hisi.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30], [15, 60], [30, 60], [60, 60]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30], [60, 60]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4096x3072, 4096x2304, 4096x1888, 3648x2056, 3648x1680, 3648x2056, 3072x3072, 3840x2160, 3840x1760, 3840x1648, 3120x2340, 2560x1080, 3280x2448, 3264x2448, 3264x1840, 3008x2256, 2448x2448, 2336x1080, 2048x1536, 1920x1080, 1552x720, 1440x1080, 1456x1456, 1664x768, 1440x720, 1280x960, 1280x720, 1088x1080, 960x720, 960x540, 720x720, 720x540, 640x480, 640x360, 736x412, 544x408, 480x360, 400x400, 352x288, 320x240, 208x144, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3840x2160, 3264x2448, 2448x2448, 3264x1836, 3264x1504, 3264x1680, 3264x1480, 2336x1080, 2160x1080, 1920x1080, 1920x960, 1664x768, 1552x720, 1440x1080, 1440x720, 1280x960, 1280x720, 1216x912, 960x720, 960x544, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144, 1600x1200, 896x672]`
 
 ------
 
@@ -500,6 +541,26 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[4032, 3024][4000, 3000][4032, 2268][4032, 2016][3840, 2160][2880, 2156][2688, 1512][2592, 1296][1920, 1440][1920, 1080][1600, 1200][1280, 960][1280, 720][1280, 640][800, 600][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[2880, 2156][2688, 1512][2592, 1296][1920, 1440][1920, 1080][1600, 1200][1280, 960][1280, 720][1280, 640][800, 600][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144]`
+
+------
+
+### Redmi K30(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_3(3)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [5, 20], [20, 20], [8, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [8, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4624x3472, 4624x2600, 3840x2160, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1560x720, 1440x1080, 1280x960, 1280x720, 800x600, 720x480, 640x480, 640x360, 352x288, 320x240, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[2592x1940, 2160x1080, 1920x1440, 1920x1080, 1600x1200, 1560x720, 1440x1080, 1280x960, 1280x720, 800x600, 720x480, 640x480, 640x360, 352x288, 320x240, 176x144]`
 
 ------
 

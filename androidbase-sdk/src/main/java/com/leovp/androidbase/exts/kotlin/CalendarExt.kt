@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Calendar.*
 
-
 @SuppressLint("ConstantLocale")
 internal val sdf1 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
@@ -24,6 +23,15 @@ internal val sdf5 = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
 @SuppressLint("ConstantLocale")
 internal val sdf6 = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+@SuppressLint("ConstantLocale")
+internal val sdf7 = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf8 = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf9 = SimpleDateFormat("HH:mm", Locale.getDefault())
+
 /**
  * Author: Michael Leo
  * Date: 20-8-17 下午4:06
@@ -37,9 +45,19 @@ fun Date.getToday(format: String) = SimpleDateFormat(format, Locale.getDefault()
 fun Date.formatToDateTimeDefaults(): String = sdf1.format(this)
 
 /**
+ * Pattern: yyyy-MM-dd HH:mm
+ */
+fun Date.formatToShortDateTimeDefaults(): String = sdf7.format(this)
+
+/**
  * Pattern: yyyyMMddHHmmss
  */
 fun Date.formatToTruncatedDateTime(): String = sdf2.format(this)
+
+/**
+ * Pattern: yyyyMMddHHmm
+ */
+fun Date.formatToTruncatedShortDateTime(): String = sdf8.format(this)
 
 /**
  * Pattern: yyyy-MM-dd
@@ -51,6 +69,13 @@ fun Date.formatToServerDateDefaults(): String = sdf3.format(this)
  */
 fun Date.formatToTimeDefaults(): String {
     return sdf4.format(this)
+}
+
+/**
+ * Pattern: HH:mm
+ */
+fun Date.formatToShortTimeDefaults(): String {
+    return sdf9.format(this)
 }
 
 /**

@@ -16,6 +16,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.cipher.AudioCipherActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
@@ -85,6 +86,7 @@ class BasicFragment : Fragment() {
             Pair("Finger Paint", FingerPaintActivity::class.java),
             Pair("Watermark", WatermarkActivity::class.java),
             Pair("Preference", PrefActivity::class.java),
+            Pair("Audio Cipher", AudioCipherActivity::class.java),
         )
 
         val colors = arrayOf(

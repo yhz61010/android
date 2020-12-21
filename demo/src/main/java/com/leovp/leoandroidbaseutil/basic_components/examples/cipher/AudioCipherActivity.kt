@@ -40,8 +40,6 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
             val tempMp3 = File.createTempFile("decrypted_temp_music_file", "mp3", cacheDir)
             tempMp3.deleteOnExit()
             FileOutputStream(tempMp3).use { it.write(mp3SoundByteArray) }
-            // Tried reusing instance of media player
-            // but that resulted in system crashes...
             val fis = FileInputStream(tempMp3)
             MediaPlayer().run {
                 setDataSource(fis.fd)
@@ -52,7 +50,6 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
     }
 
     fun onEncryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        // saveFile("Hello World")
         saveFile(resources.openRawResource(R.raw.music).readBytes())
         toast("onEncryptAudioClick")
     }

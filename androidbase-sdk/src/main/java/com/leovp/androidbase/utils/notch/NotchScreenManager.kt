@@ -14,13 +14,30 @@ import com.leovp.androidbase.utils.notch.impl.MiNotchScreen
 import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
 
 /**
- * Usage:
+ * Example1: Allow to render on notch area
  * ```kotlin
- * // Allow to render on notch area
  * NotchScreenManager.setDisplayInNotch(activity)
+ * ```
  *
- * // Get notch information
- * NotchScreenManager.getNotchInfo(activity, callback)
+ *
+ * Example2:
+ * Get notch information
+ * ```kotlin
+ * NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
+ *     override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
+ *         LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
+ *         notchScreenInfo.notchRects?.let {
+ *             val halfScreenWidth = getRealResolution().x / 2
+ *             if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
+ *                 LogContext.log.i(TAG, "Notch in Middle")
+ *             } else if (halfScreenWidth < it[0].left) {
+ *                 LogContext.log.i(TAG, "Notch in Right")
+ *             } else {
+ *                 LogContext.log.i(TAG, "Notch in Left")
+ *             }
+ *         }
+ *     }
+ * })
  * ```
  *
  * Author: Michael Leo

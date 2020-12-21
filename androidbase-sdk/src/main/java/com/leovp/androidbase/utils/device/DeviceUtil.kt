@@ -22,14 +22,16 @@ import java.io.File
 object DeviceUtil {
     private const val TAG = "DeviceUtil"
 
-    val osVersion: String? = Build.VERSION.RELEASE
+    val osVersion: String = Build.VERSION.RELEASE
     val osVersionSdkInt = Build.VERSION.SDK_INT
-    val deviceName: String? = Build.DEVICE
-    val brand: String? = Build.BRAND
-    val manufacturer: String? = Build.MANUFACTURER
-    val model: String? = Build.MODEL
-    val product: String? = Build.PRODUCT
-    val display: String? = Build.DISPLAY
+    val deviceName: String = Build.DEVICE
+    val brand: String = Build.BRAND
+    val board: String = Build.BOARD
+    val host: String = Build.HOST
+    val manufacturer: String = Build.MANUFACTURER
+    val model: String = Build.MODEL
+    val product: String = Build.PRODUCT
+    val display: String = Build.DISPLAY
     val cpuName = Build.HARDWARE
     val cpuQualifiedName =
         runCatching {
@@ -118,16 +120,19 @@ object DeviceUtil {
             App version: ${app.versionName}(${app.versionCode})
             Manufacturer: $manufacturer
             Brand: $brand
+            Board: $board
             OsVersion: $osVersion($osVersionSdkInt)
             DeviceName: $deviceName
             Model: $model
             Product: $product
+            Host: $host
             CPU: $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
             Supported ABIS: ${supportedCpuArchs.contentToString()}
             Display: $display
             Screen: ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage: ${(memInfo.second - memInfo.first).autoBinary()}/${memInfo.second.autoBinary()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
+            Fingerprint: ${Build.FINGERPRINT}
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}

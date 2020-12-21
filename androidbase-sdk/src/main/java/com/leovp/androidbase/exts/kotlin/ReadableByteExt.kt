@@ -97,7 +97,7 @@ fun Long.toEiB() = this * 1.0F / EiB
  * B -> XiB
  * Automatically convert Byte to the appropriate XiB.
  */
-fun Long.autoBinary() = when {
+fun Long.autoByteInBinary() = when {
     this < 0 -> null
     this >= EiB -> String.format("%.2fEiB", toEiB())
     this >= PiB -> String.format("%.2fPiB", toPiB())
@@ -112,7 +112,7 @@ fun Long.autoBinary() = when {
  * B -> XB
  * Automatically convert Byte to the appropriate XB.
  */
-fun Long.autoDecimal() = when {
+fun Long.autoByteInDecimal() = when {
     this < 0 -> null
     this >= EB -> String.format("%.2fEB", toEB())
     this >= PB -> String.format("%.2fPB", toPB())
@@ -128,7 +128,7 @@ fun Long.autoDecimal() = when {
  * Automatically convert Byte to the appropriate XB/XiB.
  * @param decimal true -> B -> XB; false -> B -> XiB
  */
-fun Long.auto(decimal: Boolean) = if (decimal) autoDecimal() else autoBinary()
+fun Long.autoFormatByte(decimal: Boolean) = if (decimal) autoByteInDecimal() else autoByteInBinary()
 
 // Formatter.formatShortFileSize(ctx, bytes)
 fun Long.humanReadableByteCount(si: Boolean = false): String {
@@ -138,3 +138,5 @@ fun Long.humanReadableByteCount(si: Boolean = false): String {
     val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1].toString()
     return "%.1f%s".format(this / unit.toDouble().pow(exp.toDouble()), pre)
 }
+
+fun Long.outputFormatByte() = "${autoByteInBinary()}(${autoByteInDecimal()})"

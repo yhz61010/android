@@ -1,12 +1,11 @@
 package com.leovp.androidbase.utils.cipher
 
+import androidx.annotation.IntRange
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
@@ -15,47 +14,19 @@ import javax.crypto.spec.SecretKeySpec
  */
 @Suppress("unused", "WeakerAccess")
 object AesUtil {
-    private const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
+    const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
 
-    // PBKDF2WithHmacSHA1: will produce a hash length of 160 bits
-    // PBKDF2WithHmacSHA512: will produce a hash length of 512 bits
-    private const val ALGORITHM_SHA = "PBKDF2WithHmacSHA512"
-
-    fun generateKey(): SecretKey {
+    /**
+     * @param outputKeyLengthInBits Default value 32 shl 3 = 256
+     * AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
+     */
+    fun generateKey(@IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3): SecretKey {
         return runCatching {
-            // Generate a 256-bit key
-            // AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
-            // 32 shl 3 = 256
-            val outputKeyLength = 32 shl 3
             val secureRandom = SecureRandom()
             // Do NOT seed secureRandom! Automatically seeded from system entropy.
             val keyGenerator = KeyGenerator.getInstance("AES")
-            keyGenerator.init(outputKeyLength, secureRandom)
+            keyGenerator.init(outputKeyLengthInBits, secureRandom)
             keyGenerator.generateKey()
-        }.getOrThrow()
-    }
-
-    /**
-     * val random = SecureRandom()
-     * val salt = ByteArray(24)
-     * random.nextBytes(salt)
-     */
-    fun generateKey(passphraseOrPin: CharArray, salt: ByteArray): SecretKey {
-        return runCatching {
-            // Number of PBKDF2 hardening rounds to use. Larger values increase
-            // computation time. You should select a value that causes computation
-            // to take >100ms.
-            val iterations = 1000
-
-            // Generate a 256-bit key
-            // AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
-            // 32 shl 3 = 256
-            val outputKeyLength = 32 shl 3
-            // PBKDF2WithHmacSHA1
-            // PBKDF2WithHmacSHA512
-            val secretKeyFactory = SecretKeyFactory.getInstance(ALGORITHM_SHA)
-            val keySpec = PBEKeySpec(passphraseOrPin, salt, iterations, outputKeyLength)
-            secretKeyFactory.generateSecret(keySpec)
         }.getOrThrow()
     }
 

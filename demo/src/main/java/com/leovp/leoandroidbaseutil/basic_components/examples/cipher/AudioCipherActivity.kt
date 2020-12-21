@@ -37,18 +37,17 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
     private fun playMP3(mp3SoundByteArray: ByteArray) {
         runCatching {
             // Create temp file that will hold byte array
-            val tempMp3: File = File.createTempFile("decrypted_temp_music_file", "mp3", cacheDir)
+            val tempMp3 = File.createTempFile("decrypted_temp_music_file", "mp3", cacheDir)
             tempMp3.deleteOnExit()
-            val fos = FileOutputStream(tempMp3)
-            fos.write(mp3SoundByteArray)
-            fos.close()
+            FileOutputStream(tempMp3).use { it.write(mp3SoundByteArray) }
             // Tried reusing instance of media player
             // but that resulted in system crashes...
-            val mediaPlayer = MediaPlayer()
             val fis = FileInputStream(tempMp3)
-            mediaPlayer.setDataSource(fis.fd)
-            mediaPlayer.prepare()
-            mediaPlayer.start()
+            MediaPlayer().run {
+                setDataSource(fis.fd)
+                prepare()
+                start()
+            }
         }.onFailure { it.printStackTrace() }
     }
 

@@ -1,6 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
+import com.leovp.androidbase.exts.android.getRealResolution
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -26,6 +27,16 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
             override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
                 LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
+                notchScreenInfo.notchRects?.let {
+                    val halfScreenWidth = getRealResolution().x / 2
+                    if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
+                        LogContext.log.i(TAG, "Notch in Middle")
+                    } else if (halfScreenWidth < it[0].left) {
+                        LogContext.log.i(TAG, "Notch in Right")
+                    } else {
+                        LogContext.log.i(TAG, "Notch in Left")
+                    }
+                }
             }
         })
     }

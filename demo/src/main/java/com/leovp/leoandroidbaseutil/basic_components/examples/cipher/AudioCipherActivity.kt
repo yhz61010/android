@@ -5,22 +5,16 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.View
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.utils.cipher.AesUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import java.io.*
-import java.security.SecureRandom
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.PBEKeySpec
-import javax.crypto.spec.SecretKeySpec
 
 class AudioCipherActivity : BaseDemonstrationActivity() {
     companion object {
         private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
-        private const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
+
     }
 
     private var secretKey: SecretKey? = null
@@ -30,81 +24,21 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_audio_cipher)
     }
 
-    private fun generateKey(passphraseOrPin: CharArray, salt: ByteArray): SecretKey? {
-        return runCatching {
-            // Number of PBKDF2 hardening rounds to use. Larger values increase
-            // computation time. You should select a value that causes computation
-            // to take >100ms.
-            val iterations = 1000
-
-            // Generate a 256-bit key
-            val outputKeyLength = 256
-            val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-            val keySpec = PBEKeySpec(passphraseOrPin, salt, iterations, outputKeyLength)
-            secretKeyFactory.generateSecret(keySpec)
-        }.getOrElse {
-            it.printStackTrace()
-            null
-        }
-    }
-
-    private fun generateKey(): SecretKey? {
-        return runCatching {
-            // Generate a 256-bit key
-            val outputKeyLength = 256
-            val secureRandom = SecureRandom()
-            // Do NOT seed secureRandom! Automatically seeded from system entropy.
-            val keyGenerator = KeyGenerator.getInstance("AES")
-            keyGenerator.init(outputKeyLength, secureRandom)
-            secretKey = keyGenerator.generateKey()
-            secretKey
-        }.getOrElse {
-            it.printStackTrace()
-            null
-        }
-    }
-
-    private fun encodeFile(secretKey: SecretKey, fileData: ByteArray): ByteArray? {
-        return runCatching {
-            val data = secretKey.encoded
-            val secKeySpec = SecretKeySpec(data, 0, data.size, ALGORITHM_AES)
-            val cipher: Cipher = Cipher.getInstance(ALGORITHM_AES)
-            cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
-            cipher.doFinal(fileData)
-        }.getOrElse {
-            it.printStackTrace()
-            null
-        }
-    }
-
-    private fun decodeAndPlayMP3File(secretKey: SecretKey, fileData: ByteArray): ByteArray? {
-        return runCatching {
-            val cipher: Cipher = Cipher.getInstance(ALGORITHM_AES)
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(cipher.blockSize)))
-            cipher.doFinal(fileData)
-        }.getOrElse {
-            it.printStackTrace()
-            null
-        }
-    }
-
     private fun saveFile(stringToSave: ByteArray) {
         runCatching {
             val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, ENCRYPTED_MP3_FILE_NAME)
             val bos = BufferedOutputStream(FileOutputStream(file))
-            secretKey = generateKey()
-            val filesBytes = encodeFile(secretKey!!, stringToSave)
+            secretKey = AesUtil.generateKey()
+            val filesBytes = AesUtil.encode(secretKey!!, stringToSave)
             bos.write(filesBytes)
             bos.flush()
             bos.close()
         }.onFailure { it.printStackTrace() }
     }
 
-    private fun decodeAndPlayMP3File(mp3File: File) {
-        runCatching { playMP3(decodeAndPlayMP3File(secretKey!!, readMP3File(mp3File))) }.onFailure { it.printStackTrace() }
+    private fun decode(mp3File: File) {
+        runCatching { playMP3(AesUtil.decode(secretKey!!, FileInputStream(mp3File).use { it.readBytes() })) }.onFailure { it.printStackTrace() }
     }
-
-    private fun readMP3File(mp3File: File): ByteArray = FileInputStream(mp3File).use { it.readBytes() }
 
     private fun getAudioFile(): ByteArray? {
         return try {
@@ -150,7 +84,7 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
 
     fun onDecryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, ENCRYPTED_MP3_FILE_NAME)
-        decodeAndPlayMP3File(file)
+        decode(file)
         toast("onDecryptAudioClick")
     }
 }

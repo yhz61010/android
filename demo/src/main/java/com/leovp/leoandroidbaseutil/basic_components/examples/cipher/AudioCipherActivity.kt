@@ -19,8 +19,8 @@ import javax.crypto.spec.SecretKeySpec
 
 class AudioCipherActivity : BaseDemonstrationActivity() {
     companion object {
-        private const val encryptedFileName = "encrypted_audio.mp3"
-        private const val algorithm = "AES"
+        private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
+        private const val ALGORITHM_AES = "AES/CBC/PKCS5Padding"
     }
 
     private var secretKey: SecretKey? = null
@@ -42,7 +42,10 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
             val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
             val keySpec = PBEKeySpec(passphraseOrPin, salt, iterations, outputKeyLength)
             secretKeyFactory.generateSecret(keySpec)
-        }.getOrNull()
+        }.getOrElse {
+            it.printStackTrace()
+            null
+        }
     }
 
     private fun generateKey(): SecretKey? {
@@ -55,30 +58,39 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
             keyGenerator.init(outputKeyLength, secureRandom)
             secretKey = keyGenerator.generateKey()
             secretKey
-        }.getOrNull()
+        }.getOrElse {
+            it.printStackTrace()
+            null
+        }
     }
 
     private fun encodeFile(secretKey: SecretKey, fileData: ByteArray): ByteArray? {
         return runCatching {
             val data = secretKey.encoded
-            val secKeySpec = SecretKeySpec(data, 0, data.size, algorithm)
-            val cipher: Cipher = Cipher.getInstance(algorithm)
+            val secKeySpec = SecretKeySpec(data, 0, data.size, ALGORITHM_AES)
+            val cipher: Cipher = Cipher.getInstance(ALGORITHM_AES)
             cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
             cipher.doFinal(fileData)
-        }.getOrNull()
+        }.getOrElse {
+            it.printStackTrace()
+            null
+        }
     }
 
-    private fun decodeFile(secretKey: SecretKey, fileData: ByteArray): ByteArray? {
+    private fun decodeAndPlayMP3File(secretKey: SecretKey, fileData: ByteArray): ByteArray? {
         return runCatching {
-            val cipher: Cipher = Cipher.getInstance(algorithm)
+            val cipher: Cipher = Cipher.getInstance(ALGORITHM_AES)
             cipher.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(cipher.blockSize)))
             cipher.doFinal(fileData)
-        }.getOrNull()
+        }.getOrElse {
+            it.printStackTrace()
+            null
+        }
     }
 
     private fun saveFile(stringToSave: ByteArray) {
         runCatching {
-            val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, encryptedFileName)
+            val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, ENCRYPTED_MP3_FILE_NAME)
             val bos = BufferedOutputStream(FileOutputStream(file))
             secretKey = generateKey()
             val filesBytes = encodeFile(secretKey!!, stringToSave)
@@ -88,36 +100,11 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
         }.onFailure { it.printStackTrace() }
     }
 
-    private fun decodeFile() {
-        try {
-            val decodedData = decodeFile(secretKey!!, readFile()!!)
-            // String str = new String(decodedData);
-            //System.out.println("DECODED FILE CONTENTS : " + str);
-            playMp3(decodedData)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            e.printStackTrace()
-        }
+    private fun decodeAndPlayMP3File(mp3File: File) {
+        runCatching { playMP3(decodeAndPlayMP3File(secretKey!!, readMP3File(mp3File))) }.onFailure { it.printStackTrace() }
     }
 
-    private fun readFile(): ByteArray? {
-        val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, encryptedFileName)
-        val size = file.length().toInt()
-        val contents = ByteArray(size)
-        try {
-            val buf = BufferedInputStream(FileInputStream(file))
-            try {
-                buf.read(contents)
-                buf.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-            return null
-        }
-        return contents
-    }
+    private fun readMP3File(mp3File: File): ByteArray = FileInputStream(mp3File).use { it.readBytes() }
 
     private fun getAudioFile(): ByteArray? {
         return try {
@@ -137,9 +124,9 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private fun playMp3(mp3SoundByteArray: ByteArray?) {
+    private fun playMP3(mp3SoundByteArray: ByteArray?) {
         runCatching {
-            // create temp file that will hold byte array
+            // Create temp file that will hold byte array
             val tempMp3: File = File.createTempFile("temp", "mp3", cacheDir)
             tempMp3.deleteOnExit()
             val fos = FileOutputStream(tempMp3)
@@ -156,13 +143,14 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
     }
 
     fun onEncryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        //saveFile("Hello From CoderzHeaven asaksjalksjals")
+        // saveFile("Hello World")
         saveFile(getAudioFile()!!)
         toast("onEncryptAudioClick")
     }
 
     fun onDecryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        decodeFile()
+        val file = File(Environment.getExternalStorageDirectory().absolutePath + File.separator, ENCRYPTED_MP3_FILE_NAME)
+        decodeAndPlayMP3File(file)
         toast("onDecryptAudioClick")
     }
 }

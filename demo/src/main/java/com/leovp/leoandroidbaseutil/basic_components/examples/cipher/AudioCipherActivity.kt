@@ -20,7 +20,7 @@ import javax.crypto.spec.SecretKeySpec
 class AudioCipherActivity : BaseDemonstrationActivity() {
     companion object {
         private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
-        private const val ALGORITHM_AES = "AES/CBC/PKCS5Padding"
+        private const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
     }
 
     private var secretKey: SecretKey? = null
@@ -53,7 +53,7 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
             // Generate a 256-bit key
             val outputKeyLength = 256
             val secureRandom = SecureRandom()
-            // Do *not* seed secureRandom! Automatically seeded from system entropy.
+            // Do NOT seed secureRandom! Automatically seeded from system entropy.
             val keyGenerator = KeyGenerator.getInstance("AES")
             keyGenerator.init(outputKeyLength, secureRandom)
             secretKey = keyGenerator.generateKey()

@@ -117,20 +117,20 @@ object DeviceUtil {
             val navBarHeight = app.navigationBarHeight
             """
             Device basic information:
-            App version : ${app.versionName}(${app.versionCode})
-            Manufacturer: $manufacturer
-            Brand       : $brand
-            Board       : $board
-            OsVersion   : $osVersion($osVersionSdkInt)
-            DeviceName  : $deviceName
-            Model       : $model
-            Product     : $product
-            Host        : $host
-            CPU         : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
-            Supported ABIS: ${supportedCpuArchs.contentToString()}
-            Display     : $display
-            Screen      : ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
-            MemoryUsage : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
+            App version     : ${app.versionName}(${app.versionCode})
+            Manufacturer    : $manufacturer
+            Brand           : $brand
+            Board           : $board
+            OsVersion       : $osVersion($osVersionSdkInt)
+            DeviceName      : $deviceName
+            Model           : $model
+            Product         : $product
+            Host            : $host
+            CPU             : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            Supported ABIS  : ${supportedCpuArchs.contentToString()}
+            Display         : $display
+            Screen          : ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio.round()})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
+            MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}
             IMEI:

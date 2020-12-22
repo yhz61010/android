@@ -3,7 +3,7 @@ package com.leovp.audio.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.androidbase.exts.kotlin.toHexadecimalString
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.recorder.BuildConfig
 import java.nio.ByteBuffer
@@ -32,7 +32,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
     fun start() {
         LogContext.log.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
 //        csd0 = getAudioEncodingCsd0(PROFILE_AAC_LC, sampleRate, channelCount)!!
-//        LogContext.log.w(TAG, "Audio csd0=${csd0.toHexadecimalString()}")
+//        LogContext.log.w(TAG, "Audio csd0=${csd0.toHexStringLE()}")
         aacEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
         val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
         with(mediaFormat) {
@@ -84,7 +84,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)
                             outputBuffer.get(csd0!!)
-                            LogContext.log.i(TAG, "csd0=${csd0?.toHexadecimalString()}")
+                            LogContext.log.i(TAG, "csd0=${csd0?.toHexStringLE()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit

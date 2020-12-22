@@ -135,7 +135,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray) {
-        LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexadecimalString()} pps=${pps.toHexadecimalString()}")
+        LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
         this.sps = sps
         this.pps = pps
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
@@ -180,7 +180,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
-                            LogContext.log.w(ITAG, "Found SPS/PPS frame: ${decodedData.toHexadecimalString()}")
+                            LogContext.log.w(ITAG, "Found SPS/PPS frame: ${decodedData.toHexStringLE()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {

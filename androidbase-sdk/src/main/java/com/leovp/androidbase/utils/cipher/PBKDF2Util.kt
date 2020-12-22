@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import java.security.SecureRandom
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
@@ -55,4 +56,6 @@ object PBKDF2Util {
         random.nextBytes(salt)
         return generateKey(plainPassphraseOrPin, salt, iterations, outputKeyLengthInBits)
     }
+
+    fun hash(plainText: String): String = generateKey(plainText.toCharArray()).encoded.toHexStringLE(true, "")
 }

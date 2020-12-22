@@ -267,7 +267,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                     }
                     frameCount.set(0)
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
-                    LogContext.log.w(TAG, "Audio csd0=${csd0?.toHexStringLE()}")
+                    LogContext.log.w(TAG, "Audio csd0=HEX[${csd0?.toHexStringLE()}]")
                     initAudioDecoder(csd0!!)
                     initAudioTrack(ctx)
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000

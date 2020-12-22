@@ -84,7 +84,7 @@ class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private 
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)
                             outputBuffer.get(csd0!!)
-                            LogContext.log.i(TAG, "csd0=${csd0?.toHexStringLE()}")
+                            LogContext.log.i(TAG, "csd0=HEX[${csd0?.toHexStringLE()}]")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit

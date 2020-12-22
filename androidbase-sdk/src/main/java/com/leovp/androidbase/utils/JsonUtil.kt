@@ -86,19 +86,21 @@ object JsonUtil {
      * @param bytes the object for which JSON representation is to be created
      * @return Returns `Hex string in big endian` or `[]` if serializing failed.
      */
-    fun toHexadecimalString(bytes: ByteArray?): String {
+    @Deprecated(
+        "This method is not efficiency. Use ByteArray.toHexStringLE() instead",
+        ReplaceWith("toHexStringLE(addPadding, delimiter)", "com.leovp.androidbase.exts.kotlin.toHexStringLE")
+    )
+    fun toHexadecimalString(bytes: ByteArray?, addPadding: Boolean = false, delimiter: CharSequence = ","): String {
         if (bytes == null || bytes.isEmpty()) {
-            return "[]"
+            return ""
         }
         try {
             val sb = StringBuilder()
-            sb.append("HEX[")
             for (b in bytes) {
-                sb.append(b.toHexString())
-                sb.append(',')
+                sb.append(b.toHexString(addPadding))
+                if (delimiter.isNotEmpty()) sb.append(delimiter)
             }
             sb.deleteCharAt(sb.length - 1)
-            sb.append(']')
             return sb.toString()
         } catch (ex: Exception) {
             LogContext.log.e(

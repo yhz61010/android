@@ -5,7 +5,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
-import com.leovp.androidbase.exts.kotlin.toHexadecimalString
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.listeners.CallbackListener
@@ -118,7 +118,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
-                            LogContext.log.w(TAG, "Found SPS/PPS frame: ${csd?.toHexadecimalString()}")
+                            LogContext.log.w(TAG, "Found SPS/PPS frame: ${csd?.toHexStringLE()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {

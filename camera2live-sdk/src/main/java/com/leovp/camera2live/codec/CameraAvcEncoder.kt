@@ -118,7 +118,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
-                            LogContext.log.w(TAG, "Found SPS/PPS frame: ${csd?.toHexStringLE()}")
+                            LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexStringLE()}]")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {

@@ -3,6 +3,7 @@ package com.leovp.audio.aac
 import android.content.Context
 import android.media.*
 import android.os.SystemClock
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.JsonUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.bean.AudioDecoderInfo
@@ -266,7 +267,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                     }
                     frameCount.set(0)
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
-                    LogContext.log.w(TAG, "Audio csd0=${JsonUtil.toHexadecimalString(csd0)}")
+                    LogContext.log.w(TAG, "Audio csd0=${csd0?.toHexStringLE()}")
                     initAudioDecoder(csd0!!)
                     initAudioTrack(ctx)
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000

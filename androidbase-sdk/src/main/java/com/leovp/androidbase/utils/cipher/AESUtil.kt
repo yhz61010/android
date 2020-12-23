@@ -33,7 +33,7 @@ object AESUtil {
     /**
      * @param data Bytes to be encrypted
      */
-    fun encode(secretKey: SecretKey, data: ByteArray): ByteArray {
+    fun encrypt(secretKey: SecretKey, data: ByteArray): ByteArray {
         return runCatching {
             val encodedKeyBytes = secretKey.encoded
             val secKeySpec = SecretKeySpec(encodedKeyBytes, 0, encodedKeyBytes.size, ALGORITHM_AES)
@@ -46,7 +46,7 @@ object AESUtil {
     /**
      * @param data Bytes to be decoded
      */
-    fun decode(secretKey: SecretKey, data: ByteArray): ByteArray {
+    fun decrypt(secretKey: SecretKey, data: ByteArray): ByteArray {
         return runCatching {
             Cipher.getInstance(ALGORITHM_AES).run {
                 init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(blockSize)))

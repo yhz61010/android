@@ -11,7 +11,7 @@ package com.leovp.androidbase
  *         // Init using context argument
  *         context.getString(R.string.app_name)
  *     }
- * companion object : SingletonHolder<SomeSingleton, Context>(::SomeSingleton)
+ *     companion object : SingletonHolder<SomeSingleton, Context>(::SomeSingleton)
  * }
  * ```
  */

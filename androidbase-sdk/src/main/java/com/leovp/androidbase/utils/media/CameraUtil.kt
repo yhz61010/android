@@ -10,6 +10,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
+import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import java.util.*
@@ -107,10 +108,10 @@ object CameraUtil {
     @TargetApi(19)
     fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
         val selectedImage: MutableList<String> = ArrayList()
-        data?.data?.let { url -> FileUtil.getImageRealFilePath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) } }
+        data?.data?.let { url -> FileDocumentUtil.getFileRealPath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) } }
         data?.clipData?.let {
             for (i in 0 until it.itemCount) {
-                FileUtil.getImageRealFilePath(ctx, it.getItemAt(i).uri)?.let { selectedImage.add(it) }
+                FileDocumentUtil.getFileRealPath(ctx, it.getItemAt(i).uri)?.let { selectedImage.add(it) }
             }
         }
         return selectedImage

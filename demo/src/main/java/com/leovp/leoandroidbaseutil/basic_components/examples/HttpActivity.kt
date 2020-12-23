@@ -100,7 +100,7 @@ class HttpActivity : BaseDemonstrationActivity() {
             }
         }
 
-        val fileFullPath = ResourcesUtil.saveRawResourceToFile(resources, R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
+        val fileFullPath = ResourcesUtil.saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
         val sourceFile = File(fileFullPath)
         val mimeType = getMimeType(sourceFile)
         if (mimeType == null) {

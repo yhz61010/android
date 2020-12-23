@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.system
 
-import android.content.res.Resources
+import androidx.annotation.RawRes
+import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.file.FileUtil
 import java.io.File
 import java.io.InputStream
@@ -11,14 +12,14 @@ import java.nio.charset.StandardCharsets
  * Date: 20-7-30 下午7:14
  */
 object ResourcesUtil {
-    fun readAssetsFileAsString(resources: Resources, subdirectory: String?, filename: String): String {
-        return resources.assets.open(if (subdirectory.isNullOrBlank()) filename else "$subdirectory${File.separatorChar}$filename").use {
+    fun readAssetsFileAsString(subdirectory: String?, filename: String): String {
+        return app.resources.assets.open(if (subdirectory.isNullOrBlank()) filename else "$subdirectory${File.separatorChar}$filename").use {
             it.readBytes().toString(StandardCharsets.UTF_8)
         }
     }
 
-    fun saveRawResourceToFile(resources: Resources, id: Int, storagePath: String, fileName: String): String {
-        val inputStream: InputStream = resources.openRawResource(id)
+    fun saveRawResourceToFile(@RawRes id: Int, storagePath: String, fileName: String): String {
+        val inputStream: InputStream = app.resources.openRawResource(id)
         val file = File(storagePath)
         if (!file.exists()) {
             file.mkdirs()

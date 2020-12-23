@@ -5,10 +5,10 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
+import com.leovp.androidbase.exts.android.utils.ResourcesUtil
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
-import com.leovp.androidbase.utils.system.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base.DecoderVideoFileManager

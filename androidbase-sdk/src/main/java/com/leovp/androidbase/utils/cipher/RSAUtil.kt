@@ -17,11 +17,9 @@ object RSAUtil {
     private const val KEY_SIZE = 2048
     private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 11
 
-    @Suppress("unused")
     private const val MAX_DECRYPT_LEN = KEY_SIZE / 8
 
     // The RSA key MUST BE 2048 bits or higher.
-    @Suppress("unused")
     fun decrypt(pubKey: String, encryptedData: ByteArray?): String? {
         return try {
             val keyBytes = Base64.decode(pubKey.toByteArray(), Base64.NO_WRAP)
@@ -38,7 +36,6 @@ object RSAUtil {
     }
 
     // The RSA key MUST BE 2048 bits or higher.
-    @Suppress("unused")
     fun encrypt(priKey: String, plainText: String): String? {
         return try {
             val data =
@@ -55,7 +52,6 @@ object RSAUtil {
     }
 
     // The RSA key MUST BE 2048 bits or higher.
-    @Suppress("unused")
     fun encryptStringByFragment(priKey: String, wholeText: String): String? {
         return if (wholeText.length > MAX_ENCRYPT_LEN) {
             val str1 = wholeText.substring(0, MAX_ENCRYPT_LEN)
@@ -70,7 +66,6 @@ object RSAUtil {
     }
 
     // The RSA key MUST BE 2048 bits or higher.
-    @Suppress("unused")
     fun decryptStringByFragment(pubKey: String, wholeText: String): String {
         val result = StringBuilder()
         val configParts = wholeText.split("\n").toTypedArray()

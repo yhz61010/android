@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
 import androidx.annotation.Keep
+import com.leovp.androidbase.exts.android.utils.ResourcesUtil
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.http.retrofit.ApiService
@@ -13,7 +14,6 @@ import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
 import com.leovp.androidbase.http.retrofit.observers.NoProgressObserver
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.system.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import io.reactivex.Observable

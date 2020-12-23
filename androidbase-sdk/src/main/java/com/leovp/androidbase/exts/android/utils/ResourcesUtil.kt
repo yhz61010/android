@@ -1,4 +1,4 @@
-package com.leovp.androidbase.utils.system
+package com.leovp.androidbase.exts.android.utils
 
 import androidx.annotation.RawRes
 import com.leovp.androidbase.exts.android.app

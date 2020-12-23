@@ -13,7 +13,7 @@ import javax.crypto.Cipher
  * Date: 19-12-30 下午6:23
  */
 @Suppress("unused")
-object RsaUtil {
+object RSAUtil {
     private const val KEY_SIZE = 2048
     private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 11
 

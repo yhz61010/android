@@ -34,7 +34,7 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 uiScope.launch {
                     val rawFileFullPath = withContext(Dispatchers.IO) {
-                        saveRawResourceToFile(resources, R.raw.tears_400_x265_raw, getExternalFilesDir(null)!!.absolutePath, "h265.h265")
+                        saveRawResourceToFile(R.raw.tears_400_x265_raw, getExternalFilesDir(null)!!.absolutePath, "h265.h265")
                     }
                     decoderManager.init(rawFileFullPath, 1920, 800, surface)
                     // In order to fix the SurfaceView blink problem,

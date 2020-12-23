@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.file
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
@@ -11,6 +12,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
+import androidx.core.content.FileProvider
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import java.io.FileOutputStream
@@ -22,15 +24,33 @@ import kotlin.math.min
  *
  * [Check this post](https://stackoverflow.com/a/50664805)
  */
-object FileUtils {
+@Suppress("unused", "WeakerAccess")
+object FileDocumentUtil {
+    /**
+     * Usage:
+     *
+     * ```xml
+     *  <provider
+     *   android:name="androidx.core.content.FileProvider"
+     *   android:authorities="${applicationId}.fileprovider"
+     *   android:exported="false"
+     *   android:grantUriPermissions="true">
+     *  <meta-data
+     *      android:name="android.support.FILE_PROVIDER_PATHS"
+     *      android:resource="@xml/path" />
+     * </provider>
+     * ```
+     */
+    fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(context, "${context.applicationContext.packageName}.fileprovider", file)
+
     @SuppressLint("NewApi", "ObsoleteSdkInt")
-    fun getPath(context: Context, uri: Uri): String? {
+    fun getFileRealPath(context: Context, uri: Uri): String? {
         // check here to KITKAT or new version
-        val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+        val aboveKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
         var selection: String? = null
         var selectionArgs: Array<String>? = null
         // DocumentProvider
-        if (isKitKat) {
+        if (aboveKitKat) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
@@ -102,16 +122,11 @@ object FileUtils {
                 val type = split[0]
                 var contentUri: Uri? = null
                 when (type) {
-                    "image" -> {
-                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    }
-                    "video" -> {
-                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    }
-                    "audio" -> {
-                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                    }
+                    "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 }
+                if (contentUri == null) return null
                 selection = "_id=?"
                 selectionArgs = arrayOf(split[1])
                 return getDataColumn(
@@ -133,7 +148,6 @@ object FileUtils {
                     return getDriveFilePath(context, uri)
                 }
                 return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
                     // return getFilePathFromURI(context,uri);
                     copyFileToInternalStorage(context, uri, "userfiles")
                     // return getRealPathFromURI(context,uri);
@@ -149,33 +163,28 @@ object FileUtils {
                 return getFilePathForWhatsApp(context, uri)
             }
             if ("content".equals(uri.scheme, ignoreCase = true)) {
-                val projection = arrayOf(
-                    MediaStore.Images.Media.DATA
-                )
-                try {
-                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use {
-                        val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                        if (it.moveToFirst()) {
-                            return it.getString(columnIndex)
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                return getDataColumn(context, uri, selection, selectionArgs)
             }
         }
         return null
     }
 
-    private fun fileExists(filePath: String): Boolean {
-        val file = File(filePath)
-        return file.exists()
+    fun resourceToUri(context: Context, resId: Int): Uri? {
+        return Uri.parse(
+            ContentResolver.SCHEME_ANDROID_RESOURCE
+                    + "://"
+                    + context.resources.getResourcePackageName(resId)
+                    + "/"
+                    + context.resources.getResourceTypeName(resId)
+                    + "/"
+                    + context.resources.getResourceEntryName(resId)
+        )
     }
 
     private fun getPathFromExtSD(pathData: Array<String>): String {
         val type = pathData[0]
         val relativePath = "/" + pathData[1]
-        var fullPath = ""
+        var fullPath: String
 
         // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
         // something like "71F8-2C0A", some kind of unique id per storage
@@ -184,7 +193,7 @@ object FileUtils {
         // so no "primary" type, but let the check here for other devices
         if ("primary".equals(type, ignoreCase = true)) {
             fullPath = Environment.getExternalStorageDirectory().toString() + relativePath
-            if (fileExists(fullPath)) {
+            if (FileUtil.fileExists(fullPath)) {
                 return fullPath
             }
         }
@@ -195,11 +204,11 @@ object FileUtils {
         // instead, for each possible path, check if file exists
         // we'll start with secondary storage as this could be our (physically) removable sd card
         fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
-        if (fileExists(fullPath)) {
+        if (FileUtil.fileExists(fullPath)) {
             return fullPath
         }
         fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
-        return if (fileExists(fullPath)) {
+        return if (FileUtil.fileExists(fullPath)) {
             fullPath
         } else fullPath
     }
@@ -230,11 +239,8 @@ object FileUtils {
                 while (inputStream.read(buffers).also { read = it } != -1) {
                     outputStream.write(buffers, 0, read)
                 }
-                LogContext.log.e("File Size", "Size " + file.length())
                 inputStream.close()
                 outputStream.close()
-                LogContext.log.e("File Path", "Path " + file.path)
-                LogContext.log.e("File Size", "Size " + file.length())
             } catch (e: Exception) {
                 LogContext.log.e("Exception", e.message!!)
             }
@@ -250,7 +256,7 @@ object FileUtils {
      * @return
      */
     private fun copyFileToInternalStorage(context: Context, uri: Uri, newDirName: String): String {
-        val returnCursor = context.contentResolver.query(
+        context.contentResolver.query(
             uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null
         )?.use { cursor ->
             /*
@@ -259,7 +265,7 @@ object FileUtils {
              *     * and display it.
              * */
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+//            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
             cursor.moveToFirst()
             val name = cursor.getString(nameIndex)
 //            val size = cursor.getLong(sizeIndex).toString()
@@ -296,37 +302,34 @@ object FileUtils {
         return copyFileToInternalStorage(context, uri, "whatsapp")
     }
 
-    private fun getDataColumn(context: Context, uri: Uri?, selection: String?, selectionArgs: Array<String>?): String? {
-        var cursor: Cursor? = null
-        val column = "_data"
-        val projection = arrayOf(column)
-        try {
-            cursor = context.contentResolver.query(
-                uri!!, projection,
-                selection, selectionArgs, null
-            )
-            if (cursor != null && cursor.moveToFirst()) {
-                val index = cursor.getColumnIndexOrThrow(column)
-                return cursor.getString(index)
-            }
-        } finally {
-            cursor?.close()
-        }
-        return null
-    }
-
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is ExternalStorageProvider.
+     */
     private fun isExternalStorageDocument(uri: Uri): Boolean {
         return "com.android.externalstorage.documents" == uri.authority
     }
 
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is DownloadsProvider.
+     */
     private fun isDownloadsDocument(uri: Uri): Boolean {
         return "com.android.providers.downloads.documents" == uri.authority
     }
 
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is MediaProvider.
+     */
     private fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
     }
 
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Google Photos.
+     */
     private fun isGooglePhotosUri(uri: Uri): Boolean {
         return "com.google.android.apps.photos.content" == uri.authority
     }
@@ -338,4 +341,95 @@ object FileUtils {
     private fun isGoogleDriveUri(uri: Uri): Boolean {
         return "com.google.android.apps.docs.storage" == uri.authority || "com.google.android.apps.docs.storage.legacy" == uri.authority
     }
+
+    private fun getDataColumn(context: Context, uri: Uri, selection: String?, selectionArgs: Array<String>?): String? {
+        val column = MediaStore.Images.Media.DATA // MediaStore.Images.Media.DATA // MediaStore.Images.Media._ID
+        val projection = arrayOf(column)
+        context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use {
+            if (it.moveToFirst()) return it.getString(it.getColumnIndexOrThrow(column))
+        }
+        return null
+    }
+
+    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getDataColumn(ctx, uri, selection, null)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+    private fun getImagePath(ctx: Context, uri: Uri, selection: String?): String? {
+        ctx.contentResolver.query(uri, null, selection, null, null)?.use {
+            if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
+        }
+        return null
+    }
+
+    // =================================================================
+
+    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getPath(ctx, uri)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+    fun getRealPath(ctx: Context, uri: Uri): String? {
+        var imagePath: String? = null
+        if (DocumentsContract.isDocumentUri(ctx, uri)) {
+            val docId = DocumentsContract.getDocumentId(uri)
+            if ("com.android.providers.media.documents" == uri.authority) {
+                val id = docId.split(":").toTypedArray()[1]
+                val selection = MediaStore.Images.Media._ID + "=" + id
+                imagePath = getImagePath(ctx, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection)
+            } else if ("com.android.providers.downloads.documents" == uri.authority) {
+                val contentUri =
+                    ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(docId))
+                imagePath = getImagePath(ctx, contentUri, null)
+            }
+        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+            imagePath = getImagePath(ctx, uri, null)
+        } else if ("file".equals(uri.scheme, ignoreCase = true)) {
+            imagePath = uri.path
+        }
+        return imagePath
+    }
+
+    // ===== Start =================================================
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun getPathFromUri(context: Context, uri: Uri): String? {
+//        val aboveKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+//
+//        // DocumentProvider
+//        if (aboveKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+//            // ExternalStorageProvider
+//            if (isExternalStorageDocument(uri)) {
+//                val docId = DocumentsContract.getDocumentId(uri)
+//                val split = docId.split(":".toRegex()).toTypedArray()
+//                val type = split[0]
+//                if ("primary".equals(type, ignoreCase = true)) {
+//                    return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+//                }
+//
+//                // TODO handle non-primary volumes
+//            } else if (isDownloadsDocument(uri)) {
+//                val id = DocumentsContract.getDocumentId(uri)
+//                val contentUri = ContentUris.withAppendedId(
+//                    Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
+//                )
+//                return getDataColumn(context, contentUri, null, null)
+//            } else if (isMediaDocument(uri)) {
+//                val docId = DocumentsContract.getDocumentId(uri)
+//                val split = docId.split(":".toRegex()).toTypedArray()
+//                val type = split[0]
+//                var contentUri: Uri? = null
+//                if ("image" == type) {
+//                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//                } else if ("video" == type) {
+//                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+//                } else if ("audio" == type) {
+//                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+//                }
+//                val selection = "_id=?"
+//                val selectionArgs = arrayOf(split[1])
+//                return getDataColumn(context, contentUri, selection, selectionArgs)
+//            }
+//        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+//
+//            // Return the remote address
+//            return if (isGooglePhotosUri(uri)) uri.lastPathSegment else getDataColumn(context, uri, null, null)
+//        } else if ("file".equals(uri.scheme, ignoreCase = true)) {
+//            return uri.path
+//        }
+//        return null
+//    }
+    // ===== End =================================================
 }

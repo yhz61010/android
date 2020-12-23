@@ -76,7 +76,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
                 val inputStream = contentResolver.openInputStream(it)!!
                 val outputStream = FileOutputStream(File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg"))
                 inputStream.copyTo(outputStream)
-                LogContext.log.i(TAG, "Image stream has been copy to FileOutputStream")
+                LogContext.log.i(TAG, "Image stream has been copied to FileOutputStream")
             }
         }
     }

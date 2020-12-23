@@ -28,7 +28,7 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
 
     private fun saveFile(dataToEncode: ByteArray) {
         runCatching {
-            val encodedData = AESUtil.encode(secretKey, dataToEncode)
+            val encodedData = AESUtil.encrypt(secretKey, dataToEncode)
             val encodedOutFile = File(getExternalFilesDir(null), ENCRYPTED_MP3_FILE_NAME)
             BufferedOutputStream(FileOutputStream(encodedOutFile)).use { it.write(encodedData) }
         }.onFailure { it.printStackTrace() }
@@ -56,7 +56,7 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
 
     fun onDecryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val mp3File = File(getExternalFilesDir(null), ENCRYPTED_MP3_FILE_NAME)
-        runCatching { playMP3(AESUtil.decode(secretKey, FileInputStream(mp3File).use { it.readBytes() })) }.onFailure { it.printStackTrace() }
+        runCatching { playMP3(AESUtil.decrypt(secretKey, FileInputStream(mp3File).use { it.readBytes() })) }.onFailure { it.printStackTrace() }
         toast("onDecryptAudioClick")
     }
 }

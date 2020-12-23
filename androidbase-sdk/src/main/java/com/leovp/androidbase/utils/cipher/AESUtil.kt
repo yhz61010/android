@@ -13,7 +13,7 @@ import javax.crypto.spec.SecretKeySpec
  * Date: 20-12-21 下午5:39
  */
 @Suppress("unused", "WeakerAccess")
-object AesUtil {
+object AESUtil {
     const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
 
     /**

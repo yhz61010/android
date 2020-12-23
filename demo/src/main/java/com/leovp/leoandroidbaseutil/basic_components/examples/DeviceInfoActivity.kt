@@ -2,8 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import com.leovp.androidbase.exts.android.getRealResolution
+import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.notch.INotchScreen

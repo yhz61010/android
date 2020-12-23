@@ -41,6 +41,19 @@ fun sp2px(spValue: Float, ctx: Context? = null): Int {
 }
 
 /**
+ * Converts an unpacked complex data value holding a dimension to its final floating point value.
+ *
+ * @param unit [TypedValue]
+ * TypedValue.COMPLEX_UNIT_DIP: dp -> px
+ * TypedValue.COMPLEX_UNIT_PT:  pt -> px
+ * TypedValue.COMPLEX_UNIT_MM:  mm -> px
+ * TypedValue.COMPLEX_UNIT_IN:  inch -> px
+ */
+@JvmOverloads
+fun px(value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP) = TypedValue.applyDimension(unit, value, app.resources.displayMetrics).toInt()
+
+
+/**
  * Get meta data in Activity or Application.<br></br>
  * Notice that, if you want to get meta data in Service or Broadcast using [.getMetaData] instead.
  *

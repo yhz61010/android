@@ -105,6 +105,7 @@ class SystemUiUtil(private val window: Window) {
      * 设置虚拟键颜色&主题
      * @param color 颜色
      */
+    @SuppressLint("NewApi")
     fun setNavigationBar(color: Int): SystemUiUtil {
         window.navigationBarColor = when {
             API.ABOVE_O -> color.apply { setNavigationBarStyle(this) }

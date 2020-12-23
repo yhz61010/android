@@ -8,6 +8,7 @@ import java.util.*
 /**
  * A set of color-related utility methods
  */
+@Suppress("unused")
 class ColorUtil(var color: Int) {
 
     /**

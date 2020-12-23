@@ -92,7 +92,7 @@ object PBKDF2Util {
 
     // =====================================
 
-    fun hash(plainText: String): String {
+    fun encrypt(plainText: String): String {
         val preSalt = ByteArray(DEFAULT_PRE_SALT_LENGTH)
         SecureRandom().nextBytes(preSalt)
         val preSaltHex = preSalt.toHexStringLE(true, "")

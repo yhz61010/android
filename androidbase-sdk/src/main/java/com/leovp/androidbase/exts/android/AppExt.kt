@@ -16,7 +16,7 @@ import android.os.Process
 import android.util.TypedValue
 import android.view.inputmethod.InputMethodManager
 import com.leovp.androidbase.BuildConfig
-import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
 import kotlin.system.exitProcess
@@ -105,7 +105,7 @@ fun installApk(file: File) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val downloadedApkUri = FileUtil.getFileUri(app, file)
+            val downloadedApkUri = FileDocumentUtil.getFileUri(app, file)
             intent.setDataAndType(downloadedApkUri, "application/vnd.android.package-archive")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

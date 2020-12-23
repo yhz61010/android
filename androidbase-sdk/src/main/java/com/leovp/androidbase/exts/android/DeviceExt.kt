@@ -10,8 +10,8 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.utils.device.DeviceProp
-import com.leovp.androidbase.utils.device.DeviceUtil
 import java.lang.reflect.Method
 import java.util.*
 
@@ -35,7 +35,10 @@ val isOnePlus: Boolean get() = VENDOR_ONEPLUS.equals(DeviceUtil.manufacturer, ig
 val isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.manufacturer, ignoreCase = true)
 val isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.manufacturer, ignoreCase = true)
 
-fun Context.getAvailableResolution(): Point {
+val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
+val Context.density get(): Float = this.resources.displayMetrics.density
+
+fun getAvailableResolution(): Point {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val wm = app.windowManager
         val width = wm.currentWindowMetrics.bounds.width()
@@ -52,7 +55,7 @@ fun Context.getAvailableResolution(): Point {
 //            display.getMetrics(displayMetrics)
 //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
 
-        val displayMetrics = this.resources.displayMetrics
+        val displayMetrics = app.resources.displayMetrics
         return runCatching { Point(displayMetrics.widthPixels, displayMetrics.heightPixels) }.getOrDefault(Point())
     }
 }
@@ -75,7 +78,7 @@ fun Activity.getRealResolution(): Point {
     return size
 }
 
-val Activity.screenWidth get() = getRealResolution().x
+val Activity.screenRealWidth get() = getRealResolution().x
 
 val Activity.screenRealHeight get() = getRealResolution().y
 

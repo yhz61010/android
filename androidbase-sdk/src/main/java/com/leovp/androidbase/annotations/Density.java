@@ -5,10 +5,6 @@ import androidx.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-/**
- * @author Sukcria Miksria
- * @version 2019/10/04
- */
 @IntDef({ Density.WIDTH_BASED, Density.HEIGHT_BASED, Density.LONG_SIDE_BASED, Density.SHORT_SIDE_BASED })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Density {

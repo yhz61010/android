@@ -10,7 +10,7 @@ import com.leovp.androidbase.exts.android.windowManager
 import com.leovp.androidbase.utils.system.API
 import kotlin.math.max
 
-class DimenUtil(private val context: Context) {
+class DimenUtil(context: Context) {
 
     private val resource: Resources = context.resources
 
@@ -46,7 +46,7 @@ class DimenUtil(private val context: Context) {
     val navigation: Int
         get() {
             val id = resource.getIdentifier("navigation_bar_height", "dimen", "android")
-            return if (id > 0) ResUtil(context).getPixel(id) else 0
+            return if (id > 0) resource.getDimensionPixelSize(id) else 0
         }
 
     /**
@@ -62,7 +62,7 @@ class DimenUtil(private val context: Context) {
     val status: Int
         get() {
             val id = resource.getIdentifier("status_bar_height", "dimen", "android")
-            return if (id > 0) ResUtil(context).getPixel(id) else 0
+            return if (id > 0) resource.getDimensionPixelSize(id) else 0
         }
 
     /**

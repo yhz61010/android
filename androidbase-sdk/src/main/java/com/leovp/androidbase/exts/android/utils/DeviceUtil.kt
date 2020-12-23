@@ -1,4 +1,4 @@
-package com.leovp.androidbase.utils.device
+package com.leovp.androidbase.exts.android.utils
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -112,7 +112,7 @@ object DeviceUtil {
             val st = SystemClock.elapsedRealtimeNanos()
             val memInfo = getMemInfoInBytes()
             val screenSize = act.getRealResolution()
-            val availableSize = app.getAvailableResolution()
+            val availableSize = getAvailableResolution()
             val statusBarHeight = app.statusBarHeight
             val navBarHeight = app.navigationBarHeight
             """

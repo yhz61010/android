@@ -7,7 +7,7 @@ import com.leovp.androidbase.utils.log.LogContext
  * Date: 20-5-13 下午3:39
  */
 fun fail(message: String): Nothing {
-    throw IllegalStateException(message)
+    throw IllegalArgumentException(message)
 }
 
 fun exception(message: String): Nothing {

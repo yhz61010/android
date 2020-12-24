@@ -4,13 +4,18 @@ import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.http.okhttp.HttpLoggingInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
 /**
  * Author: Michael Leo
  * Date: 20-5-27 下午8:41
  */
-abstract class BaseHttpRequest {
+abstract class BaseHttpRequest(private val certificateInputStream: InputStream? = null, trustHostNames: Array<String> = emptyArray()) {
+    init {
+        SslUtils.hostnames = trustHostNames
+    }
+
     val okHttpClient: OkHttpClient
         get() {
             val httpClientBuilder = OkHttpClient.Builder()
@@ -18,10 +23,17 @@ abstract class BaseHttpRequest {
                 .connectTimeout(DEFAULT_CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(DEFAULT_WRITE_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-                .sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
-                .hostnameVerifier(SslUtils.doNotVerifier)
                 .addInterceptor(getHeaderInterceptor())
                 .addInterceptor(logInterceptor)
+
+            if (certificateInputStream == null) {
+                httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
+                httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
+            } else {
+//                httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
+                val sslContext = SslUtils.getSSLContext(certificateInputStream)
+                httpClientBuilder.sslSocketFactory(sslContext.first, sslContext.second)
+            }
             return httpClientBuilder.build()
         }
 

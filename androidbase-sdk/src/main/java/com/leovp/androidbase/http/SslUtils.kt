@@ -15,6 +15,11 @@ import javax.net.ssl.*
  * Author: Michael Leo
  * Date: 19-10-22 上午10:03
  *
+ * If you want to verify server certificate, the following code must be called:
+ * ```kotlin
+ * SslUtils.certificateInputStream = assets.open("cert/certificate.pem")
+ * ```
+ *
  * Usage1 - HttpsURLConnection:
  * ```kotlin
  * SslUtils.trustAllHosts("TLS")
@@ -55,6 +60,25 @@ object SslUtils {
     fun trustAllHosts(protocol: String) {
         HttpsURLConnection.setDefaultSSLSocketFactory(createSocketFactory(protocol))
     }
+
+    /**
+     * This method must be called if you want to verify server certificate.
+     * ```kotlin
+     * SslUtils.certificateInputStream = assets.open("cert/certificate.pem")
+     * ```
+     *
+     * You can put your certification file in `assets` folder. Then call following codes to get input stream:
+     * ```kotlin
+     * resources.assets.open("cert/certificate.pem")
+     * ```
+     * or you can get certification string, then call following codes to get input stream:
+     * ```kotlin
+     * okio.Buffer()
+     *     .writeUtf8("Cer string")
+     *     .inputStream()
+     * ```
+     */
+    var certificateInputStream: InputStream? = null
 
     var hostnames: Array<String>? = null
 

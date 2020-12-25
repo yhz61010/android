@@ -66,6 +66,10 @@ object SslUtils {
      * ```kotlin
      * SslUtils.certificateInputStream = assets.open("cert/certificate.pem")
      * ```
+     * For self-signed certificate, you must set valid hostnames:
+     * ```kotlin
+     * SslUtils.hostnames = arrayOf("postman-echo.com")
+     * ```
      *
      * You can put your certification file in `assets` folder. Then call following codes to get input stream:
      * ```kotlin
@@ -80,6 +84,12 @@ object SslUtils {
      */
     var certificateInputStream: InputStream? = null
 
+    /**
+     * For self-signed certificate, you must set valid hostnames:
+     * ```kotlin
+     * SslUtils.hostnames = arrayOf("postman-echo.com")
+     * ```
+     */
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->

@@ -54,7 +54,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 ToastUtil.showDebugToast("onDisconnect")
             }
 
-            override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?) {
+            override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
                 LogContext.log.w(TAG, "onFailed code: $code message: $msg")
                 ToastUtil.showDebugToast("onFailed code: $code message: $msg")
             }

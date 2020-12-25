@@ -225,7 +225,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
 //            e.printStackTrace()
             connectState.set(ClientConnectStatus.FAILED)
-            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message)
+            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
             doRetry()
         }
     }

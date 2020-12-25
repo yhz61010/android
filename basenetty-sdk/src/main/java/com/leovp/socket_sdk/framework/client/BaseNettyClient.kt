@@ -312,14 +312,16 @@ abstract class BaseNettyClient protected constructor(
         defaultInboundHandler = null
         channelInitializer = null
 
-        channel.run {
-            LogContext.log.w(tag, "Closing channel...")
-            runCatching {
-                pipeline().removeAll { true }
+        if (::channel.isInitialized) {
+            channel.run {
+                LogContext.log.w(tag, "Closing channel...")
+                runCatching {
+                    pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-                closeFuture()
-                close().syncUninterruptibly()
-            }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
+                    closeFuture()
+                    close().syncUninterruptibly()
+                }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
+            }
         }
 
         runCatching {
@@ -405,11 +407,16 @@ abstract class BaseNettyClient protected constructor(
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
-        if (isWebSocket) {
-            if (isPing) channel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+        if (::channel.isInitialized) {
+            if (isWebSocket) {
+                if (isPing) channel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
+                else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            } else {
+                channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+            }
         } else {
-            channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
+            LogContext.log.e(tag, "Property 'channel' is not initialized.")
+            return false
         }
         return true
     }

@@ -25,6 +25,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
         app = this
         instance = this
 
+//        SslUtils.certificateInputStream = assets.open("cert/certificate.pem")
+
         ForegroundComponent.init(this, 0L)
 
 //        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE)

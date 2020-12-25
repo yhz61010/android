@@ -34,7 +34,7 @@ class HttpActivity : BaseDemonstrationActivity() {
     }
 
     interface CommonService {
-        @GET("/data/sk/{id}.html")
+        @GET("/status/{id}")
         fun getData(@Path("id") param: String): Observable<WeatherInfoResult>
 
         @FormUrlEncoded
@@ -60,8 +60,8 @@ class HttpActivity : BaseDemonstrationActivity() {
                 txtResult.text = t?.toJsonString()
             }
         }
-        val service = ApiService.getService("http://www.weather.com.cn", CommonService::class.java)
-        ApiSubscribe.subscribe(service.getData("101070201"), NoProgressObserver(observer))
+        val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
+        ApiSubscribe.subscribe(service.getData("200"), NoProgressObserver(observer))
     }
 
     @SuppressLint("SetTextI18n")

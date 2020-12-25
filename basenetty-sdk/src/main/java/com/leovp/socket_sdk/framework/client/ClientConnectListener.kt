@@ -18,7 +18,7 @@ interface ClientConnectListener<in T : BaseNetty> {
      */
     fun onReceivedData(netty: T, data: Any?, action: Int = -1) {}
     fun onDisconnected(netty: T)
-    fun onFailed(netty: T, code: Int, msg: String?)
+    fun onFailed(netty: T, code: Int, msg: String?, e: Throwable? = null)
 
     companion object {
         private const val CONNECTION_ERROR_BASE_CODE = 0x1000 // 4096

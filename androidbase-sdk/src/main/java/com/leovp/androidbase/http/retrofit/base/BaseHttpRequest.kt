@@ -28,7 +28,7 @@ abstract class BaseHttpRequest {
 //                httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
                 requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })
                 val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
-                httpClientBuilder.sslSocketFactory(sslContext.first, sslContext.second)
+                httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
             }
             return httpClientBuilder.build()
         }

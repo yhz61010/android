@@ -1,6 +1,7 @@
 package com.leovp.socket_sdk.framework.client
 
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
+import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
@@ -25,6 +26,7 @@ import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.SslHandler
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.stream.ChunkedWriteHandler
 import kotlinx.coroutines.*
@@ -111,9 +113,19 @@ abstract class BaseNettyClient protected constructor(
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
                         if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                            LogContext.log.w(tag, "Working in wss mode")
-                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-                            addFirst(sslCtx.newHandler(socketChannel.alloc(), host, port))
+                            if (SslUtils.certificateInputStream == null) {
+                                LogContext.log.w(tag, "Working in wss INSECURE mode")
+                                val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                                addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
+                            } else {
+                                LogContext.log.w(tag, "Working in wss SECURE mode")
+                                requireNotNull("In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream.")
+                                val sslContextPair = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
+                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
+                                    useClientMode = true
+                                }
+                                addFirst("ssl", SslHandler(sslEngine))
+                            }
                         }
                         addLast(HttpClientCodec())
                         addLast(HttpObjectAggregator(65536))

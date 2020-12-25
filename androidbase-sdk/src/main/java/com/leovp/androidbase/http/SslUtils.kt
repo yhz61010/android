@@ -108,7 +108,7 @@ object SslUtils {
         }.getOrThrow()
     }
 
-    fun getSSLContext(certInputStream: InputStream): Pair<SSLSocketFactory, X509TrustManager> {
+    fun getSSLContext(certInputStream: InputStream): Pair<SSLContext, X509TrustManager> {
         return runCatching {
             val certificateFactory: CertificateFactory = CertificateFactory.getInstance("X.509")
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
@@ -123,7 +123,7 @@ object SslUtils {
             val sslContext = SSLContext.getInstance("TLS")
             sslContext.init(null/*kmf.keyManagers*/, trustMgrFactory.trustManagers, SecureRandom())
 
-            Pair<SSLSocketFactory, X509TrustManager>(sslContext.socketFactory, trustMgrFactory.trustManagers[0] as X509TrustManager)
+            Pair<SSLContext, X509TrustManager>(sslContext, trustMgrFactory.trustManagers[0] as X509TrustManager)
         }.getOrThrow()
     }
 }

@@ -252,7 +252,7 @@ abstract class BaseNettyClient protected constructor(
 
         stopRetryHandler()
         defaultInboundHandler?.release()
-        runCatching { channel.disconnect().syncUninterruptibly() }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
+        runCatching { if (::channel.isInitialized) channel.disconnect().syncUninterruptibly() }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
         LogContext.log.w(tag, "===== disconnectManually() done =====")
         return true
     }
@@ -361,7 +361,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(tag, "$cmdTypeAndId: Socket is not connected. Can not send command.")
             return false
         }
-        if (!channel.isActive) {
+        if (::channel.isInitialized && !channel.isActive) {
             LogContext.log.e(tag, "$cmdTypeAndId: Can not execute cmd because of Channel is not active.")
             return false
         }

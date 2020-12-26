@@ -61,11 +61,11 @@ abstract class BaseNettyClient protected constructor(
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy = ConstantRetry()
-    ) : this(webSocketUri.host, webSocketUri.port, connectionListener, retryStrategy) {
+    ) : this(webSocketUri.host, if (webSocketUri.port == -1) 443 else webSocketUri.port, connectionListener, retryStrategy) {
         this.webSocketUri = webSocketUri
         LogContext.log.w(
             tag,
-            "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${webSocketUri.port} retry_strategy=${retryStrategy::class.simpleName}"
+            "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${if (webSocketUri.port == -1) 443 else webSocketUri.port} retry_strategy=${retryStrategy::class.simpleName}"
         )
     }
 

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.R
@@ -60,7 +61,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        webSocketClient = WebSocketClient(URI("ws://10.10.9.64:10010/ws"), connectionListener, ConstantRetry(10, 2000))
+        webSocketClient = WebSocketClient(URI("wss://www.qvdv.com:443/Websocket"), connectionListener, ConstantRetry(10, 2000))
         webSocketClientHandler = WebSocketClientHandler(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
     }
@@ -78,6 +79,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             repeat(1) {
                 if (::webSocketClient.isInitialized) {
                     LogContext.log.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
+                    SslUtils.hostnames = arrayOf("www.qvdv.com")
+                    SslUtils.certificateInputStream = assets.open("cert/www.qvdv.com.crt")
                     webSocketClient.connect()
                 }
 

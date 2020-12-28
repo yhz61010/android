@@ -2,6 +2,7 @@ package com.leovp.leoandroidbaseutil
 
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.app
+import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
@@ -25,9 +26,9 @@ class CustomApplication : MultiDexApplication(), DIAware {
         app = this
         instance = this
 
-//        SslUtils.hostnames = arrayOf("postman-echo.com")
-//        SslUtils.certificateInputStream = assets.open("cert/postman-echo.com.cer")
-//        SslUtils.certificateInputStream = assets.open("cert/baidu.com.cer")
+        SslUtils.hostnames = arrayOf("www.qvdv.com")
+        SslUtils.certificateInputStream = assets.open("cert/www.qvdv.com.crt")
+//        SslUtils.certificateInputStream = assets.open("cert/baidu.com.crt")
 
         ForegroundComponent.init(this, 0L)
 

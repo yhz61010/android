@@ -8,9 +8,9 @@ import com.leovp.androidbase.utils.log.base.ILog
  * Date: 20-6-15 下午7:16
  */
 @Suppress("unused")
-class LLog : ILog {
+class LLog(private val prefix: String) : ILog {
 
-    override fun getTagName(tag: String) = "LEO-$tag"
+    override fun getTagName(tag: String) = "$prefix-$tag"
 
     override var enableLog: Boolean = true
 

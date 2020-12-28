@@ -37,7 +37,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
         ToastUtil.init(this)
 
-        LogContext.setLogImp(LLog())
+        LogContext.setLogImp(LLog("LEO"))
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
     }
 

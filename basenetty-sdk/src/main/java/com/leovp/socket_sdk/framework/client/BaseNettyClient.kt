@@ -26,10 +26,12 @@ import io.netty.handler.codec.string.StringDecoder
 import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.SslHandler
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.stream.ChunkedWriteHandler
 import kotlinx.coroutines.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.ConnectException
 import java.net.URI
 import java.util.concurrent.RejectedExecutionException
@@ -55,18 +57,53 @@ abstract class BaseNettyClient protected constructor(
     val tag: String by lazy { getTagName() }
     abstract fun getTagName(): String
 
+    private var certificateInputStream: InputStream? = null
+
+    init {
+        LogContext.log.w(tag, "Socket host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+    }
+
+    fun getCertificateInputStream(): InputStream? {
+        if (certificateInputStream == null) {
+            return null
+        }
+        try {
+            val baos = ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            var len: Int
+            while (certificateInputStream!!.read(buffer).also { len = it } > -1) {
+                baos.write(buffer, 0, len)
+            }
+            baos.flush()
+
+            return ByteArrayInputStream(baos.toByteArray())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
     private val retryScope = CoroutineScope(Dispatchers.IO + Job())
 
     protected constructor(
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
-        retryStrategy: RetryStrategy = ConstantRetry()
-    ) : this(webSocketUri.host, if (webSocketUri.port == -1) 443 else webSocketUri.port, connectionListener, retryStrategy) {
+        retryStrategy: RetryStrategy = ConstantRetry(),
+        certInputStream: InputStream? = null
+    ) : this(
+        webSocketUri.host,
+        if (webSocketUri.port == -1) {
+            when {
+                "ws".equals(webSocketUri.scheme, true) -> 80
+                "wss".equals(webSocketUri.scheme, true) -> 443
+                else -> -1
+            }
+        } else webSocketUri.port,
+        connectionListener, retryStrategy
+    ) {
         this.webSocketUri = webSocketUri
-        LogContext.log.w(
-            tag,
-            "WebSocket mode. Uri=${webSocketUri} host=${webSocketUri.host} port=${if (webSocketUri.port == -1) 443 else webSocketUri.port} retry_strategy=${retryStrategy::class.simpleName}"
-        )
+        this.certificateInputStream = certInputStream
+        LogContext.log.w(tag, "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     internal var webSocketUri: URI? = null
@@ -78,10 +115,7 @@ abstract class BaseNettyClient protected constructor(
         .channel(NioSocketChannel::class.java)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
-        .option(
-            ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            CONNECTION_TIMEOUT_IN_MILLS
-        )
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
     private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseClientChannelInboundHandler<*>? = null
@@ -100,10 +134,6 @@ abstract class BaseNettyClient protected constructor(
 //    private val retryHandler = Handler(retryThread.looper)
     private var retryTimes = AtomicInteger(0)
 
-    init {
-        LogContext.log.w(tag, "WebSocket mode. host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
-    }
-
     open fun addLastToPipeline(pipeline: ChannelPipeline) {}
 
     fun initHandler(handler: BaseClientChannelInboundHandler<*>?) {
@@ -113,18 +143,26 @@ abstract class BaseNettyClient protected constructor(
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
                         if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                            if (SslUtils.certificateInputStream == null) {
+                            if (certificateInputStream == null) {
                                 LogContext.log.w(tag, "Working in wss INSECURE mode")
                                 val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
                                 addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
                             } else {
                                 LogContext.log.w(tag, "Working in wss SECURE mode")
                                 requireNotNull("In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream.")
-                                val sslContextPair = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
-                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
-                                    useClientMode = true
-                                }
-                                addFirst("ssl", SslHandler(sslEngine))
+
+                                val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
+
+//                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
+//                                    useClientMode = true
+//                                }
+//                                addFirst("ssl", SslHandler(sslEngine))
+
+                                val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
+                                addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
+
+//                                val sslEngine = SSLContext.getDefault().createSSLEngine().apply { useClientMode = true }
+//                                addFirst("ssl", SslHandler(sslEngine))
                             }
                         }
                         addLast(HttpClientCodec())
@@ -193,7 +231,7 @@ abstract class BaseNettyClient protected constructor(
             disconnectManually = false
             if (isWebSocket) {
                 defaultInboundHandler?.channelPromise?.addListener { _ ->
-                    LogContext.log.i(tag, "===== Connect success =====")
+                    LogContext.log.i(tag, "===== ws Connect success =====")
                     connectState.set(ClientConnectStatus.CONNECTED)
                     connectionListener.onConnected(this@BaseNettyClient)
                 }
@@ -371,14 +409,7 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(
-        cmdTypeAndId: String,
-        cmdDesc: String,
-        cmd: Any?,
-        showContent: Boolean,
-        isPing: Boolean,
-        showLog: Boolean = true
-    ): Boolean {
+    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean, isPing: Boolean, showLog: Boolean = true): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }

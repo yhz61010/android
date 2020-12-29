@@ -67,15 +67,18 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             } | Channel is inactive and reached its end of lifetime ====="
         )
         if (netty.isWebSocket) {
-            handshaker?.close(ctx.channel(), CloseWebSocketFrame())
+            LogContext.log.w(tag, "Try to close handshaker for web socket")
+            runCatching { handshaker?.close(ctx.channel(), CloseWebSocketFrame()) }.onFailure { it.printStackTrace() }
         }
         super.channelInactive(ctx)
 
         if (!caughtException) {
             if (netty.disconnectManually) {
+                LogContext.log.i(tag, "Set disconnected status due to manually.")
                 netty.connectState.set(ClientConnectStatus.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
             } else {
+                LogContext.log.i(tag, "Set disconnected status.")
                 netty.connectState.set(ClientConnectStatus.FAILED)
                 netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECTION_DISCONNECT, "Disconnect")
                 netty.doRetry()
@@ -130,6 +133,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             it.printStackTrace()
         }
 
+        LogContext.log.e(tag, "============================")
+
         if ("IOException" == exceptionType) {
             netty.connectState.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
@@ -138,8 +143,6 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             netty.connectState.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)
         }
-
-        LogContext.log.e(tag, "============================")
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {

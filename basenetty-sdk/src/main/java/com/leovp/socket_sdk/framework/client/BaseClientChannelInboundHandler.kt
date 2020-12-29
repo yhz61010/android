@@ -86,6 +86,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {
             LogContext.log.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
+            netty.connectState.set(ClientConnectStatus.FAILED)
+            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
+            netty.doRetry()
         }
     }
 

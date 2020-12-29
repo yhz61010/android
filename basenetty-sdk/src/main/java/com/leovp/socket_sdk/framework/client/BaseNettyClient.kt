@@ -296,6 +296,8 @@ abstract class BaseNettyClient protected constructor(
     }
 
     fun doRetry() {
+        if (retryProcess()) return
+
         retryTimes.getAndIncrement()
         if (retryTimes.get() > retryStrategy.getMaxTimes()) {
             LogContext.log.e(tag, "===== Connect failed - Exceed max retry times. =====")
@@ -321,6 +323,12 @@ abstract class BaseNettyClient protected constructor(
             }
         }
     }
+
+    /**
+     * Return `true` to consume retry operation meanwhile. Otherwise return false.
+     * If you return `true`, you must do reconnect by yourself or else it will not be reconnected again.
+     */
+    open fun retryProcess() = false
 
     /**
      * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.)

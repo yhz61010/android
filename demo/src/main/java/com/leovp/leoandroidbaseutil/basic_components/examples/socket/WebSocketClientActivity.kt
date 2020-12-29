@@ -20,24 +20,78 @@ import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_socket_client.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
+import java.util.concurrent.atomic.AtomicInteger
 
 class WebSocketClientActivity : BaseDemonstrationActivity() {
+    companion object {
+        private const val TAG = "WebSocketClient"
+    }
+
     private val cs = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var webSocketClient: WebSocketClient
-    private lateinit var webSocketClientHandler: WebSocketClientHandler
+    private lateinit var webSocketClient: WebSocketClientDemo
+    private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
+    private val constantRetry = ConstantRetry(10, 2000)
+
+    private val retryTimes = AtomicInteger(0)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_websocket_client)
+        webSocketClient = createSocket()
+    }
+
+    private fun createSocket(): WebSocketClientDemo {
+        val webSocketClient = WebSocketClientDemo(
+//            URI("wss://www.qvdv.com:443/Websocket"),
+            URI("ws://123.207.136.134:9010/ajaxchattest"),
+            connectionListener,
+            constantRetry
+        )
+        webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
+        webSocketClient.initHandler(webSocketClientHandler)
+        return webSocketClient
+    }
+
+    fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LogContext.log.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
+
+        cs.launch {
+            repeat(1) {
+                if (::webSocketClient.isInitialized) {
+                    LogContext.log.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
+                    webSocketClient.connect()
+                }
+
+                // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
+                // val socketClient = SocketClient("50d.win", 8080, connectionListener)
+                // val socketClientHandler = SocketClientHandler(socketClient)
+                // socketClient.initHandler(socketClientHandler)
+                // socketClient.connect()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        cs.launch {
+            if (::webSocketClient.isInitialized) webSocketClient.release()
+        }
+        super.onDestroy()
+    }
+
+// =====================================================
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
             ToastUtil.showDebugToast("onConnected")
+
+            // Reset retry counter
+            retryTimes.set(0)
         }
 
         @SuppressLint("SetTextI18n")
@@ -54,40 +108,45 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+
+            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION
+            ) {
+                retryTimes.incrementAndGet()
+                if (retryTimes.get() > constantRetry.getMaxTimes()) {
+                    LogContext.log.e(TAG, "===== Connect failed - Exceed max retry times. =====")
+                    ToastUtil.showDebugToast("Exceed max retry times.")
+
+                    // Reset retry counter
+                    retryTimes.set(0)
+                } else {
+                    LogContext.log.w(TAG, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
+                    cs.launch {
+                        runCatching {
+                            delay(constantRetry.getDelayInMillSec(retryTimes.get()))
+                            ensureActive()
+                            webSocketClient.release()
+                            webSocketClient = createSocket()
+                            webSocketClient.connect()
+                        }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
+                    } // launch
+                } // else
+            } // if for exception
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_websocket_client)
-
-        webSocketClient = WebSocketClient(
-//            URI("wss://www.qvdv.com:443/Websocket"),
-            URI("ws://123.207.136.134:9010/ajaxchattest"),
-            connectionListener,
-            ConstantRetry(10, 2000),
-            null /*assets.open("cert/certificate.crt")*/
-        )
-        webSocketClientHandler = WebSocketClientHandler(webSocketClient)
-        webSocketClient.initHandler(webSocketClientHandler)
-    }
-
-    override fun onDestroy() {
-        cs.launch {
-            if (::webSocketClient.isInitialized) webSocketClient.release()
-        }
-        super.onDestroy()
-    }
-
-    // =====================================================
-
-    class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy, certInputStream: InputStream? = null) :
+    class WebSocketClientDemo(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy, certInputStream: InputStream? = null) :
         BaseNettyClient(webSocketUri, connectionListener, retryStrategy, certInputStream) {
         override fun getTagName() = "WebSocketClient"
+
+        override fun retryProcess(): Boolean {
+            return true
+        }
     }
 
     @ChannelHandler.Sharable
-    class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
+    class WebSocketClientHandlerDemo(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame
@@ -113,26 +172,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
     }
 
-    // =================================================
-
-    fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        LogContext.log.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
-
-        cs.launch {
-            repeat(1) {
-                if (::webSocketClient.isInitialized) {
-                    LogContext.log.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
-                    webSocketClient.connect()
-                }
-
-                // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
-                // val socketClient = SocketClient("50d.win", 8080, connectionListener)
-                // val socketClientHandler = SocketClientHandler(socketClient)
-                // socketClient.initHandler(socketClientHandler)
-                // socketClient.connect()
-            }
-        }
-    }
+// =================================================
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
@@ -153,9 +193,5 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         cs.launch {
             if (::webSocketClient.isInitialized) webSocketClient.release()
         }
-    }
-
-    companion object {
-        private const val TAG = "WebSocketClient"
     }
 }

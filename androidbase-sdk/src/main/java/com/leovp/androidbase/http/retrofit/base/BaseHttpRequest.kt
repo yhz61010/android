@@ -11,13 +11,17 @@ import java.util.concurrent.TimeUnit
  * Date: 20-5-27 下午8:41
  */
 abstract class BaseHttpRequest {
+    var connectTimeoutInMs = DEFAULT_CONNECTION_TIMEOUT_IN_MS
+    var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
+    var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
+
     val okHttpClient: OkHttpClient
         get() {
             val httpClientBuilder = OkHttpClient.Builder()
             httpClientBuilder
-                .connectTimeout(DEFAULT_CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-                .writeTimeout(DEFAULT_WRITE_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+                .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
+                .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
+                .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
                 .addInterceptor(getHeaderInterceptor())
                 .addInterceptor(logInterceptor)
 
@@ -70,7 +74,7 @@ abstract class BaseHttpRequest {
     companion object {
         // Timeout explanation
         // https://futurestud.io/tutorials/retrofit-2-customize-network-timeouts
-        private const val DEFAULT_CONNECTION_TIMEOUT_IN_SECONDS = 30L
+        private const val DEFAULT_CONNECTION_TIMEOUT_IN_MS = 30_000L
 
         /**
          * The read timeout starts to pay attention once the connection is established and then watches
@@ -82,7 +86,7 @@ abstract class BaseHttpRequest {
          *
          * Again, this is not only limited to the server. Slow read times can be caused by the Internet connection as well.
          */
-        private const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 30L
+        private const val DEFAULT_READ_TIMEOUT_IN_MS = 30_000L
 
         /**
          * The write timeout is the opposite direction of the read timeout. It checks how fast you can
@@ -90,6 +94,6 @@ abstract class BaseHttpRequest {
          * if sending a single byte takes longer than the configured write timeout limit, Retrofit will
          * count the request as failed.
          */
-        private const val DEFAULT_WRITE_TIMEOUT_IN_SECONDS = 30L
+        private const val DEFAULT_WRITE_TIMEOUT_IN_MS = 30_000L
     }
 }

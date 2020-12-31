@@ -26,6 +26,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     @Volatile
     private var caughtException = false
 
+    /**
+     * When client is disconnected by manually or released, this method will be called.
+     */
     abstract fun release()
 
     override fun handlerAdded(ctx: ChannelHandlerContext) {
@@ -50,7 +53,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LogContext.log.i(tag, "===== Channel is active Connected to: ${ctx.channel().remoteAddress()} =====")
+        LogContext.log.i(tag, "===== Channel is active. Connected to: ${ctx.channel().remoteAddress()} =====")
         caughtException = false
         if (netty.isWebSocket) {
             handshaker?.handshake(ctx.channel())

@@ -126,9 +126,7 @@ abstract class BaseNettyClient protected constructor(
         protected set
 
     @Volatile
-    internal var connectState: AtomicReference<ClientConnectStatus> = AtomicReference(
-        ClientConnectStatus.UNINITIALIZED
-    )
+    internal var connectState: AtomicReference<ClientConnectStatus> = AtomicReference(ClientConnectStatus.UNINITIALIZED)
 
     //    private val retryThread = HandlerThread("retry-thread").apply { start() }
 //    private val retryHandler = Handler(retryThread.looper)

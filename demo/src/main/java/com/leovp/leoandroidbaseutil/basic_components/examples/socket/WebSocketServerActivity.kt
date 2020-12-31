@@ -28,6 +28,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     companion object {
         private const val TAG = "WebSocketServerActivity"
+        private const val PORT = 10010
     }
 
     private val cs = CoroutineScope(Dispatchers.IO)
@@ -37,9 +38,9 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
-            LogContext.log.i(TAG, "onStarted")
-            ToastUtil.showDebugToast("onStarted")
-            runOnUiThread { txtResponse.text = "Server started";sv.fullScroll(View.FOCUS_DOWN) }
+            LogContext.log.i(TAG, "onStarted on port: $PORT")
+            ToastUtil.showDebugToast("onStarted on port: $PORT")
+            runOnUiThread { txtResponse.text = "Server started on port: $PORT";sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
@@ -94,7 +95,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-                webSocketServer = WebSocketServer(10010, connectionListener)
+                webSocketServer = WebSocketServer(PORT, connectionListener)
                 webSocketServerHandler = WebSocketServerHandler(webSocketServer)
                 webSocketServer.initHandler(webSocketServerHandler)
                 webSocketServer.startServer()

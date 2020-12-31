@@ -19,7 +19,9 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_socket_client.*
+import kotlinx.android.synthetic.main.activity_socket_client.editText
+import kotlinx.android.synthetic.main.activity_socket_client.txtView
+import kotlinx.android.synthetic.main.activity_websocket_client.*
 import kotlinx.coroutines.*
 import java.io.InputStream
 import java.net.URI
@@ -48,7 +50,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
 //            URI("wss://www.qvdv.com:443/Websocket"),
-            URI("ws://123.207.136.134:9010/ajaxchattest"),
+//            URI("ws://123.207.136.134:9010/ajaxchattest"),
+            URI(etSvrIp.text.toString()),
             connectionListener,
             constantRetry
         )
@@ -112,6 +115,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
                 || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
                 || code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
             ) {
                 retryTimes.incrementAndGet()
                 if (retryTimes.get() > constantRetry.getMaxTimes()) {

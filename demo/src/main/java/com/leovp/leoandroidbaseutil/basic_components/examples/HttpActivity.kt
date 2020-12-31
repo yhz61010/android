@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
-import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.utils.ResourcesUtil
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -35,12 +34,12 @@ class HttpActivity : BaseDemonstrationActivity() {
 
     interface CommonService {
         @GET("/status/{id}")
-        fun getData(@Path("id") param: String): Observable<WeatherInfoResult>
+        fun getData(@Path("id") param: String): Observable<String>
 
-        @FormUrlEncoded
+        //        @FormUrlEncoded
         @Headers("Authorization:APPCODE Add-you-app-code-here")
-        @POST("/ai_market/ai_face_position")
-        fun postData(@Field("VIDEO") video: String): Observable<String>
+        @POST("/post")
+        fun postData(@Body body: String): Observable<String>
 
         @Multipart
         @POST("/fileTransfer/uploadFile")
@@ -54,10 +53,10 @@ class HttpActivity : BaseDemonstrationActivity() {
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val observer: ObserverOnNextListener<WeatherInfoResult> = object : ObserverOnNextListener<WeatherInfoResult?> {
-            override fun onNext(t: WeatherInfoResult?) {
+        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+            override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response bean=${t?.toJsonString()}")
-                txtResult.text = t?.toJsonString()
+                txtResult.text = t
             }
         }
         val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
@@ -78,9 +77,9 @@ class HttpActivity : BaseDemonstrationActivity() {
                 txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
-        val service = ApiService.getService("https://iface.market.alicloudapi.com", CommonService::class.java)
+        val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
         ApiSubscribe.subscribe(
-            service.postData("https://icredit-api-market.oss-cn-hangzhou.aliyuncs.com/%E8%89%BE%E7%A7%91%E7%91%9E%E7%89%B9_%E6%99%BA%E8%83%BD%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB_%E6%99%BA%E8%83%BD%E4%BA%BA%E8%84%B8%E5%A7%BF%E6%80%81%E6%A3%80%E6%B5%8B/%E4%BA%BA%E8%84%B8%E5%A7%BF%E6%80%81.mp4"),
+            service.postData("This is expected to be sent back as part of response body."),
             NoProgressObserver(observer)
         )
     }
@@ -153,22 +152,4 @@ class HttpActivity : BaseDemonstrationActivity() {
         }
         return type
     }
-
-    @Keep
-    data class WeatherInfoResult(val weatherinfo: WeatherInfo)
-
-    @Keep
-    data class WeatherInfo(
-        val city: String,
-        val cityid: String,
-        val temp: String,
-        val WD: String,
-        val WS: String,
-        val SD: String,
-        val AP: String,
-        val njd: String,
-        val WSE: String,
-        val time: String,
-        val sm: String
-    )
 }

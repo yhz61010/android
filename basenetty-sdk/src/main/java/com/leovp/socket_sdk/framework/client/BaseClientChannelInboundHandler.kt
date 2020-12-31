@@ -1,7 +1,7 @@
 package com.leovp.socket_sdk.framework.client
 
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.socket_sdk.framework.base.ClientConnectStatus
+import com.leovp.socket_sdk.framework.base.ClientConnectState
 import com.leovp.socket_sdk.framework.base.ReadSocketDataListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -78,11 +78,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         if (!caughtException) {
             if (netty.disconnectManually) {
                 LogContext.log.i(tag, "Set disconnected status due to manually.")
-                netty.connectState.set(ClientConnectStatus.DISCONNECTED)
+                netty.connectState.set(ClientConnectState.DISCONNECTED)
                 netty.connectionListener.onDisconnected(netty)
             } else {
                 LogContext.log.i(tag, "Set disconnected status.")
-                netty.connectState.set(ClientConnectStatus.FAILED)
+                netty.connectState.set(ClientConnectState.FAILED)
                 netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECTION_DISCONNECT, "Disconnect")
                 netty.doRetry()
             }
@@ -142,11 +142,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.e(tag, "============================")
 
         if ("IOException" == exceptionType) {
-            netty.connectState.set(ClientConnectStatus.FAILED)
+            netty.connectState.set(ClientConnectState.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
             netty.doRetry()
         } else {
-            netty.connectState.set(ClientConnectStatus.FAILED)
+            netty.connectState.set(ClientConnectState.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)
         }
     }

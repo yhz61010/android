@@ -94,7 +94,6 @@ val Context.statusBarHeight
         return result
     }
 
-
 val Activity.isFullScreenDevice
     @SuppressLint("ObsoleteSdkInt")
     get(): Boolean {
@@ -113,7 +112,6 @@ val Activity.isFullScreenDevice
  */
 //    fun getTitleHeight(activity: Activity) = activity.window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
 
-
 val Context.isNavigationGestureEnabled
     @SuppressLint("ObsoleteSdkInt")
     get(): Boolean {
@@ -125,7 +123,7 @@ val Context.isNavigationGestureEnabled
         return value != 0
     }
 
-internal fun getNavigationBarName(): String {
+private fun getNavigationBarName(): String {
     val brand = Build.BRAND
     if (TextUtils.isEmpty(brand)) return "navigationbar_is_min"
     return when {

@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
+import android.os.HandlerThread
 import com.leovp.androidbase.utils.log.LogContext
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -53,7 +54,8 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         get() = !isForeground
 
     private var paused = true
-    private val handler = Handler()
+    private val handlerThread = HandlerThread("fg").apply { start() }
+    private val handler = Handler(handlerThread.looper)
     private val listeners: MutableList<AppStateListener> = CopyOnWriteArrayList()
     private var checkRunnable: Runnable? = null
 

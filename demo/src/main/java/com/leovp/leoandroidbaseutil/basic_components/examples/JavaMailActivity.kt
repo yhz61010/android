@@ -143,6 +143,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
 
                 // fetches new messages from server
                 val messages = folderInbox.messages
+                messages.sortByDescending { it.sentDate }
 
                 for (i in messages.indices) {
                     val msg = messages[i]

@@ -71,10 +71,12 @@ class AudioSender {
 
     fun start(ctx: Context, uri: URI) {
         this.ctx = ctx
-        senderClient = AudioSenderWebSocket(uri, connectionListener, ConstantRetry(10, 2000)).also {
-            senderHandler = AudioSenderWebSocketHandler(it)
-            it.initHandler(senderHandler)
-            it.connect()
+        ioScope.launch {
+            senderClient = AudioSenderWebSocket(uri, connectionListener, ConstantRetry(10, 2000)).also {
+                senderHandler = AudioSenderWebSocketHandler(it)
+                it.initHandler(senderHandler)
+                it.connect()
+            }
         }
 
         micRecorder = MicRecorder(AudioActivity.audioEncoderInfo, object : MicRecorder.RecordCallback {
@@ -116,7 +118,7 @@ class AudioSender {
         ioScope.cancel()
         audioPlayer?.release()
         micRecorder?.stopRecord()
-        senderClient?.disconnectManually()
+        ioScope.launch { senderClient?.disconnectManually() }
         senderClient?.release()
     }
 }

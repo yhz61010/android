@@ -37,9 +37,16 @@ import java.net.URI
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
 
 /**
  * A thread-safe class
+ *
+ * For none-ssl websocket or trust all certificates websocket, you can create just a socket object,
+ * then disconnect it and connect it again for many times as you wish.
+ *
+ * However, for self-signed certificate, once you disconnect the socket,
+ * you must recreate the socket object again then connect it or else you can **NOT** connect it any more.
  *
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
@@ -201,12 +208,13 @@ abstract class BaseNettyClient protected constructor(
     /**
      * If netty client has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
-    fun connect() {
+    suspend fun connect(): ClientConnectState = suspendCancellableCoroutine { cont ->
         LogContext.log.i(tag, "===== connect() current state=${connectState.get().name} =====")
         synchronized(this) {
             if (connectState.get() == ClientConnectState.CONNECTING || connectState.get() == ClientConnectState.CONNECTED) {
                 LogContext.log.w(tag, "===== Connecting or already connected =====")
-                return
+                cont.resume(connectState.get())
+                return@suspendCancellableCoroutine
             } else {
                 LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
@@ -232,6 +240,7 @@ abstract class BaseNettyClient protected constructor(
                     LogContext.log.i(tag, "===== ws Connect success =====")
                     connectState.set(ClientConnectState.CONNECTED)
                     connectionListener.onConnected(this@BaseNettyClient)
+                    cont.resume(ClientConnectState.CONNECTED)
                 }
             } else {
                 // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
@@ -240,6 +249,7 @@ abstract class BaseNettyClient protected constructor(
                 LogContext.log.i(tag, "===== Connect success =====")
                 connectState.set(ClientConnectState.CONNECTED)
                 connectionListener.onConnected(this@BaseNettyClient)
+                cont.resume(ClientConnectState.CONNECTED)
             }
         } catch (e: RejectedExecutionException) {
             LogContext.log.e(tag, "===== RejectedExecutionException: ${e.message} =====")
@@ -251,18 +261,21 @@ abstract class BaseNettyClient protected constructor(
             // So we handle it here.
             connectState.set(ClientConnectState.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
+            cont.resume(ClientConnectState.FAILED)
         } catch (e: ConnectException) {
             LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
 //            e.printStackTrace()
             connectState.set(ClientConnectState.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-            doRetry()
+            cont.resume(ClientConnectState.FAILED)
+//            doRetry()
         } catch (e: Exception) {
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
 //            e.printStackTrace()
             connectState.set(ClientConnectState.FAILED)
             connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
-            doRetry()
+            cont.resume(ClientConnectState.FAILED)
+//            doRetry()
         }
     }
 
@@ -274,11 +287,12 @@ abstract class BaseNettyClient protected constructor(
      *
      * **Remember**, If you call this method, it will not trigger retry process.
      */
-    fun disconnectManually(): Boolean {
+    suspend fun disconnectManually(): Boolean = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== disconnectManually() current state=${connectState.get().name} =====")
         if (ClientConnectState.DISCONNECTED == connectState.get() || ClientConnectState.UNINITIALIZED == connectState.get()) {
             LogContext.log.w(tag, "Socket is not connected or already disconnected or not initialized.")
-            return false
+            cont.resume(true)
+            return@suspendCancellableCoroutine
         }
         disconnectManually = true
 
@@ -288,9 +302,21 @@ abstract class BaseNettyClient protected constructor(
 
         stopRetryHandler()
         defaultInboundHandler?.release()
-        runCatching { if (::channel.isInitialized) channel.disconnect().syncUninterruptibly() }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
-        LogContext.log.w(tag, "===== disconnectManually() done =====")
-        return true
+        runCatching {
+            if (::channel.isInitialized) channel.disconnect().syncUninterruptibly().addListener { f ->
+                if (f.isSuccess) {
+                    LogContext.log.w(tag, "===== disconnectManually() done =====")
+                    connectState.set(ClientConnectState.DISCONNECTED)
+                    connectionListener.onDisconnected(this)
+                    cont.resume(true)
+                } else {
+                    LogContext.log.w(tag, "===== disconnectManually() failed =====")
+                    connectState.set(ClientConnectState.FAILED)
+                    connectionListener.onFailed(this, ClientConnectListener.DISCONNECT_MANUALLY_ERROR, "Disconnect manually failed")
+                    cont.resume(false)
+                }
+            }
+        }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
     }
 
     fun doRetry() {
@@ -381,9 +407,7 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.i(tag, "stopRetryHandler()")
 //        retryHandler.removeCallbacksAndMessages(null)
 //        retryThread.interrupt()
-        runCatching {
-            retryScope.cancel()
-        }.onFailure { LogContext.log.e(tag, "Cancel retry coroutine error.", it) }
+        runCatching { retryScope.cancel() }.onFailure { LogContext.log.e(tag, "Cancel retry coroutine error.", it) }
         retryTimes.set(0)
     }
 

@@ -77,9 +77,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
         if (!caughtException) {
             if (netty.disconnectManually) {
-                LogContext.log.i(tag, "Set disconnected status due to manually.")
-                netty.connectState.set(ClientConnectState.DISCONNECTED)
-                netty.connectionListener.onDisconnected(netty)
+                LogContext.log.i(tag, "channelInactive(disconnect) manually=${netty.disconnectManually}")
+//                netty.connectState.set(ClientConnectState.DISCONNECTED)
+//                netty.connectionListener.onDisconnected(netty)
             } else {
                 LogContext.log.i(tag, "Set disconnected status.")
                 netty.connectState.set(ClientConnectState.FAILED)

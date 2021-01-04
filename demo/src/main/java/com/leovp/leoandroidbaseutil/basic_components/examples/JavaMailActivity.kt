@@ -46,7 +46,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             val session: Session = Session.getDefaultInstance(properties,
                 object : javax.mail.Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("zytase01@leovp.com", "Temp61010")
+                        return PasswordAuthentication("zytase01@leovp.com", "xxx")
                     }
                 }
             )
@@ -78,7 +78,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             val session: Session = Session.getDefaultInstance(properties,
                 object : Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("zytase01@163.com", "Temp61010")
+                        return PasswordAuthentication("zytase01@163.com", "xxx")
                     }
                 }
             )

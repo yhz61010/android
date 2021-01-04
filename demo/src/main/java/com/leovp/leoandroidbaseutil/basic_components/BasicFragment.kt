@@ -87,6 +87,7 @@ class BasicFragment : Fragment() {
             Pair("Watermark", WatermarkActivity::class.java),
             Pair("Preference", PrefActivity::class.java),
             Pair("Audio Cipher", AudioCipherActivity::class.java),
+            Pair("Java Mail", JavaMailActivity::class.java),
         )
 
         val colors = arrayOf(

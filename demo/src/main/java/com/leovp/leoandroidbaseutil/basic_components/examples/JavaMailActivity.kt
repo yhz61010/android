@@ -53,6 +53,16 @@ class JavaMailActivity : BaseDemonstrationActivity() {
         }
     }
 
+    private fun getSession(protocol: String, port: Int, userName: String? = null, pwd: String? = null): Session {
+        return Session.getInstance(getServerProperties(protocol, port), if (userName.isNullOrBlank()) null else
+            object : javax.mail.Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication {
+                    return PasswordAuthentication(userName, pwd)
+                }
+            }
+        )
+    }
+
     /**
      * Returns a list of addresses in String format separated by comma
      *
@@ -64,14 +74,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
     fun onSendSimpleEmailClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ioScope.launch {
             LogContext.log.i(ITAG, "Sending simple mail...")
-            val session: Session = Session.getInstance(getServerProperties("smtp", 25),
-                object : javax.mail.Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication(FROM, FROM_PWD)
-                    }
-                }
-            )
-
+            val session: Session = getSession("smtp", 25, FROM, FROM_PWD)
             runCatching {
                 val message = MimeMessage(session)
                 message.setFrom(InternetAddress(FROM))
@@ -90,14 +93,8 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             LogContext.log.i(ITAG, "Sending attachment mail...")
             val attachment = FileUtil.createFile(this@JavaMailActivity, "music.mp3")
             FileUtil.copyInputStreamToFile(resources.openRawResource(R.raw.music), attachment.absolutePath)
+            val session: Session = getSession("smtp", 25, FROM, FROM_PWD)
 
-            val session: Session = Session.getInstance(getServerProperties("smtp", 25),
-                object : Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication(FROM, FROM_PWD)
-                    }
-                }
-            )
             val text = MimeBodyPart()
             text.setContent("<h1>Welcome Leo</h1>", "text/html;charset=UTF-8")
 
@@ -132,16 +129,8 @@ class JavaMailActivity : BaseDemonstrationActivity() {
         ioScope.launch {
             LogContext.log.i(ITAG, "Receiving mails...")
             runCatching {
-                val session: Session = Session.getInstance(getServerProperties("pop3", 110))
+                val session: Session = getSession("pop3", 110)
                 session.debug = true
-
-//                val session: Session = Session.getInstance(getServerProperties("pop3", 110),
-//                    object : Authenticator() {
-//                        override fun getPasswordAuthentication(): PasswordAuthentication {
-//                            return PasswordAuthentication(FROM, FROM_PWD)
-//                        }
-//                    }
-//                )
 
                 // connects to the message store
                 val store: Store = session.getStore("pop3")

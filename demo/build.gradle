@@ -82,9 +82,10 @@ android {
     packagingOptions {
         // This line is for room
         exclude 'META-INF/atomicfu.kotlin_module'
-        exclude 'META-INF/LICENSE'
+//        exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
         pickFirst 'lib/x86/libstlport_shared.so'
         pickFirst 'lib/x86_64/libstlport_shared.so'
         pickFirst 'lib/armeabi/libstlport_shared.so'
@@ -180,4 +181,7 @@ dependencies {
 
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
     implementation "com.tencent:mmkv-static:$mmkvVersion"
+
+    implementation "com.sun.mail:android-mail:$javaMailVersion"
+    implementation "com.sun.mail:android-activation:$javaMailVersion"
 }

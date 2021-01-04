@@ -19,8 +19,9 @@ import javax.mail.internet.MimeMultipart
 
 class JavaMailActivity : BaseDemonstrationActivity() {
     companion object {
-        private const val to = "zytase01@leovp.com"
-        private const val from = "zytase01@leovp.com"
+        private const val TO = "zytase01@leovp.com"
+        private const val FROM = "zytase01@leovp.com"
+        private const val FROM_PWD = "xxx"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -46,15 +47,15 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             val session: Session = Session.getDefaultInstance(properties,
                 object : javax.mail.Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("zytase01@leovp.com", "xxx")
+                        return PasswordAuthentication(FROM, FROM_PWD)
                     }
                 }
             )
 
             runCatching {
                 val message = MimeMessage(session)
-                message.setFrom(InternetAddress(from))
-                message.addRecipient(Message.RecipientType.TO, InternetAddress(to))
+                message.setFrom(InternetAddress(FROM))
+                message.addRecipient(Message.RecipientType.TO, InternetAddress(TO))
                 message.subject = "Mail Subject"
                 message.setText("Mail Text")
                 Transport.send(message)
@@ -78,7 +79,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             val session: Session = Session.getDefaultInstance(properties,
                 object : Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("zytase01@leovp.com", "xxx")
+                        return PasswordAuthentication(FROM, FROM_PWD)
                     }
                 }
             )
@@ -92,10 +93,10 @@ class JavaMailActivity : BaseDemonstrationActivity() {
 
             val message = MimeMessage(session)
 
-            val address = InternetAddress(from)
+            val address = InternetAddress(FROM)
             message.setFrom(address)
             message.addRecipient(Message.RecipientType.CC, address)
-            message.addRecipient(Message.RecipientType.TO, InternetAddress(to))
+            message.addRecipient(Message.RecipientType.TO, InternetAddress(TO))
 
             val mp = MimeMultipart()
             mp.addBodyPart(text)

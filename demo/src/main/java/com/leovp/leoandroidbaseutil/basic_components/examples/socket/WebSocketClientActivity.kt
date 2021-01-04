@@ -35,7 +35,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var webSocketClient: WebSocketClientDemo
+    private var webSocketClient: WebSocketClientDemo? = null
     private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
     private val constantRetry = ConstantRetry(10, 2000)
 
@@ -44,16 +44,14 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_websocket_client)
-        webSocketClient = createSocket()
     }
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
-//            URI("wss://www.qvdv.com:443/Websocket"),
-//            URI("ws://123.207.136.134:9010/ajaxchattest"),
             URI(etSvrIp.text.toString()),
             connectionListener,
-            constantRetry
+            constantRetry,
+            assets.open("cert/websocket.org.crt")
         )
         webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
@@ -63,12 +61,18 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
 
+        // For none-ssl websocket or trust all certificates websocket, you can create just a socket object,
+        // then disconnect it and connect it again for many times as you wish.
+        // However, for self-signed certificate, once you disconnect the socket,
+        // you must recreate the socket object again then connect it or else you can **NOT** connect it any more.
         cs.launch {
-            repeat(1) {
-                if (::webSocketClient.isInitialized) {
-                    LogContext.log.i(TAG, "do connect at ${SystemClock.elapsedRealtime()}")
-                    webSocketClient.connect()
-                }
+            for (i in 1..1) {
+                webSocketClient = createSocket()
+                LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
+                webSocketClient?.connect()
+//                LogContext.log.i(TAG, "--------------------------------------------------------")
+//                webSocketClient?.disconnectManually()
+//                LogContext.log.i(TAG, "=================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -80,9 +84,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     override fun onDestroy() {
-        cs.launch {
-            if (::webSocketClient.isInitialized) webSocketClient.release()
-        }
+        cs.launch { webSocketClient?.release() }
         super.onDestroy()
     }
 
@@ -130,9 +132,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                         runCatching {
                             delay(constantRetry.getDelayInMillSec(retryTimes.get()))
                             ensureActive()
-                            webSocketClient.release()
-                            webSocketClient = createSocket()
-                            webSocketClient.connect()
+                            webSocketClient?.release()
+                            webSocketClient = createSocket().apply { connect() }
                         }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
                     } // launch
                 } // else
@@ -188,14 +189,12 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch {
-            if (::webSocketClient.isInitialized) webSocketClient.disconnectManually()
-        }
+        cs.launch { webSocketClient?.disconnectManually() }
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
-            if (::webSocketClient.isInitialized) webSocketClient.release()
+            webSocketClient?.release()
         }
     }
 }

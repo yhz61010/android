@@ -115,10 +115,12 @@ class AudioSender {
     }
 
     fun stop() {
-        ioScope.cancel()
         audioPlayer?.release()
         micRecorder?.stopRecord()
-        ioScope.launch { senderClient?.disconnectManually() }
-        senderClient?.release()
+        ioScope.launch {
+            senderClient?.disconnectManually()
+            senderClient?.release()
+        }
+        ioScope.cancel()
     }
 }

@@ -74,7 +74,7 @@ abstract class BaseNettyClient protected constructor(
         if (certificateInputStream == null) {
             return null
         }
-        try {
+        return try {
             val baos = ByteArrayOutputStream()
             val buffer = ByteArray(1024)
             var len: Int
@@ -82,11 +82,11 @@ abstract class BaseNettyClient protected constructor(
                 baos.write(buffer, 0, len)
             }
             baos.flush()
-
-            return ByteArrayInputStream(baos.toByteArray())
+            // DO NOT close certificateInputStream stream or else we can not clone it anymore
+            ByteArrayInputStream(baos.toByteArray())
         } catch (e: Exception) {
             e.printStackTrace()
-            return null
+            null
         }
     }
 
@@ -231,7 +231,7 @@ abstract class BaseNettyClient protected constructor(
             // In some cases, although you add your connection listener, you still need to catch some exceptions what your listener can not deal with
             // Just like RejectedExecutionException exception. However, I never catch RejectedExecutionException as I expect. Who can tell me why?
 
-            val f = bootstrap.connect(host, port).sync()
+            val f = bootstrap.connect(host, port).syncUninterruptibly()
             channel = f.syncUninterruptibly().channel()
             retryTimes.set(0)
             disconnectManually = false
@@ -316,7 +316,10 @@ abstract class BaseNettyClient protected constructor(
                     cont.resume(false)
                 }
             }
-        }.onFailure { LogContext.log.e(tag, "disconnectManually error.", it) }
+        }.onFailure {
+            LogContext.log.e(tag, "disconnectManually error.", it)
+            cont.resume(false)
+        }
     }
 
     fun doRetry() {
@@ -363,12 +366,13 @@ abstract class BaseNettyClient protected constructor(
      *
      * If current connect state is [ClientConnectState.FAILED], this method will also be run and any exception will be ignored.
      */
-    fun release(): Boolean {
+    suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== release() current state=${connectState.get().name} =====")
         synchronized(this) {
             if (!::channel.isInitialized || ClientConnectState.UNINITIALIZED == connectState.get()) {
                 LogContext.log.w(tag, "Already release or not initialized")
-                return false
+                cont.resume(false)
+                return@suspendCancellableCoroutine
             }
             connectState.set(ClientConnectState.UNINITIALIZED)
         }
@@ -388,7 +392,7 @@ abstract class BaseNettyClient protected constructor(
                 runCatching {
                     pipeline().removeAll { true }
 //            closeFuture().syncUninterruptibly() // It will stuck here. Why???
-                    closeFuture()
+//                    closeFuture()
                     close().syncUninterruptibly()
                 }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
             }
@@ -397,10 +401,19 @@ abstract class BaseNettyClient protected constructor(
         runCatching {
             LogContext.log.w(tag, "Releasing socket...")
             workerGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
-            LogContext.log.w(tag, "Release socket done!!!")
-        }.onFailure { LogContext.log.e(tag, "Release socket error.", it) }
-        LogContext.log.w(tag, "=====> Socket released <=====")
-        return true
+                .addListener { f ->
+                    if (f.isSuccess) {
+                        LogContext.log.w(tag, "=====> Socket released <=====")
+                        cont.resume(true)
+                    } else {
+                        LogContext.log.w(tag, "Release socket failed!!!")
+                        cont.resume(false)
+                    }
+                }
+        }.onFailure {
+            LogContext.log.e(tag, "Release socket error.", it)
+            cont.resume(false)
+        }
     }
 
     private fun stopRetryHandler() {

@@ -42,11 +42,22 @@ import kotlin.coroutines.resume
 /**
  * A thread-safe class
  *
- * For none-ssl websocket or trust all certificates websocket, you can create just a socket object,
+ * For none-ssl websocket or trust all certificates websocket, you can create just one socket object,
  * then disconnect it and connect it again for many times as you wish.
  *
  * However, for self-signed certificate, once you disconnect the socket,
  * you must recreate the socket object again then connect it or else you can **NOT** connect it any more.
+ *
+ * Example:
+ * For none-ssl websocket or trust all certificates:
+ * create socket ──> connect() ──> disconnectManually()
+ *                       ↑                   ↓
+ *                       └───────────────────┘
+ *
+ * For self-signed certificate:
+ * create socket ──> connect() ──> (optional)disconnectManually()  ──> release()
+ *        ↑                                                               ↓
+ *        └───────────────────────────────────────────────────────────────┘
  *
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
@@ -303,7 +314,7 @@ abstract class BaseNettyClient protected constructor(
         stopRetryHandler()
         defaultInboundHandler?.release()
         runCatching {
-            if (::channel.isInitialized) channel.disconnect().syncUninterruptibly().addListener { f ->
+            if (::channel.isInitialized) channel.disconnect().addListener { f ->
                 if (f.isSuccess) {
                     LogContext.log.w(tag, "===== disconnectManually() done =====")
                     connectState.set(ClientConnectState.DISCONNECTED)
@@ -358,7 +369,7 @@ abstract class BaseNettyClient protected constructor(
     open fun retryProcess() = false
 
     /**
-     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2s.)
+     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2200ms.)
      * So you'd better NOT call this method in main thread.
      *
      * Once you call [release], you can not reconnect it again by calling [connect] simply, you must recreate netty client again.
@@ -391,7 +402,7 @@ abstract class BaseNettyClient protected constructor(
                 LogContext.log.w(tag, "Closing channel...")
                 runCatching {
                     pipeline().removeAll { true }
-//            closeFuture().syncUninterruptibly() // It will stuck here. Why???
+//            closeFuture().syncUninterruptibly() // syncUninterruptibly() will stuck here. Why???
 //                    closeFuture()
                     close().syncUninterruptibly()
                 }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
@@ -400,7 +411,7 @@ abstract class BaseNettyClient protected constructor(
 
         runCatching {
             LogContext.log.w(tag, "Releasing socket...")
-            workerGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+            workerGroup.shutdownGracefully() // syncUninterruptibly() will not stuck here.
                 .addListener { f ->
                     if (f.isSuccess) {
                         LogContext.log.w(tag, "=====> Socket released <=====")

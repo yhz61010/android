@@ -121,7 +121,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             }
 
             // The following codes process WebSocket connection
-
             val frame = msg as WebSocketFrame
             if (frame is CloseWebSocketFrame) {
                 LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")

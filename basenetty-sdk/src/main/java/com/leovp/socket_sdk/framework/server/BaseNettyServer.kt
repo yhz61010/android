@@ -35,7 +35,7 @@ abstract class BaseNettyServer protected constructor(
     private val port: Int,
     val connectionListener: ServerConnectListener<BaseNettyServer>,
     internal var isWebSocket: Boolean = false,
-    internal var webSocketPath: String = "/ws"
+    internal var webSocketPath: String = "/"
 ) : BaseNetty() {
 
     companion object {

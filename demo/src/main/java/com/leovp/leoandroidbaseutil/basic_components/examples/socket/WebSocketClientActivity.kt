@@ -83,10 +83,10 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 webSocketClient = createSocket()
                 LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
-                LogContext.log.i(TAG, "--------------------------------------------------")
+//                LogContext.log.i(TAG, "--------------------------------------------------")
 //                webSocketClient?.disconnectManually()
 //                LogContext.log.i(TAG, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                webSocketClient?.release()
+//                webSocketClient?.release()
                 LogContext.log.i(TAG, "=================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):

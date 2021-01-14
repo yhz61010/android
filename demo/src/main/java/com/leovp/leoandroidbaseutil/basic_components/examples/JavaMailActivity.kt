@@ -22,9 +22,19 @@ import javax.mail.internet.MimeMultipart
 
 class JavaMailActivity : BaseDemonstrationActivity() {
     companion object {
-        private const val TO = "zytase01@leovp.com"
-        private const val FROM = "zytase01@leovp.com"
-        private const val FROM_PWD = "xxx"
+        private const val TO = "t@leovp.com"
+        private const val FROM = "t@leovp.com"
+        private const val FROM_PWD = "Temp123456:)"
+
+        private const val EMAIL_POP_PROTOCOL = "pop3"
+        private const val EMAIL_POP_HOST = "pop.qiye.aliyun.com"
+        private const val EMAIL_POP_PORT = 995
+        private const val EMAIL_POP_SSL = true
+
+        private const val EMAIL_SMTP_PROTOCOL = "smtp"
+        private const val EMAIL_SMTP_HOST = "smtp.qiye.aliyun.com"
+        private const val EMAIL_SMTP_PORT = 465
+        private const val EMAIL_SMTP_SSL = true
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -37,12 +47,13 @@ class JavaMailActivity : BaseDemonstrationActivity() {
     // smtp port 25, ssl port 465
     // pop3 port 110, ssl port 995
     // imap port 143, ssl port 993
-    private fun getServerProperties(protocol: String, port: Int): Properties {
+    private fun getServerProperties(protocol: String, mailHost: String, port: Int, enableSsl: Boolean = false): Properties {
         return Properties().apply {
             setProperty("mail.transport.protocol", protocol)
-            setProperty("mail.$protocol.host", "$protocol.mxhichina.com")
+            setProperty("mail.$protocol.host", mailHost)
             setProperty("mail.$protocol.port", port.toString())
             setProperty("mail.$protocol.auth", "true")
+            setProperty("mail.$protocol.ssl.enable", enableSsl.toString())
 //            setProperty("mail.$protocol.timeout", "10_000")
 //            setProperty("mail.debug", "true")
 
@@ -53,8 +64,8 @@ class JavaMailActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private fun getSession(protocol: String, port: Int, userName: String? = null, pwd: String? = null): Session {
-        return Session.getInstance(getServerProperties(protocol, port), if (userName.isNullOrBlank()) null else
+    private fun getSession(protocol: String, mailHost: String, port: Int, userName: String? = null, pwd: String? = null, enableSsl: Boolean = false): Session {
+        return Session.getInstance(getServerProperties(protocol, mailHost, port, enableSsl), if (userName.isNullOrBlank()) null else
             object : javax.mail.Authenticator() {
                 override fun getPasswordAuthentication(): PasswordAuthentication {
                     return PasswordAuthentication(userName, pwd)
@@ -74,7 +85,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
     fun onSendSimpleEmailClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ioScope.launch {
             LogContext.log.i(ITAG, "Sending simple mail...")
-            val session: Session = getSession("smtp", 25, FROM, FROM_PWD)
+            val session: Session = getSession(EMAIL_SMTP_PROTOCOL, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, FROM, FROM_PWD, EMAIL_SMTP_SSL)
             runCatching {
                 val message = MimeMessage(session)
                 message.setFrom(InternetAddress(FROM))
@@ -93,7 +104,7 @@ class JavaMailActivity : BaseDemonstrationActivity() {
             LogContext.log.i(ITAG, "Sending attachment mail...")
             val attachment = FileUtil.createFile(this@JavaMailActivity, "music.mp3")
             FileUtil.copyInputStreamToFile(resources.openRawResource(R.raw.music), attachment.absolutePath)
-            val session: Session = getSession("smtp", 25, FROM, FROM_PWD)
+            val session: Session = getSession(EMAIL_SMTP_PROTOCOL, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, FROM, FROM_PWD, EMAIL_SMTP_SSL)
 
             val text = MimeBodyPart()
             text.setContent("<h1>Welcome Leo</h1>", "text/html;charset=UTF-8")
@@ -129,11 +140,11 @@ class JavaMailActivity : BaseDemonstrationActivity() {
         ioScope.launch {
             LogContext.log.i(ITAG, "Receiving mails...")
             runCatching {
-                val session: Session = getSession("pop3", 110)
+                val session: Session = getSession(EMAIL_POP_PROTOCOL, EMAIL_POP_HOST, EMAIL_POP_PORT, enableSsl = EMAIL_POP_SSL)
                 session.debug = true
 
                 // connects to the message store
-                val store: Store = session.getStore("pop3")
+                val store: Store = session.getStore(EMAIL_POP_PROTOCOL)
                 store.connect(FROM, FROM_PWD)
 //                store.connect()
 
@@ -164,6 +175,18 @@ class JavaMailActivity : BaseDemonstrationActivity() {
                         } catch (ex: Exception) {
                             messageContent = "[Error downloading content]"
                             ex.printStackTrace()
+                        }
+                    } else if (contentType.contains("multipart")) {
+                        val multiPart = msg.content as? Multipart
+                        val numberOfParts = multiPart?.count ?: 0
+                        for (partCount in 0 until numberOfParts) {
+                            val part: MimeBodyPart? = multiPart?.getBodyPart(partCount) as? MimeBodyPart
+                            if (part?.contentType?.contains("text/plain") == true) {
+                                messageContent += part.content.toString()
+                            } else if (part?.contentType?.contains("text/html") == true) {
+                                // TODO remove useless html tag?
+                                messageContent += part.content.toString()
+                            }
                         }
                     }
 

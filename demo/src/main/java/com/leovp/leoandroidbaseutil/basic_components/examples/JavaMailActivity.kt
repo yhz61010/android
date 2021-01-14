@@ -166,32 +166,32 @@ class JavaMailActivity : BaseDemonstrationActivity() {
                     val sentDate = msg.sentDate.toString()
                     val contentType = msg.contentType
                     var messageContent = ""
+                    var messageHtmlContent = ""
                     if (contentType.contains("text/plain") || contentType.contains("text/html")) {
-                        try {
-                            val content = msg.content
-                            if (content != null) {
-                                messageContent = content.toString()
-                            }
-                        } catch (ex: Exception) {
+                        runCatching {
+                            messageContent = msg.content?.toString() ?: ""
+                        }.onFailure {
                             messageContent = "[Error downloading content]"
-                            ex.printStackTrace()
+                            it.printStackTrace()
                         }
                     } else if (contentType.contains("multipart")) {
                         val multiPart = msg.content as? Multipart
                         val numberOfParts = multiPart?.count ?: 0
                         for (partCount in 0 until numberOfParts) {
                             val part: MimeBodyPart? = multiPart?.getBodyPart(partCount) as? MimeBodyPart
+                            LogContext.log.i(ITAG, "    Part[$partCount] content type: ${part?.contentType}")
                             if (part?.contentType?.contains("text/plain") == true) {
                                 messageContent += part.content.toString()
                             } else if (part?.contentType?.contains("text/html") == true) {
                                 // TODO remove useless html tag?
-                                messageContent += part.content.toString()
+                                messageHtmlContent += part.content.toString()
                             }
                         }
                     }
+                    if (messageContent.isBlank()) messageContent = messageHtmlContent
 
                     // print out details of each message
-                    LogContext.log.i(ITAG, "Message #" + (i + 1) + ":")
+                    LogContext.log.i(ITAG, "Message(${contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)}) #" + (i + 1) + ":")
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")
 //                    LogContext.log.i(ITAG, "CC: $ccList")

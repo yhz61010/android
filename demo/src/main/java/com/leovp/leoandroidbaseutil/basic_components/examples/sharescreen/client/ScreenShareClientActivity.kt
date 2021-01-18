@@ -389,9 +389,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)
-            cs.launch {
-                it.connect()
-            }
+            cs.launch { it.connect() }
         }
     }
 

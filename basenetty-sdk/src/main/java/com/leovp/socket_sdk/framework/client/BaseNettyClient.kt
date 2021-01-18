@@ -225,6 +225,10 @@ abstract class BaseNettyClient protected constructor(
                 LogContext.log.w(tag, "===== Connecting or already connected =====")
                 cont.resume(connectStatus.get())
                 return@suspendCancellableCoroutine
+            } else if (connectStatus.get() == ClientConnectStatus.RELEASING) {
+                LogContext.log.w(tag, "===== Releasing now. DO NOT connect now. =====")
+                cont.resume(connectStatus.get())
+                return@suspendCancellableCoroutine
             } else {
                 LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
@@ -399,12 +403,15 @@ abstract class BaseNettyClient protected constructor(
     suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
         synchronized(this) {
-            if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectStatus.get()) {
-                LogContext.log.w(tag, "Already release or not initialized")
+            if (!::channel.isInitialized
+                || ClientConnectStatus.UNINITIALIZED == connectStatus.get()
+                || ClientConnectStatus.RELEASING == connectStatus.get()
+            ) {
+                LogContext.log.w(tag, "Releasing now or already release or not initialized")
                 cont.resume(false)
                 return@suspendCancellableCoroutine
             }
-            connectStatus.set(ClientConnectStatus.UNINITIALIZED)
+            connectStatus.set(ClientConnectStatus.RELEASING)
         }
         disconnectManually = true
         LogContext.log.w(tag, "Releasing retry handler...")

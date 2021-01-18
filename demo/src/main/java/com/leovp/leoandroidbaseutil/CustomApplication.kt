@@ -25,9 +25,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
         app = this
         instance = this
 
-//        SslUtils.hostnames = arrayOf("www.qvdv.com")
-//        SslUtils.certificateInputStream = assets.open("cert/www.qvdv.com.crt")
-//        SslUtils.certificateInputStream = assets.open("cert/baidu.com.crt")
+//        SslUtils.hostnames = arrayOf("postman-echo.com")
+//        SslUtils.certificateInputStream = assets.open("cert/postman-echo.com.crt")
 
         ForegroundComponent.init(this, 0L)
 

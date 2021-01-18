@@ -22,10 +22,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.android.synthetic.main.activity_socket_client.editText
 import kotlinx.android.synthetic.main.activity_socket_client.txtView
 import kotlinx.android.synthetic.main.activity_websocket_client.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
@@ -54,7 +51,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             URI(etSvrIp.text.toString()),
             connectionListener,
             constantRetry,
-            assets.open("cert/websocket.org.crt")
+            assets.open("cert/certificate.crt")
         )
         webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
@@ -73,6 +70,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         // create socket ──> connect() ──> disconnectManually()
         //                      ↑                   ↓
         //                      └───────────────────┘
+        // Note that, in this case, your socket handler must be @Sharable
         //
         // For self-signed certificate:
         // create socket ──> connect() ──> (optional)disconnectManually()  ──> release()
@@ -83,11 +81,9 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 webSocketClient = createSocket()
                 LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
-//                LogContext.log.i(TAG, "--------------------------------------------------")
 //                webSocketClient?.disconnectManually()
-//                LogContext.log.i(TAG, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 //                webSocketClient?.release()
-                LogContext.log.i(TAG, "=================================================================================")
+//                LogContext.log.i(TAG, "= released ================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -96,6 +92,14 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 // socketClient.connect()
             }
         }
+    }
+
+    fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        cs.launch { webSocketClient?.disconnectManually() }
+    }
+
+    fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
+        cs.launch { webSocketClient?.release() }
     }
 
     override fun onDestroy() {
@@ -107,7 +111,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
-            LogContext.log.i(TAG, "onConnected")
+            LogContext.log.w(TAG, "onConnected")
+            LogContext.log.i(TAG, "- connected -------------------------------------------------")
             ToastUtil.showDebugToast("onConnected")
 
             // Reset retry counter
@@ -121,38 +126,39 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
-            LogContext.log.w(TAG, "onDisconnect")
-            ToastUtil.showDebugToast("onDisconnect")
+            LogContext.log.w(TAG, "onDisconnected")
+            LogContext.log.i(TAG, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            ToastUtil.showDebugToast("onDisconnected")
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
-            LogContext.log.w(TAG, "onFailed code: $code message: $msg")
+            LogContext.log.w(TAG, "onFailed code: $code e=$e message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
 
-//            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
-//                || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
-//                || code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION
-//                || code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
-//            ) {
-//                retryTimes.incrementAndGet()
-//                if (retryTimes.get() > constantRetry.getMaxTimes()) {
-//                    LogContext.log.e(TAG, "===== Connect failed - Exceed max retry times. =====")
-//                    ToastUtil.showDebugToast("Exceed max retry times.")
-//
-//                    // Reset retry counter
-//                    retryTimes.set(0)
-//                } else {
-//                    LogContext.log.w(TAG, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
-//                    cs.launch {
-//                        runCatching {
-//                            delay(constantRetry.getDelayInMillSec(retryTimes.get()))
-//                            ensureActive()
-//                            webSocketClient?.release()
-//                            webSocketClient = createSocket().apply { connect() }
-//                        }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
-//                    } // launch
-//                } // else
-//            } // if for exception
+            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION
+                || code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
+            ) {
+                if (retryTimes.incrementAndGet() > constantRetry.getMaxTimes()) {
+                    LogContext.log.e(TAG, "===== Connect failed - Exceed max retry times. =====")
+                    ToastUtil.showDebugToast("Exceed max retry times.")
+
+                    // Reset retry counter
+                    retryTimes.set(0)
+                } else {
+                    LogContext.log.w(TAG, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
+                    cs.launch {
+                        runCatching {
+                            delay(constantRetry.getDelayInMillSec(retryTimes.get()))
+                            ensureActive()
+                            netty.release()
+                            LogContext.log.w(TAG, "= Reconnect ===============================================================")
+                            webSocketClient = createSocket().apply { connect() }
+                        }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
+                    } // launch
+                } // else
+            } // if for exception
         }
     }
 
@@ -200,16 +206,6 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 val result = webSocketClientHandler.sendMsgToServer(editText.text.toString())
                 withContext(Dispatchers.Main) { editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
             }
-        }
-    }
-
-    fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch { webSocketClient?.disconnectManually() }
-    }
-
-    fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch {
-            webSocketClient?.release()
         }
     }
 }

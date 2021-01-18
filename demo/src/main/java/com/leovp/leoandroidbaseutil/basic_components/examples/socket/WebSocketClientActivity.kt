@@ -78,6 +78,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         //        └───────────────────────────────────────────────────────────────┘
         cs.launch {
             for (i in 1..1) {
+                ensureActive()
                 webSocketClient = createSocket()
                 LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
@@ -104,6 +105,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     override fun onDestroy() {
         cs.launch { webSocketClient?.release() }
+        cs.cancel()
         super.onDestroy()
     }
 
@@ -153,7 +155,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                             delay(constantRetry.getDelayInMillSec(retryTimes.get()))
                             ensureActive()
                             netty.release()
-                            LogContext.log.w(TAG, "= Reconnect ===============================================================")
+                            LogContext.log.w(TAG, "= Start Reconnecting ===============================================================")
                             webSocketClient = createSocket().apply { connect() }
                         }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
                     } // launch

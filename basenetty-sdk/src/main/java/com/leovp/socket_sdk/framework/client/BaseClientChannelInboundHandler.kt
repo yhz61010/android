@@ -1,7 +1,7 @@
 package com.leovp.socket_sdk.framework.client
 
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.socket_sdk.framework.base.ClientConnectState
+import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.base.ReadSocketDataListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -65,34 +65,14 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun channelInactive(ctx: ChannelHandlerContext) {
         LogContext.log.w(
             tag,
-            "===== disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${
-                ctx.channel().remoteAddress()
-            } | Channel is inactive and reached its end of lifetime ====="
+            "===== Channel is inactive and reached its end of lifetime | " +
+                    "disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel().remoteAddress()}  ====="
         )
         if (netty.isWebSocket) {
-            LogContext.log.w(tag, "Try to close handshaker for web socket")
+            LogContext.log.i(tag, "Closing handshaker for websocket")
             runCatching { handshaker?.close(ctx.channel(), CloseWebSocketFrame()) }.onFailure { it.printStackTrace() }
         }
         super.channelInactive(ctx)
-
-        if (!caughtException) {
-            if (netty.disconnectManually) {
-                LogContext.log.i(tag, "channelInactive(disconnect) manually=${netty.disconnectManually}")
-//                netty.connectState.set(ClientConnectState.DISCONNECTED)
-//                netty.connectionListener.onDisconnected(netty)
-            } else {
-                LogContext.log.i(tag, "Set disconnected status.")
-                netty.connectState.set(ClientConnectState.FAILED)
-                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECTION_DISCONNECT, "Disconnect")
-                netty.doRetry()
-            }
-            LogContext.log.w(tag, "=====> Socket disconnected <=====")
-        } else {
-            LogContext.log.e(tag, "Caught socket exception! DO NOT fire onDisconnect() method!")
-//            netty.connectState.set(ClientConnectStatus.FAILED)
-//            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
-//            netty.doRetry()
-        }
     }
 
     /**
@@ -107,6 +87,27 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
         LogContext.log.i(tag, "===== handlerRemoved =====")
         super.handlerRemoved(ctx)
+
+        // In fact, we should do reconnect in channelUnregistered, however, according to our business requirement(only one use logged-in allowed),
+        // I must do reconnect here to make sure worker thread had already been released.
+        if (!caughtException) {
+            if (netty.disconnectManually) {
+                LogContext.log.i(tag, "handlerRemoved(disconnect) manually=${netty.disconnectManually}")
+//                netty.connectState.set(ClientConnectState.DISCONNECTED)
+//                netty.connectionListener.onDisconnected(netty)
+            } else {
+                LogContext.log.i(tag, "Set failed exception status.")
+                netty.connectStatus.set(ClientConnectStatus.FAILED)
+                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect exception or disconnect")
+                netty.doRetry()
+            }
+            LogContext.log.w(tag, "=====> Socket disconnected <=====")
+        } else {
+            LogContext.log.e(tag, "Caught socket exception! DO NOT fire ClientConnectListener#onDisconnected() method!")
+//            netty.connectState.set(ClientConnectStatus.FAILED)
+//            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
+//            netty.doRetry()
+        }
     }
 
     /**
@@ -133,7 +134,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 //            ctx.close()
 //        }
         runCatching {
-            ctx.close().syncUninterruptibly()
+            ctx.close().sync()
         }.onFailure {
             LogContext.log.e(tag, "close channel error.", it)
             it.printStackTrace()
@@ -142,11 +143,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.e(tag, "============================")
 
         if ("IOException" == exceptionType) {
-            netty.connectState.set(ClientConnectState.FAILED)
+            netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
             netty.doRetry()
         } else {
-            netty.connectState.set(ClientConnectState.FAILED)
+            netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)
         }
     }
@@ -164,10 +165,10 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             if (handshaker?.isHandshakeComplete == false) {
                 try {
                     handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
-                    LogContext.log.w(tag, "=====> WebSocket client connected <=====")
+                    LogContext.log.i(tag, "===== WebSocket hand shake finished =====")
                     channelPromise?.setSuccess()
                 } catch (e: WebSocketHandshakeException) {
-                    LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
+                    LogContext.log.e(tag, "===== WebSocket hand shake failed =====")
                     channelPromise?.setFailure(e)
                 }
                 return

@@ -21,16 +21,6 @@ enum class ClientConnectStatus {
      */
     UNINITIALIZED,
 
-    /**
-     * **PRIVATE status** for library.
-     * **DO NOT** use it in your codes
-     *
-     * Because of [CONNECTED] status is an asynchronous status, when user do connect to server successively,
-     * it will create more than one connection than you expect. So we need this status to tell user you're
-     * doing a connect now.
-     */
-    CONNECTING,
-
     CONNECTED,
 
     /**
@@ -46,7 +36,27 @@ enum class ClientConnectStatus {
      *
      * Once connecting is in this status, [DISCONNECTED] listeners will **NOT** be triggered.
      */
-    FAILED
+    FAILED,
+
+    // ==============================================================
+    // ===== Private status
+    // ==============================================================
+
+    /**
+     * **PRIVATE status** for library.
+     * **DO NOT** use it in your codes
+     *
+     * Because of [CONNECTED] status is an asynchronous status, when user do connect to server successively,
+     * it will create more than one connection than you expect. So we need this status to tell user you're
+     * doing a connect now.
+     */
+    CONNECTING,
+
+    /**
+     * PRIVATE status** for library.
+     * DO NOT** use it in your codes
+     */
+    RELEASING
 }
 
 

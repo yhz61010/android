@@ -56,6 +56,12 @@ enum class ClientConnectStatus {
      * PRIVATE status** for library.
      * DO NOT** use it in your codes
      */
+    DISCONNECTING,
+
+    /**
+     * PRIVATE status** for library.
+     * DO NOT** use it in your codes
+     */
     RELEASING
 }
 

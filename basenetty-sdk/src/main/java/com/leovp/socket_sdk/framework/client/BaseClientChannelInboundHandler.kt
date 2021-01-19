@@ -88,7 +88,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.i(tag, "===== handlerRemoved =====")
         super.handlerRemoved(ctx)
 
-        // In fact, we should do reconnect in channelUnregistered, however, according to our business requirement(only single user logged-in allowed),
+        // In fact, we should do reconnect in channelUnregistered. However, according to our business requirement(only one single user logged-in allowed),
         // I must do reconnect here to make sure worker thread had already been released.
         if (!caughtException) {
             if (netty.disconnectManually) {

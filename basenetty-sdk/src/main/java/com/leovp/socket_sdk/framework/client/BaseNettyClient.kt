@@ -403,7 +403,7 @@ abstract class BaseNettyClient protected constructor(
     suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
         synchronized(this) {
-            if (!::channel.isInitialized || ClientConnectStatus.UNINITIALIZED == connectStatus.get() || ClientConnectStatus.RELEASING == connectStatus.get()) {
+            if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() || ClientConnectStatus.RELEASING == connectStatus.get()) {
                 LogContext.log.w(tag, "Releasing now or already release or not initialized")
                 cont.resume(false)
                 return@suspendCancellableCoroutine
@@ -437,6 +437,7 @@ abstract class BaseNettyClient protected constructor(
             workerGroup.shutdownGracefully() // syncUninterruptibly() will not stuck here.
                 .addListener { f ->
                     if (f.isSuccess) {
+                        connectStatus.set(ClientConnectStatus.UNINITIALIZED)
                         LogContext.log.w(tag, "=====> Socket released <=====")
                         cont.resume(true)
                     } else {

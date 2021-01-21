@@ -99,14 +99,18 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 LogContext.log.i(tag, "Set failed exception status.")
                 netty.connectStatus.set(ClientConnectStatus.FAILED)
                 netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect exception or disconnect")
+                // For instance, "Unable to resolve host xxx" error will go into here when you connect to server without network.
+//                LogContext.log.e(tag, "=====> CHK11 <=====")
                 netty.doRetry()
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {
             LogContext.log.e(tag, "Caught socket exception! DO NOT fire ClientConnectListener#onDisconnected() method!")
-//            netty.connectState.set(ClientConnectStatus.FAILED)
-//            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
-//            netty.doRetry()
+            netty.connectStatus.set(ClientConnectStatus.FAILED)
+            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
+            // When network lost, you will go into here.
+//            LogContext.log.e(tag, "=====> CHK13 <=====")
+            netty.doRetry()
         }
     }
 
@@ -144,8 +148,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
         if ("IOException" == exceptionType) {
             netty.connectStatus.set(ClientConnectStatus.FAILED)
-            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-            netty.doRetry()
+            LogContext.log.w(tag, "Network lost")
+            // This exception will trigger handlerRemoved(), so we retry at that time.
+
+//            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+//            LogContext.log.e(tag, "=====> CHK12 <=====")
+//            netty.doRetry()
         } else {
             netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)

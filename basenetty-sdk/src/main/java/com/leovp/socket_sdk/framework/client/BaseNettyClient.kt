@@ -257,6 +257,8 @@ abstract class BaseNettyClient protected constructor(
                         connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Websocket Connect failed")
                         cont.resume(connectStatus.get())
+                        // Do NOT know how to reproduce this case
+//                        LogContext.log.e(tag, "=====> CHK1 <=====")
                         doRetry()
                     }
                 }
@@ -275,6 +277,8 @@ abstract class BaseNettyClient protected constructor(
                         connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect failed")
                         cont.resume(connectStatus.get())
+                        // Do NOT know how to reproduce this case
+//                        LogContext.log.e(tag, "=====> CHK2 <=====")
                         doRetry()
                     }
                 }
@@ -293,13 +297,19 @@ abstract class BaseNettyClient protected constructor(
 //            connectStatus.set(ClientConnectStatus.FAILED)
 //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
             cont.resume(ClientConnectStatus.FAILED)
-            doRetry()
+            // This exception will trigger handlerRemoved(), so we retry at that time.
+
+//            LogContext.log.e(tag, "=====> CHK3 <=====")
+//            doRetry()
         } catch (e: Exception) {
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
 //            connectStatus.set(ClientConnectStatus.FAILED)
 //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
             cont.resume(ClientConnectStatus.FAILED)
-            doRetry()
+            // This exception will trigger handlerRemoved(), so we retry at that time.
+
+//            LogContext.log.e(tag, "=====> CHK4 <=====")
+//            doRetry()
         }
     }
 

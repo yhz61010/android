@@ -365,7 +365,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
                 LogContext.log.w(ITAG, "onFailed code: $code message: $msg")
-                lostConnection()
+//                lostConnection()
             }
 
             private fun lostConnection() {

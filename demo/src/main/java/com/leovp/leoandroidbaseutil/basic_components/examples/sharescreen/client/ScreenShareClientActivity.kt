@@ -385,7 +385,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         // 1. adb shell (Login your server phone)
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
-        val url = URI("ws://${etServerIp.text}:10086/ws")
+        val url = URI("ws://${etServerIp.text}:10086/")
         webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)

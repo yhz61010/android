@@ -13,7 +13,6 @@ import android.os.HandlerThread
 import com.leovp.androidbase.exts.kotlin.exception
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.CodecUtil
 import java.nio.ByteBuffer
 
 /**
@@ -111,42 +110,49 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
         with(format) {
+            // MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+            // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setInteger(MediaFormat.KEY_LATENCY, 0)
+            }
+            // Set the encoder priority to realtime.
+            setInteger(MediaFormat.KEY_PRIORITY, 0x00)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
                 @Suppress("unchecked")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
-            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
-                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
-//                .maxByOrNull { it.profile }
-            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
-                setInteger(MediaFormat.KEY_PROFILE, usedProfile)
-            } else {
-                LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
-                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
-            }
+//            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
+//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+////                .maxByOrNull { it.profile }
+//            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+//            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
+//            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+//                LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
+//                setInteger(MediaFormat.KEY_PROFILE, usedProfile)
+//            } else {
+//                LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
+//                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+//            }
 //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // You must specify KEY_LEVEL on Android 6.0+
-                // AVCLevel51
-                // AVCLevel4
-                LogContext.log.w(TAG, "KEY_LEVEL: $usedLevel")
-                setInteger(MediaFormat.KEY_LEVEL, usedLevel)
-            } else {
-                LogContext.log.w(TAG, "KEY_LEVEL static: AVCLevel4")
-                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                // You must specify KEY_LEVEL on Android 6.0+
+//                // AVCLevel51
+//                // AVCLevel4
+//                LogContext.log.w(TAG, "KEY_LEVEL: $usedLevel")
+//                setInteger(MediaFormat.KEY_LEVEL, usedLevel)
+//            } else {
+//                LogContext.log.w(TAG, "KEY_LEVEL static: AVCLevel4")
+//                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
+//            }
         }
         h264Encoder = if (builder.useGoogleEncoder) {
             MediaCodec.createByCodecName("OMX.google.h264.encoder")

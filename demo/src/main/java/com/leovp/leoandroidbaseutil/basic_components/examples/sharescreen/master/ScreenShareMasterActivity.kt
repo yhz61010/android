@@ -23,7 +23,6 @@ import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
-import com.leovp.leoandroidbaseutil.CustomApplication
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -110,7 +109,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        floatCanvas = FloatViewManager(CustomApplication.instance, R.layout.component_screen_share_float_canvas, enableDrag = false, enableFullScreen = true)
+        floatCanvas = FloatViewManager(this, R.layout.component_screen_share_float_canvas, enableDrag = false, enableFullScreen = true)
 
         if (canDrawOverlays) {
             floatCanvas?.show()

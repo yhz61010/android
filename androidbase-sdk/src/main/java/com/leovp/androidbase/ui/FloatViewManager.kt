@@ -116,9 +116,11 @@ class FloatViewManager constructor(
 
     fun show() {
         if (context.canDrawOverlays) {
-            dismiss()
-            isShowing = true
-            windowManager?.addView(floatView, layoutParams)
+            runCatching {
+                dismiss()
+                isShowing = true
+                windowManager?.addView(floatView, layoutParams)
+            }.onFailure { it.printStackTrace() }
         }
     }
 

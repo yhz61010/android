@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".basic_components.examples.KeepAliveActivity" />
-        <activity android:name=".basic_components.examples.socket.WebSocketServerActivity" />
+        <activity android:name=".basic_components.examples.socket.websocket.WebSocketServerActivity" />
         <activity android:name=".basic_components.examples.HttpActivity" />
         <activity
             android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
@@ -52,7 +52,7 @@
         <activity
             android:name=".basic_components.examples.media_player.PlayVideoByMediaCodecActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity android:name=".basic_components.examples.socket.WebSocketClientActivity" />
+        <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />
         <activity android:name=".basic_components.examples.socket.SocketActivity" />
         <activity android:name=".basic_components.examples.RecordSingleAppScreenActivity" />

@@ -54,7 +54,8 @@
             android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />
-        <activity android:name=".basic_components.examples.socket.SocketActivity" />
+        <activity android:name=".basic_components.examples.socket.SocketServerActivity" />
+        <activity android:name=".basic_components.examples.socket.SocketClientActivity" />
         <activity android:name=".basic_components.examples.RecordSingleAppScreenActivity" />
         <activity android:name=".basic_components.examples.TakeScreenshotActivity" />
         <activity android:name=".basic_components.examples.CoroutineActivity" />

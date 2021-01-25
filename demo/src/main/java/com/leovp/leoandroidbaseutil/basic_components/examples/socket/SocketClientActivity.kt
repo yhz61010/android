@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SocketActivity : BaseDemonstrationActivity() {
+class SocketClientActivity : BaseDemonstrationActivity() {
     private val cs = CoroutineScope(Dispatchers.IO)
 
     private lateinit var socketClient: SocketClient
@@ -54,7 +54,7 @@ class SocketActivity : BaseDemonstrationActivity() {
             }
         }
 
-        socketClient = SocketClient("61010.ml", 9443, connectionListener, ExponentRetry(5, 1))
+        socketClient = SocketClient(etSvrIp.text.toString(), 10020, connectionListener, ExponentRetry(5, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
     }

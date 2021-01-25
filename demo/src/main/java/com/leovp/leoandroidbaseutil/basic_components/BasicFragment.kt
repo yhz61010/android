@@ -24,8 +24,8 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.socket.WebSocketClientActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.socket.WebSocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
 
 class BasicFragment : Fragment() {
 

@@ -1,4 +1,4 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples.socket
+package com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket
 
 import android.annotation.SuppressLint
 import android.os.Bundle

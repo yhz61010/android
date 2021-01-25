@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.socket.WebSocketServerActivity">
+    tools:context=".basic_components.examples.socket.websocket.WebSocketServerActivity">
 
     <ScrollView
         android:id="@+id/sv"

@@ -51,7 +51,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             URI(etSvrIp.text.toString()),
             connectionListener,
             constantRetry,
-            assets.open("cert/websocket.org.crt")
+            null //assets.open("cert/websocket.org.crt")
         )
         webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)

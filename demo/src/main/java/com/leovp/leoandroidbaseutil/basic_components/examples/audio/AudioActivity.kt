@@ -34,8 +34,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(8000, 48000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(8000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(16000, 48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)

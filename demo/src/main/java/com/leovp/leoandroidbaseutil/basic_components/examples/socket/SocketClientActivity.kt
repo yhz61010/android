@@ -54,7 +54,9 @@ class SocketClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        socketClient = SocketClient(etSvrIp.text.toString(), 10020, connectionListener, ExponentRetry(5, 1))
+        val svrIp = etSvrIp.text.toString().substringBeforeLast(':')
+        val svrPort = etSvrIp.text.toString().substringAfterLast(':').toInt()
+        socketClient = SocketClient(svrIp, svrPort, connectionListener, ExponentRetry(5, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
     }

@@ -1,4 +1,4 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket
+package com.leovp.leoandroidbaseutil.basic_components.examples.socket
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -14,28 +14,28 @@ import com.leovp.socket_sdk.framework.server.ServerConnectListener
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_websocket_server.*
+import kotlinx.android.synthetic.main.activity_socket_server.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.nio.charset.Charset
 
-@SuppressLint("SetTextI18n")
-class WebSocketServerActivity : BaseDemonstrationActivity() {
+/**
+ * Author: Michael Leo
+ * Date: 21-1-25 上午11:43
+ */
+class SocketServerActivity : BaseDemonstrationActivity() {
 
     companion object {
-        private const val TAG = "WebSocketServerActivity"
-        private const val PORT = 10010
+        private const val TAG = "SocketServerActivity"
+        private const val PORT = 10020
     }
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var webSocketServer: WebSocketServer
-    private lateinit var webSocketServerHandler: WebSocketServerHandler
+    private lateinit var socketServer: SocketServer
+    private lateinit var socketServerHandler: SocketServerHandler
 
+    @SuppressLint("SetTextI18n")
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted on port: $PORT")
@@ -61,7 +61,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             runOnUiThread { txtResponse.text = "${txtResponse.text}\n${clientChannel.remoteAddress()}: $data";sv.fullScroll(View.FOCUS_DOWN) }
-            webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
+            socketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -82,12 +82,12 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_websocket_server)
+        setContentView(R.layout.activity_socket_server)
 
         btnStop.setOnSingleClickListener {
             LogContext.log.d(TAG, "Stop button clicked.")
             cs.launch {
-                if (::webSocketServer.isInitialized) webSocketServer.stopServer()
+                if (::socketServer.isInitialized) socketServer.stopServer()
             }
         }
     }
@@ -95,36 +95,29 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-                webSocketServer = WebSocketServer(PORT, connectionListener)
-                webSocketServerHandler = WebSocketServerHandler(webSocketServer)
-                webSocketServer.initHandler(webSocketServerHandler)
-                webSocketServer.startServer()
+                socketServer = SocketServer(PORT, connectionListener)
+                socketServerHandler = SocketServerHandler(socketServer)
+                socketServer.initHandler(socketServerHandler)
+                socketServer.startServer()
             }
         }
     }
 
     override fun onDestroy() {
         cs.launch {
-            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
+            if (::socketServer.isInitialized) socketServer.stopServer()
         }
         super.onDestroy()
     }
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
+    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, false)
 
     @ChannelHandler.Sharable
-    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+    class SocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-            val receivedString: String?
-            val frame = msg as WebSocketFrame
-            receivedString = when (frame) {
-                is TextWebSocketFrame -> frame.text()
-                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
-                else -> null
-            }
-            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
+            netty.connectionListener.onReceivedData(netty, ctx.channel(), msg)
         }
 
         fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {

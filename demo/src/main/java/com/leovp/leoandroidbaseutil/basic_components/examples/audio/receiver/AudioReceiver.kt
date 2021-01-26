@@ -23,7 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue
 class AudioReceiver {
     companion object {
         private const val TAG = "AudioReceiver"
-        val defaultAudioType = AudioType.COMPRESSED_PCM
+        val defaultAudioType = AudioType.PCM
     }
 
     private var receiverServer: AudioReceiverWebSocket? = null

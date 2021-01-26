@@ -27,38 +27,42 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     private lateinit var socketClient: SocketClient
     private lateinit var socketClientHandler: SocketClientHandler
 
+    private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
+        override fun onConnected(netty: BaseNettyClient) {
+            LogContext.log.i(TAG, "onConnected")
+            ToastUtil.showDebugToast("onConnected")
+        }
+
+        @SuppressLint("SetTextI18n")
+        override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
+            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
+            runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
+        }
+
+        override fun onDisconnected(netty: BaseNettyClient) {
+            LogContext.log.w(TAG, "onDisconnect")
+            ToastUtil.showDebugToast("onDisconnect")
+        }
+
+        override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
+            LogContext.log.w(TAG, "onFailed code: $code message: $msg")
+            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_socket_client)
+    }
 
-        val connectionListener = object : ClientConnectListener<BaseNettyClient> {
-            override fun onConnected(netty: BaseNettyClient) {
-                LogContext.log.i(TAG, "onConnected")
-                ToastUtil.showDebugToast("onConnected")
-            }
-
-            @SuppressLint("SetTextI18n")
-            override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
-                LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-                runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
-            }
-
-            override fun onDisconnected(netty: BaseNettyClient) {
-                LogContext.log.w(TAG, "onDisconnect")
-                ToastUtil.showDebugToast("onDisconnect")
-            }
-
-            override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
-                LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-                ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            }
-        }
-
+    private fun createSocket(): SocketClient {
         val svrIp = etSvrIp.text.toString().substringBeforeLast(':')
         val svrPort = etSvrIp.text.toString().substringAfterLast(':').toInt()
         socketClient = SocketClient(svrIp, svrPort, connectionListener, ExponentRetry(5, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
+
+        return socketClient
     }
 
     override fun onDestroy() {
@@ -71,7 +75,7 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             repeat(1) {
-                if (::socketClient.isInitialized) socketClient.connect()
+                createSocket().connect()
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)

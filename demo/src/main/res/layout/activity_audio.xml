@@ -13,19 +13,17 @@
         android:layout_marginTop="16dp"
         android:textOff="Record AAC"
         android:textOn="Stop Recording"
-        app:layout_constraintEnd_toEndOf="@+id/btnPlayPCM"
-        app:layout_constraintHorizontal_bias="0.464"
-        app:layout_constraintStart_toStartOf="@+id/btnPlayPCM"
-        app:layout_constraintTop_toBottomOf="@+id/btnPlayPCM" />
+        app:layout_constraintStart_toStartOf="@+id/btnRecordPcm"
+        app:layout_constraintTop_toBottomOf="@+id/btnRecordPcm" />
 
     <ToggleButton
         android:id="@+id/btnRecordPcm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="8dp"
-        android:textOn="Stop Recording"
         android:textOff="Record PCM"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textOn="Stop Recording"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -33,23 +31,20 @@
         android:id="@+id/btnPlayPCM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp"
         android:textOff="Play PCM"
         android:textOn="Stop Playing"
-        app:layout_constraintEnd_toEndOf="@+id/btnRecordPcm"
-        app:layout_constraintStart_toStartOf="@+id/btnRecordPcm"
-        app:layout_constraintTop_toBottomOf="@+id/btnRecordPcm" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnRecordPcm" />
 
     <ToggleButton
         android:id="@+id/btnPlayAac"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:textOff="Play AAC"
         android:textOn="Stop Playing"
-        app:layout_constraintEnd_toEndOf="@+id/btnRecordAac"
-        app:layout_constraintStart_toStartOf="@+id/btnRecordAac"
-        app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
+        app:layout_constraintEnd_toEndOf="@+id/btnPlayPCM"
+        app:layout_constraintTop_toTopOf="@+id/btnRecordAac" />
 
     <EditText
         android:id="@+id/etAudioReceiverIp"
@@ -62,7 +57,7 @@
         android:text="wss://50d.win:8087/client"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPlayAac" />
+        app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
 
     <Button
         android:id="@+id/btnAudioSender"

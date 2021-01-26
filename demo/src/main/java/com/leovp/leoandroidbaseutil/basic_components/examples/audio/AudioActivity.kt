@@ -176,10 +176,10 @@ class AudioActivity : BaseDemonstrationActivity() {
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val url = URI("ws://${etAudioReceiverIp.text}:10020/")
-        LogContext.log.w(TAG, "Send to $url")
+        val uri = URI.create(etAudioReceiverIp.text.toString())
+        LogContext.log.w(TAG, "Send to $uri")
         audioSender = AudioSender()
-        ioScope.launch { audioSender?.start(this@AudioActivity, url) }
+        ioScope.launch { audioSender?.start(this@AudioActivity, uri) }
     }
 
     fun onAudioReceiverClick(@Suppress("UNUSED_PARAMETER") view: View) {

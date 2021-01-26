@@ -20,7 +20,7 @@ class NetworkUnitTest {
 
     @Before
     fun preTest() {
-        LogContext.setLogImp(LLog())
+        LogContext.setLogImp(LLog("LEO"))
     }
 
     @Test

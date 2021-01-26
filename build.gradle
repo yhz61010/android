@@ -11,7 +11,8 @@ buildscript {
         maven { url "https://maven.java.net/content/groups/public/" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:4.1.2'
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -24,6 +25,7 @@ allprojects {
         google()
         jcenter()
         maven { url 'https://jitpack.io' }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 }
 

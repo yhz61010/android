@@ -3,6 +3,7 @@ package com.leovp.androidbase.exts.android
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
@@ -244,4 +245,8 @@ fun isProbablyAnEmulator(): Boolean {
             || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
             || Build.PRODUCT == "google_sdk"
             || DeviceProp.getSystemProperty("ro.kernel.qemu") == "1"// another Android SDK emulator check
+}
+
+fun Context.isTablet(): Boolean {
+    return (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 }

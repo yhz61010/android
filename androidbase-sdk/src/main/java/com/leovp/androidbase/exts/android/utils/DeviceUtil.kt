@@ -133,6 +133,7 @@ object DeviceUtil {
             MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}
+            Tablet          : ${app.isTablet()}
             Emulator        : ${isProbablyAnEmulator()}
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}

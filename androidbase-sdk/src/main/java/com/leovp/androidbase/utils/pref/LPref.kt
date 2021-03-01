@@ -61,13 +61,13 @@ class LPref(name: String = app.packageName) : IPref {
         }
     }
 
+    @Synchronized
     override fun put(key: String, v: Set<String>) {
         pref.edit().apply {
             putStringSet(key, v)
             apply()
         }
     }
-
 
     override fun getInt(key: String, default: Int) = pref.getInt(key, default)
 

@@ -90,6 +90,7 @@ class BasicFragment : Fragment() {
             Pair("Preference", PrefActivity::class.java),
             Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Java Mail", JavaMailActivity::class.java),
+            Pair("Bluetooth", BluetoothActivity::class.java),
         )
 
         val colors = arrayOf(

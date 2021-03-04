@@ -13,6 +13,7 @@ class BluetoothActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bluetooth)
+        BluetoothUtil.enable()
     }
 
     fun onEnableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {

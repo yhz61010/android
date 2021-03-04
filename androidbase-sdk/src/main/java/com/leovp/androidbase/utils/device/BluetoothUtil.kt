@@ -113,4 +113,9 @@ object BluetoothUtil {
         val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
         bluetoothLeAdvertiser.startAdvertising(settings, advertiseData, callback)
     }
+
+    fun stopAdvertising(callback: AdvertiseCallback) {
+        val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
+        bluetoothLeAdvertiser.stopAdvertising(callback)
+    }
 }

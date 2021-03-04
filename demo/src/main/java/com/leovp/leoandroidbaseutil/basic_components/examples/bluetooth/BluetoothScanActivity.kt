@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
+import com.leovp.androidbase.utils.device.ScanDeviceCallback
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceAdapter
@@ -35,7 +36,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         initView()
         initBluetooth()
         initReceiver()
-        doScan()
+        doDiscovery()
     }
 
     private fun initReceiver() {
@@ -50,6 +51,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+        BluetoothUtil.release()
         unregisterReceiver(bluetoothReceiver)
     }
 
@@ -58,7 +60,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         adapter = DeviceAdapter().apply {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
-                    BluetoothUtil.stopScan()
+                    BluetoothUtil.cancelDiscovery()
                     val intent = Intent(this@BluetoothScanActivity, BluetoothClientActivity::class.java)
                     intent.putExtra("device", item.device)
                     startActivity(intent)
@@ -81,10 +83,14 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         BluetoothUtil.enable()
     }
 
-    private fun doScan() {
+    private fun doDiscovery() {
         bluetoothDeviceMap.clear()
-        binding.btnDoScan.text = "Scan"
-        BluetoothUtil.scan()
+        binding.btnDiscovery.text = "Discovery"
+        BluetoothUtil.startDiscovery()
+    }
+
+    fun onDiscoveryClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        doDiscovery()
     }
 
     fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -93,24 +99,26 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
 
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {
         bluetoothDeviceMap.clear()
-        BluetoothUtil.stopScan()
+        BluetoothUtil.cancelDiscovery()
     }
 
-    private fun oldScan() {
+    private fun doScan() {
         bluetoothDeviceMap.clear()
         binding.btnDoScan.text = "Scan"
-        BluetoothUtil.scan { device: BluetoothDevice, rssi: Int ->
-            // Remove redundant data
-            if (bluetoothDeviceMap.containsKey(device.address)) {
-                return@scan
+        BluetoothUtil.scan(object : ScanDeviceCallback {
+            override fun onScanned(device: BluetoothDevice, rssi: Int) {
+                // Remove redundant data
+                if (bluetoothDeviceMap.containsKey(device.address)) {
+                    return
+                }
+                val model = DeviceModel(device, device.name, device.address, rssi.toString())
+                bluetoothDeviceMap[device.address] = model
+                binding.btnDoScan.text = "Scan(${bluetoothDeviceMap.size})"
+                val list = bluetoothDeviceMap.values.toMutableList()
+                list.sortByDescending { it.name }
+                adapter?.clearAndAddList(list)
             }
-            val model = DeviceModel(device, device.name, device.address, rssi.toString())
-            bluetoothDeviceMap[device.address] = model
-            binding.btnDoScan.text = "Scan(${bluetoothDeviceMap.size})"
-            val list = bluetoothDeviceMap.values.toMutableList()
-            list.sortBy { it.name }
-            adapter?.clearAndAddList(list)
-        }
+        })
     }
 
     private val bluetoothReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -121,7 +129,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                     val model = DeviceModel(device, device.name, device.address, null)
                     LogContext.log.w("Found device: ${model.toJsonString()}")
                     bluetoothDeviceMap[device.address] = model
-                    binding.btnDoScan.text = "Scan(${bluetoothDeviceMap.size})"
+                    binding.btnDiscovery.text = "Discovery(${bluetoothDeviceMap.size})"
                     val list = bluetoothDeviceMap.values.toMutableList()
                     list.sortByDescending { it.name }
                     adapter?.clearAndAddList(list)

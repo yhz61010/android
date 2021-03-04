@@ -25,7 +25,14 @@ import com.leovp.androidbase.exts.android.bluetoothManager
  */
 object BluetoothUtil {
     private val bluetoothManager: BluetoothManager by lazy { app.bluetoothManager }
-    private val bluetoothAdapter: BluetoothAdapter by lazy { bluetoothManager.adapter }
+    private val bluetoothAdapter: BluetoothAdapter by lazy {
+        bluetoothManager.adapter
+//        BluetoothAdapter.getDefaultAdapter()
+
+        // TODO The following descriptions are right?
+        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
+        // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
+    }
 
     private var scanDeviceCallback: ScanDeviceCallback? = null
 

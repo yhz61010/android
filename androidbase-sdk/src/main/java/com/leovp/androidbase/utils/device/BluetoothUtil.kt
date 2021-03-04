@@ -4,8 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
+import android.bluetooth.le.*
 import android.content.pm.PackageManager
 import android.os.Build
 import com.leovp.androidbase.exts.android.app
@@ -91,5 +90,27 @@ object BluetoothUtil {
     @SuppressLint("MissingPermission")
     fun stopScan(): Boolean {
         return bluetoothAdapter.cancelDiscovery()
+    }
+
+    /**
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
+    fun startAdvertising(name: String, callback: AdvertiseCallback) {
+        val settings = AdvertiseSettings.Builder()
+            .setConnectable(true)
+            .setTimeout(0)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .build()
+        val advertiseData = AdvertiseData.Builder()
+            .setIncludeDeviceName(true)
+            .setIncludeTxPowerLevel(true)
+            .build()
+        bluetoothAdapter.name = name
+        val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
+        bluetoothLeAdvertiser.startAdvertising(settings, advertiseData, callback)
     }
 }

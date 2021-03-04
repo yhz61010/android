@@ -28,8 +28,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.bluetooth.BluetoothClientActivity"></activity>
         <activity android:name=".basic_components.examples.bluetooth.BluetoothServerActivity" />
-        <activity android:name=".basic_components.examples.bluetooth.BluetoothClientActivity" />
+        <activity android:name=".basic_components.examples.bluetooth.BluetoothScanActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothActivity" />
         <activity android:name=".basic_components.examples.JavaMailActivity" />
         <activity android:name=".basic_components.examples.cipher.AudioCipherActivity" />

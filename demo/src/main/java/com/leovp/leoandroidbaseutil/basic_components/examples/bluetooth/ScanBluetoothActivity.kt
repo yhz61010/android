@@ -78,7 +78,7 @@ class ScanBluetoothActivity : BaseDemonstrationActivity() {
 
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {
         bluetoothDeviceMap.clear()
-        binding.btnDoScan.text = "Scan"
+        BluetoothUtil.stopScan()
     }
 
     private fun oldScan() {
@@ -112,8 +112,10 @@ class ScanBluetoothActivity : BaseDemonstrationActivity() {
                     adapter?.clearAndAddList(list)
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                    LogContext.log.w("Bluetooth discovery started")
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    LogContext.log.w("Bluetooth discovery finished")
                 }
             }
         }

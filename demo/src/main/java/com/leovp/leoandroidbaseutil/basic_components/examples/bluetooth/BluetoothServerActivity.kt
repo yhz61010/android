@@ -35,6 +35,13 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     private var connectedDevice: BluetoothDevice? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
     private var bluetoothGattServer: BluetoothGattServer? = null
+    private val advertiseCallback = object : AdvertiseCallback() {
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+            super.onStartSuccess(settingsInEffect)
+            LogContext.log.w("onStartSuccess=${settingsInEffect.toJsonString()}")
+            addService()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +51,16 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
 
         initView()
         initBleServer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+        BluetoothUtil.stopAdvertising(advertiseCallback)
+        bluetoothGattServer?.run {
+            clearServices()
+            close()
+        }
     }
 
     private fun initView() {
@@ -57,13 +74,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
             return
         }
         BluetoothUtil.enable()
-        BluetoothUtil.startAdvertising(SERVER_NAME, object : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                super.onStartSuccess(settingsInEffect)
-                LogContext.log.w("onStartSuccess=${settingsInEffect.toJsonString()}")
-                addService()
-            }
-        })
+        BluetoothUtil.startAdvertising(SERVER_NAME, advertiseCallback)
     }
 
     /**

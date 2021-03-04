@@ -1,7 +1,8 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples
+package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
 import android.os.Bundle
 import android.view.View
+import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -24,5 +25,9 @@ class BluetoothActivity : BaseDemonstrationActivity() {
         val disable = BluetoothUtil.disable()
         LogContext.log.i("Disable=$disable")
         toast("Disable=$disable")
+    }
+
+    fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        startActivity(ScanBluetoothActivity::class)
     }
 }

@@ -1,7 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,21 +15,21 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceAdapter
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceModel
-import com.leovp.leoandroidbaseutil.databinding.ActivityScanBluetoothBinding
+import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothClientBinding
 import java.util.*
 
-class ScanBluetoothActivity : BaseDemonstrationActivity() {
+class BluetoothClientActivity : BaseDemonstrationActivity() {
 
-    private var _binding: ActivityScanBluetoothBinding? = null
+    private var _binding: ActivityBluetoothClientBinding? = null
     private val binding get() = _binding!!
 
+    private var bluetoothGatt: BluetoothGatt? = null
     private var adapter: DeviceAdapter? = null
-
     private val bluetoothDeviceMap = mutableMapOf<String, DeviceModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityScanBluetoothBinding.inflate(layoutInflater).apply {
+        _binding = ActivityBluetoothClientBinding.inflate(layoutInflater).apply {
             setContentView(this.root)
         }
 
@@ -54,24 +53,60 @@ class ScanBluetoothActivity : BaseDemonstrationActivity() {
     }
 
     private fun initView() {
-        title = "Scan Bluetooth"
+        title = "Bluetooth Client"
         adapter = DeviceAdapter().apply {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
-                    toast("You click item=${item.toJsonString()}")
+                    bluetoothGatt = item.device.connectGatt(this@BluetoothClientActivity, false, object : BluetoothGattCallback() {
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            when (newState) {
+                                BluetoothProfile.STATE_CONNECTED -> {
+                                    LogContext.log.w("STATE_CONNECTED")
+                                    gatt!!.discoverServices()
+                                }
+                                BluetoothProfile.STATE_CONNECTING -> {
+                                    LogContext.log.w("STATE_CONNECTING")
+                                }
+                                BluetoothProfile.STATE_DISCONNECTED -> {
+                                    LogContext.log.w("STATE_DISCONNECTED")
+                                }
+                                BluetoothProfile.STATE_DISCONNECTING -> {
+                                    LogContext.log.w("STATE_DISCONNECTING")
+                                }
+                            }
+                        }
+
+                        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                            LogContext.log.w("onServicesDiscovered status=$status")
+                            super.onServicesDiscovered(gatt, status)
+                            //设置读特征值的监听，接收服务端发送的数据
+                            val service = bluetoothGatt!!.getService(BluetoothServerActivity.UUID_SERVER)
+                            val characteristic = service.getCharacteristic(BluetoothServerActivity.UUID_CHAR_READ)
+                            val b = bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
+                            LogContext.log.w("setCharacteristicNotification b=$b")
+                        }
+
+                        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                            super.onCharacteristicChanged(gatt, characteristic)
+                            val data = String(characteristic.value)
+                            LogContext.log.w("onCharacteristicChanged characteristic=${characteristic.toJsonString()} data=$data")
+                        }
+                    })
                 }
             }
         }
 
         binding.rvDeviceList.run {
-            layoutManager = LinearLayoutManager(this@ScanBluetoothActivity)
-            adapter = this@ScanBluetoothActivity.adapter
+            layoutManager = LinearLayoutManager(this@BluetoothClientActivity)
+            adapter = this@BluetoothClientActivity.adapter
         }
     }
 
     private fun initBluetooth() {
         if (!BluetoothUtil.isSupportBle()) {
             toast("Does not support bluetooth!")
+            finish()
             return
         }
         BluetoothUtil.enable()
@@ -123,6 +158,12 @@ class ScanBluetoothActivity : BaseDemonstrationActivity() {
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     LogContext.log.w("Bluetooth discovery finished")
+                }
+                BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                    LogContext.log.w("Device connected")
+                }
+                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
+                    LogContext.log.w("Device disconnected")
                 }
             }
         }

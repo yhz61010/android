@@ -78,8 +78,18 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun scan() {
+    fun scan(): Boolean {
         enable()
-        bluetoothAdapter.startDiscovery()
+        return bluetoothAdapter.startDiscovery()
+    }
+
+    /**
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
+    fun stopScan(): Boolean {
+        return bluetoothAdapter.cancelDiscovery()
     }
 }

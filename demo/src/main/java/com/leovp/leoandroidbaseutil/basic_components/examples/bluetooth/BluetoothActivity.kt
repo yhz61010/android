@@ -29,6 +29,10 @@ class BluetoothActivity : BaseDemonstrationActivity() {
     }
 
     fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        startActivity(ScanBluetoothActivity::class)
+        startActivity(BluetoothClientActivity::class)
+    }
+
+    fun onGotoServerSideClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        startActivity(BluetoothServerActivity::class)
     }
 }

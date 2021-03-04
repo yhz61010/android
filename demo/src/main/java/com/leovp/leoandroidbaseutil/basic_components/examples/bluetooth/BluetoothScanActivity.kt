@@ -50,6 +50,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+        unregisterReceiver(bluetoothReceiver)
     }
 
     private fun initView() {
@@ -57,6 +58,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         adapter = DeviceAdapter().apply {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
+                    BluetoothUtil.stopScan()
                     val intent = Intent(this@BluetoothScanActivity, BluetoothClientActivity::class.java)
                     intent.putExtra("device", item.device)
                     startActivity(intent)

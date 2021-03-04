@@ -26,6 +26,7 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.adapterPosition]
 //        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
+        currentItem.index = holder.adapterPosition + 1
         holder.bind(currentItem)
         holder.itemView.setOnClickListener {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1

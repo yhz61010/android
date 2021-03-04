@@ -55,7 +55,14 @@ class ScanBluetoothActivity : BaseDemonstrationActivity() {
 
     private fun initView() {
         title = "Scan Bluetooth"
-        adapter = DeviceAdapter()
+        adapter = DeviceAdapter().apply {
+            onItemClickListener = object : DeviceAdapter.OnItemClickListener {
+                override fun onItemClick(item: DeviceModel, position: Int) {
+                    toast("You click item=${item.toJsonString()}")
+                }
+            }
+        }
+
         binding.rvDeviceList.run {
             layoutManager = LinearLayoutManager(this@ScanBluetoothActivity)
             adapter = this@ScanBluetoothActivity.adapter

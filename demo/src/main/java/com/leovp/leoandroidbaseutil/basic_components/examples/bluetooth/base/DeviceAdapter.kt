@@ -30,7 +30,7 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
         holder.bind(currentItem)
         holder.itemView.setOnClickListener {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-            onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
+            onItemClickListener?.onItemClick(currentItem, holder.layoutPosition)
         }
     }
 
@@ -56,9 +56,8 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
 
     // =============================================
     interface OnItemClickListener {
-        fun onItemClick(view: View, position: Int) {}
+        fun onItemClick(item: DeviceModel, position: Int)
     }
-
 
     class ItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         private val tvIndex: TextView = itemView.findViewById(R.id.txtIndex)

@@ -40,7 +40,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:onClick="onScanClick"
-        android:text="Goto Client Side"
+        android:text="Scan"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnEnableBluetooth" />
@@ -75,8 +75,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Goto Server Side"
         android:onClick="onGotoServerSideClick"
+        android:text="Start Server"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView12" />

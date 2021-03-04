@@ -19,14 +19,14 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     companion object {
         private const val SERVER_NAME = "Leo_BLE_Server"
 
-        //服务uuid
-        var UUID_SERVER = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
+        // Service UUID
+        var SERVICE_UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
 
-        //读的特征值¸
-        var UUID_CHAR_READ = UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb")
+        // Characteristic UUID for reading
+        var CHARACTERISTIC_READ_UUID = UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb")
 
-        //写的特征值
-        var UUID_CHAR_WRITE = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
+        // Characteristic UUID for writing
+        var CHARACTERISTIC_WRITE_UUID = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
     }
 
     private var _binding: ActivityBluetoothServerBinding? = null
@@ -78,27 +78,27 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     }
 
     /**
-     * 添加读写服务UUID，特征值等
+     * Add service and characteristic
      */
     private fun addService() {
-        val gattService = BluetoothGattService(UUID_SERVER, BluetoothGattService.SERVICE_TYPE_PRIMARY)
-        //只读的特征值
+        val gattService = BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        // Read only characteristic
         characteristicRead = BluetoothGattCharacteristic(
-            UUID_CHAR_READ,
+            CHARACTERISTIC_READ_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
-        //只写的特征值
+        // Write only characteristic
         val characteristicWrite = BluetoothGattCharacteristic(
-            UUID_CHAR_WRITE,
+            CHARACTERISTIC_WRITE_UUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_READ
                     or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_WRITE or BluetoothGattCharacteristic.PERMISSION_READ
         )
-        //将特征值添加至服务里
+        // Add characteristics to service
         gattService.addCharacteristic(characteristicRead)
         gattService.addCharacteristic(characteristicWrite)
-        //监听客户端的连接
+        // Client monitor listener
         bluetoothGattServer = app.bluetoothManager.openGattServer(this, gattServerCallback)
         bluetoothGattServer?.addService(gattService)
     }

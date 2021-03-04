@@ -62,11 +62,11 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 LogContext.log.w("onServicesDiscovered status=$status")
                 super.onServicesDiscovered(gatt, status)
-                //设置读特征值的监听，接收服务端发送的数据
-                val service = bluetoothGatt!!.getService(BluetoothServerActivity.UUID_SERVER)
-                val characteristic = service.getCharacteristic(BluetoothServerActivity.UUID_CHAR_READ)
-                val b = bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
-                LogContext.log.w("setCharacteristicNotification b=$b")
+                // Set characteristics
+                val service = bluetoothGatt!!.getService(BluetoothServerActivity.SERVICE_UUID)
+                val characteristic = service.getCharacteristic(BluetoothServerActivity.CHARACTERISTIC_READ_UUID)
+                val successFlag = bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
+                LogContext.log.w("setCharacteristicNotification b=$successFlag")
             }
 
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
@@ -88,10 +88,10 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
         if (bluetoothGatt == null) {
             return
         }
-        //找到服务
-        val service = bluetoothGatt!!.getService(BluetoothServerActivity.UUID_SERVER) ?: return
-        //拿到写的特征值
-        val characteristic = service.getCharacteristic(BluetoothServerActivity.UUID_CHAR_WRITE)
+        // Get service
+        val service = bluetoothGatt!!.getService(BluetoothServerActivity.SERVICE_UUID) ?: return
+        // Get writing characteristic
+        val characteristic = service.getCharacteristic(BluetoothServerActivity.CHARACTERISTIC_WRITE_UUID)
         bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
         characteristic.value = msg.toByteArray()
         bluetoothGatt!!.writeCharacteristic(characteristic)

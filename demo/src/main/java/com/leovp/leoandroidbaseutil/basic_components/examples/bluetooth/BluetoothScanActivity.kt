@@ -35,6 +35,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         initView()
         initBluetooth()
         initReceiver()
+        doScan()
     }
 
     private fun initReceiver() {
@@ -78,10 +79,14 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         BluetoothUtil.enable()
     }
 
-    fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun doScan() {
         bluetoothDeviceMap.clear()
         binding.btnDoScan.text = "Scan"
         BluetoothUtil.scan()
+    }
+
+    fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        doScan()
     }
 
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {

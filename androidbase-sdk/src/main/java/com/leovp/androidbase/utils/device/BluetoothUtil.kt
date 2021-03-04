@@ -19,7 +19,6 @@ import com.leovp.androidbase.exts.android.bluetoothManager
  * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
  * <!--  For get nearby devices, need location permission when above android M  -->
  * <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
- * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  *
  * Author: Michael Leo
  * Date: 21-3-3 下午5:38
@@ -34,7 +33,7 @@ object BluetoothUtil {
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
-            scanDeviceCallback?.onScanned(result.device, result.rssi)
+            scanDeviceCallback?.onScanned(result.device, result.rssi, result)
         }
     }
 
@@ -152,5 +151,5 @@ object BluetoothUtil {
 }
 
 interface ScanDeviceCallback {
-    fun onScanned(device: BluetoothDevice, rssi: Int)
+    fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult? = null)
 }

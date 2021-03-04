@@ -27,6 +27,12 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
         initData()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+        bluetoothGatt?.disconnect()
+    }
+
     private fun initView() {
         title = "Bluetooth Client"
     }

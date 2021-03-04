@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -95,6 +96,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     }
 
     fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("You must click STOP SCAN button to stop scanning.", Toast.LENGTH_LONG)
         doScan()
     }
 

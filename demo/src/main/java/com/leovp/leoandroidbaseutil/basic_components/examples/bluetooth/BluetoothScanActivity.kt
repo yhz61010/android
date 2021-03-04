@@ -1,6 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
 import android.bluetooth.*
+import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -106,7 +107,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         bluetoothDeviceMap.clear()
         binding.btnDoScan.text = "Scan"
         BluetoothUtil.scan(object : ScanDeviceCallback {
-            override fun onScanned(device: BluetoothDevice, rssi: Int) {
+            override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
                 // Remove redundant data
                 if (bluetoothDeviceMap.containsKey(device.address)) {
                     return

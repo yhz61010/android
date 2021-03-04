@@ -15,6 +15,14 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothServerBinding
 import java.util.*
 
+/**
+ *  Need following permissions:
+ *
+ * <uses-permission android:name="android.permission.BLUETOOTH" />
+ * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+ * <!--  For get nearby devices, need location permission when above android M  -->
+ * <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+ */
 class BluetoothServerActivity : BaseDemonstrationActivity() {
     companion object {
         private const val SERVER_NAME = "Leo_BLE_Server"

@@ -71,4 +71,15 @@ object BluetoothUtil {
             bluetoothAdapter.startLeScan { device, rssi, _ -> callback(device, rssi) }
         }
     }
+
+    /**
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
+    fun scan() {
+        enable()
+        bluetoothAdapter.startDiscovery()
+    }
 }

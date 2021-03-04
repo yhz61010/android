@@ -108,6 +108,12 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         binding.btnDoScan.text = "Scan"
         BluetoothUtil.scan(object : ScanDeviceCallback {
             override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    if (result?.isConnectable == false) {
+                        LogContext.log.e("Ignore device:${device.name}|${device.address}")
+                        return
+                    }
+                }
                 // Remove redundant data
                 if (bluetoothDeviceMap.containsKey(device.address)) {
                     return

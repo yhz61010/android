@@ -2,11 +2,13 @@ package com.leovp.androidbase.utils.device
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.*
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.bluetoothManager
 
@@ -25,6 +27,20 @@ import com.leovp.androidbase.exts.android.bluetoothManager
 object BluetoothUtil {
     private val bluetoothManager: BluetoothManager by lazy { app.bluetoothManager }
     private val bluetoothAdapter: BluetoothAdapter by lazy { bluetoothManager.adapter }
+
+    private var scanDeviceCallback: ScanDeviceCallback? = null
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private val scanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            super.onScanResult(callbackType, result)
+            scanDeviceCallback?.onScanned(result.device, result.rssi)
+        }
+    }
+
+    private val leScanCallback = LeScanCallback { device, rssi, _ ->
+        scanDeviceCallback?.onScanned(device, rssi)
+    }
 
     // Bluetooth Low Energy
     fun isSupportBle(): Boolean {
@@ -57,17 +73,12 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun scan(callback: (device: BluetoothDevice, rssi: Int) -> Unit) {
+    fun scan(scanDeviceCallback: ScanDeviceCallback) {
+        this.scanDeviceCallback = scanDeviceCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothAdapter.bluetoothLeScanner?.startScan(object : ScanCallback() {
-                override fun onScanResult(callbackType: Int, result: ScanResult) {
-                    super.onScanResult(callbackType, result)
-                    val device = result.device
-                    callback(device, result.rssi)
-                }
-            })
+            bluetoothAdapter.bluetoothLeScanner?.startScan(scanCallback)
         } else {
-            bluetoothAdapter.startLeScan { device, rssi, _ -> callback(device, rssi) }
+            bluetoothAdapter.startLeScan(leScanCallback)
         }
     }
 
@@ -77,7 +88,23 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun scan(): Boolean {
+    fun stopScan() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
+        } else {
+            bluetoothAdapter.stopLeScan(leScanCallback)
+        }
+    }
+
+    /**
+     * **DO NOT forget to implement the bluetooth receiver.**
+     *
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
+    fun startDiscovery(): Boolean {
         enable()
         return bluetoothAdapter.startDiscovery()
     }
@@ -88,7 +115,7 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun stopScan(): Boolean {
+    fun cancelDiscovery(): Boolean {
         return bluetoothAdapter.cancelDiscovery()
     }
 
@@ -118,4 +145,12 @@ object BluetoothUtil {
         val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
         bluetoothLeAdvertiser.stopAdvertising(callback)
     }
+
+    fun release() {
+        stopScan()
+    }
+}
+
+interface ScanDeviceCallback {
+    fun onScanned(device: BluetoothDevice, rssi: Int)
 }

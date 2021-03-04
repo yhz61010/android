@@ -14,6 +14,7 @@ import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.cipher.AudioCipherActivity

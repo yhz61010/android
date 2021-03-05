@@ -11,6 +11,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.bluetoothManager
+import com.leovp.androidbase.utils.log.LogContext
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 
 /**
  * Need following permissions:
@@ -22,7 +25,11 @@ import com.leovp.androidbase.exts.android.bluetoothManager
  *
  * Author: Michael Leo
  * Date: 21-3-3 下午5:38
+ *
+ * [BLE_1](https://blog.csdn.net/qq_25827845/article/details/52400782)
+ * [BLE_2](https://blog.csdn.net/qq_25827845/article/details/52997523)
  */
+@Suppress("unused")
 object BluetoothUtil {
     private val bluetoothManager: BluetoothManager by lazy { app.bluetoothManager }
     private val bluetoothAdapter: BluetoothAdapter by lazy {
@@ -33,6 +40,89 @@ object BluetoothUtil {
         // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
         // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
     }
+
+    /**
+     * Create bond with device
+     *
+     * `platform/packages/apps/Settings.git`
+     *
+     * `/Settings/src/com/android/settings/bluetooth/CachedBluetoothDevice.java`
+     */
+    fun createBond(bluetoothDeviceClass: Class<*>, btDevice: BluetoothDevice?): Boolean {
+        val createBondMethod = bluetoothDeviceClass.getMethod("createBond")
+        return createBondMethod.invoke(btDevice) as Boolean
+    }
+
+    /**
+     * Remove bond
+     *
+     * platform/packages/apps/Settings.git
+     *
+     * /Settings/src/com/android/settings/bluetooth/CachedBluetoothDevice.java
+     */
+    fun removeBond(bluetoothClass: Class<*>, btDevice: BluetoothDevice?): Boolean {
+        val removeBondMethod: Method = bluetoothClass.getMethod("removeBond")
+        return removeBondMethod.invoke(btDevice) as Boolean
+    }
+
+    /**
+     * Set pin
+     */
+    fun setPin(bluetoothClass: Class<out BluetoothDevice>, device: BluetoothDevice, str: String): Boolean {
+        runCatching {
+            val removeBondMethod = bluetoothClass.getDeclaredMethod("setPin", ByteArray::class.java)
+            return removeBondMethod.invoke(device, str.toByteArray()) as Boolean
+        }.onFailure {
+            it.printStackTrace()
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Cancel input
+     */
+    fun cancelPairingUserInput(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean {
+        val createBondMethod = bluetoothClass.getMethod("cancelPairingUserInput")
+        // cancelBondProcess(bluetoothClass, device)
+        return createBondMethod.invoke(device) as Boolean
+    }
+
+    /**
+     * Cancel bond
+     */
+    fun cancelBondProcess(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean {
+        val createBondMethod = bluetoothClass.getMethod("cancelBondProcess")
+        return createBondMethod.invoke(device) as Boolean
+    }
+
+    /**
+     *  Confirm pairing
+     */
+    fun setPairingConfirmation(btClass: Class<*>, device: BluetoothDevice?, isConfirm: Boolean) {
+        val setPairingConfirmation = btClass.getDeclaredMethod("setPairingConfirmation", Boolean::class.javaPrimitiveType)
+        setPairingConfirmation.invoke(device, isConfirm)
+    }
+
+    fun printAllInformation(clsShow: Class<*>) {
+        runCatching {
+            // Get all methods
+            val hideMethod: Array<Method> = clsShow.methods
+            hideMethod.forEachIndexed { index, method ->
+                if (LogContext.enableLog) {
+                    LogContext.log.d("Method[$index] name: ${method.name}")
+                }
+            }
+            // Get all const values
+            val allFields: Array<Field> = clsShow.fields
+            allFields.forEachIndexed { index, field ->
+                if (LogContext.enableLog) {
+                    LogContext.log.d("Field[$index] name: ${field.name}")
+                }
+            }
+        }.onFailure { it.printStackTrace() }
+    }
+    // ========================================================================
 
     private var scanDeviceCallback: ScanDeviceCallback? = null
 

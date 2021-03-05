@@ -10,12 +10,28 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothClientBinding
 
 /**
+ * Steps:
+ * 1. Acquire permissions
+ * 2. Enable bluetooth
+ * 3. Search devices
+ * 4. Connect device
+ * 5. Communicate
+ *   5.1 Wait for the device to connect successfully
+ *   5.2 Discovery service
+ *   5.3 Get BluetoothGattCharacteristic
+ *   5.4 Enable monitor
+ *   5.5 Read & Write data
+ * 6. Disconnect
+ *
  *  Need following permissions:
  *
  * <uses-permission android:name="android.permission.BLUETOOTH" />
  * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
  * <!--  For get nearby devices, need location permission when above android M  -->
  * <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+ *
+ * @see [BLE_Develop](https://www.jianshu.com/p/a27f3ca027e3)
+ * @see [FAQ](https://www.jianshu.com/p/71116665fd08)
  */
 class BluetoothClientActivity : BaseDemonstrationActivity() {
 
@@ -38,7 +54,14 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-        bluetoothGatt?.disconnect()
+        disconnect()
+    }
+
+    private fun disconnect() {
+        bluetoothGatt?.run {
+            disconnect()
+            close()
+        }
     }
 
     private fun initView() {
@@ -77,11 +100,21 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
                 LogContext.log.w("setCharacteristicNotification b=$successFlag")
             }
 
+            // Receive data
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
                 val data = String(characteristic.value)
                 LogContext.log.w("onCharacteristicChanged characteristic=${characteristic.toJsonString()} data=$data")
                 toast("Received msg=$data")
+            }
+
+            // SENT callback
+            override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+                LogContext.log.w("onCharacteristicWrite characteristic=${characteristic.toJsonString()} status=$status")
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    LogContext.log.w("Sent successfully.")
+                }
+                super.onCharacteristicWrite(gatt, characteristic, status)
             }
         })
     }

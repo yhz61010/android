@@ -251,6 +251,15 @@ object BluetoothUtil {
      * You'd better add a short delay after calling this method to make sure the operation will be done.
      */
     fun release() = if (isEnabled) stopScan() else Unit
+
+    /**
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
+    var boundedDevices: Set<BluetoothDevice> = bluetoothAdapter.bondedDevices
+        private set
 }
 
 interface ScanDeviceCallback {

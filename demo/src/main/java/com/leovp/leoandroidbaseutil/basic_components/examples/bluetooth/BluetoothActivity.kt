@@ -28,11 +28,18 @@ class BluetoothActivity : BaseDemonstrationActivity() {
         }
 
         BluetoothUtil.enable()
-        initData()
     }
 
-    private fun initData() {
-        val msg = ""
+    override fun onResume() {
+        super.onResume()
+
+        var msg = ""
+        val boundedDevices = BluetoothUtil.boundedDevices
+        if (boundedDevices.isNotEmpty()) {
+            boundedDevices.forEachIndexed { index, bluetoothDevice ->
+                msg += "${index + 1}: ${bluetoothDevice.name}|${bluetoothDevice.address}\n"
+            }
+        }
         binding.tvInfo.text = msg
     }
 

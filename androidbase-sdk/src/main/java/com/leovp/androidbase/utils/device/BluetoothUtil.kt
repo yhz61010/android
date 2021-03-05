@@ -49,31 +49,35 @@ object BluetoothUtil {
     }
 
     // Bluetooth Low Energy
-    fun isSupportBle(): Boolean {
-        return app.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-    }
+    fun isSupportBle(): Boolean = app.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+
+    @SuppressLint("MissingPermission")
+    var isEnabled: Boolean = bluetoothAdapter.isEnabled
+        private set
 
     /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun enable(): Boolean {
-        return if (!bluetoothAdapter.isEnabled) bluetoothAdapter.enable() else true
-    }
+    fun enable(): Boolean = if (!isEnabled) bluetoothAdapter.enable() else true
 
     /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun disable(): Boolean {
-        return if (bluetoothAdapter.isEnabled) bluetoothAdapter.disable() else true
-    }
+    fun disable(): Boolean = if (isEnabled) bluetoothAdapter.disable() else true
 
     /**
+     * Make sure bluetooth is enabled before calling this method.
+     *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
@@ -89,12 +93,15 @@ object BluetoothUtil {
     }
 
     /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
      */
     @SuppressLint("MissingPermission")
     fun stopScan() {
+        if (!isEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
         } else {
@@ -104,26 +111,24 @@ object BluetoothUtil {
 
     /**
      * **DO NOT forget to implement the bluetooth receiver.**
+     * Make sure bluetooth is enabled before calling this method.
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun startDiscovery(): Boolean {
-        enable()
-        return bluetoothAdapter.startDiscovery()
-    }
+    fun startDiscovery(): Boolean = if (isEnabled) bluetoothAdapter.startDiscovery() else false
 
     /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun cancelDiscovery(): Boolean {
-        return bluetoothAdapter.cancelDiscovery()
-    }
+    fun cancelDiscovery(): Boolean = if (isEnabled) bluetoothAdapter.cancelDiscovery() else true
 
     /**
      * Requires
@@ -152,9 +157,10 @@ object BluetoothUtil {
         bluetoothLeAdvertiser.stopAdvertising(callback)
     }
 
-    fun release() {
-        stopScan()
-    }
+    /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     */
+    fun release() = if (isEnabled) stopScan() else Unit
 }
 
 interface ScanDeviceCallback {

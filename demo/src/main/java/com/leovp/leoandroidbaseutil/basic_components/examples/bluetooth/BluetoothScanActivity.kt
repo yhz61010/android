@@ -145,15 +145,19 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     LogContext.log.w("Bluetooth discovery started")
+                    toast("Discovery started")
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     LogContext.log.w("Bluetooth discovery finished")
+                    toast("Discovery done")
                 }
                 BluetoothDevice.ACTION_ACL_CONNECTED -> {
                     LogContext.log.w("Device connected")
+                    toast("ACTION_ACL_CONNECTED")
                 }
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     LogContext.log.w("Device disconnected")
+                    toast("ACTION_ACL_DISCONNECTED")
                 }
             }
         }

@@ -193,7 +193,7 @@ object BluetoothUtil {
     fun stopScan() {
         if (!isEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
+            bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
         } else {
             bluetoothAdapter.stopLeScan(leScanCallback)
         }

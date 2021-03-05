@@ -153,7 +153,7 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun enable(): Boolean = if (!isEnabled) bluetoothAdapter.enable() else true
+    fun enable(): Boolean = bluetoothAdapter.enable()
 
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
@@ -163,7 +163,7 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun disable(): Boolean = if (isEnabled) bluetoothAdapter.disable() else true
+    fun disable(): Boolean = bluetoothAdapter.disable()
 
     /**
      * Make sure bluetooth is enabled before calling this method.
@@ -191,7 +191,6 @@ object BluetoothUtil {
      */
     @SuppressLint("MissingPermission")
     fun stopScan() {
-        if (!isEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
         } else {
@@ -208,7 +207,7 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun startDiscovery(): Boolean = if (isEnabled) bluetoothAdapter.startDiscovery() else false
+    fun startDiscovery(): Boolean = bluetoothAdapter.startDiscovery()
 
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
@@ -218,7 +217,7 @@ object BluetoothUtil {
      * permission
      */
     @SuppressLint("MissingPermission")
-    fun cancelDiscovery(): Boolean = if (isEnabled) bluetoothAdapter.cancelDiscovery() else true
+    fun cancelDiscovery(): Boolean = bluetoothAdapter.cancelDiscovery()
 
     /**
      * Requires
@@ -250,10 +249,10 @@ object BluetoothUtil {
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
      */
-    fun release() = if (isEnabled) {
+    fun release() {
         cancelDiscovery()
         stopScan()
-    } else Unit
+    }
 
     /**
      * Requires

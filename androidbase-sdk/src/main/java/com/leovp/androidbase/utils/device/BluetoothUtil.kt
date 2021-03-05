@@ -250,7 +250,10 @@ object BluetoothUtil {
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
      */
-    fun release() = if (isEnabled) stopScan() else Unit
+    fun release() = if (isEnabled) {
+        cancelDiscovery()
+        stopScan()
+    } else Unit
 
     /**
      * Requires

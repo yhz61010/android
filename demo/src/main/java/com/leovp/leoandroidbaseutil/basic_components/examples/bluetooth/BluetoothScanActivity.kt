@@ -103,6 +103,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {
         bluetoothDeviceMap.clear()
         BluetoothUtil.cancelDiscovery()
+        BluetoothUtil.stopScan()
     }
 
     private fun doScan() {

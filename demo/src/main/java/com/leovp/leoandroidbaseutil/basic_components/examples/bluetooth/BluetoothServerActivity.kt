@@ -65,6 +65,10 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         super.onDestroy()
         _binding = null
         BluetoothUtil.stopAdvertising(advertiseCallback)
+        disconnect()
+    }
+
+    private fun disconnect() {
         bluetoothGattServer?.run {
             clearServices()
             close()

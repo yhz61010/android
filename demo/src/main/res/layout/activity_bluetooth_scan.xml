@@ -36,7 +36,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnDoScan" />
+        app:layout_constraintTop_toBottomOf="@+id/btnDoScan"
+        tools:listitem="@layout/recyclerview_bluetooth_device_item" />
 
     <Button
         android:id="@+id/btnDiscovery"

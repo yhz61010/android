@@ -10,11 +10,9 @@
         android:id="@+id/btnScanWifi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="Scan"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="@+id/btnSetWifi"
+        app:layout_constraintTop_toBottomOf="@+id/btnSetWifi" />
 
     <EditText
         android:id="@+id/etWifiName"
@@ -23,21 +21,20 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
-        android:inputType="text"
         android:hint="Input wifi name"
+        android:inputType="text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnScanWifi" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/etWifiPwd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:ems="10"
         android:hint="Input wifi password"
         android:inputType="textVisiblePassword"
-        app:layout_constraintStart_toEndOf="@+id/etWifiName"
-        app:layout_constraintTop_toTopOf="@+id/etWifiName" />
+        app:layout_constraintStart_toStartOf="@+id/etWifiName"
+        app:layout_constraintTop_toBottomOf="@+id/etWifiName" />
 
     <Button
         android:id="@+id/btnSetWifi"
@@ -45,9 +42,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="Set Wifi"
-        app:layout_constraintBottom_toBottomOf="@+id/etWifiPwd"
+        app:layout_constraintBottom_toBottomOf="@+id/etWifiName"
         app:layout_constraintStart_toEndOf="@+id/etWifiPwd"
-        app:layout_constraintTop_toTopOf="@+id/etWifiPwd" />
+        app:layout_constraintTop_toTopOf="@+id/etWifiName" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvWifiList"
@@ -57,6 +54,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSetWifi"
+        app:layout_constraintTop_toBottomOf="@+id/etWifiPwd"
         app:layout_constraintVertical_bias="0.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

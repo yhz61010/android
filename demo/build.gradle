@@ -83,8 +83,12 @@ android {
         // This line is for room
         exclude 'META-INF/atomicfu.kotlin_module'
 //        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/NOTICE'
+        pickFirst 'META-INF/NOTICE.md'
+        pickFirst 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/DEPENDENCIES.md'
+        pickFirst 'META-INF/LICENSE'
+        pickFirst 'META-INF/LICENSE.md'
         pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
         pickFirst 'lib/x86/libstlport_shared.so'
         pickFirst 'lib/x86_64/libstlport_shared.so'

@@ -1,4 +1,4 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples
+package com.leovp.leoandroidbaseutil.basic_components.examples.wifi
 
 import android.os.Bundle
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity

@@ -11,8 +11,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Scan"
+        app:layout_constraintBottom_toBottomOf="@+id/etWifiPwd"
         app:layout_constraintStart_toStartOf="@+id/btnSetWifi"
-        app:layout_constraintTop_toBottomOf="@+id/btnSetWifi" />
+        app:layout_constraintTop_toTopOf="@+id/etWifiPwd" />
 
     <EditText
         android:id="@+id/etWifiName"
@@ -30,6 +31,7 @@
         android:id="@+id/etWifiPwd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:ems="10"
         android:hint="Input wifi password"
         android:inputType="textVisiblePassword"
@@ -50,6 +52,7 @@
         android:id="@+id/rvWifiList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

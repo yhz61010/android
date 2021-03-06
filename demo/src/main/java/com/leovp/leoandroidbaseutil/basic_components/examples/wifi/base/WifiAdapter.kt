@@ -61,12 +61,14 @@ class WifiAdapter : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
 
     class ItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         private val tvIndex: TextView = itemView.findViewById(R.id.txtIndex)
-        private val tvWifiName: TextView = itemView.findViewById(R.id.txtWifiName)
+        private val tvWifiSsid: TextView = itemView.findViewById(R.id.txtWifiName)
+        private val tvWifiBssid: TextView = itemView.findViewById(R.id.tvBssid)
         private val tvWifiLevel: TextView = itemView.findViewById(R.id.tvWifiLevel)
 
         fun bind(item: WifiModel) {
             tvIndex.text = item.index.toString()
-            tvWifiName.text = item.name
+            tvWifiSsid.text = item.name
+            tvWifiBssid.text = item.bssid
             tvWifiLevel.text = item.level.toString()
         }
     }

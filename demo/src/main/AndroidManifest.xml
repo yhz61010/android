@@ -27,6 +27,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.WifiActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothClientActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothServerActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothScanActivity" />
@@ -37,7 +38,7 @@
         <activity android:name=".basic_components.examples.WatermarkActivity" />
         <activity
             android:name=".basic_components.examples.FingerPaintActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".basic_components.examples.camera2.Camera2WithoutPreviewActivity" />
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
@@ -55,10 +56,10 @@
         <activity android:name=".basic_components.examples.HttpActivity" />
         <activity
             android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity
             android:name=".basic_components.examples.media_player.PlayVideoByMediaCodecActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />
         <activity android:name=".basic_components.examples.socket.SocketServerActivity" />
@@ -72,7 +73,7 @@
         <activity android:name=".basic_components.examples.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
         <activity
             android:name=".basic_components.examples.camera2.Camera2LiveActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basic_components.examples.NetworkMonitorActivity" />
         <activity android:name=".basic_components.examples.log.LogActivity" />
         <activity android:name=".basic_components.examples.DeviceInfoActivity" />

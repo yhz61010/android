@@ -28,6 +28,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketClien
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketServerActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.WifiActivity
 
 class BasicFragment : Fragment() {
 

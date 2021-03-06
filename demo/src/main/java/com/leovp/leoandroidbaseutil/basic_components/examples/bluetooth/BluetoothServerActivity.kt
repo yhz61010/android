@@ -155,8 +155,10 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     }
 
     private fun sendData(msg: String) {
-        characteristicRead?.value = msg.toByteArray()
-        bluetoothGattServer?.notifyCharacteristicChanged(connectedDevice, characteristicRead, false)
-        LogContext.log.w("Send message to client: $msg")
+        runCatching {
+            characteristicRead?.value = msg.toByteArray()
+            bluetoothGattServer?.notifyCharacteristicChanged(connectedDevice, characteristicRead, false)
+            LogContext.log.w("Send message to client: $msg")
+        }.onFailure { it.printStackTrace() }
     }
 }

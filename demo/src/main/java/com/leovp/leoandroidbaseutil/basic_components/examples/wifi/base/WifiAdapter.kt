@@ -17,7 +17,7 @@ class WifiAdapter : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_bluetooth_device_item, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_wifi_item, parent, false)
         return ItemViewHolder(view)
     }
 

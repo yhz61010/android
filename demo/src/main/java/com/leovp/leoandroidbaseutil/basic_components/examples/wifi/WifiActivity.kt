@@ -111,9 +111,12 @@ class WifiActivity : BaseDemonstrationActivity() {
     }
 
     private fun scanFailure() {
+        LogContext.log.w("scanFailure")
+        toast("scanFailure")
         // handle failure: new scan did NOT succeed
         // consider using old scan results: these are the OLD results!
         val results = app.wifiManager.scanResults
+        scanSuccess(results)
     }
 
     override fun onDestroy() {

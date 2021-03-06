@@ -13,10 +13,8 @@ import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base.WifiAdapter
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base.WifiModel
 import com.leovp.leoandroidbaseutil.databinding.ActivityWifiBinding
@@ -90,10 +88,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         adapter = WifiAdapter().apply {
             onItemClickListener = object : WifiAdapter.OnItemClickListener {
                 override fun onItemClick(item: WifiModel, position: Int) {
-                    BluetoothUtil.cancelDiscovery()
-                    val intent = Intent(this@WifiActivity, BluetoothClientActivity::class.java)
-                    intent.putExtra("device", item.name)
-                    startActivity(intent)
+
                 }
             }
         }
@@ -111,6 +106,7 @@ class WifiActivity : BaseDemonstrationActivity() {
             val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level).apply { this.index = index + 1 }
             wifiList.add(wifiModel)
         }
+        wifiList.sortByDescending { it.name }
         adapter?.clearAndAddList(wifiList)
     }
 

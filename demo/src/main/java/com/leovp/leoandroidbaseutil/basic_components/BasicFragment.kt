@@ -71,11 +71,11 @@ class BasicFragment : Fragment() {
             Pair("Socket Client", SocketClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
+            Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
@@ -92,6 +92,7 @@ class BasicFragment : Fragment() {
             Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Java Mail", JavaMailActivity::class.java),
             Pair("Bluetooth", BluetoothActivity::class.java),
+            Pair("Wifi", WifiActivity::class.java),
         )
 
         val colors = arrayOf(

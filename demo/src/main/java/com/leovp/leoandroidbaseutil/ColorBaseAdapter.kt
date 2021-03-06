@@ -16,7 +16,7 @@ class ColorBaseAdapter(private val dataArray: List<String>, private val colorArr
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.main_recyclerview_item, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_main_item, parent, false)
         return ItemViewHolder(view)
     }
 

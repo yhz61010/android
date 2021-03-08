@@ -104,7 +104,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         val wifiList: MutableList<WifiModel> = mutableListOf()
         results.forEachIndexed { index, scanResult ->
             LogContext.log.i("Result=${scanResult.toJsonString()}")
-            val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level).apply { this.index = index + 1 }
+            val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level, scanResult.frequency).apply { this.index = index + 1 }
             wifiList.add(wifiModel)
         }
         wifiList.sortByDescending { it.name }

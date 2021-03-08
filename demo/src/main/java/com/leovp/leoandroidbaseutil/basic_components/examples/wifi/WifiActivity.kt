@@ -13,6 +13,7 @@ import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.utils.device.WifiUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base.WifiAdapter
@@ -88,7 +89,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         adapter = WifiAdapter().apply {
             onItemClickListener = object : WifiAdapter.OnItemClickListener {
                 override fun onItemClick(item: WifiModel, position: Int) {
-
+                    binding.etWifiName.setText(item.name)
                 }
             }
         }
@@ -125,7 +126,9 @@ class WifiActivity : BaseDemonstrationActivity() {
     }
 
     fun onSetWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
-
+        val ssid = binding.etWifiName.text.toString()
+        val pwd = binding.etWifiPwd.text.toString()
+        WifiUtil.connectWifi(ssid, pwd)
     }
 
     fun onScanWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {

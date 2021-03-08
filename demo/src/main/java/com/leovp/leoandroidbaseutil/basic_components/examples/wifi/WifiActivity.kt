@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.android.wifiManager
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.WifiUtil
 import com.leovp.androidbase.utils.log.LogContext
@@ -64,6 +65,8 @@ class WifiActivity : BaseDemonstrationActivity() {
         initView()
         initReceiver()
         initData()
+
+        LogContext.log.e(ITAG, "current ssid=${WifiUtil.getCurrentSsid()}")
     }
 
     private fun initData() {
@@ -86,7 +89,7 @@ class WifiActivity : BaseDemonstrationActivity() {
     }
 
     private fun initView() {
-        adapter = WifiAdapter().apply {
+        adapter = WifiAdapter(WifiUtil.getCurrentSsid()).apply {
             onItemClickListener = object : WifiAdapter.OnItemClickListener {
                 override fun onItemClick(item: WifiModel, position: Int) {
                     binding.etWifiName.setText(item.name)
@@ -104,8 +107,10 @@ class WifiActivity : BaseDemonstrationActivity() {
         val wifiList: MutableList<WifiModel> = mutableListOf()
         results.forEachIndexed { index, scanResult ->
             LogContext.log.i("Result=${scanResult.toJsonString()}")
-            val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level, scanResult.frequency).apply { this.index = index + 1 }
-            wifiList.add(wifiModel)
+            if (scanResult.SSID.isNotBlank()) {
+                val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level, scanResult.frequency).apply { this.index = index + 1 }
+                wifiList.add(wifiModel)
+            }
         }
         wifiList.sortByDescending { it.name }
         adapter?.clearAndAddList(wifiList)

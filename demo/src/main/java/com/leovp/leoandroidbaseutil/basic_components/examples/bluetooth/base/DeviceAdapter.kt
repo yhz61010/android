@@ -69,7 +69,7 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
             tvIndex.text = item.index.toString()
             tvDeviceName.text = item.name ?: ""
             tvBluetoothStrength.text = item.rssi ?: ""
-            tvBluetoothMacAddress.text = item.macAddress ?: ""
+            tvBluetoothMacAddress.text = item.macAddress
         }
     }
 }

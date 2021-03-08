@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.device
 import android.annotation.SuppressLint
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.NetworkInfo
 import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiNetworkSpecifier
@@ -71,6 +72,25 @@ object WifiUtil {
                 }
             }
         }
+    }
+
+    /**
+     *
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
+    fun getCurrentSsid(): String? {
+        var ssid: String? = null
+        val networkInfo: NetworkInfo? = app.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        if (networkInfo?.isConnected == true) {
+            val connectionInfo = app.wifiManager.connectionInfo
+            if (connectionInfo != null && connectionInfo.ssid.isNotEmpty()) {
+                ssid = connectionInfo.ssid
+            }
+        }
+        return ssid?.removePrefix("\"")?.removeSuffix("\"")
     }
 }
 

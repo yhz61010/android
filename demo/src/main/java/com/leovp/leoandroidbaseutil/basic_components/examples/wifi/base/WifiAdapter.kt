@@ -1,18 +1,23 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
+import com.leovp.androidbase.exts.android.app
 import com.leovp.leoandroidbaseutil.R
+import kotlinx.android.synthetic.main.recyclerview_wifi_item.view.*
 
 /**
  * Author: Michael Leo
  * Date: 21-3-6 下午3:59
  */
-class WifiAdapter : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
+class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
     private val dataArray: MutableList<WifiModel> = mutableListOf()
     var onItemClickListener: OnItemClickListener? = null
 
@@ -28,6 +33,11 @@ class WifiAdapter : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
 //        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
         currentItem.index = holder.adapterPosition + 1
         holder.bind(currentItem)
+        if (currentSsid == currentItem.name) {
+            holder.itemView.cardView.setCardBackgroundColor(ContextCompat.getColor(app, R.color.purple_200))
+            val innerViewGroup = holder.itemView.cardView.children.first() as ViewGroup
+            innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.WHITE) }
+        }
         holder.itemView.setOnClickListener {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(currentItem, holder.layoutPosition)

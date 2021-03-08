@@ -134,6 +134,7 @@ class WifiActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+        unregisterReceiver(wifiScanReceiver)
     }
 
     fun onSetWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {

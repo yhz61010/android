@@ -48,6 +48,8 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
 
     override fun getItemId(position: Int) = position.toLong()
 
+    override fun getItemViewType(position: Int) = position
+
     fun insertAdd(item: WifiModel) {
         dataArray.add(item)
         notifyItemRangeInserted(0, 1)

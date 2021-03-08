@@ -112,8 +112,14 @@ class WifiActivity : BaseDemonstrationActivity() {
                 wifiList.add(wifiModel)
             }
         }
-        wifiList.sortByDescending { it.name }
-        adapter?.clearAndAddList(wifiList)
+        val wifiMap = wifiList.groupBy { it.name }
+
+        val mergedWifiList: MutableList<WifiModel> = mutableListOf()
+        for ((_, sameWifiList) in wifiMap) {
+            mergedWifiList.add(sameWifiList.maxByOrNull { it.freq }!!)
+        }
+        mergedWifiList.sortByDescending { it.signalLevel }
+        adapter?.clearAndAddList(mergedWifiList)
     }
 
     private fun scanFailure() {

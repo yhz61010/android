@@ -112,7 +112,7 @@ object PBKDF2Util {
     /**
      * Usage:
      * ```kotlin
-     * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")}
+     * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")
      * ```
      */
     fun validate(plainText: String, correctHash: String): Boolean {

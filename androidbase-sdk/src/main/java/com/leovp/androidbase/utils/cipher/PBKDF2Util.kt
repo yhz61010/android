@@ -1,8 +1,10 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
+import com.leovp.androidbase.utils.log.LogContext
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
@@ -33,6 +35,8 @@ object PBKDF2Util {
      * val random = SecureRandom()
      * val salt = ByteArray(32)
      * random.nextBytes(salt)
+     *
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
      */
     fun generateKey(
         plainPassphrase: CharArray,
@@ -41,6 +45,8 @@ object PBKDF2Util {
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3
     ): ByteArray {
         return runCatching {
+            LogContext.log.w(ITAG, "salt=${salt.toHexStringLE()} iterations=$iterations outputKeyLengthInBits=$outputKeyLengthInBits")
+
             // PBKDF2WithHmacSHA1
             // PBKDF2WithHmacSHA512
             val secretKeyFactory = SecretKeyFactory.getInstance(ALGORITHM_SHA)
@@ -49,6 +55,9 @@ object PBKDF2Util {
         }.getOrThrow()
     }
 
+    /**
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     */
     fun generateKey(
         plainPassphrase: CharArray,
         salt: String,
@@ -56,6 +65,9 @@ object PBKDF2Util {
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3
     ): ByteArray = generateKey(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
+    /**
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     */
     fun generateKey(
         plainPassphrase: String,
         salt: String,
@@ -63,6 +75,9 @@ object PBKDF2Util {
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3
     ): ByteArray = generateKey(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
+    /**
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     */
     fun generateKey(
         plainPassphrase: String,
         salt: ByteArray,
@@ -72,6 +87,9 @@ object PBKDF2Util {
 
     // =====================================
 
+    /**
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     */
     fun generateKey(
         plainPassphrase: CharArray,
         saltLength: Int = 32,
@@ -83,12 +101,15 @@ object PBKDF2Util {
         return generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits)
     }
 
+    /**
+     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     */
     fun generateKey(
         plainPassphrase: String,
         saltLength: Int = 32,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3
-    ): ByteArray = generateKey(plainPassphrase, saltLength, iterations, outputKeyLengthInBits)
+    ): ByteArray = generateKey(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
 
     // =====================================
 
@@ -101,10 +122,10 @@ object PBKDF2Util {
         SecureRandom().nextBytes(suffixSalt)
         val suffixSaltHex = suffixSalt.toHexStringLE(true, "")
 
-//        if (BuildConfig.DEBUG) LogContext.log.w(ITAG, "preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
+//        LogContext.log.w(ITAG, "encrypt preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
 
         val onlyHash = generateKey(plainText.toCharArray(), preSalt, DEFAULT_ITERATIONS).toHexStringLE(true, "")
-//        if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "onlyHash=$onlyHash")
+//        LogContext.log.w(ITAG, "encrypt onlyHash=$onlyHash")
 
         return "$preSaltHex$onlyHash$suffixSaltHex"
     }
@@ -114,15 +135,17 @@ object PBKDF2Util {
      * ```kotlin
      * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")
      * ```
+     *
+     * @param plainText The hex plain text should be padded.
      */
     fun validate(plainText: String, correctHash: String): Boolean {
-//        if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "correctHash=$correctHash")
+//        LogContext.log.w(ITAG, "correctHash=$correctHash")
         val preSalt = correctHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
-//        if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "preSalt=$preSalt")
+//        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
         val onlyHash = correctHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, correctHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
-//        if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "onlyHash=$onlyHash")
+//        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
         val testHash = generateKey(plainText.toCharArray(), preSalt.hexToByteArray(), DEFAULT_ITERATIONS).toHexStringLE(true, "")
-//        if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "testHash=$testHash")
+//        LogContext.log.w(ITAG, "testHash=$testHash")
         return onlyHash == testHash
     }
 }

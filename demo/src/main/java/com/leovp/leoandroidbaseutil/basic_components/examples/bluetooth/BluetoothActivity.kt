@@ -14,8 +14,8 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothBinding
  *
  * <uses-permission android:name="android.permission.BLUETOOTH" />
  * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
- * <!--  For get nearby devices, need location permission when above android M  -->
- * <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+ * <!-- Required only if your app isn't using the Device Companion Manager. -->
+ * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
 class BluetoothActivity : BaseDemonstrationActivity() {
     private var _binding: ActivityBluetoothBinding? = null

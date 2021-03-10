@@ -131,6 +131,8 @@ object PBKDF2Util {
     }
 
     /**
+     * This method can valid the encrypted hash which is encrypted by [encrypt] method.
+     *
      * Usage:
      * ```kotlin
      * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")
@@ -138,11 +140,11 @@ object PBKDF2Util {
      *
      * @param plainText The hex plain text should be padded.
      */
-    fun validate(plainText: String, correctHash: String): Boolean {
-//        LogContext.log.w(ITAG, "correctHash=$correctHash")
-        val preSalt = correctHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
+    fun validate(plainText: String, encryptedHash: String): Boolean {
+//        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
+        val preSalt = encryptedHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
 //        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
-        val onlyHash = correctHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, correctHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
+        val onlyHash = encryptedHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, encryptedHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
 //        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
         val testHash = generateKey(plainText.toCharArray(), preSalt.hexToByteArray(), DEFAULT_ITERATIONS).toHexStringLE(true, "")
 //        LogContext.log.w(ITAG, "testHash=$testHash")

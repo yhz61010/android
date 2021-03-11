@@ -69,15 +69,28 @@ object AESUtil {
 
     // ===================================================
 
-    fun generateKey(secKey: String): SecretKey {
+    /**
+     * @param secKey AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
+     */
+    private fun generateKey(secKey: String): SecretKey {
         return SecretKeySpec(secKey.toByteArray(), ALGORITHM_AES)
     }
 
+    /**
+     * Encrypt data with specified secure key.
+     *
+     * @param secKey AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
+     */
     fun encrypt(secKey: String, plainText: String): String {
         val rawKey: SecretKey = generateKey(secKey)
         return encrypt(rawKey, plainText.toByteArray()).toHexStringLE(true, "")
     }
 
+    /**
+     * Decrypt data with specified secure key.
+     *
+     * @param secKey AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
+     */
     fun decrypt(secKey: String, encryptedString: String): String {
         val rawKey: SecretKey = generateKey(secKey)
         return decrypt(rawKey, encryptedString.hexToByteArray()).decodeToString()

@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -8,13 +9,15 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+
 /**
  * Author: Michael Leo
  * Date: 20-12-21 下午5:39
  */
 @Suppress("unused", "WeakerAccess")
 object AESUtil {
-    const val ALGORITHM_AES = "AES/CBC/PKCS7Padding"
+    private const val ALGORITHM_AES = "AES"
+    private const val CIPHER_AES = "AES/CBC/PKCS7Padding"
 
     /**
      * @param outputKeyLengthInBits Default value 32 shl 3 = 256
@@ -24,35 +27,51 @@ object AESUtil {
         return runCatching {
             val secureRandom = SecureRandom()
             // Do NOT seed secureRandom! Automatically seeded from system entropy.
-            val keyGenerator = KeyGenerator.getInstance("AES")
+            val keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES)
             keyGenerator.init(outputKeyLengthInBits, secureRandom)
             keyGenerator.generateKey()
         }.getOrThrow()
     }
 
     /**
-     * @param data Bytes to be encrypted
+     * @param plainData Bytes to be encrypted
      */
-    fun encrypt(secretKey: SecretKey, data: ByteArray): ByteArray {
-        return runCatching {
-            val encodedKeyBytes = secretKey.encoded
-            val secKeySpec = SecretKeySpec(encodedKeyBytes, 0, encodedKeyBytes.size, ALGORITHM_AES)
-            val cipher: Cipher = Cipher.getInstance(ALGORITHM_AES)
-            cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
-            cipher.doFinal(data)
-        }.getOrThrow()
-    }
+    fun encrypt(secretKey: SecretKey, plainData: ByteArray): ByteArray = doEncrypt(secretKey.encoded, plainData)
 
     /**
-     * @param data Bytes to be decoded
+     * @param encryptedData Bytes to be decoded
      */
-    fun decrypt(secretKey: SecretKey, data: ByteArray): ByteArray {
+    fun decrypt(secretKey: SecretKey, encryptedData: ByteArray): ByteArray = doDecrypt(secretKey.encoded, encryptedData)
+
+    private fun doEncrypt(keyBytes: ByteArray, plainData: ByteArray): ByteArray {
         return runCatching {
-            Cipher.getInstance(ALGORITHM_AES).run {
-                init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(blockSize)))
-                doFinal(data)
+            val secKeySpec = SecretKeySpec(keyBytes, ALGORITHM_AES)
+            Cipher.getInstance(CIPHER_AES).run {
+                init(Cipher.ENCRYPT_MODE, secKeySpec, IvParameterSpec(ByteArray(blockSize)))
+                doFinal(plainData)
             }
         }.getOrThrow()
     }
 
+    private fun doDecrypt(keyBytes: ByteArray, encryptedData: ByteArray): ByteArray {
+        return runCatching {
+            val secKeySpec = SecretKeySpec(keyBytes, ALGORITHM_AES)
+            Cipher.getInstance(CIPHER_AES).run {
+                init(Cipher.DECRYPT_MODE, secKeySpec, IvParameterSpec(ByteArray(blockSize)))
+                doFinal(encryptedData)
+            }
+        }.getOrThrow()
+    }
+
+    // ===================================================
+
+    fun encrypt(secKey: String, plainText: String): String {
+//        val rawKey: ByteArray = generateKey(secKey, "leovp.com")
+        return doEncrypt(secKey.toByteArray(), plainText.toByteArray()).toHexStringLE(true, "")
+    }
+
+    fun decrypt(secKey: String, encryptedString: String): String {
+//        val rawKey: ByteArray = generateKey(secKey, "leovp.com")
+        return doDecrypt(secKey.toByteArray(), encryptedString.toByteArray()).toHexStringLE(true, "")
+    }
 }

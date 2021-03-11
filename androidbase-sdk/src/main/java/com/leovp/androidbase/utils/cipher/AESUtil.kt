@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -23,9 +24,12 @@ object AESUtil {
      * @param outputKeyLengthInBits Default value 32 shl 3 = 256
      * AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
      */
-    fun generateKey(@IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3): SecretKey {
+    fun generateKey(seed: String? = null, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = 32 shl 3): SecretKey {
         return runCatching {
             val secureRandom = SecureRandom()
+            if (seed != null) {
+                secureRandom.setSeed(seed.toByteArray())
+            }
             // Do NOT seed secureRandom! Automatically seeded from system entropy.
             val keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES)
             keyGenerator.init(outputKeyLengthInBits, secureRandom)
@@ -65,13 +69,17 @@ object AESUtil {
 
     // ===================================================
 
+    fun generateKey(secKey: String): SecretKey {
+        return SecretKeySpec(secKey.toByteArray(), ALGORITHM_AES)
+    }
+
     fun encrypt(secKey: String, plainText: String): String {
-//        val rawKey: ByteArray = generateKey(secKey, "leovp.com")
-        return doEncrypt(secKey.toByteArray(), plainText.toByteArray()).toHexStringLE(true, "")
+        val rawKey: SecretKey = generateKey(secKey)
+        return encrypt(rawKey, plainText.toByteArray()).toHexStringLE(true, "")
     }
 
     fun decrypt(secKey: String, encryptedString: String): String {
-//        val rawKey: ByteArray = generateKey(secKey, "leovp.com")
-        return doDecrypt(secKey.toByteArray(), encryptedString.toByteArray()).toHexStringLE(true, "")
+        val rawKey: SecretKey = generateKey(secKey)
+        return decrypt(rawKey, encryptedString.hexToByteArray()).decodeToString()
     }
 }

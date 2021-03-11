@@ -1,8 +1,6 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
-import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
@@ -11,10 +9,7 @@ import javax.crypto.spec.PBEKeySpec
  * - PBKDF(Password-based-Key-Derivative-Function, a successor of PBKDF1)
  *
  * This class is suit for generating a secure key.
- * In other words, you can use this class to get a secure key for other cipher.\
- * Or you can use this class to encrypt your short text like password.
- *
- * If you want to
+ * In other words, you can use this class to get a secure key for other cipher.
  *
  * Author: Michael Leo
  * Date: 20-12-21 下午8:15
@@ -198,24 +193,24 @@ object PBKDF2Util {
 
     // =====================================
 
-    fun encryptWithSHA512(plainText: String): String {
-        val preSalt = ByteArray(DEFAULT_PRE_SALT_LENGTH)
-        // Do NOT seed secureRandom! Automatically seeded from system entropy.
-        SecureRandom().nextBytes(preSalt)
-        val preSaltHex = preSalt.toHexStringLE(true, "")
-
-        val suffixSalt = ByteArray(DEFAULT_SUFFIX_SALT_LENGTH)
-        // Do NOT seed secureRandom! Automatically seeded from system entropy.
-        SecureRandom().nextBytes(suffixSalt)
-        val suffixSaltHex = suffixSalt.toHexStringLE(true, "")
-
-//        LogContext.log.w(ITAG, "encrypt preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
-
-        val onlyHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt, DEFAULT_ITERATIONS).toHexStringLE(true, "")
-//        LogContext.log.w(ITAG, "encrypt onlyHash=$onlyHash")
-
-        return "$preSaltHex$onlyHash$suffixSaltHex"
-    }
+//    fun encryptWithSHA512(plainText: String): String {
+//        val preSalt = ByteArray(DEFAULT_PRE_SALT_LENGTH)
+//        // Do NOT seed secureRandom! Automatically seeded from system entropy.
+//        SecureRandom().nextBytes(preSalt)
+//        val preSaltHex = preSalt.toHexStringLE(true, "")
+//
+//        val suffixSalt = ByteArray(DEFAULT_SUFFIX_SALT_LENGTH)
+//        // Do NOT seed secureRandom! Automatically seeded from system entropy.
+//        SecureRandom().nextBytes(suffixSalt)
+//        val suffixSaltHex = suffixSalt.toHexStringLE(true, "")
+//
+////        LogContext.log.w(ITAG, "encrypt preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
+//
+//        val onlyHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt, DEFAULT_ITERATIONS).toHexStringLE(true, "")
+////        LogContext.log.w(ITAG, "encrypt onlyHash=$onlyHash")
+//
+//        return "$preSaltHex$onlyHash$suffixSaltHex"
+//    }
 
     /**
      * This method can valid the encrypted hash which is encrypted by [encryptWithSHA512] method.
@@ -227,14 +222,14 @@ object PBKDF2Util {
      *
      * @param plainText The hex plain text should be padded.
      */
-    fun validate(plainText: String, encryptedHash: String): Boolean {
-//        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
-        val preSalt = encryptedHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
-//        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
-        val onlyHash = encryptedHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, encryptedHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
-//        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
-        val testHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt.hexToByteArray(), DEFAULT_ITERATIONS).toHexStringLE(true, "")
-//        LogContext.log.w(ITAG, "testHash=$testHash")
-        return onlyHash == testHash
-    }
+//    fun validate(plainText: String, encryptedHash: String): Boolean {
+////        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
+//        val preSalt = encryptedHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
+////        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
+//        val onlyHash = encryptedHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, encryptedHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
+////        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
+//        val testHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt.hexToByteArray(), DEFAULT_ITERATIONS).toHexStringLE(true, "")
+////        LogContext.log.w(ITAG, "testHash=$testHash")
+//        return onlyHash == testHash
+//    }
 }

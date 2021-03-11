@@ -11,6 +11,8 @@ import javax.crypto.spec.PBEKeySpec
  * This class is suit for generating a secure key.
  * In other words, you can use this class to get a secure key for other cipher.
  *
+ * https://stackoverflow.com/questions/13433529/android-4-2-broke-my-encrypt-decrypt-code-and-the-provided-solutions-dont-work/39002997#39002997
+ *
  * Author: Michael Leo
  * Date: 20-12-21 下午8:15
  */
@@ -23,6 +25,7 @@ object PBKDF2Util {
 
     private const val DEFAULT_PRE_SALT_LENGTH = 4
     private const val DEFAULT_SUFFIX_SALT_LENGTH = 2
+
     private const val DEFAULT_SALT_LENGTH = 32
     private const val DEFAULT_ITERATIONS = 1000
 
@@ -73,12 +76,7 @@ object PBKDF2Util {
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray {
-        val salt = ByteArray(saltLength)
-        // Do NOT seed secureRandom! Automatically seeded from system entropy.
-        SecureRandom().nextBytes(salt)
-        return generateKeyWithSHA512(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-    }
+    ): ByteArray = generateKeyWithSHA512(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
      * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
@@ -139,12 +137,7 @@ object PBKDF2Util {
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray {
-        val salt = ByteArray(saltLength)
-        // Do NOT seed secureRandom! Automatically seeded from system entropy.
-        SecureRandom().nextBytes(salt)
-        return generateKeyWithSHA1(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-    }
+    ): ByteArray = generateKeyWithSHA1(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
      * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
@@ -158,6 +151,14 @@ object PBKDF2Util {
 
     // ===== ALGORITHM_SHA1 - End ================================================================
 
+    fun generateSalt(saltLength: Int = DEFAULT_SALT_LENGTH): ByteArray {
+        val salt = ByteArray(saltLength)
+        // Do NOT seed secureRandom! Automatically seeded from system entropy.
+        SecureRandom().nextBytes(salt)
+        return salt
+    }
+
+    // =====================================
     /**
      * @param iterations Default value 1000.
      * Number of PBKDF2 hardening rounds to use. Larger values increase

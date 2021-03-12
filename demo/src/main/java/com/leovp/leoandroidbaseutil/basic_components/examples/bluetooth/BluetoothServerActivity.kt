@@ -144,6 +144,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
             toast("Received message=$data")
             // Response message
             bluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.value)
+            sendData("I received: $data")
         }
     }
 

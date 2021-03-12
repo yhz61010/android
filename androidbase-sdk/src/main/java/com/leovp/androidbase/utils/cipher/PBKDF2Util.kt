@@ -2,6 +2,7 @@ package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
 import java.security.SecureRandom
+import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
@@ -23,131 +24,134 @@ object PBKDF2Util {
     private const val ALGORITHM_SHA1 = "PBKDF2WithHmacSHA1"
     private const val ALGORITHM_SHA512 = "PBKDF2WithHmacSHA512"
 
-    private const val DEFAULT_PRE_SALT_LENGTH = 4
-    private const val DEFAULT_SUFFIX_SALT_LENGTH = 2
-
     private const val DEFAULT_SALT_LENGTH = 32
     private const val DEFAULT_ITERATIONS = 1000
 
     // ===== ALGORITHM_SHA512 - Start ================================================================
 
+    /**
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     */
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         salt: ByteArray,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA512)
+    ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA512)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA512(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA512(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         salt: ByteArray,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA512(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA512(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA512(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
 
     // ===== ALGORITHM_SHA512 - End ================================================================
 
     // ===== ALGORITHM_SHA1 - Start ================================================================
 
+    /**
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
         salt: ByteArray,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA1)
+    ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA1)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA1(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA1(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
         salt: ByteArray,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA1(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA1(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
         saltLength: Int = DEFAULT_SALT_LENGTH,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): ByteArray = generateKeyWithSHA1(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
+    ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
 
     // ===== ALGORITHM_SHA1 - End ================================================================
 
@@ -180,7 +184,7 @@ object PBKDF2Util {
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3,
         algorithm: String
-    ): ByteArray {
+    ): SecretKey {
         return runCatching {
 //            LogContext.log.w(ITAG, "salt=${salt.toHexStringLE()} iterations=$iterations outputKeyLengthInBits=$outputKeyLengthInBits")
 
@@ -188,7 +192,7 @@ object PBKDF2Util {
             // PBKDF2WithHmacSHA512
             val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
             val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-            secretKeyFactory.generateSecret(keySpec).encoded
+            secretKeyFactory.generateSecret(keySpec)
         }.getOrThrow()
     }
 

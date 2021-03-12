@@ -39,6 +39,46 @@ object AESUtil {
     // ==============================================================
 
     /**
+     * Encrypt string with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun encrypt(plainText: String, secKey: ByteArray): String = encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
+
+    /**
+     * Decrypt string with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun decrypt(cipherText: String, secKey: ByteArray): String = decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
+
+    // ==============================================================
+
+    /**
      * Encrypt bytes with specified secure key.
      *
      * Example:
@@ -111,6 +151,24 @@ object AESUtil {
         return salt + cipherBytes
     }
 
+    /**
+     * Encrypt bytes with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
+     * val decryptedAsString: String = decryptedBytes.decodeToString()
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
     fun decrypt(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
         val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)
         val oriCipherBytes: ByteArray = cipherBytes.copyOfRange(DEFAULT_PRE_SALT_LENGTH, cipherBytes.size)

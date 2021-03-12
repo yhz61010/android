@@ -21,24 +21,88 @@ object AESUtil {
     private const val DEFAULT_PRE_SALT_LENGTH = 4
 
     /**
-     * Encrypt data with specified secure key.
+     * Encrypt string with specified secure key.
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      */
-    fun encrypt(plainText: String, secKey: String): String {
-        return encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
-    }
+    fun encrypt(plainText: String, secKey: String): String = encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
 
-    fun decrypt(cipherText: String, secKey: String): String {
-        return decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
-    }
+    /**
+     * Decrypt string with specified secure key.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun decrypt(cipherText: String, secKey: String): String = decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
 
-    fun encrypt(plainData: ByteArray, secKey: String): ByteArray {
+    // ==============================================================
+
+    /**
+     * Encrypt bytes with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedAsString: String = decryptedBytes.decodeToString()
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun encrypt(plainBytes: ByteArray, secKey: String): ByteArray = encrypt(plainBytes, secKey.toByteArray())
+
+    /**
+     * Decrypt bytes with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedAsString: String = decryptedBytes.decodeToString()
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun decrypt(cipherBytes: ByteArray, secKey: String): ByteArray = decrypt(cipherBytes, secKey.toByteArray())
+
+    // ==============================================================
+
+    /**
+     * Encrypt bytes with specified secure key.
+     *
+     * Example:
+     * ```
+     * val plainText = "I have a dream."
+     * val secKey = "I'm a key."
+     *
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
+     * val decryptedAsString: String = decryptedBytes.decodeToString()
+     * ```
+     *
+     * You can encrypt and decrypt any binary data.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     */
+    fun encrypt(plainData: ByteArray, secKey: ByteArray): ByteArray {
         val cipher = Cipher.getInstance(CIPHER_AES)
         val salt: ByteArray = PBKDF2Util.generateSalt(DEFAULT_PRE_SALT_LENGTH)
 //        val iv: ByteArray = generateIv(cipher.blockSize)
-        val rawKey: SecretKey = PBKDF2Util.generateKeyWithSHA512(secKey, salt)
+        val rawKey: SecretKey = PBKDF2Util.generateKeyWithSHA512(secKey.toHexStringLE(true, ""), salt)
 //        val ivParams = IvParameterSpec(iv)
         val cipherBytes: ByteArray = cipher.run {
             init(Cipher.ENCRYPT_MODE, rawKey, IvParameterSpec(ByteArray(blockSize)))
@@ -47,16 +111,18 @@ object AESUtil {
         return salt + cipherBytes
     }
 
-    fun decrypt(cipherData: ByteArray, secKey: String): ByteArray {
-        val salt: ByteArray = cipherData.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)
-        val cipherBytes: ByteArray = cipherData.copyOfRange(DEFAULT_PRE_SALT_LENGTH, cipherData.size)
-        val rawKey: SecretKey = PBKDF2Util.generateKeyWithSHA512(secKey, salt)
+    fun decrypt(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
+        val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)
+        val oriCipherBytes: ByteArray = cipherBytes.copyOfRange(DEFAULT_PRE_SALT_LENGTH, cipherBytes.size)
+        val rawKey: SecretKey = PBKDF2Util.generateKeyWithSHA512(secKey.toHexStringLE(true, ""), salt)
 
         return Cipher.getInstance(CIPHER_AES).run {
             init(Cipher.DECRYPT_MODE, rawKey, IvParameterSpec(ByteArray(blockSize)))
-            doFinal(cipherBytes)
+            doFinal(oriCipherBytes)
         }
     }
+
+    // ==============================================================
 
     private fun generateIv(length: Int): ByteArray {
         val iv = ByteArray(length)

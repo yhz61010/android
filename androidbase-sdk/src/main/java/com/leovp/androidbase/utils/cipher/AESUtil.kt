@@ -26,6 +26,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainText: String, secKey: String): String = encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
 
@@ -34,8 +36,40 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherText: String, secKey: String): String = decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
+
+    // ==============================================================
+
+    /**
+     * Encrypt string with specified secure key.
+     *
+     * If can use your SecretKey or generate it like this:
+     * ```
+     * val secKey: SecretKey = AESUtil.generateKey()
+     * // or
+     * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
+     * ```
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     */
+    fun encrypt(plainText: String, secKey: SecretKey): String = encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
+
+    /**
+     * Decrypt string with specified secure key.
+     *
+     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
+     * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param secKey You must use the same SecretKey or else the decryption will be failed.
+     */
+    fun decrypt(cipherText: String, secKey: SecretKey): String = decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
 
     // ==============================================================
 
@@ -55,6 +89,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainText: String, secKey: ByteArray): String = encrypt(plainText.toByteArray(), secKey).toHexStringLE(true, "")
 
@@ -74,6 +110,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherText: String, secKey: ByteArray): String = decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
 
@@ -96,6 +134,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainBytes: ByteArray, secKey: String): ByteArray = encrypt(plainBytes, secKey.toByteArray())
 
@@ -116,6 +156,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: String): ByteArray = decrypt(cipherBytes, secKey.toByteArray())
 
@@ -140,6 +182,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainData: ByteArray, secKey: SecretKey): ByteArray = encrypt(plainData, secKey.encoded)
 
@@ -162,6 +206,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: SecretKey): ByteArray = decrypt(cipherBytes, secKey.encoded)
 
@@ -183,6 +229,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainData: ByteArray, secKey: ByteArray): ByteArray {
         val cipher = Cipher.getInstance(CIPHER_AES)
@@ -214,6 +262,8 @@ object AESUtil {
      *
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
+     *
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
         val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)

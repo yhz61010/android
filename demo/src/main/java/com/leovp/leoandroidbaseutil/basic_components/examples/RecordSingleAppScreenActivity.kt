@@ -28,7 +28,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
     private lateinit var videoH264OsForDebug: BufferedOutputStream
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: Any, flags: Int) {
+        override fun onDataUpdate(buffer: ByteArray, flags: Int) {
             val buf = buffer as ByteArray
             when (flags) {
                 MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString()}")

@@ -20,6 +20,7 @@ object ScreenCapture {
 
     const val BY_IMAGE = 1
     const val BY_MEDIA_CODEC = 2
+    const val BY_RAW = 3
 
     @Suppress("unused")
     const val SCREEN_CAPTURE_TYPE_X264 = 3
@@ -62,22 +63,26 @@ object ScreenCapture {
         private var quality = 100
 
         // ==================================================
-        // ===== For H264
+        // ===== Common For H264
         // ==================================================
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
+
+        // ==================================================
+        // ===== Only For H264
+        // ==================================================
         fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         // ==================================================
-        // ===== For Image
+        // ===== Only For Image
         // ==================================================
-        /**
-         * Only used in `ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE` mode
-         */
+        /** Only used in [BY_IMAGE] mode */
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
+
+        /** Only used in [BY_IMAGE] mode */
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
@@ -104,6 +109,10 @@ object ScreenCapture {
                         .setKeyFrameRate(keyFrameRate)
                         .setIFrameInterval(iFrameInterval)
                         .setGoogleEncoder(useGoogleEncoder)
+                        .build()
+                BY_RAW ->
+                    ScreenRecordRawStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+                        .setFps(fps)
                         .build()
                 else ->
                     ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)

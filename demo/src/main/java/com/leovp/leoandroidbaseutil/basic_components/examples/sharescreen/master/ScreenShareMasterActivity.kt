@@ -70,7 +70,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.outputH264File = false
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
-                    override fun onUpdate(data: Any, flags: Int) {
+                    override fun onUpdate(data: ByteArray, flags: Int) {
                         if (clientChannel != null) {
                             val dataArray = data as ByteArray
                             runOnUiThread { txtInfo.text = "flags=$flags Data length=${dataArray.size}" }

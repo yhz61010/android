@@ -20,7 +20,7 @@ object ScreenCapture {
 
     const val BY_IMAGE = 1
     const val BY_MEDIA_CODEC = 2
-    const val BY_RAW = 3
+    const val BY_RAW_BMP = 3
 
     @Suppress("unused")
     const val SCREEN_CAPTURE_TYPE_X264 = 3
@@ -110,8 +110,8 @@ object ScreenCapture {
                         .setIFrameInterval(iFrameInterval)
                         .setGoogleEncoder(useGoogleEncoder)
                         .build()
-                BY_RAW ->
-                    ScreenRecordRawStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+                BY_RAW_BMP ->
+                    ScreenRecordRawBmpStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
                         .setFps(fps)
                         .build()
                 else ->

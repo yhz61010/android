@@ -37,6 +37,10 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
             holder.itemView.cardView.setCardBackgroundColor(ContextCompat.getColor(app, R.color.purple_200))
             val innerViewGroup = holder.itemView.cardView.children.first() as ViewGroup
             innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.WHITE) }
+        } else {
+            holder.itemView.cardView.setCardBackgroundColor(ContextCompat.getColor(app, android.R.color.white))
+            val innerViewGroup = holder.itemView.cardView.children.first() as ViewGroup
+            innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.BLACK) }
         }
         holder.itemView.setOnClickListener {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
@@ -48,7 +52,7 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
 
     override fun getItemId(position: Int) = position.toLong()
 
-    override fun getItemViewType(position: Int) = position
+//    override fun getItemViewType(position: Int) = position
 
     fun insertAdd(item: WifiModel) {
         dataArray.add(item)

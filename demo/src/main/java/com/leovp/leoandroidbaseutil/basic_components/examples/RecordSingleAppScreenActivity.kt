@@ -30,13 +30,12 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
 
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: ByteArray, flags: Int) {
-            val buf = buffer as ByteArray
             when (flags) {
-                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]=${buf.toHexString()}")
-                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Get h264 data Key-Frame[${buf.size}]")
-                else -> LogContext.log.i(ITAG, "Get h264 data[${buf.size}]")
+                MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(ITAG, "Get h264 data[${buffer.size}]=${buffer.toHexString()}")
+                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Get h264 data Key-Frame[${buffer.size}]")
+                else -> LogContext.log.i(ITAG, "Get h264 data[${buffer.size}]")
             }
-            videoH264OsForDebug.write(buf)
+            videoH264OsForDebug.write(buffer)
         }
     }
 

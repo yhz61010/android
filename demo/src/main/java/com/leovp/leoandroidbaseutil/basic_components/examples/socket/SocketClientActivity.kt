@@ -6,8 +6,8 @@ import android.view.View
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivitySocketClientBinding
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
@@ -15,7 +15,6 @@ import com.leovp.socket_sdk.framework.client.retry_strategy.ExponentRetry
 import com.leovp.socket_sdk.framework.client.retry_strategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
-import kotlinx.android.synthetic.main.activity_socket_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +26,8 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     private lateinit var socketClient: SocketClient
     private lateinit var socketClientHandler: SocketClientHandler
 
+    private lateinit var binding: ActivitySocketClientBinding
+
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
@@ -36,7 +37,7 @@ class SocketClientActivity : BaseDemonstrationActivity() {
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
             LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-            runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
+            runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
@@ -52,12 +53,12 @@ class SocketClientActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_socket_client)
+        binding = ActivitySocketClientBinding.inflate(layoutInflater).apply { setContentView(root) }
     }
 
     private fun createSocket(): SocketClient {
-        val svrIp = etSvrIp.text.toString().substringBeforeLast(':')
-        val svrPort = etSvrIp.text.toString().substringAfterLast(':').toInt()
+        val svrIp = binding.etSvrIp.text.toString().substringBeforeLast(':')
+        val svrPort = binding.etSvrIp.text.toString().substringAfterLast(':').toInt()
         socketClient = SocketClient(svrIp, svrPort, connectionListener, ExponentRetry(5, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
@@ -89,8 +90,8 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             if (::socketClientHandler.isInitialized) {
-                val result = socketClientHandler.sendMsgToServer(editText.text.toString())
-                withContext(Dispatchers.Main) { editText.text.clear(); if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+                val result = socketClientHandler.sendMsgToServer(binding.editText.text.toString())
+                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) ToastUtil.showDebugErrorToast("Send command error") }
             }
         }
     }

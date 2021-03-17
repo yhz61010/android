@@ -26,6 +26,7 @@ import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.ScreenCapture.BY_IMAGE
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
@@ -37,7 +38,6 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_screen_share_master.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,6 +54,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
+
+    private lateinit var binding: ActivityScreenShareMasterBinding
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -73,7 +75,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     override fun onUpdate(data: ByteArray, flags: Int) {
                         if (clientChannel != null) {
                             val dataArray = data as ByteArray
-                            runOnUiThread { txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
+                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
                             runCatching {
                                 clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, dataArray) }
                             }.onFailure { e -> e.printStackTrace() }
@@ -91,7 +93,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_screen_share_master)
+        binding = ActivityScreenShareMasterBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -101,7 +103,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         }
         bindService(serviceIntent, serviceConn, Service.BIND_AUTO_CREATE)
 
-        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+        binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 ScreenCapture.requestPermission(this@ScreenShareMasterActivity)
             } else {
@@ -322,7 +324,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         private fun lostClientDisconnection() {
             this@ScreenShareMasterActivity.clientChannel = null
-            runOnUiThread { toggleButton.isChecked = false }
+            runOnUiThread { binding.toggleButton.isChecked = false }
             stopServer()
         }
     }

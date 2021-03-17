@@ -15,11 +15,10 @@ import com.leovp.audio.aac.AacFilePlayer
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.bean.AudioEncoderInfo
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.AudioSender
-import kotlinx.android.synthetic.main.activity_audio.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityAudioBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,6 +37,8 @@ class AudioActivity : BaseDemonstrationActivity() {
         val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
     }
 
+    private lateinit var binding: ActivityAudioBinding
+
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private val pcmFile by lazy { FileUtil.createFile(this, "audio.pcm") }
@@ -54,7 +55,7 @@ class AudioActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_audio)
+        binding = ActivityAudioBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
@@ -68,7 +69,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                 }
             })
 
-        btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
+        binding.btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 record(AudioType.PCM)
             } else {
@@ -76,7 +77,7 @@ class AudioActivity : BaseDemonstrationActivity() {
             }
         }
 
-        btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
+        binding.btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 record(AudioType.AAC)
             } else {
@@ -84,7 +85,7 @@ class AudioActivity : BaseDemonstrationActivity() {
             }
         }
 
-        btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
+        binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             var playPcmThread: Thread? = null
             if (isChecked) {
                 audioPlayer = AudioPlayer(applicationContext, audioDecoderInfo, AudioType.PCM)
@@ -108,7 +109,7 @@ class AudioActivity : BaseDemonstrationActivity() {
             }
         }
 
-        btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
+        binding.btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
                 aacFilePlayer = AacFilePlayer(applicationContext, audioDecoderInfo)
                 aacFilePlayer?.playAac(aacFile) {
@@ -176,7 +177,7 @@ class AudioActivity : BaseDemonstrationActivity() {
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val uri = URI.create(etAudioReceiverIp.text.toString())
+        val uri = URI.create(binding.etAudioReceiverIp.text.toString())
         LogContext.log.w(TAG, "Send to $uri")
         audioSender = AudioSender()
         ioScope.launch { audioSender?.start(this@AudioActivity, uri) }

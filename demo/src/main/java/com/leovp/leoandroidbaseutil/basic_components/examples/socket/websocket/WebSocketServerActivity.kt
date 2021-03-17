@@ -6,8 +6,8 @@ import android.view.View
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketServerBinding
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
 import com.leovp.socket_sdk.framework.server.ServerConnectListener
@@ -17,7 +17,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_websocket_server.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,6 +30,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         private const val PORT = 10010
     }
 
+    private lateinit var binding: ActivityWebsocketServerBinding
+
     private val cs = CoroutineScope(Dispatchers.IO)
 
     private lateinit var webSocketServer: WebSocketServer
@@ -40,27 +41,27 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted on port: $PORT")
             ToastUtil.showDebugToast("onStarted on port: $PORT")
-            runOnUiThread { txtResponse.text = "Server started on port: $PORT";sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "Server started on port: $PORT";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
             LogContext.log.i(TAG, "onStop")
             ToastUtil.showDebugToast("onStop")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nServer stopped";sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
             runOnUiThread {
-                txtResponse.text = "${txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
-                sv.fullScroll(View.FOCUS_DOWN)
+                binding.txtResponse.text = "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
             LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\n${clientChannel.remoteAddress()}: $data";sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data";binding.sv.fullScroll(View.FOCUS_DOWN) }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
@@ -68,23 +69,23 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
             runOnUiThread {
-                txtResponse.text = "${txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
-                sv.fullScroll(View.FOCUS_DOWN)
+                binding.txtResponse.text = "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             ToastUtil.showDebugToast("onFailed code: $code message: $msg")
-            runOnUiThread { txtResponse.text = "${txtResponse.text}\nStart failed $code $msg";sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_websocket_server)
+        binding = ActivityWebsocketServerBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        btnStop.setOnSingleClickListener {
+        binding.btnStop.setOnSingleClickListener {
             LogContext.log.d(TAG, "Stop button clicked.")
             cs.launch {
                 if (::webSocketServer.isInitialized) webSocketServer.stopServer()

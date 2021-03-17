@@ -16,8 +16,7 @@ import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
-import com.leovp.leoandroidbaseutil.R
-import kotlinx.android.synthetic.main.activity_camera2_without_preview.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityCamera2WithoutPreviewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -26,12 +25,14 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL
     }
 
+    private lateinit var binding: ActivityCamera2WithoutPreviewBinding
+
     private lateinit var camera2Helper: Camera2ComponentHelper
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_camera2_without_preview)
+        binding = ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         XXPermissions.with(this@Camera2WithoutPreviewActivity)
             .permission(Permission.CAMERA)
@@ -86,7 +87,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
             }
         }
 
-        btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
+        binding.btnCameraRecord.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) doStartRecord() else stopRecord()
         }
     }

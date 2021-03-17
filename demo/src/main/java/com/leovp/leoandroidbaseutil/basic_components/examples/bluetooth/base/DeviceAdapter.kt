@@ -4,21 +4,23 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.leoandroidbaseutil.R
+import com.leovp.androidbase.exts.android.app
+import com.leovp.leoandroidbaseutil.databinding.RecyclerviewBluetoothDeviceItemBinding
 
 /**
  * Author: Michael Leo
  * Date: 21-3-3 下午6:13
  */
 class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
+    private lateinit var binding: RecyclerviewBluetoothDeviceItemBinding
+
     private val dataArray: MutableList<DeviceModel> = mutableListOf()
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_bluetooth_device_item, parent, false)
-        return ItemViewHolder(view)
+        binding = RecyclerviewBluetoothDeviceItemBinding.inflate(LayoutInflater.from(app), parent, false)
+        return ItemViewHolder(binding.root)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -60,16 +62,13 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
     }
 
     class ItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
-        private val tvIndex: TextView = itemView.findViewById(R.id.txtIndex)
-        private val tvDeviceName: TextView = itemView.findViewById(R.id.txtDeviceName)
-        private val tvBluetoothStrength: TextView = itemView.findViewById(R.id.txtBluetoothStrength)
-        private val tvBluetoothMacAddress: TextView = itemView.findViewById(R.id.txtBluetoothMac)
+        private val binding = RecyclerviewBluetoothDeviceItemBinding.bind(view)
 
         fun bind(item: DeviceModel) {
-            tvIndex.text = item.index.toString()
-            tvDeviceName.text = item.name ?: ""
-            tvBluetoothStrength.text = item.rssi ?: ""
-            tvBluetoothMacAddress.text = item.macAddress
+            binding.txtIndex.text = item.index.toString()
+            binding.txtDeviceName.text = item.name ?: ""
+            binding.txtBluetoothStrength.text = item.rssi ?: ""
+            binding.txtBluetoothMac.text = item.macAddress
         }
     }
 }

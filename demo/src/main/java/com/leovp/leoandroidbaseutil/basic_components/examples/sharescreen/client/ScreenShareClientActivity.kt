@@ -20,12 +20,12 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TOUCH_EVENT
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TRIGGER_I_FRAME
+import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareClientBinding
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
@@ -36,7 +36,6 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_screen_share_client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,6 +45,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ScreenShareClientActivity : BaseDemonstrationActivity() {
+
+    private lateinit var binding: ActivityScreenShareClientBinding
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -66,11 +67,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreen()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_screen_share_client)
+        binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         val screenInfo = getAvailableResolution()
-        surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
-        surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
+        binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
                 // When surface recreated, we need to redraw screen again.
@@ -90,14 +91,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             }
         })
 
-        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+        binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) connectToServer() else releaseConnection()
         }
 
-        finger.strokeColor = Color.RED
-        finger.inEditMode = false
+        binding.finger.strokeColor = Color.RED
+        binding.finger.inEditMode = false
 
-        finger.touchUpCallback = object : FingerPaintView.TouchUpCallback {
+        binding.finger.touchUpCallback = object : FingerPaintView.TouchUpCallback {
             override fun onTouchDown(x: Float, y: Float, paint: Paint) {
                 webSocketClientHandler?.sendPaintData(TouchType.DOWN, x, y, paint)
             }
@@ -119,8 +120,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             }
         }
 
-        switchDraw.setOnCheckedChangeListener { _, isChecked ->
-            finger.inEditMode = isChecked
+        binding.switchDraw.setOnCheckedChangeListener { _, isChecked ->
+            binding.finger.inEditMode = isChecked
         }
     }
 
@@ -146,7 +147,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 //        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
         format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
         format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
-        decoder?.configure(format, surfaceView.holder.surface, null, 0)
+        decoder?.configure(format, binding.surfaceView.holder.surface, null, 0)
         outputFormat = decoder?.outputFormat // option B
         decoder?.setCallback(mediaCodecCallback)
         decoder?.start()
@@ -375,7 +376,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                     decoder?.release()
                 }.onFailure { it.printStackTrace() }
                 cs.launch { webSocketClient?.disconnectManually() }
-                runOnUiThread { toggleButton.isChecked = false }
+                runOnUiThread { binding.toggleButton.isChecked = false }
 
             }
         }
@@ -385,7 +386,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         // 1. adb shell (Login your server phone)
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
-        val url = URI("ws://${etServerIp.text}:10086/")
+        val url = URI("ws://${binding.etServerIp.text}:10086/")
         webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)
@@ -396,7 +397,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private fun releaseConnection() {
         sps = null
         pps = null
-        finger.clear()
+        binding.finger.clear()
         queue.clear()
         runCatching {
             decoder?.release()
@@ -405,10 +406,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        finger.clear()
+        binding.finger.clear()
     }
 
     fun onUndoClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        finger.undo()
+        binding.finger.undo()
     }
 }

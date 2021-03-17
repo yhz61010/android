@@ -7,8 +7,8 @@ import android.view.View
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.ui.ToastUtil
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketClientBinding
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
@@ -19,9 +19,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_socket_client.editText
-import kotlinx.android.synthetic.main.activity_socket_client.txtView
-import kotlinx.android.synthetic.main.activity_websocket_client.*
 import kotlinx.coroutines.*
 import java.io.InputStream
 import java.net.URI
@@ -33,6 +30,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         private const val TAG = "WebSocketClient"
     }
 
+    private lateinit var binding: ActivityWebsocketClientBinding
+
     private val cs = CoroutineScope(Dispatchers.IO)
 
     private var webSocketClient: WebSocketClientDemo? = null
@@ -43,12 +42,12 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_websocket_client)
+        binding = ActivityWebsocketClientBinding.inflate(layoutInflater).apply { setContentView(root) }
     }
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
-            URI(etSvrIp.text.toString()),
+            URI(binding.etSvrIp.text.toString()),
             connectionListener,
             constantRetry,
             null //assets.open("cert/websocket.org.crt")
@@ -124,7 +123,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
             LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-            runOnUiThread { txtView.text = txtView.text.toString() + data?.toJsonString() + "\n" }
+            runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
         }
 
         override fun onDisconnected(netty: BaseNettyClient) {
@@ -205,8 +204,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             if (::webSocketClientHandler.isInitialized) {
-                val result = webSocketClientHandler.sendMsgToServer(editText.text.toString())
-                withContext(Dispatchers.Main) { editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+                val result = webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
+                withContext(Dispatchers.Main) { binding.editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
             }
         }
     }

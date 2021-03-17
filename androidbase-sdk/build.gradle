@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 apply plugin: "org.sonarqube"
 
 android {
@@ -37,6 +37,10 @@ android {
         unitTests {
             returnDefaultValues = true
         }
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 

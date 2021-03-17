@@ -8,20 +8,22 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import kotlinx.android.synthetic.main.activity_device_info.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityDeviceInfoBinding
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {
+
+    private lateinit var binding: ActivityDeviceInfoBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_device_info)
+        binding = ActivityDeviceInfoBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
         val deviceInfo = DeviceUtil.getDeviceInfo(this)
-        tv.text = deviceInfo
+        binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 
         NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {

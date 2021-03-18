@@ -10,6 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo/LeoAndroidBaseUtil.demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/drawOnScreen-sdk/LeoAndroidBaseUtil.drawOnScreen-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/drawOnScreen-sdk/LeoAndroidBaseUtil.drawOnScreen-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/x264/LeoAndroidBaseUtil.x264.iml" filepath="$PROJECT_DIR$/.idea/modules/x264/LeoAndroidBaseUtil.x264.iml" />
     </modules>
   </component>
 </project>

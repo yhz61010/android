@@ -1,18 +1,25 @@
-plugins {
-    id 'com.android.library'
-    id 'kotlin-android'
-}
-apply plugin: "org.sonarqube"
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+    ndkVersion rootProject.ext.ndkVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        externalNativeBuild {
+            ndkBuild {
+                cppFlags ""
+            }
+        }
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -21,6 +28,16 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            externalNativeBuild {
+                ndkBuild {
+                    arguments "LOCAL_LDFLAGS:=-Wl,-s"
+                }
+            }
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path "src/main/cpp/Android.mk"
         }
     }
     compileOptions {
@@ -33,8 +50,6 @@ android {
 }
 
 dependencies {
-    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    api "androidx.appcompat:appcompat:$appcompatVersion"
-    api "com.google.android.material:material:$rootProject.ext.materialVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 }

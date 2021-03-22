@@ -80,3 +80,5 @@ lint/tmp/
 /screencapture-sdk/src/main/libs/armeabi-v7a/
 /.cxx/
 /src/main/cpp/prebuilt/
+/src/main/cpp/libs/
+/src/main/cpp/obj/

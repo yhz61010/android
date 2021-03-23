@@ -22,14 +22,35 @@ import org.greenrobot.eventbus.ThreadMode
  */
 class SimulatedClickService : AccessibilityService() {
 
+    override fun onCreate() {
+        LogContext.log.i("onCreate()")
+        super.onCreate()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onDestroy() {
+        LogContext.log.i("onDestroy()")
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
+    }
+
     @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.POSTING)
     fun onReceiveEvent(touchBean: ScreenShareClientActivity.TouchBean) {
         LogContext.log.i(TAG, "onReceiveEvent: ${touchBean.toJsonString()}")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
+            when (touchBean.touchType) {
+                ScreenShareClientActivity.TouchType.DRAG -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        dispatchGestureDrag(touchBean.x, touchBean.y, touchBean.dstX, touchBean.dstY, touchBean.duration)
+                    } else {
+                        LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
+                    }
+                }
+                else -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
+            }
         } else {
-            LogContext.log.w(TAG, "Does NOT support simulate click.")
+            LogContext.log.w(TAG, "Simulate click only available as of Android 7.0")
         }
     }
 
@@ -50,26 +71,60 @@ class SimulatedClickService : AccessibilityService() {
     private fun dispatchGestureClick(x: Int, y: Int) {
         val path = Path()
         path.moveTo(x.toFloat(), y.toFloat())
-        val click: Boolean = dispatchGesture(
-            GestureDescription.Builder()
-                .addStroke(GestureDescription.StrokeDescription(path, 0, 100)).build(), null, null
-        )
+        val clickGesture = GestureDescription.StrokeDescription(path, 0, 100)
+        val click: Boolean = dispatchGesture(GestureDescription.Builder().addStroke(clickGesture).build(), null, null)
         LogContext.log.i(TAG, "dispatchGestureClick: $click")
     }
 
+    // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun dispatchGestureDrag(srcX: Float, srcY: Float, dstX: Float, dstY: Float, duration: Long) {
+        val dragPath = Path().apply {
+            moveTo(srcX, srcY)
+            lineTo(dstX, dstY)
+        }
+        val dragGesture = GestureDescription.StrokeDescription(dragPath, 0, duration)
+        val drag: Boolean = dispatchGesture(GestureDescription.Builder().addStroke(dragGesture).build(), null, null)
+        LogContext.log.i(TAG, "dispatchGestureDrag: $drag")
+    }
+
+    // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun doRightThenDownDrag() {
+        val dragRightPath = Path().apply {
+            moveTo(200f, 200f)
+            lineTo(400f, 200f)
+        }
+        val dragRightDuration = 500L // 0.5 second
+
+        // The starting point of the second path must match
+        // the ending point of the first path.
+        val dragDownPath = Path().apply {
+            moveTo(400f, 200f)
+            lineTo(400f, 400f)
+        }
+        val dragDownDuration = 500L
+        val rightThenDownDrag = GestureDescription.StrokeDescription(
+            dragRightPath,
+            0L,
+            dragRightDuration,
+            true
+        ).apply {
+            continueStroke(dragDownPath, dragRightDuration, dragDownDuration, false)
+        }
+    }
+
     override fun onInterrupt() {
-        LogContext.log.i(TAG, "onInterrupt()")
-        EventBus.getDefault().unregister(this)
+        LogContext.log.w(TAG, "onInterrupt()")
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        LogContext.log.i(TAG, "onServiceConnected()")
-        EventBus.getDefault().register(this)
+        LogContext.log.w(TAG, "onServiceConnected()")
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        LogContext.log.i(TAG, "onUnbind()")
+        LogContext.log.w(TAG, "onUnbind()")
         return super.onUnbind(intent)
     }
 

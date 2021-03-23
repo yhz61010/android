@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
 import android.os.Build
+import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -62,9 +63,10 @@ class SimulatedClickService : AccessibilityService() {
 //        val packageName: String = event.packageName.toString()
         val eventType: Int = event.eventType
         val className: String? = event.className?.toString()
-        LogContext.log.i(TAG, "onAccessibilityEvent [$className]:$eventType")
         // eventType: AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+        val st = SystemClock.elapsedRealtimeNanos()
         AccessibilityUtil.init(this)
+        LogContext.log.i(TAG, "init cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us onAccessibilityEvent [$className]:$eventType")
     }
 
     @RequiresApi(Build.VERSION_CODES.N)

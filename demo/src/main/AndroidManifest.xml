@@ -28,7 +28,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".basic_components.examples.accessibility.AccessibilityActivity" />
+        <activity
+            android:name=".basic_components.examples.accessibility.AccessibilityActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
         <activity
             android:name=".basic_components.examples.wifi.WifiActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />

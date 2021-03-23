@@ -19,10 +19,10 @@ import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
-import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_PAINT_EVENT
@@ -61,7 +61,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     @Keep
     enum class TouchType {
-        DOWN, MOVE, UP, CLEAR, UNDO, DRAG
+        DOWN, MOVE, UP, CLEAR, UNDO, DRAG, HOME, BACK, RECENT
     }
 
     private var sps: ByteArray? = null
@@ -270,8 +270,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         fun sendTouchData(type: TouchType, x: Float, y: Float): Boolean {
             val touchBean = TouchBean(type, x, y)
-            val touchArray = CmdBean(CMD_TOUCH_EVENT, null, null, touchBean).toJsonString().encodeToByteArray()
-            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val cmdId = when (type) {
+                TouchType.RECENT -> ScreenShareMasterActivity.CMD_TOUCH_RECENT
+                TouchType.HOME -> ScreenShareMasterActivity.CMD_TOUCH_HOME
+                TouchType.BACK -> ScreenShareMasterActivity.CMD_TOUCH_BACK
+                else -> CMD_TOUCH_EVENT
+            }
+            val touchArray = CmdBean(cmdId, null, null, touchBean).toJsonString().encodeToByteArray()
+            val cId = cmdId.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
@@ -438,15 +444,15 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     fun onRecentClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        AccessibilityUtil.clickRecentsKey()
+        webSocketClientHandler?.sendTouchData(TouchType.RECENT, 0f, 0f)
     }
 
     fun onBackClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        AccessibilityUtil.clickBackKey()
+        webSocketClientHandler?.sendTouchData(TouchType.BACK, 0f, 0f)
     }
 
     fun onHomeClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        AccessibilityUtil.clickHomeKey()
+        webSocketClientHandler?.sendTouchData(TouchType.HOME, 0f, 0f)
     }
 
     private var rawX = 0F

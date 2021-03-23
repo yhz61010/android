@@ -42,7 +42,14 @@ class AccessibilityActivity : BaseDemonstrationActivity() {
             val touchBean = ScreenShareClientActivity.TouchBean(ScreenShareClientActivity.TouchType.DRAG, 500F, 1400F, 500F, 800F, 500L)
             EventBus.getDefault().post(touchBean)
         }, 1000)
-        Handler(Looper.getMainLooper()).postDelayed({ AccessibilityUtil.clickHomeKey() }, 5000)
+        Handler(Looper.getMainLooper()).postDelayed({
+            AccessibilityUtil.openNotification()
+            AccessibilityUtil.clickBackKey()
+        }, 3000)
+        Handler(Looper.getMainLooper()).postDelayed({
+            AccessibilityUtil.clickHomeKey()
+            AccessibilityUtil.clickRecentsKey()
+        }, 5000)
     }
 
     fun onButtonClick(@Suppress("UNUSED_PARAMETER") view: View) {

@@ -112,6 +112,8 @@ object AccessibilityUtil {
 
     fun clickRecentsKey(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_RECENTS)
 
+    fun openNotification(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)
+
     fun performFunctionKey(action: Int): Boolean {
         if (!::weakService.isInitialized) {
             LogContext.log.e(ITAG, "You must call init method first.")

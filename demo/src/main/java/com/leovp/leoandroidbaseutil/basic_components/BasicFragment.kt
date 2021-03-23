@@ -13,6 +13,7 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
+import com.leovp.leoandroidbaseutil.basic_components.examples.accessibility.AccessibilityActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
@@ -94,6 +95,7 @@ class BasicFragment : Fragment() {
             Pair("Java Mail", JavaMailActivity::class.java),
             Pair("Bluetooth", BluetoothActivity::class.java),
             Pair("Wifi", WifiActivity::class.java),
+            Pair("Accessibility", AccessibilityActivity::class.java),
         )
 
         val colors = arrayOf(

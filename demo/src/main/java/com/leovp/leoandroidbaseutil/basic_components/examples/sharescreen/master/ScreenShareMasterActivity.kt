@@ -42,15 +42,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
 
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     companion object {
         const val CMD_GRAPHIC_CSD: Int = 1
         const val CMD_GRAPHIC_DATA: Int = 2
-        const val CMD_TOUCH_EVENT: Int = 3
+        const val CMD_PAINT_EVENT: Int = 3
         const val CMD_DEVICE_SCREEN_INFO: Int = 4
         const val CMD_TRIGGER_I_FRAME: Int = 5
+        const val CMD_TOUCH_EVENT: Int = 6
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
@@ -94,6 +96,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityScreenShareMasterBinding.inflate(layoutInflater).apply { setContentView(root) }
+
+        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -270,9 +274,15 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 val stringData = data as String
                 val cmdBean = stringData.toObject(ScreenShareClientActivity.CmdBean::class.java)!!
                 when (cmdBean.cmdId) {
+                    CMD_TOUCH_EVENT -> {
+                        val touchBean = cmdBean.touchBean!!
+                        touchBean.x = currentScreen.x / clientScreenInfo!!.x.toFloat() * touchBean.x
+                        touchBean.y = currentScreen.y / clientScreenInfo!!.y.toFloat() * touchBean.y
+                        EventBus.getDefault().post(touchBean)
+                    }
                     CMD_TRIGGER_I_FRAME -> mediaProjectService?.triggerIFrame()
                     CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
-                    CMD_TOUCH_EVENT -> {
+                    CMD_PAINT_EVENT -> {
                         val paintBean = cmdBean.paintBean!!
                         val pathPaint = Paint().apply {
                             isAntiAlias = true

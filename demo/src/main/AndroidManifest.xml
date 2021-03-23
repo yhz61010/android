@@ -87,6 +87,19 @@
             android:exported="false"
             android:foregroundServiceType="mediaProjection"
             tools:targetApi="q" />
+        <service
+            android:name=".basic_components.examples.sharescreen.master.SimulatedClickService"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 
 </manifest>

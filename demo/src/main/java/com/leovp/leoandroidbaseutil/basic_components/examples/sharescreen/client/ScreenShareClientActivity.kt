@@ -61,7 +61,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     @Keep
     enum class TouchType {
-        DOWN, MOVE, UP, CLEAR, UNDO
+        DOWN, MOVE, UP, CLEAR, UNDO, DRAG
     }
 
     private var sps: ByteArray? = null
@@ -336,7 +336,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     data class TouchBean(
         val touchType: TouchType,
         var x: Float = 0f,
-        var y: Float = 0f
+        var y: Float = 0f,
+        var dstX: Float = 0f,
+        var dstY: Float = 0f,
+        var duration: Long = 0
     )
 
     private fun connectToServer() {

@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
@@ -23,6 +24,7 @@ import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_PAINT_EVENT
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TOUCH_EVENT
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TRIGGER_I_FRAME
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareClientBinding
@@ -244,7 +246,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         fun triggerIFrame(): Boolean {
-            val cmdArray = CmdBean(CMD_TRIGGER_I_FRAME, null, null).toJsonString().encodeToByteArray()
+            val cmdArray = CmdBean(CMD_TRIGGER_I_FRAME, null, null, null).toJsonString().encodeToByteArray()
 
             val cId = CMD_TRIGGER_I_FRAME.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -255,7 +257,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
 
         fun sendDeviceScreenInfoToServer(point: Point): Boolean {
-            val paintArray = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point, null).toJsonString().encodeToByteArray()
 
             val cId = CMD_DEVICE_SCREEN_INFO.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -265,11 +267,22 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             return netty.executeCommand("ScreenInfo", "Send screen info to server", command)
         }
 
+        fun sendTouchData(type: TouchType, x: Float, y: Float): Boolean {
+            val touchBean = TouchBean(type, x, y)
+            val touchArray = CmdBean(CMD_TOUCH_EVENT, null, null, touchBean).toJsonString().encodeToByteArray()
+            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
+
+            return netty.executeCommand("WebSocketTouchCmd", "Touch[${type.name}]", command, false)
+        }
+
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
             val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
-            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
 
-            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
@@ -279,9 +292,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         fun clearCanvas(): Boolean {
             val paintBean = PaintBean(TouchType.CLEAR)
-            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
 
-            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
@@ -291,9 +304,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         fun undoDraw(): Boolean {
             val paintBean = PaintBean(TouchType.UNDO)
-            val paintArray = CmdBean(CMD_TOUCH_EVENT, paintBean, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
 
-            val cId = CMD_TOUCH_EVENT.asByteAndForceToBytes()
+            val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
@@ -306,7 +319,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     @Keep
-    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Point?)
+    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Point?, val touchBean: TouchBean?)
 
     @Keep
     data class PaintBean(
@@ -316,6 +329,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         val paintColor: Int = 0,
         val paintStyle: Paint.Style = Paint.Style.STROKE,
         val strokeWidth: Float = 0f
+    )
+
+    @Keep
+    data class TouchBean(
+        val touchType: TouchType,
+        var x: Float = 0f,
+        var y: Float = 0f
     )
 
     private fun connectToServer() {
@@ -411,5 +431,23 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     fun onUndoClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.finger.undo()
+    }
+
+    private var rawX = 0F
+    private var rawY = 0F
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (binding.finger.inEditMode) {
+            return super.dispatchTouchEvent(ev)
+        }
+        rawX = ev.rawX
+        rawY = ev.rawY
+        LogContext.log.d("Raw position=$rawX x $rawY")
+        val touchType = when (ev.action) {
+            MotionEvent.ACTION_DOWN -> TouchType.DOWN
+            else -> TouchType.UP
+        }
+        webSocketClientHandler?.sendTouchData(touchType, rawX, rawY)
+        return super.dispatchTouchEvent(ev)
     }
 }

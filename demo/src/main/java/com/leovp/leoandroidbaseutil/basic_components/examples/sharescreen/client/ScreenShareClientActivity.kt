@@ -19,6 +19,7 @@ import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -431,6 +432,18 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     fun onUndoClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.finger.undo()
+    }
+
+    fun onRecentClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        AccessibilityUtil.clickRecentsKey()
+    }
+
+    fun onBackClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        AccessibilityUtil.clickBackKey()
+    }
+
+    fun onHomeClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        AccessibilityUtil.clickHomeKey()
     }
 
     private var rawX = 0F

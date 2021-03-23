@@ -98,7 +98,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityScreenShareMasterBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        if (!AccessibilityUtil.isAccessibilityEnabled(SimulatedClickService::class.java)) {
+        if (!AccessibilityUtil.isAccessibilityEnabled()) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
 

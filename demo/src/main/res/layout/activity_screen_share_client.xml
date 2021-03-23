@@ -89,4 +89,35 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
+    <Button
+        android:id="@+id/btnRecent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Recent"
+        android:onClick="onRecentClick"
+        app:layout_constraintBottom_toTopOf="@+id/etServerIp"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Back"
+        android:onClick="onBackClick"
+        app:layout_constraintBottom_toBottomOf="@+id/btnRecent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HOME"
+        android:onClick="onHomeClick"
+        app:layout_constraintBottom_toBottomOf="@+id/btnRecent"
+        app:layout_constraintEnd_toStartOf="@+id/btnBack"
+        app:layout_constraintStart_toEndOf="@+id/btnRecent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

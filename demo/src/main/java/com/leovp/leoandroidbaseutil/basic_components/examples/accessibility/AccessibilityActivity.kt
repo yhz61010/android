@@ -48,7 +48,7 @@ class AccessibilityActivity : BaseDemonstrationActivity() {
         }, 3000)
         Handler(Looper.getMainLooper()).postDelayed({
             AccessibilityUtil.clickHomeKey()
-            AccessibilityUtil.clickRecentsKey()
+            AccessibilityUtil.clickRecentKey()
         }, 5000)
     }
 

@@ -53,7 +53,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         const val CMD_PAINT_EVENT: Int = 3
         const val CMD_DEVICE_SCREEN_INFO: Int = 4
         const val CMD_TRIGGER_I_FRAME: Int = 5
+
         const val CMD_TOUCH_EVENT: Int = 6
+        const val CMD_TOUCH_HOME: Int = 7
+        const val CMD_TOUCH_BACK: Int = 8
+        const val CMD_TOUCH_RECENT: Int = 9
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
@@ -283,6 +287,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         touchBean.y = currentScreen.y / clientScreenInfo!!.y.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
+                    CMD_TOUCH_BACK -> AccessibilityUtil.clickBackKey()
+                    CMD_TOUCH_HOME -> AccessibilityUtil.clickHomeKey()
+                    CMD_TOUCH_RECENT -> AccessibilityUtil.clickRecentKey()
                     CMD_TRIGGER_I_FRAME -> mediaProjectService?.triggerIFrame()
                     CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
                     CMD_PAINT_EVENT -> {

@@ -66,6 +66,7 @@ ext {
     rxjava2RxAndroidVersion = '2.1.1'
     retrofit2Version = '2.9.0'
     gsonVersion = '2.8.6'
+    eventbusVersion = '3.1.1'
     marsXlogVersion = '1.2.4'
 
     materialDialogVersion = '3.3.0'

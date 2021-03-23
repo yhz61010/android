@@ -110,7 +110,7 @@ object AccessibilityUtil {
 
     fun clickHomeKey(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_HOME)
 
-    fun clickRecentsKey(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_RECENTS)
+    fun clickRecentKey(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_RECENTS)
 
     fun openNotification(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)
 

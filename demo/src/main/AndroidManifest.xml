@@ -28,6 +28,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.accessibility.AccessibilityActivity" />
         <activity
             android:name=".basic_components.examples.wifi.WifiActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />
@@ -96,6 +97,7 @@
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />

@@ -46,6 +46,7 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.abs
 
 class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
@@ -125,6 +126,15 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         binding.switchDraw.setOnCheckedChangeListener { _, isChecked ->
             binding.finger.inEditMode = isChecked
+        }
+
+        binding.swDrag.setOnCheckedChangeListener { _, isChecked ->
+            if (!isChecked) {
+                previousRawX = 0F
+                previousRawY = 0F
+                firstTouch = false
+                firstTouchPoint = null
+            }
         }
     }
 
@@ -266,6 +276,17 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
 
             return netty.executeCommand("ScreenInfo", "Send screen info to server", command)
+        }
+
+        fun sendDragData(x: Float, y: Float, dstX: Float, dstY: Float, duration: Long): Boolean {
+            val touchBean = TouchBean(TouchType.DRAG, x, y, dstX, dstY, duration)
+            val touchArray = CmdBean(ScreenShareMasterActivity.CMD_TOUCH_DRAG, null, null, touchBean).toJsonString().encodeToByteArray()
+            val cId = ScreenShareMasterActivity.CMD_TOUCH_DRAG.asByteAndForceToBytes()
+            val protoVer = 1.asByteAndForceToBytes()
+            val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
+            val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
+
+            return netty.executeCommand("WebSocketTouchDragCmd", "Touch[${touchBean.touchType}]", command, false)
         }
 
         fun sendTouchData(type: TouchType, x: Float, y: Float): Boolean {
@@ -455,21 +476,43 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         webSocketClientHandler?.sendTouchData(TouchType.HOME, 0f, 0f)
     }
 
-    private var rawX = 0F
-    private var rawY = 0F
+    private var previousRawX = 0F
+    private var previousRawY = 0F
+    private var firstTouch = false
+    private var firstTouchPoint: Pair<Float, Float>? = null
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (binding.finger.inEditMode) {
             return super.dispatchTouchEvent(ev)
         }
-        rawX = ev.rawX
-        rawY = ev.rawY
-        LogContext.log.d("Raw position=$rawX x $rawY")
+        val clickThreshold = 8
+        if (abs(previousRawX - ev.rawX) <= clickThreshold && abs(previousRawY - ev.rawY) <= clickThreshold) {
+            LogContext.log.w("clickThreshold denied!")
+            return super.dispatchTouchEvent(ev)
+        }
+
+        previousRawX = ev.rawX
+        previousRawY = ev.rawY
+        LogContext.log.d("Raw position=$previousRawX x $previousRawY    First touch: $firstTouch")
+        val isDrag = binding.swDrag.isChecked
+        if (isDrag) {
+            if (!firstTouch) {
+                firstTouch = true
+                firstTouchPoint = Pair(previousRawX, previousRawY)
+                LogContext.log.w("First position=${firstTouchPoint?.toJsonString()}")
+            } else {
+                LogContext.log.w("Second position=$previousRawX x $previousRawY")
+                webSocketClientHandler?.sendDragData(firstTouchPoint!!.first, firstTouchPoint!!.second, previousRawX, previousRawY, 500L)
+                firstTouch = false
+                firstTouchPoint = null
+                return super.dispatchTouchEvent(ev)
+            }
+        }
         val touchType = when (ev.action) {
             MotionEvent.ACTION_DOWN -> TouchType.DOWN
             else -> TouchType.UP
         }
-        webSocketClientHandler?.sendTouchData(touchType, rawX, rawY)
+        webSocketClientHandler?.sendTouchData(touchType, previousRawX, previousRawY)
         return super.dispatchTouchEvent(ev)
     }
 }

@@ -82,3 +82,4 @@ lint/tmp/
 # lint/reports/
 /src/main/java/example/sszpf/x264/x264Encoder.java
 /src/main/libs/armeabi-v7a/libx264encoder.so
+/src/main/libs/

@@ -58,6 +58,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         const val CMD_TOUCH_HOME: Int = 7
         const val CMD_TOUCH_BACK: Int = 8
         const val CMD_TOUCH_RECENT: Int = 9
+        const val CMD_TOUCH_DRAG: Int = 10
 
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
@@ -287,6 +288,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         touchBean.y = currentScreen.y / clientScreenInfo!!.y.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
+                    CMD_TOUCH_DRAG -> EventBus.getDefault().post(cmdBean.touchBean!!)
                     CMD_TOUCH_BACK -> AccessibilityUtil.clickBackKey()
                     CMD_TOUCH_HOME -> AccessibilityUtil.clickHomeKey()
                     CMD_TOUCH_RECENT -> AccessibilityUtil.clickRecentKey()

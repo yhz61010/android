@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base
+package com.leovp.screenshot.base.strategies
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -13,7 +13,9 @@ import android.view.Surface
 import com.leovp.androidbase.utils.device.CaptureUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.ImageUtil
-import com.leovp.screenshot.TextureRenderer
+import com.leovp.screenshot.base.ScreenDataListener
+import com.leovp.screenshot.base.ScreenProcessor
+import com.leovp.screenshot.base.TextureRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

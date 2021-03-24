@@ -16,7 +16,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.Screenshot2H264Strategy
+import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream

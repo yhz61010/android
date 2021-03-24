@@ -17,7 +17,7 @@ import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.base.ScreenRecordMediaCodecStrategy
+import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
 import io.karn.notify.Notify
 import okhttp3.internal.closeQuietly
 import java.io.BufferedOutputStream

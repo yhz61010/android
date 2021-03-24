@@ -8,7 +8,11 @@ import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.screenshot.base.*
+import com.leovp.screenshot.base.ScreenDataListener
+import com.leovp.screenshot.base.ScreenProcessor
+import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
+import com.leovp.screenshot.base.strategies.ScreenRecordRawBmpStrategy
+import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy
 
 /**
  * Author: Michael Leo
@@ -114,11 +118,11 @@ object ScreenCapture {
                     ScreenRecordRawBmpStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
                         .setFps(fps)
                         .build()
-                else ->
-                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
-                        .setFps(fps)
-                        .setBitrate(bitrate)
-                        .build()
+                else -> throw IllegalAccessException("Not support strategy.")
+//                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+//                        .setFps(fps)
+//                        .setBitrate(bitrate)
+//                        .build()
             }
         }
     }

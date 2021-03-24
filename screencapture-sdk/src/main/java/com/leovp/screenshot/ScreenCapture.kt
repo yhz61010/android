@@ -38,7 +38,7 @@ object ScreenCapture {
     }
 
     /**
-     * @param dpi Not used for [ScreenshotStrategy] which type is [BY_IMAGE]
+     * @param dpi Not used for [Screenshot2H264Strategy] which type is [BY_IMAGE]
      */
     class Builder(
         private val width: Int,
@@ -92,7 +92,7 @@ object ScreenCapture {
             )
             return when (captureType) {
                 BY_IMAGE ->
-                    ScreenshotStrategy.Builder(width, height, dpi, screenDataListener)
+                    Screenshot2H264Strategy.Builder(width, height, dpi, screenDataListener)
                         .setFps(fps)
                         .setBitrate(bitrate)
                         .setBitrateMode(bitrateMode)

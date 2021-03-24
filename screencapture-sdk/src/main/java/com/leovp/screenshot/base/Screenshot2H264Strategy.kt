@@ -24,7 +24,7 @@ import java.lang.ref.WeakReference
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
  */
-class ScreenshotStrategy private constructor(private val builder: Builder) : ScreenProcessor {
+class Screenshot2H264Strategy private constructor(private val builder: Builder) : ScreenProcessor {
 
     companion object {
         private const val TAG = "ScrShotRec"
@@ -138,9 +138,9 @@ class ScreenshotStrategy private constructor(private val builder: Builder) : Scr
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
-        fun build(): ScreenshotStrategy {
+        fun build(): Screenshot2H264Strategy {
             LogContext.log.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
-            return ScreenshotStrategy(this)
+            return Screenshot2H264Strategy(this)
         }
     }
 

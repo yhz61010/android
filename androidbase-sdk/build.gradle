@@ -82,5 +82,5 @@ dependencies {
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
 
     // https://github.com/hyuwah/DraggableView
-    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
+//    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
 }

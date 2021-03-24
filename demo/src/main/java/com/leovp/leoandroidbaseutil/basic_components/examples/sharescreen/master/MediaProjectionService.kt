@@ -179,9 +179,9 @@ class MediaProjectionService : Service() {
             setting.height, // 800 1024 1280
             setting.dpi,
             mediaProjection,
-            // SCREEN_CAPTURE_TYPE_IMAGE
-            // SCREEN_CAPTURE_TYPE_MEDIACODEC
-            // SCREEN_CAPTURE_TYPE_X264
+            // BY_IMAGE_2_H264
+            // BY_MEDIA_CODEC
+            // BY_RAW_BMP
             ScreenCapture.BY_MEDIA_CODEC,
             screenDataListener
         )

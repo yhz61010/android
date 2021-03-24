@@ -121,14 +121,4 @@
         app:layout_constraintBottom_toTopOf="@+id/btnRecent"
         app:layout_constraintStart_toStartOf="@+id/btnRecent" />
 
-    <Switch
-        android:id="@+id/swDrag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Drag"
-        android:textColor="@color/teal_200"
-        app:layout_constraintBottom_toTopOf="@+id/btnBack"
-        app:layout_constraintEnd_toEndOf="@+id/btnBack"
-        app:layout_constraintStart_toStartOf="@+id/btnBack" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

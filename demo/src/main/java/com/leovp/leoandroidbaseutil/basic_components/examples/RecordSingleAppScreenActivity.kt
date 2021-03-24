@@ -16,7 +16,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenshotStrategy
+import com.leovp.screenshot.base.Screenshot2H264Strategy
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -44,7 +44,9 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         binding = ActivityScreenshotRecordH264Binding.inflate(layoutInflater).apply { setContentView(root) }
 
         val file = FileUtil.getBaseDirString(this, "output")
-        videoH264OsForDebug = BufferedOutputStream(FileOutputStream(File(file, "screen.h264")))
+        val dstFile = File(file, "screen.h264")
+        videoH264OsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
+        LogContext.log.i("dstFile=${dstFile.absolutePath}")
 
         val screenInfo = getAvailableResolution()
         val setting = ScreenShareSetting(
@@ -70,7 +72,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (screenProcessor as ScreenshotStrategy).startRecord(this)
+                (screenProcessor as Screenshot2H264Strategy).startRecord(this)
             } else {
                 videoH264OsForDebug.flush()
                 videoH264OsForDebug.close()

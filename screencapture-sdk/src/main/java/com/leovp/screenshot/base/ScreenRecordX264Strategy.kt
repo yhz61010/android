@@ -1,9 +1,10 @@
 package com.leovp.screenshot.base
 
-import android.graphics.PixelFormat
+import android.graphics.ImageFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
+import android.media.MediaCodec
 import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
@@ -11,6 +12,10 @@ import android.os.SystemClock
 import com.leovp.androidbase.annotations.NotImplemented
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.YuvUtil
+import com.leovp.x264.X264EncodeResult
+import com.leovp.x264.X264Encoder
+import com.leovp.x264.X264InitResult
+import com.leovp.x264.X264Params
 import java.io.IOException
 
 /**
@@ -27,8 +32,10 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
     private var timespan: Int = 0
     private var time: Long = 0
 
-    //    private var x264: x264Encoder? = null
-//    private val x264DataListener: x264Encoder.DataUpdateListener = x264Encoder.DataUpdateListener { buffer, length ->
+    private var x264Encoder: X264Encoder? = null
+    private var params: X264Params? = null
+
+    //    private val x264DataListener: x264Encoder.DataUpdateListener = x264Encoder.DataUpdateListener { buffer, length ->
 //        try {
 //            builder.screenDataListener.onDataUpdate(buffer)
 //        } catch (e: IOException) {
@@ -71,11 +78,28 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
     @Throws(IOException::class)
     override fun onInit() {
         timespan = (builder.bitrate / builder.fps).toInt()
-//        x264 = x264Encoder(x264DataListener)
-//        x264!!.initX264Encode(builder.width, builder.height, builder.fps.toInt(), builder.bitrate)
-        imageReader = ImageReader.newInstance(builder.width, builder.height, PixelFormat.RGBA_8888, 2)
+
+        x264Encoder = X264Encoder()
+        params = X264Params().apply {
+            width = builder.width
+            height = builder.height
+            bitrate = builder.bitrate
+            fps = builder.fps.toInt()
+            gop = fps * 2
+            preset = "ultrafast"
+            profile = "baseline"
+        }
+
+        val initRs: X264InitResult = x264Encoder!!.initEncoder(params)
+        if (initRs.err == 0) {
+            val sps = initRs.sps
+            val pps = initRs.pps
+            builder.screenDataListener.onDataUpdate(sps + pps, MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+        }
+
+        imageReader = ImageReader.newInstance(builder.width, builder.height, ImageFormat.YUV_420_888, 2)
         virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
-            "screenshot",
+            "x264",
             builder.width, builder.height, builder.dpi,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, // VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
             imageReader!!.surface, null, null
@@ -113,27 +137,12 @@ class ScreenRecordX264Strategy private constructor(private val builder: Builder)
             return@OnImageAvailableListener
         }
         previousDisplayTime = SystemClock.elapsedRealtime()
-        screenRecHandler!!.post {
-            try {
-                val width = image.width
-                val height = image.height
-                image.format
-                LogContext.log.v(TAG, "Image width=$width height=$height")
 
-                val rgbaBytes = ByteArray(image.planes[0].buffer.remaining())
-                image.planes[0].buffer.get(rgbaBytes)
-                val yuvBytes = ByteArray(rgbaBytes.size * 3 / 2)
-                val st = SystemClock.elapsedRealtime()
-                YuvUtil.rgb2YCbCr420(rgbaBytes, yuvBytes, width, height)
-                val ed = SystemClock.elapsedRealtime()
-                LogContext.log.e(TAG, "rgb2YCbCr420 cost=${ed - st} time=$time timespan=$timespan")
-                time += timespan
-//                x264!!.encodeData(yuvBytes, yuvBytes.size, time)
-            } catch (e: Exception) {
-                LogContext.log.e(TAG, "screenRecHandler error=${e.message}")
-            } finally {
-                image.close()
-            }
+        val encodedFrame: X264EncodeResult = x264Encoder!!.encodeFrame(YuvUtil.getBytesFromImage(image), X264Params.CSP_NV21, previousDisplayTime)
+        if (encodedFrame.err == 0) {
+            builder.screenDataListener.onDataUpdate(encodedFrame.data, if (encodedFrame.isKey) MediaCodec.BUFFER_FLAG_KEY_FRAME else -1)
         }
+
+        image.close()
     }
 }

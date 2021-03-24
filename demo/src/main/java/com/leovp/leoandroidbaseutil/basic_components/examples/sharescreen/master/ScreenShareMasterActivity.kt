@@ -29,7 +29,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
 import com.leovp.screenshot.ScreenCapture
-import com.leovp.screenshot.ScreenCapture.BY_IMAGE
+import com.leovp.screenshot.ScreenCapture.BY_IMAGE_2_H264
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
@@ -378,7 +378,7 @@ data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var keyFrameRate = 8
     var iFrameInterval = 4
 
-    /** Only used in [BY_IMAGE] mode */
+    /** Only used in [BY_IMAGE_2_H264] mode */
     @Suppress("unused")
     var sampleSize: Int = 1
 }

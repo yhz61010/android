@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
@@ -49,6 +50,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
 class ScreenShareClientActivity : BaseDemonstrationActivity() {
+    companion object {
+        private const val CLICK_THRESHOLD = 8
+    }
 
     private lateinit var binding: ActivityScreenShareClientBinding
 
@@ -126,15 +130,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         binding.switchDraw.setOnCheckedChangeListener { _, isChecked ->
             binding.finger.inEditMode = isChecked
-        }
-
-        binding.swDrag.setOnCheckedChangeListener { _, isChecked ->
-            if (!isChecked) {
-                previousRawX = 0F
-                previousRawY = 0F
-                firstTouch = false
-                firstTouchPoint = null
-            }
         }
     }
 
@@ -476,43 +471,41 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         webSocketClientHandler?.sendTouchData(TouchType.HOME, 0f, 0f)
     }
 
-    private var previousRawX = 0F
-    private var previousRawY = 0F
-    private var firstTouch = false
-    private var firstTouchPoint: Pair<Float, Float>? = null
+    private var touchDownRawX = 0F
+    private var touchDownRawY = 0F
+    private var touchDownStartTime = 0L
+
+    private var touchUpRawX = 0F
+    private var touchUpRawY = 0F
+    private var touchUpStartTime = 0L
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (binding.finger.inEditMode) {
             return super.dispatchTouchEvent(ev)
         }
-        val clickThreshold = 8
-        if (abs(previousRawX - ev.rawX) <= clickThreshold && abs(previousRawY - ev.rawY) <= clickThreshold) {
-            LogContext.log.w("clickThreshold denied!")
-            return super.dispatchTouchEvent(ev)
-        }
 
-        previousRawX = ev.rawX
-        previousRawY = ev.rawY
-        LogContext.log.d("Raw position=$previousRawX x $previousRawY    First touch: $firstTouch")
-        val isDrag = binding.swDrag.isChecked
-        if (isDrag) {
-            if (!firstTouch) {
-                firstTouch = true
-                firstTouchPoint = Pair(previousRawX, previousRawY)
-                LogContext.log.w("First position=${firstTouchPoint?.toJsonString()}")
-            } else {
-                LogContext.log.w("Second position=$previousRawX x $previousRawY")
-                webSocketClientHandler?.sendDragData(firstTouchPoint!!.first, firstTouchPoint!!.second, previousRawX, previousRawY, 500L)
-                firstTouch = false
-                firstTouchPoint = null
-                return super.dispatchTouchEvent(ev)
+        when (ev.action) {
+            MotionEvent.ACTION_DOWN -> {
+                touchDownRawX = ev.rawX
+                touchDownRawY = ev.rawY
+                touchDownStartTime = SystemClock.currentThreadTimeMillis()
+            }
+            MotionEvent.ACTION_MOVE -> Unit
+            MotionEvent.ACTION_UP -> {
+                touchUpRawX = ev.rawX
+                touchUpRawY = ev.rawY
+                touchUpStartTime = SystemClock.currentThreadTimeMillis()
+
+                if (abs(touchUpRawX - touchDownRawX) <= CLICK_THRESHOLD && abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD) {
+                    LogContext.log.w("Accept as click")
+                    webSocketClientHandler?.sendTouchData(TouchType.DOWN, touchUpRawX, touchDownRawY)
+                    return super.dispatchTouchEvent(ev)
+                }
             }
         }
-        val touchType = when (ev.action) {
-            MotionEvent.ACTION_DOWN -> TouchType.DOWN
-            else -> TouchType.UP
-        }
-        webSocketClientHandler?.sendTouchData(touchType, previousRawX, previousRawY)
+
+        LogContext.log.w("Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) duration=${touchUpStartTime - touchDownStartTime}ms")
+        webSocketClientHandler?.sendDragData(touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY, touchUpStartTime - touchDownStartTime)
         return super.dispatchTouchEvent(ev)
     }
 }

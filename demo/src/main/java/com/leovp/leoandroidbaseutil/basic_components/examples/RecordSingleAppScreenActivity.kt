@@ -62,7 +62,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
             setting.height, // 800 1024 1280
             setting.dpi,
             null,
-            ScreenCapture.BY_IMAGE,
+            ScreenCapture.BY_IMAGE_2_H264,
             screenDataListener
         ).setFps(setting.fps)
             .setKeyFrameRate(20)

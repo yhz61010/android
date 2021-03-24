@@ -10,7 +10,7 @@
         android:id="@+id/toggleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="8dp"
         android:textOff="Receive"
         android:textOn="Receiving..."
         app:layout_constraintBottom_toBottomOf="parent"
@@ -32,7 +32,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="16dp"
         android:ems="10"
         android:hint="Please input server phone ip"
         android:inputType="textPersonName"
@@ -85,6 +84,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="Draw"
+        android:textColor="@color/teal_200"
         app:layout_constraintBottom_toTopOf="@+id/toggleButton"
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
@@ -94,9 +94,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="Recent"
         android:onClick="onRecentClick"
+        android:text="Recent"
+        android:textAllCaps="false"
         app:layout_constraintBottom_toTopOf="@+id/etServerIp"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -105,8 +105,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:text="Back"
         android:onClick="onBackClick"
+        android:text="Back"
+        android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="@+id/btnRecent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -114,10 +115,20 @@
         android:id="@+id/btnHome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="HOME"
         android:onClick="onHomeClick"
-        app:layout_constraintBottom_toBottomOf="@+id/btnRecent"
-        app:layout_constraintEnd_toStartOf="@+id/btnBack"
-        app:layout_constraintStart_toEndOf="@+id/btnRecent" />
+        android:text="HOME"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnRecent"
+        app:layout_constraintStart_toStartOf="@+id/btnRecent" />
+
+    <Switch
+        android:id="@+id/swDrag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Drag"
+        android:textColor="@color/teal_200"
+        app:layout_constraintBottom_toTopOf="@+id/btnBack"
+        app:layout_constraintEnd_toEndOf="@+id/btnBack"
+        app:layout_constraintStart_toStartOf="@+id/btnBack" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

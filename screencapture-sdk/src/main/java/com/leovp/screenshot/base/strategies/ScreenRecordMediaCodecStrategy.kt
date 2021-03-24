@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base
+package com.leovp.screenshot.base.strategies
 
 import android.annotation.SuppressLint
 import android.hardware.display.DisplayManager
@@ -13,6 +13,8 @@ import android.os.HandlerThread
 import com.leovp.androidbase.exts.kotlin.exception
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.screenshot.base.ScreenDataListener
+import com.leovp.screenshot.base.ScreenProcessor
 import java.nio.ByteBuffer
 
 /**

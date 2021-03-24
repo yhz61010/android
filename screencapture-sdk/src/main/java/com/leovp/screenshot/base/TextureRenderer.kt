@@ -1,4 +1,4 @@
-package com.leovp.screenshot
+package com.leovp.screenshot.base
 
 import android.graphics.Bitmap
 import android.opengl.GLES20

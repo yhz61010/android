@@ -18,7 +18,7 @@ object ScreenCapture {
 
     private const val TAG = "ScrCap"
 
-    const val BY_IMAGE = 1
+    const val BY_IMAGE_2_H264 = 1
     const val BY_MEDIA_CODEC = 2
     const val BY_RAW_BMP = 3
 
@@ -38,7 +38,7 @@ object ScreenCapture {
     }
 
     /**
-     * @param dpi Not used for [Screenshot2H264Strategy] which type is [BY_IMAGE]
+     * @param dpi Not used for [Screenshot2H264Strategy] which type is [BY_IMAGE_2_H264]
      */
     class Builder(
         private val width: Int,
@@ -79,10 +79,10 @@ object ScreenCapture {
         // ==================================================
         // ===== Only For Image
         // ==================================================
-        /** Only used in [BY_IMAGE] mode */
+        /** Only used in [BY_IMAGE_2_H264] mode */
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
 
-        /** Only used in [BY_IMAGE] mode */
+        /** Only used in [BY_IMAGE_2_H264] mode */
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
@@ -91,7 +91,7 @@ object ScreenCapture {
                 "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
-                BY_IMAGE ->
+                BY_IMAGE_2_H264 ->
                     Screenshot2H264Strategy.Builder(width, height, dpi, screenDataListener)
                         .setFps(fps)
                         .setBitrate(bitrate)

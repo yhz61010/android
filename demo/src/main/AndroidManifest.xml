@@ -16,13 +16,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> <!-- For get nearby devices, need location permission when above android M -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- For get nearby devices, need location permission when above android M -->
 
-    <!-- This permission is not necessary. However if you declare it, you need also the same permission in your AIDL client side. -->
     <permission
         android:name="remote.service.permission"
-        android:protectionLevel="signature" />
+        android:protectionLevel="signature" /> <!-- This permission is not necessary. However if you declare it, you need also the same permission in your AIDL client side. -->
 
     <application
         android:name=".CustomApplication"
@@ -33,6 +32,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.provider.ProviderActivity" />
         <activity android:name=".basic_components.examples.aidl.AidlActivity" />
         <activity
             android:name=".basic_components.examples.accessibility.AccessibilityActivity"

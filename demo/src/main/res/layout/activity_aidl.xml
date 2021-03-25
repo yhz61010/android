@@ -14,7 +14,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="This project is AIDL Server. Check [aidl-client] module to get AIDL client side.\n\nHow to make AIDL file?\nRight click -> New -> AIDL -> AIDL File\n\nHow to create AIDL server?\n1. Create your AIDL files and implement all necessary models.\n2. Build your project to generate necessary files.\n3. Create your Service with AIDL as binder.\n4. Declare your service in AndroidManifest.xml.\n\n How to create AIDL client?\n1. Copy all AIDL files to AIDL client project in the same folder and implement all necessary models.\n2. Build your project to generate necessary files.\n3. Do bind service in your client side.\n4. Declare your service in AndroidManifest.xml."
+        android:text="For demonstration, you need also to run [aidl-client] project.\n\nThis project is AIDL Server. Check [aidl-client] module to get AIDL client side.\n\nHow to make AIDL file?\nRight click -> New -> AIDL -> AIDL File\n\nHow to create AIDL server?\n1. Create your AIDL files and implement all necessary models.\n2. Build your project to generate necessary files.\n3. Create your Service with AIDL as binder.\n4. Declare your service in AndroidManifest.xml.\n\n How to create AIDL client?\n1. Copy all AIDL files to AIDL client project in the same folder and implement all necessary models.\n2. Build your project to generate necessary files.\n3. Do bind service in your client side.\n4. Declare your service in AndroidManifest.xml."
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

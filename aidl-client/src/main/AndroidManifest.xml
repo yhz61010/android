@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.leovp.aidl_client">
 
+    <!-- The same permission which you've declared in AIDL server side. -->
     <uses-permission android:name="remote.service.permission" />
 
     <application

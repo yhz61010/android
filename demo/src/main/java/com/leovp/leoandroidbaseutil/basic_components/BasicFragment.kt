@@ -24,6 +24,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.provider.ProviderActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketClientActivity
@@ -98,6 +99,7 @@ class BasicFragment : Fragment() {
             Pair("Wifi", WifiActivity::class.java),
             Pair("Accessibility", AccessibilityActivity::class.java),
             Pair("AIDL", AidlActivity::class.java),
+            Pair("Provider", ProviderActivity::class.java),
         )
 
         val colors = arrayOf(

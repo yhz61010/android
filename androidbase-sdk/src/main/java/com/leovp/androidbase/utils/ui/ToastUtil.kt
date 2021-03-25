@@ -1,7 +1,6 @@
 package com.leovp.androidbase.utils.ui
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
@@ -9,71 +8,73 @@ import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
+import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.dp2px
 
 /**
+ * When use this utility, you MUST initialize [app] first
+ *
  * Author: Michael Leo
  * Date: 19-7-17 下午8:27
  */
+@Suppress("unused")
 object ToastUtil {
-    private var sToast: Toast? = null
-    private lateinit var mApplicationCtx: Context
-
-    fun init(ctx: Context) {
-        mApplicationCtx = ctx
-    }
+    private var toast: Toast? = null
 
     // ============================================
+    @Suppress("WeakerAccess")
     fun showNormalToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
+        showToast(message, Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
     }
 
     fun showNormalToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
+        showToast(app.getString(resId), Toast.LENGTH_SHORT, isFailed = false, defaultToast = true)
     }
 
     fun showNormalLongToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
+        showToast(app.getString(resId), Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
     }
 
+    @Suppress("WeakerAccess")
     fun showNormalLongToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
+        showToast(message, Toast.LENGTH_LONG, isFailed = false, defaultToast = true)
     }
     // ============================================
 
     fun showToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, false)
+        showToast(message, Toast.LENGTH_SHORT, false)
     }
 
     fun showToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, false)
+        showToast(app.getString(resId), Toast.LENGTH_SHORT, false)
     }
 
     fun showLongToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, false)
+        showToast(app.getString(resId), Toast.LENGTH_LONG, false)
     }
 
     fun showLongToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, false)
+        showToast(message, Toast.LENGTH_LONG, false)
     }
 
     // ============================================
     fun showErrorToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_SHORT, true)
+        showToast(message, Toast.LENGTH_SHORT, true)
     }
 
     fun showErrorToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_SHORT, true)
+        showToast(app.getString(resId), Toast.LENGTH_SHORT, true)
     }
 
     fun showErrorLongToast(@StringRes resId: Int) {
-        showToast(mApplicationCtx, mApplicationCtx.getString(resId), Toast.LENGTH_LONG, true)
+        showToast(app.getString(resId), Toast.LENGTH_LONG, true)
     }
 
     fun showErrorLongToast(message: String?) {
-        showToast(mApplicationCtx, message, Toast.LENGTH_LONG, true)
+        showToast(message, Toast.LENGTH_LONG, true)
     }
 
     // ============================================
@@ -81,6 +82,7 @@ object ToastUtil {
         if (BuildConfig.DEBUG) showNormalToast("DEBUG: $message")
     }
 
+    @Suppress("WeakerAccess")
     fun showDebugLongToast(message: String?) {
         if (BuildConfig.DEBUG) showNormalLongToast("DEBUG: $message")
     }
@@ -89,6 +91,7 @@ object ToastUtil {
         if (BuildConfig.DEBUG) showNormalToast("DEBUG: $message")
     }
 
+    @Suppress("WeakerAccess")
     fun showDebugErrorLongToast(message: String?) {
         if (BuildConfig.DEBUG) showNormalLongToast("DEBUG: $message")
     }
@@ -96,32 +99,30 @@ object ToastUtil {
     // ------------
 
     fun showDebugToast(@StringRes resId: Int) {
-        showDebugToast(mApplicationCtx.getString(resId))
+        showDebugToast(app.getString(resId))
     }
 
     fun showDebugLongToast(@StringRes resId: Int) {
-        showDebugLongToast(mApplicationCtx.getString(resId))
+        showDebugLongToast(app.getString(resId))
     }
 
     fun showDebugErrorToast(@StringRes resId: Int) {
-        showDebugErrorToast(mApplicationCtx.getString(resId))
+        showDebugErrorToast(app.getString(resId))
     }
 
     fun showDebugErrorLongToast(@StringRes resId: Int) {
-        showDebugErrorLongToast(mApplicationCtx.getString(resId))
+        showDebugErrorLongToast(app.getString(resId))
     }
 
     // ============================================
     private fun showToast(
-        context: Context,
         msg: String?,
         duration: Int,
         isFailed: Boolean,
         defaultToast: Boolean = false
     ) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            if (defaultToast) Toast.makeText(context, msg, duration).show() else makeText(
-                context,
+            if (defaultToast) Toast.makeText(app, msg, duration).show() else makeText(
                 msg,
                 duration,
                 isFailed
@@ -131,29 +132,28 @@ object ToastUtil {
         // Be sure toast can be shown in thread
         Handler(Looper.getMainLooper()).post {
             if (defaultToast) {
-                Toast.makeText(context, msg, duration).show()
+                Toast.makeText(app, msg, duration).show()
             } else {
-                makeText(context, msg, duration, isFailed)
+                makeText(msg, duration, isFailed)
             }
         }
     }
 
     @SuppressLint("InflateParams")
     private fun makeText(
-        context: Context,
         msg: String?,
         duration: Int,
         isFailed: Boolean
     ) {
-        sToast?.cancel()
+        toast?.cancel()
 
-        val view = LayoutInflater.from(context).inflate(R.layout.toast_tools_layout, null)
+        val view = LayoutInflater.from(app).inflate(R.layout.toast_tools_layout, null)
         view.findViewById<TextView>(R.id.tv_text).run {
-            setTextColor(context.resources.getColor(android.R.color.white))
+            setTextColor(ContextCompat.getColor(context, android.R.color.white))
             text = msg
         }
 
-        sToast = Toast(context).also {
+        toast = Toast(app).also {
             it.view = view
             it.setGravity(Gravity.CENTER, 0, dp2px(-50F))
             it.duration = duration
@@ -165,11 +165,11 @@ object ToastUtil {
             view.setBackgroundResource(R.drawable.toast_bg_normal)
         }
 
-        sToast?.show()
+        toast?.show()
     }
 
     fun clearAllToast() {
-        sToast?.cancel()
-        sToast = null
+        toast?.cancel()
+        toast = null
     }
 }

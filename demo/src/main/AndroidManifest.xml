@@ -19,6 +19,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> <!-- For get nearby devices, need location permission when above android M -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <permission
+        android:name="remote.service.permission"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".CustomApplication"
         android:allowBackup="false"
@@ -84,6 +88,14 @@
         <activity android:name=".basic_components.examples.log.LogActivity" />
         <activity android:name=".basic_components.examples.DeviceInfoActivity" />
 
+        <service
+            android:name=".basic_components.examples.aidl.LocalLogService"
+            android:exported="true"
+            android:permission="remote.service.permission">
+            <intent-filter>
+                <action android:name="service.name" />
+            </intent-filter>
+        </service>
         <service
             android:name=".basic_components.examples.sharescreen.master.MediaProjectionService"
             android:enabled="true"

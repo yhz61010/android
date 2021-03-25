@@ -7,7 +7,6 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
-import com.leovp.androidbase.utils.ui.ToastUtil
 import io.reactivex.plugins.RxJavaPlugins
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -35,8 +34,6 @@ class CustomApplication : MultiDexApplication(), DIAware {
 //        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE)
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
-
-        ToastUtil.init(this)
 
         LogContext.setLogImp(LLog("LEO"))
         PrefContext.setPrefImp(LPref())

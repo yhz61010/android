@@ -92,7 +92,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-                LogContext.log.w(ITAG, "=====> surfaceChanged <=====")
+                LogContext.log.w(ITAG, "=====> surfaceChanged($width x $height format=$format) <=====")
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {

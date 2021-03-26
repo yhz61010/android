@@ -81,8 +81,12 @@
         <activity android:name=".basic_components.examples.CoroutineActivity" />
         <activity android:name=".basic_components.examples.audio.AudioActivity" />
         <activity android:name=".basic_components.examples.sharescreen.client.ScreenShareClientActivity" />
-        <activity android:name=".basic_components.examples.sharescreen.master.ScreenShareMasterActivity" />
-        <activity android:name=".basic_components.examples.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
+        <activity
+            android:name=".basic_components.examples.sharescreen.master.ScreenShareMasterActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
+            android:name=".basic_components.examples.SaveInstanceStateActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" /> <!-- android:configChanges="orientation|screenSize" -->
         <activity
             android:name=".basic_components.examples.camera2.Camera2LiveActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />

@@ -1,6 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Point
@@ -130,6 +131,16 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
         binding.switchDraw.setOnCheckedChangeListener { _, isChecked ->
             binding.finger.inEditMode = isChecked
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            LogContext.log.i("Running in LANDSCAPE")
+        } else {
+            LogContext.log.i("Running in PORTRAIT")
         }
     }
 

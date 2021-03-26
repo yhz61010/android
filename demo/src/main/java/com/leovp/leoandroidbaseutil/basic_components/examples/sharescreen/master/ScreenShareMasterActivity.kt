@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.res.Configuration
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
@@ -130,6 +131,16 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             floatCanvas?.show()
         } else {
             startManageDrawOverlaysPermission()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            LogContext.log.i("Running in LANDSCAPE")
+        } else {
+            LogContext.log.i("Running in PORTRAIT")
         }
     }
 

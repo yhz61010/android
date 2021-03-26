@@ -73,13 +73,15 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var sps: ByteArray? = null
     private var pps: ByteArray? = null
 
+    private lateinit var screenInfo: Point
+
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreen()
         super.onCreate(savedInstanceState)
         binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        val screenInfo = getAvailableResolution()
-        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
+        screenInfo = getAvailableResolution()
+//        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
@@ -138,9 +140,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onConfigurationChanged(newConfig)
         LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            LogContext.log.i("Running in LANDSCAPE")
+            LogContext.log.i("Running in LANDSCAPE ${screenInfo.toJsonString()}")
+            binding.surfaceView.holder.setFixedSize(screenInfo.x * screenInfo.x / screenInfo.y, screenInfo.x)
         } else {
-            LogContext.log.i("Running in PORTRAIT")
+            LogContext.log.i("Running in PORTRAIT ${screenInfo.toJsonString()}")
+            binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         }
     }
 

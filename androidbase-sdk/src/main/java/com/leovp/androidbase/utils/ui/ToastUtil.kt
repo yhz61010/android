@@ -21,6 +21,7 @@ import com.leovp.androidbase.exts.android.dp2px
  * Date: 19-7-17 下午8:27
  */
 @Suppress("unused")
+@Deprecated("Use Toast extension(ToastExt.kt) to replace this utility.")
 object ToastUtil {
     private var toast: Toast? = null
 
@@ -44,35 +45,43 @@ object ToastUtil {
     }
     // ============================================
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(message)", "com.leovp.androidbase.exts.android.toast"))
     fun showToast(message: String?) {
         showToast(message, Toast.LENGTH_SHORT, false)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(resId)", "com.leovp.androidbase.exts.android.toast"))
     fun showToast(@StringRes resId: Int) {
         showToast(app.getString(resId), Toast.LENGTH_SHORT, false)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(resId, length = Toast.LENGTH_LONG)", "com.leovp.androidbase.exts.android.toast"))
     fun showLongToast(@StringRes resId: Int) {
         showToast(app.getString(resId), Toast.LENGTH_LONG, false)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(message, length = Toast.LENGTH_LONG)", "com.leovp.androidbase.exts.android.toast"))
     fun showLongToast(message: String?) {
         showToast(message, Toast.LENGTH_LONG, false)
     }
 
     // ============================================
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(message)", "com.leovp.androidbase.exts.android.toast"))
     fun showErrorToast(message: String?) {
         showToast(message, Toast.LENGTH_SHORT, true)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(resId)", "com.leovp.androidbase.exts.android.toast"))
     fun showErrorToast(@StringRes resId: Int) {
         showToast(app.getString(resId), Toast.LENGTH_SHORT, true)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(resId, length = Toast.LENGTH_LONG)", "com.leovp.androidbase.exts.android.toast"))
     fun showErrorLongToast(@StringRes resId: Int) {
         showToast(app.getString(resId), Toast.LENGTH_LONG, true)
     }
 
+    @Deprecated("Custom Toast is deprecated on Android R+", ReplaceWith("toast(message, length = Toast.LENGTH_LONG)", "com.leovp.androidbase.exts.android.toast"))
     fun showErrorLongToast(message: String?) {
         showToast(message, Toast.LENGTH_LONG, true)
     }

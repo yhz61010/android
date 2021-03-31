@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketClientBinding
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
@@ -114,7 +114,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.w(TAG, "onConnected")
             LogContext.log.i(TAG, "- connected -------------------------------------------------")
-            ToastUtil.showDebugToast("onConnected")
+            toast("onConnected", debug = true)
 
             // Reset retry counter
             retryTimes.set(0)
@@ -129,12 +129,12 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         override fun onDisconnected(netty: BaseNettyClient) {
             LogContext.log.w(TAG, "onDisconnected")
             LogContext.log.i(TAG, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            ToastUtil.showDebugToast("onDisconnected")
+            toast("onDisconnected", debug = true)
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(TAG, "onFailed code: $code e=$e message: $msg")
-            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            toast("onFailed code: $code message: $msg", debug = true)
 
             if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
                 || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
@@ -143,7 +143,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             ) {
                 if (retryTimes.incrementAndGet() > constantRetry.getMaxTimes()) {
                     LogContext.log.e(TAG, "===== Connect failed - Exceed max retry times. =====")
-                    ToastUtil.showDebugToast("Exceed max retry times.")
+                    toast("Exceed max retry times.", debug = true)
 
                     // Reset retry counter
                     retryTimes.set(0)
@@ -205,7 +205,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         cs.launch {
             if (::webSocketClientHandler.isInitialized) {
                 val result = webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
-                withContext(Dispatchers.Main) { binding.editText.text.clear();if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+                withContext(Dispatchers.Main) { binding.editText.text.clear();if (!result) toast("Send command error", error = true, debug = true) }
             }
         }
     }

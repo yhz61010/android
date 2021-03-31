@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivitySocketServerBinding
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
@@ -40,19 +40,19 @@ class SocketServerActivity : BaseDemonstrationActivity() {
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted on port: $PORT")
-            ToastUtil.showDebugToast("onStarted on port: $PORT")
+            toast("onStarted on port: $PORT", debug = true)
             runOnUiThread { binding.txtResponse.text = "Server started on port: $PORT";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
             LogContext.log.i(TAG, "onStop")
-            ToastUtil.showDebugToast("onStop")
+            toast("onStop", debug = true)
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
-            ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
+            toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text = "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
@@ -67,7 +67,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
-            ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
+            toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text = "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
@@ -76,7 +76,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            toast("onFailed code: $code message: $msg", debug = true)
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
     }

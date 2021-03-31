@@ -9,9 +9,9 @@ import android.os.IBinder
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.androidbase.exts.android.app
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.ILocalLogService
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
 
@@ -53,6 +53,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onReceiveClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        ToastUtil.showToast("Get from remote service: ${remoteService?.getLogCount("dummy value")}")
+        toast("Get from remote service: ${remoteService?.getLogCount("dummy value")}")
     }
 }

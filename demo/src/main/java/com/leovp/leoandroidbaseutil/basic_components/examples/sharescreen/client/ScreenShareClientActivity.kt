@@ -12,16 +12,13 @@ import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
+import android.widget.Toast
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.android.getAvailableResolution
-import com.leovp.androidbase.exts.android.getRealResolution
-import com.leovp.androidbase.exts.android.hideNavigationBar
-import com.leovp.androidbase.exts.android.requestFullScreen
+import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.H264Util
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
@@ -407,7 +404,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                             webSocketClientHandler?.triggerIFrame()
                             return
                         } else {
-                            ToastUtil.showErrorLongToast("Get SPS/PPS error.")
+                            toast("Get SPS/PPS error.", length = Toast.LENGTH_LONG, error = true)
                             return
                         }
                     }

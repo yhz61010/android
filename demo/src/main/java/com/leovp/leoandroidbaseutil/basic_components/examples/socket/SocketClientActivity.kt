@@ -3,9 +3,9 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivitySocketClientBinding
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
@@ -31,7 +31,7 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
-            ToastUtil.showDebugToast("onConnected")
+            toast("onConnected", debug = true)
         }
 
         @SuppressLint("SetTextI18n")
@@ -42,12 +42,12 @@ class SocketClientActivity : BaseDemonstrationActivity() {
 
         override fun onDisconnected(netty: BaseNettyClient) {
             LogContext.log.w(TAG, "onDisconnect")
-            ToastUtil.showDebugToast("onDisconnect")
+            toast("onDisconnect", debug = true)
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            toast("onFailed code: $code message: $msg", debug = true)
         }
     }
 
@@ -91,7 +91,7 @@ class SocketClientActivity : BaseDemonstrationActivity() {
         cs.launch {
             if (::socketClientHandler.isInitialized) {
                 val result = socketClientHandler.sendMsgToServer(binding.editText.text.toString())
-                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) ToastUtil.showDebugErrorToast("Send command error") }
+                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) toast("Send command error", error = true, debug = true) }
             }
         }
     }

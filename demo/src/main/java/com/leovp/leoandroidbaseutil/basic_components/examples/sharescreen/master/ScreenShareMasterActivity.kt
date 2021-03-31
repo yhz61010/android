@@ -23,7 +23,6 @@ import com.leovp.androidbase.ui.FloatViewManager
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.AccessibilityUtil
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -191,7 +190,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     }
                     ScreenCapture.SCREEN_CAPTURE_RESULT_DENY -> {
                         LogContext.log.w(ITAG, "Permission denied!")
-                        ToastUtil.showErrorToast("Permission denied!")
+                        toast("Permission denied!", error = true)
                     }
                     else -> LogContext.log.d(ITAG, "Not screen capture request")
                 }

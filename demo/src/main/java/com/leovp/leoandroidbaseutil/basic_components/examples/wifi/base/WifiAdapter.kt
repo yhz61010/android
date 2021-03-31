@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
@@ -35,13 +36,14 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
 //        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
         currentItem.index = holder.adapterPosition + 1
         holder.bind(currentItem)
+        val cardView = holder.view.findViewById<CardView>(R.id.cardView)
         if (currentSsid == currentItem.name) {
-            binding.cardView.setCardBackgroundColor(ContextCompat.getColor(app, R.color.purple_200))
-            val innerViewGroup = binding.cardView.children.first() as ViewGroup
+            cardView.setCardBackgroundColor(ContextCompat.getColor(app, R.color.purple_200))
+            val innerViewGroup = cardView.children.first() as ViewGroup
             innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.WHITE) }
         } else {
-            binding.cardView.setCardBackgroundColor(ContextCompat.getColor(app, android.R.color.white))
-            val innerViewGroup = binding.cardView.children.first() as ViewGroup
+            cardView.setCardBackgroundColor(ContextCompat.getColor(app, android.R.color.white))
+            val innerViewGroup = cardView.children.first() as ViewGroup
             innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.BLACK) }
         }
         holder.itemView.setOnClickListener {

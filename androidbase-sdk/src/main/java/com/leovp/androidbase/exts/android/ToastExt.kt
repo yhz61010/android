@@ -54,7 +54,7 @@ private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolea
         val view = LayoutInflater.from(app).inflate(R.layout.toast_tools_layout, null).apply {
             findViewById<TextView>(R.id.tv_text).run {
                 setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                text = msg
+                text = message
             }
             setBackgroundResource(if (error) R.drawable.toast_bg_error else R.drawable.toast_bg_normal)
         }

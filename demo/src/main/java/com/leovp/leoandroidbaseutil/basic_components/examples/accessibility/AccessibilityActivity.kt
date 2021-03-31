@@ -7,8 +7,8 @@ import android.os.SystemClock
 import android.view.View
 import android.widget.ArrayAdapter
 import com.leovp.androidbase.exts.android.id
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.system.AccessibilityUtil
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityAccessibilityBinding
@@ -53,6 +53,6 @@ class AccessibilityActivity : BaseDemonstrationActivity() {
     }
 
     fun onButtonClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        ToastUtil.showToast("You click button")
+        toast("You click button")
     }
 }

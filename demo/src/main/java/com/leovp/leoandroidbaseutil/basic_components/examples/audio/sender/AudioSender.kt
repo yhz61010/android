@@ -2,8 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.leoandroidbaseutil.BuildConfig
@@ -43,7 +43,7 @@ class AudioSender {
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
-            ToastUtil.showDebugToast("onConnected")
+            toast("onConnected", debug = true)
             audioPlayer = AudioPlayer(ctx!!, AudioActivity.audioDecoderInfo, defaultAudioType)
             sendRecAudioThread()
             startPlayThread()
@@ -58,13 +58,13 @@ class AudioSender {
 
         override fun onDisconnected(netty: BaseNettyClient) {
             LogContext.log.w(TAG, "onDisconnect")
-            ToastUtil.showDebugToast("onDisconnect")
+            toast("onDisconnect", debug = true)
             stop()
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            toast("onFailed code: $code message: $msg", debug = true)
             stop()
         }
     }

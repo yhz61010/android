@@ -14,7 +14,6 @@ import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.leoandroidbaseutil.databinding.ActivityCamera2WithoutPreviewBinding
 import kotlinx.coroutines.Dispatchers
@@ -83,7 +82,7 @@ class Camera2WithoutPreviewActivity : AppCompatActivity() {
                 initializeCamera(previewSize.width, previewSize.height)
             }.getOrElse {
                 LogContext.log.e(ITAG, "=====> Finally openCamera error <=====")
-                ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
+                toast("Initialized camera error. Please try again later.", error = true)
             }
         }
 

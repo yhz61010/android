@@ -6,11 +6,11 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.leovp.androidbase.exts.android.densityDpi
 import com.leovp.androidbase.exts.android.getAvailableResolution
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareSetting
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
@@ -82,7 +82,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
     }
 
     fun onShowToastClick(view: View) {
-        ToastUtil.showToast("Custom Toast")
+        toast("Custom Toast")
     }
 
     fun onShowDialogClick(view: View) {

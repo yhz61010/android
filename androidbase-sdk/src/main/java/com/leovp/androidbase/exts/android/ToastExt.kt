@@ -1,33 +1,62 @@
 package com.leovp.androidbase.exts.android
 
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
+import com.leovp.androidbase.R
+import com.leovp.androidbase.utils.system.API
 
 /**
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:52
  */
-fun toast(@StringRes resId: Int, length: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
-    toast(app.getString(resId), length, error, debug)
+fun toast(@StringRes resId: Int, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
+    toast(app.getString(resId), duration, error, debug)
 }
 
-fun toast(msg: String?, length: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
+fun toast(msg: String?, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(msg, length, error, debug)
+        showToast(msg, duration, error, debug)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post { showToast(msg, length, error, debug) }
+        Handler(Looper.getMainLooper()).post { showToast(msg, duration, error, debug) }
     }
 }
 
-private fun showToast(msg: String?, length: Int, error: Boolean, debug: Boolean) {
+private var toast: Toast? = null
+
+@SuppressLint("InflateParams")
+private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolean) {
     val message: String? = if (debug) "DEBUG: $msg" else msg
-    if (error) {
-        Toast.makeText(app, HtmlCompat.fromHtml("<font color='red'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), length).show()
+    if (API.ABOVE_R) {
+        if (error) {
+            Toast.makeText(app, HtmlCompat.fromHtml("<font color='#eeff41'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+        } else {
+            Toast.makeText(app, message, duration).show()
+        }
     } else {
-        Toast.makeText(app, message, length).show()
+        toast?.cancel()
+
+        val view = LayoutInflater.from(app).inflate(R.layout.toast_tools_layout, null).apply {
+            findViewById<TextView>(R.id.tv_text).run {
+                setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                text = msg
+            }
+            setBackgroundResource(if (error) R.drawable.toast_bg_error else R.drawable.toast_bg_normal)
+        }
+
+        toast = Toast(app).apply {
+            this.view = view
+            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, dp2px(50F))
+            this.duration = duration
+            show()
+        }
     }
 }

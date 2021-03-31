@@ -15,7 +15,7 @@ import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.leovp.androidbase.exts.android.action
 import com.leovp.androidbase.exts.android.snack
-import com.leovp.androidbase.utils.ui.ToastUtil
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityRecyclerviewBinding
@@ -47,12 +47,12 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         simpleAdapter = SimpleAdapter(featureList)
         simpleAdapter.onItemClickListener = object : SimpleAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                ToastUtil.showToast("You click position: $position")
+                toast("You click position: $position")
                 findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
             }
 
             override fun onItemLongClick(view: View, position: Int) {
-                ToastUtil.showToast("Long click on position: $position")
+                toast("Long click on position: $position")
             }
         }
         binding.recyclerView.run {

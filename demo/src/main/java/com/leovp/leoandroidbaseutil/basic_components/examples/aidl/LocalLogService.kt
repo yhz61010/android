@@ -3,9 +3,9 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.aidl
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -25,7 +25,7 @@ class LocalLogService : Service() {
         override fun writeLog(appPackage: String, log: LocalLog) {
             GlobalScope.launch {
                 LogContext.log.w("Write log: [$appPackage]=${log.toJsonString()}")
-                ToastUtil.showToast("Write log: [$appPackage]=${log.toJsonString()}")
+                toast("Write log: [$appPackage]=${log.toJsonString()}")
             }
         }
     }

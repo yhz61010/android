@@ -404,7 +404,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                             webSocketClientHandler?.triggerIFrame()
                             return
                         } else {
-                            toast("Get SPS/PPS error.", length = Toast.LENGTH_LONG, error = true)
+                            toast("Get SPS/PPS error.", duration = Toast.LENGTH_LONG, error = true)
                             return
                         }
                     }

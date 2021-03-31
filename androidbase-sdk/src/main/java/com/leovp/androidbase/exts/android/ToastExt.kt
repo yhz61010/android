@@ -17,25 +17,32 @@ import com.leovp.androidbase.utils.system.API
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:52
  */
-fun toast(@StringRes resId: Int, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
-    toast(app.getString(resId), duration, error, debug)
+
+/**
+ * @param normal On Android 11+(Android R+), this parameter will be ignored.
+ */
+fun toast(@StringRes resId: Int, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
+    toast(app.getString(resId), duration, error, debug, normal)
 }
 
-fun toast(msg: String?, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false) {
+/**
+ * @param normal On Android 11+(Android R+), this parameter will be ignored.
+ */
+fun toast(msg: String?, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(msg, duration, error, debug)
+        showToast(msg, duration, error, debug, normal)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post { showToast(msg, duration, error, debug) }
+        Handler(Looper.getMainLooper()).post { showToast(msg, duration, error, debug, normal) }
     }
 }
 
 private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
-private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolean) {
+private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolean, normal: Boolean) {
     val message: String? = if (debug) "DEBUG: $msg" else msg
-    if (API.ABOVE_R) {
+    if (normal || API.ABOVE_R) {
         if (error) {
             Toast.makeText(app, HtmlCompat.fromHtml("<font color='#eeff41'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
         } else {

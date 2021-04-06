@@ -18,10 +18,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- For get nearby devices, need location permission when above android M -->
-
     <permission
         android:name="remote.service.permission"
-        android:protectionLevel="signature" /> <!-- This permission is not necessary. However if you declare it, you need also the same permission in your AIDL client side. -->
+        android:protectionLevel="signature" />
 
     <application
         android:name=".CustomApplication"
@@ -32,6 +31,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.animation.AnimationActivity"></activity>
         <activity android:name=".basic_components.examples.provider.ProviderActivity" />
         <activity android:name=".basic_components.examples.aidl.AidlActivity" />
         <activity
@@ -99,7 +99,8 @@
             android:exported="true"
             android:permission="remote.service.permission">
             <intent-filter>
-                <!-- The action name will be used in your AIDL client side when you bind to this service. -->
+
+            <!-- The action name will be used in your AIDL client side when you bind to this service. -->
                 <action android:name="service.name" />
             </intent-filter>
         </service>

@@ -15,6 +15,7 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.accessibility.AccessibilityActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.AidlActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.animation.AnimationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
@@ -100,6 +101,7 @@ class BasicFragment : Fragment() {
             Pair("Accessibility", AccessibilityActivity::class.java),
             Pair("AIDL", AidlActivity::class.java),
             Pair("Provider", ProviderActivity::class.java),
+            Pair("Animation", AnimationActivity::class.java),
         )
 
         val colors = arrayOf(

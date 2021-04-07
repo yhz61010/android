@@ -126,12 +126,33 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:textAllCaps="false"
         android:id="@+id/btnSequence2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sequence2"
+        android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="@+id/btnSequence"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline4" />
+
+    <Button
+        android:id="@+id/btnBlink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Blink"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnSequence"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnShake"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Shake"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBlink"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guideline4" />
 </androidx.constraintlayout.widget.ConstraintLayout>

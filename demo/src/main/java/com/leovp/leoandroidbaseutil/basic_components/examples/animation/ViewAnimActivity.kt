@@ -93,5 +93,25 @@ class ViewAnimActivity : BaseDemonstrationActivity() {
             })
         }
 
+        // ----------------------
+
+        binding.btnBlink.setOnSingleClickListener {
+            val blinkAnim = AlphaAnimation(0.1f, 1.0f).apply {
+                duration = 100
+                repeatCount = Animation.INFINITE
+                repeatMode = Animation.REVERSE
+            }
+            binding.ivBeauty.startAnimation(blinkAnim)
+        }
+
+        binding.btnShake.setOnSingleClickListener {
+            val shakeAnim = TranslateAnimation(-50f, 50f, 0f, 0f).apply {
+                duration = 50
+                repeatCount = 5
+                repeatMode = Animation.REVERSE
+            }
+            binding.ivBeauty.startAnimation(shakeAnim)
+        }
+
     }
 }

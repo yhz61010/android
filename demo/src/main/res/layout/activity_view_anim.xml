@@ -1,8 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".basic_components.examples.animation.ViewAnimActivity">
 
+    <ImageView
+        android:id="@+id/ivBeauty"
+        android:layout_width="250dp"
+        android:layout_height="261dp"
+        android:layout_marginTop="8dp"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/beauty" />
+
+    <Button
+        android:id="@+id/btnAlpha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Alpha"
+        app:layout_constraintBottom_toTopOf="@+id/btnTranslate"
+        app:layout_constraintStart_toStartOf="@+id/btnTranslate" />
+
+    <Button
+        android:id="@+id/btnScale"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Scale"
+        app:layout_constraintBottom_toBottomOf="@+id/btnAlpha"
+        app:layout_constraintStart_toEndOf="@+id/btnAlpha" />
+
+    <Button
+        android:id="@+id/btnTranslate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Translate"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnRotate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Rotate"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate"
+        app:layout_constraintStart_toEndOf="@+id/btnTranslate" />
 </androidx.constraintlayout.widget.ConstraintLayout>

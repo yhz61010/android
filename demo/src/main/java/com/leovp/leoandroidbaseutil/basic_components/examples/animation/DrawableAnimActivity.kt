@@ -15,8 +15,6 @@ class DrawableAnimActivity : BaseDemonstrationActivity() {
 
         // Load the ImageView that will host the animation and
         // set its background to our AnimationDrawable XML resource.
-        // Load the ImageView that will host the animation and
-        // set its background to our AnimationDrawable XML resource.
         binding.ivDrawableAnim.setBackgroundResource(R.drawable.drawable_anim_list)
 
         // Get the background, which has been compiled to an AnimationDrawable object.

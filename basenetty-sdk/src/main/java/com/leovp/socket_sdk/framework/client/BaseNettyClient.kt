@@ -164,7 +164,7 @@ abstract class BaseNettyClient protected constructor(
                                 addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
                             } else {
                                 LogContext.log.w(tag, "Working in wss SECURE mode")
-                                requireNotNull("In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream.")
+                                requireNotNull(certificateInputStream) { "In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream." }
 
                                 val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
 

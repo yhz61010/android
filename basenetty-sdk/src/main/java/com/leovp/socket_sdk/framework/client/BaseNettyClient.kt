@@ -181,7 +181,7 @@ abstract class BaseNettyClient protected constructor(
                             }
                         }
                         addLast(HttpClientCodec())
-                        addLast(HttpObjectAggregator(65536))
+                        addLast(HttpObjectAggregator(10 shl 20))
                         /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
                          * neither spending a lot of memory nor getting [OutOfMemoryError]. */
                         addLast(ChunkedWriteHandler())

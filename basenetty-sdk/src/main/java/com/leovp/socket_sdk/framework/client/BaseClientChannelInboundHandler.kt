@@ -34,13 +34,15 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         LogContext.log.i(tag, "===== handlerAdded =====")
         if (netty.isWebSocket) {
+            val headers = DefaultHttpHeaders()
+            netty.setHeaders(headers)
             handshaker = WebSocketClientHandshakerFactory.newHandshaker(
                 netty.webSocketUri,
                 WebSocketVersion.V13,
                 null,
                 false,
-                DefaultHttpHeaders(),
-                1024 * 1024 /*5 * 65536*/
+                headers,
+                10 shl 20
             )
             channelPromise = ctx.newPromise()
         }
@@ -176,7 +178,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                     LogContext.log.i(tag, "===== WebSocket hand shake finished =====")
                     channelPromise?.setSuccess()
                 } catch (e: WebSocketHandshakeException) {
-                    LogContext.log.e(tag, "===== WebSocket hand shake failed =====")
+                    LogContext.log.e(tag, "===== WebSocket hand shake failed =====", e)
                     channelPromise?.setFailure(e)
                 }
                 return

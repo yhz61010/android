@@ -16,6 +16,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.Delimiters
+import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
@@ -75,6 +76,10 @@ abstract class BaseNettyClient protected constructor(
 
     val tag: String by lazy { getTagName() }
     abstract fun getTagName(): String
+
+    open fun setHeaders(headers: DefaultHttpHeaders) {
+
+    }
 
     private var certificateInputStream: InputStream? = null
 

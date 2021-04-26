@@ -261,12 +261,12 @@ abstract class BaseNettyClient protected constructor(
             if (isWebSocket) {
                 defaultInboundHandler?.channelPromise?.addListener {
                     if (it.isSuccess) {
-                        LogContext.log.i(tag, "=====> Websocket Connect success <=====")
+                        LogContext.log.i(tag, "=====> WebSocket Connect success <=====")
                         connectStatus.set(ClientConnectStatus.CONNECTED)
                         connectionListener.onConnected(this@BaseNettyClient)
                         cont.resume(connectStatus.get())
                     } else {
-                        LogContext.log.i(tag, "=====> Websocket Connect failed <=====")
+                        LogContext.log.i(tag, "=====> WebSocket Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Websocket Connect failed")
                         cont.resume(connectStatus.get())

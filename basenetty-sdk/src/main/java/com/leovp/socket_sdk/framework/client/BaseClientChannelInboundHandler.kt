@@ -40,7 +40,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 netty.webSocketUri,
                 WebSocketVersion.V13,
                 null,
-                false,
+                // FIXME Need to set this value dynamically
+                true,
                 headers,
                 10 shl 20
             )

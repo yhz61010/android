@@ -68,24 +68,53 @@ abstract class BaseNettyClient protected constructor(
     private val host: String,
     private val port: Int,
     val connectionListener: ClientConnectListener<BaseNettyClient>,
-    private val retryStrategy: RetryStrategy = ConstantRetry()
+    private val retryStrategy: RetryStrategy = ConstantRetry(),
+    private val headers: Map<String, String>? = null
 ) : BaseNetty() {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }
 
-    val tag: String by lazy { getTagName() }
-    abstract fun getTagName(): String
-
-    open fun setHeaders(headers: DefaultHttpHeaders) {
-
+    protected constructor(
+        webSocketUri: URI,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        retryStrategy: RetryStrategy = ConstantRetry(),
+        certInputStream: InputStream? = null,
+        headers: Map<String, String>? = null
+    ) : this(
+        webSocketUri.host,
+        if (webSocketUri.port == -1) {
+            when {
+                "ws".equals(webSocketUri.scheme, true) -> 80
+                "wss".equals(webSocketUri.scheme, true) -> 443
+                else -> -1
+            }
+        } else webSocketUri.port,
+        connectionListener, retryStrategy, headers
+    ) {
+        this.webSocketUri = webSocketUri
+        this.certificateInputStream = certInputStream
+        LogContext.log.w(tag, "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
-    private var certificateInputStream: InputStream? = null
+    val tag: String by lazy { getTagName() }
+    abstract fun getTagName(): String
 
     init {
         LogContext.log.i(tag, "Socket host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
+
+    internal fun setHeaders(headers: DefaultHttpHeaders) {
+        this.headers?.let {
+            if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
+            for ((k, v) in it) {
+                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
+                headers.add(k, v)
+            }
+        }
+    }
+
+    private var certificateInputStream: InputStream? = null
 
     fun getCertificateInputStream(): InputStream? {
         if (certificateInputStream == null) {
@@ -108,27 +137,6 @@ abstract class BaseNettyClient protected constructor(
     }
 
     private val retryScope = CoroutineScope(Dispatchers.IO + Job())
-
-    protected constructor(
-        webSocketUri: URI,
-        connectionListener: ClientConnectListener<BaseNettyClient>,
-        retryStrategy: RetryStrategy = ConstantRetry(),
-        certInputStream: InputStream? = null
-    ) : this(
-        webSocketUri.host,
-        if (webSocketUri.port == -1) {
-            when {
-                "ws".equals(webSocketUri.scheme, true) -> 80
-                "wss".equals(webSocketUri.scheme, true) -> 443
-                else -> -1
-            }
-        } else webSocketUri.port,
-        connectionListener, retryStrategy
-    ) {
-        this.webSocketUri = webSocketUri
-        this.certificateInputStream = certInputStream
-        LogContext.log.w(tag, "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
-    }
 
     internal var webSocketUri: URI? = null
     internal val isWebSocket: Boolean by lazy { webSocketUri != null }

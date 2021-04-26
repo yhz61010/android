@@ -185,13 +185,14 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             }
 
             if (msg is FullHttpResponse) {
-                LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
-                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                    val exceptionInfo =
-                        "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
-                    LogContext.log.e(tag, exceptionInfo)
-                    throw IllegalStateException(exceptionInfo)
-                }
+//                LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+//                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+                val exceptionInfo =
+                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${
+                        msg.content().toString(CharsetUtil.UTF_8)
+                    }) isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
+                LogContext.log.e(tag, exceptionInfo)
+                throw IllegalStateException(exceptionInfo)
             }
 
             val frame = msg as WebSocketFrame

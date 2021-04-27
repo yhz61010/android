@@ -4,6 +4,7 @@ import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.http.okhttp.HttpLoggingInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 /**
@@ -15,9 +16,22 @@ abstract class BaseHttpRequest {
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
 
+    private val httpClientBuilder = OkHttpClient.Builder()
+
+    protected fun setHeaders(headers: Map<String, String>? = null) {
+        headers?.let {
+            httpClientBuilder.addInterceptor(Interceptor { chain ->
+                val requestBuilder: Request.Builder = chain.request().newBuilder()
+                for ((k, v) in headers) {
+                    requestBuilder.addHeader(k, v)
+                }
+                chain.proceed(requestBuilder.build())
+            })
+        }
+    }
+
     val okHttpClient: OkHttpClient
         get() {
-            val httpClientBuilder = OkHttpClient.Builder()
             httpClientBuilder
                 .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
                 .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)

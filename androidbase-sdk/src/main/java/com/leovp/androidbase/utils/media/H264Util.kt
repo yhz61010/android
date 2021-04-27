@@ -167,7 +167,7 @@ object H264Util {
     @Suppress("unused")
     fun getNaluTypeInStr(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_SPS -> "SPS/PPS"
+            NALU_TYPE_SPS -> "SPS"
             NALU_TYPE_PPS -> "PPS"
             NALU_TYPE_IDR -> "I"
             NALU_TYPE_NONE_IDR -> "P"

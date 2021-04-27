@@ -20,13 +20,25 @@ object HttpRequest : BaseHttpRequest() {
 //        .addConverterFactory(MoshiConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
-    fun getRetrofit(baseUrl: String): Retrofit {
+    var globalHeaders: Map<String, String>? = null
+
+    fun getRetrofit(baseUrl: String, headers: Map<String, String>? = null): Retrofit {
+        mergeMap(headers)?.also { setHeaders(it) }
         return builder.baseUrl(baseUrl).build()
     }
 
     @Suppress("unused")
-    fun getRetrofit(baseUrl: HttpUrl): Retrofit {
+    fun getRetrofit(baseUrl: HttpUrl, headers: Map<String, String>? = null): Retrofit {
+        mergeMap(headers)?.also { setHeaders(it) }
         return getRetrofit(baseUrl.toString())
     }
 
+    private fun mergeMap(secondMap: Map<String, String>?): Map<String, String>? {
+        if (globalHeaders == null) return secondMap
+        if (secondMap == null) return globalHeaders
+        return (globalHeaders!!.asSequence() + secondMap.asSequence())
+            .distinct()
+            .groupBy({ it.key }, { it.value })
+            .mapValues { (_, values) -> values.joinToString(",") }
+    }
 }

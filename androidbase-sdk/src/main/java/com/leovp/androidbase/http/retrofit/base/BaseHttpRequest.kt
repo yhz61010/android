@@ -11,27 +11,14 @@ import java.util.concurrent.TimeUnit
  * Author: Michael Leo
  * Date: 20-5-27 下午8:41
  */
-abstract class BaseHttpRequest {
+abstract class BaseHttpRequest(private val headerMap: Map<String, String>?) {
     var connectTimeoutInMs = DEFAULT_CONNECTION_TIMEOUT_IN_MS
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
 
-    private val httpClientBuilder = OkHttpClient.Builder()
-
-    protected fun setHeaders(headers: Map<String, String>? = null) {
-        headers?.let {
-            httpClientBuilder.addInterceptor(Interceptor { chain ->
-                val requestBuilder: Request.Builder = chain.request().newBuilder()
-                for ((k, v) in headers) {
-                    requestBuilder.addHeader(k, v)
-                }
-                chain.proceed(requestBuilder.build())
-            })
-        }
-    }
-
     val okHttpClient: OkHttpClient
         get() {
+            val httpClientBuilder = OkHttpClient.Builder()
             httpClientBuilder
                 .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
                 .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
@@ -77,11 +64,15 @@ abstract class BaseHttpRequest {
 
     private fun getHeaderInterceptor(): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
-            val build = chain.request().newBuilder()
-                // Add your other headers here.
-                // .addHeader("Content-Type", "application/json")
-                .build()
-            chain.proceed(build)
+            val build: Request.Builder = chain.request().newBuilder()
+            // Add your other headers here.
+            // .addHeader("Content-Type", "application/json")
+            headerMap?.let {
+                for ((k, v) in headerMap) {
+                    build.addHeader(k, v)
+                }
+            }
+            chain.proceed(build.build())
         }
     }
 

@@ -43,7 +43,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 // FIXME Need to set this value dynamically
                 true,
                 headers,
-                10 shl 20
+                1 shl 20
             )
             channelPromise = ctx.newPromise()
         }

@@ -34,6 +34,7 @@ object HttpRequest : BaseHttpRequest() {
     }
 
     private fun mergeMap(secondMap: Map<String, String>?): Map<String, String>? {
+        if (globalHeaders == null && secondMap == null) return null
         if (globalHeaders == null) return secondMap
         if (secondMap == null) return globalHeaders
         return (globalHeaders!!.asSequence() + secondMap.asSequence())

@@ -1,7 +1,9 @@
 package com.leovp.androidbase.utils.media
 
 import android.media.MediaCodec
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.log.LogContext
 import kotlin.experimental.and
@@ -11,6 +13,7 @@ import kotlin.experimental.and
  * Author: Michael Leo
  * Date: 19-10-29 下午2:54
  */
+@Suppress("unused")
 object H264Util {
     private const val TAG = "H264Util"
     private const val DEBUG = false
@@ -20,7 +23,6 @@ object H264Util {
     private const val NALU_TYPE_NONE_IDR = 1
 
     // NALU_TYPE_IDR and NALU_TYPE_SPS frame are considered as Key frame
-    @Suppress("unused")
     fun isKeyFrame(data: ByteArray): Boolean {
         return isIdrFrame(data) || isSps(
             data
@@ -33,17 +35,14 @@ object H264Util {
      * @param data The video data.
      * @return Whether this frame is key frame.
      */
-    @Suppress("unused")
     fun isIdrFrame(data: ByteArray): Boolean {
         return getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101)
     }
 
-    @Suppress("unused")
     fun isNoneIdrFrame(data: ByteArray): Boolean {
         return getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65)
     }
 
-    @Suppress("unused")
     fun isSps(data: ByteArray): Boolean {
         // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
@@ -51,7 +50,6 @@ object H264Util {
         return getNaluType(data) == NALU_TYPE_SPS // 7 0x67(103)
     }
 
-    @Suppress("unused")
     fun isPps(data: ByteArray): Boolean {
         // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
@@ -59,7 +57,6 @@ object H264Util {
         return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104)
     }
 
-    @Suppress("unused")
     fun getSps(data: ByteArray): ByteArray? {
         val isSps = isSps(data)
         return if (!isSps) {
@@ -85,7 +82,6 @@ object H264Util {
         }
     }
 
-    @Suppress("unused")
     fun getPps(data: ByteArray): ByteArray? {
         val isPps = isPps(data)
         if (isPps) {
@@ -115,7 +111,6 @@ object H264Util {
         }
     }
 
-    @Suppress("unused")
     fun getNaluType(data: ByteArray): Int {
         if (data.size < 5) {
             if (DEBUG) LogContext.log.d(TAG, "Invalid H264 data length. Length: ${data.size}")
@@ -175,9 +170,9 @@ object H264Util {
         }
     }
 
-    @Suppress("unused")
     fun getNaluTypeInStr(data: ByteArray) = getNaluTypeInStr(getNaluType(data))
 
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun sendIdrFrameByManual(mediaCodec: MediaCodec) {
         LogContext.log.w(TAG, "sendIdrFrameByManual()")
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
@@ -187,6 +182,7 @@ object H264Util {
 //        }
     }
 
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun setBitrateModeDynamically(mediaCodec: MediaCodec, bitrateMode: Int) {
         val param = Bundle()
         param.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bitrateMode)

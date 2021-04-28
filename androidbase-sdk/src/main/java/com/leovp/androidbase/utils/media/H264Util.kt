@@ -57,6 +57,12 @@ object H264Util {
         return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104)
     }
 
+    /**
+     * @param data The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
+     *
+     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     */
     fun getSps(data: ByteArray): ByteArray? {
         val isSps = isSps(data)
         return if (!isSps) {
@@ -71,17 +77,19 @@ object H264Util {
                     return sps
                 }
             }
-            // If current frame data does not contain NALU_TYPE_PPS, it indicates this frame is just NALU_TYPE_SPS.
-            data
+            null
         } catch (e: Exception) {
-            LogContext.log.e(
-                TAG,
-                "getSps error msg=${e.message}"
-            )
+            LogContext.log.e(TAG, "getSps error msg=${e.message}")
             null
         }
     }
 
+    /**
+     * @param data The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
+     * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,10,56,8B,4,B0,7C,F1
+     *
+     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     */
     fun getPps(data: ByteArray): ByteArray? {
         val isPps = isPps(data)
         if (isPps) {
@@ -90,23 +98,24 @@ object H264Util {
         return if (!isSps(data)) {
             null
         } else try {
-            // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
-            // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
+            // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
+            // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,10,56,8B,4,B0,7C,F1
+            var startIndex = -1
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
-                    val ppsLength = data.size - i
-                    val sps = ByteArray(ppsLength)
-                    System.arraycopy(data, i, sps, 0, ppsLength)
-                    return sps
+                    if (startIndex < 0) {
+                        startIndex = i
+                    } else {
+                        val ppsLength = i - startIndex
+                        val pps = ByteArray(ppsLength)
+                        System.arraycopy(data, startIndex, pps, 0, ppsLength)
+                        return pps
+                    }
                 }
             }
-            // If current frame data does not contain NALU_TYPE_PPS, it indicates this frame is just NALU_TYPE_SPS.
-            data
+            null
         } catch (e: Exception) {
-            LogContext.log.e(
-                TAG,
-                "getPps error msg=${e.message}"
-            )
+            LogContext.log.e(TAG, "getPps error msg=${e.message}")
             null
         }
     }

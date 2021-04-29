@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * https://blog.csdn.net/duoluo9/article/details/85318274
  */
+@Deprecated
 public class SpsFrame {
     private int forbidden_zero_bit;
     private int nal_ref_idc;

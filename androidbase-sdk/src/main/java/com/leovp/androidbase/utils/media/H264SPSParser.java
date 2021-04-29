@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.media;
 /**
  * https://blog.csdn.net/duoluo9/article/details/85318274
  */
+@Deprecated
 public class H264SPSParser {
     private int startBit = 0;
 

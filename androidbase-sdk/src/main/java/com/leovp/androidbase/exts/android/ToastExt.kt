@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
+import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.utils.system.API
 
@@ -41,6 +42,10 @@ private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
 private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolean, normal: Boolean) {
+    if (debug && !BuildConfig.DEBUG) {
+        // Debug log only be shown in DEBUG flavor
+        return
+    }
     val message: String? = if (debug) "DEBUG: $msg" else msg
     if (normal || API.ABOVE_R) {
         if (error) {

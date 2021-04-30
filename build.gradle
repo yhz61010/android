@@ -38,7 +38,7 @@ ext {
     buildToolsVersion = "30.0.3"
     ndkVersion = "22.1.7171670"
 
-    minSdkVersion = 23
+    minSdkVersion = 19
     targetSdkVersion = 30
 
     junitVersion = '4.13.2'

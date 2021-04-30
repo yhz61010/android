@@ -362,7 +362,7 @@ abstract class BaseNettyClient protected constructor(
                 if (f.isSuccess) {
                     LogContext.log.w(tag, "===== disconnectManually() done =====")
                     connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                    connectionListener.onDisconnected(this)
+                    connectionListener.onDisconnected(this, byRemote = false)
                     cont.resume(connectStatus.get())
                 } else {
                     LogContext.log.w(tag, "===== disconnectManually() failed =====")

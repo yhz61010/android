@@ -40,8 +40,8 @@ class SocketClientActivity : BaseDemonstrationActivity() {
             runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
         }
 
-        override fun onDisconnected(netty: BaseNettyClient) {
-            LogContext.log.w(TAG, "onDisconnect")
+        override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
+            LogContext.log.w(TAG, "onDisconnect byRemote=$byRemote")
             toast("onDisconnect", debug = true)
         }
 

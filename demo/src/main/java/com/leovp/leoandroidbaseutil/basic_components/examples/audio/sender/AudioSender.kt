@@ -56,7 +56,7 @@ class AudioSender {
             receiveAudioQueue.offer(audioData)
         }
 
-        override fun onDisconnected(netty: BaseNettyClient) {
+        override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
             LogContext.log.w(TAG, "onDisconnect")
             toast("onDisconnect", debug = true)
             stop()

@@ -200,6 +200,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             if (frame is CloseWebSocketFrame) {
                 LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
                 ctx.channel().close()
+                netty.connectStatus.set(ClientConnectStatus.DISCONNECTED)
+                netty.connectionListener.onDisconnected(netty, true)
                 return
             }
         }

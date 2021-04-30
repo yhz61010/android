@@ -417,7 +417,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 }
             }
 
-            override fun onDisconnected(netty: BaseNettyClient) {
+            override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
                 LogContext.log.w(ITAG, "onDisconnect")
                 lostConnection()
             }

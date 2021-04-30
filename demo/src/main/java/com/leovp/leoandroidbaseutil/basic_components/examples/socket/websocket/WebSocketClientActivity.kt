@@ -126,10 +126,10 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
         }
 
-        override fun onDisconnected(netty: BaseNettyClient) {
-            LogContext.log.w(TAG, "onDisconnected")
+        override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
+            LogContext.log.w(TAG, "onDisconnected byRemote=$byRemote")
             LogContext.log.i(TAG, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            toast("onDisconnected", debug = true)
+            toast("onDisconnected byRemote=$byRemote", debug = true)
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {

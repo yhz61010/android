@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
+    android:background="@color/purple_200"
     tools:context=".basic_components.examples.sharescreen.client.ScreenShareClientActivity">
 
     <ToggleButton
@@ -36,7 +36,7 @@
         android:ems="10"
         android:hint="Please input server phone ip"
         android:inputType="textPersonName"
-        android:text="10.10.9.67"
+        android:text="10.10.10.120"
         android:textColor="@android:color/white"
         app:layout_constraintBottom_toTopOf="@+id/toggleButton"
         app:layout_constraintEnd_toEndOf="parent"

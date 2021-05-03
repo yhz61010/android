@@ -141,6 +141,12 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()}")
+
+//            val layoutParams = binding.surfaceView.layoutParams
+//            layoutParams.width = 800
+//            layoutParams.height = 600
+//            binding.surfaceView.layoutParams = layoutParams
+
             // If remote screen is still in portrait, do like this to preserve the video dimension.
             binding.surfaceView.holder.setFixedSize(screenInfo.x * screenInfo.x / screenInfo.y, screenInfo.x)
         } else {

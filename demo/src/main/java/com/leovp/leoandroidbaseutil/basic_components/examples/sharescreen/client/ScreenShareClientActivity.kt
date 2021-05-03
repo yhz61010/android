@@ -79,7 +79,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        screenInfo = getAvailableResolution()
+        screenInfo = getRealResolution()
 //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -138,21 +138,26 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
+        val ratio = screenInfo.x * 1.0F / screenInfo.y
+//        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
+        val newWidth: Int
+        val newHeight: Int
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()}")
-
 //            val layoutParams = binding.surfaceView.layoutParams
 //            layoutParams.width = 800
 //            layoutParams.height = 600
 //            binding.surfaceView.layoutParams = layoutParams
 
+            newWidth = (screenInfo.x * ratio).toInt()
+            newHeight = screenInfo.x
             // If remote screen is still in portrait, do like this to preserve the video dimension.
-            binding.surfaceView.holder.setFixedSize(screenInfo.x * screenInfo.x / screenInfo.y, screenInfo.x)
+            LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
         } else {
-            LogContext.log.w("Running in PORTRAIT ${screenInfo.toJsonString()}")
-            binding.surfaceView.holder.setFixedSize(screenInfo.y * screenInfo.y / screenInfo.x, screenInfo.y)
+            newWidth = screenInfo.x
+            newHeight = screenInfo.y
+            LogContext.log.w("Running in PORTRAIT ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
         }
+        binding.surfaceView.holder.setFixedSize(newWidth, newHeight)
     }
 
     override fun onResume() {

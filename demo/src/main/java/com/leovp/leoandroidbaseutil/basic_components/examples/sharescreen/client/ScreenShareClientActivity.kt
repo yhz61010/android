@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.MotionEvent
@@ -14,6 +15,7 @@ import android.view.SurfaceHolder
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
@@ -80,6 +82,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         screenInfo = getAvailableResolution()
 //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
                 // When surface recreated, we need to redraw screen again.
@@ -135,13 +138,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
+        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            LogContext.log.i("Running in LANDSCAPE ${screenInfo.toJsonString()}")
+            LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()}")
+            // If remote screen is still in portrait, do like this to preserve the video dimension.
             binding.surfaceView.holder.setFixedSize(screenInfo.x * screenInfo.x / screenInfo.y, screenInfo.x)
         } else {
-            LogContext.log.i("Running in PORTRAIT ${screenInfo.toJsonString()}")
-            binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
+            LogContext.log.w("Running in PORTRAIT ${screenInfo.toJsonString()}")
+            binding.surfaceView.holder.setFixedSize(screenInfo.y * screenInfo.y / screenInfo.x, screenInfo.y)
         }
     }
 
@@ -155,6 +159,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onDestroy()
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun initDecoder(sps: ByteArray, pps: ByteArray) {
         LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
         this.sps = sps
@@ -173,7 +178,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         decoder?.start()
     }
 
-    private val mediaCodecCallback = object : MediaCodec.Callback() {
+    private val mediaCodecCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
             try {
                 val inputBuffer = codec.getInputBuffer(inputBufferId)
@@ -385,6 +391,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 webSocketClientHandler?.sendDeviceScreenInfoToServer(getRealResolution())
             }
 
+            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             @SuppressLint("SetTextI18n")
             override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
                 val dataArray = data as ByteArray

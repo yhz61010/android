@@ -1,5 +1,7 @@
 package com.leovp.leoandroidbaseutil
 
+import android.content.Context
+import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.log.LLog
@@ -38,6 +40,11 @@ class CustomApplication : MultiDexApplication(), DIAware {
         LogContext.setLogImp(LLog("LEO"))
         PrefContext.setPrefImp(LPref())
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 
     companion object {

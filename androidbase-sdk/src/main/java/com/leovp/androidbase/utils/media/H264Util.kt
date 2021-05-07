@@ -113,7 +113,7 @@ object H264Util {
                     }
                 }
             }
-            null
+            if (startIndex > -1) data.copyOfRange(startIndex, data.size) else null
         } catch (e: Exception) {
             LogContext.log.e(TAG, "getPps error msg=${e.message}")
             null

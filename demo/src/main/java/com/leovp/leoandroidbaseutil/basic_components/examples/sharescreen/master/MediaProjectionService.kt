@@ -8,6 +8,7 @@ import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -89,6 +90,7 @@ class MediaProjectionService : Service() {
         if (outputH264File) {
             try {
                 val baseFolder = File(getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media")
+                LogContext.log.w(ITAG, "Output H.264 file path=$baseFolder")
                 baseFolder.mkdirs()
                 videoH264File = File(baseFolder, "screen.h264")
                 videoH264Os = BufferedOutputStream(FileOutputStream(videoH264File))
@@ -168,6 +170,7 @@ class MediaProjectionService : Service() {
     /**
      * This method must be following `setData()` method
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun startScreenShare(setting: ScreenShareSetting) {
         LogContext.log.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()

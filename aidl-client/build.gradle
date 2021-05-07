@@ -13,6 +13,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -70,6 +71,7 @@ dependencies {
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
     implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
+    implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
 
     implementation project(':androidbase-sdk')
 }

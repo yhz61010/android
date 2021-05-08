@@ -12,18 +12,18 @@ import java.util.concurrent.TimeUnit
  * Author: Michael Leo
  * Date: 20-5-27 下午8:41
  */
-abstract class BaseHttpRequest(private val headerMap: Map<String, String>?) {
+abstract class BaseHttpRequest {
     var connectTimeoutInMs = DEFAULT_CONNECTION_TIMEOUT_IN_MS
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
 
-    fun getOkHttpClient(): OkHttpClient {
+    fun getOkHttpClient(headerMap: Map<String, String>? = null): OkHttpClient {
         val httpClientBuilder = OkHttpClient.Builder()
         httpClientBuilder
             .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
             .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
             .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
-            .addInterceptor(getHeaderInterceptor())
+            .addInterceptor(getHeaderInterceptor(headerMap))
             .addInterceptor(logInterceptor)
 
         if (SslUtils.certificateInputStream == null) {
@@ -62,7 +62,7 @@ abstract class BaseHttpRequest(private val headerMap: Map<String, String>?) {
 //                .build();
         }
 
-    private fun getHeaderInterceptor(): Interceptor {
+    private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
             val build: Request.Builder = chain.request().newBuilder()
             // Add your other headers here.

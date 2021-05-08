@@ -2,6 +2,7 @@ package com.leovp.androidbase.http.retrofit.base
 
 import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.http.okhttp.HttpLoggingInterceptor
+import com.leovp.androidbase.utils.log.LogContext
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -69,6 +70,7 @@ abstract class BaseHttpRequest(private val headerMap: Map<String, String>?) {
             // .addHeader("Content-Type", "application/json")
             headerMap?.let {
                 for ((k, v) in headerMap) {
+                    if (LogContext.enableLog) LogContext.log.d("Assign cookie: $k=$v")
                     build.addHeader(k, v)
                 }
             }

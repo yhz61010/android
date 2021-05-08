@@ -17,27 +17,26 @@ abstract class BaseHttpRequest(private val headerMap: Map<String, String>?) {
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
 
-    val okHttpClient: OkHttpClient
-        get() {
-            val httpClientBuilder = OkHttpClient.Builder()
-            httpClientBuilder
-                .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
-                .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
-                .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
-                .addInterceptor(getHeaderInterceptor())
-                .addInterceptor(logInterceptor)
+    fun getOkHttpClient(): OkHttpClient {
+        val httpClientBuilder = OkHttpClient.Builder()
+        httpClientBuilder
+            .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
+            .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
+            .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
+            .addInterceptor(getHeaderInterceptor())
+            .addInterceptor(logInterceptor)
 
-            if (SslUtils.certificateInputStream == null) {
-                httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
-                httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
-            } else {
-                httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
-                requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })
-                val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
-                httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
-            }
-            return httpClientBuilder.build()
+        if (SslUtils.certificateInputStream == null) {
+            httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
+            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
+        } else {
+            httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
+            requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })
+            val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
+            httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
         }
+        return httpClientBuilder.build()
+    }
 
     private val logInterceptor: Interceptor
         get() {

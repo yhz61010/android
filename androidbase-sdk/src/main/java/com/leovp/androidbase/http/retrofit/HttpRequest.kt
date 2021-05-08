@@ -16,13 +16,11 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 class HttpRequest private constructor(headerMap: Map<String, String>?) : BaseHttpRequest(headerMap) {
     companion object : SingletonHolder<HttpRequest, Map<String, String>?>(::HttpRequest)
 
-    private val builder: Retrofit.Builder = Retrofit.Builder()
-        .client(okHttpClient)
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(GsonConverterFactory.create())
-//        .addConverterFactory(MoshiConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    private var builder: Retrofit.Builder = getRetrofitBuilder()
 
+    fun reInit() {
+        builder = getRetrofitBuilder()
+    }
 
     fun getRetrofit(baseUrl: String): Retrofit {
         return builder.baseUrl(baseUrl).build()
@@ -31,5 +29,14 @@ class HttpRequest private constructor(headerMap: Map<String, String>?) : BaseHtt
     @Suppress("unused")
     fun getRetrofit(baseUrl: HttpUrl): Retrofit {
         return getRetrofit(baseUrl.toString())
+    }
+
+    private fun getRetrofitBuilder(): Retrofit.Builder {
+        return Retrofit.Builder()
+            .client(getOkHttpClient())
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+//        .addConverterFactory(MoshiConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
     }
 }

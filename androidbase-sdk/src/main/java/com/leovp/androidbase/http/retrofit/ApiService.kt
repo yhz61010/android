@@ -8,11 +8,11 @@ import okhttp3.HttpUrl
  */
 @Suppress("unused")
 object ApiService {
-    fun <T> getService(baseUrl: String, clazz: Class<T>, headers: Map<String, String>? = null): T {
-        return HttpRequest.getInstance(headers ?: emptyMap()).getRetrofit(baseUrl).create(clazz)
+    fun <T> getService(baseUrl: String, clazz: Class<T>): T {
+        return HttpRequest.getRetrofit(baseUrl).create(clazz)
     }
 
-    fun <T> getService(baseUrl: HttpUrl, clazz: Class<T>, headers: Map<String, String>? = null): T {
-        return getService(baseUrl.toString(), clazz, headers)
+    fun <T> getService(baseUrl: HttpUrl, clazz: Class<T>): T {
+        return getService(baseUrl.toString(), clazz)
     }
 }

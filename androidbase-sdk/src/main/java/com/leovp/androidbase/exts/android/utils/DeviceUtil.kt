@@ -33,7 +33,7 @@ object DeviceUtil {
     val model: String = Build.MODEL
     val product: String = Build.PRODUCT
     val display: String = Build.DISPLAY
-    val cpuName = Build.HARDWARE
+    val hardware = Build.HARDWARE
     val cpuQualifiedName =
         runCatching {
             ShellUtil.execCmd("cat /proc/cpuinfo | grep -i hardware", false).successMsg.replaceFirst(
@@ -145,6 +145,7 @@ object DeviceUtil {
             Model           : $model
             Product         : $product
             Host            : $host
+            Hardware        : $hardware
             CPU             : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
             CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}

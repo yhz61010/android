@@ -2,6 +2,7 @@ package com.leovp.androidbase.exts.android.utils
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
@@ -43,6 +44,14 @@ object DeviceUtil {
             ""
         )
     val supportedCpuArchs: Array<String> = Build.SUPPORTED_ABIS
+    val cpuArch: String = runCatching {
+        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
+            Regex("Processor[\\s\\t]*:", RegexOption.IGNORE_CASE),
+            ""
+        )
+    }.getOrDefault(
+        ""
+    )
 
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
         file?.name?.matches(Regex("cpu[0-9]+")) ?: false
@@ -58,6 +67,16 @@ object DeviceUtil {
             file?.name?.matches(Regex("cpu[0-9]+")) ?: false
         }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.maxOrNull() ?: -1
     }.getOrDefault(-2)
+
+    val batteryCapacity = runCatching {
+        val powerProfileClass = "com.android.internal.os.PowerProfile"
+        val powerProfile = Class.forName(powerProfileClass)
+            .getConstructor(Context::class.java)
+            .newInstance(app)
+        Class.forName(powerProfileClass)
+            .getMethod("getBatteryCapacity")
+            .invoke(powerProfile) as Double
+    }.getOrDefault(0.0)
 
     /**
      * The result is:
@@ -127,6 +146,7 @@ object DeviceUtil {
             Product         : $product
             Host            : $host
             CPU             : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}
             Display         : $display
             Screen          : ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio.round()})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
@@ -135,6 +155,7 @@ object DeviceUtil {
             Fingerprint     : ${Build.FINGERPRINT}
             Tablet          : ${app.isTablet()}
             Emulator        : ${isProbablyAnEmulator()}
+            Battery Capacity: $batteryCapacity
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}

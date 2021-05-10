@@ -47,11 +47,11 @@ class MMKVPref : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: Any?) {
+    override fun putObject(key: String, v: Any?) {
         mmkv.encode(key, v?.toJsonString())
     }
 
-    override fun put(key: String, v: Set<String>?) {
+    override fun putSet(key: String, v: Set<String>?) {
         mmkv.encode(key, v)
     }
 

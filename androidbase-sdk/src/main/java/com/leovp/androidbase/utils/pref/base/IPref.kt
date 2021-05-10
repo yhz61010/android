@@ -10,8 +10,8 @@ interface IPref {
     fun put(key: String, v: Float)
     fun put(key: String, v: Boolean)
     fun put(key: String, v: String?)
-    fun put(key: String, v: Any?)
-    fun put(key: String, v: Set<String>?)
+    fun putObject(key: String, v: Any?)
+    fun putSet(key: String, v: Set<String>?)
 
     fun getInt(key: String, default: Int = 0): Int
     fun getLong(key: String, default: Long = 0L): Long

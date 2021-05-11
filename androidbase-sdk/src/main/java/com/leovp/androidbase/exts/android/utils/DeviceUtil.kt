@@ -37,7 +37,7 @@ object DeviceUtil {
     val cpuQualifiedName =
         runCatching {
             ShellUtil.execCmd("cat /proc/cpuinfo | grep -i hardware", false).successMsg.replaceFirst(
-                Regex("hardware[\\s\\t]*:", RegexOption.IGNORE_CASE),
+                Regex("hardware[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
                 ""
             )
         }.getOrDefault(
@@ -46,7 +46,7 @@ object DeviceUtil {
     val supportedCpuArchs: Array<String> = Build.SUPPORTED_ABIS
     val cpuArch: String = runCatching {
         ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
-            Regex("Processor[\\s\\t]*:", RegexOption.IGNORE_CASE),
+            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
             ""
         )
     }.getOrDefault(
@@ -68,6 +68,27 @@ object DeviceUtil {
         }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.maxOrNull() ?: -1
     }.getOrDefault(-2)
 
+    fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? {
+        return runCatching {
+            val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false).successMsg.toInt() != 0
+            val minFreq: Int
+            val maxFreq: Int
+            if (online) {
+                minFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false).successMsg.toInt()
+                maxFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false).successMsg.toInt()
+            } else {
+                minFreq = 0
+                maxFreq = 0
+            }
+            CpuCoreInfo(online, minFreq, maxFreq)
+        }.getOrNull()
+    }
+
+    data class CpuCoreInfo(val online: Boolean, val minFreq: Int, val maxFreq: Int)
+
+    /**
+     * Unit: mAh
+     */
     val batteryCapacity = runCatching {
         val powerProfileClass = "com.android.internal.os.PowerProfile"
         val powerProfile = Class.forName(powerProfileClass)

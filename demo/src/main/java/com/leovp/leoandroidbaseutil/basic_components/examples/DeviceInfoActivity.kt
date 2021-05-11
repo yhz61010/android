@@ -41,6 +41,11 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
                 }
             }
         })
+
+        for (index in 0 until DeviceUtil.cpuCoreCount) {
+            val coreInfo = DeviceUtil.getCpuCoreInfoByIndex(index)
+            LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
+        }
     }
 
     companion object {

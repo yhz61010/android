@@ -117,6 +117,115 @@ object H265Util {
         return getNaluType(data) == NALU_TYPE_VPS // 32
     }
 
+    fun isSps(data: ByteArray): Boolean {
+        return getNaluType(data) == NALU_TYPE_SPS // 33
+    }
+
+    fun isPps(data: ByteArray): Boolean {
+        return getNaluType(data) == NALU_TYPE_PPS // 34
+    }
+
+    /**
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     *
+     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     */
+    fun getVps(data: ByteArray): ByteArray? {
+        val isVps = isVps(data)
+        return if (!isVps) {
+            null
+        } else try {
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            for (i in 5 until data.size) {
+                if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
+                    val vps = ByteArray(i)
+                    System.arraycopy(data, 0, vps, 0, i)
+                    return vps
+                }
+            }
+            null
+        } catch (e: Exception) {
+            LogContext.log.e(TAG, "getVps error msg=${e.message}")
+            null
+        }
+    }
+
+    /**
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     *
+     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     */
+    fun getSps(data: ByteArray): ByteArray? {
+        val isSps = isSps(data)
+        if (isSps) {
+            return data
+        }
+        return if (!isVps(data)) {
+            null
+        } else try {
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            var startIndex = -1
+            for (i in 5 until data.size) {
+                if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
+                    if (startIndex < 0) {
+                        startIndex = i
+                    } else {
+                        val spsLength = i - startIndex
+                        val sps = ByteArray(spsLength)
+                        System.arraycopy(data, startIndex, sps, 0, spsLength)
+                        return sps
+                    }
+                }
+            }
+            if (startIndex > -1) data.copyOfRange(startIndex, data.size) else null
+        } catch (e: Exception) {
+            LogContext.log.e(TAG, "getSps error msg=${e.message}")
+            null
+        }
+    }
+
+    /**
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     *
+     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     */
+    fun getPps(data: ByteArray): ByteArray? {
+        val isPps = isPps(data)
+        if (isPps) {
+            return data
+        }
+        return if (!isVps(data)) {
+            null
+        } else try {
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            var startIndex = -1
+            var prefixOccurTimes = 1
+            for (i in 5 until data.size) {
+                if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
+                    if (++prefixOccurTimes < 3) continue
+                    if (startIndex < 0) {
+                        startIndex = i
+                    } else {
+                        val ppsLength = i - startIndex
+                        val pps = ByteArray(ppsLength)
+                        System.arraycopy(data, startIndex, pps, 0, ppsLength)
+                        return pps
+                    }
+                }
+            }
+            if (startIndex > -1) data.copyOfRange(startIndex, data.size) else null
+        } catch (e: Exception) {
+            LogContext.log.e(TAG, "getPps error msg=${e.message}")
+            null
+        }
+    }
+
     fun getNaluType(data: ByteArray): Int {
         if (data.size < 5) {
             if (DEBUG) LogContext.log.d(TAG, "Invalid H265 data length. Length: ${data.size}")

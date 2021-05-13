@@ -190,11 +190,4 @@ object H264Util {
         mediaCodec.setParameters(param)
 //        }
     }
-
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    fun setBitrateModeDynamically(mediaCodec: MediaCodec, bitrateMode: Int) {
-        val param = Bundle()
-        param.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bitrateMode)
-        mediaCodec.setParameters(param)
-    }
 }

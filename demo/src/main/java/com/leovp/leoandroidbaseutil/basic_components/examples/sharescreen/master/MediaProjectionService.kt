@@ -13,7 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
@@ -234,7 +234,7 @@ class MediaProjectionService : Service() {
     fun triggerIFrame() {
         LogContext.log.w(ITAG, "triggerIFrame()")
         val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h264Encoder
-        encoder?.let { H264Util.sendIdrFrameByManual(it) }
+        encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
     }
 }
 

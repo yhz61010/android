@@ -21,6 +21,16 @@ object VideoUtil {
         }.onFailure { if (LogContext.enableLog) LogContext.log.e("setBitrateDynamically error", it) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    fun sendIdrFrameByManual(mediaCodec: MediaCodec) {
+        LogContext.log.w("sendIdrFrameByManual()")
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
+        val param = Bundle()
+        param.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+        mediaCodec.setParameters(param)
+//        }
+    }
+
     @Suppress("unused")
     fun getImageFormatName(imageFormat: Int) = when (imageFormat) {
         ImageFormat.JPEG -> "JPEG"

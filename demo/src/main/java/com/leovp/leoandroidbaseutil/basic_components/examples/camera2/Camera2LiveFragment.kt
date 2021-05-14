@@ -54,7 +54,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
 //                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
-                CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
+                CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
                 val previewSize = getPreviewOutputSize(

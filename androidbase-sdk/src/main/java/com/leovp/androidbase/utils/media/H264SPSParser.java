@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.media;
 /**
  * https://blog.csdn.net/duoluo9/article/details/85318274
  * <p>
+ * val spsByteArray = byteArrayOf(103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88)
  * val h264Parser = H264SPSParser()
  * val h264Frame = SpsFrame().getSpsFrame(spsByteArray)
  * println("width=${h264Parser.getWidth(h264Frame)}")

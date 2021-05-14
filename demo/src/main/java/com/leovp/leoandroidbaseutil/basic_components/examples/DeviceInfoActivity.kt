@@ -48,8 +48,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
             LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
         }
 
-        H265Util.getHevcCodec().forEach { LogContext.log.w(TAG, "HEVC Encoder: ${it.name}") }
-        H265Util.getHevcCodec(false).forEach { LogContext.log.w(TAG, "HEVC Decoder: ${it.name}") }
+        H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name}") }
+        H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name}") }
     }
 
     companion object {

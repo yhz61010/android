@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.media
 
+import android.media.MediaFormat
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.log.LogContext
 
@@ -262,4 +263,6 @@ object H265Util {
     }
 
     fun getNaluTypeInStr(data: ByteArray) = getNaluTypeInStr(getNaluType(data))
+
+    fun getHevcCodec(encoder: Boolean = true) = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

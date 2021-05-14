@@ -4,6 +4,11 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * https://blog.csdn.net/duoluo9/article/details/85318274
+ * <p>
+ * val h264Parser = H264SPSParser()
+ * val h264Frame = SpsFrame().getSpsFrame(spsByteArray)
+ * println("width=${h264Parser.getWidth(h264Frame)}")
+ * println("height=${h264Parser.getHeight(h264Frame)}")
  */
 @Deprecated
 public class SpsFrame {

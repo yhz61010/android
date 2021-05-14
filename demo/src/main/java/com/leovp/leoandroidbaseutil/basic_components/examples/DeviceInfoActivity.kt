@@ -6,6 +6,7 @@ import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
+import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -46,6 +47,9 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
             val coreInfo = DeviceUtil.getCpuCoreInfoByIndex(index)
             LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
         }
+
+        H265Util.getHevcCodec().forEach { LogContext.log.w(TAG, "HEVC Encoder: ${it.name}") }
+        H265Util.getHevcCodec(false).forEach { LogContext.log.w(TAG, "HEVC Decoder: ${it.name}") }
     }
 
     companion object {

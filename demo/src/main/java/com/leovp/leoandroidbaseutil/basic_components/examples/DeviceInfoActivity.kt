@@ -6,6 +6,7 @@ import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
+import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
@@ -50,6 +51,9 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
 
         H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name}") }
         H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name}") }
+
+        H264Util.getAvcCodec().forEach { LogContext.log.i(TAG, "AVC Encoder: ${it.name}") }
+        H264Util.getAvcCodec(false).forEach { LogContext.log.i(TAG, "AVC Decoder: ${it.name}") }
     }
 
     companion object {

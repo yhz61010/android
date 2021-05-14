@@ -1,9 +1,6 @@
 package com.leovp.androidbase.utils.media
 
-import android.media.MediaCodec
-import android.os.Build
-import android.os.Bundle
-import androidx.annotation.RequiresApi
+import android.media.MediaFormat
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.log.LogContext
 import kotlin.experimental.and
@@ -181,13 +178,5 @@ object H264Util {
 
     fun getNaluTypeInStr(data: ByteArray) = getNaluTypeInStr(getNaluType(data))
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    fun sendIdrFrameByManual(mediaCodec: MediaCodec) {
-        LogContext.log.w(TAG, "sendIdrFrameByManual()")
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
-        val param = Bundle()
-        param.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
-        mediaCodec.setParameters(param)
-//        }
-    }
+    fun getAvcCodec(encoder: Boolean = true) = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
 }

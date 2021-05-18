@@ -129,6 +129,9 @@ object H265Util {
     /**
      * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+     * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+     * 0,0,0,1,44,1,C0,66,3C,E,C6,40
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -139,6 +142,9 @@ object H265Util {
         } else try {
             // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+            // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
                     val vps = ByteArray(i)
@@ -156,6 +162,9 @@ object H265Util {
     /**
      * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+     * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+     * 0,0,0,1,44,1,C0,66,3C,E,C6,40
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -169,6 +178,9 @@ object H265Util {
         } else try {
             // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+            // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
             var startIndex = -1
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
@@ -192,6 +204,9 @@ object H265Util {
     /**
      * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+     * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+     * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+     * 0,0,0,1,44,1,C0,66,3C,E,C6,40
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -205,6 +220,9 @@ object H265Util {
         } else try {
             // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
+            // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
+            // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
             var startIndex = -1
             var prefixOccurTimes = 1
             for (i in 5 until data.size) {

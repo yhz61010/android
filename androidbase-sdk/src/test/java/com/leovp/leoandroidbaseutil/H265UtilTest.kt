@@ -19,9 +19,12 @@ class H265UtilTest {
 
     @Test
     fun h265Test() {
-        val vspByteArray = byteArrayOf(0, 0, 0, 1, 0x40, 1)
-        val spsByteArray = byteArrayOf(0, 0, 0, 1, 0x42, 1)
-        val ppsByteArray = byteArrayOf(0, 0, 0, 1, 0x44, 1)
+        val vspByteArray = byteArrayOf(0, 0, 0, 1, 0x40, 1, 0xC, 1, 0xFF.toByte(), 0xFF.toByte(), 1, 60, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 78, 0x2C, 9)
+        val spsByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x42, 1, 1, 1, 0x60, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0x78,
+            0xA0.toByte(), 4, 0x62, 0, 0xFC.toByte(), 0x7C, 0xBA.toByte(), 0x2D, 0x24, 0xB0.toByte(), 0x4B, 0xB2.toByte()
+        )
+        val ppsByteArray = byteArrayOf(0, 0, 0, 1, 0x44, 1, 0xC0.toByte(), 0x66, 0x3C, 0xE, 0xC6.toByte(), 0x40)
         val idrByteArray = byteArrayOf(0, 0, 0, 1, 0x26, 1)
 
         var isVps = H265Util.isVps(vspByteArray)

@@ -1,14 +1,23 @@
 package com.leovp.androidbase.utils.system
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
 import android.os.PowerManager
+import android.os.SystemClock
 import androidx.annotation.RawRes
+import androidx.core.content.ContextCompat
+import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.log.LogContext
+
 
 /**
  * Need `<uses-permission android:name="android.permission.WAKE_LOCK" />` permission
  *
+ * @param keepAliveTime Unit: minute. Default value 25 min
  * Author: Michael Leo
  * Date: 20-8-28 下午1:40
  */
@@ -20,19 +29,41 @@ class KeepAlive(private val context: Context, @RawRes val undeadAudioResId: Int)
 //        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     }
 
-    private val mediaPlayer by lazy { MediaPlayer.create(context, undeadAudioResId) }
+    private var keepAliveTimeInMin: Float = 25f
+    private var callback: BroadcastReceiver? = null
+
+    constructor(context: Context, @RawRes undeadAudioResId: Int, keepAliveTimeInMin: Float, callback: BroadcastReceiver) : this(context, undeadAudioResId) {
+        this.keepAliveTimeInMin = keepAliveTimeInMin
+        this.callback = callback
+    }
+
+    private var mediaPlayer: MediaPlayer? = null
 
     fun keepAlive() {
-        LogContext.log.w(TAG, "Start keepAlive()")
-        mediaPlayer.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
-//        mediaPlayer.setVolume(0.01F, 0.01F)
-        mediaPlayer.isLooping = true
-        mediaPlayer.start()
+        if (LogContext.enableLog) LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
+        runCatching {
+            mediaPlayer = MediaPlayer.create(context, undeadAudioResId).apply {
+                setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
+//        setVolume(0.01F, 0.01F)
+                isLooping = true
+                start()
+            }
+        }.onFailure { it.printStackTrace() }
+
+        if (callback != null) {
+            val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
+            val alarmManager: AlarmManager = ContextCompat.getSystemService(app, AlarmManager::class.java)!!
+            val triggerAtTime = SystemClock.elapsedRealtime() + aliveTimeInMs
+            val intent = Intent(app, callback!!::class.java)
+//            intent.putExtra("package", app.id)
+            val pendingIntent = PendingIntent.getBroadcast(app, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent)
+        }
     }
 
     fun release() {
         LogContext.log.w(TAG, "Release keepAlive()")
-        mediaPlayer.release()
+        mediaPlayer?.release()
     }
 
 //    private val ioScope = CoroutineScope(Dispatchers.IO)

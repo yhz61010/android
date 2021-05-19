@@ -23,6 +23,7 @@ import java.util.*
 object NetworkUtil {
     private const val TAG = "NetworkUtil"
 
+    const val NETWORK_PING_DELAY_NORMAL = 80
     const val NETWORK_PING_DELAY_HIGH = 130
     const val NETWORK_PING_DELAY_VERY_HIGH = 200
 

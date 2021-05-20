@@ -82,10 +82,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     @SuppressLint("SetTextI18n")
                     override fun onUpdate(data: ByteArray, flags: Int) {
                         if (clientChannel != null) {
-                            val dataArray = data as ByteArray
-                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
+                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size}" }
                             runCatching {
-                                clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, dataArray) }
+                                clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data) }
                             }.onFailure { e -> e.printStackTrace() }
                         } // if
                     } // onUpdate
@@ -336,6 +335,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                                     userPath = fingerPaintView?.getPaths()!!
                                     return@withContext
                                 }
+                                else -> throw IllegalArgumentException("Unknown touch type[${paintBean.touchType}]")
                             }
                             fingerPaintView?.drawUserPath(userPath)
                         }

@@ -61,19 +61,21 @@ class MediaProjectionService : Service() {
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: ByteArray, flags: Int) {
+        override fun onDataUpdate(buffer: Any, flags: Int) {
+            val data = buffer as ByteArray
             if (outputH264File) {
                 try {
-                    videoH264Os.write(buffer)
+                    videoH264Os.write(data)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
 //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
-            screenDataUpdateListener?.onUpdate(buffer, flags)
+            screenDataUpdateListener?.onUpdate(data, flags)
+
             // Bitmap for screenshot
-//            val bitmap = buffer as Bitmap
-//            FileUtil.writeBitmapToFile(bitmap, 0)
+//            val file = FileUtil.createImageFile(app, "bmp")
+//            ImageUtil.writeBitmapToFile(file, buffer as Bitmap, 90)
         }
     }
 

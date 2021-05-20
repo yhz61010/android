@@ -2,6 +2,7 @@ package com.leovp.androidbase.exts.android.utils
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
@@ -32,17 +33,25 @@ object DeviceUtil {
     val model: String = Build.MODEL
     val product: String = Build.PRODUCT
     val display: String = Build.DISPLAY
-    val cpuName = Build.HARDWARE
+    val hardware = Build.HARDWARE
     val cpuQualifiedName =
         runCatching {
             ShellUtil.execCmd("cat /proc/cpuinfo | grep -i hardware", false).successMsg.replaceFirst(
-                Regex("hardware[\\s\\t]*:", RegexOption.IGNORE_CASE),
+                Regex("hardware[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
                 ""
             )
         }.getOrDefault(
             ""
         )
     val supportedCpuArchs: Array<String> = Build.SUPPORTED_ABIS
+    val cpuArch: String = runCatching {
+        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
+            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
+            ""
+        )
+    }.getOrDefault(
+        ""
+    )
 
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
         file?.name?.matches(Regex("cpu[0-9]+")) ?: false
@@ -58,6 +67,37 @@ object DeviceUtil {
             file?.name?.matches(Regex("cpu[0-9]+")) ?: false
         }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.maxOrNull() ?: -1
     }.getOrDefault(-2)
+
+    fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? {
+        return runCatching {
+            val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false).successMsg.toInt() != 0
+            val minFreq: Int
+            val maxFreq: Int
+            if (online) {
+                minFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false).successMsg.toInt()
+                maxFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false).successMsg.toInt()
+            } else {
+                minFreq = 0
+                maxFreq = 0
+            }
+            CpuCoreInfo(online, minFreq, maxFreq)
+        }.getOrNull()
+    }
+
+    data class CpuCoreInfo(val online: Boolean, val minFreq: Int, val maxFreq: Int)
+
+    /**
+     * Unit: mAh
+     */
+    val batteryCapacity = runCatching {
+        val powerProfileClass = "com.android.internal.os.PowerProfile"
+        val powerProfile = Class.forName(powerProfileClass)
+            .getConstructor(Context::class.java)
+            .newInstance(app)
+        Class.forName(powerProfileClass)
+            .getMethod("getBatteryCapacity")
+            .invoke(powerProfile) as Double
+    }.getOrDefault(0.0)
 
     /**
      * The result is:
@@ -126,14 +166,18 @@ object DeviceUtil {
             Model           : $model
             Product         : $product
             Host            : $host
+            Hardware        : $hardware
             CPU             : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}
             Display         : $display
             Screen          : ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio.round()})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}
+            Tablet          : ${app.isTablet()}
             Emulator        : ${isProbablyAnEmulator()}
+            Battery Capacity: $batteryCapacity
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}

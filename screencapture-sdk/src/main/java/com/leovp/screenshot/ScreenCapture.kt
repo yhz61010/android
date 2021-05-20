@@ -8,7 +8,11 @@ import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.screenshot.base.*
+import com.leovp.screenshot.base.ScreenDataListener
+import com.leovp.screenshot.base.ScreenProcessor
+import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
+import com.leovp.screenshot.base.strategies.ScreenRecordRawBmpStrategy
+import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy
 
 /**
  * Author: Michael Leo
@@ -18,8 +22,9 @@ object ScreenCapture {
 
     private const val TAG = "ScrCap"
 
-    const val BY_IMAGE = 1
+    const val BY_IMAGE_2_H264 = 1
     const val BY_MEDIA_CODEC = 2
+    const val BY_RAW_BMP = 3
 
     @Suppress("unused")
     const val SCREEN_CAPTURE_TYPE_X264 = 3
@@ -37,7 +42,7 @@ object ScreenCapture {
     }
 
     /**
-     * @param dpi Not used for [ScreenshotStrategy] which type is [BY_IMAGE]
+     * @param dpi Not used for [Screenshot2H264Strategy] which type is [BY_IMAGE_2_H264]
      */
     class Builder(
         private val width: Int,
@@ -62,22 +67,26 @@ object ScreenCapture {
         private var quality = 100
 
         // ==================================================
-        // ===== For H264
+        // ===== Common For H264
         // ==================================================
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
+
+        // ==================================================
+        // ===== Only For H264
+        // ==================================================
         fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         // ==================================================
-        // ===== For Image
+        // ===== Only For Image
         // ==================================================
-        /**
-         * Only used in `ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE` mode
-         */
+        /** Only used in [BY_IMAGE_2_H264] mode */
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
+
+        /** Only used in [BY_IMAGE_2_H264] mode */
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
@@ -86,8 +95,8 @@ object ScreenCapture {
                 "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
-                BY_IMAGE ->
-                    ScreenshotStrategy.Builder(width, height, dpi, screenDataListener)
+                BY_IMAGE_2_H264 ->
+                    Screenshot2H264Strategy.Builder(width, height, dpi, screenDataListener)
                         .setFps(fps)
                         .setBitrate(bitrate)
                         .setBitrateMode(bitrateMode)
@@ -105,11 +114,15 @@ object ScreenCapture {
                         .setIFrameInterval(iFrameInterval)
                         .setGoogleEncoder(useGoogleEncoder)
                         .build()
-                else ->
-                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+                BY_RAW_BMP ->
+                    ScreenRecordRawBmpStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
                         .setFps(fps)
-                        .setBitrate(bitrate)
                         .build()
+                else -> throw IllegalAccessException("Not support strategy.")
+//                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+//                        .setFps(fps)
+//                        .setBitrate(bitrate)
+//                        .build()
             }
         }
     }

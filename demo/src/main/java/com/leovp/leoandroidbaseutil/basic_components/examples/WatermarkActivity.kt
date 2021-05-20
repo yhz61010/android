@@ -8,15 +8,16 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.Watermark
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import kotlinx.android.synthetic.main.activity_watermark.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityWatermarkBinding
 
 
 class WatermarkActivity : BaseDemonstrationActivity() {
+    private lateinit var binding: ActivityWatermarkBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_watermark)
+        binding = ActivityWatermarkBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         // You can config global setting if you want
         Watermark.defaultConfig {
@@ -26,7 +27,7 @@ class WatermarkActivity : BaseDemonstrationActivity() {
 
         Watermark.with(this).show()
 
-        sbRotation.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+        binding.sbRotation.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 val usedRotation = progress - 180
                 LogContext.log.i(ITAG, "rotation=$usedRotation")

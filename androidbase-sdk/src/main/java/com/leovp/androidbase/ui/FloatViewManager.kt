@@ -21,7 +21,7 @@ import kotlin.math.abs
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-class FloatViewManager constructor(
+class FloatViewManager(
     private val context: Context,
     @LayoutRes private val layoutId: Int,
     @Suppress("WeakerAccess") val enableDrag: Boolean = true,
@@ -45,7 +45,8 @@ class FloatViewManager constructor(
     private var firstX: Int = 0
     private var firstY: Int = 0
 
-    private var isShowing = false
+    var isShowing = false
+        private set
     private var touchConsumedByMove = false
 
 
@@ -116,9 +117,11 @@ class FloatViewManager constructor(
 
     fun show() {
         if (context.canDrawOverlays) {
-            dismiss()
-            isShowing = true
-            windowManager?.addView(floatView, layoutParams)
+            runCatching {
+                dismiss()
+                isShowing = true
+                windowManager?.addView(floatView, layoutParams)
+            }.onFailure { it.printStackTrace() }
         }
     }
 

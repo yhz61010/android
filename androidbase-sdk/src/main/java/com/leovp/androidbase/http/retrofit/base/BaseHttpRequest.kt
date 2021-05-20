@@ -2,8 +2,10 @@ package com.leovp.androidbase.http.retrofit.base
 
 import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.http.okhttp.HttpLoggingInterceptor
+import com.leovp.androidbase.utils.log.LogContext
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 /**
@@ -15,27 +17,26 @@ abstract class BaseHttpRequest {
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS
 
-    val okHttpClient: OkHttpClient
-        get() {
-            val httpClientBuilder = OkHttpClient.Builder()
-            httpClientBuilder
-                .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
-                .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
-                .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
-                .addInterceptor(getHeaderInterceptor())
-                .addInterceptor(logInterceptor)
+    fun getOkHttpClient(headerMap: Map<String, String>? = null): OkHttpClient {
+        val httpClientBuilder = OkHttpClient.Builder()
+        httpClientBuilder
+            .connectTimeout(connectTimeoutInMs, TimeUnit.MILLISECONDS)
+            .readTimeout(readTimeoutInMs, TimeUnit.MILLISECONDS)
+            .writeTimeout(writeTimeoutInMs, TimeUnit.MILLISECONDS)
+            .addInterceptor(getHeaderInterceptor(headerMap))
+            .addInterceptor(logInterceptor)
 
-            if (SslUtils.certificateInputStream == null) {
-                httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
-                httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
-            } else {
-                httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
-                requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })
-                val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
-                httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
-            }
-            return httpClientBuilder.build()
+        if (SslUtils.certificateInputStream == null) {
+            httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
+            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
+        } else {
+            httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
+            requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })
+            val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
+            httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
         }
+        return httpClientBuilder.build()
+    }
 
     private val logInterceptor: Interceptor
         get() {
@@ -61,13 +62,18 @@ abstract class BaseHttpRequest {
 //                .build();
         }
 
-    private fun getHeaderInterceptor(): Interceptor {
+    private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
-            val build = chain.request().newBuilder()
-                // Add your other headers here.
-                // .addHeader("Content-Type", "application/json")
-                .build()
-            chain.proceed(build)
+            val build: Request.Builder = chain.request().newBuilder()
+            // Add your other headers here.
+            // .addHeader("Content-Type", "application/json")
+            headerMap?.let {
+                for ((k, v) in headerMap) {
+                    if (LogContext.enableLog) LogContext.log.d("Assign cookie: $k=$v")
+                    build.addHeader(k, v)
+                }
+            }
+            chain.proceed(build.build())
         }
     }
 

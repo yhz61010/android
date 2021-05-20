@@ -12,6 +12,7 @@ import android.widget.CompoundButton
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper

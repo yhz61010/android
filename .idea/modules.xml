@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" filepath="$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/aidl-client/LeoAndroidBaseUtil.aidl-client.iml" filepath="$PROJECT_DIR$/.idea/modules/aidl-client/LeoAndroidBaseUtil.aidl-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/audio-sdk/LeoAndroidBaseUtil.audio-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/audio-sdk/LeoAndroidBaseUtil.audio-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/basenetty-sdk/LeoAndroidBaseUtil.basenetty-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/basenetty-sdk/LeoAndroidBaseUtil.basenetty-sdk.iml" />

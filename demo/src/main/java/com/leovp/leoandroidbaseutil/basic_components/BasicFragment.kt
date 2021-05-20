@@ -13,7 +13,11 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
+import com.leovp.leoandroidbaseutil.basic_components.examples.accessibility.AccessibilityActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.AidlActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.animation.AnimationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.cipher.AudioCipherActivity
@@ -21,11 +25,14 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.provider.ProviderActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.socket.WebSocketClientActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.socket.WebSocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketClientActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.WifiActivity
 
 class BasicFragment : Fragment() {
 
@@ -65,14 +72,15 @@ class BasicFragment : Fragment() {
         private val featureList = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
+            Pair("Socket Server", SocketServerActivity::class.java),
+            Pair("Socket Client", SocketClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Socket Client", SocketActivity::class.java),
-            Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
+            Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
@@ -88,6 +96,12 @@ class BasicFragment : Fragment() {
             Pair("Preference", PrefActivity::class.java),
             Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Java Mail", JavaMailActivity::class.java),
+            Pair("Bluetooth", BluetoothActivity::class.java),
+            Pair("Wifi", WifiActivity::class.java),
+            Pair("Accessibility", AccessibilityActivity::class.java),
+            Pair("AIDL", AidlActivity::class.java),
+            Pair("Provider", ProviderActivity::class.java),
+            Pair("Animation", AnimationActivity::class.java),
         )
 
         val colors = arrayOf(

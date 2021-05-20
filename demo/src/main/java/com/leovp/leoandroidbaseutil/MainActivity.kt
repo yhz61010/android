@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         XXPermissions.with(this)
             .permission(
-                Permission.MANAGE_EXTERNAL_STORAGE, Permission.CAMERA, Permission.RECORD_AUDIO,
+                Permission.MANAGE_EXTERNAL_STORAGE, Permission.CAMERA, Permission.RECORD_AUDIO, Permission.ACCESS_COARSE_LOCATION,
                 Permission.SYSTEM_ALERT_WINDOW
             )
             .request(object : OnPermission {

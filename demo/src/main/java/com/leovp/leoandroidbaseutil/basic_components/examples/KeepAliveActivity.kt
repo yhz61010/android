@@ -20,18 +20,18 @@ class KeepAliveActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private val keepAlive: KeepAlive by lazy { KeepAlive(this, R.raw.single_note30, 0.1f, KeepAliveReceiver()) }
+    private val keepAlive: KeepAlive by lazy { KeepAlive(R.raw.single_note30, 0.1f, KeepAliveReceiver()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_keep_alive)
     }
 
-    fun onKeepAliveClick(view: View) {
+    fun onKeepAliveClick(@Suppress("UNUSED_PARAMETER") view: View) {
         keepAlive.keepAlive()
     }
 
-    fun onStopClick(view: View) {
+    fun onStopClick(@Suppress("UNUSED_PARAMETER") view: View) {
         keepAlive.release()
     }
 }

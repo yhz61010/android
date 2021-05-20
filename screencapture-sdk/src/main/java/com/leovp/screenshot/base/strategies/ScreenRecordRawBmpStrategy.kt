@@ -10,7 +10,7 @@ import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.YuvUtil
+import com.leovp.androidbase.utils.media.ImageUtil
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import java.util.*
@@ -48,16 +48,16 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
         }
     }
 
-    @SuppressLint("InlinedApi")
+    @SuppressLint("InlinedApi", "WrongConstant")
     @Throws(Exception::class)
     override fun onInit() {
         imageReader = ImageReader.newInstance(builder.width, builder.height, PixelFormat.RGBA_8888, IMAGE_BUFFER_SIZE).apply {
             setOnImageAvailableListener({ reader ->
                 runCatching {
                     val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
-                    val imageBytes = YuvUtil.getBytesFromImage(image)
+                    val bitmap = ImageUtil.createBitmapFromImage(image)
                     image.close()
-                    builder.screenDataListener.onDataUpdate(imageBytes)
+                    builder.screenDataListener.onDataUpdate(bitmap)
                 }.onFailure { it.printStackTrace() }
             }, imageReaderHandler)
         }

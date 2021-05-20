@@ -56,7 +56,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.adapterPosition]
         LogContext.log.d(ITAG, "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
-        // In some cases, it will prevent unwanted situations
+        // In some cases, it will prevent unexpected situations
         holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
         holder.bind(currentItem)
@@ -93,12 +93,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
+        val translationXOffset = 110F
+        val animDuration = 200L
         if (editMode) {
-            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, 90F)
+            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, translationXOffset)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 0F, 1F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
-                duration = 200
+                duration = animDuration
                 addListener(onStart = {
                     holder.selectBtn.visibility = View.VISIBLE
                 })
@@ -106,16 +108,16 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             }
 
             YoYo.with(Techniques.SlideInRight)
-                .duration(200)
+                .duration(animDuration)
                 .onStart { holder.ivDrag.visibility = View.VISIBLE }
                 .playOn(holder.ivDrag)
         }
         if (shouldRunEditCancelAnimation) {
-            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 90F, 0F)
+            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", translationXOffset, 0F)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 1F, 0F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
-                duration = 200
+                duration = animDuration
                 addListener(onEnd = {
                     holder.selectBtn.visibility = View.GONE
                 })
@@ -123,7 +125,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             }
 
             YoYo.with(Techniques.SlideOutRight)
-                .duration(200)
+                .duration(animDuration)
                 .onEnd { holder.ivDrag.visibility = View.GONE }
                 .playOn(holder.ivDrag)
         }

@@ -1,8 +1,8 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver
 
 import android.content.Context
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.audio.base.AudioType
@@ -23,7 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue
 class AudioReceiver {
     companion object {
         private const val TAG = "AudioReceiver"
-        val defaultAudioType = AudioType.COMPRESSED_PCM
+        val defaultAudioType = AudioType.PCM
     }
 
     private var receiverServer: AudioReceiverWebSocket? = null
@@ -45,19 +45,19 @@ class AudioReceiver {
 
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted")
-            ToastUtil.showDebugToast("onStarted")
+            toast("onStarted", debug = true)
         }
 
         override fun onStopped() {
             LogContext.log.i(TAG, "onStop")
-            ToastUtil.showDebugToast("onStop")
+            toast("onStop", debug = true)
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             nettyServer = netty
             this.clientChannel = clientChannel
             LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
-            ToastUtil.showDebugToast("onClientConnected: ${clientChannel.remoteAddress()}")
+            toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             startMicRecording()
             sendRecAudioThread()
             startPlayThread()
@@ -71,13 +71,13 @@ class AudioReceiver {
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
-            ToastUtil.showDebugToast("onClientDisconnected: ${clientChannel.remoteAddress()}")
+            toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             stopServer()
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            ToastUtil.showDebugToast("onFailed code: $code message: $msg")
+            toast("onFailed code: $code message: $msg", debug = true)
             stopServer()
         }
 

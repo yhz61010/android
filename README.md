@@ -120,6 +120,26 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
+### Samsung Galaxy S20 5G(SM-G9810)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [7, 24], [24, 24], [7, 30], [30, 30]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [24, 24], [7, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032x3024, 4032x2268, 4032x1816, 3024x3024, 2400x1080, 1920x864, 1920x824, 3840x2160, 1920x1080, 1440x1080, 1088x1088, 1280x720, 960x720, 720x480, 640x480, 640x360, 352x288, 320x240, 256x144, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3216x1808, 3216x1448, 2944x2208, 2944x1656, 2944x1320, 2208x2208, 2400x1080, 1920x864, 1920x824, 1920x1080, 1440x1080, 1088x1088, 1280x720, 960x720, 720x480, 640x480, 640x360, 352x288, 320x240, 256x144, 176x144]`
+
+------
+
 ### Samsung Galaxy A51 5G(SM-A5160)(Android 10)
 #### Camera supported hardware level
 ##### Lens Back: LEVEL_LIMITED(0)
@@ -332,6 +352,26 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 `[4096x3072, 4096x2304, 4096x1888, 3648x2056, 3648x1680, 3648x2056, 3072x3072, 3840x2160, 3840x1760, 3840x1648, 3120x2340, 2560x1080, 3280x2448, 3264x2448, 3264x1840, 3008x2256, 2448x2448, 2336x1080, 2048x1536, 1920x1080, 1552x720, 1440x1080, 1456x1456, 1664x768, 1440x720, 1280x960, 1280x720, 1088x1080, 960x720, 960x540, 720x720, 720x540, 640x480, 640x360, 736x412, 544x408, 480x360, 400x400, 352x288, 320x240, 208x144, 176x144]`
 ##### Lens Front(Camera Sensor Orientation: 270)
 `[3840x2160, 3264x2448, 2448x2448, 3264x1836, 3264x1504, 3264x1680, 3264x1480, 2336x1080, 2160x1080, 1920x1080, 1920x960, 1664x768, 1552x720, 1440x1080, 1440x720, 1280x960, 1280x720, 1216x912, 960x720, 960x544, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144, 1600x1200, 896x672]`
+
+------
+
+### HuaWei P40 Pro(ELS-TN00)(Android 10)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_LIMITED(0)
+##### Lens Front: LEVEL_LIMITED(0)
+#### H.264 Encoder
+`OMX.hisi.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30], [15, 60], [30, 60], [60, 60]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[12, 15], [15, 15], [14, 20], [20, 20], [24, 24], [14, 25], [25, 25], [14, 30], [30, 30], [60, 60]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4096x3072, 4096x1864, 3072x3072, 3840x2160, 3840x1648, 3120x2340, 2560x1080, 2368x1080, 2160x1080, 3264x2448, 3264x1840, 3008x2256, 2688x2016, 2448x2448, 2592x1952, 2048x1536, 1920x1080, 1440x1080, 1600x1080, 1536x864, 1456x1456, 1712x720, 1584x720, 1440x720, 1280x960, 1280x720, 1088x1080, 1088x720, 960x720, 960x540, 720x720, 720x540, 640x480, 640x360, 736x412, 544x408, 480x360, 400x400, 352x288, 320x240, 208x144, 176x144]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3840x2160, 3264x2448, 2448x2448, 3264x1836, 3264x1504, 3264x1680, 3264x1480, 2368x1080, 2160x1080, 1920x1080, 1920x960, 1600x1200, 1584x720, 1440x1080, 1440x720, 1216x912, 1280x960, 1280x720, 1024x768, 960x720, 960x544, 768x576, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144]`
 
 ------
 

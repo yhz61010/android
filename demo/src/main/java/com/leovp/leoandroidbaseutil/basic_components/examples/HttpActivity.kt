@@ -15,8 +15,8 @@ import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivityHttpBinding
 import io.reactivex.Observable
-import kotlinx.android.synthetic.main.activity_http.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -27,9 +27,11 @@ import java.io.File
 
 
 class HttpActivity : BaseDemonstrationActivity() {
+    private lateinit var binding: ActivityHttpBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_http)
+        binding = ActivityHttpBinding.inflate(layoutInflater).apply { setContentView(root) }
     }
 
     interface CommonService {
@@ -56,7 +58,7 @@ class HttpActivity : BaseDemonstrationActivity() {
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response bean=${t?.toJsonString()}")
-                txtResult.text = t
+                binding.txtResult.text = t
             }
         }
         val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
@@ -65,16 +67,16 @@ class HttpActivity : BaseDemonstrationActivity() {
 
     @SuppressLint("SetTextI18n")
     fun onPostClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        txtResult.text = "It will cost several seconds. Please be patient..."
+        binding.txtResult.text = "It will cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
-                txtResult.text = t
+                binding.txtResult.text = t
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
                 LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
-                txtResult.text = "Request error. code=$code msg=$msg"
+                binding.txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
         val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
@@ -86,16 +88,16 @@ class HttpActivity : BaseDemonstrationActivity() {
 
     @SuppressLint("SetTextI18n")
     fun onUploadClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        txtResult.text = "It may cost several seconds. Please be patient..."
+        binding.txtResult.text = "It may cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
-                txtResult.text = "Upload Done"
+                binding.txtResult.text = "Upload Done"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
                 LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
-                txtResult.text = "Request error. code=$code msg=$msg"
+                binding.txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
 
@@ -123,18 +125,18 @@ class HttpActivity : BaseDemonstrationActivity() {
 
     @SuppressLint("SetTextI18n")
     fun onDownloadClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        txtResult.text = "Downloading..."
+        binding.txtResult.text = "Downloading..."
         val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody?> {
             override fun onNext(t: ResponseBody?) {
                 val filePath = FileUtil.createFile(this@HttpActivity, "download.pdf").absolutePath
                 FileUtil.copyInputStreamToFile(t!!.byteStream(), filePath)
                 LogContext.log.w(ITAG, "Downloaded to $filePath")
-                txtResult.text = "Downloaded to $filePath"
+                binding.txtResult.text = "Downloaded to $filePath"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
                 LogContext.log.w(ITAG, "Download error. code=$code msg=$msg")
-                txtResult.text = "Download error. code=$code msg=$msg"
+                binding.txtResult.text = "Download error. code=$code msg=$msg"
             }
         }
         val service = ApiService.getService("http://temp.leovp.com", CommonService::class.java)

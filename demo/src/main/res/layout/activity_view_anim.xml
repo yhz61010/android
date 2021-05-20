@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basic_components.examples.animation.ViewAnimActivity">
+
+    <Button
+        android:id="@+id/btnTranslate2"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Translate2"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnTranslate"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnAlpha2"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Alpha2"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate2"
+        app:layout_constraintEnd_toStartOf="@+id/btnScale2" />
+
+    <Button
+        android:id="@+id/btnScale2"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Scale2"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate2"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnRotate2"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rotate2"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate2"
+        app:layout_constraintEnd_toStartOf="@+id/btnAlpha2"
+        app:layout_constraintStart_toEndOf="@+id/btnTranslate2" />
+
+    <ImageView
+        android:id="@+id/ivBeauty"
+        android:layout_width="250dp"
+        android:layout_height="261dp"
+        android:layout_marginTop="8dp"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/beauty" />
+
+    <Button
+        android:id="@+id/btnAlpha"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Alpha1"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate"
+        app:layout_constraintEnd_toStartOf="@+id/btnScale" />
+
+    <Button
+        android:id="@+id/btnScale"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Scale1"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnTranslate"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Translate1"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnRotate"
+        style="@style/Widget.AppCompat.Button.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rotate1"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnTranslate"
+        app:layout_constraintEnd_toStartOf="@+id/btnAlpha"
+        app:layout_constraintStart_toEndOf="@+id/btnTranslate" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <Button
+        android:id="@+id/btnSequence"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Sequence1"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnTranslate2"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnSequence2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sequence2"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnSequence"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline4" />
+
+    <Button
+        android:id="@+id/btnBlink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Blink"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnSequence"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnShake"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Shake"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBlink"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline4" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,16 +9,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
-import android.widget.ImageView
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper
-import com.leovp.camera2live.R
+import com.leovp.camera2live.databinding.FragmentCameraViewBinding
 import com.leovp.camera2live.utils.OrientationLiveData
-import kotlinx.android.synthetic.main.fragment_camera_view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -41,6 +39,12 @@ abstract class BaseCamera2Fragment : Fragment() {
     /** Where the camera preview is displayed */
     protected lateinit var cameraView: CameraSurfaceView
 
+    protected var _binding: FragmentCameraViewBinding? = null
+
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    protected val binding get() = _binding!!
+
     /** Live data listener for changes in the device orientation relative to the camera */
     lateinit var relativeOrientation: OrientationLiveData
 
@@ -49,49 +53,51 @@ abstract class BaseCamera2Fragment : Fragment() {
     abstract suspend fun onStopRecordButtonClick()
     abstract fun onOpenGallery()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.fragment_camera_view, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        _binding = FragmentCameraViewBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (!enableRecordFeature) {
-            view.findViewById<View>(R.id.ivShotRecord).visibility = View.GONE
-            view.findViewById<View>(R.id.ivRecordStop).visibility = View.GONE
-            view.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.GONE
+            binding.ivShotRecord.visibility = View.GONE
+            binding.ivRecordStop.visibility = View.GONE
+            binding.llRecordTime.visibility = View.GONE
         }
         if (!enableTakePhotoFeature) {
-            view.findViewById<View>(R.id.ivShot).visibility = View.GONE
+            binding.ivShot.visibility = View.GONE
         }
         if (!enableGallery) {
-            view.findViewById<View>(R.id.ivAlbum).visibility = View.GONE
+            binding.ivAlbum.visibility = View.GONE
         }
-        view.findViewById<View>(R.id.ivAlbum).setOnClickListener { onOpenGallery() }
-        view.findViewById<ImageView>(R.id.ivBack).setOnClickListener {
+        binding.ivAlbum.setOnSingleClickListener { onOpenGallery() }
+        binding.ivBack.setOnSingleClickListener {
             activity?.supportFragmentManager?.popBackStackImmediate()
             backPressListener?.onBackPressed()
         }
-        cameraView = view.findViewById(R.id.cameraSurfaceView)
+        cameraView = binding.cameraSurfaceView
         camera2Helper = Camera2ComponentHelper(requireActivity(), CameraMetadata.LENS_FACING_BACK, view)
         camera2Helper.enableRecordFeature = enableRecordFeature
         camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
         camera2Helper.enableGallery = enableGallery
-        switchFlashBtn = view.findViewById(R.id.switchFlashBtn)
+        switchFlashBtn = binding.switchFlashBtn
         switchFlashBtn.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
         }
-        switchCameraBtn = view.findViewById(R.id.switchFacing)
+        switchCameraBtn = binding.switchFacing
         switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, _: Boolean ->
             btnView?.isEnabled = false
-            ivShot.isEnabled = false
-            ivShotRecord.isEnabled = false
+            binding.ivShot.isEnabled = false
+            binding.ivShotRecord.isEnabled = false
 //            val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
 //            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
             camera2Helper.switchCamera()
             btnView?.post {
                 btnView.isEnabled = true
-                ivShot.isEnabled = true
-                ivShotRecord.isEnabled = true
+                binding.ivShot.isEnabled = true
+                binding.ivShotRecord.isEnabled = true
             }
         }
 
@@ -109,11 +115,11 @@ abstract class BaseCamera2Fragment : Fragment() {
         })
 
         // Listen to the capture button
-        ivShot.setOnClickListener {
+        binding.ivShot.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
             switchCameraBtn.isEnabled = false
-            ivShotRecord.isEnabled = false
+            binding.ivShotRecord.isEnabled = false
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
@@ -123,17 +129,17 @@ abstract class BaseCamera2Fragment : Fragment() {
                 it.post {
                     it.isEnabled = true
                     switchCameraBtn.isEnabled = true
-                    ivShotRecord.isEnabled = true
+                    binding.ivShotRecord.isEnabled = true
                 }
                 LogContext.log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
             }
         }
 
-        ivShotRecord.setOnClickListener {
+        binding.ivShotRecord.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
             switchCameraBtn.isEnabled = false
-            ivShot.isEnabled = false
+            binding.ivShot.isEnabled = false
 
             // Perform I/O heavy operations in a different scope
             lifecycleScope.launch(Dispatchers.IO) {
@@ -146,13 +152,13 @@ abstract class BaseCamera2Fragment : Fragment() {
                 it.post {
                     it.isEnabled = true
                     switchCameraBtn.isEnabled = false
-                    ivShot.isEnabled = false
+                    binding.ivShot.isEnabled = false
                 }
                 DeviceSound.playStartVideoRecording()
             }
         }
 
-        ivRecordStop.setOnClickListener {
+        binding.ivRecordStop.setOnClickListener {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
             // Perform I/O heavy operations in a different scope
@@ -163,7 +169,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                 it.post {
                     it.isEnabled = true
                     switchCameraBtn.isEnabled = true
-                    ivShot.isEnabled = true
+                    binding.ivShot.isEnabled = true
                     camera2Helper.initializeCamera(
                         camera2Helper.previewWidth,
                         camera2Helper.previewHeight
@@ -194,6 +200,11 @@ abstract class BaseCamera2Fragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         camera2Helper.stopCameraThread()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

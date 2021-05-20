@@ -14,6 +14,10 @@ package com.leovp.androidbase
  *     companion object : SingletonHolder<SomeSingleton, Context>(::SomeSingleton)
  * }
  * ```
+ * Get your singleton instance like this below:
+ * ```kotlin
+ * SomeSingleton.getInstance(context).doSomething()
+ * ```
  */
 open class SingletonHolder<out T, in A>(creator: (A) -> T) {
     private var creator: ((A) -> T)? = creator

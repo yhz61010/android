@@ -32,6 +32,7 @@ import com.leovp.androidbase.exts.kotlin.fail
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
+import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
@@ -168,10 +169,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         cameraEncoder = CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
         dataProcessContext = if (
-            CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-            || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
+            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
@@ -613,7 +614,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 val height = image.height
                 LogContext.log.v(
                     TAG,
-                    "Image format[${image.format}]=${CodecUtil.getImageFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
+                    "Image format[${image.format}]=${VideoUtil.getImageFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
                 )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {

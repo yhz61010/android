@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
+apply plugin: "org.sonarqube"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -36,6 +37,10 @@ android {
         unitTests {
             returnDefaultValues = true
         }
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 
@@ -77,5 +82,5 @@ dependencies {
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
 
     // https://github.com/hyuwah/DraggableView
-    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
+//    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
 }

@@ -8,16 +8,17 @@ import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.base.ScreenRecordMediaCodecStrategy
+import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
 import io.karn.notify.Notify
 import okhttp3.internal.closeQuietly
 import java.io.BufferedOutputStream
@@ -60,15 +61,15 @@ class MediaProjectionService : Service() {
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: Any, flags: Int) {
-            val buf = buffer as ByteArray
+        override fun onDataUpdate(buffer: ByteArray, flags: Int) {
             if (outputH264File) {
                 try {
-                    videoH264Os.write(buf)
+                    videoH264Os.write(buffer)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
+//            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
             screenDataUpdateListener?.onUpdate(buffer, flags)
             // Bitmap for screenshot
 //            val bitmap = buffer as Bitmap
@@ -89,6 +90,7 @@ class MediaProjectionService : Service() {
         if (outputH264File) {
             try {
                 val baseFolder = File(getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media")
+                LogContext.log.w(ITAG, "Output H.264 file path=$baseFolder")
                 baseFolder.mkdirs()
                 videoH264File = File(baseFolder, "screen.h264")
                 videoH264Os = BufferedOutputStream(FileOutputStream(videoH264File))
@@ -98,7 +100,7 @@ class MediaProjectionService : Service() {
         }
     }
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         LogContext.log.i(ITAG, "=====> onBind <=====")
         return binder
     }
@@ -168,6 +170,7 @@ class MediaProjectionService : Service() {
     /**
      * This method must be following `setData()` method
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun startScreenShare(setting: ScreenShareSetting) {
         LogContext.log.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
@@ -179,9 +182,9 @@ class MediaProjectionService : Service() {
             setting.height, // 800 1024 1280
             setting.dpi,
             mediaProjection,
-            // SCREEN_CAPTURE_TYPE_IMAGE
-            // SCREEN_CAPTURE_TYPE_MEDIACODEC
-            // SCREEN_CAPTURE_TYPE_X264
+            // BY_IMAGE_2_H264
+            // BY_MEDIA_CODEC
+            // BY_RAW_BMP
             ScreenCapture.BY_MEDIA_CODEC,
             screenDataListener
         )
@@ -231,10 +234,10 @@ class MediaProjectionService : Service() {
     fun triggerIFrame() {
         LogContext.log.w(ITAG, "triggerIFrame()")
         val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h264Encoder
-        encoder?.let { H264Util.sendIdrFrameByManual(it) }
+        encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
     }
 }
 
 interface ScreenDataUpdateListener {
-    fun onUpdate(data: Any, flags: Int)
+    fun onUpdate(data: ByteArray, flags: Int)
 }

@@ -23,16 +23,10 @@ object JsonUtil {
      * or if `json` is empty.
      */
     fun <T> toObject(json: String?, clazz: Class<T>): T? {
-        try {
-            return GSON.fromJson(json, clazz)
-        } catch (ex: Exception) {
-            LogContext.log.e(
-                TAG,
-                "Can not toObject. Generally, you can ignore this exception. Exception",
-                ex
-            )
+        return runCatching { GSON.fromJson(json, clazz) }.getOrElse {
+            LogContext.log.e(TAG, "Can not to object. Exception: ${it.message}")
+            null
         }
-        return null
     }
 
     /**
@@ -49,15 +43,7 @@ object JsonUtil {
      * or if `json` is empty.
      */
     fun <T> toObject(json: String?, type: Type): T? {
-        try {
-            return GSON.fromJson(json, type)
-        } catch (ex: Exception) {
-            LogContext.log.e(
-                TAG,
-                "Can not toObject with Type. Generally, you can ignore this exception. Exception",
-                ex
-            )
-        }
+        runCatching { return GSON.fromJson(json, type) }.onFailure { LogContext.log.e(TAG, "Can not to object. Exception: ${it.message}") }
         return null
     }
 
@@ -68,16 +54,10 @@ object JsonUtil {
      * @return Returns `json string` or `""` if serializing failed.
      */
     fun toJsonString(obj: Any?): String {
-        try {
-            return GSON.toJson(obj)
-        } catch (ex: Exception) {
-            LogContext.log.e(
-                TAG,
-                "Can not toJson. Generally, you can ignore this exception. Exception",
-                ex
-            )
+        return runCatching { GSON.toJson(obj) }.getOrElse {
+            LogContext.log.e(TAG, "Can not to json string. Exception: ${it.message}")
+            ""
         }
-        return ""
     }
 
     /**

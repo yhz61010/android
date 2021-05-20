@@ -12,8 +12,7 @@ import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base.DecodeH265RawFile
-import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.ui.CustomSurfaceView
-import kotlinx.android.synthetic.main.activity_play_video.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityPlayVideoBinding
 import kotlinx.coroutines.*
 
 class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
@@ -21,16 +20,18 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
     private val uiScope = CoroutineScope(Dispatchers.Main + Job())
     private val decoderManager = DecodeH265RawFile()
 
+    private lateinit var binding: ActivityPlayVideoBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreen()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_play_video)
+        binding = ActivityPlayVideoBinding.inflate(layoutInflater).apply { setContentView(root) }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
 
-        val videoSurfaceView = surfaceView as CustomSurfaceView
+        val videoSurfaceView = binding.surfaceView
         val surface = videoSurfaceView.holder.surface
 
-        surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+        videoSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 uiScope.launch {
                     val rawFileFullPath = withContext(Dispatchers.IO) {

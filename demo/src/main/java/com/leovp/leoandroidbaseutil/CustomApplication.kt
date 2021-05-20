@@ -1,11 +1,14 @@
 package com.leovp.leoandroidbaseutil
 
+import android.content.Context
+import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.androidbase.utils.pref.LPref
+import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
-import com.leovp.androidbase.utils.ui.ToastUtil
 import io.reactivex.plugins.RxJavaPlugins
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -25,9 +28,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
         app = this
         instance = this
 
-//        SslUtils.hostnames = arrayOf("www.qvdv.com")
-//        SslUtils.certificateInputStream = assets.open("cert/www.qvdv.com.crt")
-//        SslUtils.certificateInputStream = assets.open("cert/baidu.com.crt")
+//        SslUtils.hostnames = arrayOf("postman-echo.com")
+//        SslUtils.certificateInputStream = assets.open("cert/postman-echo.com.crt")
 
         ForegroundComponent.init(this, 0L)
 
@@ -35,10 +37,14 @@ class CustomApplication : MultiDexApplication(), DIAware {
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
 
-        ToastUtil.init(this)
-
         LogContext.setLogImp(LLog("LEO"))
+        PrefContext.setPrefImp(LPref())
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 
     companion object {

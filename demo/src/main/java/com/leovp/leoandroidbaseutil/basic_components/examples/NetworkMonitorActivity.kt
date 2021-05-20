@@ -7,9 +7,8 @@ import com.leovp.androidbase.exts.kotlin.humanReadableByteCount
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.network.NetworkUtil
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import kotlinx.android.synthetic.main.activity_network_monitor.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityNetworkMonitorBinding
 
 /**
  * Author: Michael Leo
@@ -23,11 +22,13 @@ import kotlinx.android.synthetic.main.activity_network_monitor.*
  */
 class NetworkMonitorActivity : BaseDemonstrationActivity() {
 
+    private lateinit var binding: ActivityNetworkMonitorBinding
+
     private lateinit var networkMonitor: NetworkMonitor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_network_monitor)
+        binding = ActivityNetworkMonitorBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         networkMonitor = NetworkMonitor(this.application, "220.181.38.148") { info ->
             val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
@@ -47,8 +48,8 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
             val infoStr =
                 "S:$downloadSpeedStr/$uploadSpeedStr\t\tP:${info.ping}${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}\t\tL:${info.linkSpeed}Mbps\tR:${info.rssi} ${info.wifiScoreIn5} ${info.wifiScore} ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
             LogContext.log.i(ITAG, infoStr)
-            runOnUiThread { txtNetworkStatus.text = infoStr }
-            scrollView2.post { scrollView2.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtNetworkStatus.text = infoStr }
+            binding.scrollView2.post { binding.scrollView2.fullScroll(View.FOCUS_DOWN) }
         }
         networkMonitor.startMonitor(2)
     }

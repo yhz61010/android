@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.res.Configuration
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
@@ -21,13 +22,14 @@ import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.ui.FloatViewManager
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
+import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
-import com.leovp.leoandroidbaseutil.CustomApplication
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
 import com.leovp.screenshot.ScreenCapture
+import com.leovp.screenshot.ScreenCapture.BY_IMAGE_2_H264
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
@@ -37,23 +39,31 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.android.synthetic.main.activity_screen_share_master.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
 
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     companion object {
         const val CMD_GRAPHIC_CSD: Int = 1
         const val CMD_GRAPHIC_DATA: Int = 2
-        const val CMD_TOUCH_EVENT: Int = 3
+        const val CMD_PAINT_EVENT: Int = 3
         const val CMD_DEVICE_SCREEN_INFO: Int = 4
         const val CMD_TRIGGER_I_FRAME: Int = 5
 
+        const val CMD_TOUCH_EVENT: Int = 6
+        const val CMD_TOUCH_HOME: Int = 7
+        const val CMD_TOUCH_BACK: Int = 8
+        const val CMD_TOUCH_RECENT: Int = 9
+        const val CMD_TOUCH_DRAG: Int = 10
+
         private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
+
+    private lateinit var binding: ActivityScreenShareMasterBinding
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -70,10 +80,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.outputH264File = false
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
-                    override fun onUpdate(data: Any, flags: Int) {
+                    override fun onUpdate(data: ByteArray, flags: Int) {
                         if (clientChannel != null) {
                             val dataArray = data as ByteArray
-                            runOnUiThread { txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
+                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${dataArray.size}" }
                             runCatching {
                                 clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, dataArray) }
                             }.onFailure { e -> e.printStackTrace() }
@@ -91,7 +101,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_screen_share_master)
+        binding = ActivityScreenShareMasterBinding.inflate(layoutInflater).apply { setContentView(root) }
+
+        if (!AccessibilityUtil.isAccessibilityEnabled()) {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -101,7 +115,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         }
         bindService(serviceIntent, serviceConn, Service.BIND_AUTO_CREATE)
 
-        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+        binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 ScreenCapture.requestPermission(this@ScreenShareMasterActivity)
             } else {
@@ -110,12 +124,22 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        floatCanvas = FloatViewManager(CustomApplication.instance, R.layout.component_screen_share_float_canvas, enableDrag = false, enableFullScreen = true)
+        floatCanvas = FloatViewManager(this, R.layout.component_screen_share_float_canvas, enableDrag = false, enableFullScreen = true)
 
         if (canDrawOverlays) {
             floatCanvas?.show()
         } else {
             startManageDrawOverlaysPermission()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            LogContext.log.i("Running in LANDSCAPE")
+        } else {
+            LogContext.log.i("Running in PORTRAIT")
         }
     }
 
@@ -166,7 +190,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     }
                     ScreenCapture.SCREEN_CAPTURE_RESULT_DENY -> {
                         LogContext.log.w(ITAG, "Permission denied!")
-                        ToastUtil.showErrorToast("Permission denied!")
+                        toast("Permission denied!", error = true)
                     }
                     else -> LogContext.log.d(ITAG, "Not screen capture request")
                 }
@@ -268,9 +292,19 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 val stringData = data as String
                 val cmdBean = stringData.toObject(ScreenShareClientActivity.CmdBean::class.java)!!
                 when (cmdBean.cmdId) {
+                    CMD_TOUCH_EVENT -> {
+                        val touchBean = cmdBean.touchBean!!
+                        touchBean.x = currentScreen.x / clientScreenInfo!!.x.toFloat() * touchBean.x
+                        touchBean.y = currentScreen.y / clientScreenInfo!!.y.toFloat() * touchBean.y
+                        EventBus.getDefault().post(touchBean)
+                    }
+                    CMD_TOUCH_DRAG -> EventBus.getDefault().post(cmdBean.touchBean!!)
+                    CMD_TOUCH_BACK -> AccessibilityUtil.clickBackKey()
+                    CMD_TOUCH_HOME -> AccessibilityUtil.clickHomeKey()
+                    CMD_TOUCH_RECENT -> AccessibilityUtil.clickRecentKey()
                     CMD_TRIGGER_I_FRAME -> mediaProjectService?.triggerIFrame()
                     CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
-                    CMD_TOUCH_EVENT -> {
+                    CMD_PAINT_EVENT -> {
                         val paintBean = cmdBean.paintBean!!
                         val pathPaint = Paint().apply {
                             isAntiAlias = true
@@ -322,7 +356,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         private fun lostClientDisconnection() {
             this@ScreenShareMasterActivity.clientChannel = null
-            runOnUiThread { toggleButton.isChecked = false }
+            runOnUiThread { binding.toggleButton.isChecked = false }
             stopServer()
         }
     }
@@ -354,9 +388,7 @@ data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var keyFrameRate = 8
     var iFrameInterval = 4
 
-    /**
-     * Only used in **ScreenCapture.SCREEN_CAPTURE_TYPE_IMAGE** mode
-     */
+    /** Only used in [BY_IMAGE_2_H264] mode */
     @Suppress("unused")
     var sampleSize: Int = 1
 }

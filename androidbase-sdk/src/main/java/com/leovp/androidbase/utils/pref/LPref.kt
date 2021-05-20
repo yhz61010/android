@@ -46,7 +46,7 @@ class LPref(name: String = app.packageName) : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: String) {
+    override fun put(key: String, v: String?) {
         pref.edit().apply {
             putString(key, v)
             apply()
@@ -54,20 +54,20 @@ class LPref(name: String = app.packageName) : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: Any) {
+    override fun putObject(key: String, v: Any?) {
         pref.edit().apply {
-            putString(key, v.toJsonString())
+            putString(key, v?.toJsonString())
             apply()
         }
     }
 
-    override fun put(key: String, v: Set<String>) {
+    @Synchronized
+    override fun putSet(key: String, v: Set<String>?) {
         pref.edit().apply {
             putStringSet(key, v)
             apply()
         }
     }
-
 
     override fun getInt(key: String, default: Int) = pref.getInt(key, default)
 

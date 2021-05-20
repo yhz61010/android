@@ -3,10 +3,10 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.Surface
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
@@ -149,7 +149,7 @@ class DecodeH265RawFile {
             mediaCodec.configure(format, surface, null, 0)
             outputFormat = mediaCodec.outputFormat // option B
             mediaCodec.setCallback(mediaCodecCallback)
-        }.onFailure { it.printStackTrace();ToastUtil.showErrorToast("Init Decoder error") }
+        }.onFailure { it.printStackTrace();toast("Init Decoder error", error = true) }
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {

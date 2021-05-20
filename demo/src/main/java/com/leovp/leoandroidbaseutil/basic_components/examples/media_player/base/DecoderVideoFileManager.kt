@@ -5,10 +5,10 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.ui.ToastUtil
 import java.io.File
 import java.io.FileOutputStream
 
@@ -56,7 +56,7 @@ class DecoderVideoFileManager {
                 if (mime.startsWith("video")) {
                     mediaExtractor.selectTrack(i)
                     // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
-                    mediaCodec = MediaCodec.createDecoderByType(mime).apply{
+                    mediaCodec = MediaCodec.createDecoderByType(mime).apply {
                         configure(format, surface, null, 0)
                         setCallback(mediaCodecCallback)
                     }
@@ -64,7 +64,7 @@ class DecoderVideoFileManager {
                 }
             }
 
-        }.onFailure { it.printStackTrace();ToastUtil.showErrorToast("Init Decoder error") }
+        }.onFailure { it.printStackTrace();toast("Init Decoder error", error = true) }
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {

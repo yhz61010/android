@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basic_components.examples.bluetooth.BluetoothScanActivity">
+
+    <Button
+        android:id="@+id/btnDoScan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:onClick="onScanClick"
+        android:text="Scan"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnStopScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onStopScan"
+        android:text="Stop Scan"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnDiscovery"
+        app:layout_constraintTop_toTopOf="@+id/btnDoScan" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDeviceList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnDoScan"
+        tools:listitem="@layout/recyclerview_bluetooth_device_item" />
+
+    <Button
+        android:id="@+id/btnDiscovery"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:onClick="onDiscoveryClick"
+        android:text="Discovery"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toEndOf="@+id/btnDoScan"
+        app:layout_constraintTop_toTopOf="@+id/btnDoScan" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

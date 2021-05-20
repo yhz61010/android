@@ -8,10 +8,10 @@ import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
-import com.leovp.androidbase.utils.ui.ToastUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.view.BaseCamera2Fragment
 
@@ -54,7 +54,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
 //                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
-                CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
+                CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
                 val previewSize = getPreviewOutputSize(
@@ -71,7 +71,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                         camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
                         LogContext.log.e(TAG, "=====> Finally openCamera error <=====")
-                        ToastUtil.showErrorToast("Initialized camera error. Please try again later.")
+                        toast("Initialized camera error. Please try again later.", error = true)
                     }
                 }
             }

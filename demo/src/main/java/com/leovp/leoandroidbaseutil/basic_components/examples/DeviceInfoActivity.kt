@@ -6,22 +6,26 @@ import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
+import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
-import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import kotlinx.android.synthetic.main.activity_device_info.*
+import com.leovp.leoandroidbaseutil.databinding.ActivityDeviceInfoBinding
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {
+
+    private lateinit var binding: ActivityDeviceInfoBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_device_info)
+        binding = ActivityDeviceInfoBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
         val deviceInfo = DeviceUtil.getDeviceInfo(this)
-        tv.text = deviceInfo
+        binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 
         NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
@@ -39,6 +43,17 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
                 }
             }
         })
+
+        for (index in 0 until DeviceUtil.cpuCoreCount) {
+            val coreInfo = DeviceUtil.getCpuCoreInfoByIndex(index)
+            LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
+        }
+
+        H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name}") }
+        H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name}") }
+
+        H264Util.getAvcCodec().forEach { LogContext.log.i(TAG, "AVC Encoder: ${it.name}") }
+        H264Util.getAvcCodec(false).forEach { LogContext.log.i(TAG, "AVC Decoder: ${it.name}") }
     }
 
     companion object {

@@ -25,8 +25,8 @@ class PrefActivity : BaseDemonstrationActivity() {
         PrefContext.pref.put("long", 1234567L)
         PrefContext.pref.put("int", 10)
         PrefContext.pref.put("float", 3.14f)
-        PrefContext.pref.put("object", mapOf("k1" to 1, "k2" to 2))
-        PrefContext.pref.put("set", setOf("s1", "s2"))
+        PrefContext.pref.putObject("object", mapOf("k1" to 1, "k2" to 2))
+        PrefContext.pref.putSet("set", setOf("s1", "s2"))
 
         LogContext.log.d(ITAG, "pref string=${PrefContext.pref.getString("string", null)}")
         LogContext.log.d(ITAG, "pref boolean=${PrefContext.pref.getBool("boolean", false)}")
@@ -54,8 +54,8 @@ class PrefActivity : BaseDemonstrationActivity() {
         PrefContext.pref.put("mmkv_long", 1234567L)
         PrefContext.pref.put("mmkv_int", 10)
         PrefContext.pref.put("mmkv_float", 3.14f)
-        PrefContext.pref.put("mmkv_object", mapOf("mmkv_k1" to 1, "mmkv_k2" to 2))
-        PrefContext.pref.put("mmkv_set", setOf("mmkv_s1", "mmkv_s2"))
+        PrefContext.pref.putObject("mmkv_object", mapOf("mmkv_k1" to 1, "mmkv_k2" to 2))
+        PrefContext.pref.putSet("mmkv_set", setOf("mmkv_s1", "mmkv_s2"))
 
         LogContext.log.d(ITAG, "mmkv pref string=${PrefContext.pref.getString("mmkv_string", null)}")
         LogContext.log.d(ITAG, "mmkv pref boolean=${PrefContext.pref.getBool("mmkv_boolean", false)}")

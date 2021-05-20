@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basic_components.examples.animation.AnimationActivity">
+
+    <Button
+        android:id="@+id/btnDrawableAnim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Drawable Animation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnViewAnim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="View Animation"
+        app:layout_constraintEnd_toEndOf="@+id/btnDrawableAnim"
+        app:layout_constraintStart_toStartOf="@+id/btnDrawableAnim"
+        app:layout_constraintTop_toBottomOf="@+id/btnDrawableAnim" />
+
+    <Button
+        android:id="@+id/btnPropAnim"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Property Animation"
+        app:layout_constraintEnd_toEndOf="@+id/btnViewAnim"
+        app:layout_constraintStart_toStartOf="@+id/btnViewAnim"
+        app:layout_constraintTop_toBottomOf="@+id/btnViewAnim" />
+</androidx.constraintlayout.widget.ConstraintLayout>

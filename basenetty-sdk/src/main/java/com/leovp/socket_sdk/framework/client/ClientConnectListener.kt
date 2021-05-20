@@ -17,7 +17,13 @@ interface ClientConnectListener<in T : BaseNetty> {
      * so that you can pass the data whatever you want to your upper business layer.
      */
     fun onReceivedData(netty: T, data: Any?, action: Int = -1) {}
-    fun onDisconnected(netty: T)
+
+    /**
+     * @param byRemote
+     *            Attention, this parameter is not implemented by normal TCP Socket. Only used by WebSocket
+     *            Whether connection is disconnected by remote server.
+     */
+    fun onDisconnected(netty: T, byRemote: Boolean)
     fun onFailed(netty: T, code: Int, msg: String?, e: Throwable? = null)
 
     companion object {
@@ -31,5 +37,6 @@ interface ClientConnectListener<in T : BaseNetty> {
         const val CONNECTION_ERROR_NETWORK_LOST = CONNECTION_ERROR_BASE_CODE + 6 // 4102
         const val CONNECTION_ERROR_SOCKET_EXCEPTION = CONNECTION_ERROR_BASE_CODE + 7 // 4103
         const val DISCONNECT_MANUALLY_ERROR = CONNECTION_ERROR_BASE_CODE + 8 // 4104
+        const val DISCONNECT_MANUALLY_EXCEPTION = CONNECTION_ERROR_BASE_CODE + 9 // 4105
     }
 }

@@ -20,7 +20,7 @@ class NetworkUnitTest {
 
     @Before
     fun preTest() {
-        LogContext.setLogImp(LLog())
+        LogContext.setLogImp(LLog("LEO"))
     }
 
     @Test
@@ -29,7 +29,7 @@ class NetworkUnitTest {
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
         ips = InternetUtil.getIpsByName("lib.leovp.com").toTypedArray()
-        assertArrayEquals(arrayOf("113.229.252.241"), ips)
+        assertArrayEquals(arrayOf("163.181.22.213"), ips)
 
         ips = InternetUtil.getIpsByName("ho1 ho.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
@@ -77,6 +77,9 @@ class NetworkUnitTest {
         assertArrayEquals(emptyArray(), ips)
 
         ips = InternetUtil.getIpsByName("http://www.cip.cc/175.162.7.41").toTypedArray()
+        assertArrayEquals(emptyArray(), ips)
+
+        ips = InternetUtil.getIpsByName("leovp.com/resource/dummy").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
         ips = InternetUtil.getIpsByName("12345").toTypedArray()

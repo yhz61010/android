@@ -78,3 +78,4 @@ lint/tmp/
 /debug.keystore
 /screencapture-sdk/src/main/java/example/sszpf/x264/
 /screencapture-sdk/src/main/libs/armeabi-v7a/
+/change_auth.sh

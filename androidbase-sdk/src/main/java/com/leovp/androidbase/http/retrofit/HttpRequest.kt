@@ -13,12 +13,14 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
  */
 @Suppress("unused", "WeakerAccess")
 object HttpRequest : BaseHttpRequest() {
-    private val builder: Retrofit.Builder = Retrofit.Builder()
-        .client(okHttpClient)
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(GsonConverterFactory.create())
-//        .addConverterFactory(MoshiConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    private var builder: Retrofit.Builder = getRetrofitBuilder()
+
+    /**
+     * If you want to re-init header, you must call this method everytime.
+     */
+    fun initWithHeader(headerMap: Map<String, String>) {
+        builder = getRetrofitBuilder(headerMap)
+    }
 
     fun getRetrofit(baseUrl: String): Retrofit {
         return builder.baseUrl(baseUrl).build()
@@ -29,4 +31,12 @@ object HttpRequest : BaseHttpRequest() {
         return getRetrofit(baseUrl.toString())
     }
 
+    private fun getRetrofitBuilder(headerMap: Map<String, String>? = null): Retrofit.Builder {
+        return Retrofit.Builder()
+            .client(getOkHttpClient(headerMap))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+//        .addConverterFactory(MoshiConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    }
 }

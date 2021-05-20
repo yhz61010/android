@@ -1,5 +1,6 @@
 package com.leovp.androidbase.exts.android.utils
 
+import android.content.Context
 import androidx.annotation.RawRes
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.file.FileUtil
@@ -18,13 +19,23 @@ object ResourcesUtil {
         }
     }
 
-    fun saveRawResourceToFile(@RawRes id: Int, storagePath: String, fileName: String): String {
+    fun saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileName: String): String {
         val inputStream: InputStream = app.resources.openRawResource(id)
         val file = File(storagePath)
         if (!file.exists()) {
             file.mkdirs()
         }
-        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + fileName)
-        return storagePath + File.separatorChar + fileName
+        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName)
+        return storagePath + File.separatorChar + outFileName
+    }
+
+    fun saveAssetToFile(ctx: Context, assetFileName: String, storagePath: String, outFileName: String): Boolean {
+        return runCatching {
+            FileUtil.copyInputStreamToFile(ctx.assets.open(assetFileName), File(storagePath, outFileName).absolutePath)
+            true
+        }.getOrElse {
+            it.printStackTrace()
+            false
+        }
     }
 }

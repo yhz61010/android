@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
 }
+apply plugin: "org.sonarqube"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -32,7 +33,6 @@ android {
 }
 
 dependencies {
-
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api "androidx.appcompat:appcompat:$appcompatVersion"

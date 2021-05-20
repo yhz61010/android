@@ -10,7 +10,11 @@ import kotlin.system.measureTimeMillis
 
 class CoroutineActivity : BaseDemonstrationActivity() {
 
-    val mainScope = MainScope()
+    private val mainScope = MainScope()
+
+//    private val ioScope = CoroutineScope(Dispatchers.IO)
+
+//    private val ioJobScope = CoroutineScope(Dispatchers.IO + Job())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

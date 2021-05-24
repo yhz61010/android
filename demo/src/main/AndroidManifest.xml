@@ -127,7 +127,11 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-        <receiver android:name=".basic_components.examples.KeepAliveActivity$KeepAliveReceiver" />
+
+        <receiver
+            android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

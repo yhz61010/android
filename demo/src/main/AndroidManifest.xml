@@ -31,6 +31,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.audio.ADPCMActivity" />
+        <activity android:name=".basic_components.examples.StaticIpActivity" />
         <activity android:name=".basic_components.examples.animation.PropertyAnimActivity" />
         <activity android:name=".basic_components.examples.animation.ViewAnimActivity" />
         <activity android:name=".basic_components.examples.animation.DrawableAnimActivity" />

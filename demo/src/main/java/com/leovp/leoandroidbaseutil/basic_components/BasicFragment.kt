@@ -16,6 +16,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.accessibility.AccessibilityActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.AidlActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.animation.AnimationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.audio.ADPCMActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.BluetoothActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
@@ -85,6 +86,8 @@ class BasicFragment : Fragment() {
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),
             Pair("Network Monitor", NetworkMonitorActivity::class.java),
             Pair("Audio", AudioActivity::class.java),
+            Pair("ADPCM", ADPCMActivity::class.java),
+            Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("HTTP Related", HttpActivity::class.java),
             Pair("Log", LogActivity::class.java),
@@ -94,7 +97,6 @@ class BasicFragment : Fragment() {
             Pair("Finger Paint", FingerPaintActivity::class.java),
             Pair("Watermark", WatermarkActivity::class.java),
             Pair("Preference", PrefActivity::class.java),
-            Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Java Mail", JavaMailActivity::class.java),
             Pair("Bluetooth", BluetoothActivity::class.java),
             Pair("Wifi", WifiActivity::class.java),
@@ -102,6 +104,7 @@ class BasicFragment : Fragment() {
             Pair("AIDL", AidlActivity::class.java),
             Pair("Provider", ProviderActivity::class.java),
             Pair("Animation", AnimationActivity::class.java),
+            Pair("Static IP", StaticIpActivity::class.java),
         )
 
         val colors = arrayOf(

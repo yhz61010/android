@@ -31,6 +31,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.audio.ADPCMActivity" />
+        <activity android:name=".basic_components.examples.StaticIpActivity" />
         <activity android:name=".basic_components.examples.animation.PropertyAnimActivity" />
         <activity android:name=".basic_components.examples.animation.ViewAnimActivity" />
         <activity android:name=".basic_components.examples.animation.DrawableAnimActivity" />
@@ -128,7 +130,10 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <receiver android:name=".basic_components.examples.KeepAliveActivity$KeepAliveReceiver" />
+        <receiver
+            android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

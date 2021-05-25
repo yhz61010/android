@@ -21,7 +21,7 @@ import com.leovp.audio.recorder.BuildConfig
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
-class AudioPlayer(ctx: Context, audioDecoderInfo: AudioDecoderInfo, private val type: AudioType = AudioType.COMPRESSED_PCM, minPlayBufferSizeRatio: Int = 1) {
+class AudioPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo, private val type: AudioType = AudioType.COMPRESSED_PCM, minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "AudioPlayer"
     }
@@ -155,4 +155,13 @@ class AudioPlayer(ctx: Context, audioDecoderInfo: AudioDecoderInfo, private val 
         decoderWrapper?.release()
         aacStreamPlayer?.stopPlaying()
     }
+
+    fun getPlayState() = audioTrack.playState
+
+    fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
+
+    fun getAudioTimeUs(): Long = runCatching {
+        val numFramesPlayed: Int = audioTrack.playbackHeadPosition
+        numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
+    }.getOrDefault(0L)
 }

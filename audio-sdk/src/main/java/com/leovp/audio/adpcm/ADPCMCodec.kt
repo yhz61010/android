@@ -123,7 +123,14 @@ class ADPCMCodec {
 
     companion object {
         private val stepIndexTable = byteArrayOf(
-            8, 6, 4, 2, -1, -1, -1, -1, -1, -1, -1, -1, 2, 4, 6, 8
+            8, 6, 4, 2, -1, -1, -1, -1,
+            -1, -1, -1, -1, 2, 4, 6, 8
+
+            // https://wiki.multimedia.cx/index.php/Apple_QuickTime_IMA_ADPCM
+
+            // https://wiki.multimedia.cx/index.php/IMA_ADPCM
+//            -1, -1, -1, -1, 2, 4, 6, 8,
+//            -1, -1, -1, -1, 2, 4, 6, 8
         )
         private val stepTable = shortArrayOf(
             7, 8, 9, 10, 11, 12, 13, 14, 16, 17,

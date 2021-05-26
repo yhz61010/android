@@ -25,7 +25,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
 //        val inputStream = resources.openRawResource(R.raw.adpcm_22050_2ch_s16le_128kbps)
 //        val musicBytes = inputStream.readBytes()
-        val musicBytes = FileUtil.createFile(this, "audio.adpcm").readBytes()
+        val musicBytes = FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).readBytes()
         val shortPcmArray = adpcm.decode(musicBytes)
         val player = AudioPlayer(
             this,
@@ -36,10 +36,14 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     fun onEncodeToADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val inputStream = resources.openRawResource(R.raw.wav_22050_2ch_s16le_128kbps)
-        val musicBytes = inputStream.readBytes()
-        val adpcmArray = adpcm.encode(musicBytes.copyOfRange(4, musicBytes.size).toShortArrayLE())
-        FileUtil.createFile(this, "audio.adpcm").writeBytes(adpcmArray)
+        val inputStream = resources.openRawResource(R.raw.raw_22050_2ch_s16le)
+        val pcmData = inputStream.readBytes()
+        val adpcmArray = adpcm.encode(pcmData.toShortArrayLE())
+        FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).writeBytes(adpcmArray)
         toast("Encode done!")
+    }
+
+    companion object {
+        private const val OUTPUT_IMA_FILE_NAME = "audio_adpcm_ima_22050_2ch_s16le.ima"
     }
 }

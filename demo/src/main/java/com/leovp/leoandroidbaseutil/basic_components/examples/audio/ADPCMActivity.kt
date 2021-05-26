@@ -44,6 +44,6 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     companion object {
-        private const val OUTPUT_IMA_FILE_NAME = "audio_adpcm_ima_22050_2ch_s16le.ima"
+        private const val OUTPUT_IMA_FILE_NAME = "adpcm_ima_22050_2ch_s16le.ima"
     }
 }

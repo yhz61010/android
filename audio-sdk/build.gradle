@@ -18,7 +18,7 @@ android {
         // https://stackoverflow.com/a/46051246
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            abiFilters "arm64-v8a"
+            abiFilters "armeabi-v7a"
         }
     }
 
@@ -52,6 +52,10 @@ dependencies {
 
     api project(':androidbase-sdk')
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
-    api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion"
+//    api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion"// https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
+
+    // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg/4.1.3-1.5
+    api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion"
+
 
 }

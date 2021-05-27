@@ -17,7 +17,7 @@ android {
 
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            abiFilters "armeabi-v7a"
+            abiFilters "arm64-v8a"
         }
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -98,6 +98,31 @@ android {
         pickFirst 'lib/x86_64/libc++_shared.so'
         pickFirst 'lib/armeabi/libc++_shared.so'
         pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+        // The following lines are for ffmpeg
+        pickFirst 'META-INF/native-image/linux-x86/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/linux-x86/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/linux-x86_64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/linux-x86_64/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/linux-ppc64le/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/linux-ppc64le/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/linux-arm64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/linux-arm64/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/linux-armhf/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/linux-armhf/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/android-arm/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/android-arm/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/android-arm64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/android-arm64/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/android-x86/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/android-x86/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/android-x86_64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/android-x86_64/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/macosx-x86_64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/macosx-x86_64/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/windows-x86/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/windows-x86/jnijavacpp/reflect-config.json'
+        pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json'
+        pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json'
     }
 
     dexOptions {

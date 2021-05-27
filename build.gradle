@@ -77,4 +77,5 @@ ext {
     xxPermissionVersion = '9.2'
     mmkvVersion = '1.2.6'
     javaMailVersion = '1.6.6'
+    ffmpegVersion = '4.3.2-1.5.5'
 }

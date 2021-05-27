@@ -12,9 +12,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="onPlayADPCMClick"
-        android:text="Play ADPCM"
+        android:text="Play Encoded ADPCM"
+        android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.467"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button4" />
 
@@ -23,9 +23,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Encdeo PCM to ADPCM"
         android:onClick="onEncodeToADPCMClick"
+        android:text="Encode PCM to ADPCM"
+        android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/playAdpcmRaw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="56dp"
+        android:onClick="onPlayRawAdpcmClick"
+        android:text="Play Raw ADPCM-IMA-QT"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPlayADPCM" />
 </androidx.constraintlayout.widget.ConstraintLayout>

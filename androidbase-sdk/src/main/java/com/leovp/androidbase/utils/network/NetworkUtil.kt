@@ -183,6 +183,11 @@ object NetworkUtil {
         }.getOrDefault("")
     }
 
+    /**
+     * Need following permissions:
+     * <uses-permission android:name="android.permission.INTERNET" />
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     */
     fun getIp(): ArrayList<String> {
         val ifconfig = ArrayList<String>()
         runCatching {

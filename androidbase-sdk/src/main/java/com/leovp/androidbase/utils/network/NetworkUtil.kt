@@ -162,20 +162,20 @@ object NetworkUtil {
             }
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {
-                val netWork = interfaces.nextElement()
-                val by = netWork.hardwareAddress
-                if (by == null || by.isEmpty()) {
+                val network = interfaces.nextElement()
+                val macAddr = network.hardwareAddress
+                if (macAddr == null || macAddr.isEmpty()) {
                     continue
                 }
                 val builder = StringBuilder()
-                for (b in by) {
+                for (b in macAddr) {
                     builder.append(String.format("%02X:", b))
                 }
                 if (builder.isNotEmpty()) {
                     builder.deleteCharAt(builder.length - 1)
                 }
                 val mac = builder.toString()
-                if (netWork.name == "wlan0") {
+                if (network.name == "wlan0") {
                     address = mac
                 }
             }

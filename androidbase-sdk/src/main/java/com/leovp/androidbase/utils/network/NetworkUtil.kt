@@ -15,6 +15,7 @@ import java.net.Socket
 import java.net.SocketAddress
 import java.util.*
 
+
 /**
  * Author: Michael Leo
  * Date: 20-6-12 上午11:37
@@ -180,5 +181,19 @@ object NetworkUtil {
             }
             address
         }.getOrDefault("")
+    }
+
+    fun getIp(): ArrayList<String> {
+        val ifconfig = ArrayList<String>()
+        runCatching {
+            for (ni: NetworkInterface in NetworkInterface.getNetworkInterfaces()) {
+                for (addr in ni.inetAddresses) {
+                    if (!addr.isLoopbackAddress && !addr.isLinkLocalAddress && addr.isSiteLocalAddress) {
+                        ifconfig.add(addr.hostAddress)
+                    }
+                }
+            }
+        }
+        return ifconfig
     }
 }

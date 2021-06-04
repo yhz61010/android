@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tv_i18n">これは日本語です。</string>
+    <string name="select_lang">言語選択</string>
+    <string-array name="lang_list">
+        <item>英語</item>
+        <item>中国語の簡体字</item>
+        <item>中国語の繁体字</item>
+        <item>日本語</item>
+    </string-array>
+    <string-array name="lang_code_list">
+        <item>en</item>
+        <item>zh_CN</item>
+        <item>zh_TW</item>
+        <item>ja</item>
+    </string-array>
+</resources>

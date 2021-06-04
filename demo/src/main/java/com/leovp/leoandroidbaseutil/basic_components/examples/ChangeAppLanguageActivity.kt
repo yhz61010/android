@@ -20,7 +20,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setTitle(R.string.select_lang)
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
-                    LangUtil.saveLanguageAndRefreshUI(langCode)
+                    LangUtil.saveLanguageAndRefreshUI(LangUtil.getLocale(langCode)!!)
                     dlg.dismiss()
                 }
                 .show()

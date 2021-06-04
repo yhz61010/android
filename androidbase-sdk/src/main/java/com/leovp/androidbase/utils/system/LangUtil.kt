@@ -19,6 +19,7 @@ object LangUtil {
     const val INTENT_APP_LANG_CHANGE = "app-lang-change-broadcast"
     private const val PREF_KEY_LANGUAGE = "language"
 
+    @Volatile
     private var currentAppLang: Locale? = null
 
     fun getLocale(languageAndCountry: String): Locale? {

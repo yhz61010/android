@@ -19,7 +19,6 @@ import com.leovp.androidbase.utils.system.LangUtil
 open class BaseDemonstrationActivity : AppCompatActivity() {
     private val appLangChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
             recreate()
         }
     }

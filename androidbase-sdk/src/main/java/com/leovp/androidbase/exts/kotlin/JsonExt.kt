@@ -13,11 +13,11 @@ internal val gson
 
 fun Any.toJsonString(): String = runCatching { gson.toJson(this) }.getOrDefault("")
 
-@Deprecated(
-    "This method is not efficiency. Use ByteArray.toHexStringLE() instead",
-    ReplaceWith("toHexStringLE(addPadding, delimiter)", "com.leovp.androidbase.exts.kotlin.toHexStringLE")
-)
-fun ByteArray.toHexadecimalString(addPadding: Boolean = false, delimiter: CharSequence = ","): String = JsonUtil.toHexadecimalString(this, addPadding, delimiter)
+//@Deprecated(
+//    "This method is not efficiency. Use ByteArray.toHexStringLE() instead",
+//    ReplaceWith("toHexStringLE(addPadding, delimiter)", "com.leovp.androidbase.exts.kotlin.toHexStringLE")
+//)
+//fun ByteArray.toHexadecimalString(addPadding: Boolean = false, delimiter: CharSequence = ","): String = JsonUtil.toHexadecimalString(this, addPadding, delimiter)
 
 /**
  * Convert json string to object

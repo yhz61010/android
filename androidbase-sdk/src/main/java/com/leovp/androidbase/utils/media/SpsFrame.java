@@ -470,28 +470,28 @@ public class SpsFrame {
     @NotNull
     @Override
     public String toString() {
-        return String.valueOf(forbidden_zero_bit) + "," +
-                String.valueOf(nal_ref_idc) + "," +
-                String.valueOf(nal_unit_type) + "," +
-                String.valueOf(profile_idc) + "," +
-                String.valueOf(constraint_set0_flag) + "," +
-                String.valueOf(constraint_set1_flag) + "," +
-                String.valueOf(constraint_set2_flag) + "," +
-                String.valueOf(constraint_set3_flag) + "," +
-                String.valueOf(reserved_zero_4bits) + "," +
-                String.valueOf(level_idc) + "," +
-                String.valueOf(seq_parameter_set_id) + "," +
-                String.valueOf(log2_max_frame_num_minus4) + "," +
-                String.valueOf(pic_order_cnt_type) + "," +
-                String.valueOf(log2_max_pic_order_cnt_lsb_minus4) + "," +
-                String.valueOf(num_ref_frames) + "," +
-                String.valueOf(gaps_in_frame_num_value_allowed_flag) + "," +
-                String.valueOf(pic_width_in_mbs_minus_1) + "," +
-                String.valueOf(pic_height_in_map_units_minus_1) + "," +
-                String.valueOf(frame_mbs_only_flag) + "," +
-                String.valueOf(direct_8x8_inference_flag) + "," +
-                String.valueOf(frame_cropping_flag) + "," +
-                String.valueOf(vui_prameters_present_flag) + "," +
-                String.valueOf(rbsp_stop_one_bit);
+        return forbidden_zero_bit + "," +
+                nal_ref_idc + "," +
+                nal_unit_type + "," +
+                profile_idc + "," +
+                constraint_set0_flag + "," +
+                constraint_set1_flag + "," +
+                constraint_set2_flag + "," +
+                constraint_set3_flag + "," +
+                reserved_zero_4bits + "," +
+                level_idc + "," +
+                seq_parameter_set_id + "," +
+                log2_max_frame_num_minus4 + "," +
+                pic_order_cnt_type + "," +
+                log2_max_pic_order_cnt_lsb_minus4 + "," +
+                num_ref_frames + "," +
+                gaps_in_frame_num_value_allowed_flag + "," +
+                pic_width_in_mbs_minus_1 + "," +
+                pic_height_in_map_units_minus_1 + "," +
+                frame_mbs_only_flag + "," +
+                direct_8x8_inference_flag + "," +
+                frame_cropping_flag + "," +
+                vui_prameters_present_flag + "," +
+                rbsp_stop_one_bit;
     }
 }

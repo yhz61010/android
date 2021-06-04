@@ -2,20 +2,11 @@ package com.leovp.androidbase.utils.network;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkRequest;
+import android.net.LinkAddress;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 
-import com.leovp.androidbase.utils.log.LogContext;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -24,10 +15,13 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.leovp.androidbase.exts.android.ContextExtKt.app;
+
 /**
  * Author: Michael Leo
  * Date: 2021/5/24 10:35 AM
  */
+@Deprecated
 public class IpUtil {
     @SuppressWarnings("unchecked")
     public static void setStaticIpConfiguration(WifiManager manager, WifiConfiguration config, InetAddress ipAddress, int prefixLength, InetAddress gateway, InetAddress[] dns) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException, InstantiationException {
@@ -84,121 +78,84 @@ public class IpUtil {
         method.invoke(object, parameterValues);
     }
 
-    // =====================
+    // ========================================================================
 
-    //    15ms
-    public static List<InetAddress> getByCommand() {
-        try {
-            Process process = Runtime.getRuntime().exec("getprop");
-            InputStream inputStream = process.getInputStream();
-            LineNumberReader lnr = new LineNumberReader(
-                    new InputStreamReader(inputStream));
-            String line = null;
-            ArrayList<InetAddress> servers = new ArrayList<InetAddress>(5);
-            while ((line = lnr.readLine()) != null) {
-                int split = line.indexOf("]: [");
-                if (split <= 1 || line.length() - 1 <= split + 4) {
-                    continue;
-                }
-                String property = line.substring(1, split);
-                String value = line.substring(split + 4, line.length() - 1);
-                if (property.endsWith(".dns") || property.endsWith(".dns1") ||
-                        property.endsWith(".dns2") || property.endsWith(".dns3") ||
-                        property.endsWith(".dns4")) {
-
-                    // normalize the address
-
-                    InetAddress ip = InetAddress.getByName(value);
-
-                    if (ip == null) continue;
-
-                    value = ip.getHostAddress();
-
-                    if (value == null) continue;
-                    if (value.length() == 0) continue;
-
-                    servers.add(ip);
-                }
-            }
-            if (servers.size() > 0) {
-                return servers;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    /**
+     * Need following permissions required by WifiManager.getConfiguredNetworks:
+     * - android.permission.ACCESS_FINE_LOCATION
+     * - android.permission.ACCESS_WIFI_STATE
+     */
+    public static void changeWifiConfiguration(boolean dhcp, String ip, int prefix, String dns1, String dns2, String gateway) {
+        WifiManager wm = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
+        if (!wm.isWifiEnabled()) {
+            // wifi is disabled
+            return;
         }
-        return null;
-    }
-
-    // 1ms
-    public static List<InetAddress> getByReflection() {
+        // get the current wifi configuration
+        WifiConfiguration wifiConf = null;
+        WifiInfo connectionInfo = wm.getConnectionInfo();
+        @SuppressLint("MissingPermission") List<WifiConfiguration> configuredNetworks = wm.getConfiguredNetworks();
+        if (configuredNetworks != null) {
+            for (WifiConfiguration conf : configuredNetworks) {
+                if (conf.networkId == connectionInfo.getNetworkId()) {
+                    wifiConf = conf;
+                    break;
+                }
+            }
+        }
+        if (wifiConf == null) {
+            // wifi is not connected
+            return;
+        }
         try {
-            Class<?> SystemProperties =
-                    Class.forName("android.os.SystemProperties");
-            Method method = SystemProperties.getMethod("get",
-                    new Class<?>[]{String.class});
-
-            ArrayList<InetAddress> servers = new ArrayList<InetAddress>(5);
-
-            for (String propKey : new String[]{
-                    "net.dns1", "net.dns2", "net.dns3", "net.dns4"}) {
-
-                String value = (String) method.invoke(null, propKey);
-
-                if (value == null) continue;
-                if (value.length() == 0) continue;
-
-                InetAddress ip = InetAddress.getByName(value);
-
-                if (ip == null) continue;
-
-                value = ip.getHostAddress();
-
-                if (value == null) continue;
-                if (value.length() == 0) continue;
-                if (servers.contains(ip)) continue;
-
-                servers.add(ip);
+            Class<?> ipAssignment = wifiConf.getClass().getMethod("getIpAssignment").invoke(wifiConf).getClass();
+            Object staticConf = wifiConf.getClass().getMethod("getStaticIpConfiguration").invoke(wifiConf);
+            if (dhcp) {
+                wifiConf.getClass().getMethod("setIpAssignment", ipAssignment).invoke(wifiConf, Enum.valueOf((Class<Enum>) ipAssignment, "DHCP"));
+                if (staticConf != null) {
+                    staticConf.getClass().getMethod("clear").invoke(staticConf);
+                }
+            } else {
+                wifiConf.getClass().getMethod("setIpAssignment", ipAssignment).invoke(wifiConf, Enum.valueOf((Class<Enum>) ipAssignment, "STATIC"));
+                if (staticConf == null) {
+                    Class<?> staticConfigClass = Class.forName("android.net.StaticIpConfiguration");
+                    staticConf = staticConfigClass.newInstance();
+                }
+                // STATIC IP AND MASK PREFIX
+                Constructor<?> laConstructor = LinkAddress.class.getConstructor(InetAddress.class, int.class);
+                LinkAddress linkAddress = (LinkAddress) laConstructor.newInstance(
+                        InetAddress.getByName(ip),
+                        prefix);
+                staticConf.getClass().getField("ipAddress").set(staticConf, linkAddress);
+                // GATEWAY
+                staticConf.getClass().getField("gateway").set(staticConf, InetAddress.getByName(gateway));
+                // DNS
+                List<InetAddress> dnsServers = (List<InetAddress>) staticConf.getClass().getField("dnsServers").get(staticConf);
+                dnsServers.clear();
+                dnsServers.add(InetAddress.getByName(dns1));
+                dnsServers.add(InetAddress.getByName(dns2));
+                // apply the new static configuration
+                wifiConf.getClass().getMethod("setStaticIpConfiguration", staticConf.getClass()).invoke(wifiConf, staticConf);
             }
-
-            if (servers.size() > 0) {
-                return servers;
-            }
+            // apply the configuration change
+            boolean result = wm.updateNetwork(wifiConf) != -1; //apply the setting
+            if (result) result = wm.saveConfiguration(); //Save it
+            if (result) wm.reassociate(); // reconnect with the new static IP
         } catch (Exception e) {
-            // we might trigger some problems this way
             e.printStackTrace();
         }
-        return null;
     }
 
-    @SuppressLint("MissingPermission")
-    public static void getAboveAndroid8(Context context) {
-        ///Android 8 , net.dns* was disabled, query dns servers must use network callback
-        ///@see https://developer.android.com/about/versions/oreo/android-8.0-changes.html
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ConnectivityManager connectivityManager =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-            NetworkRequest.Builder builder = new NetworkRequest.Builder();
-            if (connectivityManager != null) {
-                try {
-                    connectivityManager.registerNetworkCallback(builder.build(),
-                            new ConnectivityManager.NetworkCallback() {
-                                @Override
-                                public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
-                                    if (linkProperties != null) {
-                                        List<InetAddress> dnsList = linkProperties.getDnsServers();
-                                        for (InetAddress dns : dnsList) {
-                                            if (LogContext.INSTANCE.getEnableLog()) LogContext.INSTANCE.getLog().i("TAG", "dns=" + dns.getHostAddress());
-                                        }
-//                                        dnsServers.addAll(dns);
-                                    }
-//                                    networkCallback = true;
-                                }
-                            });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    /**
+     * The following permission is only granted to system apps.
+     * android.permission.WRITE_SETTINGS
+     */
+    public static void setStaticNetworkConfiguration(Context ctx, String ip, String dns1, String dns2, String gateway) {
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_USE_STATIC_IP, "1");
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_STATIC_DNS1, dns1);
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_STATIC_DNS2, dns2);
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_STATIC_GATEWAY, gateway);
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_STATIC_NETMASK, "255.255.255.0");
+        android.provider.Settings.System.putString(ctx.getContentResolver(), android.provider.Settings.System.WIFI_STATIC_IP, ip);
     }
 }

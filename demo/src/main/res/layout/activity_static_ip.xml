@@ -24,7 +24,7 @@
         android:ems="10"
         android:inputType="text"
         android:hint="Input IP"
-        android:text="192.168.1.107"
+        tools:text="192.168.1.107"
         app:layout_constraintBottom_toBottomOf="@+id/textView23"
         app:layout_constraintStart_toEndOf="@+id/textView23"
         app:layout_constraintTop_toTopOf="@+id/textView23" />

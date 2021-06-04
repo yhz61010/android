@@ -269,8 +269,7 @@ object FileDocumentUtil {
             cursor.moveToFirst()
             val name = cursor.getString(nameIndex)
 //            val size = cursor.getLong(sizeIndex).toString()
-            val output: File
-            output = if (newDirName != "") {
+            val output: File = if (newDirName != "") {
                 val dir = File(context.filesDir.toString() + "/" + newDirName)
                 if (!dir.exists()) {
                     dir.mkdir()
@@ -351,37 +350,37 @@ object FileDocumentUtil {
         return null
     }
 
-    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getDataColumn(ctx, uri, selection, null)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
-    private fun getImagePath(ctx: Context, uri: Uri, selection: String?): String? {
-        ctx.contentResolver.query(uri, null, selection, null, null)?.use {
-            if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
-        }
-        return null
-    }
+//    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getDataColumn(ctx, uri, selection, null)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+//    private fun getImagePath(ctx: Context, uri: Uri, selection: String?): String? {
+//        ctx.contentResolver.query(uri, null, selection, null, null)?.use {
+//            if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
+//        }
+//        return null
+//    }
 
     // =================================================================
 
-    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getPath(ctx, uri)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
-    fun getRealPath(ctx: Context, uri: Uri): String? {
-        var imagePath: String? = null
-        if (DocumentsContract.isDocumentUri(ctx, uri)) {
-            val docId = DocumentsContract.getDocumentId(uri)
-            if ("com.android.providers.media.documents" == uri.authority) {
-                val id = docId.split(":").toTypedArray()[1]
-                val selection = MediaStore.Images.Media._ID + "=" + id
-                imagePath = getImagePath(ctx, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection)
-            } else if ("com.android.providers.downloads.documents" == uri.authority) {
-                val contentUri =
-                    ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(docId))
-                imagePath = getImagePath(ctx, contentUri, null)
-            }
-        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
-            imagePath = getImagePath(ctx, uri, null)
-        } else if ("file".equals(uri.scheme, ignoreCase = true)) {
-            imagePath = uri.path
-        }
-        return imagePath
-    }
+//    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getPath(ctx, uri)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+//    fun getRealPath(ctx: Context, uri: Uri): String? {
+//        var imagePath: String? = null
+//        if (DocumentsContract.isDocumentUri(ctx, uri)) {
+//            val docId = DocumentsContract.getDocumentId(uri)
+//            if ("com.android.providers.media.documents" == uri.authority) {
+//                val id = docId.split(":").toTypedArray()[1]
+//                val selection = MediaStore.Images.Media._ID + "=" + id
+//                imagePath = getDataColumn(ctx, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection, null)
+//            } else if ("com.android.providers.downloads.documents" == uri.authority) {
+//                val contentUri =
+//                    ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(docId))
+//                imagePath = getDataColumn(ctx, contentUri, null, null)
+//            }
+//        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+//            imagePath = getDataColumn(ctx, uri, null, null)
+//        } else if ("file".equals(uri.scheme, ignoreCase = true)) {
+//            imagePath = uri.path
+//        }
+//        return imagePath
+//    }
 
     // ===== Start =================================================
 //    @SuppressLint("ObsoleteSdkInt")
@@ -399,7 +398,7 @@ object FileDocumentUtil {
 //                    return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
 //                }
 //
-//                // TODO handle non-primary volumes
+//                // T O D O: handle non-primary volumes
 //            } else if (isDownloadsDocument(uri)) {
 //                val id = DocumentsContract.getDocumentId(uri)
 //                val contentUri = ContentUris.withAppendedId(

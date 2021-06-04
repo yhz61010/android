@@ -36,7 +36,6 @@ import android.nfc.NfcManager
 import android.os.*
 import android.os.health.SystemHealthManager
 import android.os.storage.StorageManager
-import android.preference.PreferenceManager
 import android.print.PrintManager
 import android.telecom.TelecomManager
 import android.telephony.CarrierConfigManager
@@ -49,6 +48,7 @@ import android.view.inputmethod.InputMethodManager
 import android.view.textclassifier.TextClassificationManager
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import com.leovp.androidbase.utils.system.API
 
 /**
@@ -91,7 +91,7 @@ val Context.versionCode
 val Context.isPortrait get() = this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 val Context.isLandscape get() = this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
-fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, AppCompatActivity.MODE_PRIVATE)!!
+fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, AppCompatActivity.MODE_PRIVATE)
 
 val Application.accessibilityManager get() = this.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 val Application.accountManager get() = this.getSystemService(Context.ACCOUNT_SERVICE) as AccountManager

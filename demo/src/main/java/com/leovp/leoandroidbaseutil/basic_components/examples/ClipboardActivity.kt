@@ -24,7 +24,7 @@ class ClipboardActivity : BaseDemonstrationActivity() {
         }
     }
 
-    fun onClearClipboardClick(view: View) {
+    fun onClearClipboardClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ClipboardUtil.clear(this)
         ClipboardUtil.getClipboardText(this) {
             binding.edTxt.setText(it)
@@ -32,7 +32,7 @@ class ClipboardActivity : BaseDemonstrationActivity() {
         }
     }
 
-    fun onSetTextToClipboardClick(view: View) {
+    fun onSetTextToClipboardClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ClipboardUtil.setTextToClipboard(this, "Welcome Leo")
         ClipboardUtil.getClipboardText(this) {
             binding.edTxt.setText(it)

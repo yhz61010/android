@@ -105,6 +105,7 @@ class BasicFragment : Fragment() {
             Pair("Provider", ProviderActivity::class.java),
             Pair("Animation", AnimationActivity::class.java),
             Pair("Static IP", StaticIpActivity::class.java),
+            Pair("Change App Language", ChangeAppLanguageActivity::class.java),
         )
 
         val colors = arrayOf(

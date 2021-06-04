@@ -60,6 +60,7 @@ dependencies {
     // optional - ProcessLifecycleOwner provides a lifecycle for the whole application process
     api "androidx.lifecycle:lifecycle-process:$rootProject.ext.archLifecycleVersion"
     api "com.google.android.material:material:$materialVersion"
+    api "androidx.preference:preference-ktx:$preferenceVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidTestRunnerVersion"

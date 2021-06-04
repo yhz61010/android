@@ -36,7 +36,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
             }"
         )
 
-        CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)?.forEach { it ->
+        CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { it ->
             LogContext.log.w(TAG, "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
         }
     }

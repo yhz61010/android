@@ -12,6 +12,21 @@ import com.leovp.androidbase.exts.kotlin.fail
 import java.util.*
 
 /**
+ * Attention:
+ * For Chinese language(Simplified Chinese, Traditional Chinese),
+ * - If you set language in `zh_CN`, you should create `values-zh-rCN` folder in `values` folder.
+ * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
+ *
+ * Locale.getDefault().getLanguage()       ---> en
+ * Locale.getDefault().getISO3Language()   ---> eng
+ * Locale.getDefault().getCountry()        ---> US
+ * Locale.getDefault().getISO3Country()    ---> USA
+ * Locale.getDefault().getDisplayCountry() ---> United States
+ * Locale.getDefault().getDisplayName()    ---> English (United States)
+ * Locale.getDefault().toString()          ---> en_US
+ * Locale.getDefault().getDisplayLanguage()---> English
+ * Locale.getDefault().toLanguageTag()     ---> en-US
+ *
  * Author: Michael Leo
  * Date: 2021/6/4 13:05
  */
@@ -32,6 +47,46 @@ object LangUtil {
             }
         }.getOrNull()
     }
+
+    fun getLanguageCountryCode(locale: Locale): String {
+        val country = locale.country
+        return if (country.isBlank()) {
+            locale.language
+        } else {
+            "${locale.language}_$country"
+        }
+    }
+
+    /**
+     * @return The result is like: `zh_CN` or `zh_CN_#Hans`. Please notice the difference with [getDeviceLanguageCountryCode].
+     */
+    fun getDefaultLanguageFullCode(): String = Locale.getDefault().toString()
+
+    /**
+     * @return The result is only contains language and country, just like this: `zh_CN`.
+     */
+    fun getDefaultLanguageCountryCode(): String = getLanguageCountryCode(Locale.getDefault())
+
+    /**
+     * @return The result is like: `中文`
+     */
+    fun getDefaultDisplayLanguage(): String = Locale.getDefault().displayLanguage
+
+    /**
+     * @return If you call `toString()` on result, you will get something like: zh_CN_#Hans
+     */
+    fun getDeviceLocale(): Locale {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Resources.getSystem().configuration.locales[0]
+        } else {
+            Resources.getSystem().configuration.locale
+        }
+    }
+
+    /**
+     * @return The result is only contains language and country, just like this: `zh_CN`. Please notice the difference with [getDefaultLanguageFullCode].
+     */
+    fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
 
     /**
      * Most of time, you should call the handy method [saveLanguageAndRefreshUI].
@@ -57,6 +112,8 @@ object LangUtil {
     }
 
     /**
+     * This method should be called on `onCreate`.
+     *
      * @param ctx Most of time, this context should be `Activity` context.
      */
     fun changeAppLanguage(ctx: Context) {

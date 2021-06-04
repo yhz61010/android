@@ -11,6 +11,7 @@ import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.outputFormatByte
 import com.leovp.androidbase.exts.kotlin.round
 import com.leovp.androidbase.utils.shell.ShellUtil
+import com.leovp.androidbase.utils.system.LangUtil
 import java.io.File
 
 
@@ -158,6 +159,8 @@ object DeviceUtil {
             """
             Device basic information:
             App version     : ${app.versionName}(${app.versionCode})
+            Device locale   : ${LangUtil.getDeviceLanguageCountryCode()}
+            Default locale  : ${LangUtil.getDefaultLanguageCountryCode()}
             Manufacturer    : $manufacturer
             Brand           : $brand
             Board           : $board
@@ -171,7 +174,7 @@ object DeviceUtil {
             CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}
             Display         : $display
-            Screen          : ${screenSize.x}x${screenSize.y}(${app.densityDpi}:${app.density})(${act.screenRatio.round()})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
+            Screen          : ${screenSize.x}x${screenSize.y}(${act.screenRatio.round()})  (${app.densityDpi}:${app.density})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}

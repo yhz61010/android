@@ -30,8 +30,8 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         title = intent.getStringExtra("title")
         LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getAppLanguage()
-        LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
         LogContext.log.i("Pref lang=$lang")
+        LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
     }
 
     /**

@@ -7,6 +7,7 @@ import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.IpUtil
+import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityStaticIpBinding
 import java.net.InetAddress
@@ -19,12 +20,9 @@ class StaticIpActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityStaticIpBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        val ipByCommand = IpUtil.getByCommand()
-        val ipByReflection = IpUtil.getByReflection()
-        IpUtil.getAboveAndroid8(this)
-
-        if (LogContext.enableLog) LogContext.log.i("ipByCommand=$ipByCommand")
-        if (LogContext.enableLog) LogContext.log.i("ipByReflection=$ipByReflection")
+        if (LogContext.enableLog) LogContext.log.i("ip=${NetworkUtil.getIp()}")
+        if (LogContext.enableLog) LogContext.log.i("mac=${NetworkUtil.getMacAddress(app)}")
+        binding.etIp.setText(NetworkUtil.getIp()[0])
 
         binding.btnSet.setOnSingleClickListener {
             val ip = binding.etIp.text.toString()
@@ -48,6 +46,10 @@ class StaticIpActivity : BaseDemonstrationActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
+//            IpUtil.changeWifiConfiguration(false, ip, prefixLength, dns1, dns2, gateway)
+
+//            IpUtil.setStaticNetworkConfiguration(this@StaticIpActivity, ip, dns1, dns2, gateway)
         }
     }
 }

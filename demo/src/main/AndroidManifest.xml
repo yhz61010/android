@@ -18,6 +18,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- For get nearby devices, need location permission when above android M -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <permission
         android:name="remote.service.permission"
         android:protectionLevel="signature" />
@@ -31,6 +33,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".basic_components.examples.ChangeAppLanguageActivity"
+            android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.audio.ADPCMActivity" />
         <activity android:name=".basic_components.examples.StaticIpActivity" />
         <activity android:name=".basic_components.examples.animation.PropertyAnimActivity" />

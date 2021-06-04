@@ -1,6 +1,7 @@
 # Known Issues
 ~~1. AudioActivity~~(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)
 ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
+
 2. AudioReceiver
 In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
 

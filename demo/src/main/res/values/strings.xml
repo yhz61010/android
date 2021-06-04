@@ -12,4 +12,19 @@
 
     <string name="accessibility_label">@string/app_name</string>
     <string name="accessibility_desc">Simulated click on screen</string>
+
+    <string name="tv_i18n">This is English text.</string>
+    <string name="select_lang">Choose a language</string>
+    <string-array name="lang_list">
+        <item>English</item>
+        <item>Simplified Chinese</item>
+        <item>Traditional Chinese</item>
+        <item>Japanese</item>
+    </string-array>
+    <string-array name="lang_code_list">
+        <item>en</item>
+        <item>zh_CN</item>
+        <item>zh_TW</item>
+        <item>ja</item>
+    </string-array>
 </resources>

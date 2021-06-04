@@ -194,7 +194,7 @@ object ShellUtil {
         try {
             var line: String
             while (reader.readLine().also { line = it } != null) {
-                if (line.contains(processName!!)) {
+                if (line.contains(processName)) {
                     return true
                 }
             }

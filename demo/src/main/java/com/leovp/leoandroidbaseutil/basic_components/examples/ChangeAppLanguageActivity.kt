@@ -9,11 +9,11 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityChangeAppLanguageBinding
 
 /**
- * Add the following method into your base activity:
+ * Add the following codes into your base activity:
+ *
  * ```kotlin
  * private val appLangChangeReceiver = object : BroadcastReceiver() {
  *     override fun onReceive(context: Context, intent: Intent?) {
- *     LangUtil.changeAppLanguage(this@YourActivity)
  *     recreate()
  *     }
  * }
@@ -22,13 +22,6 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityChangeAppLanguageBinding
  *     super.onCreate(savedInstanceState)
  *     LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
  *     LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
- * }
- *
- * /**
- *  * If you set `android:configChanges="orientation|screenSize"` for activity on `AndroidManifest`, this method will be called.
- *  */
- * override fun onConfigurationChanged(newConfig: Configuration) {
- *     super.onConfigurationChanged(newConfig)
  * }
  *
  * override fun onDestroy() {

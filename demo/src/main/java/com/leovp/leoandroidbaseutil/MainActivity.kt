@@ -1,7 +1,6 @@
 package com.leovp.leoandroidbaseutil
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -10,8 +9,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hjq.permissions.OnPermission
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -254,8 +254,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var webSocketClient: WebSocketClient? = null
     private var webSocketClientHandler: WebSocketClientHandler? = null
 
-    class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
-        BaseNettyClient(webSocketUri, connectionListener, retryStrategy) {
+    class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, trustAllServers: Boolean, retryStrategy: RetryStrategy) :
+        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "ScreenShareClientActivity"
 
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
@@ -463,7 +463,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
         val url = URI("ws://${binding.etServerIp.text}:10086/")
-        webSocketClient = WebSocketClient(url, connectionListener, ConstantRetry(10, 2000)).also {
+        webSocketClient = WebSocketClient(url, connectionListener, true, ConstantRetry(10, 2000)).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)
             cs.launch { it.connect() }

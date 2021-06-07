@@ -78,8 +78,8 @@ abstract class BaseNettyClient protected constructor(
     protected constructor(
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
+        certInputStream: InputStream,
         retryStrategy: RetryStrategy = ConstantRetry(),
-        certInputStream: InputStream? = null,
         headers: Map<String, String>? = null
     ) : this(
         webSocketUri.host,
@@ -95,6 +95,28 @@ abstract class BaseNettyClient protected constructor(
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
         LogContext.log.w(tag, "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+    }
+
+    protected constructor(
+        webSocketUri: URI,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        trustAllServers: Boolean,
+        retryStrategy: RetryStrategy = ConstantRetry(),
+        headers: Map<String, String>? = null
+    ) : this(
+        webSocketUri.host,
+        if (webSocketUri.port == -1) {
+            when {
+                "ws".equals(webSocketUri.scheme, true) -> 80
+                "wss".equals(webSocketUri.scheme, true) -> 443
+                else -> -1
+            }
+        } else webSocketUri.port,
+        connectionListener, retryStrategy, headers
+    ) {
+        this.webSocketUri = webSocketUri
+        this.trustAllServers = trustAllServers
+        LogContext.log.w(tag, "WebSocket mode. Insecure: $trustAllServers. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     val tag: String by lazy { getTagName() }
@@ -115,6 +137,7 @@ abstract class BaseNettyClient protected constructor(
     }
 
     private var certificateInputStream: InputStream? = null
+    private var trustAllServers: Boolean = false
 
     fun getCertificateInputStream(): InputStream? {
         if (certificateInputStream == null) {
@@ -171,26 +194,33 @@ abstract class BaseNettyClient protected constructor(
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
                         if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-                            if (certificateInputStream == null) {
+                            if (trustAllServers) {
                                 LogContext.log.w(tag, "Working in wss INSECURE mode")
                                 val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
                                 addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
                             } else {
-                                LogContext.log.w(tag, "Working in wss SECURE mode")
-                                requireNotNull(certificateInputStream) { "In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream." }
+                                if (certificateInputStream == null) {
+                                    LogContext.log.w(tag, "Working in wss CA SECURE mode")
+                                    val sslCtx: SslContext = SslContextBuilder.forClient().build()
+//                                val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                                    addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
+                                } else {
+                                    LogContext.log.w(tag, "Working in wss self-signed SECURE mode")
+                                    requireNotNull(certificateInputStream) { "In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream." }
 
-                                val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
+                                    val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
 
 //                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
 //                                    useClientMode = true
 //                                }
 //                                addFirst("ssl", SslHandler(sslEngine))
 
-                                val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
-                                addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
+                                    val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
+                                    addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
 
 //                                val sslEngine = SSLContext.getDefault().createSSLEngine().apply { useClientMode = true }
 //                                addFirst("ssl", SslHandler(sslEngine))
+                                }
                             }
                         }
                         addLast(HttpClientCodec())

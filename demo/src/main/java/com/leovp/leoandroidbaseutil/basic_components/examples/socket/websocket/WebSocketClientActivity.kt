@@ -20,7 +20,6 @@ import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import kotlinx.coroutines.*
-import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicInteger
@@ -49,8 +48,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         val webSocketClient = WebSocketClientDemo(
             URI(binding.etSvrIp.text.toString()),
             connectionListener,
+            false, // assets.open("cert/websocket.org.crt")
             constantRetry,
-            null //assets.open("cert/websocket.org.crt")
         )
         webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
         webSocketClient.initHandler(webSocketClientHandler)
@@ -163,8 +162,14 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
     }
 
-    class WebSocketClientDemo(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy, certInputStream: InputStream? = null) :
-        BaseNettyClient(webSocketUri, connectionListener, retryStrategy, certInputStream) {
+    class WebSocketClientDemo(
+        webSocketUri: URI,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        trustAllServers: Boolean,
+//        certInputStream: InputStream? = null,
+        retryStrategy: RetryStrategy
+    ) :
+        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, /* trustAllServers,*/ retryStrategy) {
         override fun getTagName() = "WebSocketClient"
 
         override fun retryProcess(): Boolean {

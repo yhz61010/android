@@ -5,8 +5,8 @@ import android.media.*
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import com.leovp.androidbase.exts.kotlin.toShortArrayLE
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.audio.BuildConfig
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.audio.recorder.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

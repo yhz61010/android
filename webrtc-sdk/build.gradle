@@ -1,7 +1,7 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-parcelize'
-apply plugin: "org.sonarqube"
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -28,27 +28,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/libs']
         }
     }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "$rootProject.ext.java_version"
-    }
 }
 
 dependencies {
-    api fileTree(dir: "libs", include: ["*.jar"])
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+//    api "androidx.appcompat:appcompat:$appcompatVersion"
+//    api "com.google.android.material:material:$rootProject.ext.materialVersion"
 
     api project(':androidbase-sdk')
 }

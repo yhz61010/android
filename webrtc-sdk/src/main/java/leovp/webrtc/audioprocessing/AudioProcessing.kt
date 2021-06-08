@@ -1,4 +1,4 @@
-package com.leovp.audio.webrtc.audioprocessing
+package leovp.webrtc.audioprocessing
 
 import com.leovp.androidbase.utils.log.LogContext
 

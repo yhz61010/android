@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.net.wifi.WifiManager
+import android.telephony.TelephonyManager
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.BufferedReader
 import java.io.IOException
@@ -34,6 +36,8 @@ object NetworkUtil {
     fun isOnline(ctx: Context) = getNetworkInfo(ctx)?.isConnected ?: false
     fun isOffline(ctx: Context) = !isOnline(ctx)
 
+    fun isWifiActive(ctx: Context): Boolean = getNetworkType(ctx) == ConnectivityManager.TYPE_WIFI
+
     /**
      * **Need following permission:**
      * ```xml
@@ -41,8 +45,7 @@ object NetworkUtil {
      * ```
      */
     @SuppressLint("MissingPermission")
-    private fun getNetworkInfo(ctx: Context) =
-        (ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).activeNetworkInfo
+    fun getNetworkInfo(ctx: Context): NetworkInfo? = (ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).activeNetworkInfo
 
     /**
      * Returns the latency to a given server in milliseconds by issuing a ping command.
@@ -87,10 +90,21 @@ object NetworkUtil {
         }
     }
 
-    fun getNetworkType(ctx: Context) = if (getNetworkInfo(ctx) != null) {
-        getNetworkInfo(ctx)?.type ?: -1
-    } else {
-        -1
+    fun getNetworkType(ctx: Context): Int = getNetworkInfo(ctx)?.type ?: -1
+
+    fun getNetworkTypeName(ctx: Context): String? = getNetworkInfo(ctx)?.typeName
+
+    fun getNetworkSubType(ctx: Context): Int = getNetworkInfo(ctx)?.subtype ?: -1
+
+    fun getNetworkSubTypeName(ctx: Context): String? = getNetworkInfo(ctx)?.subtypeName
+
+    fun getNetworkGeneration(ctx: Context): String? {
+        val ni: NetworkInfo? = getNetworkInfo(ctx)
+        return if (ni?.type == ConnectivityManager.TYPE_MOBILE) {
+            getNetworkGeneration(ni.subtype)
+        } else {
+            null
+        }
     }
 
     /**
@@ -200,5 +214,20 @@ object NetworkUtil {
             }
         }
         return ifconfig
+    }
+
+    private fun getNetworkGeneration(networkType: Int): String? {
+        return when (networkType) {
+            TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_EDGE,
+            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_IDEN, TelephonyManager.NETWORK_TYPE_GSM -> "2G"
+
+            TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A,
+            TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSPA,
+            TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_UMTS,
+            TelephonyManager.NETWORK_TYPE_TD_SCDMA -> "3G"
+            TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
+            TelephonyManager.NETWORK_TYPE_NR -> "5G"
+            else -> null
+        }
     }
 }

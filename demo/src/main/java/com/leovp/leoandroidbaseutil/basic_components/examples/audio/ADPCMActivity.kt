@@ -10,8 +10,6 @@ import com.leovp.androidbase.exts.kotlin.toShortArrayLE
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.AudioPlayer
-import com.leovp.audio.adpcm.ADPCMCodec
-import com.leovp.audio.adpcm.AdpcmImaQTDecoder
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.leoandroidbaseutil.R
@@ -26,8 +24,8 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         private const val OUTPUT_IMA_FILE_NAME = "adpcm_ima_22050_2ch_s16le.ima"
     }
 
-    private val adpcm = ADPCMCodec()
-    private val adpcmQT = AdpcmImaQTDecoder(2, 44100)
+    private val adpcm = com.leovp.ffmpeg.ADPCMCodec()
+    private val adpcmQT = com.leovp.ffmpeg.AdpcmImaQTDecoder(2, 44100)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +84,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 if (LogContext.enableLog) LogContext.log.i(
                     "$i: bytes per sample=${av_get_bytes_per_sample(avFrame.format())} chunk[${stereoPcmBytes.size}] ch:${avFrame.channels()} sampleRate:${avFrame.sample_rate()} np_samples:${avFrame.nb_samples()} " +
                             " linesize[0]=${avFrame.linesize(0)} fmt[${avFrame.format()}]:${
-                                AdpcmImaQTDecoder.getSampleFormatName(
+                                com.leovp.ffmpeg.AdpcmImaQTDecoder.getSampleFormatName(
                                     avFrame.format()
                                 )
                             }"

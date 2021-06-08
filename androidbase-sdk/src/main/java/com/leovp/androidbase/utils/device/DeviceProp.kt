@@ -30,7 +30,7 @@ object DeviceProp {
     @SuppressLint("PrivateApi")
     private fun getSystemPropertyByReflect(key: String): String {
         return runCatching {
-            Class.forName("android.os.SystemProperties").getMethod("get", String::class.java).invoke(null, key) as String
+            Class.forName("android.os.SystemProperties").let { it.getMethod("get", String::class.java).invoke(it, key) as String }
         }.getOrDefault("")
     }
 

@@ -1,4 +1,4 @@
-package com.leovp.audio.webrtc.audioprocessing
+package leovp.webrtc.audioprocessing
 
 /**
  * Author: Michael Leo

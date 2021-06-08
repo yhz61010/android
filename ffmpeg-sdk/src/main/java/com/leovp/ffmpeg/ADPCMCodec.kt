@@ -1,4 +1,4 @@
-package com.leovp.audio.adpcm
+package com.leovp.ffmpeg
 
 /**
  * ADPCM encoder/decoder

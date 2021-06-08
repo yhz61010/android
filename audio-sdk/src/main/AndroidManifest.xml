@@ -1,6 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.leovp.audio.recorder">
+<manifest package="com.leovp.audio">
 
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!--    <uses-permission android:name="android.permission.RECORD_AUDIO" />-->
+    <!--    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />-->
 </manifest>

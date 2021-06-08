@@ -5,7 +5,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.audio.recorder.BuildConfig
+import com.leovp.audio.BuildConfig
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 

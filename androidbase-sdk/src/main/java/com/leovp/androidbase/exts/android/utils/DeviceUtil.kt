@@ -10,6 +10,8 @@ import androidx.core.content.ContextCompat
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.outputFormatByte
 import com.leovp.androidbase.exts.kotlin.round
+import com.leovp.androidbase.utils.device.DeviceProp
+import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.androidbase.utils.shell.ShellUtil
 import com.leovp.androidbase.utils.system.LangUtil
 import java.io.File
@@ -53,6 +55,21 @@ object DeviceUtil {
     }.getOrDefault(
         ""
     )
+
+    fun getSerialNumber(): String {
+        var serialNo = DeviceProp.getSystemProperty("ro.serialno")
+        if (serialNo.isNotBlank()) return serialNo
+        serialNo = DeviceProp.getSystemProperty("ro.boot.serialno")
+        if (serialNo.isNotBlank()) return serialNo
+        serialNo = DeviceProp.getSystemProperty("ril.serialnumber")
+        if (serialNo.isNotBlank()) return serialNo
+        serialNo = DeviceProp.getSystemProperty("sys.serialnumber")
+        if (serialNo.isNotBlank()) return serialNo
+        serialNo = DeviceProp.getSystemProperty("gsm.sn1")
+        if (serialNo.isNotBlank()) return serialNo
+        return ""
+    }
+
 
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
         file?.name?.matches(Regex("cpu[0-9]+")) ?: false
@@ -161,10 +178,12 @@ object DeviceUtil {
             App version     : ${app.versionName}(${app.versionCode})
             Device locale   : ${LangUtil.getDeviceLanguageCountryCode()}
             Default locale  : ${LangUtil.getDefaultLanguageCountryCode()}
+            Network Type    : ${NetworkUtil.getNetworkTypeName(app)} | ${NetworkUtil.getNetworkSubTypeName(app)}(${NetworkUtil.getNetworkGeneration(app)})
             Manufacturer    : $manufacturer
             Brand           : $brand
             Board           : $board
             OsVersion       : $osVersion($osVersionSdkInt)
+            Serial Number   : ${getSerialNumber()}
             DeviceName      : $deviceName
             Model           : $model
             Product         : $product
@@ -181,6 +200,7 @@ object DeviceUtil {
             Tablet          : ${app.isTablet()}
             Emulator        : ${isProbablyAnEmulator()}
             Battery Capacity: $batteryCapacity
+            MAC             : ${NetworkUtil.getMacAddress(app)}
             IMEI:
                     slot0: ${getImei(app, 0) ?: "NA"}
                     slot1: ${getImei(app, 1) ?: "NA"}

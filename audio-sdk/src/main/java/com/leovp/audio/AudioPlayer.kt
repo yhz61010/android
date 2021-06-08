@@ -15,7 +15,6 @@ import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
-import com.leovp.audio.recorder.BuildConfig
 
 /**
  * Author: Michael Leo

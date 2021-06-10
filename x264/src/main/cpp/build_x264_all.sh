@@ -1,8 +1,9 @@
 #!/bin/bash
 
-NDK_PATH=/home/yhz61010/Android/Sdk/ndk/22.0.7026061
+NDK_PATH=~/Library/Android/sdk/ndk/22.1.7171670
+# linux-x86_64
+HOST_TAG=darwin-x86_64
 
-HOST_TAG=linux-x86_64
 TOOLCHAINS=$NDK_PATH/toolchains/llvm/prebuilt/$HOST_TAG
 SYSROOT=$TOOLCHAINS/sysroot
 
@@ -49,7 +50,7 @@ pushd libx264
 
 make clean
 #make -j4 install V=1
-make -j4
+make -j6
 make install
 popd
 }
@@ -70,18 +71,18 @@ export CC=$TOOLCHAINS/bin/aarch64-linux-android$MIN_SDK_VER-clang
 export CXX=$TOOLCHAINS/bin/aarch64-linux-android$MIN_SDK_VER-clang++
 build_one
 
-#x86
-ARCH=i686
-OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=i686-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
-PREFIX=`pwd`/prebuilt/x86
-export CC=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang
-export CXX=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang++
-build_one
-
-#x86_64
-ARCH=x86_64
-OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=x86_64-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
-PREFIX=`pwd`/prebuilt/x86_64
-export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
-export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
-build_one
+##x86
+#ARCH=i686
+#OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=i686-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
+#PREFIX=`pwd`/prebuilt/x86
+#export CC=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang
+#export CXX=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang++
+#build_one
+#
+##x86_64
+#ARCH=x86_64
+#OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=x86_64-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
+#PREFIX=`pwd`/prebuilt/x86_64
+#export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
+#export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
+#build_one

@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <android/log.h>
+
 extern "C"
 {
 #include "libavutil/imgutils.h"
@@ -24,14 +25,13 @@ JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     ctx->channels = channels;
     ctx->channel_layout = av_get_default_channel_layout(ctx->channels);
 
-  int ret = avcodec_open2(ctx, codec, NULL);
-  if(ret < 0)
-  {
-    av_log(NULL, AV_LOG_ERROR, "avcodec_open2 err\n");
-    return ret;
-  }
+    int ret = avcodec_open2(ctx, codec, NULL);
+    if (ret < 0) {
+        av_log(NULL, AV_LOG_ERROR, "avcodec_open2 err\n");
+        return ret;
+    }
 
-  return ret;
+    return ret;
 }
 
 JNIEXPORT void release(JNIEnv *env, jobject obj) {
@@ -41,7 +41,7 @@ JNIEXPORT void release(JNIEnv *env, jobject obj) {
     }
 }
 
-JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes, jint adpcmBytesLen) {
+JNIEXPORT AVFrame *decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes, jint adpcmBytesLen) {
     int dataLen = adpcmBytesLen;
     uint8_t *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, 0);
     AVPacket *pkt = av_packet_alloc();
@@ -53,12 +53,11 @@ JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes, jin
 
     pkt->data = adpcmData;
     pkt->pts = dataLen;
-  ret = avcodec_send_packet(ctx, pkt);
-  if(ret < 0)
-  {
-    av_packet_free(&pkt);
-    return NULL;
-  }
+    ret = avcodec_send_packet(ctx, pkt);
+    if (ret < 0) {
+        av_packet_free(&pkt);
+        return NULL;
+    }
 
     AVFrame *frame = av_frame_alloc();
     ret = avcodec_receive_frame(ctx, frame);

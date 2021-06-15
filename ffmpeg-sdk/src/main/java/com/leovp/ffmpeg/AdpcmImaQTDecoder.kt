@@ -39,9 +39,6 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
         }
         var rtnCode: Int
         val pkt = avcodec.av_packet_alloc()
-        if (avcodec.av_new_packet(pkt, adpcmBytes.size).also { rtnCode = it } < 0) {
-            return null
-        }
         try {
             BytePointer(*adpcmBytes).use { p ->
                 pkt.data(p)

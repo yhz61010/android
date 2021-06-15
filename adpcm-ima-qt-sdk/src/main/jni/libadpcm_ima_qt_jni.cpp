@@ -11,23 +11,30 @@ extern "C"
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_jni", __VA_ARGS__))
 
 #define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
-#define ADPCM_PACKAGE "com/leovp/ffmpeg/adpcm"
+#define ADPCM_PACKAGE "com/leovp/ffmpeg/adpcm/"
 
-AVCodecContext *ctx = NULL;
+//#define AUDIO_INBUF_SIZE 20480
+//#define AUDIO_REFILL_THRESH 4096
+
+AVCodecContext *ctx = nullptr;
+const AVCodec *codec = nullptr;
+//AVCodecParserContext *parser = nullptr;
 
 JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     av_log_set_level(AV_LOG_ERROR);
-    av_log(NULL, AV_LOG_INFO, "ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
+    av_log(nullptr, AV_LOG_ERROR, "ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
 
-    const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
+    codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
     ctx = avcodec_alloc_context3(codec);
     ctx->sample_rate = sampleRate;
     ctx->channels = channels;
     ctx->channel_layout = av_get_default_channel_layout(ctx->channels);
 
-    int ret = avcodec_open2(ctx, codec, NULL);
+//    parser = av_parser_init(codec->id);
+
+    int ret = avcodec_open2(ctx, codec, nullptr);
     if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "avcodec_open2 err\n");
+        av_log(nullptr, AV_LOG_ERROR, "avcodec_open2 err\n");
         return ret;
     }
 
@@ -35,20 +42,24 @@ JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
 }
 
 JNIEXPORT void release(JNIEnv *env, jobject obj) {
-    if (ctx != NULL) {
+    if (ctx != nullptr) {
         avcodec_free_context(&ctx);
-        ctx = NULL;
+        ctx = nullptr;
     }
+//    if (parser != nullptr) {
+//        av_parser_close(parser);
+//        parser = null;
+//    }
 }
 
-JNIEXPORT AVFrame *decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes, jint adpcmBytesLen) {
-    int dataLen = adpcmBytesLen;
-    uint8_t *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, 0);
+JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes) {
+    size_t dataLen = env->GetArrayLength(adpcmBytes);
+    auto *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, 0);
     AVPacket *pkt = av_packet_alloc();
-    int ret = av_new_packet(pkt, dataLen);
+    size_t ret = av_new_packet(pkt, dataLen);
     if (ret < 0) {
         av_packet_free(&pkt);
-        return NULL;
+        return nullptr;
     }
 
     pkt->data = adpcmData;
@@ -56,17 +67,47 @@ JNIEXPORT AVFrame *decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes, jint 
     ret = avcodec_send_packet(ctx, pkt);
     if (ret < 0) {
         av_packet_free(&pkt);
-        return NULL;
+        return nullptr;
     }
 
     AVFrame *frame = av_frame_alloc();
     ret = avcodec_receive_frame(ctx, frame);
     if (ret < 0) {
         av_frame_free(&frame);
-        return NULL;
+        return nullptr;
     }
+
+    int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
+    if (data_size < 0) {
+        /* This should not occur, checking just for paranoia */
+        av_log(nullptr, AV_LOG_ERROR, "Failed to calculate data size\n");
+        return nullptr;
+    }
+
+//    if (!parser) {
+//        av_log(nullptr, AV_LOG_ERROR, "Parser not found\n");
+//        return nullptr;
+//    }
+
+//    uint8_t inbuf[AUDIO_INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
+//    uint8_t *data;
+//
+//    /* decode until eof */
+//    data      = inbuf;
+//
+//    ret = av_parser_parse2(parser, c, &pkt->data, &pkt->size,
+//                           data, data_size,
+//                           AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+
+    uint8_t *left_channel = frame->extended_data[0];
+//    uint8_t *right_channel = frame->extended_data[1];
+
+    size_t pcm_len = frame->linesize[0];
+    jbyteArray byte_array = env->NewByteArray(pcm_len);
+    env->SetByteArrayRegion(byte_array, 0, pcm_len, reinterpret_cast<const jbyte *>(left_channel));
+
     av_packet_free(&pkt);
-    return frame;
+    return byte_array;
 }
 
 JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
@@ -76,10 +117,10 @@ JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"init",       "(II)I",                  (void *) init},
-        {"release",    "()V",                    (void *) release},
-        {"decode",     "([B)Ljava/lang/Object;", (void *) decode},
-        {"getVersion", "()Ljava/lang/String;",   (void *) getVersion},
+        {"init",       "(II)I",                (void *) init},
+        {"release",    "()V",                  (void *) release},
+        {"decode",     "([B)[B;",              (void *) decode},
+        {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -91,7 +132,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     }
 
     jclass clz = env->FindClass(ADPCM_PACKAGE"AdpcmImaQtDecoder");
-    if (clz == NULL) {
+    if (clz == nullptr) {
         LOGE("JNI_OnLoad FindClass error.");
         return JNI_ERR;
     }

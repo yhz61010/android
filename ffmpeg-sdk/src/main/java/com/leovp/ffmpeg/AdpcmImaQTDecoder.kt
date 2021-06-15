@@ -33,22 +33,19 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
         return 34 * channel
     }
 
-    var pts: Long = 0
-        private set
-
-    fun decode(pcm: ByteArray): AVFrame? {
-        if (pcm.size != chunkSize()) {
-            throw RuntimeException("Invalid ChunkSize: ${pcm.size}, required: ${chunkSize()}, In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples)")
+    fun decode(adpcmBytes: ByteArray): AVFrame? {
+        if (adpcmBytes.size != chunkSize()) {
+            throw RuntimeException("Invalid ChunkSize: ${adpcmBytes.size}, required: ${chunkSize()}, In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples)")
         }
         var rtnCode: Int
         val pkt = avcodec.av_packet_alloc()
-        if (avcodec.av_new_packet(pkt, pcm.size).also { rtnCode = it } < 0) {
+        if (avcodec.av_new_packet(pkt, adpcmBytes.size).also { rtnCode = it } < 0) {
             return null
         }
         try {
-            BytePointer(*pcm).use { p ->
+            BytePointer(*adpcmBytes).use { p ->
                 pkt.data(p)
-                pkt.pts(pcm.size.let { pts += it; pts })
+                pkt.size(adpcmBytes.size)
                 rtnCode = avcodec.avcodec_send_packet(ctx, pkt)
                 if (rtnCode < 0) {
                     avcodec.av_packet_free(pkt)
@@ -62,8 +59,8 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
                 return frame
             }
         } finally {
-            avcodec.av_packet_free(pkt)
             pkt.close()
+            avcodec.av_packet_free(pkt)
         }
     }
 

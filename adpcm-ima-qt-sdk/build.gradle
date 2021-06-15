@@ -48,11 +48,19 @@ android {
     packagingOptions {
         pickFirst "lib/armeabi-v7a/libavutil.so"
         pickFirst "lib/armeabi-v7a/libavcodec.so"
+        pickFirst "lib/armeabi-v7a/libswresample.so"
+        pickFirst "lib/armeabi-v7a/libavfilter.so"
+        pickFirst "lib/armeabi-v7a/libavdevice.so"
+        pickFirst "lib/armeabi-v7a/libavformat.so"
         pickFirst "lib/armeabi-v7a/libadpcm-ima-qt.so"
         pickFirst "lib/armeabi-v7a/libc++_shared.so"
 
         pickFirst "lib/arm64-v8a/libavutil.so"
         pickFirst "lib/arm64-v8a/libavcodec.so"
+        pickFirst "lib/arm64-v8a/libswresample.so"
+        pickFirst "lib/arm64-v8a/libavfilter.so"
+        pickFirst "lib/arm64-v8a/libavdevice.so"
+        pickFirst "lib/arm64-v8a/libavformat.so"
         pickFirst "lib/arm64-v8a/libadpcm-ima-qt.so"
         pickFirst "lib/arm64-v8a/libc++_shared.so"
     }

@@ -10,8 +10,10 @@ import com.leovp.androidbase.exts.kotlin.toShortArrayLE
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.AudioPlayer
+import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.ffmpeg.AdpcmImaQTDecoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import org.bytedeco.ffmpeg.avutil.AVFrame
@@ -24,8 +26,8 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         private const val OUTPUT_IMA_FILE_NAME = "adpcm_ima_22050_2ch_s16le.ima"
     }
 
-    private val adpcm = com.leovp.ffmpeg.ADPCMCodec()
-    private val adpcmQT = com.leovp.ffmpeg.AdpcmImaQTDecoder(2, 44100)
+    private val adpcm = ADPCMCodec()
+    private val adpcmQT = AdpcmImaQTDecoder(2, 44100)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

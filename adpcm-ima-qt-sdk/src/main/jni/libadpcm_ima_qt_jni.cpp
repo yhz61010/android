@@ -10,7 +10,7 @@ extern "C"
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_jni", __VA_ARGS__))
 
-#define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
+//#define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
 #define ADPCM_PACKAGE "com/leovp/ffmpeg/adpcm/"
 
 //#define AUDIO_INBUF_SIZE 20480
@@ -21,8 +21,7 @@ const AVCodec *codec = nullptr;
 //AVCodecParserContext *parser = nullptr;
 
 JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
-    av_log_set_level(AV_LOG_ERROR);
-    av_log(nullptr, AV_LOG_ERROR, "ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
+    LOGE("ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
 
     codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
     ctx = avcodec_alloc_context3(codec);
@@ -34,7 +33,7 @@ JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
 
     int ret = avcodec_open2(ctx, codec, nullptr);
     if (ret < 0) {
-        av_log(nullptr, AV_LOG_ERROR, "avcodec_open2 err\n");
+        LOGE("avcodec_open2 err\n");
         return ret;
     }
 
@@ -54,16 +53,30 @@ JNIEXPORT void release(JNIEnv *env, jobject obj) {
 
 JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes) {
     size_t dataLen = env->GetArrayLength(adpcmBytes);
-    auto *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, 0);
+    LOGE("dataLen=%d\n", dataLen);
+    auto *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, nullptr);
     AVPacket *pkt = av_packet_alloc();
     size_t ret = av_new_packet(pkt, dataLen);
     if (ret < 0) {
         av_packet_free(&pkt);
         return nullptr;
     }
-
     pkt->data = adpcmData;
     pkt->pts = dataLen;
+
+//    parser = av_parser_init(codec->id);
+//    if (!parser) {
+//        LOGE("Parser not found\n");
+//        return nullptr;
+//    }
+//
+//    size_t ret = av_parser_parse2(parser, ctx, &pkt->data, &pkt->size, adpcmData, dataLen, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+//    if (ret < 0) {
+//        av_packet_free(&pkt);
+//        return nullptr;
+//    }
+//    LOGE("av_parser_parse2 ret=%d\n", ret);
+
     ret = avcodec_send_packet(ctx, pkt);
     if (ret < 0) {
         av_packet_free(&pkt);
@@ -80,34 +93,33 @@ JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes) {
     int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
     if (data_size < 0) {
         /* This should not occur, checking just for paranoia */
-        av_log(nullptr, AV_LOG_ERROR, "Failed to calculate data size\n");
+        LOGE("Failed to calculate data size\n");
         return nullptr;
     }
 
-//    if (!parser) {
-//        av_log(nullptr, AV_LOG_ERROR, "Parser not found\n");
-//        return nullptr;
-//    }
-
-//    uint8_t inbuf[AUDIO_INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
-//    uint8_t *data;
 //
-//    /* decode until eof */
-//    data      = inbuf;
-//
-//    ret = av_parser_parse2(parser, c, &pkt->data, &pkt->size,
-//                           data, data_size,
-//                           AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+//    int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
+//    LOGE("data_size=%d\n", data_size);
 
+    LOGE("sample_rate=%d\n", frame->sample_rate);
+    LOGE("channels=%d\n", frame->channels);
+    LOGE("nb_samples=%d\n", frame->nb_samples);
+    LOGE("format=%d\n", frame->format);
+    int t_data_size = av_samples_get_buffer_size(reinterpret_cast<int *>(frame->linesize), frame->channels, frame->nb_samples, (AVSampleFormat) frame->format, 0);
+
+    LOGE("11 t_data_size=%d\n", t_data_size);
+    LOGE("11 linesize=%d\n", frame->linesize[0]);
+
+    uint8_t pcm_len = frame->linesize[0];
+    LOGE("pcm_len=%d\n", pcm_len);
     uint8_t *left_channel = frame->extended_data[0];
 //    uint8_t *right_channel = frame->extended_data[1];
 
-    size_t pcm_len = frame->linesize[0];
     jbyteArray byte_array = env->NewByteArray(pcm_len);
     env->SetByteArrayRegion(byte_array, 0, pcm_len, reinterpret_cast<const jbyte *>(left_channel));
 
     av_packet_free(&pkt);
-    return byte_array;
+    return static_cast<jbyteArray>(byte_array);
 }
 
 JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
@@ -119,7 +131,7 @@ JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
 static JNINativeMethod methods[] = {
         {"init",       "(II)I",                (void *) init},
         {"release",    "()V",                  (void *) release},
-        {"decode",     "([B)[B;",              (void *) decode},
+        {"decode",     "([B)[B",               (void *) decode},
         {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
 };
 

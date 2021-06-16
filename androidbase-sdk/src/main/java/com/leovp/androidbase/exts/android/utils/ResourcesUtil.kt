@@ -19,19 +19,19 @@ object ResourcesUtil {
         }
     }
 
-    fun saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileName: String): String {
+    fun saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileName: String, force: Boolean = false): String {
         val inputStream: InputStream = app.resources.openRawResource(id)
         val file = File(storagePath)
         if (!file.exists()) {
             file.mkdirs()
         }
-        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName)
+        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName, force)
         return storagePath + File.separatorChar + outFileName
     }
 
-    fun saveAssetToFile(ctx: Context, assetFileName: String, storagePath: String, outFileName: String): Boolean {
+    fun saveAssetToFile(ctx: Context, assetFileName: String, storagePath: String, outFileName: String, force: Boolean = false): Boolean {
         return runCatching {
-            FileUtil.copyInputStreamToFile(ctx.assets.open(assetFileName), File(storagePath, outFileName).absolutePath)
+            FileUtil.copyInputStreamToFile(ctx.assets.open(assetFileName), File(storagePath, outFileName).absolutePath, force)
             true
         }.getOrElse {
             it.printStackTrace()

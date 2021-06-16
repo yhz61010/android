@@ -13,7 +13,7 @@ import com.leovp.audio.AudioPlayer
 import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.ffmpeg.AdpcmImaQTDecoder
+import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQTDecoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import org.bytedeco.ffmpeg.avutil.AVFrame
@@ -86,7 +86,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 if (LogContext.enableLog) LogContext.log.i(
                     "$i: bytes per sample=${av_get_bytes_per_sample(avFrame.format())} chunk[${stereoPcmBytes.size}] ch:${avFrame.channels()} sampleRate:${avFrame.sample_rate()} np_samples:${avFrame.nb_samples()} " +
                             " linesize[0]=${avFrame.linesize(0)} fmt[${avFrame.format()}]:${
-                                com.leovp.ffmpeg.AdpcmImaQTDecoder.getSampleFormatName(
+                                AdpcmImaQTDecoder.getSampleFormatName(
                                     avFrame.format()
                                 )
                             }"

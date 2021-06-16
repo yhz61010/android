@@ -123,6 +123,16 @@ android {
         pickFirst 'META-INF/native-image/windows-x86/jnijavacpp/reflect-config.json'
         pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json'
         pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json'
+
+        pickFirst "lib/armeabi-v7a/libavutil.so"
+        pickFirst "lib/armeabi-v7a/libavcodec.so"
+        pickFirst "lib/armeabi-v7a/libadpcm-ima-qt.so"
+        pickFirst "lib/armeabi-v7a/libc++_shared.so"
+
+        pickFirst "lib/arm64-v8a/libavutil.so"
+        pickFirst "lib/arm64-v8a/libavcodec.so"
+        pickFirst "lib/arm64-v8a/libadpcm-ima-qt.so"
+        pickFirst "lib/arm64-v8a/libc++_shared.so"
     }
 
     dexOptions {

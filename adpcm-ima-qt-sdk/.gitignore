@@ -84,3 +84,4 @@ lint/tmp/
 /src/main/obj/
 /src/main/jni/prebuilt/
 /src/main/libs/
+/src/main/jni/ffmpeg/

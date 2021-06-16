@@ -34,7 +34,7 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
 
     fun decode(adpcmBytes: ByteArray): Pair<ByteArray, ByteArray>? {
         if (adpcmBytes.size != chunkSize()) {
-            throw RuntimeException("Invalid ChunkSize: ${adpcmBytes.size}, required: ${chunkSize()}, In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples)")
+            throw RuntimeException("Invalid ChunkSize: ${adpcmBytes.size}, required: ${chunkSize()}, In QuickTime, IMA is encoded by chunks of 34*channels bytes (=64 samples)")
         }
         var rtnCode: Int
         val pkt = avcodec.av_packet_alloc()

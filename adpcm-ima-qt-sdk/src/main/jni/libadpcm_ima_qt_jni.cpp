@@ -51,18 +51,27 @@ JNIEXPORT void release(JNIEnv *env, jobject obj) {
 //    }
 }
 
-JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes) {
-    size_t dataLen = env->GetArrayLength(adpcmBytes);
-    LOGE("dataLen=%d\n", dataLen);
-    auto *adpcmData = (uint8_t *) env->GetByteArrayElements(adpcmBytes, nullptr);
-    AVPacket *pkt = av_packet_alloc();
-    size_t ret = av_new_packet(pkt, dataLen);
-    if (ret < 0) {
-        av_packet_free(&pkt);
-        return nullptr;
+JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
+    size_t adpcmLen = env->GetArrayLength(adpcmByteArray);
+    LOGE("dataLen=%d\n", adpcmLen);
+    for (int i = 0; i < adpcmLen; i++) {
+//        LOGE("bytearray: %d", adpcmByteArray[i]);
+        LOGE("%d", i);
     }
-    pkt->data = adpcmData;
-    pkt->pts = dataLen;
+    auto *temp = (jbyte *) env->GetByteArrayElements(adpcmByteArray, nullptr);
+    auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
+    memcpy(adpcm_unit8_t_array, temp, adpcmLen);
+    LOGE("adpcmLen=%d\n", (sizeof(adpcm_unit8_t_array) / sizeof(adpcm_unit8_t_array[0])));
+    LOGE("===== Print ADPCM data - Start =====");
+    for (int i = 0; i < adpcmLen; i++) {
+//        LOGE("%02X", adpcm_unit8_t_array[i]);
+        LOGE("%d", i);
+    }
+    env->ReleaseByteArrayElements(adpcmByteArray, temp, 0);
+    LOGE("===== Print ADPCM data - Done =====");
+    AVPacket *pkt = av_packet_alloc();
+    pkt->data = adpcm_unit8_t_array;
+    pkt->size = adpcmLen;
 
 //    parser = av_parser_init(codec->id);
 //    if (!parser) {
@@ -77,7 +86,7 @@ JNIEXPORT jbyteArray decode(JNIEnv *env, jobject obj, jbyteArray adpcmBytes) {
 //    }
 //    LOGE("av_parser_parse2 ret=%d\n", ret);
 
-    ret = avcodec_send_packet(ctx, pkt);
+    size_t ret = avcodec_send_packet(ctx, pkt);
     if (ret < 0) {
         av_packet_free(&pkt);
         return nullptr;

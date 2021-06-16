@@ -16,9 +16,6 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQTDecoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import org.bytedeco.ffmpeg.avutil.AVFrame
-import org.bytedeco.ffmpeg.global.avutil.av_get_bytes_per_sample
-import org.bytedeco.javacpp.BytePointer
 import kotlin.concurrent.thread
 
 class ADPCMActivity : BaseDemonstrationActivity() {
@@ -65,34 +62,9 @@ class ADPCMActivity : BaseDemonstrationActivity() {
             val chunkSize: Int = adpcmQT.chunkSize()
             for (i in musicBytes.indices step chunkSize) {
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
-                val avFrame: AVFrame = adpcmQT.decode(chunk) ?: fail("ADPCM decode error")
-
-//                val bp: BytePointer = avFrame.data(0)
-//                val pcmChunkBytes = ByteArray(avFrame.linesize().get())
-//                bp.get(pcmChunkBytes)
-
-                val bpLeft: BytePointer = avFrame.extended_data(0)
-                val leftChunkBytes = ByteArray(avFrame.linesize(0))
-                bpLeft.get(leftChunkBytes)
-
-//                val bpRight: BytePointer = avFrame.extended_data(1)
-//                val rightChunkBytes = ByteArray(avFrame.linesize(1))
-//                bpRight.get(rightChunkBytes)
-//
-                val stereoPcmBytes = leftChunkBytes // + rightChunkBytes
-
-//                os.write(pcmChunkBytes)
-
-                if (LogContext.enableLog) LogContext.log.i(
-                    "$i: bytes per sample=${av_get_bytes_per_sample(avFrame.format())} chunk[${stereoPcmBytes.size}] ch:${avFrame.channels()} sampleRate:${avFrame.sample_rate()} np_samples:${avFrame.nb_samples()} " +
-                            " linesize[0]=${avFrame.linesize(0)} fmt[${avFrame.format()}]:${
-                                AdpcmImaQTDecoder.getSampleFormatName(
-                                    avFrame.format()
-                                )
-                            }"
-                )
-
-                player.play(stereoPcmBytes)
+                val pcmBytes: ByteArray = adpcmQT.decode(chunk)?.first ?: fail("Decode ADPCM error!")
+//                os.write(pcmBytes)
+                player.play(pcmBytes)
             }
 //            os.flush()
 //            os.close()

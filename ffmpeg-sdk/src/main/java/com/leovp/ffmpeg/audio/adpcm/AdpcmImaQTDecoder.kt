@@ -2,7 +2,6 @@ package com.leovp.ffmpeg.audio.adpcm
 
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avutil.AVDictionary
-import org.bytedeco.ffmpeg.avutil.AVFrame
 import org.bytedeco.ffmpeg.global.avcodec
 import org.bytedeco.ffmpeg.global.avutil
 import org.bytedeco.javacpp.BytePointer
@@ -33,7 +32,7 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
         return 34 * channel
     }
 
-    fun decode(adpcmBytes: ByteArray): AVFrame? {
+    fun decode(adpcmBytes: ByteArray): Pair<ByteArray, ByteArray>? {
         if (adpcmBytes.size != chunkSize()) {
             throw RuntimeException("Invalid ChunkSize: ${adpcmBytes.size}, required: ${chunkSize()}, In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples)")
         }
@@ -53,7 +52,21 @@ class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
                     avutil.av_frame_free(frame)
                     return null
                 }
-                return frame
+
+//                if (LogContext.enableLog) LogContext.log.i(
+//                    "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())} ch:${frame.channels()} sampleRate:${frame.sample_rate()} np_samples:${frame.nb_samples()} " +
+//                            " linesize[0]=${frame.linesize(0)} fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
+//                )
+
+                val bpLeft: BytePointer = frame.extended_data(0)
+                val leftChunkBytes = ByteArray(frame.linesize(0))
+                bpLeft.get(leftChunkBytes)
+
+                val bpRight: BytePointer = frame.extended_data(1)
+                val rightChunkBytes = ByteArray(frame.linesize(1))
+                bpRight.get(rightChunkBytes)
+
+                return leftChunkBytes to rightChunkBytes
             }
         } finally {
             pkt.close()

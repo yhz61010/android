@@ -43,11 +43,11 @@ pushd ffmpeg
     --ranlib=${TOOLCHAINS}/bin/llvm-ranlib \
     --strip=${TOOLCHAINS}/bin/llvm-strip \
     --disable-everything \
-    --disable-programs \
     --disable-x86asm \
     --disable-inline-asm \
     --disable-swscale \
     --enable-decoder=adpcm_ima_qt \
+    --enable-parser=adpcm_ima_qt \
     --disable-static \
     --enable-shared \
     --enable-small \

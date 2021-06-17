@@ -47,7 +47,6 @@ pushd ffmpeg
     --disable-inline-asm \
     --disable-swscale \
     --enable-decoder=adpcm_ima_qt \
-    --enable-parser=adpcm_ima_qt \
     --disable-static \
     --enable-shared \
     --enable-small \

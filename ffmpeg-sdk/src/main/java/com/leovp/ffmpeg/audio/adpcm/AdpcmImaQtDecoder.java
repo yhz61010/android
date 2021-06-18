@@ -8,7 +8,14 @@ import com.leovp.ffmpeg.base.DecodedAudioResult;
  */
 public class AdpcmImaQtDecoder {
 
-    public native int init(int sampleRate, int channels);
+    private AdpcmImaQtDecoder() {
+    }
+
+    public AdpcmImaQtDecoder(int sampleRate, int channels) {
+        init(sampleRate, channels);
+    }
+
+    private native int init(int sampleRate, int channels);
 
     public native void release();
 

@@ -22,8 +22,7 @@ class AdpcmImaQtDecoder private constructor() {
     private external fun init(sampleRate: Int, channels: Int): Int
     external fun release()
     external fun decode(adpcmBytes: ByteArray): DecodedAudioResult
-    val version: String
-        external get
+    external fun getVersion(): String
 
     /**
      * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples).

@@ -67,6 +67,7 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteA
         av_frame_free(&frame);
         return nullptr;
     }
+    av_packet_free(&pkt);
 
     int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
     if (data_size < 0) {
@@ -93,8 +94,6 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteA
     uint8_t *right_channel_data = frame->extended_data[1];
     jbyteArray right_pcm_byte_array = env->NewByteArray(right_pcm_len);
     env->SetByteArrayRegion(right_pcm_byte_array, 0, right_pcm_len, reinterpret_cast<const jbyte *>(right_channel_data));
-
-    av_packet_free(&pkt);
 
     // Get the class we wish to return an instance of
     jclass resultClass = env->FindClass(ADPCM_PACKAGE_BASE"base/DecodedAudioResult");

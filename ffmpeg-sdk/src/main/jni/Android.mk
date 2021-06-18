@@ -13,6 +13,11 @@ LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavutil.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 #include $(CLEAR_VARS)
+#LOCAL_MODULE := libswresample
+#LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libswresample.so
+#include $(PREBUILT_SHARED_LIBRARY)
+#
+#include $(CLEAR_VARS)
 #LOCAL_MODULE := libavdevice
 #LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavdevice.so
 #include $(PREBUILT_SHARED_LIBRARY)
@@ -40,6 +45,7 @@ LOCAL_SRC_FILES := libadpcm_ima_qt_jni.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include
+# The following libraries will be generated in src/main/lib folder
 #LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample
 LOCAL_SHARED_LIBRARIES := libavcodec libavutil
 LOCAL_DISABLE_FORMAT_STRING_CHECKS := true

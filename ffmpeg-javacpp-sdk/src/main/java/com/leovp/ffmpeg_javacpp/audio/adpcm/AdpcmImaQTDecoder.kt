@@ -6,14 +6,14 @@ import org.bytedeco.ffmpeg.global.avcodec
 import org.bytedeco.ffmpeg.global.avutil
 import org.bytedeco.javacpp.BytePointer
 
-class AdpcmImaQTDecoder(private val channel: Int, sampleRate: Int) {
+class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
     init {
-        init(channel, sampleRate)
+        init(sampleRate, channel)
     }
 
     private var ctx: AVCodecContext? = null
 
-    private fun init(channel: Int, sampleRate: Int): Boolean {
+    private fun init(sampleRate: Int, channel: Int): Boolean {
         val codec = avcodec.avcodec_find_decoder(avcodec.AV_CODEC_ID_ADPCM_IMA_QT)
         ctx = avcodec.avcodec_alloc_context3(codec).apply {
             channels(channel)

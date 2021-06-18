@@ -105,3 +105,7 @@ lint/tmp/
 /src/main/jni/ffmpeg-4.4/doc/libavutil.3
 /src/main/jni/ffmpeg-4.4/doc/libavutil.pod
 /src/main/jni/ffmpeg-4.4/doc/print_options
+/src/main/jni/ffmpeg-4.4/doc/config.texi
+/src/main/jni/ffmpeg-4.4/ffbuild/config.fate
+/src/main/jni/ffmpeg-4.4/ffbuild/config.mak
+/src/main/jni/ffmpeg-4.4/ffbuild/config.sh

@@ -82,8 +82,6 @@ lint/tmp/
 # lint/reports/
 /.cxx/
 /src/main/obj/
-/src/main/jni/prebuilt/
 /src/main/libs/
-/src/main/jni/ffmpeg/
-/src/main/java/com/leovp/adpcm_ima/ADPCMDecoder.kt.bak
-/src/main/java/com/leovp/adpcm_ima/AdpcmImaQtDecoder.kt.bak
+/src/main/jni/prebuilt/
+/src/main/jni/ffmpeg_javacpp/

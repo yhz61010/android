@@ -15,7 +15,7 @@ extern "C"
 
 AVCodecContext *ctx = nullptr;
 
-JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
+JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     LOGE("ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
 
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
@@ -33,18 +33,19 @@ JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     return ret;
 }
 
-JNIEXPORT jint chunkSize() {
+JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
     return 34 * ctx->channels;
 }
 
-JNIEXPORT void release(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
     if (ctx != nullptr) {
         avcodec_free_context(&ctx);
         ctx = nullptr;
+        LOGE("ADPCM released!");
     }
 }
 
-JNIEXPORT jobject decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
+JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
     size_t adpcmLen = env->GetArrayLength(adpcmByteArray);
     auto *temp = (jbyte *) env->GetByteArrayElements(adpcmByteArray, nullptr);
     auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
@@ -113,8 +114,8 @@ JNIEXPORT jobject decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
     return resultObj;
 }
 
-JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
-    return env->NewStringUTF("0.0.1");
+JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
+    return env->NewStringUTF("0.1.0");
 }
 
 // =============================

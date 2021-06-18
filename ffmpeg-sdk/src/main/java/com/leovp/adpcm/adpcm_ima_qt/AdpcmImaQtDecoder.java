@@ -1,4 +1,6 @@
-package com.leovp.ffmpeg.adpcm;
+package com.leovp.adpcm.adpcm_ima_qt;
+
+import com.leovp.adpcm.adpcm_ima_qt.base.DecodedAudioResult;
 
 /**
  * Author: Michael Leo
@@ -10,7 +12,7 @@ public class AdpcmImaQtDecoder {
 
     public native void release();
 
-    public native byte[] decode(byte[] adpcmBytes);
+    public native DecodedAudioResult decode(byte[] adpcmBytes);
 
     public native String getVersion();
 

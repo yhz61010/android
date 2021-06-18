@@ -25,7 +25,7 @@ else
     CROSS_PREFIX=$TOOLCHAINS/bin/x86_64-linux-android-
 fi
 
-pushd ffmpeg
+pushd ffmpeg-4.4
 ./configure \
     --prefix=$PREFIX \
     --extra-cflags="$OPTIMIZE_CFLAGS" \

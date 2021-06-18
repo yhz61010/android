@@ -1,4 +1,4 @@
-package com.leovp.adpcm.adpcm_ima_qt.base;
+package com.leovp.ffmpeg.base;
 
 /**
  * Author: Michael Leo

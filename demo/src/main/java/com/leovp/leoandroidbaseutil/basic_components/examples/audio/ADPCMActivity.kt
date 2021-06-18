@@ -13,7 +13,7 @@ import com.leovp.audio.AudioPlayer
 import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQTDecoder
+import com.leovp.ffmpeg_javacpp.audio.adpcm.AdpcmImaQTDecoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlin.concurrent.thread
@@ -24,7 +24,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     private val adpcm = ADPCMCodec()
-    private val adpcmQT = AdpcmImaQTDecoder(2, 44100)
+    private val adpcmQT = AdpcmImaQTDecoder(44100, 2)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

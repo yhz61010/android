@@ -28,7 +28,8 @@
 
 static int cbs_av1_read_uvlc(CodedBitstreamContext *ctx, GetBitContext *gbc,
                              const char *name, uint32_t *write_to,
-                             uint32_t range_min, uint32_t range_max) {
+                             uint32_t range_min, uint32_t range_max)
+{
     uint32_t zeroes, bits_value, value;
     int position;
 
@@ -39,7 +40,7 @@ static int cbs_av1_read_uvlc(CodedBitstreamContext *ctx, GetBitContext *gbc,
     while (1) {
         if (get_bits_left(gbc) < 1) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid uvlc code at "
-                                               "%s: bitstream ended.\n", name);
+                   "%s: bitstream ended.\n", name);
             return AVERROR_INVALIDDATA;
         }
 
@@ -53,7 +54,7 @@ static int cbs_av1_read_uvlc(CodedBitstreamContext *ctx, GetBitContext *gbc,
     } else {
         if (get_bits_left(gbc) < zeroes) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid uvlc code at "
-                                               "%s: bitstream ended.\n", name);
+                   "%s: bitstream ended.\n", name);
             return AVERROR_INVALIDDATA;
         }
 
@@ -94,14 +95,8 @@ static int cbs_av1_read_uvlc(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
     if (value < range_min || value > range_max) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [%"
-        PRIu32
-        ",%"
-        PRIu32
-        "].\n",
-                name, value, range_min, range_max);
+               "%"PRIu32", but must be in [%"PRIu32",%"PRIu32"].\n",
+               name, value, range_min, range_max);
         return AVERROR_INVALIDDATA;
     }
 
@@ -111,20 +106,15 @@ static int cbs_av1_read_uvlc(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
 static int cbs_av1_write_uvlc(CodedBitstreamContext *ctx, PutBitContext *pbc,
                               const char *name, uint32_t value,
-                              uint32_t range_min, uint32_t range_max) {
+                              uint32_t range_min, uint32_t range_max)
+{
     uint32_t v;
     int position, zeroes;
 
     if (value < range_min || value > range_max) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [%"
-        PRIu32
-        ",%"
-        PRIu32
-        "].\n",
-                name, value, range_min, range_max);
+               "%"PRIu32", but must be in [%"PRIu32",%"PRIu32"].\n",
+               name, value, range_min, range_max);
         return AVERROR_INVALIDDATA;
     }
 
@@ -155,7 +145,8 @@ static int cbs_av1_write_uvlc(CodedBitstreamContext *ctx, PutBitContext *pbc,
 }
 
 static int cbs_av1_read_leb128(CodedBitstreamContext *ctx, GetBitContext *gbc,
-                               const char *name, uint64_t *write_to) {
+                               const char *name, uint64_t *write_to)
+{
     uint64_t value;
     int position, err, i;
 
@@ -164,7 +155,7 @@ static int cbs_av1_read_leb128(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
     value = 0;
     for (i = 0; i < 8; i++) {
-        int subscript[2] = {1, i};
+        int subscript[2] = { 1, i };
         uint32_t byte;
         err = ff_cbs_read_unsigned(ctx, gbc, 8, "leb128_byte[i]", subscript,
                                    &byte, 0x00, 0xff);
@@ -187,7 +178,8 @@ static int cbs_av1_read_leb128(CodedBitstreamContext *ctx, GetBitContext *gbc,
 }
 
 static int cbs_av1_write_leb128(CodedBitstreamContext *ctx, PutBitContext *pbc,
-                                const char *name, uint64_t value) {
+                                const char *name, uint64_t value)
+{
     int position, err, len, i;
     uint8_t byte;
 
@@ -197,7 +189,7 @@ static int cbs_av1_write_leb128(CodedBitstreamContext *ctx, PutBitContext *pbc,
         position = put_bits_count(pbc);
 
     for (i = 0; i < len; i++) {
-        int subscript[2] = {1, i};
+        int subscript[2] = { 1, i };
 
         byte = value >> (7 * i) & 0x7f;
         if (i < len - 1)
@@ -217,7 +209,8 @@ static int cbs_av1_write_leb128(CodedBitstreamContext *ctx, PutBitContext *pbc,
 
 static int cbs_av1_read_ns(CodedBitstreamContext *ctx, GetBitContext *gbc,
                            uint32_t n, const char *name,
-                           const int *subscripts, uint32_t *write_to) {
+                           const int *subscripts, uint32_t *write_to)
+{
     uint32_t m, v, extra_bit, value;
     int position, w;
 
@@ -231,7 +224,7 @@ static int cbs_av1_read_ns(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
     if (get_bits_left(gbc) < w) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid non-symmetric value at "
-                                           "%s: bitstream ended.\n", name);
+               "%s: bitstream ended.\n", name);
         return AVERROR_INVALIDDATA;
     }
 
@@ -266,18 +259,15 @@ static int cbs_av1_read_ns(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
 static int cbs_av1_write_ns(CodedBitstreamContext *ctx, PutBitContext *pbc,
                             uint32_t n, const char *name,
-                            const int *subscripts, uint32_t value) {
+                            const int *subscripts, uint32_t value)
+{
     uint32_t w, m, v, extra_bit;
     int position;
 
     if (value > n) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [0,%"
-        PRIu32
-        "].\n",
-                name, value, n);
+               "%"PRIu32", but must be in [0,%"PRIu32"].\n",
+               name, value, n);
         return AVERROR_INVALIDDATA;
     }
 
@@ -318,7 +308,8 @@ static int cbs_av1_write_ns(CodedBitstreamContext *ctx, PutBitContext *pbc,
 
 static int cbs_av1_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc,
                                   uint32_t range_min, uint32_t range_max,
-                                  const char *name, uint32_t *write_to) {
+                                  const char *name, uint32_t *write_to)
+{
     uint32_t value;
     int position, i;
     char bits[33];
@@ -330,7 +321,7 @@ static int cbs_av1_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc
     for (i = 0, value = range_min; value < range_max;) {
         if (get_bits_left(gbc) < 1) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid increment value at "
-                                               "%s: bitstream ended.\n", name);
+                   "%s: bitstream ended.\n", name);
             return AVERROR_INVALIDDATA;
         }
         if (get_bits1(gbc)) {
@@ -354,20 +345,15 @@ static int cbs_av1_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc
 
 static int cbs_av1_write_increment(CodedBitstreamContext *ctx, PutBitContext *pbc,
                                    uint32_t range_min, uint32_t range_max,
-                                   const char *name, uint32_t value) {
+                                   const char *name, uint32_t value)
+{
     int len;
 
     av_assert0(range_min <= range_max && range_max - range_min < 32);
     if (value < range_min || value > range_max) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [%"
-        PRIu32
-        ",%"
-        PRIu32
-        "].\n",
-                name, value, range_min, range_max);
+               "%"PRIu32", but must be in [%"PRIu32",%"PRIu32"].\n",
+               name, value, range_min, range_max);
         return AVERROR_INVALIDDATA;
     }
 
@@ -400,7 +386,8 @@ static int cbs_av1_write_increment(CodedBitstreamContext *ctx, PutBitContext *pb
 
 static int cbs_av1_read_subexp(CodedBitstreamContext *ctx, GetBitContext *gbc,
                                uint32_t range_max, const char *name,
-                               const int *subscripts, uint32_t *write_to) {
+                               const int *subscripts, uint32_t *write_to)
+{
     uint32_t value;
     int position, err;
     uint32_t max_len, len, range_offset, range_bits;
@@ -417,10 +404,10 @@ static int cbs_av1_read_subexp(CodedBitstreamContext *ctx, GetBitContext *gbc,
         return err;
 
     if (len) {
-        range_bits = 2 + len;
+        range_bits   = 2 + len;
         range_offset = 1 << range_bits;
     } else {
-        range_bits = 3;
+        range_bits   = 3;
         range_offset = 0;
     }
 
@@ -449,18 +436,15 @@ static int cbs_av1_read_subexp(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
 static int cbs_av1_write_subexp(CodedBitstreamContext *ctx, PutBitContext *pbc,
                                 uint32_t range_max, const char *name,
-                                const int *subscripts, uint32_t value) {
+                                const int *subscripts, uint32_t value)
+{
     int position, err;
     uint32_t max_len, len, range_offset, range_bits;
 
     if (value > range_max) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [0,%"
-        PRIu32
-        "].\n",
-                name, value, range_max);
+               "%"PRIu32", but must be in [0,%"PRIu32"].\n",
+               name, value, range_max);
         return AVERROR_INVALIDDATA;
     }
 
@@ -471,7 +455,7 @@ static int cbs_av1_write_subexp(CodedBitstreamContext *ctx, PutBitContext *pbc,
     max_len = av_log2(range_max - 1) - 3;
 
     if (value < 8) {
-        range_bits = 3;
+        range_bits   = 3;
         range_offset = 0;
         len = 0;
     } else {
@@ -515,14 +499,16 @@ static int cbs_av1_write_subexp(CodedBitstreamContext *ctx, PutBitContext *pbc,
 }
 
 
-static int cbs_av1_tile_log2(int blksize, int target) {
+static int cbs_av1_tile_log2(int blksize, int target)
+{
     int k;
     for (k = 0; (blksize << k) < target; k++);
     return k;
 }
 
 static int cbs_av1_get_relative_dist(const AV1RawSequenceHeader *seq,
-                                     unsigned int a, unsigned int b) {
+                                     unsigned int a, unsigned int b)
+{
     unsigned int diff, m;
     if (!seq->enable_order_hint)
         return 0;
@@ -532,7 +518,8 @@ static int cbs_av1_get_relative_dist(const AV1RawSequenceHeader *seq,
     return diff;
 }
 
-static size_t cbs_av1_get_payload_bytes_left(GetBitContext *gbc) {
+static size_t cbs_av1_get_payload_bytes_left(GetBitContext *gbc)
+{
     GetBitContext tmp = *gbc;
     size_t size = 0;
     for (int i = 0; get_bits_left(&tmp) >= 8; i++) {
@@ -750,7 +737,8 @@ static size_t cbs_av1_get_payload_bytes_left(GetBitContext *gbc) {
 
 static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
                                   CodedBitstreamFragment *frag,
-                                  int header) {
+                                  int header)
+{
     GetBitContext gbc;
     uint8_t *data;
     size_t size;
@@ -766,9 +754,7 @@ static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
 
     if (INT_MAX / 8 < size) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid fragment: "
-                                           "too large (%"
-        SIZE_SPECIFIER
-        " bytes).\n", size);
+               "too large (%"SIZE_SPECIFIER" bytes).\n", size);
         err = AVERROR_INVALIDDATA;
         goto fail;
     }
@@ -819,9 +805,7 @@ static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
         if (header.obu_has_size_field) {
             if (get_bits_left(&gbc) < 8) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid OBU: fragment "
-                                                   "too short (%"
-                SIZE_SPECIFIER
-                " bytes).\n", size);
+                       "too short (%"SIZE_SPECIFIER" bytes).\n", size);
                 err = AVERROR_INVALIDDATA;
                 goto fail;
             }
@@ -838,12 +822,8 @@ static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
 
         if (size < obu_length) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid OBU length: "
-                                               "%"
-            PRIu64
-            ", but only %"
-            SIZE_SPECIFIER
-            " bytes remaining in fragment.\n",
-                    obu_length, size);
+                   "%"PRIu64", but only %"SIZE_SPECIFIER" bytes remaining in fragment.\n",
+                   obu_length, size);
             err = AVERROR_INVALIDDATA;
             goto fail;
         }
@@ -857,9 +837,9 @@ static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
         size -= obu_length;
     }
 
-    success:
+success:
     err = 0;
-    fail:
+fail:
     ctx->trace_enable = trace;
     return err;
 }
@@ -867,13 +847,14 @@ static int cbs_av1_split_fragment(CodedBitstreamContext *ctx,
 static int cbs_av1_ref_tile_data(CodedBitstreamContext *ctx,
                                  CodedBitstreamUnit *unit,
                                  GetBitContext *gbc,
-                                 AV1RawTileData *td) {
+                                 AV1RawTileData *td)
+{
     int pos;
 
     pos = get_bits_count(gbc);
     if (pos >= 8 * unit->data_size) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Bitstream ended before "
-                                           "any data in tile group (%d bits read).\n", pos);
+               "any data in tile group (%d bits read).\n", pos);
         return AVERROR_INVALIDDATA;
     }
     // Must be byte-aligned at this point.
@@ -883,14 +864,15 @@ static int cbs_av1_ref_tile_data(CodedBitstreamContext *ctx,
     if (!td->data_ref)
         return AVERROR(ENOMEM);
 
-    td->data = unit->data + pos / 8;
+    td->data      = unit->data      + pos / 8;
     td->data_size = unit->data_size - pos / 8;
 
     return 0;
 }
 
 static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
-                             CodedBitstreamUnit *unit) {
+                             CodedBitstreamUnit *unit)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     AV1RawOBU *obu;
     GetBitContext gbc;
@@ -919,9 +901,7 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
     } else {
         if (unit->data_size < 1 + obu->header.obu_extension_flag) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid OBU length: "
-                                               "unit too short (%"
-            SIZE_SPECIFIER
-            ").\n", unit->data_size);
+                   "unit too short (%"SIZE_SPECIFIER").\n", unit->data_size);
             return AVERROR_INVALIDDATA;
         }
         obu->obu_size = unit->data_size - 1 - obu->header.obu_extension_flag;
@@ -934,9 +914,9 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
             obu->header.obu_type != AV1_OBU_TEMPORAL_DELIMITER &&
             priv->operating_point_idc) {
             int in_temporal_layer =
-                    (priv->operating_point_idc >> priv->temporal_id) & 1;
-            int in_spatial_layer =
-                    (priv->operating_point_idc >> (priv->spatial_id + 8)) & 1;
+                (priv->operating_point_idc >>  priv->temporal_id    ) & 1;
+            int in_spatial_layer  =
+                (priv->operating_point_idc >> (priv->spatial_id + 8)) & 1;
             if (!in_temporal_layer || !in_spatial_layer) {
                 return AVERROR(EAGAIN); // drop_obu()
             }
@@ -944,7 +924,8 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
     }
 
     switch (obu->header.obu_type) {
-        case AV1_OBU_SEQUENCE_HEADER: {
+    case AV1_OBU_SEQUENCE_HEADER:
+        {
             err = cbs_av1_read_sequence_header_obu(ctx, &gbc,
                                                    &obu->obu.sequence_header);
             if (err < 0)
@@ -970,15 +951,17 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
                 return AVERROR(ENOMEM);
             priv->sequence_header = &obu->obu.sequence_header;
         }
-            break;
-        case AV1_OBU_TEMPORAL_DELIMITER: {
+        break;
+    case AV1_OBU_TEMPORAL_DELIMITER:
+        {
             err = cbs_av1_read_temporal_delimiter_obu(ctx, &gbc);
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_FRAME_HEADER:
-        case AV1_OBU_REDUNDANT_FRAME_HEADER: {
+        break;
+    case AV1_OBU_FRAME_HEADER:
+    case AV1_OBU_REDUNDANT_FRAME_HEADER:
+        {
             err = cbs_av1_read_frame_header_obu(ctx, &gbc,
                                                 &obu->obu.frame_header,
                                                 obu->header.obu_type ==
@@ -987,8 +970,9 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_TILE_GROUP: {
+        break;
+    case AV1_OBU_TILE_GROUP:
+        {
             err = cbs_av1_read_tile_group_obu(ctx, &gbc,
                                               &obu->obu.tile_group);
             if (err < 0)
@@ -999,8 +983,9 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_FRAME: {
+        break;
+    case AV1_OBU_FRAME:
+        {
             err = cbs_av1_read_frame_obu(ctx, &gbc, &obu->obu.frame,
                                          unit->data_ref);
             if (err < 0)
@@ -1011,8 +996,9 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_TILE_LIST: {
+        break;
+    case AV1_OBU_TILE_LIST:
+        {
             err = cbs_av1_read_tile_list_obu(ctx, &gbc,
                                              &obu->obu.tile_list);
             if (err < 0)
@@ -1023,21 +1009,23 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_METADATA: {
+        break;
+    case AV1_OBU_METADATA:
+        {
             err = cbs_av1_read_metadata_obu(ctx, &gbc, &obu->obu.metadata);
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_PADDING: {
+        break;
+    case AV1_OBU_PADDING:
+        {
             err = cbs_av1_read_padding_obu(ctx, &gbc, &obu->obu.padding);
             if (err < 0)
                 return err;
         }
-            break;
-        default:
-            return AVERROR(ENOSYS);
+        break;
+    default:
+        return AVERROR(ENOSYS);
     }
 
     end_pos = get_bits_count(&gbc);
@@ -1062,7 +1050,8 @@ static int cbs_av1_read_unit(CodedBitstreamContext *ctx,
 
 static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
                              CodedBitstreamUnit *unit,
-                             PutBitContext *pbc) {
+                             PutBitContext *pbc)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     AV1RawOBU *obu = unit->content;
     PutBitContext pbc_tmp;
@@ -1090,7 +1079,8 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
     start_pos = put_bits_count(pbc);
 
     switch (obu->header.obu_type) {
-        case AV1_OBU_SEQUENCE_HEADER: {
+    case AV1_OBU_SEQUENCE_HEADER:
+        {
             err = cbs_av1_write_sequence_header_obu(ctx, pbc,
                                                     &obu->obu.sequence_header);
             if (err < 0)
@@ -1108,15 +1098,17 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
                 return AVERROR(ENOMEM);
             priv->sequence_header = &obu->obu.sequence_header;
         }
-            break;
-        case AV1_OBU_TEMPORAL_DELIMITER: {
+        break;
+    case AV1_OBU_TEMPORAL_DELIMITER:
+        {
             err = cbs_av1_write_temporal_delimiter_obu(ctx, pbc);
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_FRAME_HEADER:
-        case AV1_OBU_REDUNDANT_FRAME_HEADER: {
+        break;
+    case AV1_OBU_FRAME_HEADER:
+    case AV1_OBU_REDUNDANT_FRAME_HEADER:
+        {
             err = cbs_av1_write_frame_header_obu(ctx, pbc,
                                                  &obu->obu.frame_header,
                                                  obu->header.obu_type ==
@@ -1125,8 +1117,9 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_TILE_GROUP: {
+        break;
+    case AV1_OBU_TILE_GROUP:
+        {
             err = cbs_av1_write_tile_group_obu(ctx, pbc,
                                                &obu->obu.tile_group);
             if (err < 0)
@@ -1134,37 +1127,41 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
 
             td = &obu->obu.tile_group.tile_data;
         }
-            break;
-        case AV1_OBU_FRAME: {
+        break;
+    case AV1_OBU_FRAME:
+        {
             err = cbs_av1_write_frame_obu(ctx, pbc, &obu->obu.frame, NULL);
             if (err < 0)
                 return err;
 
             td = &obu->obu.frame.tile_group.tile_data;
         }
-            break;
-        case AV1_OBU_TILE_LIST: {
+        break;
+    case AV1_OBU_TILE_LIST:
+        {
             err = cbs_av1_write_tile_list_obu(ctx, pbc, &obu->obu.tile_list);
             if (err < 0)
                 return err;
 
             td = &obu->obu.tile_list.tile_data;
         }
-            break;
-        case AV1_OBU_METADATA: {
+        break;
+    case AV1_OBU_METADATA:
+        {
             err = cbs_av1_write_metadata_obu(ctx, pbc, &obu->obu.metadata);
             if (err < 0)
                 return err;
         }
-            break;
-        case AV1_OBU_PADDING: {
+        break;
+    case AV1_OBU_PADDING:
+        {
             err = cbs_av1_write_padding_obu(ctx, pbc, &obu->obu.padding);
             if (err < 0)
                 return err;
         }
-            break;
-        default:
-            return AVERROR(ENOSYS);
+        break;
+    default:
+        return AVERROR(ENOSYS);
     }
 
     end_pos = put_bits_count(pbc);
@@ -1188,7 +1185,7 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
     av_assert0(end_pos % 8 == 0);
     flush_put_bits(pbc);
     start_pos /= 8;
-    end_pos /= 8;
+    end_pos   /= 8;
 
     *pbc = pbc_tmp;
     err = cbs_av1_write_leb128(ctx, pbc, "obu_size", obu->obu_size);
@@ -1221,7 +1218,8 @@ static int cbs_av1_write_obu(CodedBitstreamContext *ctx,
 }
 
 static int cbs_av1_assemble_fragment(CodedBitstreamContext *ctx,
-                                     CodedBitstreamFragment *frag) {
+                                     CodedBitstreamFragment *frag)
+{
     size_t size, pos;
     int i;
 
@@ -1247,7 +1245,8 @@ static int cbs_av1_assemble_fragment(CodedBitstreamContext *ctx,
     return 0;
 }
 
-static void cbs_av1_flush(CodedBitstreamContext *ctx) {
+static void cbs_av1_flush(CodedBitstreamContext *ctx)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
 
     av_buffer_unref(&priv->frame_header_ref);
@@ -1260,76 +1259,78 @@ static void cbs_av1_flush(CodedBitstreamContext *ctx) {
     priv->tile_num = 0;
 }
 
-static void cbs_av1_close(CodedBitstreamContext *ctx) {
+static void cbs_av1_close(CodedBitstreamContext *ctx)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
 
     av_buffer_unref(&priv->sequence_header_ref);
     av_buffer_unref(&priv->frame_header_ref);
 }
 
-static void cbs_av1_free_metadata(void *unit, uint8_t *content) {
-    AV1RawOBU *obu = (AV1RawOBU *) content;
+static void cbs_av1_free_metadata(void *unit, uint8_t *content)
+{
+    AV1RawOBU *obu = (AV1RawOBU*)content;
     AV1RawMetadata *md;
 
     av_assert0(obu->header.obu_type == AV1_OBU_METADATA);
     md = &obu->obu.metadata;
 
     switch (md->metadata_type) {
-        case AV1_METADATA_TYPE_ITUT_T35:
-            av_buffer_unref(&md->metadata.itut_t35.payload_ref);
-            break;
+    case AV1_METADATA_TYPE_ITUT_T35:
+        av_buffer_unref(&md->metadata.itut_t35.payload_ref);
+        break;
     }
     av_free(content);
 }
 
 static const CodedBitstreamUnitTypeDescriptor cbs_av1_unit_types[] = {
-        CBS_UNIT_TYPE_POD(AV1_OBU_SEQUENCE_HEADER, AV1RawOBU),
-        CBS_UNIT_TYPE_POD(AV1_OBU_TEMPORAL_DELIMITER, AV1RawOBU),
-        CBS_UNIT_TYPE_POD(AV1_OBU_FRAME_HEADER, AV1RawOBU),
-        CBS_UNIT_TYPE_POD(AV1_OBU_REDUNDANT_FRAME_HEADER, AV1RawOBU),
+    CBS_UNIT_TYPE_POD(AV1_OBU_SEQUENCE_HEADER,        AV1RawOBU),
+    CBS_UNIT_TYPE_POD(AV1_OBU_TEMPORAL_DELIMITER,     AV1RawOBU),
+    CBS_UNIT_TYPE_POD(AV1_OBU_FRAME_HEADER,           AV1RawOBU),
+    CBS_UNIT_TYPE_POD(AV1_OBU_REDUNDANT_FRAME_HEADER, AV1RawOBU),
 
-        CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_TILE_GROUP, AV1RawOBU,
-                                   obu.tile_group.tile_data.data),
-        CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_FRAME, AV1RawOBU,
-                                   obu.frame.tile_group.tile_data.data),
-        CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_TILE_LIST, AV1RawOBU,
-                                   obu.tile_list.tile_data.data),
-        CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_PADDING, AV1RawOBU,
-                                   obu.padding.payload),
+    CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_TILE_GROUP, AV1RawOBU,
+                               obu.tile_group.tile_data.data),
+    CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_FRAME,      AV1RawOBU,
+                               obu.frame.tile_group.tile_data.data),
+    CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_TILE_LIST,  AV1RawOBU,
+                               obu.tile_list.tile_data.data),
+    CBS_UNIT_TYPE_INTERNAL_REF(AV1_OBU_PADDING,    AV1RawOBU,
+                               obu.padding.payload),
 
-        CBS_UNIT_TYPE_COMPLEX(AV1_OBU_METADATA, AV1RawOBU,
-                              &cbs_av1_free_metadata),
+    CBS_UNIT_TYPE_COMPLEX(AV1_OBU_METADATA, AV1RawOBU,
+                          &cbs_av1_free_metadata),
 
-        CBS_UNIT_TYPE_END_OF_LIST
+    CBS_UNIT_TYPE_END_OF_LIST
 };
 
 #define OFFSET(x) offsetof(CodedBitstreamAV1Context, x)
 static const AVOption cbs_av1_options[] = {
-        {"operating_point", "Set operating point to select layers to parse from a scalable bitstream",
-                OFFSET(operating_point), AV_OPT_TYPE_INT, {.i64 = -1}, -1, AV1_MAX_OPERATING_POINTS - 1, 0},
-        {NULL}
+    { "operating_point",  "Set operating point to select layers to parse from a scalable bitstream",
+                          OFFSET(operating_point), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, AV1_MAX_OPERATING_POINTS - 1, 0 },
+    { NULL }
 };
 
 static const AVClass cbs_av1_class = {
-        .class_name = "cbs_av1",
-        .item_name  = av_default_item_name,
-        .option     = cbs_av1_options,
-        .version    = LIBAVUTIL_VERSION_INT,
+    .class_name = "cbs_av1",
+    .item_name  = av_default_item_name,
+    .option     = cbs_av1_options,
+    .version    = LIBAVUTIL_VERSION_INT,
 };
 
 const CodedBitstreamType ff_cbs_type_av1 = {
-        .codec_id          = AV_CODEC_ID_AV1,
+    .codec_id          = AV_CODEC_ID_AV1,
 
-        .priv_class        = &cbs_av1_class,
-        .priv_data_size    = sizeof(CodedBitstreamAV1Context),
+    .priv_class        = &cbs_av1_class,
+    .priv_data_size    = sizeof(CodedBitstreamAV1Context),
 
-        .unit_types        = cbs_av1_unit_types,
+    .unit_types        = cbs_av1_unit_types,
 
-        .split_fragment    = &cbs_av1_split_fragment,
-        .read_unit         = &cbs_av1_read_unit,
-        .write_unit        = &cbs_av1_write_obu,
-        .assemble_fragment = &cbs_av1_assemble_fragment,
+    .split_fragment    = &cbs_av1_split_fragment,
+    .read_unit         = &cbs_av1_read_unit,
+    .write_unit        = &cbs_av1_write_obu,
+    .assemble_fragment = &cbs_av1_assemble_fragment,
 
-        .flush             = &cbs_av1_flush,
-        .close             = &cbs_av1_close,
+    .flush             = &cbs_av1_flush,
+    .close             = &cbs_av1_close,
 };

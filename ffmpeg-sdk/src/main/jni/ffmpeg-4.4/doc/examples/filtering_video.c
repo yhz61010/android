@@ -28,7 +28,6 @@
  */
 
 #define _XOPEN_SOURCE 600 /* for usleep */
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,7 +51,8 @@ AVFilterGraph *filter_graph;
 static int video_stream_index = -1;
 static int64_t last_pts = AV_NOPTS_VALUE;
 
-static int open_input_file(const char *filename) {
+static int open_input_file(const char *filename)
+{
     int ret;
     AVCodec *dec;
 
@@ -89,15 +89,16 @@ static int open_input_file(const char *filename) {
     return 0;
 }
 
-static int init_filters(const char *filters_descr) {
+static int init_filters(const char *filters_descr)
+{
     char args[512];
     int ret = 0;
-    const AVFilter *buffersrc = avfilter_get_by_name("buffer");
+    const AVFilter *buffersrc  = avfilter_get_by_name("buffer");
     const AVFilter *buffersink = avfilter_get_by_name("buffersink");
     AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs = avfilter_inout_alloc();
+    AVFilterInOut *inputs  = avfilter_inout_alloc();
     AVRational time_base = fmt_ctx->streams[video_stream_index]->time_base;
-    enum AVPixelFormat pix_fmts[] = {AV_PIX_FMT_GRAY8, AV_PIX_FMT_NONE};
+    enum AVPixelFormat pix_fmts[] = { AV_PIX_FMT_GRAY8, AV_PIX_FMT_NONE };
 
     filter_graph = avfilter_graph_alloc();
     if (!outputs || !inputs || !filter_graph) {
@@ -107,10 +108,10 @@ static int init_filters(const char *filters_descr) {
 
     /* buffer video source: the decoded frames from the decoder will be inserted here. */
     snprintf(args, sizeof(args),
-             "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-             dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
-             time_base.num, time_base.den,
-             dec_ctx->sample_aspect_ratio.num, dec_ctx->sample_aspect_ratio.den);
+            "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+            dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
+            time_base.num, time_base.den,
+            dec_ctx->sample_aspect_ratio.num, dec_ctx->sample_aspect_ratio.den);
 
     ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
                                        args, NULL, filter_graph);
@@ -145,10 +146,10 @@ static int init_filters(const char *filters_descr) {
      * filter input label is not specified, it is set to "in" by
      * default.
      */
-    outputs->name = av_strdup("in");
+    outputs->name       = av_strdup("in");
     outputs->filter_ctx = buffersrc_ctx;
-    outputs->pad_idx = 0;
-    outputs->next = NULL;
+    outputs->pad_idx    = 0;
+    outputs->next       = NULL;
 
     /*
      * The buffer sink input must be connected to the output pad of
@@ -156,26 +157,27 @@ static int init_filters(const char *filters_descr) {
      * filter output label is not specified, it is set to "out" by
      * default.
      */
-    inputs->name = av_strdup("out");
+    inputs->name       = av_strdup("out");
     inputs->filter_ctx = buffersink_ctx;
-    inputs->pad_idx = 0;
-    inputs->next = NULL;
+    inputs->pad_idx    = 0;
+    inputs->next       = NULL;
 
     if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
-                                        &inputs, &outputs, NULL)) < 0)
+                                    &inputs, &outputs, NULL)) < 0)
         goto end;
 
     if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
         goto end;
 
-    end:
+end:
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
 
     return ret;
 }
 
-static void display_frame(const AVFrame *frame, AVRational time_base) {
+static void display_frame(const AVFrame *frame, AVRational time_base)
+{
     int x, y;
     uint8_t *p0, *p;
     int64_t delay;
@@ -205,7 +207,8 @@ static void display_frame(const AVFrame *frame, AVRational time_base) {
     fflush(stdout);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int ret;
     AVPacket packet;
     AVFrame *frame;
@@ -272,7 +275,7 @@ int main(int argc, char **argv) {
         }
         av_packet_unref(&packet);
     }
-    end:
+end:
     avfilter_graph_free(&filter_graph);
     avcodec_free_context(&dec_ctx);
     avformat_close_input(&fmt_ctx);

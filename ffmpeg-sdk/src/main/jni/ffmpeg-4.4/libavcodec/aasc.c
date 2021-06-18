@@ -41,32 +41,33 @@ typedef struct AascContext {
     int palette_size;
 } AascContext;
 
-static av_cold int aasc_decode_init(AVCodecContext *avctx) {
+static av_cold int aasc_decode_init(AVCodecContext *avctx)
+{
     AascContext *s = avctx->priv_data;
     uint8_t *ptr;
     int i;
 
     s->avctx = avctx;
     switch (avctx->bits_per_coded_sample) {
-        case 8:
-            avctx->pix_fmt = AV_PIX_FMT_PAL8;
+    case 8:
+        avctx->pix_fmt = AV_PIX_FMT_PAL8;
 
-            ptr = avctx->extradata;
-            s->palette_size = FFMIN(avctx->extradata_size, AVPALETTE_SIZE);
-            for (i = 0; i < s->palette_size / 4; i++) {
-                s->palette[i] = 0xFFU << 24 | AV_RL32(ptr);
-                ptr += 4;
-            }
-            break;
-        case 16:
-            avctx->pix_fmt = AV_PIX_FMT_RGB555LE;
-            break;
-        case 24:
-            avctx->pix_fmt = AV_PIX_FMT_BGR24;
-            break;
-        default:
-            av_log(avctx, AV_LOG_ERROR, "Unsupported bit depth: %d\n", avctx->bits_per_coded_sample);
-            return -1;
+        ptr = avctx->extradata;
+        s->palette_size = FFMIN(avctx->extradata_size, AVPALETTE_SIZE);
+        for (i = 0; i < s->palette_size / 4; i++) {
+            s->palette[i] = 0xFFU << 24 | AV_RL32(ptr);
+            ptr += 4;
+        }
+        break;
+    case 16:
+        avctx->pix_fmt = AV_PIX_FMT_RGB555LE;
+        break;
+    case 24:
+        avctx->pix_fmt = AV_PIX_FMT_BGR24;
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "Unsupported bit depth: %d\n", avctx->bits_per_coded_sample);
+        return -1;
     }
 
     s->frame = av_frame_alloc();
@@ -77,11 +78,12 @@ static av_cold int aasc_decode_init(AVCodecContext *avctx) {
 }
 
 static int aasc_decode_frame(AVCodecContext *avctx,
-                             void *data, int *got_frame,
-                             AVPacket *avpkt) {
+                              void *data, int *got_frame,
+                              AVPacket *avpkt)
+{
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
-    AascContext *s = avctx->priv_data;
+    int buf_size       = avpkt->size;
+    AascContext *s     = avctx->priv_data;
     int compr, i, stride, psize, ret;
 
     if (buf_size < 4) {
@@ -92,39 +94,39 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     if ((ret = ff_reget_buffer(avctx, s->frame, 0)) < 0)
         return ret;
 
-    compr = AV_RL32(buf);
-    buf += 4;
+    compr     = AV_RL32(buf);
+    buf      += 4;
     buf_size -= 4;
     psize = avctx->bits_per_coded_sample / 8;
     switch (avctx->codec_tag) {
-        case MKTAG('A', 'A', 'S', '4'):
-            bytestream2_init(&s->gb, buf - 4, buf_size + 4);
-            ff_msrle_decode(avctx, s->frame, 8, &s->gb);
-            break;
-        case MKTAG('A', 'A', 'S', 'C'):
-            switch (compr) {
-                case 0:
-                    stride = (avctx->width * psize + psize) & ~psize;
-                    if (buf_size < stride * avctx->height)
-                        return AVERROR_INVALIDDATA;
-                    for (i = avctx->height - 1; i >= 0; i--) {
-                        memcpy(s->frame->data[0] + i * s->frame->linesize[0], buf, avctx->width * psize);
-                        buf += stride;
-                        buf_size -= stride;
-                    }
-                    break;
-                case 1:
-                    bytestream2_init(&s->gb, buf, buf_size);
-                    ff_msrle_decode(avctx, s->frame, 8, &s->gb);
-                    break;
-                default:
-                    av_log(avctx, AV_LOG_ERROR, "Unknown compression type %d\n", compr);
-                    return AVERROR_INVALIDDATA;
-            }
-            break;
-        default:
-            av_log(avctx, AV_LOG_ERROR, "Unknown FourCC: %X\n", avctx->codec_tag);
-            return -1;
+    case MKTAG('A', 'A', 'S', '4'):
+        bytestream2_init(&s->gb, buf - 4, buf_size + 4);
+        ff_msrle_decode(avctx, s->frame, 8, &s->gb);
+        break;
+    case MKTAG('A', 'A', 'S', 'C'):
+    switch (compr) {
+    case 0:
+        stride = (avctx->width * psize + psize) & ~psize;
+        if (buf_size < stride * avctx->height)
+            return AVERROR_INVALIDDATA;
+        for (i = avctx->height - 1; i >= 0; i--) {
+            memcpy(s->frame->data[0] + i * s->frame->linesize[0], buf, avctx->width * psize);
+            buf += stride;
+            buf_size -= stride;
+        }
+        break;
+    case 1:
+        bytestream2_init(&s->gb, buf, buf_size);
+        ff_msrle_decode(avctx, s->frame, 8, &s->gb);
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "Unknown compression type %d\n", compr);
+        return AVERROR_INVALIDDATA;
+    }
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "Unknown FourCC: %X\n", avctx->codec_tag);
+        return -1;
     }
 
     if (avctx->pix_fmt == AV_PIX_FMT_PAL8)
@@ -138,7 +140,8 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     return avpkt->size;
 }
 
-static av_cold int aasc_decode_end(AVCodecContext *avctx) {
+static av_cold int aasc_decode_end(AVCodecContext *avctx)
+{
     AascContext *s = avctx->priv_data;
 
     av_frame_free(&s->frame);
@@ -147,14 +150,14 @@ static av_cold int aasc_decode_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_aasc_decoder = {
-        .name           = "aasc",
-        .long_name      = NULL_IF_CONFIG_SMALL("Autodesk RLE"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_AASC,
-        .priv_data_size = sizeof(AascContext),
-        .init           = aasc_decode_init,
-        .close          = aasc_decode_end,
-        .decode         = aasc_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "aasc",
+    .long_name      = NULL_IF_CONFIG_SMALL("Autodesk RLE"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_AASC,
+    .priv_data_size = sizeof(AascContext),
+    .init           = aasc_decode_init,
+    .close          = aasc_decode_end,
+    .decode         = aasc_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

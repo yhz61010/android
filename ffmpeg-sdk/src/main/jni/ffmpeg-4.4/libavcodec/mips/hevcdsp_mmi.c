@@ -112,19 +112,12 @@ void ff_hevc_put_hevc_qpel_h##w##_8_mmi(int16_t *dst, uint8_t *_src,     \
 }
 
 PUT_HEVC_QPEL_H(4, 1, -4, -8);
-
 PUT_HEVC_QPEL_H(8, 2, -8, -16);
-
 PUT_HEVC_QPEL_H(12, 3, -12, -24);
-
 PUT_HEVC_QPEL_H(16, 4, -16, -32);
-
 PUT_HEVC_QPEL_H(24, 6, -24, -48);
-
 PUT_HEVC_QPEL_H(32, 8, -32, -64);
-
 PUT_HEVC_QPEL_H(48, 12, -48, -96);
-
 PUT_HEVC_QPEL_H(64, 16, -64, -128);
 
 #define PUT_HEVC_QPEL_HV(w, x_step, src_step, dst_step)                  \
@@ -313,19 +306,12 @@ void ff_hevc_put_hevc_qpel_hv##w##_8_mmi(int16_t *dst, uint8_t *_src,    \
 }
 
 PUT_HEVC_QPEL_HV(4, 1, -4, -8);
-
 PUT_HEVC_QPEL_HV(8, 2, -8, -16);
-
 PUT_HEVC_QPEL_HV(12, 3, -12, -24);
-
 PUT_HEVC_QPEL_HV(16, 4, -16, -32);
-
 PUT_HEVC_QPEL_HV(24, 6, -24, -48);
-
 PUT_HEVC_QPEL_HV(32, 8, -32, -64);
-
 PUT_HEVC_QPEL_HV(48, 12, -48, -96);
-
 PUT_HEVC_QPEL_HV(64, 16, -64, -128);
 
 #define PUT_HEVC_QPEL_BI_H(w, x_step, src_step, src2_step, dst_step)    \
@@ -452,19 +438,12 @@ void ff_hevc_put_hevc_qpel_bi_h##w##_8_mmi(uint8_t *_dst,               \
 }
 
 PUT_HEVC_QPEL_BI_H(4, 1, -4, -8, -4);
-
 PUT_HEVC_QPEL_BI_H(8, 2, -8, -16, -8);
-
 PUT_HEVC_QPEL_BI_H(12, 3, -12, -24, -12);
-
 PUT_HEVC_QPEL_BI_H(16, 4, -16, -32, -16);
-
 PUT_HEVC_QPEL_BI_H(24, 6, -24, -48, -24);
-
 PUT_HEVC_QPEL_BI_H(32, 8, -32, -64, -32);
-
 PUT_HEVC_QPEL_BI_H(48, 12, -48, -96, -48);
-
 PUT_HEVC_QPEL_BI_H(64, 16, -64, -128, -64);
 
 #define PUT_HEVC_QPEL_BI_HV(w, x_step, src_step, src2_step, dst_step)   \
@@ -688,19 +667,12 @@ void ff_hevc_put_hevc_qpel_bi_hv##w##_8_mmi(uint8_t *_dst,              \
 }
 
 PUT_HEVC_QPEL_BI_HV(4, 1, -4, -8, -4);
-
 PUT_HEVC_QPEL_BI_HV(8, 2, -8, -16, -8);
-
 PUT_HEVC_QPEL_BI_HV(12, 3, -12, -24, -12);
-
 PUT_HEVC_QPEL_BI_HV(16, 4, -16, -32, -16);
-
 PUT_HEVC_QPEL_BI_HV(24, 6, -24, -48, -24);
-
 PUT_HEVC_QPEL_BI_HV(32, 8, -32, -64, -32);
-
 PUT_HEVC_QPEL_BI_HV(48, 12, -48, -96, -48);
-
 PUT_HEVC_QPEL_BI_HV(64, 16, -64, -128, -64);
 
 #define PUT_HEVC_EPEL_BI_HV(w, x_step, src_step, src2_step, dst_step)   \
@@ -883,15 +855,10 @@ void ff_hevc_put_hevc_epel_bi_hv##w##_8_mmi(uint8_t *_dst,              \
 }
 
 PUT_HEVC_EPEL_BI_HV(4, 1, -4, -8, -4);
-
 PUT_HEVC_EPEL_BI_HV(8, 2, -8, -16, -8);
-
 PUT_HEVC_EPEL_BI_HV(12, 3, -12, -24, -12);
-
 PUT_HEVC_EPEL_BI_HV(16, 4, -16, -32, -16);
-
 PUT_HEVC_EPEL_BI_HV(24, 6, -24, -48, -24);
-
 PUT_HEVC_EPEL_BI_HV(32, 8, -32, -64, -32);
 
 #define PUT_HEVC_PEL_BI_PIXELS(w, x_step, src_step, dst_step, src2_step)  \
@@ -998,17 +965,11 @@ void ff_hevc_put_hevc_pel_bi_pixels##w##_8_mmi(uint8_t *_dst,             \
     );                                                                    \
 }                                                                         \
 
-
 PUT_HEVC_PEL_BI_PIXELS(8, 1, -8, -8, -16);
-
 PUT_HEVC_PEL_BI_PIXELS(16, 2, -16, -16, -32);
-
 PUT_HEVC_PEL_BI_PIXELS(24, 3, -24, -24, -48);
-
 PUT_HEVC_PEL_BI_PIXELS(32, 4, -32, -32, -64);
-
 PUT_HEVC_PEL_BI_PIXELS(48, 6, -48, -48, -96);
-
 PUT_HEVC_PEL_BI_PIXELS(64, 8, -64, -64, -128);
 
 #define PUT_HEVC_QPEL_UNI_HV(w, x_step, src_step, dst_step, tmp_step)   \
@@ -1213,17 +1174,10 @@ void ff_hevc_put_hevc_qpel_uni_hv##w##_8_mmi(uint8_t *_dst,             \
 }
 
 PUT_HEVC_QPEL_UNI_HV(4, 1, -4, -4, -8);
-
 PUT_HEVC_QPEL_UNI_HV(8, 2, -8, -8, -16);
-
 PUT_HEVC_QPEL_UNI_HV(12, 3, -12, -12, -24);
-
 PUT_HEVC_QPEL_UNI_HV(16, 4, -16, -16, -32);
-
 PUT_HEVC_QPEL_UNI_HV(24, 6, -24, -24, -48);
-
 PUT_HEVC_QPEL_UNI_HV(32, 8, -32, -32, -64);
-
 PUT_HEVC_QPEL_UNI_HV(48, 12, -48, -48, -96);
-
 PUT_HEVC_QPEL_UNI_HV(64, 16, -64, -64, -128);

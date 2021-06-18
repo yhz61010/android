@@ -27,7 +27,8 @@
 #include "internal.h"
 #include "libavutil/internal.h"
 
-static av_cold int aura_decode_init(AVCodecContext *avctx) {
+static av_cold int aura_decode_init(AVCodecContext *avctx)
+{
     /* width needs to be divisible by 4 for this codec to work */
     if (avctx->width & 0x3)
         return AVERROR(EINVAL);
@@ -38,7 +39,8 @@ static av_cold int aura_decode_init(AVCodecContext *avctx) {
 
 static int aura_decode_frame(AVCodecContext *avctx,
                              void *data, int *got_frame,
-                             AVPacket *pkt) {
+                             AVPacket *pkt)
+{
     AVFrame *frame = data;
     uint8_t *Y, *U, *V;
     uint8_t val;
@@ -46,7 +48,7 @@ static int aura_decode_frame(AVCodecContext *avctx,
     const uint8_t *buf = pkt->data;
 
     /* prediction error tables (make it clear that they are signed values) */
-    const int8_t *delta_table = (const int8_t *) buf + 16;
+    const int8_t *delta_table = (const int8_t*)buf + 16;
 
     if (pkt->size != 48 + avctx->height * avctx->width) {
         av_log(avctx, AV_LOG_ERROR, "got a buffer with %d bytes when %d were expected\n",
@@ -67,29 +69,25 @@ static int aura_decode_frame(AVCodecContext *avctx,
     /* iterate through each line in the height */
     for (y = 0; y < avctx->height; y++) {
         /* reset predictors */
-        val = *buf++;
+        val  = *buf++;
         U[0] = val & 0xF0;
         Y[0] = val << 4;
-        val = *buf++;
+        val  = *buf++;
         V[0] = val & 0xF0;
         Y[1] = Y[0] + delta_table[val & 0xF];
-        Y += 2;
-        U++;
-        V++;
+        Y   += 2; U++; V++;
 
         /* iterate through the remaining pixel groups (4 pixels/group) */
         for (x = 1; x < (avctx->width >> 1); x++) {
-            val = *buf++;
+            val  = *buf++;
             U[0] = U[-1] + delta_table[val >> 4];
             Y[0] = Y[-1] + delta_table[val & 0xF];
-            val = *buf++;
+            val  = *buf++;
             V[0] = V[-1] + delta_table[val >> 4];
-            Y[1] = Y[0] + delta_table[val & 0xF];
-            Y += 2;
-            U++;
-            V++;
+            Y[1] = Y[ 0] + delta_table[val & 0xF];
+            Y   += 2; U++; V++;
         }
-        Y += frame->linesize[0] - avctx->width;
+        Y += frame->linesize[0] -  avctx->width;
         U += frame->linesize[1] - (avctx->width >> 1);
         V += frame->linesize[2] - (avctx->width >> 1);
     }
@@ -100,12 +98,12 @@ static int aura_decode_frame(AVCodecContext *avctx,
 }
 
 AVCodec ff_aura2_decoder = {
-        .name           = "aura2",
-        .long_name      = NULL_IF_CONFIG_SMALL("Auravision Aura 2"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_AURA2,
-        .init           = aura_decode_init,
-        .decode         = aura_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "aura2",
+    .long_name      = NULL_IF_CONFIG_SMALL("Auravision Aura 2"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_AURA2,
+    .init           = aura_decode_init,
+    .decode         = aura_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

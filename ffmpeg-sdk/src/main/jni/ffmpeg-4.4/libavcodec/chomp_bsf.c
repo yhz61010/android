@@ -22,7 +22,8 @@
 #include "bsf.h"
 #include "bsf_internal.h"
 
-static int chomp_filter(AVBSFContext *ctx, AVPacket *pkt) {
+static int chomp_filter(AVBSFContext *ctx, AVPacket *pkt)
+{
     int ret;
 
     ret = ff_bsf_get_packet_ref(ctx, pkt);
@@ -39,6 +40,6 @@ static int chomp_filter(AVBSFContext *ctx, AVPacket *pkt) {
  * This filter removes a string of NULL bytes from the end of a packet.
  */
 const AVBitStreamFilter ff_chomp_bsf = {
-        .name   = "chomp",
-        .filter = chomp_filter,
+    .name   = "chomp",
+    .filter = chomp_filter,
 };

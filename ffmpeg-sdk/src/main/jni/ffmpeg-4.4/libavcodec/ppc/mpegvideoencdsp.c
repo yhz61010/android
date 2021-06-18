@@ -149,7 +149,8 @@ static int pix_sum_altivec(uint8_t *pix, int line_size)
 #endif /* HAVE_ALTIVEC */
 
 av_cold void ff_mpegvideoencdsp_init_ppc(MpegvideoEncDSPContext *c,
-                                         AVCodecContext *avctx) {
+                                         AVCodecContext *avctx)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

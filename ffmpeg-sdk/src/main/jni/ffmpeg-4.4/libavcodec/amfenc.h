@@ -37,7 +37,7 @@
 
 typedef struct AmfTraceWriter {
     AMFTraceWriterVtbl *vtbl;
-    AVCodecContext *avctx;
+    AVCodecContext     *avctx;
 } AmfTraceWriter;
 
 /**
@@ -45,77 +45,77 @@ typedef struct AmfTraceWriter {
 */
 
 typedef struct AmfContext {
-    AVClass *avclass;
+    AVClass            *avclass;
     // access to AMF runtime
-    amf_handle library; ///< handle to DLL library
-    AMFFactory *factory; ///< pointer to AMF factory
-    AMFDebug *debug;   ///< pointer to AMF debug interface
-    AMFTrace *trace;   ///< pointer to AMF trace interface
+    amf_handle          library; ///< handle to DLL library
+    AMFFactory         *factory; ///< pointer to AMF factory
+    AMFDebug           *debug;   ///< pointer to AMF debug interface
+    AMFTrace           *trace;   ///< pointer to AMF trace interface
 
-    amf_uint64 version; ///< version of AMF runtime
-    AmfTraceWriter tracer;  ///< AMF writer registered with AMF
-    AMFContext *context; ///< AMF context
+    amf_uint64          version; ///< version of AMF runtime
+    AmfTraceWriter      tracer;  ///< AMF writer registered with AMF
+    AMFContext         *context; ///< AMF context
     //encoder
-    AMFComponent *encoder; ///< AMF encoder object
-    amf_bool eof;     ///< flag indicating EOF happened
-    AMF_SURFACE_FORMAT format;  ///< AMF surface format
+    AMFComponent       *encoder; ///< AMF encoder object
+    amf_bool            eof;     ///< flag indicating EOF happened
+    AMF_SURFACE_FORMAT  format;  ///< AMF surface format
 
-    AVBufferRef *hw_device_ctx; ///< pointer to HW accelerator (decoder)
-    AVBufferRef *hw_frames_ctx; ///< pointer to HW accelerator (frame allocator)
+    AVBufferRef        *hw_device_ctx; ///< pointer to HW accelerator (decoder)
+    AVBufferRef        *hw_frames_ctx; ///< pointer to HW accelerator (frame allocator)
 
-    int hwsurfaces_in_queue;
-    int hwsurfaces_in_queue_max;
+    int                 hwsurfaces_in_queue;
+    int                 hwsurfaces_in_queue_max;
 
     // helpers to handle async calls
-    int delayed_drain;
-    AMFSurface *delayed_surface;
-    AVFrame *delayed_frame;
+    int                 delayed_drain;
+    AMFSurface         *delayed_surface;
+    AVFrame            *delayed_frame;
 
     // shift dts back by max_b_frames in timing
-    AVFifoBuffer *timestamp_list;
-    int64_t dts_delay;
+    AVFifoBuffer       *timestamp_list;
+    int64_t             dts_delay;
 
     // common encoder option options
 
-    int log_to_dbg;
+    int                 log_to_dbg;
 
     // Static options, have to be set before Init() call
-    int usage;
-    int profile;
-    int level;
-    int preanalysis;
-    int quality;
-    int b_frame_delta_qp;
-    int ref_b_frame_delta_qp;
+    int                 usage;
+    int                 profile;
+    int                 level;
+    int                 preanalysis;
+    int                 quality;
+    int                 b_frame_delta_qp;
+    int                 ref_b_frame_delta_qp;
 
     // Dynamic options, can be set after Init() call
 
-    int rate_control_mode;
-    int enforce_hrd;
-    int filler_data;
-    int enable_vbaq;
-    int skip_frame;
-    int qp_i;
-    int qp_p;
-    int qp_b;
-    int max_au_size;
-    int header_spacing;
-    int b_frame_ref;
-    int intra_refresh_mb;
-    int coding_mode;
-    int me_half_pel;
-    int me_quarter_pel;
-    int aud;
+    int                 rate_control_mode;
+    int                 enforce_hrd;
+    int                 filler_data;
+    int                 enable_vbaq;
+    int                 skip_frame;
+    int                 qp_i;
+    int                 qp_p;
+    int                 qp_b;
+    int                 max_au_size;
+    int                 header_spacing;
+    int                 b_frame_ref;
+    int                 intra_refresh_mb;
+    int                 coding_mode;
+    int                 me_half_pel;
+    int                 me_quarter_pel;
+    int                 aud;
 
     // HEVC - specific options
 
-    int gops_per_idr;
-    int header_insertion_mode;
-    int min_qp_i;
-    int max_qp_i;
-    int min_qp_p;
-    int max_qp_p;
-    int tier;
+    int                 gops_per_idr;
+    int                 header_insertion_mode;
+    int                 min_qp_i;
+    int                 max_qp_i;
+    int                 min_qp_p;
+    int                 max_qp_p;
+    int                 tier;
 } AmfContext;
 
 extern const AVCodecHWConfigInternal *const ff_amfenc_hw_configs[];
@@ -124,7 +124,6 @@ extern const AVCodecHWConfigInternal *const ff_amfenc_hw_configs[];
 * Common encoder initization function
 */
 int ff_amf_encode_init(AVCodecContext *avctx);
-
 /**
 * Common encoder termination function
 */

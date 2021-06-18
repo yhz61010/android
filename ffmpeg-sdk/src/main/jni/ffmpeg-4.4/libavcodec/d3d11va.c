@@ -39,11 +39,10 @@ AVD3D11VAContext *av_d3d11va_alloc_context(void)
     return res;
 }
 #else
-
 struct AVD3D11VAContext *av_d3d11va_alloc_context(void);
 
-struct AVD3D11VAContext *av_d3d11va_alloc_context(void) {
+struct AVD3D11VAContext *av_d3d11va_alloc_context(void)
+{
     return NULL;
 }
-
 #endif /* CONFIG_D3D11VA */

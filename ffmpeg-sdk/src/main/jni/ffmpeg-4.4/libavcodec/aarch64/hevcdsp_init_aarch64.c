@@ -27,84 +27,66 @@
 
 void ff_hevc_add_residual_4x4_8_neon(uint8_t *_dst, int16_t *coeffs,
                                      ptrdiff_t stride);
-
 void ff_hevc_add_residual_4x4_10_neon(uint8_t *_dst, int16_t *coeffs,
                                       ptrdiff_t stride);
-
 void ff_hevc_add_residual_8x8_8_neon(uint8_t *_dst, int16_t *coeffs,
                                      ptrdiff_t stride);
-
 void ff_hevc_add_residual_8x8_10_neon(uint8_t *_dst, int16_t *coeffs,
                                       ptrdiff_t stride);
-
 void ff_hevc_add_residual_16x16_8_neon(uint8_t *_dst, int16_t *coeffs,
                                        ptrdiff_t stride);
-
 void ff_hevc_add_residual_16x16_10_neon(uint8_t *_dst, int16_t *coeffs,
                                         ptrdiff_t stride);
-
 void ff_hevc_add_residual_32x32_8_neon(uint8_t *_dst, int16_t *coeffs,
                                        ptrdiff_t stride);
-
 void ff_hevc_add_residual_32x32_10_neon(uint8_t *_dst, int16_t *coeffs,
                                         ptrdiff_t stride);
-
 void ff_hevc_idct_8x8_8_neon(int16_t *coeffs, int col_limit);
-
 void ff_hevc_idct_8x8_10_neon(int16_t *coeffs, int col_limit);
-
 void ff_hevc_idct_16x16_8_neon(int16_t *coeffs, int col_limit);
-
 void ff_hevc_idct_16x16_10_neon(int16_t *coeffs, int col_limit);
-
 void ff_hevc_idct_4x4_dc_8_neon(int16_t *coeffs);
-
 void ff_hevc_idct_8x8_dc_8_neon(int16_t *coeffs);
-
 void ff_hevc_idct_16x16_dc_8_neon(int16_t *coeffs);
-
 void ff_hevc_idct_32x32_dc_8_neon(int16_t *coeffs);
-
 void ff_hevc_idct_4x4_dc_10_neon(int16_t *coeffs);
-
 void ff_hevc_idct_8x8_dc_10_neon(int16_t *coeffs);
-
 void ff_hevc_idct_16x16_dc_10_neon(int16_t *coeffs);
-
 void ff_hevc_idct_32x32_dc_10_neon(int16_t *coeffs);
-
 void ff_hevc_sao_band_filter_8x8_8_neon(uint8_t *_dst, uint8_t *_src,
-                                        ptrdiff_t stride_dst, ptrdiff_t stride_src,
-                                        int16_t *sao_offset_val, int sao_left_class,
-                                        int width, int height);
+                                  ptrdiff_t stride_dst, ptrdiff_t stride_src,
+                                  int16_t *sao_offset_val, int sao_left_class,
+                                  int width, int height);
 
 
-av_cold void ff_hevc_dsp_init_aarch64(HEVCDSPContext *c, const int bit_depth) {
+
+av_cold void ff_hevc_dsp_init_aarch64(HEVCDSPContext *c, const int bit_depth)
+{
     if (!have_neon(av_get_cpu_flags())) return;
 
     if (bit_depth == 8) {
-        c->add_residual[0] = ff_hevc_add_residual_4x4_8_neon;
-        c->add_residual[1] = ff_hevc_add_residual_8x8_8_neon;
-        c->add_residual[2] = ff_hevc_add_residual_16x16_8_neon;
-        c->add_residual[3] = ff_hevc_add_residual_32x32_8_neon;
-        c->idct[1] = ff_hevc_idct_8x8_8_neon;
-        c->idct[2] = ff_hevc_idct_16x16_8_neon;
-        c->idct_dc[0] = ff_hevc_idct_4x4_dc_8_neon;
-        c->idct_dc[1] = ff_hevc_idct_8x8_dc_8_neon;
-        c->idct_dc[2] = ff_hevc_idct_16x16_dc_8_neon;
-        c->idct_dc[3] = ff_hevc_idct_32x32_dc_8_neon;
-        c->sao_band_filter[0] = ff_hevc_sao_band_filter_8x8_8_neon;
+        c->add_residual[0]             = ff_hevc_add_residual_4x4_8_neon;
+        c->add_residual[1]             = ff_hevc_add_residual_8x8_8_neon;
+        c->add_residual[2]             = ff_hevc_add_residual_16x16_8_neon;
+        c->add_residual[3]             = ff_hevc_add_residual_32x32_8_neon;
+        c->idct[1]                     = ff_hevc_idct_8x8_8_neon;
+        c->idct[2]                     = ff_hevc_idct_16x16_8_neon;
+        c->idct_dc[0]                  = ff_hevc_idct_4x4_dc_8_neon;
+        c->idct_dc[1]                  = ff_hevc_idct_8x8_dc_8_neon;
+        c->idct_dc[2]                  = ff_hevc_idct_16x16_dc_8_neon;
+        c->idct_dc[3]                  = ff_hevc_idct_32x32_dc_8_neon;
+        c->sao_band_filter[0]          = ff_hevc_sao_band_filter_8x8_8_neon;
     }
     if (bit_depth == 10) {
-        c->add_residual[0] = ff_hevc_add_residual_4x4_10_neon;
-        c->add_residual[1] = ff_hevc_add_residual_8x8_10_neon;
-        c->add_residual[2] = ff_hevc_add_residual_16x16_10_neon;
-        c->add_residual[3] = ff_hevc_add_residual_32x32_10_neon;
-        c->idct[1] = ff_hevc_idct_8x8_10_neon;
-        c->idct[2] = ff_hevc_idct_16x16_10_neon;
-        c->idct_dc[0] = ff_hevc_idct_4x4_dc_10_neon;
-        c->idct_dc[1] = ff_hevc_idct_8x8_dc_10_neon;
-        c->idct_dc[2] = ff_hevc_idct_16x16_dc_10_neon;
-        c->idct_dc[3] = ff_hevc_idct_32x32_dc_10_neon;
+        c->add_residual[0]             = ff_hevc_add_residual_4x4_10_neon;
+        c->add_residual[1]             = ff_hevc_add_residual_8x8_10_neon;
+        c->add_residual[2]             = ff_hevc_add_residual_16x16_10_neon;
+        c->add_residual[3]             = ff_hevc_add_residual_32x32_10_neon;
+        c->idct[1]                     = ff_hevc_idct_8x8_10_neon;
+        c->idct[2]                     = ff_hevc_idct_16x16_10_neon;
+        c->idct_dc[0]                  = ff_hevc_idct_4x4_dc_10_neon;
+        c->idct_dc[1]                  = ff_hevc_idct_8x8_dc_10_neon;
+        c->idct_dc[2]                  = ff_hevc_idct_16x16_dc_10_neon;
+        c->idct_dc[3]                  = ff_hevc_idct_32x32_dc_10_neon;
     }
 }

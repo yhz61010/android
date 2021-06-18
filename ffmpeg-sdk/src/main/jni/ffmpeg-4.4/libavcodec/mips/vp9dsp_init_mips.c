@@ -208,7 +208,8 @@ static av_cold void vp9dsp_init_mmi(VP9DSPContext *dsp, int bpp)
 }
 #endif  // #if HAVE_MMI
 
-av_cold void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {
+av_cold void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp)
+{
 #if HAVE_MSA || HAVE_MMI
     int cpu_flags = av_get_cpu_flags();
 #endif

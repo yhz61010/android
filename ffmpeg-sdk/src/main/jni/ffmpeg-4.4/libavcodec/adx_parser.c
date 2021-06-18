@@ -37,9 +37,10 @@ typedef struct ADXParseContext {
 } ADXParseContext;
 
 static int adx_parse(AVCodecParserContext *s1,
-                     AVCodecContext *avctx,
-                     const uint8_t **poutbuf, int *poutbuf_size,
-                     const uint8_t *buf, int buf_size) {
+                           AVCodecContext *avctx,
+                           const uint8_t **poutbuf, int *poutbuf_size,
+                           const uint8_t *buf, int buf_size)
+{
     ADXParseContext *s = s1->priv_data;
     ParseContext *pc = &s->pc;
     int next = END_NOT_FOUND;
@@ -51,12 +52,12 @@ static int adx_parse(AVCodecParserContext *s1,
             state = (state << 8) | buf[i];
             /* check for fixed fields in ADX header for possible match */
             if ((state & 0xFFFF0000FFFFFF00) == 0x8000000003120400ULL) {
-                int channels = state & 0xFF;
+                int channels    = state & 0xFF;
                 int header_size = ((state >> 32) & 0xFFFF) + 4;
                 if (channels > 0 && header_size >= 8) {
                     s->header_size = header_size;
-                    s->block_size = BLOCK_SIZE * channels;
-                    s->remaining = i - 7 + s->header_size + s->block_size;
+                    s->block_size  = BLOCK_SIZE * channels;
+                    s->remaining   = i - 7 + s->header_size + s->block_size;
                     break;
                 }
             }
@@ -75,7 +76,7 @@ static int adx_parse(AVCodecParserContext *s1,
     }
 
     if (ff_combine_frame(pc, next, &buf, &buf_size) < 0 || !buf_size) {
-        *poutbuf = NULL;
+        *poutbuf      = NULL;
         *poutbuf_size = 0;
         return buf_size;
     }
@@ -88,8 +89,8 @@ static int adx_parse(AVCodecParserContext *s1,
 }
 
 AVCodecParser ff_adx_parser = {
-        .codec_ids      = {AV_CODEC_ID_ADPCM_ADX},
-        .priv_data_size = sizeof(ADXParseContext),
-        .parser_parse   = adx_parse,
-        .parser_close   = ff_parse_close,
+    .codec_ids      = { AV_CODEC_ID_ADPCM_ADX },
+    .priv_data_size = sizeof(ADXParseContext),
+    .parser_parse   = adx_parse,
+    .parser_close   = ff_parse_close,
 };

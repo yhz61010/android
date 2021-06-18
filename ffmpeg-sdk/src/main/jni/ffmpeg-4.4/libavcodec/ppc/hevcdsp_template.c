@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-static void FUNC(ff_hevc_idct_4x4, BIT_DEPTH)(int16_t *coeffs, int col_limit) {
+static void FUNC(ff_hevc_idct_4x4, BIT_DEPTH)(int16_t *coeffs, int col_limit)
+{
     const int shift = 7;
     const int shift2 = 20 - BIT_DEPTH;
     vec_s16 src_01, src_23;

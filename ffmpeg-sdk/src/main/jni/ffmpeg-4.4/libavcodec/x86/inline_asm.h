@@ -69,7 +69,7 @@
     "psubb  "#regb", "#regr"            \n\t"
 
 // mm6 is supposed to contain 0xfefefefefefefefe
-#define PAVGBP_MMX_NO_RND(rega, regb, regr, regc, regd, regp)   \
+#define PAVGBP_MMX_NO_RND(rega, regb, regr,  regc, regd, regp)   \
     "movq  "#rega", "#regr"             \n\t"                    \
     "movq  "#regc", "#regp"             \n\t"                    \
     "pand  "#regb", "#regr"             \n\t"                    \

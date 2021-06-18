@@ -22,11 +22,8 @@
 #include "libavcodec/vp8dsp.h"
 
 void ff_vp78dsp_init_armv6(VP8DSPContext *dsp);
-
 void ff_vp78dsp_init_neon(VP8DSPContext *dsp);
-
 void ff_vp8dsp_init_armv6(VP8DSPContext *dsp);
-
 void ff_vp8dsp_init_neon(VP8DSPContext *dsp);
 
 #define VP8_LF_Y(hv, inner, opt)                                             \

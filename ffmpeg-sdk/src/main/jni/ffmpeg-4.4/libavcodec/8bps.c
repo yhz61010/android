@@ -41,7 +41,7 @@
 
 
 static const enum AVPixelFormat pixfmt_rgb24[] = {
-        AV_PIX_FMT_BGR24, AV_PIX_FMT_0RGB32, AV_PIX_FMT_NONE};
+    AV_PIX_FMT_BGR24, AV_PIX_FMT_0RGB32, AV_PIX_FMT_NONE };
 
 typedef struct EightBpsContext {
     AVCodecContext *avctx;
@@ -53,11 +53,12 @@ typedef struct EightBpsContext {
 } EightBpsContext;
 
 static int decode_frame(AVCodecContext *avctx, void *data,
-                        int *got_frame, AVPacket *avpkt) {
+                        int *got_frame, AVPacket *avpkt)
+{
     AVFrame *frame = data;
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
-    EightBpsContext *const c = avctx->priv_data;
+    int buf_size       = avpkt->size;
+    EightBpsContext * const c = avctx->priv_data;
     const unsigned char *encoded = buf;
     unsigned char *pixptr, *pixptr_end;
     unsigned int height = avctx->height; // Real image height
@@ -65,7 +66,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     const unsigned char *lp, *dp, *ep;
     unsigned char count;
     unsigned int px_inc;
-    unsigned int planes = c->planes;
+    unsigned int planes     = c->planes;
     unsigned char *planemap = c->planemap;
     int ret;
 
@@ -89,7 +90,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
             pixptr_end = pixptr + frame->linesize[0];
             if (ep - lp < row * 2 + 2)
                 return AVERROR_INVALIDDATA;
-            dlen = av_be2ne16(*(const unsigned short *) (lp + row * 2));
+            dlen = av_be2ne16(*(const unsigned short *)(lp + row * 2));
             /* Decode a row of this plane */
             while (dlen > 0) {
                 if (ep - dp <= 1)
@@ -132,7 +133,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
             av_log(avctx, AV_LOG_ERROR, "Palette size %d is wrong\n", size);
         }
 
-        memcpy(frame->data[1], c->pal, AVPALETTE_SIZE);
+        memcpy (frame->data[1], c->pal, AVPALETTE_SIZE);
     }
 
     *got_frame = 1;
@@ -141,33 +142,34 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     return buf_size;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
-    EightBpsContext *const c = avctx->priv_data;
+static av_cold int decode_init(AVCodecContext *avctx)
+{
+    EightBpsContext * const c = avctx->priv_data;
 
-    c->avctx = avctx;
+    c->avctx       = avctx;
 
     switch (avctx->bits_per_coded_sample) {
-        case 8:
-            avctx->pix_fmt = AV_PIX_FMT_PAL8;
-            c->planes = 1;
-            c->planemap[0] = 0; // 1st plane is palette indexes
-            break;
-        case 24:
-            avctx->pix_fmt = ff_get_format(avctx, pixfmt_rgb24);
-            c->planes = 3;
-            c->planemap[0] = 2; // 1st plane is red
-            c->planemap[1] = 1; // 2nd plane is green
-            c->planemap[2] = 0; // 3rd plane is blue
-            break;
-        case 32:
-            avctx->pix_fmt = AV_PIX_FMT_RGB32;
-            c->planes = 4;
-            /* handle planemap setup later for decoding rgb24 data as rbg32 */
-            break;
-        default:
-            av_log(avctx, AV_LOG_ERROR, "Error: Unsupported color depth: %u.\n",
-                   avctx->bits_per_coded_sample);
-            return AVERROR_INVALIDDATA;
+    case 8:
+        avctx->pix_fmt = AV_PIX_FMT_PAL8;
+        c->planes      = 1;
+        c->planemap[0] = 0; // 1st plane is palette indexes
+        break;
+    case 24:
+        avctx->pix_fmt = ff_get_format(avctx, pixfmt_rgb24);
+        c->planes      = 3;
+        c->planemap[0] = 2; // 1st plane is red
+        c->planemap[1] = 1; // 2nd plane is green
+        c->planemap[2] = 0; // 3rd plane is blue
+        break;
+    case 32:
+        avctx->pix_fmt = AV_PIX_FMT_RGB32;
+        c->planes      = 4;
+        /* handle planemap setup later for decoding rgb24 data as rbg32 */
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "Error: Unsupported color depth: %u.\n",
+               avctx->bits_per_coded_sample);
+        return AVERROR_INVALIDDATA;
     }
 
     if (avctx->pix_fmt == AV_PIX_FMT_RGB32) {
@@ -180,12 +182,12 @@ static av_cold int decode_init(AVCodecContext *avctx) {
 }
 
 AVCodec ff_eightbps_decoder = {
-        .name           = "8bps",
-        .long_name      = NULL_IF_CONFIG_SMALL("QuickTime 8BPS video"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_8BPS,
-        .priv_data_size = sizeof(EightBpsContext),
-        .init           = decode_init,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
+    .name           = "8bps",
+    .long_name      = NULL_IF_CONFIG_SMALL("QuickTime 8BPS video"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_8BPS,
+    .priv_data_size = sizeof(EightBpsContext),
+    .init           = decode_init,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
 };

@@ -25,13 +25,11 @@
 
 void put_pixels_clamped_mvi_asm(const int16_t *block, uint8_t *pixels,
                                 ptrdiff_t line_size);
-
 void add_pixels_clamped_mvi_asm(const int16_t *block, uint8_t *pixels,
                                 ptrdiff_t line_size);
 
 void (*put_pixels_clamped_axp_p)(const int16_t *block, uint8_t *pixels,
                                  ptrdiff_t line_size);
-
 void (*add_pixels_clamped_axp_p)(const int16_t *block, uint8_t *pixels,
                                  ptrdiff_t line_size);
 
@@ -108,7 +106,8 @@ void add_pixels_clamped_mvi(const int16_t *block, uint8_t *pixels,
 #endif
 
 av_cold void ff_idctdsp_init_alpha(IDCTDSPContext *c, AVCodecContext *avctx,
-                                   unsigned high_bit_depth) {
+                                   unsigned high_bit_depth)
+{
     /* amask clears all bits that correspond to present features.  */
     if (amask(AMASK_MVI) == 0) {
         c->put_pixels_clamped = put_pixels_clamped_mvi_asm;
@@ -122,6 +121,6 @@ av_cold void ff_idctdsp_init_alpha(IDCTDSPContext *c, AVCodecContext *avctx,
         (avctx->idct_algo == FF_IDCT_AUTO)) {
         c->idct_put = ff_simple_idct_put_axp;
         c->idct_add = ff_simple_idct_add_axp;
-        c->idct = ff_simple_idct_axp;
+        c->idct =     ff_simple_idct_axp;
     }
 }

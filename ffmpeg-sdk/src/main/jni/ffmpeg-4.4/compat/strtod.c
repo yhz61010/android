@@ -25,24 +25,25 @@
 #include "libavutil/avstring.h"
 #include "libavutil/mathematics.h"
 
-static const char *check_nan_suffix(const char *s) {
+static const char *check_nan_suffix(const char *s)
+{
     const char *start = s;
 
     if (*s++ != '(')
         return start;
 
     while ((*s >= 'a' && *s <= 'z') || (*s >= 'A' && *s <= 'Z') ||
-           (*s >= '0' && *s <= '9') || *s == '_')
+           (*s >= '0' && *s <= '9') ||  *s == '_')
         s++;
 
     return *s == ')' ? s + 1 : start;
 }
 
 #undef strtod
-
 double strtod(const char *, char **);
 
-double avpriv_strtod(const char *nptr, char **endptr) {
+double avpriv_strtod(const char *nptr, char **endptr)
+{
     const char *end;
     double res;
 
@@ -80,13 +81,13 @@ double avpriv_strtod(const char *nptr, char **endptr) {
                !av_strncasecmp(nptr, "+0x", 3)) {
         /* FIXME this doesn't handle exponents, non-integers (float/double)
          * and numbers too large for long long */
-        res = strtoll(nptr, (char **) &end, 16);
+        res = strtoll(nptr, (char **)&end, 16);
     } else {
-        res = strtod(nptr, (char **) &end);
+        res = strtod(nptr, (char **)&end);
     }
 
     if (endptr)
-        *endptr = (char *) end;
+        *endptr = (char *)end;
 
     return res;
 }

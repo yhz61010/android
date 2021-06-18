@@ -33,7 +33,8 @@
 #include <libavutil/opt.h>
 #include <unistd.h>
 
-static void process_client(AVIOContext *client, const char *in_uri) {
+static void process_client(AVIOContext *client, const char *in_uri)
+{
     AVIOContext *input = NULL;
     uint8_t buf[1024];
     int ret, n, reply_code;
@@ -74,7 +75,7 @@ static void process_client(AVIOContext *client, const char *in_uri) {
                av_err2str(ret));
         goto end;
     }
-    for (;;) {
+    for(;;) {
         n = avio_read(input, buf, sizeof(buf));
         if (n < 0) {
             if (n == AVERROR_EOF)
@@ -86,7 +87,7 @@ static void process_client(AVIOContext *client, const char *in_uri) {
         avio_write(client, buf, n);
         avio_flush(client);
     }
-    end:
+end:
     fprintf(stderr, "Flushing client\n");
     avio_flush(client);
     fprintf(stderr, "Closing client\n");
@@ -96,7 +97,8 @@ static void process_client(AVIOContext *client, const char *in_uri) {
     av_freep(&resource);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     AVDictionary *options = NULL;
     AVIOContext *client = NULL, *server = NULL;
     const char *in_uri, *out_uri;
@@ -123,7 +125,7 @@ int main(int argc, char **argv) {
         return ret;
     }
     fprintf(stderr, "Entering main loop.\n");
-    for (;;) {
+    for(;;) {
         if ((ret = avio_accept(server, &client)) < 0)
             goto end;
         fprintf(stderr, "Accepted client, forking process.\n");
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
         if (pid > 0)
             avio_close(client);
     }
-    end:
+end:
     avio_close(server);
     if (ret < 0 && ret != AVERROR_EOF) {
         fprintf(stderr, "Some errors occurred: %s\n", av_err2str(ret));

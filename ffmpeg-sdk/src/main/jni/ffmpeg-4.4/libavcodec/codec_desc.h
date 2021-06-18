@@ -36,14 +36,14 @@
  * @see avcodec_descriptor_get()
  */
 typedef struct AVCodecDescriptor {
-    enum AVCodecID id;
+    enum AVCodecID     id;
     enum AVMediaType type;
     /**
      * Name of the codec described by this descriptor. It is non-empty and
      * unique for each codec descriptor. It should contain alphanumeric
      * characters and '_' only.
      */
-    const char *name;
+    const char      *name;
     /**
      * A more descriptive name for this codec. May be NULL.
      */
@@ -51,7 +51,7 @@ typedef struct AVCodecDescriptor {
     /**
      * Codec properties, a combination of AV_CODEC_PROP_* flags.
      */
-    int props;
+    int             props;
     /**
      * MIME type(s) associated with the codec.
      * May be NULL; if not, a NULL-terminated array of MIME types.

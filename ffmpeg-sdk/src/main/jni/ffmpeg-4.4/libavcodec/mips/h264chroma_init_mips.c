@@ -23,7 +23,8 @@
 #include "h264chroma_mips.h"
 
 
-av_cold void ff_h264chroma_init_mips(H264ChromaContext *c, int bit_depth) {
+av_cold void ff_h264chroma_init_mips(H264ChromaContext *c, int bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
     int high_bit_depth = bit_depth > 8;
 

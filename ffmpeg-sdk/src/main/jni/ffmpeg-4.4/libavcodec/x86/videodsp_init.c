@@ -274,10 +274,10 @@ static av_noinline void emulated_edge_mc_avx2(uint8_t *buf, const uint8_t *src,
 #endif /* HAVE_X86ASM */
 
 void ff_prefetch_mmxext(uint8_t *buf, ptrdiff_t stride, int h);
-
 void ff_prefetch_3dnow(uint8_t *buf, ptrdiff_t stride, int h);
 
-av_cold void ff_videodsp_init_x86(VideoDSPContext *ctx, int bpc) {
+av_cold void ff_videodsp_init_x86(VideoDSPContext *ctx, int bpc)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 

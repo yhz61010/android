@@ -29,7 +29,8 @@
 }
 
 void ff_vert_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *left,
-                       const uint8_t *src) {
+                       const uint8_t *src)
+{
     uint32_t row;
     v16u8 src0;
 
@@ -42,7 +43,8 @@ void ff_vert_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *left,
 }
 
 void ff_vert_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *left,
-                       const uint8_t *src) {
+                       const uint8_t *src)
+{
     uint32_t row;
     v16u8 src1, src2;
 
@@ -56,7 +58,8 @@ void ff_vert_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *left,
 }
 
 void ff_hor_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src,
-                      const uint8_t *top) {
+                      const uint8_t *top)
+{
     uint32_t row, inp;
     v16u8 src0, src1, src2, src3;
 
@@ -76,7 +79,8 @@ void ff_hor_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src,
 }
 
 void ff_hor_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src,
-                      const uint8_t *top) {
+                      const uint8_t *top)
+{
     uint32_t row, inp;
     v16u8 src0, src1, src2, src3;
 
@@ -102,9 +106,10 @@ void ff_hor_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src,
 }
 
 void ff_dc_4x4_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src_left,
-                   const uint8_t *src_top) {
+                   const uint8_t *src_top)
+{
     uint32_t val0, val1;
-    v16i8 store, src = {0};
+    v16i8 store, src = { 0 };
     v8u16 sum_h;
     v4u32 sum_w;
     v2u64 sum_d;
@@ -142,16 +147,15 @@ void ff_dc_##dir##_4x4_msa(uint8_t *dst, ptrdiff_t dst_stride,  \
                                                                 \
     SW4(val0, val0, val0, val0, dst, dst_stride);               \
 }
-
 INTRA_DC_TL_4x4(top);
-
 INTRA_DC_TL_4x4(left);
 
 void ff_dc_8x8_msa(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src_left,
-                   const uint8_t *src_top) {
+                   const uint8_t *src_top)
+{
     uint64_t val0, val1;
     v16i8 store;
-    v16u8 src = {0};
+    v16u8 src = { 0 };
     v8u16 sum_h;
     v4u32 sum_w;
     v2u64 sum_d;
@@ -200,11 +204,11 @@ void ff_dc_##dir##_8x8_msa(uint8_t *dst, ptrdiff_t dst_stride,  \
 }
 
 INTRA_DC_TL_8x8(top);
-
 INTRA_DC_TL_8x8(left);
 
 void ff_dc_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                     const uint8_t *src_left, const uint8_t *src_top) {
+                     const uint8_t *src_left, const uint8_t *src_top)
+{
     v16u8 top, left, out;
     v8u16 sum_h, sum_top, sum_left;
     v4u32 sum_w;
@@ -249,13 +253,12 @@ void ff_dc_##dir##_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride,      \
     dst += (8 * dst_stride);                                          \
     ST_UB8(out, out, out, out, out, out, out, out, dst, dst_stride);  \
 }
-
 INTRA_DC_TL_16x16(top);
-
 INTRA_DC_TL_16x16(left);
 
 void ff_dc_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                     const uint8_t *src_left, const uint8_t *src_top) {
+                     const uint8_t *src_left, const uint8_t *src_top)
+{
     uint32_t row;
     v16u8 top0, top1, left0, left1, out;
     v8u16 sum_h, sum_top0, sum_top1, sum_left0, sum_left1;
@@ -275,7 +278,8 @@ void ff_dc_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride,
     sum_w = (v4u32) __msa_srari_w((v4i32) sum_d, 6);
     out = (v16u8) __msa_splati_b((v16i8) sum_w, 0);
 
-    for (row = 16; row--;) {
+    for (row = 16; row--;)
+    {
         ST_UB2(out, out, dst, 16);
         dst += dst_stride;
         ST_UB2(out, out, dst, 16);
@@ -312,9 +316,7 @@ void ff_dc_##dir##_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride,  \
         dst += dst_stride;                                        \
     }                                                             \
 }
-
 INTRA_DC_TL_32x32(top);
-
 INTRA_DC_TL_32x32(left);
 
 #define INTRA_PREDICT_VALDC_16X16_MSA(val)                             \
@@ -329,9 +331,7 @@ void ff_dc_##val##_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride,       \
 }
 
 INTRA_PREDICT_VALDC_16X16_MSA(127);
-
 INTRA_PREDICT_VALDC_16X16_MSA(128);
-
 INTRA_PREDICT_VALDC_16X16_MSA(129);
 
 #define INTRA_PREDICT_VALDC_32X32_MSA(val)                             \
@@ -351,13 +351,12 @@ void ff_dc_##val##_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride,       \
 }
 
 INTRA_PREDICT_VALDC_32X32_MSA(127);
-
 INTRA_PREDICT_VALDC_32X32_MSA(128);
-
 INTRA_PREDICT_VALDC_32X32_MSA(129);
 
 void ff_tm_4x4_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                   const uint8_t *src_left, const uint8_t *src_top_ptr) {
+                   const uint8_t *src_left, const uint8_t *src_top_ptr)
+{
     uint32_t left;
     uint8_t top_left = src_top_ptr[-1];
     v16i8 src_top, src_left0, src_left1, src_left2, src_left3, tmp0, tmp1;
@@ -384,7 +383,8 @@ void ff_tm_4x4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 }
 
 void ff_tm_8x8_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                   const uint8_t *src_left, const uint8_t *src_top_ptr) {
+                   const uint8_t *src_left, const uint8_t *src_top_ptr)
+{
     uint8_t top_left = src_top_ptr[-1];
     uint32_t loop_cnt, left;
     v16i8 src_top, src_left0, src_left1, src_left2, src_left3, tmp0, tmp1;
@@ -416,7 +416,8 @@ void ff_tm_8x8_msa(uint8_t *dst, ptrdiff_t dst_stride,
 }
 
 void ff_tm_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                     const uint8_t *src_left, const uint8_t *src_top_ptr) {
+                     const uint8_t *src_left, const uint8_t *src_top_ptr)
+{
     uint8_t top_left = src_top_ptr[-1];
     uint32_t loop_cnt, left;
     v16i8 src_top, src_left0, src_left1, src_left2, src_left3;
@@ -466,7 +467,8 @@ void ff_tm_16x16_msa(uint8_t *dst, ptrdiff_t dst_stride,
 }
 
 void ff_tm_32x32_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                     const uint8_t *src_left, const uint8_t *src_top_ptr) {
+                     const uint8_t *src_left, const uint8_t *src_top_ptr)
+{
     uint8_t top_left = src_top_ptr[-1];
     uint32_t loop_cnt, left;
     v16i8 src_top0, src_top1, src_left0, src_left1, src_left2, src_left3;

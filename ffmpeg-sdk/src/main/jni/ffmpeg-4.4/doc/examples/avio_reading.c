@@ -39,8 +39,9 @@ struct buffer_data {
     size_t size; ///< size left in the buffer
 };
 
-static int read_packet(void *opaque, uint8_t *buf, int buf_size) {
-    struct buffer_data *bd = (struct buffer_data *) opaque;
+static int read_packet(void *opaque, uint8_t *buf, int buf_size)
+{
+    struct buffer_data *bd = (struct buffer_data *)opaque;
     buf_size = FFMIN(buf_size, bd->size);
 
     if (!buf_size)
@@ -49,25 +50,26 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size) {
 
     /* copy internal buffer data to buf */
     memcpy(buf, bd->ptr, buf_size);
-    bd->ptr += buf_size;
+    bd->ptr  += buf_size;
     bd->size -= buf_size;
 
     return buf_size;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     AVFormatContext *fmt_ctx = NULL;
     AVIOContext *avio_ctx = NULL;
     uint8_t *buffer = NULL, *avio_ctx_buffer = NULL;
     size_t buffer_size, avio_ctx_buffer_size = 4096;
     char *input_filename = NULL;
     int ret = 0;
-    struct buffer_data bd = {0};
+    struct buffer_data bd = { 0 };
 
     if (argc != 2) {
         fprintf(stderr, "usage: %s input_file\n"
-                        "API example program to show how to read from a custom buffer "
-                        "accessed through AVIOContext.\n", argv[0]);
+                "API example program to show how to read from a custom buffer "
+                "accessed through AVIOContext.\n", argv[0]);
         return 1;
     }
     input_filename = argv[1];
@@ -78,7 +80,7 @@ int main(int argc, char *argv[]) {
         goto end;
 
     /* fill opaque structure used by the AVIOContext read callback */
-    bd.ptr = buffer;
+    bd.ptr  = buffer;
     bd.size = buffer_size;
 
     if (!(fmt_ctx = avformat_alloc_context())) {
@@ -113,7 +115,7 @@ int main(int argc, char *argv[]) {
 
     av_dump_format(fmt_ctx, 0, input_filename, 0);
 
-    end:
+end:
     avformat_close_input(&fmt_ctx);
 
     /* note: the internal buffer could have changed, and be != avio_ctx_buffer */

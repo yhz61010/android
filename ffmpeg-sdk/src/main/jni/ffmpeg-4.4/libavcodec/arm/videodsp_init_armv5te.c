@@ -25,7 +25,8 @@
 
 void ff_prefetch_arm(uint8_t *mem, ptrdiff_t stride, int h);
 
-av_cold void ff_videodsp_init_armv5te(VideoDSPContext *ctx, int bpc) {
+av_cold void ff_videodsp_init_armv5te(VideoDSPContext *ctx, int bpc)
+{
 #if HAVE_ARMV5TE_EXTERNAL
     ctx->prefetch = ff_prefetch_arm;
 #endif

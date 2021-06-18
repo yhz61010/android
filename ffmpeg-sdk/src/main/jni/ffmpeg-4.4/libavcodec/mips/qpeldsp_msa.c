@@ -55,8 +55,8 @@
     out;                                                                \
 } )
 
-#define APPLY_HORIZ_QPEL_FILTER_8BYTE(inp0, inp1, \
-                                      mask0, mask1, mask2, mask3, \
+#define APPLY_HORIZ_QPEL_FILTER_8BYTE(inp0, inp1,                       \
+                                      mask0, mask1, mask2, mask3,       \
                                       coef0, coef1, coef2)              \
 ( {                                                                     \
     v16u8 out;                                                          \
@@ -81,8 +81,8 @@
     out;                                                                \
 } )
 
-#define APPLY_HORIZ_QPEL_FILTER_8BYTE_1ROW(inp0, \
-                                           mask0, mask1, mask2, mask3, \
+#define APPLY_HORIZ_QPEL_FILTER_8BYTE_1ROW(inp0,                        \
+                                           mask0, mask1, mask2, mask3,  \
                                            coef0, coef1, coef2)         \
 ( {                                                                     \
     v16u8 out;                                                          \
@@ -102,8 +102,8 @@
     out;                                                                \
 } )
 
-#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER_8BYTE_1ROW(inp0, mask0, mask1, \
-                                                    mask2, mask3, coef0, \
+#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER_8BYTE_1ROW(inp0, mask0, mask1,   \
+                                                    mask2, mask3, coef0,  \
                                                     coef1, coef2)         \
 ( {                                                                       \
     v16u8 out;                                                            \
@@ -124,7 +124,7 @@
     out;                                                                  \
 } )
 
-#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER(inp0, inp1, mask, \
+#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER(inp0, inp1, mask,              \
                                          coef0, coef1, coef2)           \
 ( {                                                                     \
     v16u8 out, tmp0, tmp1;                                              \
@@ -162,8 +162,8 @@
     out;                                                                \
 } )
 
-#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER_8BYTE(inp0, inp1, \
-                                               mask0, mask1, mask2, mask3, \
+#define APPLY_HORIZ_QPEL_NO_ROUND_FILTER_8BYTE(inp0, inp1,                  \
+                                               mask0, mask1, mask2, mask3,  \
                                                coef0, coef1, coef2)         \
 ( {                                                                         \
     v16u8 out;                                                              \
@@ -191,8 +191,8 @@
     out;                                                                    \
 } )
 
-#define APPLY_VERT_QPEL_FILTER(inp0, inp1, inp2, inp3, \
-                               inp4, inp5, inp6, inp7, \
+#define APPLY_VERT_QPEL_FILTER(inp0, inp1, inp2, inp3,                  \
+                               inp4, inp5, inp6, inp7,                  \
                                coef0, coef1, coef2)                     \
 ( {                                                                     \
     v16u8 res;                                                          \
@@ -217,10 +217,10 @@
     res;                                                                \
 } )
 
-#define APPLY_VERT_QPEL_FILTER_8BYTE(inp00, inp01, inp02, inp03, \
-                                     inp04, inp05, inp06, inp07, \
-                                     inp10, inp11, inp12, inp13, \
-                                     inp14, inp15, inp16, inp17, \
+#define APPLY_VERT_QPEL_FILTER_8BYTE(inp00, inp01, inp02, inp03,        \
+                                     inp04, inp05, inp06, inp07,        \
+                                     inp10, inp11, inp12, inp13,        \
+                                     inp14, inp15, inp16, inp17,        \
                                      coef0, coef1, coef2)               \
 ( {                                                                     \
     v16u8 res;                                                          \
@@ -245,8 +245,8 @@
     res;                                                                \
 } )
 
-#define APPLY_VERT_QPEL_NO_ROUND_FILTER(inp0, inp1, inp2, inp3, \
-                                        inp4, inp5, inp6, inp7, \
+#define APPLY_VERT_QPEL_NO_ROUND_FILTER(inp0, inp1, inp2, inp3,         \
+                                        inp4, inp5, inp6, inp7,         \
                                         coef0, coef1, coef2)            \
 ( {                                                                     \
     v16u8 res;                                                          \
@@ -274,10 +274,10 @@
     res;                                                                \
 } )
 
-#define APPLY_VERT_QPEL_NO_ROUND_FILTER_8BYTE(inp00, inp01, inp02, inp03, \
-                                              inp04, inp05, inp06, inp07, \
-                                              inp10, inp11, inp12, inp13, \
-                                              inp14, inp15, inp16, inp17, \
+#define APPLY_VERT_QPEL_NO_ROUND_FILTER_8BYTE(inp00, inp01, inp02, inp03,  \
+                                              inp04, inp05, inp06, inp07,  \
+                                              inp10, inp11, inp12, inp13,  \
+                                              inp14, inp15, inp16, inp17,  \
                                               coef0, coef1, coef2)         \
 ( {                                                                        \
     v16u8 res;                                                             \
@@ -309,14 +309,15 @@ static void horiz_mc_qpel_aver_src0_8width_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
                                                int32_t dst_stride,
-                                               int32_t height) {
+                                               int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -342,11 +343,12 @@ static void horiz_mc_qpel_aver_src0_16width_msa(const uint8_t *src,
                                                 int32_t src_stride,
                                                 uint8_t *dst,
                                                 int32_t dst_stride,
-                                                int32_t height) {
+                                                int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -385,14 +387,15 @@ static void horiz_mc_qpel_8width_msa(const uint8_t *src,
                                      int32_t src_stride,
                                      uint8_t *dst,
                                      int32_t dst_stride,
-                                     int32_t height) {
+                                     int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -415,11 +418,12 @@ static void horiz_mc_qpel_16width_msa(const uint8_t *src,
                                       int32_t src_stride,
                                       uint8_t *dst,
                                       int32_t dst_stride,
-                                      int32_t height) {
+                                      int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -454,14 +458,15 @@ static void horiz_mc_qpel_aver_src1_8width_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
                                                int32_t dst_stride,
-                                               int32_t height) {
+                                               int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -489,11 +494,12 @@ static void horiz_mc_qpel_aver_src1_16width_msa(const uint8_t *src,
                                                 int32_t src_stride,
                                                 uint8_t *dst,
                                                 int32_t dst_stride,
-                                                int32_t height) {
+                                                int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -532,14 +538,15 @@ static void horiz_mc_qpel_no_rnd_aver_src0_8width_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
                                                       int32_t dst_stride,
-                                                      int32_t height) {
+                                                      int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -566,11 +573,12 @@ static void horiz_mc_qpel_no_rnd_aver_src0_16width_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
                                                        int32_t dst_stride,
-                                                       int32_t height) {
+                                                       int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -609,14 +617,15 @@ static void horiz_mc_qpel_no_rnd_8width_msa(const uint8_t *src,
                                             int32_t src_stride,
                                             uint8_t *dst,
                                             int32_t dst_stride,
-                                            int32_t height) {
+                                            int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -639,11 +648,12 @@ static void horiz_mc_qpel_no_rnd_16width_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
                                              int32_t dst_stride,
-                                             int32_t height) {
+                                             int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -678,14 +688,15 @@ static void horiz_mc_qpel_no_rnd_aver_src1_8width_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
                                                       int32_t dst_stride,
-                                                      int32_t height) {
+                                                      int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -714,11 +725,12 @@ static void horiz_mc_qpel_no_rnd_aver_src1_16width_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
                                                        int32_t dst_stride,
-                                                       int32_t height) {
+                                                       int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -757,15 +769,16 @@ static void horiz_mc_qpel_avg_dst_aver_src0_8width_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
                                                        int32_t dst_stride,
-                                                       int32_t height) {
+                                                       int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -795,12 +808,13 @@ static void horiz_mc_qpel_avg_dst_aver_src0_16width_msa(const uint8_t *src,
                                                         int32_t src_stride,
                                                         uint8_t *dst,
                                                         int32_t dst_stride,
-                                                        int32_t height) {
+                                                        int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res0, res1;
     v16u8 dst0, dst1;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -835,15 +849,16 @@ static void horiz_mc_qpel_avg_dst_8width_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
                                              int32_t dst_stride,
-                                             int32_t height) {
+                                             int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -870,12 +885,13 @@ static void horiz_mc_qpel_avg_dst_16width_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst,
                                               int32_t dst_stride,
-                                              int32_t height) {
+                                              int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res0, res1;
     v16u8 dst0, dst1;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -908,15 +924,16 @@ static void horiz_mc_qpel_avg_dst_aver_src1_8width_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
                                                        int32_t dst_stride,
-                                                       int32_t height) {
+                                                       int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 res0, res1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -948,11 +965,12 @@ static void horiz_mc_qpel_avg_dst_aver_src1_16width_msa(const uint8_t *src,
                                                         int32_t src_stride,
                                                         uint8_t *dst,
                                                         int32_t dst_stride,
-                                                        int32_t height) {
+                                                        int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res0, res1, dst0, dst1;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -986,7 +1004,8 @@ static void horiz_mc_qpel_avg_dst_aver_src1_16width_msa(const uint8_t *src,
 static void vert_mc_qpel_aver_src0_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 tmp0, tmp1, res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1034,7 +1053,8 @@ static void vert_mc_qpel_aver_src0_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_aver_src0_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -1174,7 +1194,8 @@ static void vert_mc_qpel_aver_src0_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_8x8_msa(const uint8_t *src,
                                  int32_t src_stride,
                                  uint8_t *dst,
-                                 int32_t dst_stride) {
+                                 int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1216,7 +1237,8 @@ static void vert_mc_qpel_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_16x16_msa(const uint8_t *src,
                                    int32_t src_stride,
                                    uint8_t *dst,
-                                   int32_t dst_stride) {
+                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -1351,7 +1373,8 @@ static void vert_mc_qpel_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_aver_src1_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 tmp0, tmp1, res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1400,7 +1423,8 @@ static void vert_mc_qpel_aver_src1_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_aver_src1_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -1550,7 +1574,8 @@ static void vert_mc_qpel_aver_src1_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_aver_src0_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 tmp0, tmp1, res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1600,7 +1625,8 @@ static void vert_mc_qpel_no_rnd_aver_src0_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_aver_src0_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -1749,7 +1775,8 @@ static void vert_mc_qpel_no_rnd_aver_src0_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_8x8_msa(const uint8_t *src,
                                         int32_t src_stride,
                                         uint8_t *dst,
-                                        int32_t dst_stride) {
+                                        int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1791,7 +1818,8 @@ static void vert_mc_qpel_no_rnd_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_16x16_msa(const uint8_t *src,
                                           int32_t src_stride,
                                           uint8_t *dst,
-                                          int32_t dst_stride) {
+                                          int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -1923,7 +1951,8 @@ static void vert_mc_qpel_no_rnd_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_aver_src1_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 tmp0, tmp1, res0, res1;
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
@@ -1973,7 +2002,8 @@ static void vert_mc_qpel_no_rnd_aver_src1_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_no_rnd_aver_src1_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0;
@@ -2121,7 +2151,8 @@ static void vert_mc_qpel_no_rnd_aver_src1_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_aver_src0_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 tmp0, tmp1, res0, res1;
@@ -2182,7 +2213,8 @@ static void vert_mc_qpel_avg_dst_aver_src0_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_aver_src0_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0, res1, dst0, dst1;
@@ -2313,7 +2345,8 @@ static void vert_mc_qpel_avg_dst_aver_src0_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_8x8_msa(const uint8_t *src,
                                          int32_t src_stride,
                                          uint8_t *dst,
-                                         int32_t dst_stride) {
+                                         int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 res0, res1;
@@ -2365,7 +2398,8 @@ static void vert_mc_qpel_avg_dst_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_16x16_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0, res1, dst0, dst1;
@@ -2489,7 +2523,8 @@ static void vert_mc_qpel_avg_dst_16x16_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_aver_src1_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 tmp0, tmp1, res0, res1;
@@ -2547,7 +2582,8 @@ static void vert_mc_qpel_avg_dst_aver_src1_8x8_msa(const uint8_t *src,
 static void vert_mc_qpel_avg_dst_aver_src1_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7, inp8;
     v16u8 inp9, inp10, inp11, inp12, inp13, inp14, inp15, inp16;
     v16u8 res0, res1, dst0, dst1;
@@ -2680,11 +2716,12 @@ static void hv_mc_qpel_no_rnd_horiz_src0_16x16_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
                                                    int32_t dst_stride,
-                                                   int32_t height) {
+                                                   int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -2728,7 +2765,8 @@ static void hv_mc_qpel_no_rnd_horiz_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src00_16x16_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
-                                                      int32_t dst_stride) {
+                                                      int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -2738,15 +2776,16 @@ static void hv_mc_qpel_no_rnd_aver_hv_src00_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src00_8x8_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -2832,11 +2871,12 @@ static void hv_mc_qpel_no_rnd_horiz_16x16_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst,
                                               int32_t dst_stride,
-                                              int32_t height) {
+                                              int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -2875,7 +2915,8 @@ static void hv_mc_qpel_no_rnd_horiz_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_v_src0_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -2885,15 +2926,16 @@ static void hv_mc_qpel_no_rnd_aver_v_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_v_src0_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -2973,11 +3015,12 @@ static void hv_mc_qpel_no_rnd_horiz_src1_16x16_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
                                                    int32_t dst_stride,
-                                                   int32_t height) {
+                                                   int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -3021,7 +3064,8 @@ static void hv_mc_qpel_no_rnd_horiz_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src10_16x16_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
-                                                      int32_t dst_stride) {
+                                                      int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3031,15 +3075,16 @@ static void hv_mc_qpel_no_rnd_aver_hv_src10_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src10_8x8_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3133,7 +3178,8 @@ static void hv_mc_qpel_no_rnd_aver_hv_src10_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_h_src0_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3143,15 +3189,16 @@ static void hv_mc_qpel_no_rnd_aver_h_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_h_src0_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3226,7 +3273,8 @@ static void hv_mc_qpel_no_rnd_aver_h_src0_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_16x16_msa(const uint8_t *src,
                                         int32_t src_stride,
                                         uint8_t *dst,
-                                        int32_t dst_stride) {
+                                        int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3236,15 +3284,16 @@ static void hv_mc_qpel_no_rnd_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_8x8_msa(const uint8_t *src,
                                       int32_t src_stride,
                                       uint8_t *dst,
-                                      int32_t dst_stride) {
+                                      int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3310,7 +3359,8 @@ static void hv_mc_qpel_no_rnd_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_h_src1_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3320,15 +3370,16 @@ static void hv_mc_qpel_no_rnd_aver_h_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_h_src1_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3411,7 +3462,8 @@ static void hv_mc_qpel_no_rnd_aver_h_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src01_16x16_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
-                                                      int32_t dst_stride) {
+                                                      int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3421,15 +3473,16 @@ static void hv_mc_qpel_no_rnd_aver_hv_src01_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src01_8x8_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3515,7 +3568,8 @@ static void hv_mc_qpel_no_rnd_aver_hv_src01_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_v_src1_16x16_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3525,15 +3579,16 @@ static void hv_mc_qpel_no_rnd_aver_v_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_v_src1_8x8_msa(const uint8_t *src,
                                                   int32_t src_stride,
                                                   uint8_t *dst,
-                                                  int32_t dst_stride) {
+                                                  int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3606,7 +3661,8 @@ static void hv_mc_qpel_no_rnd_aver_v_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src11_16x16_msa(const uint8_t *src,
                                                       int32_t src_stride,
                                                       uint8_t *dst,
-                                                      int32_t dst_stride) {
+                                                      int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_no_rnd_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3616,15 +3672,16 @@ static void hv_mc_qpel_no_rnd_aver_hv_src11_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_no_rnd_aver_hv_src11_8x8_msa(const uint8_t *src,
                                                     int32_t src_stride,
                                                     uint8_t *dst,
-                                                    int32_t dst_stride) {
+                                                    int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3716,11 +3773,12 @@ static void hv_mc_qpel_aver_horiz_src0_16x16_msa(const uint8_t *src,
                                                  int32_t src_stride,
                                                  uint8_t *dst,
                                                  int32_t dst_stride,
-                                                 int32_t height) {
+                                                 int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -3763,7 +3821,8 @@ static void hv_mc_qpel_aver_horiz_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src00_16x16_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3773,15 +3832,16 @@ static void hv_mc_qpel_aver_hv_src00_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src00_8x8_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3858,11 +3918,12 @@ static void hv_mc_qpel_aver_horiz_16x16_msa(const uint8_t *src,
                                             int32_t src_stride,
                                             uint8_t *dst,
                                             int32_t dst_stride,
-                                            int32_t height) {
+                                            int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -3900,7 +3961,8 @@ static void hv_mc_qpel_aver_horiz_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_v_src0_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -3910,15 +3972,16 @@ static void hv_mc_qpel_aver_v_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_v_src0_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -3992,11 +4055,12 @@ static void hv_mc_qpel_aver_horiz_src1_16x16_msa(const uint8_t *src,
                                                  int32_t src_stride,
                                                  uint8_t *dst,
                                                  int32_t dst_stride,
-                                                 int32_t height) {
+                                                 int32_t height)
+{
     uint8_t loop_count;
     v16u8 inp0, inp1, inp2, inp3, inp4, inp5, inp6, inp7;
     v16u8 res;
-    v16u8 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    v16u8 mask = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
     v8u16 const20 = (v8u16) __msa_ldi_h(20);
@@ -4039,7 +4103,8 @@ static void hv_mc_qpel_aver_horiz_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src10_16x16_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4049,15 +4114,16 @@ static void hv_mc_qpel_aver_hv_src10_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src10_8x8_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4139,7 +4205,8 @@ static void hv_mc_qpel_aver_hv_src10_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_h_src0_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4149,15 +4216,16 @@ static void hv_mc_qpel_aver_h_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_h_src0_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4227,7 +4295,8 @@ static void hv_mc_qpel_aver_h_src0_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_16x16_msa(const uint8_t *src,
                                  int32_t src_stride,
                                  uint8_t *dst,
-                                 int32_t dst_stride) {
+                                 int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4235,15 +4304,16 @@ static void hv_mc_qpel_16x16_msa(const uint8_t *src,
 }
 
 static void hv_mc_qpel_8x8_msa(const uint8_t *src, int32_t src_stride,
-                               uint8_t *dst, int32_t dst_stride) {
+                               uint8_t *dst, int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4308,7 +4378,8 @@ static void hv_mc_qpel_8x8_msa(const uint8_t *src, int32_t src_stride,
 static void hv_mc_qpel_aver_h_src1_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4318,15 +4389,16 @@ static void hv_mc_qpel_aver_h_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_h_src1_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4398,7 +4470,8 @@ static void hv_mc_qpel_aver_h_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src01_16x16_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4408,15 +4481,16 @@ static void hv_mc_qpel_aver_hv_src01_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src01_8x8_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4493,7 +4567,8 @@ static void hv_mc_qpel_aver_hv_src01_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_v_src1_16x16_msa(const uint8_t *src,
                                              int32_t src_stride,
                                              uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4503,15 +4578,16 @@ static void hv_mc_qpel_aver_v_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_v_src1_8x8_msa(const uint8_t *src,
                                            int32_t src_stride,
                                            uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4585,7 +4661,8 @@ static void hv_mc_qpel_aver_v_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_aver_hv_src11_16x16_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4594,15 +4671,16 @@ static void hv_mc_qpel_aver_hv_src11_16x16_msa(const uint8_t *src,
 
 static void hv_mc_qpel_aver_hv_src11_8x8_msa(const uint8_t *src,
                                              int32_t src_stride,
-                                             uint8_t *dst, int32_t dst_stride) {
+                                             uint8_t *dst, int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4687,7 +4765,8 @@ static void hv_mc_qpel_aver_hv_src11_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src00_16x16_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
-                                                       int32_t dst_stride) {
+                                                       int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4697,16 +4776,17 @@ static void hv_mc_qpel_avg_dst_aver_hv_src00_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src00_8x8_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4798,7 +4878,8 @@ static void hv_mc_qpel_avg_dst_aver_hv_src00_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_v_src0_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4808,16 +4889,17 @@ static void hv_mc_qpel_avg_dst_aver_v_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_v_src0_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -4905,7 +4987,8 @@ static void hv_mc_qpel_avg_dst_aver_v_src0_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src10_16x16_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
-                                                       int32_t dst_stride) {
+                                                       int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -4915,16 +4998,17 @@ static void hv_mc_qpel_avg_dst_aver_hv_src10_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src10_8x8_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5028,7 +5112,8 @@ static void hv_mc_qpel_avg_dst_aver_hv_src10_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_h_src0_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5038,16 +5123,17 @@ static void hv_mc_qpel_avg_dst_aver_h_src0_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_h_src0_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5129,7 +5215,8 @@ static void hv_mc_qpel_avg_dst_aver_h_src0_8x8_msa(const uint8_t *src,
 }
 
 static void hv_mc_qpel_avg_dst_16x16_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5138,16 +5225,17 @@ static void hv_mc_qpel_avg_dst_16x16_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void hv_mc_qpel_avg_dst_8x8_msa(const uint8_t *src, int32_t src_stride,
-                                       uint8_t *dst, int32_t dst_stride) {
+                                       uint8_t *dst, int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5227,7 +5315,8 @@ static void hv_mc_qpel_avg_dst_8x8_msa(const uint8_t *src, int32_t src_stride,
 static void hv_mc_qpel_avg_dst_aver_h_src1_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5237,16 +5326,17 @@ static void hv_mc_qpel_avg_dst_aver_h_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_h_src1_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5341,7 +5431,8 @@ static void hv_mc_qpel_avg_dst_aver_h_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src01_16x16_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
-                                                       int32_t dst_stride) {
+                                                       int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src0_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5351,16 +5442,17 @@ static void hv_mc_qpel_avg_dst_aver_hv_src01_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src01_8x8_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5453,7 +5545,8 @@ static void hv_mc_qpel_avg_dst_aver_hv_src01_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_v_src1_16x16_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5463,16 +5556,17 @@ static void hv_mc_qpel_avg_dst_aver_v_src1_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_v_src1_8x8_msa(const uint8_t *src,
                                                    int32_t src_stride,
                                                    uint8_t *dst,
-                                                   int32_t dst_stride) {
+                                                   int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5558,7 +5652,8 @@ static void hv_mc_qpel_avg_dst_aver_v_src1_8x8_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src11_16x16_msa(const uint8_t *src,
                                                        int32_t src_stride,
                                                        uint8_t *dst,
-                                                       int32_t dst_stride) {
+                                                       int32_t dst_stride)
+{
     uint8_t buff[272];
 
     hv_mc_qpel_aver_horiz_src1_16x16_msa(src, src_stride, buff, 16, 16);
@@ -5568,16 +5663,17 @@ static void hv_mc_qpel_avg_dst_aver_hv_src11_16x16_msa(const uint8_t *src,
 static void hv_mc_qpel_avg_dst_aver_hv_src11_8x8_msa(const uint8_t *src,
                                                      int32_t src_stride,
                                                      uint8_t *dst,
-                                                     int32_t dst_stride) {
+                                                     int32_t dst_stride)
+{
     v16u8 inp0, inp1, inp2, inp3;
     v16u8 res0, res1, avg0, avg1;
     v16u8 horiz0, horiz1, horiz2, horiz3;
     v16u8 horiz4, horiz5, horiz6, horiz7, horiz8;
     v16u8 dst0, dst1;
-    v16u8 mask0 = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
-    v16u8 mask1 = {0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8};
-    v16u8 mask2 = {1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7};
-    v16u8 mask3 = {2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6};
+    v16u8 mask0 = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8 };
+    v16u8 mask1 = { 0, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 8 };
+    v16u8 mask2 = { 1, 3, 0, 4, 0, 5, 1, 6, 2, 7, 3, 8, 4, 8, 5, 7 };
+    v16u8 mask3 = { 2, 4, 1, 5, 0, 6, 0, 7, 1, 8, 2, 8, 3, 7, 4, 6 };
     v16u8 const20 = (v16u8) __msa_ldi_b(20);
     v16u8 const6 = (v16u8) __msa_ldi_b(6);
     v16u8 const3 = (v16u8) __msa_ldi_b(3);
@@ -5672,7 +5768,8 @@ static void hv_mc_qpel_avg_dst_aver_hv_src11_8x8_msa(const uint8_t *src,
 }
 
 static void copy_8x8_msa(const uint8_t *src, int32_t src_stride,
-                         uint8_t *dst, int32_t dst_stride) {
+                         uint8_t *dst, int32_t dst_stride)
+{
     uint64_t src0, src1;
     int32_t loop_cnt;
 
@@ -5690,7 +5787,8 @@ static void copy_8x8_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void copy_16x16_msa(const uint8_t *src, int32_t src_stride,
-                           uint8_t *dst, int32_t dst_stride) {
+                           uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 src8, src9, src10, src11, src12, src13, src14, src15;
 
@@ -5707,7 +5805,8 @@ static void copy_16x16_msa(const uint8_t *src, int32_t src_stride,
 
 static void avg_width8_msa(const uint8_t *src, int32_t src_stride,
                            uint8_t *dst, int32_t dst_stride,
-                           int32_t height) {
+                           int32_t height)
+{
     int32_t cnt;
     uint64_t out0, out1, out2, out3;
     v16u8 src0, src1, src2, src3;
@@ -5732,7 +5831,8 @@ static void avg_width8_msa(const uint8_t *src, int32_t src_stride,
 
 static void avg_width16_msa(const uint8_t *src, int32_t src_stride,
                             uint8_t *dst, int32_t dst_stride,
-                            int32_t height) {
+                            int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
@@ -5751,526 +5851,620 @@ static void avg_width16_msa(const uint8_t *src, int32_t src_stride,
     }
 }
 
-void ff_copy_16x16_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride) {
+void ff_copy_16x16_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride)
+{
     copy_16x16_msa(src, stride, dest, stride);
 }
 
-void ff_copy_8x8_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride) {
+void ff_copy_8x8_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride)
+{
     copy_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_horiz_mc_qpel_aver_src0_8width_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     horiz_mc_qpel_aver_src0_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_aver_src0_16width_msa(uint8_t *dest,
                                             const uint8_t *src,
-                                            ptrdiff_t stride) {
+                                            ptrdiff_t stride)
+{
     horiz_mc_qpel_aver_src0_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_8width_msa(uint8_t *dest, const uint8_t *src,
-                                 ptrdiff_t stride) {
+                                 ptrdiff_t stride)
+{
     horiz_mc_qpel_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_16width_msa(uint8_t *dest,
-                                  const uint8_t *src, ptrdiff_t stride) {
+                                  const uint8_t *src, ptrdiff_t stride)
+{
     horiz_mc_qpel_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_aver_src1_8width_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     horiz_mc_qpel_aver_src1_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_aver_src1_16width_msa(uint8_t *dest,
                                             const uint8_t *src,
-                                            ptrdiff_t stride) {
+                                            ptrdiff_t stride)
+{
     horiz_mc_qpel_aver_src1_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_no_rnd_aver_src0_8width_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_aver_src0_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_no_rnd_aver_src0_16width_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_aver_src0_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_no_rnd_8width_msa(uint8_t *dest,
-                                        const uint8_t *src, ptrdiff_t stride) {
+                                        const uint8_t *src, ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_no_rnd_16width_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_no_rnd_aver_src1_8width_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_aver_src1_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_no_rnd_aver_src1_16width_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     horiz_mc_qpel_no_rnd_aver_src1_16width_msa(src, stride, dest, stride, 16);
 }
 
-void ff_avg_width8_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride) {
+void ff_avg_width8_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride)
+{
     avg_width8_msa(src, stride, dest, stride, 8);
 }
 
-void ff_avg_width16_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride) {
+void ff_avg_width16_msa(uint8_t *dest, const uint8_t *src, ptrdiff_t stride)
+{
     avg_width16_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_avg_dst_aver_src0_8width_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_aver_src0_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_avg_dst_aver_src0_16width_msa(uint8_t *dest,
                                                     const uint8_t *src,
-                                                    ptrdiff_t stride) {
+                                                    ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_aver_src0_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_avg_dst_8width_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_avg_dst_16width_msa(uint8_t *dest,
-                                          const uint8_t *src, ptrdiff_t stride) {
+                                          const uint8_t *src, ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_16width_msa(src, stride, dest, stride, 16);
 }
 
 void ff_horiz_mc_qpel_avg_dst_aver_src1_8width_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_aver_src1_8width_msa(src, stride, dest, stride, 8);
 }
 
 void ff_horiz_mc_qpel_avg_dst_aver_src1_16width_msa(uint8_t *dest,
                                                     const uint8_t *src,
-                                                    ptrdiff_t stride) {
+                                                    ptrdiff_t stride)
+{
     horiz_mc_qpel_avg_dst_aver_src1_16width_msa(src, stride, dest, stride, 16);
 }
 
 
 void ff_vert_mc_qpel_aver_src0_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_aver_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_aver_src0_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_aver_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_8x8_msa(uint8_t *dest, const uint8_t *src,
-                             ptrdiff_t stride) {
+                             ptrdiff_t stride)
+{
     vert_mc_qpel_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_16x16_msa(uint8_t *dest, const uint8_t *src,
-                               ptrdiff_t stride) {
+                               ptrdiff_t stride)
+{
     vert_mc_qpel_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_aver_src1_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_aver_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_aver_src1_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_aver_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_aver_src0_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_aver_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_aver_src0_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_aver_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_8x8_msa(uint8_t *dest,
-                                    const uint8_t *src, ptrdiff_t stride) {
+                                    const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_16x16_msa(uint8_t *dest,
-                                      const uint8_t *src, ptrdiff_t stride) {
+                                      const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_aver_src1_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_aver_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_no_rnd_aver_src1_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     vert_mc_qpel_no_rnd_aver_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_aver_src0_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_aver_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_aver_src0_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_aver_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_8x8_msa(uint8_t *dest,
-                                     const uint8_t *src, ptrdiff_t stride) {
+                                     const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_16x16_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_aver_src1_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_aver_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_vert_mc_qpel_avg_dst_aver_src1_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     vert_mc_qpel_avg_dst_aver_src1_16x16_msa(src, stride, dest, stride);
 }
 
 /* HV cases */
 void ff_hv_mc_qpel_aver_hv_src00_16x16_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src00_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src00_8x8_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src00_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_v_src0_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_v_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_v_src0_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_v_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src10_16x16_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src10_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src10_8x8_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src10_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_h_src0_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_h_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_h_src0_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_h_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_16x16_msa(uint8_t *dest, const uint8_t *src,
-                             ptrdiff_t stride) {
+                             ptrdiff_t stride)
+{
     hv_mc_qpel_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_8x8_msa(uint8_t *dest, const uint8_t *src,
-                           ptrdiff_t stride) {
+                           ptrdiff_t stride)
+{
     hv_mc_qpel_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_h_src1_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_h_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_h_src1_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_h_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src01_16x16_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src01_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src01_8x8_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src01_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_v_src1_16x16_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_v_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_v_src1_8x8_msa(uint8_t *dest,
-                                       const uint8_t *src, ptrdiff_t stride) {
+                                       const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_v_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src11_16x16_msa(uint8_t *dest,
                                            const uint8_t *src,
-                                           ptrdiff_t stride) {
+                                           ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src11_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_aver_hv_src11_8x8_msa(uint8_t *dest,
-                                         const uint8_t *src, ptrdiff_t stride) {
+                                         const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_aver_hv_src11_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src00_16x16_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src00_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src00_8x8_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src00_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_v_src0_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_v_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_v_src0_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_v_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src10_16x16_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src10_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src10_8x8_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src10_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_h_src0_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_h_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_h_src0_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_h_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_16x16_msa(uint8_t *dest,
-                                     const uint8_t *src, ptrdiff_t stride) {
+                                     const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_8x8_msa(uint8_t *dest,
-                                   const uint8_t *src, ptrdiff_t stride) {
+                                   const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_h_src1_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_h_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_h_src1_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_h_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src01_16x16_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src01_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src01_8x8_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src01_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_v_src1_16x16_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_v_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_v_src1_8x8_msa(uint8_t *dest,
                                                const uint8_t *src,
-                                               ptrdiff_t stride) {
+                                               ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_v_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src11_16x16_msa(uint8_t *dest,
                                                    const uint8_t *src,
-                                                   ptrdiff_t stride) {
+                                                   ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src11_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_avg_dst_aver_hv_src11_8x8_msa(uint8_t *dest,
                                                  const uint8_t *src,
-                                                 ptrdiff_t stride) {
+                                                 ptrdiff_t stride)
+{
     hv_mc_qpel_avg_dst_aver_hv_src11_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src00_16x16_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src00_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src00_8x8_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src00_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_v_src0_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_v_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_v_src0_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_v_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src10_16x16_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src10_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src10_8x8_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src10_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_h_src0_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_h_src0_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_h_src0_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_h_src0_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_16x16_msa(uint8_t *dest,
-                                    const uint8_t *src, ptrdiff_t stride) {
+                                    const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_8x8_msa(uint8_t *dest,
-                                  const uint8_t *src, ptrdiff_t stride) {
+                                  const uint8_t *src, ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_h_src1_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_h_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_h_src1_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_h_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src01_16x16_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src01_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src01_8x8_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src01_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_v_src1_16x16_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_v_src1_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_v_src1_8x8_msa(uint8_t *dest,
                                               const uint8_t *src,
-                                              ptrdiff_t stride) {
+                                              ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_v_src1_8x8_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src11_16x16_msa(uint8_t *dest,
                                                   const uint8_t *src,
-                                                  ptrdiff_t stride) {
+                                                  ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src11_16x16_msa(src, stride, dest, stride);
 }
 
 void ff_hv_mc_qpel_no_rnd_aver_hv_src11_8x8_msa(uint8_t *dest,
                                                 const uint8_t *src,
-                                                ptrdiff_t stride) {
+                                                ptrdiff_t stride)
+{
     hv_mc_qpel_no_rnd_aver_hv_src11_8x8_msa(src, stride, dest, stride);
 }

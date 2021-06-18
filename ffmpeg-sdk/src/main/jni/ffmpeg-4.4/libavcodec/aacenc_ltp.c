@@ -33,7 +33,8 @@
  * Encode LTP data.
  */
 void ff_aac_encode_ltp_info(AACEncContext *s, SingleChannelElement *sce,
-                            int common_window) {
+                            int common_window)
+{
     int i;
     IndividualChannelStream *ics = &sce->ics;
     if (s->profile != FF_PROFILE_AAC_LTP || !ics->predictor_present)
@@ -44,33 +45,35 @@ void ff_aac_encode_ltp_info(AACEncContext *s, SingleChannelElement *sce,
     if (!ics->ltp.present)
         return;
     put_bits(&s->pb, 11, ics->ltp.lag);
-    put_bits(&s->pb, 3, ics->ltp.coef_idx);
+    put_bits(&s->pb, 3,  ics->ltp.coef_idx);
     for (i = 0; i < FFMIN(ics->max_sfb, MAX_LTP_LONG_SFB); i++)
         put_bits(&s->pb, 1, ics->ltp.used[i]);
 }
 
-void ff_aac_ltp_insert_new_frame(AACEncContext *s) {
+void ff_aac_ltp_insert_new_frame(AACEncContext *s)
+{
     int i, ch, tag, chans, cur_channel, start_ch = 0;
     ChannelElement *cpe;
     SingleChannelElement *sce;
     for (i = 0; i < s->chan_map[0]; i++) {
         cpe = &s->cpe[i];
-        tag = s->chan_map[i + 1];
-        chans = tag == TYPE_CPE ? 2 : 1;
+        tag      = s->chan_map[i+1];
+        chans    = tag == TYPE_CPE ? 2 : 1;
         for (ch = 0; ch < chans; ch++) {
             sce = &cpe->ch[ch];
             cur_channel = start_ch + ch;
             /* New sample + overlap */
-            memcpy(&sce->ltp_state[0], &sce->ltp_state[1024], 1024 * sizeof(sce->ltp_state[0]));
-            memcpy(&sce->ltp_state[1024], &s->planar_samples[cur_channel][2048], 1024 * sizeof(sce->ltp_state[0]));
-            memcpy(&sce->ltp_state[2048], &sce->ret_buf[0], 1024 * sizeof(sce->ltp_state[0]));
+            memcpy(&sce->ltp_state[0],    &sce->ltp_state[1024], 1024*sizeof(sce->ltp_state[0]));
+            memcpy(&sce->ltp_state[1024], &s->planar_samples[cur_channel][2048], 1024*sizeof(sce->ltp_state[0]));
+            memcpy(&sce->ltp_state[2048], &sce->ret_buf[0], 1024*sizeof(sce->ltp_state[0]));
             sce->ics.ltp.lag = 0;
         }
         start_ch += chans;
     }
 }
 
-static void get_lag(float *buf, const float *new, LongTermPrediction *ltp) {
+static void get_lag(float *buf, const float *new, LongTermPrediction *ltp)
+{
     int i, j, lag = 0, max_corr = 0;
     float max_ratio = 0.0f;
     for (i = 0; i < 2048; i++) {
@@ -78,14 +81,14 @@ static void get_lag(float *buf, const float *new, LongTermPrediction *ltp) {
         const int start = FFMAX(0, i - 1024);
         for (j = start; j < 2048; j++) {
             const int idx = j - i + 1024;
-            s0 += new[j] * buf[idx];
-            s1 += buf[idx] * buf[idx];
+            s0 += new[j]*buf[idx];
+            s1 += buf[idx]*buf[idx];
         }
-        corr = s1 > 0.0f ? s0 / sqrt(s1) : 0.0f;
+        corr = s1 > 0.0f ? s0/sqrt(s1) : 0.0f;
         if (corr > max_corr) {
             max_corr = corr;
             lag = i;
-            max_ratio = corr / (2048 - start);
+            max_ratio = corr/(2048-start);
         }
     }
     ltp->lag = FFMAX(av_clip_uintp2(lag, 11), 0);
@@ -93,7 +96,8 @@ static void get_lag(float *buf, const float *new, LongTermPrediction *ltp) {
     ltp->coef = ltp_coef[ltp->coef_idx];
 }
 
-static void generate_samples(float *buf, LongTermPrediction *ltp) {
+static void generate_samples(float *buf, LongTermPrediction *ltp)
+{
     int i, samples_num = 2048;
     if (!ltp->lag) {
         ltp->present = 0;
@@ -102,15 +106,16 @@ static void generate_samples(float *buf, LongTermPrediction *ltp) {
         samples_num = ltp->lag + 1024;
     }
     for (i = 0; i < samples_num; i++)
-        buf[i] = ltp->coef * buf[i + 2048 - ltp->lag];
-    memset(&buf[i], 0, (2048 - i) * sizeof(float));
+        buf[i] = ltp->coef*buf[i + 2048 - ltp->lag];
+    memset(&buf[i], 0, (2048 - i)*sizeof(float));
 }
 
 /**
  * Process LTP parameters
  * @see Patent WO2006070265A1
  */
-void ff_aac_update_ltp(AACEncContext *s, SingleChannelElement *sce) {
+void ff_aac_update_ltp(AACEncContext *s, SingleChannelElement *sce)
+{
     float *pred_signal = &sce->ltp_state[0];
     const float *samples = &s->planar_samples[s->cur_channel][1024];
 
@@ -122,7 +127,8 @@ void ff_aac_update_ltp(AACEncContext *s, SingleChannelElement *sce) {
     generate_samples(pred_signal, &sce->ics.ltp);
 }
 
-void ff_aac_adjust_common_ltp(AACEncContext *s, ChannelElement *cpe) {
+void ff_aac_adjust_common_ltp(AACEncContext *s, ChannelElement *cpe)
+{
     int sfb, count = 0;
     SingleChannelElement *sce0 = &cpe->ch[0];
     SingleChannelElement *sce1 = &cpe->ch[1];
@@ -151,16 +157,17 @@ void ff_aac_adjust_common_ltp(AACEncContext *s, ChannelElement *cpe) {
  * Mark LTP sfb's
  */
 void ff_aac_search_for_ltp(AACEncContext *s, SingleChannelElement *sce,
-                           int common_window) {
+                           int common_window)
+{
     int w, g, w2, i, start = 0, count = 0;
     int saved_bits = -(15 + FFMIN(sce->ics.max_sfb, MAX_LTP_LONG_SFB));
-    float *C34 = &s->scoefs[128 * 0], *PCD = &s->scoefs[128 * 1];
-    float *PCD34 = &s->scoefs[128 * 2];
+    float *C34 = &s->scoefs[128*0], *PCD = &s->scoefs[128*1];
+    float *PCD34 = &s->scoefs[128*2];
     const int max_ltp = FFMIN(sce->ics.max_sfb, MAX_LTP_LONG_SFB);
 
     if (sce->ics.window_sequence[0] == EIGHT_SHORT_SEQUENCE) {
         if (sce->ics.ltp.lag) {
-            memset(&sce->ltp_state[0], 0, 3072 * sizeof(sce->ltp_state[0]));
+            memset(&sce->ltp_state[0], 0, 3072*sizeof(sce->ltp_state[0]));
             memset(&sce->ics.ltp, 0, sizeof(LongTermPrediction));
         }
         return;
@@ -171,35 +178,35 @@ void ff_aac_search_for_ltp(AACEncContext *s, SingleChannelElement *sce,
 
     for (w = 0; w < sce->ics.num_windows; w += sce->ics.group_len[w]) {
         start = 0;
-        for (g = 0; g < sce->ics.num_swb; g++) {
+        for (g = 0;  g < sce->ics.num_swb; g++) {
             int bits1 = 0, bits2 = 0;
             float dist1 = 0.0f, dist2 = 0.0f;
-            if (w * 16 + g > max_ltp) {
+            if (w*16+g > max_ltp) {
                 start += sce->ics.swb_sizes[g];
                 continue;
             }
             for (w2 = 0; w2 < sce->ics.group_len[w]; w2++) {
                 int bits_tmp1, bits_tmp2;
-                FFPsyBand *band = &s->psy.ch[s->cur_channel].psy_bands[(w + w2) * 16 + g];
+                FFPsyBand *band = &s->psy.ch[s->cur_channel].psy_bands[(w+w2)*16+g];
                 for (i = 0; i < sce->ics.swb_sizes[g]; i++)
-                    PCD[i] = sce->coeffs[start + (w + w2) * 128 + i] - sce->lcoeffs[start + (w + w2) * 128 + i];
-                s->abs_pow34(C34, &sce->coeffs[start + (w + w2) * 128], sce->ics.swb_sizes[g]);
+                    PCD[i] = sce->coeffs[start+(w+w2)*128+i] - sce->lcoeffs[start+(w+w2)*128+i];
+                s->abs_pow34(C34,  &sce->coeffs[start+(w+w2)*128],  sce->ics.swb_sizes[g]);
                 s->abs_pow34(PCD34, PCD, sce->ics.swb_sizes[g]);
-                dist1 += quantize_band_cost(s, &sce->coeffs[start + (w + w2) * 128], C34, sce->ics.swb_sizes[g],
-                                            sce->sf_idx[(w + w2) * 16 + g], sce->band_type[(w + w2) * 16 + g],
-                                            s->lambda / band->threshold, INFINITY, &bits_tmp1, NULL, 0);
+                dist1 += quantize_band_cost(s, &sce->coeffs[start+(w+w2)*128], C34, sce->ics.swb_sizes[g],
+                                            sce->sf_idx[(w+w2)*16+g], sce->band_type[(w+w2)*16+g],
+                                            s->lambda/band->threshold, INFINITY, &bits_tmp1, NULL, 0);
                 dist2 += quantize_band_cost(s, PCD, PCD34, sce->ics.swb_sizes[g],
-                                            sce->sf_idx[(w + w2) * 16 + g],
-                                            sce->band_type[(w + w2) * 16 + g],
-                                            s->lambda / band->threshold, INFINITY, &bits_tmp2, NULL, 0);
+                                            sce->sf_idx[(w+w2)*16+g],
+                                            sce->band_type[(w+w2)*16+g],
+                                            s->lambda/band->threshold, INFINITY, &bits_tmp2, NULL, 0);
                 bits1 += bits_tmp1;
                 bits2 += bits_tmp2;
             }
             if (dist2 < dist1 && bits2 < bits1) {
                 for (w2 = 0; w2 < sce->ics.group_len[w]; w2++)
                     for (i = 0; i < sce->ics.swb_sizes[g]; i++)
-                        sce->coeffs[start + (w + w2) * 128 + i] -= sce->lcoeffs[start + (w + w2) * 128 + i];
-                sce->ics.ltp.used[w * 16 + g] = 1;
+                        sce->coeffs[start+(w+w2)*128+i] -= sce->lcoeffs[start+(w+w2)*128+i];
+                sce->ics.ltp.used[w*16+g] = 1;
                 saved_bits += bits1 - bits2;
                 count++;
             }
@@ -214,11 +221,11 @@ void ff_aac_search_for_ltp(AACEncContext *s, SingleChannelElement *sce,
     if (!sce->ics.ltp.present && !!count) {
         for (w = 0; w < sce->ics.num_windows; w += sce->ics.group_len[w]) {
             start = 0;
-            for (g = 0; g < sce->ics.num_swb; g++) {
-                if (sce->ics.ltp.used[w * 16 + g]) {
+            for (g = 0;  g < sce->ics.num_swb; g++) {
+                if (sce->ics.ltp.used[w*16+g]) {
                     for (w2 = 0; w2 < sce->ics.group_len[w]; w2++) {
                         for (i = 0; i < sce->ics.swb_sizes[g]; i++) {
-                            sce->coeffs[start + (w + w2) * 128 + i] += sce->lcoeffs[start + (w + w2) * 128 + i];
+                            sce->coeffs[start+(w+w2)*128+i] += sce->lcoeffs[start+(w+w2)*128+i];
                         }
                     }
                 }

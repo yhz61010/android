@@ -26,15 +26,15 @@
 
 
 enum {
-    MPEG2_START_PICTURE = 0x00,
-    MPEG2_START_SLICE_MIN = 0x01,
-    MPEG2_START_SLICE_MAX = 0xaf,
-    MPEG2_START_USER_DATA = 0xb2,
+    MPEG2_START_PICTURE         = 0x00,
+    MPEG2_START_SLICE_MIN       = 0x01,
+    MPEG2_START_SLICE_MAX       = 0xaf,
+    MPEG2_START_USER_DATA       = 0xb2,
     MPEG2_START_SEQUENCE_HEADER = 0xb3,
-    MPEG2_START_SEQUENCE_ERROR = 0xb4,
-    MPEG2_START_EXTENSION = 0xb5,
-    MPEG2_START_SEQUENCE_END = 0xb7,
-    MPEG2_START_GROUP = 0xb8,
+    MPEG2_START_SEQUENCE_ERROR  = 0xb4,
+    MPEG2_START_EXTENSION       = 0xb5,
+    MPEG2_START_SEQUENCE_END    = 0xb7,
+    MPEG2_START_GROUP           = 0xb8,
 };
 
 #define MPEG2_START_IS_SLICE(type) \
@@ -42,17 +42,17 @@ enum {
      (type) <= MPEG2_START_SLICE_MAX)
 
 enum {
-    MPEG2_EXTENSION_SEQUENCE = 0x1,
-    MPEG2_EXTENSION_SEQUENCE_DISPLAY = 0x2,
-    MPEG2_EXTENSION_QUANT_MATRIX = 0x3,
-    MPEG2_EXTENSION_COPYRIGHT = 0x4,
-    MPEG2_EXTENSION_SEQUENCE_SCALABLE = 0x5,
-    MPEG2_EXTENSION_PICTURE_DISPLAY = 0x7,
-    MPEG2_EXTENSION_PICTURE_CODING = 0x8,
-    MPEG2_EXTENSION_PICTURE_SPATIAL_SCALABLE = 0x9,
+    MPEG2_EXTENSION_SEQUENCE                  = 0x1,
+    MPEG2_EXTENSION_SEQUENCE_DISPLAY          = 0x2,
+    MPEG2_EXTENSION_QUANT_MATRIX              = 0x3,
+    MPEG2_EXTENSION_COPYRIGHT                 = 0x4,
+    MPEG2_EXTENSION_SEQUENCE_SCALABLE         = 0x5,
+    MPEG2_EXTENSION_PICTURE_DISPLAY           = 0x7,
+    MPEG2_EXTENSION_PICTURE_CODING            = 0x8,
+    MPEG2_EXTENSION_PICTURE_SPATIAL_SCALABLE  = 0x9,
     MPEG2_EXTENSION_PICTURE_TEMPORAL_SCALABLE = 0xa,
-    MPEG2_EXTENSION_CAMERA_PARAMETERS = 0xb,
-    MPEG2_EXTENSION_ITU_T = 0xc,
+    MPEG2_EXTENSION_CAMERA_PARAMETERS         = 0xb,
+    MPEG2_EXTENSION_ITU_T                     = 0xc,
 };
 
 
@@ -76,9 +76,9 @@ typedef struct MPEG2RawSequenceHeader {
 typedef struct MPEG2RawUserData {
     uint8_t user_data_start_code;
 
-    uint8_t *user_data;
+    uint8_t     *user_data;
     AVBufferRef *user_data_ref;
-    size_t user_data_length;
+    size_t       user_data_length;
 } MPEG2RawUserData;
 
 typedef struct MPEG2RawSequenceExtension {
@@ -115,9 +115,9 @@ typedef struct MPEG2RawGroupOfPicturesHeader {
 } MPEG2RawGroupOfPicturesHeader;
 
 typedef struct MPEG2RawExtraInformation {
-    uint8_t *extra_information;
+    uint8_t     *extra_information;
     AVBufferRef *extra_information_ref;
-    size_t extra_information_length;
+    size_t       extra_information_length;
 } MPEG2RawExtraInformation;
 
 typedef struct MPEG2RawPictureHeader {
@@ -206,10 +206,10 @@ typedef struct MPEG2RawSliceHeader {
 typedef struct MPEG2RawSlice {
     MPEG2RawSliceHeader header;
 
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_size;
-    int data_bit_start;
+    size_t       data_size;
+    int          data_bit_start;
 } MPEG2RawSlice;
 
 typedef struct MPEG2RawSequenceEnd {

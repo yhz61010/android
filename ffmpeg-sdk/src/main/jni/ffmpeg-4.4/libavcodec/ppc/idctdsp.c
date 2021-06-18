@@ -253,7 +253,8 @@ static void idct_add_altivec(uint8_t *dest, ptrdiff_t stride, int16_t *blk)
 #endif /* HAVE_ALTIVEC */
 
 av_cold void ff_idctdsp_init_ppc(IDCTDSPContext *c, AVCodecContext *avctx,
-                                 unsigned high_bit_depth) {
+                                 unsigned high_bit_depth)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

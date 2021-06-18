@@ -28,30 +28,31 @@
     dsp->OP##vc1_mspel_pixels_tab[1][X+4*Y] = ff_##OP##vc1_mspel_mc##X##Y##INSN; \
     dsp->OP##vc1_mspel_pixels_tab[0][X+4*Y] = ff_##OP##vc1_mspel_mc##X##Y##_16##INSN
 
-av_cold void ff_vc1dsp_init_mips(VC1DSPContext *dsp) {
+av_cold void ff_vc1dsp_init_mips(VC1DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
-#if _MIPS_SIM != _ABIO32
+ #if _MIPS_SIM != _ABIO32
         dsp->vc1_inv_trans_8x8    = ff_vc1_inv_trans_8x8_mmi;
         dsp->vc1_inv_trans_4x8    = ff_vc1_inv_trans_4x8_mmi;
         dsp->vc1_inv_trans_8x4    = ff_vc1_inv_trans_8x4_mmi;
 #endif
-        dsp->vc1_inv_trans_4x4 = ff_vc1_inv_trans_4x4_mmi;
+        dsp->vc1_inv_trans_4x4    = ff_vc1_inv_trans_4x4_mmi;
         dsp->vc1_inv_trans_8x8_dc = ff_vc1_inv_trans_8x8_dc_mmi;
         dsp->vc1_inv_trans_4x8_dc = ff_vc1_inv_trans_4x8_dc_mmi;
         dsp->vc1_inv_trans_8x4_dc = ff_vc1_inv_trans_8x4_dc_mmi;
         dsp->vc1_inv_trans_4x4_dc = ff_vc1_inv_trans_4x4_dc_mmi;
 
-        dsp->vc1_h_overlap = ff_vc1_h_overlap_mmi;
-        dsp->vc1_v_overlap = ff_vc1_v_overlap_mmi;
-        dsp->vc1_h_s_overlap = ff_vc1_h_s_overlap_mmi;
-        dsp->vc1_v_s_overlap = ff_vc1_v_s_overlap_mmi;
+        dsp->vc1_h_overlap        = ff_vc1_h_overlap_mmi;
+        dsp->vc1_v_overlap        = ff_vc1_v_overlap_mmi;
+        dsp->vc1_h_s_overlap      = ff_vc1_h_s_overlap_mmi;
+        dsp->vc1_v_s_overlap      = ff_vc1_v_s_overlap_mmi;
 
-        dsp->vc1_v_loop_filter4 = ff_vc1_v_loop_filter4_mmi;
-        dsp->vc1_h_loop_filter4 = ff_vc1_h_loop_filter4_mmi;
-        dsp->vc1_v_loop_filter8 = ff_vc1_v_loop_filter8_mmi;
-        dsp->vc1_h_loop_filter8 = ff_vc1_h_loop_filter8_mmi;
+        dsp->vc1_v_loop_filter4  = ff_vc1_v_loop_filter4_mmi;
+        dsp->vc1_h_loop_filter4  = ff_vc1_h_loop_filter4_mmi;
+        dsp->vc1_v_loop_filter8  = ff_vc1_v_loop_filter8_mmi;
+        dsp->vc1_h_loop_filter8  = ff_vc1_h_loop_filter8_mmi;
         dsp->vc1_v_loop_filter16 = ff_vc1_v_loop_filter16_mmi;
         dsp->vc1_h_loop_filter16 = ff_vc1_h_loop_filter16_mmi;
 

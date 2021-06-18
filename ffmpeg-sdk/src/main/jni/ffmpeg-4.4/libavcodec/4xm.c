@@ -45,307 +45,82 @@
 #define CFRAME_BUFFER_COUNT 100
 
 static const uint8_t block_type_tab[2][4][8][2] = {
-        {
-                {    // { 8, 4, 2 } x { 8, 4, 2}
-                        {0, 1}, {2, 2}, {6, 3}, {14, 4}, {30, 5}, {31, 5}, {0, 0}
-                }, { // { 8, 4 } x 1
-                           {0, 1}, {0, 0}, {2, 2}, {6, 3}, {14, 4}, {15, 4}, {0, 0}
-                   }, { // 1 x { 8, 4 }
-                              {0, 1}, {2, 2}, {0, 0}, {6, 3}, {14, 4}, {15, 4}, {0, 0}
-                      }, { // 1 x 2, 2 x 1
-                                 {0, 1}, {0, 0}, {0, 0}, {2, 2}, {6, 3}, {14, 4}, {15, 4}
-                         }
-        },
-        {
-                {   // { 8, 4, 2 } x { 8, 4, 2}
-                        {1, 2}, {4, 3}, {5, 3}, {0,  2}, {6,  3}, {7,  3}, {0, 0}
-                }, {// { 8, 4 } x 1
-                           {1, 2}, {0, 0}, {2, 2}, {0, 2}, {6,  3}, {7,  3}, {0, 0}
-                   }, {// 1 x { 8, 4 }
-                              {1, 2}, {2, 2}, {0, 0}, {0, 2}, {6,  3}, {7,  3}, {0, 0}
-                      }, {// 1 x 2, 2 x 1
-                                 {1, 2}, {0, 0}, {0, 0}, {0, 2}, {2, 2}, {6,  3}, {7,  3}
-                         }
+    {
+        {    // { 8, 4, 2 } x { 8, 4, 2}
+            { 0, 1 }, { 2, 2 }, { 6, 3 }, { 14, 4 }, { 30, 5 }, { 31, 5 }, { 0, 0 }
+        }, { // { 8, 4 } x 1
+            { 0, 1 }, { 0, 0 }, { 2, 2 }, { 6, 3 }, { 14, 4 }, { 15, 4 }, { 0, 0 }
+        }, { // 1 x { 8, 4 }
+            { 0, 1 }, { 2, 2 }, { 0, 0 }, { 6, 3 }, { 14, 4 }, { 15, 4 }, { 0, 0 }
+        }, { // 1 x 2, 2 x 1
+            { 0, 1 }, { 0, 0 }, { 0, 0 }, { 2, 2 }, { 6, 3 }, { 14, 4 }, { 15, 4 }
         }
+    }, {
+        {   // { 8, 4, 2 } x { 8, 4, 2}
+            { 1, 2 }, { 4, 3 }, { 5, 3 }, { 0, 2 }, { 6, 3 }, { 7, 3 }, { 0, 0 }
+        }, {// { 8, 4 } x 1
+            { 1, 2 }, { 0, 0 }, { 2, 2 }, { 0, 2 }, { 6, 3 }, { 7, 3 }, { 0, 0 }
+        }, {// 1 x { 8, 4 }
+            { 1, 2 }, { 2, 2 }, { 0, 0 }, { 0, 2 }, { 6, 3 }, { 7, 3 }, { 0, 0 }
+        }, {// 1 x 2, 2 x 1
+            { 1, 2 }, { 0, 0 }, { 0, 0 }, { 0, 2 }, { 2, 2 }, { 6, 3 }, { 7, 3 }
+      }
+    }
 };
 
 static const uint8_t size2index[4][4] = {
-        {-1, 3, 1, 1},
-        {3,  0, 0, 0},
-        {2,  0, 0, 0},
-        {2,  0, 0, 0},
+    { -1, 3, 1, 1 },
+    {  3, 0, 0, 0 },
+    {  2, 0, 0, 0 },
+    {  2, 0, 0, 0 },
 };
 
 static const int8_t mv[256][2] = {
-        {0,   0},
-        {0,   -1},
-        {-1,  0},
-        {1,   0},
-        {0,   1},
-        {-1,  -1},
-        {1,   -1},
-        {-1,  1},
-        {1,   1},
-        {0,   -2},
-        {-2,  0},
-        {2,   0},
-        {0,   2},
-        {-1,  -2},
-        {1,   -2},
-        {-2,  -1},
-        {2,   -1},
-        {-2,  1},
-        {2,   1},
-        {-1,  2},
-        {1,   2},
-        {-2,  -2},
-        {2,   -2},
-        {-2,  2},
-        {2,   2},
-        {0,   -3},
-        {-3,  0},
-        {3,   0},
-        {0,   3},
-        {-1,  -3},
-        {1,   -3},
-        {-3,  -1},
-        {3,   -1},
-        {-3,  1},
-        {3,   1},
-        {-1,  3},
-        {1,   3},
-        {-2,  -3},
-        {2,   -3},
-        {-3,  -2},
-        {3,   -2},
-        {-3,  2},
-        {3,   2},
-        {-2,  3},
-        {2,   3},
-        {0,   -4},
-        {-4,  0},
-        {4,   0},
-        {0,   4},
-        {-1,  -4},
-        {1,   -4},
-        {-4,  -1},
-        {4,   -1},
-        {4,   1},
-        {-1,  4},
-        {1,   4},
-        {-3,  -3},
-        {-3,  3},
-        {3,   3},
-        {-2,  -4},
-        {-4,  -2},
-        {4,   -2},
-        {-4,  2},
-        {-2,  4},
-        {2,   4},
-        {-3,  -4},
-        {3,   -4},
-        {4,   -3},
-        {-5,  0},
-        {-4,  3},
-        {-3,  4},
-        {3,   4},
-        {-1,  -5},
-        {-5,  -1},
-        {-5,  1},
-        {-1,  5},
-        {-2,  -5},
-        {2,   -5},
-        {5,   -2},
-        {5,   2},
-        {-4,  -4},
-        {-4,  4},
-        {-3,  -5},
-        {-5,  -3},
-        {-5,  3},
-        {3,   5},
-        {-6,  0},
-        {0,   6},
-        {-6,  -1},
-        {-6,  1},
-        {1,   6},
-        {2,   -6},
-        {-6,  2},
-        {2,   6},
-        {-5,  -4},
-        {5,   4},
-        {4,   5},
-        {-6,  -3},
-        {6,   3},
-        {-7,  0},
-        {-1,  -7},
-        {5,   -5},
-        {-7,  1},
-        {-1,  7},
-        {4,   -6},
-        {6,   4},
-        {-2,  -7},
-        {-7,  2},
-        {-3,  -7},
-        {7,   -3},
-        {3,   7},
-        {6,   -5},
-        {0,   -8},
-        {-1,  -8},
-        {-7,  -4},
-        {-8,  1},
-        {4,   7},
-        {2,   -8},
-        {-2,  8},
-        {6,   6},
-        {-8,  3},
-        {5,   -7},
-        {-5,  7},
-        {8,   -4},
-        {0,   -9},
-        {-9,  -1},
-        {1,   9},
-        {7,   -6},
-        {-7,  6},
-        {-5,  -8},
-        {-5,  8},
-        {-9,  3},
-        {9,   -4},
-        {7,   -7},
-        {8,   -6},
-        {6,   8},
-        {10,  1},
-        {-10, 2},
-        {9,   -5},
-        {10,  -3},
-        {-8,  -7},
-        {-10, -4},
-        {6,   -9},
-        {-11, 0},
-        {11,  1},
-        {-11, -2},
-        {-2,  11},
-        {7,   -9},
-        {-7,  9},
-        {10,  6},
-        {-4,  11},
-        {8,   -9},
-        {8,   9},
-        {5,   11},
-        {7,   -10},
-        {12,  -3},
-        {11,  6},
-        {-9,  -9},
-        {8,   10},
-        {5,   12},
-        {-11, 7},
-        {13,  2},
-        {6,   -12},
-        {10,  9},
-        {-11, 8},
-        {-7,  12},
-        {0,   14},
-        {14,  -2},
-        {-9,  11},
-        {-6,  13},
-        {-14, -4},
-        {-5,  -14},
-        {5,   14},
-        {-15, -1},
-        {-14, -6},
-        {3,   -15},
-        {11,  -11},
-        {-7,  14},
-        {-5,  15},
-        {8,   -14},
-        {15,  6},
-        {3,   16},
-        {7,   -15},
-        {-16, 5},
-        {0,   17},
-        {-16, -6},
-        {-10, 14},
-        {-16, 7},
-        {12,  13},
-        {-16, 8},
-        {-17, 6},
-        {-18, 3},
-        {-7,  17},
-        {15,  11},
-        {16,  10},
-        {2,   -19},
-        {3,   -19},
-        {-11, -16},
-        {-18, 8},
-        {-19, -6},
-        {2,   -20},
-        {-17, -11},
-        {-10, -18},
-        {8,   19},
-        {-21, -1},
-        {-20, 7},
-        {-4,  21},
-        {21,  5},
-        {15,  16},
-        {2,   -22},
-        {-10, -20},
-        {-22, 5},
-        {20,  -11},
-        {-7,  -22},
-        {-12, 20},
-        {23,  -5},
-        {13,  -20},
-        {24,  -2},
-        {-15, 19},
-        {-11, 22},
-        {16,  19},
-        {23,  -10},
-        {-18, -18},
-        {-9,  -24},
-        {24,  -10},
-        {-3,  26},
-        {-23, 13},
-        {-18, -20},
-        {17,  21},
-        {-4,  27},
-        {27,  6},
-        {1,   -28},
-        {-11, 26},
-        {-17, -23},
-        {7,   28},
-        {11,  -27},
-        {29,  5},
-        {-23, -19},
-        {-28, -11},
-        {-21, 22},
-        {-30, 7},
-        {-17, 26},
-        {-27, 16},
-        {13,  29},
-        {19,  -26},
-        {10,  -31},
-        {-14, -30},
-        {20,  -27},
-        {-29, 18},
-        {-16, -31},
-        {-28, -22},
-        {21,  -30},
-        {-25, 28},
-        {26,  -29},
-        {25,  -32},
-        {-32, -32}
+    {   0,   0 }, {   0,  -1 }, {  -1,   0 }, {   1,   0 }, {   0,   1 }, {  -1,  -1 }, {   1,  -1 }, {  -1,   1 },
+    {   1,   1 }, {   0,  -2 }, {  -2,   0 }, {   2,   0 }, {   0,   2 }, {  -1,  -2 }, {   1,  -2 }, {  -2,  -1 },
+    {   2,  -1 }, {  -2,   1 }, {   2,   1 }, {  -1,   2 }, {   1,   2 }, {  -2,  -2 }, {   2,  -2 }, {  -2,   2 },
+    {   2,   2 }, {   0,  -3 }, {  -3,   0 }, {   3,   0 }, {   0,   3 }, {  -1,  -3 }, {   1,  -3 }, {  -3,  -1 },
+    {   3,  -1 }, {  -3,   1 }, {   3,   1 }, {  -1,   3 }, {   1,   3 }, {  -2,  -3 }, {   2,  -3 }, {  -3,  -2 },
+    {   3,  -2 }, {  -3,   2 }, {   3,   2 }, {  -2,   3 }, {   2,   3 }, {   0,  -4 }, {  -4,   0 }, {   4,   0 },
+    {   0,   4 }, {  -1,  -4 }, {   1,  -4 }, {  -4,  -1 }, {   4,  -1 }, {   4,   1 }, {  -1,   4 }, {   1,   4 },
+    {  -3,  -3 }, {  -3,   3 }, {   3,   3 }, {  -2,  -4 }, {  -4,  -2 }, {   4,  -2 }, {  -4,   2 }, {  -2,   4 },
+    {   2,   4 }, {  -3,  -4 }, {   3,  -4 }, {   4,  -3 }, {  -5,   0 }, {  -4,   3 }, {  -3,   4 }, {   3,   4 },
+    {  -1,  -5 }, {  -5,  -1 }, {  -5,   1 }, {  -1,   5 }, {  -2,  -5 }, {   2,  -5 }, {   5,  -2 }, {   5,   2 },
+    {  -4,  -4 }, {  -4,   4 }, {  -3,  -5 }, {  -5,  -3 }, {  -5,   3 }, {   3,   5 }, {  -6,   0 }, {   0,   6 },
+    {  -6,  -1 }, {  -6,   1 }, {   1,   6 }, {   2,  -6 }, {  -6,   2 }, {   2,   6 }, {  -5,  -4 }, {   5,   4 },
+    {   4,   5 }, {  -6,  -3 }, {   6,   3 }, {  -7,   0 }, {  -1,  -7 }, {   5,  -5 }, {  -7,   1 }, {  -1,   7 },
+    {   4,  -6 }, {   6,   4 }, {  -2,  -7 }, {  -7,   2 }, {  -3,  -7 }, {   7,  -3 }, {   3,   7 }, {   6,  -5 },
+    {   0,  -8 }, {  -1,  -8 }, {  -7,  -4 }, {  -8,   1 }, {   4,   7 }, {   2,  -8 }, {  -2,   8 }, {   6,   6 },
+    {  -8,   3 }, {   5,  -7 }, {  -5,   7 }, {   8,  -4 }, {   0,  -9 }, {  -9,  -1 }, {   1,   9 }, {   7,  -6 },
+    {  -7,   6 }, {  -5,  -8 }, {  -5,   8 }, {  -9,   3 }, {   9,  -4 }, {   7,  -7 }, {   8,  -6 }, {   6,   8 },
+    {  10,   1 }, { -10,   2 }, {   9,  -5 }, {  10,  -3 }, {  -8,  -7 }, { -10,  -4 }, {   6,  -9 }, { -11,   0 },
+    {  11,   1 }, { -11,  -2 }, {  -2,  11 }, {   7,  -9 }, {  -7,   9 }, {  10,   6 }, {  -4,  11 }, {   8,  -9 },
+    {   8,   9 }, {   5,  11 }, {   7, -10 }, {  12,  -3 }, {  11,   6 }, {  -9,  -9 }, {   8,  10 }, {   5,  12 },
+    { -11,   7 }, {  13,   2 }, {   6, -12 }, {  10,   9 }, { -11,   8 }, {  -7,  12 }, {   0,  14 }, {  14,  -2 },
+    {  -9,  11 }, {  -6,  13 }, { -14,  -4 }, {  -5, -14 }, {   5,  14 }, { -15,  -1 }, { -14,  -6 }, {   3, -15 },
+    {  11, -11 }, {  -7,  14 }, {  -5,  15 }, {   8, -14 }, {  15,   6 }, {   3,  16 }, {   7, -15 }, { -16,   5 },
+    {   0,  17 }, { -16,  -6 }, { -10,  14 }, { -16,   7 }, {  12,  13 }, { -16,   8 }, { -17,   6 }, { -18,   3 },
+    {  -7,  17 }, {  15,  11 }, {  16,  10 }, {   2, -19 }, {   3, -19 }, { -11, -16 }, { -18,   8 }, { -19,  -6 },
+    {   2, -20 }, { -17, -11 }, { -10, -18 }, {   8,  19 }, { -21,  -1 }, { -20,   7 }, {  -4,  21 }, {  21,   5 },
+    {  15,  16 }, {   2, -22 }, { -10, -20 }, { -22,   5 }, {  20, -11 }, {  -7, -22 }, { -12,  20 }, {  23,  -5 },
+    {  13, -20 }, {  24,  -2 }, { -15,  19 }, { -11,  22 }, {  16,  19 }, {  23, -10 }, { -18, -18 }, {  -9, -24 },
+    {  24, -10 }, {  -3,  26 }, { -23,  13 }, { -18, -20 }, {  17,  21 }, {  -4,  27 }, {  27,   6 }, {   1, -28 },
+    { -11,  26 }, { -17, -23 }, {   7,  28 }, {  11, -27 }, {  29,   5 }, { -23, -19 }, { -28, -11 }, { -21,  22 },
+    { -30,   7 }, { -17,  26 }, { -27,  16 }, {  13,  29 }, {  19, -26 }, {  10, -31 }, { -14, -30 }, {  20, -27 },
+    { -29,  18 }, { -16, -31 }, { -28, -22 }, {  21, -30 }, { -25,  28 }, {  26, -29 }, {  25, -32 }, { -32, -32 }
 };
 
 /* This is simply the scaled down elementwise product of the standard JPEG
  * quantizer table and the AAN premul table. */
 static const uint8_t dequant_table[64] = {
-        16, 15, 13, 19, 24, 31, 28, 17,
-        17, 23, 25, 31, 36, 63, 45, 21,
-        18, 24, 27, 37, 52, 59, 49, 20,
-        16, 28, 34, 40, 60, 80, 51, 20,
-        18, 31, 48, 66, 68, 86, 56, 21,
-        19, 38, 56, 59, 64, 64, 48, 20,
-        27, 48, 55, 55, 56, 51, 35, 15,
-        20, 35, 34, 32, 31, 22, 15, 8,
+    16, 15, 13, 19, 24, 31, 28, 17,
+    17, 23, 25, 31, 36, 63, 45, 21,
+    18, 24, 27, 37, 52, 59, 49, 20,
+    16, 28, 34, 40, 60, 80, 51, 20,
+    18, 31, 48, 66, 68, 86, 56, 21,
+    19, 38, 56, 59, 64, 64, 48, 20,
+    27, 48, 55, 55, 56, 51, 35, 15,
+    20, 35, 34, 32, 31, 22, 15,  8,
 };
 
 static VLC block_type_vlc[2][4];
@@ -386,7 +161,8 @@ typedef struct FourXContext {
 
 #define MULTIPLY(var, const) ((int)((var) * (unsigned)(const)) >> 16)
 
-static void idct(int16_t block[64]) {
+static void idct(int16_t block[64])
+{
     int tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     int tmp10, tmp11, tmp12, tmp13;
     int z5, z10, z11, z12, z13;
@@ -410,11 +186,11 @@ static void idct(int16_t block[64]) {
         z11 = block[8 * 1 + i] + block[8 * 7 + i];
         z12 = block[8 * 1 + i] - block[8 * 7 + i];
 
-        tmp7 = z11 + z13;
+        tmp7  =          z11 + z13;
         tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562);
 
-        z5 = MULTIPLY(z10 + z12, FIX_1_847759065);
-        tmp10 = MULTIPLY(z12, FIX_1_082392200) - z5;
+        z5    = MULTIPLY(z10 + z12, FIX_1_847759065);
+        tmp10 = MULTIPLY(z12,  FIX_1_082392200) - z5;
         tmp12 = MULTIPLY(z10, -FIX_2_613125930) + z5;
 
         tmp6 = tmp12 - tmp7;
@@ -448,11 +224,11 @@ static void idct(int16_t block[64]) {
         z11 = temp[1 + i] + temp[7 + i];
         z12 = temp[1 + i] - temp[7 + i];
 
-        tmp7 = z11 + z13;
+        tmp7  = z11 + z13;
         tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562);
 
-        z5 = MULTIPLY(z10 + z12, FIX_1_847759065);
-        tmp10 = MULTIPLY(z12, FIX_1_082392200) - z5;
+        z5    = MULTIPLY(z10 + z12, FIX_1_847759065);
+        tmp10 = MULTIPLY(z12,  FIX_1_082392200) - z5;
         tmp12 = MULTIPLY(z10, -FIX_2_613125930) + z5;
 
         tmp6 = tmp12 - tmp7;
@@ -470,13 +246,14 @@ static void idct(int16_t block[64]) {
     }
 }
 
-static av_cold void init_vlcs(FourXContext *f) {
+static av_cold void init_vlcs(FourXContext *f)
+{
     static VLC_TYPE table[2][4][32][2];
     int i, j;
 
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 4; j++) {
-            block_type_vlc[i][j].table = table[i][j];
+            block_type_vlc[i][j].table           = table[i][j];
             block_type_vlc[i][j].table_allocated = 32;
             init_vlc(&block_type_vlc[i][j], BLOCK_TYPE_VLC_BITS, 7,
                      &block_type_tab[i][j][0][1], 2, 1,
@@ -486,7 +263,8 @@ static av_cold void init_vlcs(FourXContext *f) {
     }
 }
 
-static void init_mv(FourXContext *f, int linesize) {
+static void init_mv(FourXContext *f, int linesize)
+{
     int i;
 
     for (i = 0; i < 256; i++) {
@@ -515,56 +293,58 @@ static void init_mv(FourXContext *f, int linesize) {
 #endif
 
 static inline void mcdc(uint16_t *dst, const uint16_t *src, int log2w,
-                        int h, int stride, int scale, unsigned dc) {
+                        int h, int stride, int scale, unsigned dc)
+{
     int i;
     dc *= 0x10001;
 
     switch (log2w) {
-        case 0:
-            for (i = 0; i < h; i++) {
-                dst[0] = scale * src[0] + dc;
-                if (scale)
-                    src += stride;
-                dst += stride;
-            }
-            break;
-        case 1:
-            for (i = 0; i < h; i++) {
-                LE_CENTRIC_MUL(dst, src, scale, dc);
-                if (scale)
-                    src += stride;
-                dst += stride;
-            }
-            break;
-        case 2:
-            for (i = 0; i < h; i++) {
-                LE_CENTRIC_MUL(dst, src, scale, dc);
-                LE_CENTRIC_MUL(dst + 2, src + 2, scale, dc);
-                if (scale)
-                    src += stride;
-                dst += stride;
-            }
-            break;
-        case 3:
-            for (i = 0; i < h; i++) {
-                LE_CENTRIC_MUL(dst, src, scale, dc);
-                LE_CENTRIC_MUL(dst + 2, src + 2, scale, dc);
-                LE_CENTRIC_MUL(dst + 4, src + 4, scale, dc);
-                LE_CENTRIC_MUL(dst + 6, src + 6, scale, dc);
-                if (scale)
-                    src += stride;
-                dst += stride;
-            }
-            break;
-        default:
-            av_assert0(0);
+    case 0:
+        for (i = 0; i < h; i++) {
+            dst[0] = scale * src[0] + dc;
+            if (scale)
+                src += stride;
+            dst += stride;
+        }
+        break;
+    case 1:
+        for (i = 0; i < h; i++) {
+            LE_CENTRIC_MUL(dst, src, scale, dc);
+            if (scale)
+                src += stride;
+            dst += stride;
+        }
+        break;
+    case 2:
+        for (i = 0; i < h; i++) {
+            LE_CENTRIC_MUL(dst, src, scale, dc);
+            LE_CENTRIC_MUL(dst + 2, src + 2, scale, dc);
+            if (scale)
+                src += stride;
+            dst += stride;
+        }
+        break;
+    case 3:
+        for (i = 0; i < h; i++) {
+            LE_CENTRIC_MUL(dst,     src,     scale, dc);
+            LE_CENTRIC_MUL(dst + 2, src + 2, scale, dc);
+            LE_CENTRIC_MUL(dst + 4, src + 4, scale, dc);
+            LE_CENTRIC_MUL(dst + 6, src + 6, scale, dc);
+            if (scale)
+                src += stride;
+            dst += stride;
+        }
+        break;
+    default:
+        av_assert0(0);
     }
 }
 
 static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
-                          int log2w, int log2h, int stride) {
+                          int log2w, int log2h, int stride)
+{
     int index, h, code, ret, scale = 1;
-    uint16_t * start, *end;
+    uint16_t *start, *end;
     unsigned dc = 0;
 
     av_assert0(log2w >= 0 && log2h >= 0);
@@ -574,13 +354,13 @@ static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
 
     if (get_bits_left(&f->gb) < 1)
         return AVERROR_INVALIDDATA;
-    h = 1 << log2h;
-    code = get_vlc2(&f->gb, block_type_vlc[1 - (f->version > 1)][index].table,
-                    BLOCK_TYPE_VLC_BITS, 1);
+    h     = 1 << log2h;
+    code  = get_vlc2(&f->gb, block_type_vlc[1 - (f->version > 1)][index].table,
+                     BLOCK_TYPE_VLC_BITS, 1);
     av_assert0(code >= 0 && code <= 6);
 
     start = f->last_frame_buffer;
-    end = start + stride * (f->avctx->height - h + 1) - (1 << log2w);
+    end   = start + stride * (f->avctx->height - h + 1) - (1 << log2w);
 
     if (code == 1) {
         log2h--;
@@ -591,7 +371,7 @@ static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
                               log2w, log2h, stride);
     } else if (code == 2) {
         log2w--;
-        if ((ret = decode_p_block(f, dst, src, log2w, log2h, stride)) < 0)
+        if ((ret = decode_p_block(f, dst , src, log2w, log2h, stride)) < 0)
             return ret;
         return decode_p_block(f, dst + (1 << log2w),
                               src + (1 << log2w),
@@ -602,39 +382,39 @@ static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
             return AVERROR_INVALIDDATA;
         }
         if (log2w) {
-            dst[0] = bytestream2_get_le16u(&f->g2);
-            dst[1] = bytestream2_get_le16u(&f->g2);
+            dst[0]      = bytestream2_get_le16u(&f->g2);
+            dst[1]      = bytestream2_get_le16u(&f->g2);
         } else {
-            dst[0] = bytestream2_get_le16u(&f->g2);
+            dst[0]      = bytestream2_get_le16u(&f->g2);
             dst[stride] = bytestream2_get_le16u(&f->g2);
         }
         return 0;
     }
 
-    if ((code & 3) == 0 && bytestream2_get_bytes_left(&f->g) < 1) {
+    if ((code&3)==0 && bytestream2_get_bytes_left(&f->g) < 1) {
         av_log(f->avctx, AV_LOG_ERROR, "bytestream overread\n");
         return AVERROR_INVALIDDATA;
     }
 
     if (code == 0) {
-        src += f->mv[bytestream2_get_byte(&f->g)];
+        src  += f->mv[bytestream2_get_byte(&f->g)];
     } else if (code == 3 && f->version >= 2) {
         return 0;
     } else if (code == 4) {
-        src += f->mv[bytestream2_get_byte(&f->g)];
-        if (bytestream2_get_bytes_left(&f->g2) < 2) {
+        src  += f->mv[bytestream2_get_byte(&f->g)];
+        if (bytestream2_get_bytes_left(&f->g2) < 2){
             av_log(f->avctx, AV_LOG_ERROR, "wordstream overread\n");
             return AVERROR_INVALIDDATA;
         }
-        dc = bytestream2_get_le16(&f->g2);
+        dc    = bytestream2_get_le16(&f->g2);
     } else if (code == 5) {
-        if (bytestream2_get_bytes_left(&f->g2) < 2) {
+        if (bytestream2_get_bytes_left(&f->g2) < 2){
             av_log(f->avctx, AV_LOG_ERROR, "wordstream overread\n");
             return AVERROR_INVALIDDATA;
         }
         av_assert0(start <= src && src <= end);
         scale = 0;
-        dc = bytestream2_get_le16(&f->g2);
+        dc    = bytestream2_get_le16(&f->g2);
     }
 
     if (start > src || src > end) {
@@ -647,38 +427,39 @@ static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
     return 0;
 }
 
-static int decode_p_frame(FourXContext *f, const uint8_t *buf, int length) {
+static int decode_p_frame(FourXContext *f, const uint8_t *buf, int length)
+{
     int x, y;
-    const int width = f->avctx->width;
+    const int width  = f->avctx->width;
     const int height = f->avctx->height;
-    uint16_t * dst = f->frame_buffer;
-    uint16_t * src;
+    uint16_t *dst    = f->frame_buffer;
+    uint16_t *src;
     unsigned int bitstream_size, bytestream_size, wordstream_size, extra,
-            bytestream_offset, wordstream_offset;
+                 bytestream_offset, wordstream_offset;
     int ret;
 
     src = f->last_frame_buffer;
 
     if (f->version > 1) {
-        extra = 20;
+        extra           = 20;
         if (length < extra)
             return AVERROR_INVALIDDATA;
-        bitstream_size = AV_RL32(buf + 8);
+        bitstream_size  = AV_RL32(buf + 8);
         wordstream_size = AV_RL32(buf + 12);
         bytestream_size = AV_RL32(buf + 16);
     } else {
-        extra = 0;
-        bitstream_size = AV_RL16(buf - 4);
+        extra           = 0;
+        bitstream_size  = AV_RL16(buf - 4);
         wordstream_size = AV_RL16(buf - 2);
         bytestream_size = FFMAX(length - bitstream_size - wordstream_size, 0);
     }
 
-    if (bitstream_size > length || bitstream_size >= INT_MAX / 8 ||
+    if (bitstream_size > length || bitstream_size >= INT_MAX/8 ||
         bytestream_size > length - bitstream_size ||
         wordstream_size > length - bytestream_size - bitstream_size ||
         extra > length - bytestream_size - bitstream_size - wordstream_size) {
         av_log(f->avctx, AV_LOG_ERROR, "lengths %d %d %d %d\n", bitstream_size, bytestream_size, wordstream_size,
-               bitstream_size + bytestream_size + wordstream_size - length);
+        bitstream_size+ bytestream_size+ wordstream_size - length);
         return AVERROR_INVALIDDATA;
     }
 
@@ -686,9 +467,8 @@ static int decode_p_frame(FourXContext *f, const uint8_t *buf, int length) {
                           bitstream_size);
     if (!f->bitstream_buffer)
         return AVERROR(ENOMEM);
-    f->bbdsp.bswap_buf(f->bitstream_buffer,(
-    const uint32_t *) (buf + extra),
-            bitstream_size / 4);
+    f->bbdsp.bswap_buf(f->bitstream_buffer, (const uint32_t *) (buf + extra),
+                       bitstream_size / 4);
     init_get_bits(&f->gb, f->bitstream_buffer, 8 * bitstream_size);
 
     wordstream_offset = extra + bitstream_size;
@@ -715,7 +495,8 @@ static int decode_p_frame(FourXContext *f, const uint8_t *buf, int length) {
  * decode block and dequantize.
  * Note this is almost identical to MJPEG.
  */
-static int decode_i_block(FourXContext *f, int16_t *block) {
+static int decode_i_block(FourXContext *f, int16_t *block)
+{
     int code, i, j, level, val;
 
     if (get_bits_left(&f->pre_gb) < 2) {
@@ -733,7 +514,7 @@ static int decode_i_block(FourXContext *f, int16_t *block) {
     if (val)
         val = get_xbits(&f->gb, val);
 
-    val = val * dequant_table[0] + f->last_dc;
+    val        = val * dequant_table[0] + f->last_dc;
     f->last_dc = block[0] = val;
     /* AC coefs */
     i = 1;
@@ -756,7 +537,7 @@ static int decode_i_block(FourXContext *f, int16_t *block) {
                 av_log(f->avctx, AV_LOG_ERROR, "0 coeff\n");
                 return AVERROR_INVALIDDATA;
             }
-            i += code >> 4;
+            i    += code >> 4;
             if (i >= 64) {
                 av_log(f->avctx, AV_LOG_ERROR, "run %d overflow\n", i);
                 return 0;
@@ -773,11 +554,12 @@ static int decode_i_block(FourXContext *f, int16_t *block) {
     return 0;
 }
 
-static inline void idct_put(FourXContext *f, int x, int y) {
-    int16_t(*block)[64] = f->block;
-    int stride = f->avctx->width;
+static inline void idct_put(FourXContext *f, int x, int y)
+{
+    int16_t (*block)[64] = f->block;
+    int stride           = f->avctx->width;
     int i;
-    uint16_t * dst = f->frame_buffer + y * stride + x;
+    uint16_t *dst = f->frame_buffer + y * stride + x;
 
     for (i = 0; i < 4; i++) {
         block[i][0] += 0x80 * 8 * 8;
@@ -804,21 +586,22 @@ static inline void idct_put(FourXContext *f, int x, int y) {
 
             cb += cb;
 
-            y = temp[0];
-            dst[0] = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
-            y = temp[1];
-            dst[1] = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
-            y = temp[8];
-            dst[stride] = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
-            y = temp[9];
+            y               = temp[0];
+            dst[0]          = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
+            y               = temp[1];
+            dst[1]          = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
+            y               = temp[8];
+            dst[stride]     = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
+            y               = temp[9];
             dst[1 + stride] = ((y + cb) >> 3) + (((y - cg) & 0xFC) << 3) + (((y + cr) & 0xF8) << 8);
-            dst += 2;
+            dst            += 2;
         }
         dst += 2 * stride - 2 * 8;
     }
 }
 
-static int decode_i_mb(FourXContext *f) {
+static int decode_i_mb(FourXContext *f)
+{
     int ret;
     int i;
 
@@ -832,9 +615,10 @@ static int decode_i_mb(FourXContext *f) {
 }
 
 static const uint8_t *read_huffman_tables(FourXContext *f,
-                                          const uint8_t *const buf,
-                                          int buf_size) {
-    int frequency[512] = {0};
+                                          const uint8_t * const buf,
+                                          int buf_size)
+{
+    int frequency[512] = { 0 };
     uint8_t flag[512];
     int up[512];
     uint8_t len_tab[257];
@@ -847,7 +631,7 @@ static const uint8_t *read_huffman_tables(FourXContext *f,
     memset(up, -1, sizeof(up));
 
     start = *ptr++;
-    end = *ptr++;
+    end   = *ptr++;
     for (;;) {
         int i;
 
@@ -875,8 +659,8 @@ static const uint8_t *read_huffman_tables(FourXContext *f,
     }
 
     for (j = 257; j < 512; j++) {
-        int min_freq[2] = {256 * 256, 256 * 256};
-        int smallest[2] = {0, 0};
+        int min_freq[2] = { 256 * 256, 256 * 256 };
+        int smallest[2] = { 0, 0 };
         int i;
         for (i = 0; i < j; i++) {
             if (frequency[i] == 0)
@@ -896,11 +680,11 @@ static const uint8_t *read_huffman_tables(FourXContext *f,
         if (min_freq[1] == 256 * 256)
             break;
 
-        frequency[j] = min_freq[0] + min_freq[1];
-        flag[smallest[0]] = 0;
-        flag[smallest[1]] = 1;
-        up[smallest[0]] =
-        up[smallest[1]] = j;
+        frequency[j]           = min_freq[0] + min_freq[1];
+        flag[smallest[0]]      = 0;
+        flag[smallest[1]]      = 1;
+        up[smallest[0]]        =
+        up[smallest[1]]        = j;
         frequency[smallest[0]] = frequency[smallest[1]] = 0;
     }
 
@@ -917,7 +701,7 @@ static const uint8_t *read_huffman_tables(FourXContext *f,
         }
 
         bits_tab[j] = bits;
-        len_tab[j] = len;
+        len_tab[j]  = len;
     }
 
     ff_free_vlc(&f->pre_vlc);
@@ -928,19 +712,21 @@ static const uint8_t *read_huffman_tables(FourXContext *f,
     return ptr;
 }
 
-static int mix(int c0, int c1) {
-    int blue = 2 * (c0 & 0x001F) + (c1 & 0x001F);
+static int mix(int c0, int c1)
+{
+    int blue  =  2 * (c0 & 0x001F) + (c1 & 0x001F);
     int green = (2 * (c0 & 0x03E0) + (c1 & 0x03E0)) >> 5;
-    int red = 2 * (c0 >> 10) + (c1 >> 10);
+    int red   =  2 * (c0 >> 10)    + (c1 >> 10);
     return red / 3 * 1024 + green / 3 * 32 + blue / 3;
 }
 
-static int decode_i2_frame(FourXContext *f, const uint8_t *buf, int length) {
+static int decode_i2_frame(FourXContext *f, const uint8_t *buf, int length)
+{
     int x, y, x2, y2;
-    const int width = f->avctx->width;
+    const int width  = f->avctx->width;
     const int height = f->avctx->height;
-    const int mbs = (FFALIGN(width, 16) >> 4) * (FFALIGN(height, 16) >> 4);
-    uint16_t * dst = f->frame_buffer;
+    const int mbs    = (FFALIGN(width, 16) >> 4) * (FFALIGN(height, 16) >> 4);
+    uint16_t *dst    = f->frame_buffer;
     const uint8_t *buf_end = buf + length;
     GetByteContext g3;
 
@@ -952,7 +738,7 @@ static int decode_i2_frame(FourXContext *f, const uint8_t *buf, int length) {
 
     for (y = 0; y < height; y += 16) {
         for (x = 0; x < width; x += 16) {
-            unsigned int color[4] = {0}, bits;
+            unsigned int color[4] = { 0 }, bits;
             if (buf_end - buf < 8)
                 return AVERROR_INVALIDDATA;
             // warning following is purely guessed ...
@@ -982,9 +768,10 @@ static int decode_i2_frame(FourXContext *f, const uint8_t *buf, int length) {
     return 0;
 }
 
-static int decode_i_frame(FourXContext *f, const uint8_t *buf, int length) {
+static int decode_i_frame(FourXContext *f, const uint8_t *buf, int length)
+{
     int x, y, ret;
-    const int width = f->avctx->width;
+    const int width  = f->avctx->width;
     const int height = f->avctx->height;
     const unsigned int bitstream_size = AV_RL32(buf);
     unsigned int prestream_size;
@@ -999,7 +786,7 @@ static int decode_i_frame(FourXContext *f, const uint8_t *buf, int length) {
     }
 
     prestream_size = 4 * AV_RL32(buf + bitstream_size + 4);
-    prestream = buf + bitstream_size + 12;
+    prestream      =             buf + bitstream_size + 12;
 
     if (prestream_size + bitstream_size + 12 != length
         || prestream_size > (1 << 26)) {
@@ -1024,9 +811,8 @@ static int decode_i_frame(FourXContext *f, const uint8_t *buf, int length) {
                           prestream_size);
     if (!f->bitstream_buffer)
         return AVERROR(ENOMEM);
-    f->bbdsp.bswap_buf(f->bitstream_buffer,(
-    const uint32_t *) prestream,
-            prestream_size / 4);
+    f->bbdsp.bswap_buf(f->bitstream_buffer, (const uint32_t *) prestream,
+                       prestream_size / 4);
     init_get_bits(&f->pre_gb, f->bitstream_buffer, 8 * prestream_size);
 
     f->last_dc = 0 * 128 * 8 * 8;
@@ -1047,11 +833,12 @@ static int decode_i_frame(FourXContext *f, const uint8_t *buf, int length) {
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data,
-                        int *got_frame, AVPacket *avpkt) {
-    const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
+                        int *got_frame, AVPacket *avpkt)
+{
+    const uint8_t *buf    = avpkt->data;
+    int buf_size          = avpkt->size;
     FourXContext *const f = avctx->priv_data;
-    AVFrame *picture = data;
+    AVFrame *picture      = data;
     int i, frame_4cc, frame_size, ret;
 
     if (buf_size < 20)
@@ -1060,19 +847,17 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     av_assert0(avctx->width % 16 == 0 && avctx->height % 16 == 0);
 
     if (buf_size < AV_RL32(buf + 4) + 8) {
-        av_log(f->avctx, AV_LOG_ERROR, "size mismatch %d %"
-        PRIu32
-        "\n",
-                buf_size, AV_RL32(buf + 4));
+        av_log(f->avctx, AV_LOG_ERROR, "size mismatch %d %"PRIu32"\n",
+               buf_size, AV_RL32(buf + 4));
         return AVERROR_INVALIDDATA;
     }
 
     frame_4cc = AV_RL32(buf);
 
     if (frame_4cc == AV_RL32("cfrm")) {
-        int free_index = -1;
+        int free_index       = -1;
         int id, whole_size;
-        const int data_size = buf_size - 20;
+        const int data_size  = buf_size - 20;
         CFrameBuffer *cfrm;
 
         if (f->version <= 1) {
@@ -1080,7 +865,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
             return AVERROR_INVALIDDATA;
         }
 
-        id = AV_RL32(buf + 12);
+        id         = AV_RL32(buf + 12);
         whole_size = AV_RL32(buf + 16);
 
         if (data_size < 0 || whole_size < 0) {
@@ -1101,12 +886,12 @@ static int decode_frame(AVCodecContext *avctx, void *data,
         }
 
         if (i >= CFRAME_BUFFER_COUNT) {
-            i = free_index;
+            i             = free_index;
             f->cfrm[i].id = id;
         }
         cfrm = &f->cfrm[i];
 
-        if (data_size > UINT_MAX - cfrm->size - AV_INPUT_BUFFER_PADDING_SIZE)
+        if (data_size > UINT_MAX -  cfrm->size - AV_INPUT_BUFFER_PADDING_SIZE)
             return AVERROR_INVALIDDATA;
 
         cfrm->data = av_fast_realloc(cfrm->data, &cfrm->allocated_size,
@@ -1121,7 +906,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
         cfrm->size += data_size;
 
         if (cfrm->size >= whole_size) {
-            buf = cfrm->data;
+            buf        = cfrm->data;
             frame_size = cfrm->size;
 
             if (id != avctx->frame_number)
@@ -1132,11 +917,11 @@ static int decode_frame(AVCodecContext *avctx, void *data,
                 return AVERROR_INVALIDDATA;
 
             cfrm->size = cfrm->id = 0;
-            frame_4cc = AV_RL32("pfrm");
+            frame_4cc  = AV_RL32("pfrm");
         } else
             return buf_size;
     } else {
-        buf = buf + 12;
+        buf        = buf      + 12;
         frame_size = buf_size - 12;
     }
 
@@ -1172,9 +957,9 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     picture->key_frame = picture->pict_type == AV_PICTURE_TYPE_I;
 
     av_image_copy_plane(picture->data[0], picture->linesize[0],
-                        (const uint8_t *) f->frame_buffer, avctx->width * 2,
+                        (const uint8_t*)f->frame_buffer,  avctx->width * 2,
                         avctx->width * 2, avctx->height);
-    FFSWAP(uint16_t * , f->frame_buffer, f->last_frame_buffer);
+    FFSWAP(uint16_t *, f->frame_buffer, f->last_frame_buffer);
 
     *got_frame = 1;
 
@@ -1183,8 +968,9 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     return buf_size;
 }
 
-static av_cold int decode_end(AVCodecContext *avctx) {
-    FourXContext *const f = avctx->priv_data;
+static av_cold int decode_end(AVCodecContext *avctx)
+{
+    FourXContext * const f = avctx->priv_data;
     int i;
 
     av_freep(&f->frame_buffer);
@@ -1200,15 +986,16 @@ static av_cold int decode_end(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
-    FourXContext *const f = avctx->priv_data;
+static av_cold int decode_init(AVCodecContext *avctx)
+{
+    FourXContext * const f = avctx->priv_data;
     int ret;
 
     if (avctx->extradata_size != 4 || !avctx->extradata) {
         av_log(avctx, AV_LOG_ERROR, "extradata wrong or missing\n");
         return AVERROR_INVALIDDATA;
     }
-    if ((avctx->width % 16) || (avctx->height % 16)) {
+    if((avctx->width % 16) || (avctx->height % 16)) {
         av_log(avctx, AV_LOG_ERROR, "unsupported width/height\n");
         return AVERROR_INVALIDDATA;
     }
@@ -1217,7 +1004,7 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     if (ret < 0)
         return ret;
 
-    f->frame_buffer = av_mallocz(avctx->width * avctx->height * 2);
+    f->frame_buffer      = av_mallocz(avctx->width * avctx->height * 2);
     f->last_frame_buffer = av_mallocz(avctx->width * avctx->height * 2);
     if (!f->frame_buffer || !f->last_frame_buffer) {
         decode_end(avctx);
@@ -1239,13 +1026,13 @@ static av_cold int decode_init(AVCodecContext *avctx) {
 }
 
 AVCodec ff_fourxm_decoder = {
-        .name           = "4xm",
-        .long_name      = NULL_IF_CONFIG_SMALL("4X Movie"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_4XM,
-        .priv_data_size = sizeof(FourXContext),
-        .init           = decode_init,
-        .close          = decode_end,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
+    .name           = "4xm",
+    .long_name      = NULL_IF_CONFIG_SMALL("4X Movie"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_4XM,
+    .priv_data_size = sizeof(FourXContext),
+    .init           = decode_init,
+    .close          = decode_end,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
 };

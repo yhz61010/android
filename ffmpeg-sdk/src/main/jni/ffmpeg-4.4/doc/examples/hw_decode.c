@@ -46,7 +46,8 @@ static AVBufferRef *hw_device_ctx = NULL;
 static enum AVPixelFormat hw_pix_fmt;
 static FILE *output_file = NULL;
 
-static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type) {
+static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type)
+{
     int err = 0;
 
     if ((err = av_hwdevice_ctx_create(&hw_device_ctx, type,
@@ -60,7 +61,8 @@ static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type) 
 }
 
 static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,
-                                        const enum AVPixelFormat *pix_fmts) {
+                                        const enum AVPixelFormat *pix_fmts)
+{
     const enum AVPixelFormat *p;
 
     for (p = pix_fmts; *p != -1; p++) {
@@ -72,7 +74,8 @@ static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,
     return AV_PIX_FMT_NONE;
 }
 
-static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
+static int decode_write(AVCodecContext *avctx, AVPacket *packet)
+{
     AVFrame *frame = NULL, *sw_frame = NULL;
     AVFrame *tmp_frame = NULL;
     uint8_t *buffer = NULL;
@@ -121,8 +124,8 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
             goto fail;
         }
         ret = av_image_copy_to_buffer(buffer, size,
-                                      (const uint8_t *const *) tmp_frame->data,
-                                      (const int *) tmp_frame->linesize, tmp_frame->format,
+                                      (const uint8_t * const *)tmp_frame->data,
+                                      (const int *)tmp_frame->linesize, tmp_frame->format,
                                       tmp_frame->width, tmp_frame->height, 1);
         if (ret < 0) {
             fprintf(stderr, "Can not copy image to buffer\n");
@@ -134,7 +137,7 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
             goto fail;
         }
 
-        fail:
+    fail:
         av_frame_free(&frame);
         av_frame_free(&sw_frame);
         av_freep(&buffer);
@@ -143,7 +146,8 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     AVFormatContext *input_ctx = NULL;
     int video_stream, ret;
     AVStream *video = NULL;
@@ -162,7 +166,7 @@ int main(int argc, char *argv[]) {
     if (type == AV_HWDEVICE_TYPE_NONE) {
         fprintf(stderr, "Device type %s is not supported.\n", argv[1]);
         fprintf(stderr, "Available device types:");
-        while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)
+        while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)
             fprintf(stderr, " %s", av_hwdevice_get_type_name(type));
         fprintf(stderr, "\n");
         return -1;
@@ -208,7 +212,7 @@ int main(int argc, char *argv[]) {
     if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0)
         return -1;
 
-    decoder_ctx->get_format = get_hw_format;
+    decoder_ctx->get_format  = get_hw_format;
 
     if (hw_decoder_init(decoder_ctx, type) < 0)
         return -1;

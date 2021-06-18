@@ -34,7 +34,7 @@
     mask = ((v16u8) mask <= b_limit);                            \
 }
 
-#define VP8_LPF_FILTER4_4W(p1_in_out, p0_in_out, q0_in_out, q1_in_out, \
+#define VP8_LPF_FILTER4_4W(p1_in_out, p0_in_out, q0_in_out, q1_in_out,  \
                            mask_in, hev_in)                             \
 {                                                                       \
     v16i8 p1_m, p0_m, q0_m, q1_m, q0_sub_p0, filt_sign;                 \
@@ -249,9 +249,9 @@
     p2 = __msa_xori_b((v16u8) p2_m, 0x80);                          \
 }
 
-#define LPF_MASK_HEV(p3_in, p2_in, p1_in, p0_in, \
-                     q0_in, q1_in, q2_in, q3_in, \
-                     limit_in, b_limit_in, thresh_in, \
+#define LPF_MASK_HEV(p3_in, p2_in, p1_in, p0_in,                   \
+                     q0_in, q1_in, q2_in, q3_in,                   \
+                     limit_in, b_limit_in, thresh_in,              \
                      hev_out, mask_out, flat_out)                  \
 {                                                                  \
     v16u8 p3_asub_p2_m, p2_asub_p1_m, p1_asub_p0_m, q1_asub_q0_m;  \
@@ -295,7 +295,8 @@
 }
 
 void ff_vp8_v_loop_filter16_msa(uint8_t *src, ptrdiff_t pitch, int b_limit_in,
-                                int limit_in, int thresh_in) {
+                                int limit_in, int thresh_in)
+{
     uint8_t *temp_src;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 mask, hev, flat, thresh, limit, b_limit;
@@ -318,7 +319,8 @@ void ff_vp8_v_loop_filter16_msa(uint8_t *src, ptrdiff_t pitch, int b_limit_in,
 
 void ff_vp8_v_loop_filter8uv_msa(uint8_t *src_u, uint8_t *src_v,
                                  ptrdiff_t pitch, int b_limit_in, int limit_in,
-                                 int thresh_in) {
+                                 int thresh_in)
+{
     uint8_t *temp_src;
     uint64_t p2_d, p1_d, p0_d, q0_d, q1_d, q2_d;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -370,7 +372,8 @@ void ff_vp8_v_loop_filter8uv_msa(uint8_t *src_u, uint8_t *src_v,
 }
 
 void ff_vp8_h_loop_filter16_msa(uint8_t *src, ptrdiff_t pitch, int b_limit_in,
-                                int limit_in, int thresh_in) {
+                                int limit_in, int thresh_in)
+{
     uint8_t *temp_src;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 mask, hev, flat, thresh, limit, b_limit;
@@ -435,7 +438,8 @@ void ff_vp8_h_loop_filter16_msa(uint8_t *src, ptrdiff_t pitch, int b_limit_in,
 
 void ff_vp8_h_loop_filter8uv_msa(uint8_t *src_u, uint8_t *src_v,
                                  ptrdiff_t pitch, int b_limit_in, int limit_in,
-                                 int thresh_in) {
+                                 int thresh_in)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 mask, hev, flat, thresh, limit, b_limit;
     v16u8 row0, row1, row2, row3, row4, row5, row6, row7, row8;
@@ -499,7 +503,8 @@ void ff_vp8_h_loop_filter8uv_msa(uint8_t *src_u, uint8_t *src_v,
 }
 
 void ff_vp8_v_loop_filter_simple_msa(uint8_t *src, ptrdiff_t pitch,
-                                     int b_limit_ptr) {
+                                     int b_limit_ptr)
+{
     v16u8 p1, p0, q1, q0;
     v16u8 mask, b_limit;
 
@@ -512,7 +517,8 @@ void ff_vp8_v_loop_filter_simple_msa(uint8_t *src, ptrdiff_t pitch,
 }
 
 void ff_vp8_h_loop_filter_simple_msa(uint8_t *src, ptrdiff_t pitch,
-                                     int b_limit_ptr) {
+                                     int b_limit_ptr)
+{
     uint8_t *temp_src;
     v16u8 p1, p0, q1, q0;
     v16u8 mask, b_limit;
@@ -540,7 +546,8 @@ void ff_vp8_h_loop_filter_simple_msa(uint8_t *src, ptrdiff_t pitch,
 
 void ff_vp8_v_loop_filter8uv_inner_msa(uint8_t *src_u, uint8_t *src_v,
                                        ptrdiff_t pitch, int b_limit_in,
-                                       int limit_in, int thresh_in) {
+                                       int limit_in, int thresh_in)
+{
     uint64_t p1_d, p0_d, q0_d, q1_d;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 mask, hev, flat, thresh, limit, b_limit;
@@ -570,18 +577,19 @@ void ff_vp8_v_loop_filter8uv_inner_msa(uint8_t *src_u, uint8_t *src_v,
     p0_d = __msa_copy_u_d((v2i64) p0, 0);
     q0_d = __msa_copy_u_d((v2i64) q0, 0);
     q1_d = __msa_copy_u_d((v2i64) q1, 0);
-    SD4(q1_d, q0_d, p0_d, p1_d, src_u, (-pitch));
+    SD4(q1_d, q0_d, p0_d, p1_d, src_u, (- pitch));
 
     p1_d = __msa_copy_u_d((v2i64) p1, 1);
     p0_d = __msa_copy_u_d((v2i64) p0, 1);
     q0_d = __msa_copy_u_d((v2i64) q0, 1);
     q1_d = __msa_copy_u_d((v2i64) q1, 1);
-    SD4(q1_d, q0_d, p0_d, p1_d, src_v, (-pitch));
+    SD4(q1_d, q0_d, p0_d, p1_d, src_v, (- pitch));
 }
 
 void ff_vp8_h_loop_filter8uv_inner_msa(uint8_t *src_u, uint8_t *src_v,
                                        ptrdiff_t pitch, int b_limit_in,
-                                       int limit_in, int thresh_in) {
+                                       int limit_in, int thresh_in)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 mask, hev, flat, thresh, limit, b_limit;
     v16u8 row0, row1, row2, row3, row4, row5, row6, row7, row8;
@@ -613,7 +621,8 @@ void ff_vp8_h_loop_filter8uv_inner_msa(uint8_t *src_u, uint8_t *src_v,
 }
 
 void ff_vp8_v_loop_filter16_inner_msa(uint8_t *src, ptrdiff_t pitch,
-                                      int32_t e, int32_t i, int32_t h) {
+                                      int32_t e, int32_t i, int32_t h)
+{
     v16u8 mask, hev, flat;
     v16u8 thresh, b_limit, limit;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -632,7 +641,8 @@ void ff_vp8_v_loop_filter16_inner_msa(uint8_t *src, ptrdiff_t pitch,
 }
 
 void ff_vp8_h_loop_filter16_inner_msa(uint8_t *src, ptrdiff_t pitch,
-                                      int32_t e, int32_t i, int32_t h) {
+                                      int32_t e, int32_t i, int32_t h)
+{
     v16u8 mask, hev, flat;
     v16u8 thresh, b_limit, limit;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;

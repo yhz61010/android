@@ -49,7 +49,8 @@
 #undef PREFIX_h264_chroma_mc8_num
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_h264chroma_init_ppc(H264ChromaContext *c, int bit_depth) {
+av_cold void ff_h264chroma_init_ppc(H264ChromaContext *c, int bit_depth)
+{
 #if HAVE_ALTIVEC
     const int high_bit_depth = bit_depth > 8;
 

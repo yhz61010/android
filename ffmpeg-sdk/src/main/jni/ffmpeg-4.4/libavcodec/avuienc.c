@@ -24,7 +24,8 @@
 #include "internal.h"
 #include "libavutil/intreadwrite.h"
 
-static av_cold int avui_encode_init(AVCodecContext *avctx) {
+static av_cold int avui_encode_init(AVCodecContext *avctx)
+{
     if (avctx->width != 720 || avctx->height != 486 && avctx->height != 576) {
         av_log(avctx, AV_LOG_ERROR, "Only 720x486 and 720x576 are supported.\n");
         return AVERROR(EINVAL);
@@ -48,7 +49,8 @@ static av_cold int avui_encode_init(AVCodecContext *avctx) {
 }
 
 static int avui_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
-                             const AVFrame *pic, int *got_packet) {
+                             const AVFrame *pic, int *got_packet)
+{
     uint8_t *dst;
     int i, j, skip, ret, size, interlaced;
 
@@ -90,12 +92,12 @@ static int avui_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 }
 
 AVCodec ff_avui_encoder = {
-        .name         = "avui",
-        .long_name    = NULL_IF_CONFIG_SMALL("Avid Meridien Uncompressed"),
-        .type         = AVMEDIA_TYPE_VIDEO,
-        .id           = AV_CODEC_ID_AVUI,
-        .init         = avui_encode_init,
-        .encode2      = avui_encode_frame,
-        .capabilities = AV_CODEC_CAP_EXPERIMENTAL,
-        .pix_fmts     = (const enum AVPixelFormat[]) {AV_PIX_FMT_UYVY422, AV_PIX_FMT_NONE},
+    .name         = "avui",
+    .long_name    = NULL_IF_CONFIG_SMALL("Avid Meridien Uncompressed"),
+    .type         = AVMEDIA_TYPE_VIDEO,
+    .id           = AV_CODEC_ID_AVUI,
+    .init         = avui_encode_init,
+    .encode2      = avui_encode_frame,
+    .capabilities = AV_CODEC_CAP_EXPERIMENTAL,
+    .pix_fmts     = (const enum AVPixelFormat[]){ AV_PIX_FMT_UYVY422, AV_PIX_FMT_NONE },
 };

@@ -32,35 +32,20 @@ void ff_h264_idct ## NUM ## _add_ ## DEPTH ## _ ## OPT(uint8_t *dst,    \
                                                        int stride);
 
 IDCT_ADD_FUNC(, 8, mmx)
-
 IDCT_ADD_FUNC(, 8, sse2)
-
 IDCT_ADD_FUNC(, 8, avx)
-
 IDCT_ADD_FUNC(, 10, sse2)
-
 IDCT_ADD_FUNC(_dc, 8, mmxext)
-
 IDCT_ADD_FUNC(_dc, 8, sse2)
-
 IDCT_ADD_FUNC(_dc, 8, avx)
-
 IDCT_ADD_FUNC(_dc, 10, mmxext)
-
 IDCT_ADD_FUNC(8_dc, 8, mmxext)
-
 IDCT_ADD_FUNC(8_dc, 10, sse2)
-
 IDCT_ADD_FUNC(8, 8, mmx)
-
 IDCT_ADD_FUNC(8, 8, sse2)
-
 IDCT_ADD_FUNC(8, 10, sse2)
-
 IDCT_ADD_FUNC(, 10, avx)
-
 IDCT_ADD_FUNC(8_dc, 10, avx)
-
 IDCT_ADD_FUNC(8, 10, avx)
 
 
@@ -70,33 +55,19 @@ void ff_h264_idct ## NUM ## _add ## REP ## _ ## DEPTH ## _ ## OPT       \
      int16_t *block, int stride, const uint8_t nnzc[6 * 8]);
 
 IDCT_ADD_REP_FUNC(8, 4, 8, mmx)
-
 IDCT_ADD_REP_FUNC(8, 4, 8, mmxext)
-
 IDCT_ADD_REP_FUNC(8, 4, 8, sse2)
-
 IDCT_ADD_REP_FUNC(8, 4, 10, sse2)
-
 IDCT_ADD_REP_FUNC(8, 4, 10, avx)
-
 IDCT_ADD_REP_FUNC(, 16, 8, mmx)
-
 IDCT_ADD_REP_FUNC(, 16, 8, mmxext)
-
 IDCT_ADD_REP_FUNC(, 16, 8, sse2)
-
 IDCT_ADD_REP_FUNC(, 16, 10, sse2)
-
 IDCT_ADD_REP_FUNC(, 16intra, 8, mmx)
-
 IDCT_ADD_REP_FUNC(, 16intra, 8, mmxext)
-
 IDCT_ADD_REP_FUNC(, 16intra, 8, sse2)
-
 IDCT_ADD_REP_FUNC(, 16intra, 10, sse2)
-
 IDCT_ADD_REP_FUNC(, 16, 10, avx)
-
 IDCT_ADD_REP_FUNC(, 16intra, 10, avx)
 
 
@@ -106,23 +77,17 @@ void ff_h264_idct ## NUM ## _add ## REP ## _ ## DEPTH ## _ ## OPT     \
      int16_t *block, int stride, const uint8_t nnzc[6 * 8]);
 
 IDCT_ADD_REP_FUNC2(, 8, 8, mmx)
-
 IDCT_ADD_REP_FUNC2(, 8, 8, mmxext)
-
 IDCT_ADD_REP_FUNC2(, 8, 8, sse2)
-
 IDCT_ADD_REP_FUNC2(, 8, 10, sse2)
-
 IDCT_ADD_REP_FUNC2(, 8, 10, avx)
 
 IDCT_ADD_REP_FUNC2(, 8_422, 8, mmx)
 
 IDCT_ADD_REP_FUNC2(, 8_422, 10, sse2)
-
 IDCT_ADD_REP_FUNC2(, 8_422, 10, avx)
 
 void ff_h264_luma_dc_dequant_idct_mmx(int16_t *output, int16_t *input, int qmul);
-
 void ff_h264_luma_dc_dequant_idct_sse2(int16_t *output, int16_t *input, int qmul);
 
 /***********************************/
@@ -177,11 +142,9 @@ LF_FUNC(v,  chroma,          depth, avx)        \
 LF_IFUNC(v, chroma_intra,    depth, avx)
 
 LF_FUNC(h, luma_mbaff, 8, sse2)
-
 LF_FUNC(h, luma_mbaff, 8, avx)
 
-LF_FUNCS(uint8_t, 8)
-
+LF_FUNCS(uint8_t,   8)
 LF_FUNCS(uint16_t, 10)
 
 #if ARCH_X86_32 && HAVE_MMXEXT_EXTERNAL
@@ -203,8 +166,7 @@ static void deblock_v_luma_intra_8_mmxext(uint8_t *pix, int stride,
 }
 #endif /* ARCH_X86_32 && HAVE_MMXEXT_EXTERNAL */
 
-LF_FUNC(v, luma, 10, mmxext)
-
+LF_FUNC(v,  luma,       10, mmxext)
 LF_IFUNC(v, luma_intra, 10, mmxext)
 
 /***********************************/
@@ -232,9 +194,7 @@ void ff_h264_biweight_ ## W ## _ ## OPT(uint8_t *dst, uint8_t *src,     \
     H264_BIWEIGHT(W, ssse3)
 
 H264_BIWEIGHT_MMX_SSE(16)
-
 H264_BIWEIGHT_MMX_SSE(8)
-
 H264_BIWEIGHT_MMX(4)
 
 #define H264_WEIGHT_10(W, DEPTH, OPT)                                   \
@@ -262,13 +222,12 @@ void ff_h264_biweight_ ## W ## _ ## DEPTH ## _ ## OPT(uint8_t *dst,     \
     H264_BIWEIGHT_10(W, DEPTH, sse4)
 
 H264_BIWEIGHT_10_SSE(16, 10)
-
-H264_BIWEIGHT_10_SSE(8, 10)
-
-H264_BIWEIGHT_10_SSE(4, 10)
+H264_BIWEIGHT_10_SSE(8,  10)
+H264_BIWEIGHT_10_SSE(4,  10)
 
 av_cold void ff_h264dsp_init_x86(H264DSPContext *c, const int bit_depth,
-                                 const int chroma_format_idc) {
+                                 const int chroma_format_idc)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 

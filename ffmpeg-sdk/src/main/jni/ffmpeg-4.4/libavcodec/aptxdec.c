@@ -33,7 +33,8 @@ static void aptx_qmf_polyphase_synthesis(FilterSignal signal[NB_FILTERS],
                                          int shift,
                                          int32_t low_subband_input,
                                          int32_t high_subband_input,
-                                         int32_t samples[NB_FILTERS]) {
+                                         int32_t samples[NB_FILTERS])
+{
     int32_t subbands[NB_FILTERS];
     int i;
 
@@ -41,7 +42,7 @@ static void aptx_qmf_polyphase_synthesis(FilterSignal signal[NB_FILTERS],
     subbands[1] = low_subband_input - high_subband_input;
 
     for (i = 0; i < NB_FILTERS; i++) {
-        aptx_qmf_filter_signal_push(&signal[i], subbands[1 - i]);
+        aptx_qmf_filter_signal_push(&signal[i], subbands[1-i]);
         samples[i] = aptx_qmf_convolution(&signal[i], coeffs[i], shift);
     }
 }
@@ -53,7 +54,8 @@ static void aptx_qmf_polyphase_synthesis(FilterSignal signal[NB_FILTERS],
  */
 static void aptx_qmf_tree_synthesis(QMFAnalysis *qmf,
                                     int32_t subband_samples[4],
-                                    int32_t samples[4]) {
+                                    int32_t samples[4])
+{
     int32_t intermediate_samples[4];
     int i;
 
@@ -61,21 +63,22 @@ static void aptx_qmf_tree_synthesis(QMFAnalysis *qmf,
     for (i = 0; i < 2; i++)
         aptx_qmf_polyphase_synthesis(qmf->inner_filter_signal[i],
                                      aptx_qmf_inner_coeffs, 22,
-                                     subband_samples[2 * i + 0],
-                                     subband_samples[2 * i + 1],
-                                     &intermediate_samples[2 * i]);
+                                     subband_samples[2*i+0],
+                                     subband_samples[2*i+1],
+                                     &intermediate_samples[2*i]);
 
     /* Join 2 samples from intermediate subbands upsampled to 4 samples. */
     for (i = 0; i < 2; i++)
         aptx_qmf_polyphase_synthesis(qmf->outer_filter_signal,
                                      aptx_qmf_outer_coeffs, 21,
-                                     intermediate_samples[0 + i],
-                                     intermediate_samples[2 + i],
-                                     &samples[2 * i]);
+                                     intermediate_samples[0+i],
+                                     intermediate_samples[2+i],
+                                     &samples[2*i]);
 }
 
 
-static void aptx_decode_channel(Channel *channel, int32_t samples[4]) {
+static void aptx_decode_channel(Channel *channel, int32_t samples[4])
+{
     int32_t subband_samples[4];
     int subband;
     for (subband = 0; subband < NB_SUBBANDS; subband++)
@@ -83,27 +86,30 @@ static void aptx_decode_channel(Channel *channel, int32_t samples[4]) {
     aptx_qmf_tree_synthesis(&channel->qmf, subband_samples, samples);
 }
 
-static void aptx_unpack_codeword(Channel *channel, uint16_t codeword) {
-    channel->quantize[0].quantized_sample = sign_extend(codeword >> 0, 7);
-    channel->quantize[1].quantized_sample = sign_extend(codeword >> 7, 4);
+static void aptx_unpack_codeword(Channel *channel, uint16_t codeword)
+{
+    channel->quantize[0].quantized_sample = sign_extend(codeword >>  0, 7);
+    channel->quantize[1].quantized_sample = sign_extend(codeword >>  7, 4);
     channel->quantize[2].quantized_sample = sign_extend(codeword >> 11, 2);
     channel->quantize[3].quantized_sample = sign_extend(codeword >> 13, 3);
     channel->quantize[3].quantized_sample = (channel->quantize[3].quantized_sample & ~1)
-                                            | aptx_quantized_parity(channel);
+                                          | aptx_quantized_parity(channel);
 }
 
-static void aptxhd_unpack_codeword(Channel *channel, uint32_t codeword) {
-    channel->quantize[0].quantized_sample = sign_extend(codeword >> 0, 9);
-    channel->quantize[1].quantized_sample = sign_extend(codeword >> 9, 6);
+static void aptxhd_unpack_codeword(Channel *channel, uint32_t codeword)
+{
+    channel->quantize[0].quantized_sample = sign_extend(codeword >>  0, 9);
+    channel->quantize[1].quantized_sample = sign_extend(codeword >>  9, 6);
     channel->quantize[2].quantized_sample = sign_extend(codeword >> 15, 4);
     channel->quantize[3].quantized_sample = sign_extend(codeword >> 19, 5);
     channel->quantize[3].quantized_sample = (channel->quantize[3].quantized_sample & ~1)
-                                            | aptx_quantized_parity(channel);
+                                          | aptx_quantized_parity(channel);
 }
 
 static int aptx_decode_samples(AptXContext *ctx,
-                               const uint8_t *input,
-                               int32_t samples[NB_CHANNELS][4]) {
+                                const uint8_t *input,
+                                int32_t samples[NB_CHANNELS][4])
+{
     int channel, ret;
 
     for (channel = 0; channel < NB_CHANNELS; channel++) {
@@ -111,10 +117,10 @@ static int aptx_decode_samples(AptXContext *ctx,
 
         if (ctx->hd)
             aptxhd_unpack_codeword(&ctx->channels[channel],
-                                   AV_RB24(input + 3 * channel));
+                                   AV_RB24(input + 3*channel));
         else
             aptx_unpack_codeword(&ctx->channels[channel],
-                                 AV_RB16(input + 2 * channel));
+                                 AV_RB16(input + 2*channel));
         ff_aptx_invert_quantize_and_prediction(&ctx->channels[channel], ctx->hd);
     }
 
@@ -127,7 +133,8 @@ static int aptx_decode_samples(AptXContext *ctx,
 }
 
 static int aptx_decode_frame(AVCodecContext *avctx, void *data,
-                             int *got_frame_ptr, AVPacket *avpkt) {
+                             int *got_frame_ptr, AVPacket *avpkt)
+{
     AptXContext *s = avctx->priv_data;
     AVFrame *frame = data;
     int pos, opos, channel, sample, ret;
@@ -154,7 +161,7 @@ static int aptx_decode_frame(AVCodecContext *avctx, void *data,
 
         for (channel = 0; channel < NB_CHANNELS; channel++)
             for (sample = 0; sample < 4; sample++)
-                AV_WN32A(&frame->data[channel][4 * (opos + sample)],
+                AV_WN32A(&frame->data[channel][4*(opos+sample)],
                          samples[channel][sample] * 256);
     }
 

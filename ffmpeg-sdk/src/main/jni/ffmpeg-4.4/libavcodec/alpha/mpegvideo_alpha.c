@@ -24,14 +24,15 @@
 #include "asm.h"
 
 static void dct_unquantize_h263_axp(int16_t *block, int n_coeffs,
-                                    uint64_t qscale, uint64_t qadd) {
+                                    uint64_t qscale, uint64_t qadd)
+{
     uint64_t qmul = qscale << 1;
     uint64_t correction = WORD_VEC(qmul * 255 >> 8);
     int i;
 
     qadd = WORD_VEC(qadd);
 
-    for (i = 0; i <= n_coeffs; block += 4, i += 4) {
+    for(i = 0; i <= n_coeffs; block += 4, i += 4) {
         uint64_t levels, negmask, zeros, add, sub;
 
         levels = ldq(block);
@@ -58,7 +59,7 @@ static void dct_unquantize_h263_axp(int16_t *block, int n_coeffs,
         levels -= correction & (negmask << 16);
 
         add = qadd & ~negmask;
-        sub = qadd & negmask;
+        sub = qadd &  negmask;
         /* Set qadd to 0 for levels == 0.  */
         add = zap(add, zeros);
         levels += add;
@@ -69,7 +70,8 @@ static void dct_unquantize_h263_axp(int16_t *block, int n_coeffs,
 }
 
 static void dct_unquantize_h263_intra_axp(MpegEncContext *s, int16_t *block,
-                                          int n, int qscale) {
+                                    int n, int qscale)
+{
     int n_coeffs;
     uint64_t qadd;
     int16_t block0 = block[0];
@@ -84,7 +86,7 @@ static void dct_unquantize_h263_intra_axp(MpegEncContext *s, int16_t *block,
         qadd = 0;
     }
 
-    if (s->ac_pred)
+    if(s->ac_pred)
         n_coeffs = 63;
     else
         n_coeffs = s->inter_scantable.raster_end[s->block_last_index[n]];
@@ -95,12 +97,14 @@ static void dct_unquantize_h263_intra_axp(MpegEncContext *s, int16_t *block,
 }
 
 static void dct_unquantize_h263_inter_axp(MpegEncContext *s, int16_t *block,
-                                          int n, int qscale) {
+                                    int n, int qscale)
+{
     int n_coeffs = s->inter_scantable.raster_end[s->block_last_index[n]];
     dct_unquantize_h263_axp(block, n_coeffs, qscale, (qscale - 1) | 1);
 }
 
-av_cold void ff_mpv_common_init_axp(MpegEncContext *s) {
+av_cold void ff_mpv_common_init_axp(MpegEncContext *s)
+{
     s->dct_unquantize_h263_intra = dct_unquantize_h263_intra_axp;
     s->dct_unquantize_h263_inter = dct_unquantize_h263_inter_axp;
 }

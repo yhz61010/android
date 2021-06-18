@@ -36,11 +36,12 @@
 #define INBUF_SIZE 4096
 
 static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
-                     char *filename) {
+                     char *filename)
+{
     FILE *f;
     int i;
 
-    f = fopen(filename, "wb");
+    f = fopen(filename,"wb");
     fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
     for (i = 0; i < ysize; i++)
         fwrite(buf + i * wrap, 1, xsize, f);
@@ -48,7 +49,8 @@ static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
 }
 
 static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
-                   const char *filename) {
+                   const char *filename)
+{
     char buf[1024];
     int ret;
 
@@ -78,25 +80,26 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     const char *filename, *outfilename;
     const AVCodec *codec;
     AVCodecParserContext *parser;
-    AVCodecContext *c = NULL;
+    AVCodecContext *c= NULL;
     FILE *f;
     AVFrame *frame;
     uint8_t inbuf[INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
     uint8_t *data;
-    size_t data_size;
+    size_t   data_size;
     int ret;
     AVPacket *pkt;
 
     if (argc <= 2) {
         fprintf(stderr, "Usage: %s <input file> <output file>\n"
-                        "And check your input file is encoded by mpeg1video please.\n", argv[0]);
+                "And check your input file is encoded by mpeg1video please.\n", argv[0]);
         exit(0);
     }
-    filename = argv[1];
+    filename    = argv[1];
     outfilename = argv[2];
 
     pkt = av_packet_alloc();
@@ -162,7 +165,7 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "Error while parsing\n");
                 exit(1);
             }
-            data += ret;
+            data      += ret;
             data_size -= ret;
 
             if (pkt->size)

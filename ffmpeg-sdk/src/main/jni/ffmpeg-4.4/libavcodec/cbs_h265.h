@@ -175,9 +175,9 @@ typedef struct H265RawVUI {
 } H265RawVUI;
 
 typedef struct H265RawExtensionData {
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t bit_length;
+    size_t       bit_length;
 } H265RawExtensionData;
 
 typedef struct H265RawVPS {
@@ -440,7 +440,7 @@ typedef struct H265RawAUD {
     uint8_t pic_type;
 } H265RawAUD;
 
-typedef struct H265RawSliceHeader {
+typedef struct  H265RawSliceHeader {
     H265RawNALUnitHeader nal_unit_header;
 
     uint8_t first_slice_segment_in_pic_flag;
@@ -533,19 +533,19 @@ typedef struct H265RawSliceHeader {
 typedef struct H265RawSlice {
     H265RawSliceHeader header;
 
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_size;
-    int data_bit_start;
+    size_t       data_size;
+    int          data_bit_start;
 } H265RawSlice;
 
 
 typedef struct H265RawSEIBufferingPeriod {
-    uint8_t bp_seq_parameter_set_id;
-    uint8_t irap_cpb_params_present_flag;
+    uint8_t  bp_seq_parameter_set_id;
+    uint8_t  irap_cpb_params_present_flag;
     uint32_t cpb_delay_offset;
     uint32_t dpb_delay_offset;
-    uint8_t concatenation_flag;
+    uint8_t  concatenation_flag;
     uint32_t au_cpb_removal_delay_delta_minus1;
 
     uint32_t nal_initial_cpb_removal_delay[HEVC_MAX_CPB_CNT];
@@ -558,7 +558,7 @@ typedef struct H265RawSEIBufferingPeriod {
     uint32_t vcl_initial_alt_cpb_removal_delay[HEVC_MAX_CPB_CNT];
     uint32_t vcl_initial_alt_cpb_removal_offset[HEVC_MAX_CPB_CNT];
 
-    uint8_t use_alt_cpb_params_flag;
+    uint8_t  use_alt_cpb_params_flag;
 } H265RawSEIBufferingPeriod;
 
 typedef struct H265RawSEIPicTiming {
@@ -571,7 +571,7 @@ typedef struct H265RawSEIPicTiming {
     uint32_t pic_dpb_output_du_delay;
 
     uint16_t num_decoding_units_minus1;
-    uint8_t du_common_cpb_removal_delay_flag;
+    uint8_t  du_common_cpb_removal_delay_flag;
     uint32_t du_common_cpb_removal_delay_increment_minus1;
     uint16_t num_nalus_in_du_minus1[HEVC_MAX_SLICE_SEGMENTS];
     uint32_t du_cpb_removal_delay_increment_minus1[HEVC_MAX_SLICE_SEGMENTS];
@@ -579,12 +579,12 @@ typedef struct H265RawSEIPicTiming {
 
 typedef struct H265RawSEIPanScanRect {
     uint32_t pan_scan_rect_id;
-    uint8_t pan_scan_rect_cancel_flag;
-    uint8_t pan_scan_cnt_minus1;
-    int32_t pan_scan_rect_left_offset[3];
-    int32_t pan_scan_rect_right_offset[3];
-    int32_t pan_scan_rect_top_offset[3];
-    int32_t pan_scan_rect_bottom_offset[3];
+    uint8_t  pan_scan_rect_cancel_flag;
+    uint8_t  pan_scan_cnt_minus1;
+    int32_t  pan_scan_rect_left_offset[3];
+    int32_t  pan_scan_rect_right_offset[3];
+    int32_t  pan_scan_rect_top_offset[3];
+    int32_t  pan_scan_rect_bottom_offset[3];
     uint16_t pan_scan_rect_persistence_flag;
 } H265RawSEIPanScanRect;
 
@@ -613,45 +613,45 @@ typedef struct H265RawSEIActiveParameterSets {
 } H265RawSEIActiveParameterSets;
 
 typedef struct H265RawSEIDecodedPictureHash {
-    uint8_t hash_type;
-    uint8_t picture_md5[3][16];
+    uint8_t  hash_type;
+    uint8_t  picture_md5[3][16];
     uint16_t picture_crc[3];
     uint32_t picture_checksum[3];
 } H265RawSEIDecodedPictureHash;
 
 typedef struct H265RawSEITimeCode {
-    uint8_t num_clock_ts;
-    uint8_t clock_timestamp_flag[3];
-    uint8_t units_field_based_flag[3];
-    uint8_t counting_type[3];
-    uint8_t full_timestamp_flag[3];
-    uint8_t discontinuity_flag[3];
-    uint8_t cnt_dropped_flag[3];
+    uint8_t  num_clock_ts;
+    uint8_t  clock_timestamp_flag[3];
+    uint8_t  units_field_based_flag[3];
+    uint8_t  counting_type[3];
+    uint8_t  full_timestamp_flag[3];
+    uint8_t  discontinuity_flag[3];
+    uint8_t  cnt_dropped_flag[3];
     uint16_t n_frames[3];
-    uint8_t seconds_value[3];
-    uint8_t minutes_value[3];
-    uint8_t hours_value[3];
-    uint8_t seconds_flag[3];
-    uint8_t minutes_flag[3];
-    uint8_t hours_flag[3];
-    uint8_t time_offset_length[3];
-    int32_t time_offset_value[3];
+    uint8_t  seconds_value[3];
+    uint8_t  minutes_value[3];
+    uint8_t  hours_value[3];
+    uint8_t  seconds_flag[3];
+    uint8_t  minutes_flag[3];
+    uint8_t  hours_flag[3];
+    uint8_t  time_offset_length[3];
+    int32_t  time_offset_value[3];
 } H265RawSEITimeCode;
 
 typedef struct H265RawSEIAlphaChannelInfo {
-    uint8_t alpha_channel_cancel_flag;
-    uint8_t alpha_channel_use_idc;
-    uint8_t alpha_channel_bit_depth_minus8;
+    uint8_t  alpha_channel_cancel_flag;
+    uint8_t  alpha_channel_use_idc;
+    uint8_t  alpha_channel_bit_depth_minus8;
     uint16_t alpha_transparent_value;
     uint16_t alpha_opaque_value;
-    uint8_t alpha_channel_incr_flag;
-    uint8_t alpha_channel_clip_flag;
-    uint8_t alpha_channel_clip_type_flag;
+    uint8_t  alpha_channel_incr_flag;
+    uint8_t  alpha_channel_clip_flag;
+    uint8_t  alpha_channel_clip_type_flag;
 } H265RawSEIAlphaChannelInfo;
 
 typedef struct H265RawSEI {
     H265RawNALUnitHeader nal_unit_header;
-    SEIRawMessageList message_list;
+    SEIRawMessageList    message_list;
 } H265RawSEI;
 
 typedef struct CodedBitstreamH265Context {

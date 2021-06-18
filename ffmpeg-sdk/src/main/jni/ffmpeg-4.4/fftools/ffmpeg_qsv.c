@@ -31,18 +31,21 @@
 static AVBufferRef *hw_device_ctx;
 char *qsv_device = NULL;
 
-static int qsv_get_buffer(AVCodecContext *s, AVFrame *frame, int flags) {
+static int qsv_get_buffer(AVCodecContext *s, AVFrame *frame, int flags)
+{
     InputStream *ist = s->opaque;
 
     return av_hwframe_get_buffer(ist->hw_frames_ctx, frame, 0);
 }
 
-static void qsv_uninit(AVCodecContext *s) {
+static void qsv_uninit(AVCodecContext *s)
+{
     InputStream *ist = s->opaque;
     av_buffer_unref(&ist->hw_frames_ctx);
 }
 
-static int qsv_device_init(InputStream *ist) {
+static int qsv_device_init(InputStream *ist)
+{
     int err;
     AVDictionary *dict = NULL;
 
@@ -59,14 +62,15 @@ static int qsv_device_init(InputStream *ist) {
         goto err_out;
     }
 
-    err_out:
+err_out:
     if (dict)
         av_dict_free(&dict);
 
     return err;
 }
 
-int qsv_init(AVCodecContext *s) {
+int qsv_init(AVCodecContext *s)
+{
     InputStream *ist = s->opaque;
     AVHWFramesContext *frames_ctx;
     AVQSVFramesContext *frames_hwctx;
@@ -83,15 +87,15 @@ int qsv_init(AVCodecContext *s) {
     if (!ist->hw_frames_ctx)
         return AVERROR(ENOMEM);
 
-    frames_ctx = (AVHWFramesContext *) ist->hw_frames_ctx->data;
+    frames_ctx   = (AVHWFramesContext*)ist->hw_frames_ctx->data;
     frames_hwctx = frames_ctx->hwctx;
 
-    frames_ctx->width = FFALIGN(s->coded_width, 32);
-    frames_ctx->height = FFALIGN(s->coded_height, 32);
-    frames_ctx->format = AV_PIX_FMT_QSV;
-    frames_ctx->sw_format = s->sw_pix_fmt;
+    frames_ctx->width             = FFALIGN(s->coded_width,  32);
+    frames_ctx->height            = FFALIGN(s->coded_height, 32);
+    frames_ctx->format            = AV_PIX_FMT_QSV;
+    frames_ctx->sw_format         = s->sw_pix_fmt;
     frames_ctx->initial_pool_size = 64 + s->extra_hw_frames;
-    frames_hwctx->frame_type = MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
+    frames_hwctx->frame_type      = MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
 
     ret = av_hwframe_ctx_init(ist->hw_frames_ctx);
     if (ret < 0) {
@@ -100,7 +104,7 @@ int qsv_init(AVCodecContext *s) {
     }
 
     ist->hwaccel_get_buffer = qsv_get_buffer;
-    ist->hwaccel_uninit = qsv_uninit;
+    ist->hwaccel_uninit     = qsv_uninit;
 
     return 0;
 }

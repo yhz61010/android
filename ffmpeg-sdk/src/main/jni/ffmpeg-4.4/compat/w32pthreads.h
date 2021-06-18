@@ -36,7 +36,6 @@
  * only implement return values as necessary. */
 
 #define WIN32_LEAN_AND_MEAN
-
 #include <windows.h>
 #include <process.h>
 #include <time.h>
@@ -49,9 +48,7 @@
 
 typedef struct pthread_t {
     void *handle;
-
-    void *(*func)(void *arg);
-
+    void *(*func)(void* arg);
     void *arg;
     void *ret;
 } pthread_t;
@@ -69,29 +66,30 @@ typedef CONDITION_VARIABLE pthread_cond_t;
 #define PTHREAD_CANCEL_ENABLE 1
 #define PTHREAD_CANCEL_DISABLE 0
 
-static av_unused unsigned __stdcall attribute_align_arg
-
-win32thread_worker(void *arg) {
-    pthread_t *h = (pthread_t *) arg;
+static av_unused unsigned __stdcall attribute_align_arg win32thread_worker(void *arg)
+{
+    pthread_t *h = (pthread_t*)arg;
     h->ret = h->func(h->arg);
     return 0;
 }
 
 static av_unused int pthread_create(pthread_t *thread, const void *unused_attr,
-                                    void *(*start_routine)(void *), void *arg) {
-    thread->func = start_routine;
-    thread->arg = arg;
+                                    void *(*start_routine)(void*), void *arg)
+{
+    thread->func   = start_routine;
+    thread->arg    = arg;
 #if HAVE_WINRT
     thread->handle = (void*)CreateThread(NULL, 0, win32thread_worker, thread,
                                            0, NULL);
 #else
-    thread->handle = (void *) _beginthreadex(NULL, 0, win32thread_worker, thread,
-                                             0, NULL);
+    thread->handle = (void*)_beginthreadex(NULL, 0, win32thread_worker, thread,
+                                           0, NULL);
 #endif
     return !thread->handle;
 }
 
-static av_unused int pthread_join(pthread_t thread, void **value_ptr) {
+static av_unused int pthread_join(pthread_t thread, void **value_ptr)
+{
     DWORD ret = WaitForSingleObject(thread.handle, INFINITE);
     if (ret != WAIT_OBJECT_0) {
         if (ret == WAIT_ABANDONED)
@@ -105,22 +103,23 @@ static av_unused int pthread_join(pthread_t thread, void **value_ptr) {
     return 0;
 }
 
-static inline int pthread_mutex_init(pthread_mutex_t *m, void *attr) {
+static inline int pthread_mutex_init(pthread_mutex_t *m, void* attr)
+{
     InitializeSRWLock(m);
     return 0;
 }
-
-static inline int pthread_mutex_destroy(pthread_mutex_t *m) {
+static inline int pthread_mutex_destroy(pthread_mutex_t *m)
+{
     /* Unlocked SWR locks use no resources */
     return 0;
 }
-
-static inline int pthread_mutex_lock(pthread_mutex_t *m) {
+static inline int pthread_mutex_lock(pthread_mutex_t *m)
+{
     AcquireSRWLockExclusive(m);
     return 0;
 }
-
-static inline int pthread_mutex_unlock(pthread_mutex_t *m) {
+static inline int pthread_mutex_unlock(pthread_mutex_t *m)
+{
     ReleaseSRWLockExclusive(m);
     return 0;
 }
@@ -128,7 +127,8 @@ static inline int pthread_mutex_unlock(pthread_mutex_t *m) {
 typedef INIT_ONCE pthread_once_t;
 #define PTHREAD_ONCE_INIT INIT_ONCE_STATIC_INIT
 
-static av_unused int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)) {
+static av_unused int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
+{
     BOOL pending = FALSE;
     InitOnceBeginInitialize(once_control, 0, &pending, NULL);
     if (pending)
@@ -137,28 +137,33 @@ static av_unused int pthread_once(pthread_once_t *once_control, void (*init_rout
     return 0;
 }
 
-static inline int pthread_cond_init(pthread_cond_t *cond, const void *unused_attr) {
+static inline int pthread_cond_init(pthread_cond_t *cond, const void *unused_attr)
+{
     InitializeConditionVariable(cond);
     return 0;
 }
 
 /* native condition variables do not destroy */
-static inline int pthread_cond_destroy(pthread_cond_t *cond) {
+static inline int pthread_cond_destroy(pthread_cond_t *cond)
+{
     return 0;
 }
 
-static inline int pthread_cond_broadcast(pthread_cond_t *cond) {
+static inline int pthread_cond_broadcast(pthread_cond_t *cond)
+{
     WakeAllConditionVariable(cond);
     return 0;
 }
 
-static inline int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+static inline int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
     SleepConditionVariableSRW(cond, mutex, INFINITE, 0);
     return 0;
 }
 
 static inline int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
-                                         const struct timespec *abstime) {
+                                         const struct timespec *abstime)
+{
     int64_t abs_milli = abstime->tv_sec * 1000LL + abstime->tv_nsec / 1000000;
     DWORD t = av_clip64(abs_milli - av_gettime() / 1000, 0, UINT32_MAX);
 
@@ -172,12 +177,14 @@ static inline int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *
     return 0;
 }
 
-static inline int pthread_cond_signal(pthread_cond_t *cond) {
+static inline int pthread_cond_signal(pthread_cond_t *cond)
+{
     WakeConditionVariable(cond);
     return 0;
 }
 
-static inline int pthread_setcancelstate(int state, int *oldstate) {
+static inline int pthread_setcancelstate(int state, int *oldstate)
+{
     return 0;
 }
 

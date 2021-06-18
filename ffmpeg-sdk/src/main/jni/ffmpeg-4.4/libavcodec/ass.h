@@ -75,7 +75,6 @@ int ff_ass_subtitle_header_full(AVCodecContext *avctx,
                                 int outline_color, int back_color,
                                 int bold, int italic, int underline,
                                 int border_style, int alignment);
-
 /**
  * Generate a suitable AVCodecContext.subtitle_header for SUBTITLE_ASS.
  *
@@ -136,6 +135,5 @@ void ff_ass_decoder_flush(AVCodecContext *avctx);
  * @param keep_ass_markup braces and backslash will not be escaped if set
  */
 void ff_ass_bprint_text_event(AVBPrint *buf, const char *p, int size,
-                              const char *linebreaks, int keep_ass_markup);
-
+                             const char *linebreaks, int keep_ass_markup);
 #endif /* AVCODEC_ASS_H */

@@ -32,7 +32,8 @@ void ff_predictor_avx(uint8_t *src, ptrdiff_t size);
 
 void ff_predictor_avx2(uint8_t *src, ptrdiff_t size);
 
-av_cold void ff_exrdsp_init_x86(ExrDSPContext *dsp) {
+av_cold void ff_exrdsp_init_x86(ExrDSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (EXTERNAL_SSE2(cpu_flags)) {
@@ -46,6 +47,6 @@ av_cold void ff_exrdsp_init_x86(ExrDSPContext *dsp) {
     }
     if (EXTERNAL_AVX2_FAST(cpu_flags)) {
         dsp->reorder_pixels = ff_reorder_pixels_avx2;
-        dsp->predictor = ff_predictor_avx2;
+        dsp->predictor      = ff_predictor_avx2;
     }
 }

@@ -67,7 +67,7 @@ enum {
 };
 
 static const int8_t vlc_sbr_lav[10] =
-        {60, 60, 24, 24, 31, 31, 12, 12, 31, 12};
+    { 60, 60, 24, 24, 31, 31, 12, 12, 31, 12 };
 
 #define SBR_INIT_VLC_STATIC(num, size) \
     INIT_VLC_STATIC(&vlc_sbr[num], 9, sbr_tmp[num].table_size / sbr_tmp[num].elem_size,     \
@@ -80,20 +80,16 @@ static const int8_t vlc_sbr_lav[10] =
 
 /** Initialize SBR. */
 void AAC_RENAME(ff_aac_sbr_init)(void);
-
 /** Initialize one SBR context. */
 void AAC_RENAME(ff_aac_sbr_ctx_init)(AACContext *ac, SpectralBandReplication *sbr, int id_aac);
-
 /** Close one SBR context. */
 void AAC_RENAME(ff_aac_sbr_ctx_close)(SpectralBandReplication *sbr);
-
 /** Decode one SBR element. */
 int AAC_RENAME(ff_decode_sbr_extension)(AACContext *ac, SpectralBandReplication *sbr,
-                                        GetBitContext *gb, int crc, int cnt, int id_aac);
-
+                            GetBitContext *gb, int crc, int cnt, int id_aac);
 /** Apply one SBR element to one AAC element. */
 void AAC_RENAME(ff_sbr_apply)(AACContext *ac, SpectralBandReplication *sbr, int id_aac,
-                              INTFLOAT *L, INTFLOAT *R);
+                  INTFLOAT* L, INTFLOAT *R);
 
 void ff_aacsbr_func_ptr_init_mips(AACSBRContext *c);
 

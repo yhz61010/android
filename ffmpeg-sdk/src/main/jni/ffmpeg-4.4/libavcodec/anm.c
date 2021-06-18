@@ -33,7 +33,8 @@ typedef struct AnmContext {
     int palette[AVPALETTE_COUNT];
 } AnmContext;
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     AnmContext *s = avctx->priv_data;
     GetByteContext gb;
     int i;
@@ -74,9 +75,10 @@ static av_cold int decode_init(AVCodecContext *avctx) {
 static inline int op(uint8_t **dst, const uint8_t *dst_end,
                      GetByteContext *gb,
                      int pixel, int count,
-                     int *x, int width, int linesize) {
+                     int *x, int width, int linesize)
+{
     int remaining = width - *x;
-    while (count > 0) {
+    while(count > 0) {
         int striplen = FFMIN(count, remaining);
         if (gb) {
             if (bytestream2_get_bytes_left(gb) < striplen)
@@ -84,12 +86,12 @@ static inline int op(uint8_t **dst, const uint8_t *dst_end,
             bytestream2_get_bufferu(gb, *dst, striplen);
         } else if (pixel >= 0)
             memset(*dst, pixel, striplen);
-        *dst += striplen;
+        *dst      += striplen;
         remaining -= striplen;
-        count -= striplen;
+        count     -= striplen;
         if (remaining <= 0) {
-            *dst += linesize - width;
-            remaining = width;
+            *dst      += linesize - width;
+            remaining  = width;
         }
         if (linesize > 0) {
             if (*dst >= dst_end) goto exhausted;
@@ -100,14 +102,15 @@ static inline int op(uint8_t **dst, const uint8_t *dst_end,
     *x = width - remaining;
     return 0;
 
-    exhausted:
+exhausted:
     *x = width - remaining;
     return 1;
 }
 
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *got_frame,
-                        AVPacket *avpkt) {
+                        AVPacket *avpkt)
+{
     AnmContext *s = avctx->priv_data;
     const int buf_size = avpkt->size;
     uint8_t *dst, *dst_end;
@@ -119,8 +122,8 @@ static int decode_frame(AVCodecContext *avctx,
 
     if ((ret = ff_reget_buffer(avctx, s->frame, 0)) < 0)
         return ret;
-    dst = s->frame->data[0];
-    dst_end = s->frame->data[0] + s->frame->linesize[0] * avctx->height;
+    dst     = s->frame->data[0];
+    dst_end = s->frame->data[0] + s->frame->linesize[0]*avctx->height;
 
     bytestream2_init(&gb, avpkt->data, buf_size);
 
@@ -178,7 +181,8 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static av_cold int decode_end(AVCodecContext *avctx) {
+static av_cold int decode_end(AVCodecContext *avctx)
+{
     AnmContext *s = avctx->priv_data;
 
     av_frame_free(&s->frame);
@@ -186,14 +190,14 @@ static av_cold int decode_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_anm_decoder = {
-        .name           = "anm",
-        .long_name      = NULL_IF_CONFIG_SMALL("Deluxe Paint Animation"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_ANM,
-        .priv_data_size = sizeof(AnmContext),
-        .init           = decode_init,
-        .close          = decode_end,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "anm",
+    .long_name      = NULL_IF_CONFIG_SMALL("Deluxe Paint Animation"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_ANM,
+    .priv_data_size = sizeof(AnmContext),
+    .init           = decode_init,
+    .close          = decode_end,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

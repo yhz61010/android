@@ -19,21 +19,22 @@
 #include "libavutil/common.h"
 #include "libavcodec/htmlsubtitles.c"
 
-static const char *const test_cases[] = {
-        /* latin guillemets and other < > garbage */
-        "<<hello>>",                            // guillemets
-        "<<<b>hello</b>>>",                     // guillemets + tags
-        "< hello < 2000 > world >",             // unlikely tags due to spaces
-        "<h1>TITLE</h1>",                       // likely unhandled tags
-        "< font color=red >red</font>",         // invalid format of valid tag
-        "Foo <foo@bar.com>",                    // not a tag (not alnum)
+static const char * const test_cases[] = {
+    /* latin guillemets and other < > garbage */
+    "<<hello>>",                            // guillemets
+    "<<<b>hello</b>>>",                     // guillemets + tags
+    "< hello < 2000 > world >",             // unlikely tags due to spaces
+    "<h1>TITLE</h1>",                       // likely unhandled tags
+    "< font color=red >red</font>",         // invalid format of valid tag
+    "Foo <foo@bar.com>",                    // not a tag (not alnum)
 
-        "<b> foo <I> bar </B> bla </i>",        // broken nesting
+    "<b> foo <I> bar </B> bla </i>",        // broken nesting
 
-        "A<br>B<BR/>C<br  / >D<  Br >E<brk><brk/>", // misc line breaks
+    "A<br>B<BR/>C<br  / >D<  Br >E<brk><brk/>", // misc line breaks
 };
 
-int main(void) {
+int main(void)
+{
     int i;
     AVBPrint dst;
 

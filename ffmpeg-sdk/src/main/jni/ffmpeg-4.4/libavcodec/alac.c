@@ -72,11 +72,11 @@ typedef struct ALACContext {
     int32_t *extra_bits_buffer[2];
 
     uint32_t max_samples_per_frame;
-    uint8_t sample_size;
-    uint8_t rice_history_mult;
-    uint8_t rice_initial_history;
-    uint8_t rice_limit;
-    int sample_rate;
+    uint8_t  sample_size;
+    uint8_t  rice_history_mult;
+    uint8_t  rice_initial_history;
+    uint8_t  rice_limit;
+    int      sample_rate;
 
     int extra_bits;     /**< number of extra bits beyond 16-bit */
     int nb_samples;     /**< number of samples in the current frame */
@@ -87,7 +87,8 @@ typedef struct ALACContext {
     ALACDSPContext dsp;
 } ALACContext;
 
-static inline unsigned int decode_scalar(GetBitContext *gb, int k, int bps) {
+static inline unsigned int decode_scalar(GetBitContext *gb, int k, int bps)
+{
     unsigned int x = get_unary_0_9(gb);
 
     if (x > 8) { /* RICE THRESHOLD */
@@ -109,7 +110,8 @@ static inline unsigned int decode_scalar(GetBitContext *gb, int k, int bps) {
 }
 
 static int rice_decompress(ALACContext *alac, int32_t *output_buffer,
-                           int nb_samples, int bps, int rice_history_mult) {
+                            int nb_samples, int bps, int rice_history_mult)
+{
     int i;
     unsigned int history = alac->rice_initial_history;
     int sign_modifier = 0;
@@ -118,7 +120,7 @@ static int rice_decompress(ALACContext *alac, int32_t *output_buffer,
         int k;
         unsigned int x;
 
-        if (get_bits_left(&alac->gb) <= 0)
+        if(get_bits_left(&alac->gb) <= 0)
             return AVERROR_INVALIDDATA;
 
         /* calculate rice param and decode next value */
@@ -133,7 +135,7 @@ static int rice_decompress(ALACContext *alac, int32_t *output_buffer,
         if (x > 0xffff)
             history = 0xffff;
         else
-            history += x * rice_history_mult -
+            history +=         x * rice_history_mult -
                        ((history * rice_history_mult) >> 9);
 
         /* special case: there may be compressed blocks of 0 */
@@ -164,15 +166,17 @@ static int rice_decompress(ALACContext *alac, int32_t *output_buffer,
     return 0;
 }
 
-static inline int sign_only(int v) {
+static inline int sign_only(int v)
+{
     return v ? FFSIGN(v) : 0;
 }
 
 static void lpc_prediction(int32_t *error_buffer, uint32_t *buffer_out,
                            int nb_samples, int bps, int16_t *lpc_coefs,
-                           int lpc_order, int lpc_quant) {
+                           int lpc_order, int lpc_quant)
+{
     int i;
-    uint32_t * pred = buffer_out;
+    uint32_t *pred = buffer_out;
 
     /* first sample always copies */
     *buffer_out = *error_buffer;
@@ -218,12 +222,12 @@ static void lpc_prediction(int32_t *error_buffer, uint32_t *buffer_out,
         /* adapt LPC coefficients */
         error_sign = sign_only(error_val);
         if (error_sign) {
-            for (j = 0; j < lpc_order && (int) (error_val * error_sign) > 0; j++) {
+            for (j = 0; j < lpc_order && (int)(error_val * error_sign) > 0; j++) {
                 int sign;
-                val = d - pred[j];
+                val  = d - pred[j];
                 sign = sign_only(val) * error_sign;
                 lpc_coefs[j] -= sign;
-                val *= (unsigned) sign;
+                val *= (unsigned)sign;
                 error_val -= (val >> lpc_quant) * (j + 1U);
             }
         }
@@ -231,7 +235,8 @@ static void lpc_prediction(int32_t *error_buffer, uint32_t *buffer_out,
 }
 
 static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
-                          int channels) {
+                          int channels)
+{
     ALACContext *alac = avctx->priv_data;
     int has_size, bps, is_compressed, decorr_shift, decorr_left_weight, ret;
     uint32_t output_samples;
@@ -260,29 +265,25 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
     else
         output_samples = alac->max_samples_per_frame;
     if (!output_samples || output_samples > alac->max_samples_per_frame) {
-        av_log(avctx, AV_LOG_ERROR, "invalid samples per frame: %"
-        PRIu32
-        "\n",
-                output_samples);
+        av_log(avctx, AV_LOG_ERROR, "invalid samples per frame: %"PRIu32"\n",
+               output_samples);
         return AVERROR_INVALIDDATA;
     }
     if (!alac->nb_samples) {
-        ThreadFrame tframe = {.f = frame};
+        ThreadFrame tframe = { .f = frame };
         /* get output buffer */
         frame->nb_samples = output_samples;
         if ((ret = ff_thread_get_buffer(avctx, &tframe, 0)) < 0)
             return ret;
     } else if (output_samples != alac->nb_samples) {
-        av_log(avctx, AV_LOG_ERROR, "sample count mismatch: %"
-        PRIu32
-        " != %d\n",
-                output_samples, alac->nb_samples);
+        av_log(avctx, AV_LOG_ERROR, "sample count mismatch: %"PRIu32" != %d\n",
+               output_samples, alac->nb_samples);
         return AVERROR_INVALIDDATA;
     }
     alac->nb_samples = output_samples;
     if (alac->direct_output) {
         for (ch = 0; ch < channels; ch++)
-            alac->output_samples_buffer[ch] = (int32_t *) frame->extended_data[ch_index + ch];
+            alac->output_samples_buffer[ch] = (int32_t *)frame->extended_data[ch_index + ch];
     }
 
     if (is_compressed) {
@@ -298,17 +299,17 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
             return AVERROR(ENOSYS);
         }
 
-        decorr_shift = get_bits(&alac->gb, 8);
+        decorr_shift       = get_bits(&alac->gb, 8);
         decorr_left_weight = get_bits(&alac->gb, 8);
 
         if (channels == 2 && decorr_left_weight && decorr_shift > 31)
             return AVERROR_INVALIDDATA;
 
         for (ch = 0; ch < channels; ch++) {
-            prediction_type[ch] = get_bits(&alac->gb, 4);
-            lpc_quant[ch] = get_bits(&alac->gb, 4);
+            prediction_type[ch]   = get_bits(&alac->gb, 4);
+            lpc_quant[ch]         = get_bits(&alac->gb, 4);
             rice_history_mult[ch] = get_bits(&alac->gb, 3);
-            lpc_order[ch] = get_bits(&alac->gb, 5);
+            lpc_order[ch]         = get_bits(&alac->gb, 5);
 
             if (lpc_order[ch] >= alac->max_samples_per_frame || !lpc_quant[ch])
                 return AVERROR_INVALIDDATA;
@@ -320,17 +321,17 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
 
         if (alac->extra_bits) {
             for (i = 0; i < alac->nb_samples; i++) {
-                if (get_bits_left(&alac->gb) <= 0)
+                if(get_bits_left(&alac->gb) <= 0)
                     return AVERROR_INVALIDDATA;
                 for (ch = 0; ch < channels; ch++)
                     alac->extra_bits_buffer[ch][i] = get_bits(&alac->gb, alac->extra_bits);
             }
         }
         for (ch = 0; ch < channels; ch++) {
-            int ret = rice_decompress(alac, alac->predict_error_buffer[ch],
-                                      alac->nb_samples, bps,
-                                      rice_history_mult[ch] * alac->rice_history_mult / 4);
-            if (ret < 0)
+            int ret=rice_decompress(alac, alac->predict_error_buffer[ch],
+                            alac->nb_samples, bps,
+                            rice_history_mult[ch] * alac->rice_history_mult / 4);
+            if(ret<0)
                 return ret;
 
             /* adaptive FIR filter */
@@ -356,15 +357,15 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
     } else {
         /* not compressed, easy case */
         for (i = 0; i < alac->nb_samples; i++) {
-            if (get_bits_left(&alac->gb) <= 0)
+            if(get_bits_left(&alac->gb) <= 0)
                 return AVERROR_INVALIDDATA;
             for (ch = 0; ch < channels; ch++) {
                 alac->output_samples_buffer[ch][i] =
-                        get_sbits_long(&alac->gb, alac->sample_size);
+                         get_sbits_long(&alac->gb, alac->sample_size);
             }
         }
-        alac->extra_bits = 0;
-        decorr_shift = 0;
+        alac->extra_bits   = 0;
+        decorr_shift       = 0;
         decorr_left_weight = 0;
     }
 
@@ -388,38 +389,36 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
                                        alac->extra_bits, channels, alac->nb_samples);
     }
 
-    switch (alac->sample_size) {
-        case 16: {
-            for (ch = 0; ch < channels; ch++) {
-                int16_t *outbuffer = (int16_t *) frame->extended_data[ch_index + ch];
-                for (i = 0; i < alac->nb_samples; i++)
-                    *outbuffer++ = alac->output_samples_buffer[ch][i];
-            }
-        }
-            break;
-        case 20: {
-            for (ch = 0; ch < channels; ch++) {
-                for (i = 0; i < alac->nb_samples; i++)
-                    alac->output_samples_buffer[ch][i] *= 1U << 12;
-            }
-        }
-            break;
-        case 24: {
-            for (ch = 0; ch < channels; ch++) {
-                for (i = 0; i < alac->nb_samples; i++)
-                    alac->output_samples_buffer[ch][i] *= 1U << 8;
-            }
-        }
-            break;
+    switch(alac->sample_size) {
+    case 16: {
+        for (ch = 0; ch < channels; ch++) {
+            int16_t *outbuffer = (int16_t *)frame->extended_data[ch_index + ch];
+            for (i = 0; i < alac->nb_samples; i++)
+                *outbuffer++ = alac->output_samples_buffer[ch][i];
+        }}
+        break;
+    case 20: {
+        for (ch = 0; ch < channels; ch++) {
+            for (i = 0; i < alac->nb_samples; i++)
+                alac->output_samples_buffer[ch][i] *= 1U << 12;
+        }}
+        break;
+    case 24: {
+        for (ch = 0; ch < channels; ch++) {
+            for (i = 0; i < alac->nb_samples; i++)
+                alac->output_samples_buffer[ch][i] *= 1U << 8;
+        }}
+        break;
     }
 
     return 0;
 }
 
 static int alac_decode_frame(AVCodecContext *avctx, void *data,
-                             int *got_frame_ptr, AVPacket *avpkt) {
+                             int *got_frame_ptr, AVPacket *avpkt)
+{
     ALACContext *alac = avctx->priv_data;
-    AVFrame *frame = data;
+    AVFrame *frame    = data;
     enum AlacRawDataBlockType element;
     int channels;
     int ch, ret, got_end;
@@ -474,7 +473,8 @@ static int alac_decode_frame(AVCodecContext *avctx, void *data,
     return avpkt->size;
 }
 
-static av_cold int alac_decode_close(AVCodecContext *avctx) {
+static av_cold int alac_decode_close(AVCodecContext *avctx)
+{
     ALACContext *alac = avctx->priv_data;
 
     int ch;
@@ -488,15 +488,16 @@ static av_cold int alac_decode_close(AVCodecContext *avctx) {
     return 0;
 }
 
-static int allocate_buffers(ALACContext *alac) {
+static int allocate_buffers(ALACContext *alac)
+{
     int ch;
     unsigned buf_size = alac->max_samples_per_frame * sizeof(int32_t);
     unsigned extra_buf_size = buf_size + AV_INPUT_BUFFER_PADDING_SIZE;
 
     for (ch = 0; ch < 2; ch++) {
-        alac->predict_error_buffer[ch] = NULL;
+        alac->predict_error_buffer[ch]  = NULL;
         alac->output_samples_buffer[ch] = NULL;
-        alac->extra_bits_buffer[ch] = NULL;
+        alac->extra_bits_buffer[ch]     = NULL;
     }
 
     for (ch = 0; ch < FFMIN(alac->channels, 2); ch++) {
@@ -515,7 +516,8 @@ static int allocate_buffers(ALACContext *alac) {
     return 0;
 }
 
-static int alac_set_info(ALACContext *alac) {
+static int alac_set_info(ALACContext *alac)
+{
     GetByteContext gb;
 
     bytestream2_init(&gb, alac->avctx->extradata,
@@ -527,27 +529,26 @@ static int alac_set_info(ALACContext *alac) {
     if (!alac->max_samples_per_frame ||
         alac->max_samples_per_frame > 4096 * 4096) {
         av_log(alac->avctx, AV_LOG_ERROR,
-               "max samples per frame invalid: %"
-        PRIu32
-        "\n",
-                alac->max_samples_per_frame);
+               "max samples per frame invalid: %"PRIu32"\n",
+               alac->max_samples_per_frame);
         return AVERROR_INVALIDDATA;
     }
     bytestream2_skipu(&gb, 1);  // compatible version
-    alac->sample_size = bytestream2_get_byteu(&gb);
-    alac->rice_history_mult = bytestream2_get_byteu(&gb);
+    alac->sample_size          = bytestream2_get_byteu(&gb);
+    alac->rice_history_mult    = bytestream2_get_byteu(&gb);
     alac->rice_initial_history = bytestream2_get_byteu(&gb);
-    alac->rice_limit = bytestream2_get_byteu(&gb);
-    alac->channels = bytestream2_get_byteu(&gb);
+    alac->rice_limit           = bytestream2_get_byteu(&gb);
+    alac->channels             = bytestream2_get_byteu(&gb);
     bytestream2_get_be16u(&gb); // maxRun
     bytestream2_get_be32u(&gb); // max coded frame size
     bytestream2_get_be32u(&gb); // average bitrate
-    alac->sample_rate = bytestream2_get_be32u(&gb);
+    alac->sample_rate          = bytestream2_get_be32u(&gb);
 
     return 0;
 }
 
-static av_cold int alac_decode_init(AVCodecContext *avctx) {
+static av_cold int alac_decode_init(AVCodecContext * avctx)
+{
     int ret;
     ALACContext *alac = avctx->priv_data;
     alac->avctx = avctx;
@@ -563,20 +564,17 @@ static av_cold int alac_decode_init(AVCodecContext *avctx) {
     }
 
     switch (alac->sample_size) {
-        case 16:
-            avctx->sample_fmt = AV_SAMPLE_FMT_S16P;
-            break;
-        case 20:
-        case 24:
-        case 32:
-            avctx->sample_fmt = AV_SAMPLE_FMT_S32P;
-            break;
-        default:
-            avpriv_request_sample(avctx, "Sample depth %d", alac->sample_size);
-            return AVERROR_PATCHWELCOME;
+    case 16: avctx->sample_fmt = AV_SAMPLE_FMT_S16P;
+             break;
+    case 20:
+    case 24:
+    case 32: avctx->sample_fmt = AV_SAMPLE_FMT_S32P;
+             break;
+    default: avpriv_request_sample(avctx, "Sample depth %d", alac->sample_size);
+             return AVERROR_PATCHWELCOME;
     }
     avctx->bits_per_raw_sample = alac->sample_size;
-    avctx->sample_rate = alac->sample_rate;
+    avctx->sample_rate         = alac->sample_rate;
 
     if (alac->channels < 1) {
         av_log(avctx, AV_LOG_WARNING, "Invalid channel count\n");
@@ -587,7 +585,7 @@ static av_cold int alac_decode_init(AVCodecContext *avctx) {
         else
             avctx->channels = alac->channels;
     }
-    if (avctx->channels > ALAC_MAX_CHANNELS || avctx->channels <= 0) {
+    if (avctx->channels > ALAC_MAX_CHANNELS || avctx->channels <= 0 ) {
         avpriv_report_missing_feature(avctx, "Channel count %d",
                                       avctx->channels);
         return AVERROR_PATCHWELCOME;
@@ -605,29 +603,29 @@ static av_cold int alac_decode_init(AVCodecContext *avctx) {
 }
 
 static const AVOption options[] = {
-        {"extra_bits_bug", "Force non-standard decoding process",
-                offsetof(ALACContext, extra_bit_bug), AV_OPT_TYPE_BOOL, {.i64 = 0},
-                0, 1, AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_DECODING_PARAM},
-        {NULL},
+    { "extra_bits_bug", "Force non-standard decoding process",
+      offsetof(ALACContext, extra_bit_bug), AV_OPT_TYPE_BOOL, { .i64 = 0 },
+      0, 1, AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_DECODING_PARAM },
+    { NULL },
 };
 
 static const AVClass alac_class = {
-        .class_name = "alac",
-        .item_name  = av_default_item_name,
-        .option     = options,
-        .version    = LIBAVUTIL_VERSION_INT,
+    .class_name = "alac",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_alac_decoder = {
-        .name           = "alac",
-        .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_ALAC,
-        .priv_data_size = sizeof(ALACContext),
-        .init           = alac_decode_init,
-        .close          = alac_decode_close,
-        .decode         = alac_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_CHANNEL_CONF,
-        .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
-        .priv_class     = &alac_class
+    .name           = "alac",
+    .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_ALAC,
+    .priv_data_size = sizeof(ALACContext),
+    .init           = alac_decode_init,
+    .close          = alac_decode_close,
+    .decode         = alac_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_CHANNEL_CONF,
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
+    .priv_class     = &alac_class
 };

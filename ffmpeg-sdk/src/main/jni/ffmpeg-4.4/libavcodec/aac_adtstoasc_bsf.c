@@ -36,7 +36,8 @@ typedef struct AACBSFContext {
  * This filter creates an MPEG-4 AudioSpecificConfig from an MPEG-2/4
  * ADTS header and removes the ADTS header.
  */
-static int aac_adtstoasc_filter(AVBSFContext *bsfc, AVPacket *pkt) {
+static int aac_adtstoasc_filter(AVBSFContext *bsfc, AVPacket *pkt)
+{
     AACBSFContext *ctx = bsfc->priv_data;
 
     GetBitContext gb;
@@ -75,9 +76,9 @@ static int aac_adtstoasc_filter(AVBSFContext *bsfc, AVPacket *pkt) {
     pkt->data += AV_AAC_ADTS_HEADER_SIZE + 2 * !hdr.crc_absent;
 
     if (!ctx->first_frame_done) {
-        int pce_size = 0;
-        uint8_t pce_data[MAX_PCE_SIZE];
-        uint8_t *extradata;
+        int            pce_size = 0;
+        uint8_t        pce_data[MAX_PCE_SIZE];
+        uint8_t       *extradata;
 
         if (!hdr.chan_config) {
             init_get_bits(&gb, pkt->data, pkt->size * 8);
@@ -92,8 +93,8 @@ static int aac_adtstoasc_filter(AVBSFContext *bsfc, AVPacket *pkt) {
             init_put_bits(&pb, pce_data, MAX_PCE_SIZE);
             pce_size = ff_copy_pce_data(&pb, &gb) / 8;
             flush_put_bits(&pb);
-            pkt->size -= get_bits_count(&gb) / 8;
-            pkt->data += get_bits_count(&gb) / 8;
+            pkt->size -= get_bits_count(&gb)/8;
+            pkt->data += get_bits_count(&gb)/8;
         }
 
         extradata = av_packet_new_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA,
@@ -120,15 +121,16 @@ static int aac_adtstoasc_filter(AVBSFContext *bsfc, AVPacket *pkt) {
 
     return 0;
 
-    packet_too_small:
+packet_too_small:
     av_log(bsfc, AV_LOG_ERROR, "Input packet too small\n");
     ret = AVERROR_INVALIDDATA;
-    fail:
+fail:
     av_packet_unref(pkt);
     return ret;
 }
 
-static int aac_adtstoasc_init(AVBSFContext *ctx) {
+static int aac_adtstoasc_init(AVBSFContext *ctx)
+{
     /* Validate the extradata if the stream is already MPEG-4 AudioSpecificConfig */
     if (ctx->par_in->extradata) {
         MPEG4AudioConfig mp4ac;
@@ -144,13 +146,13 @@ static int aac_adtstoasc_init(AVBSFContext *ctx) {
 }
 
 static const enum AVCodecID codec_ids[] = {
-        AV_CODEC_ID_AAC, AV_CODEC_ID_NONE,
+    AV_CODEC_ID_AAC, AV_CODEC_ID_NONE,
 };
 
 const AVBitStreamFilter ff_aac_adtstoasc_bsf = {
-        .name           = "aac_adtstoasc",
-        .priv_data_size = sizeof(AACBSFContext),
-        .init           = aac_adtstoasc_init,
-        .filter         = aac_adtstoasc_filter,
-        .codec_ids      = codec_ids,
+    .name           = "aac_adtstoasc",
+    .priv_data_size = sizeof(AACBSFContext),
+    .init           = aac_adtstoasc_init,
+    .filter         = aac_adtstoasc_filter,
+    .codec_ids      = codec_ids,
 };

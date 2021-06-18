@@ -51,7 +51,8 @@
  * see <http://developer.apple.com/technotes/tn/tn2087.html>
  * and <http://developer.apple.com/technotes/tn/tn2086.html>
  */
-static void clear_blocks_dcbz32_ppc(int16_t *blocks) {
+static void clear_blocks_dcbz32_ppc(int16_t *blocks)
+{
     register int misal = (unsigned long) blocks & 0x00000010, i = 0;
 
     if (misal) {
@@ -62,7 +63,7 @@ static void clear_blocks_dcbz32_ppc(int16_t *blocks) {
         i += 16;
     }
     for (; i < sizeof(int16_t) * 6 * 64 - 31; i += 32)
-            __asm__ volatile ("dcbz %0,%1"::"b" (blocks), "r" (i) : "memory");
+        __asm__ volatile ("dcbz %0,%1" :: "b" (blocks), "r" (i) : "memory");
     if (misal) {
         ((unsigned long *) blocks)[188] = 0L;
         ((unsigned long *) blocks)[189] = 0L;
@@ -74,7 +75,8 @@ static void clear_blocks_dcbz32_ppc(int16_t *blocks) {
 
 /* Same as above, when dcbzl clears a whole 128 bytes cache line
  * i.e. the PPC970 AKA G5. */
-static void clear_blocks_dcbz128_ppc(int16_t *blocks) {
+static void clear_blocks_dcbz128_ppc(int16_t *blocks)
+{
 #if HAVE_DCBZL
     register int misal = (unsigned long) blocks & 0x0000007f, i = 0;
 
@@ -96,7 +98,8 @@ static void clear_blocks_dcbz128_ppc(int16_t *blocks) {
 /* update 24/06/2003: Replace dcbz by dcbzl to get the intended effect
  * (Apple "fixed" dcbz). Unfortunately this cannot be used unless the
  * assembler knows about dcbzl ... */
-static long check_dcbzl_effect(void) {
+static long check_dcbzl_effect(void)
+{
     long count = 0;
 #if HAVE_DCBZL
     register char *fakedata = av_malloc(1024);
@@ -139,17 +142,18 @@ static void clear_block_altivec(int16_t *block)
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_blockdsp_init_ppc(BlockDSPContext *c) {
+av_cold void ff_blockdsp_init_ppc(BlockDSPContext *c)
+{
     // common optimizations whether AltiVec is available or not
     switch (check_dcbzl_effect()) {
-        case 32:
-            c->clear_blocks = clear_blocks_dcbz32_ppc;
-            break;
-        case 128:
-            c->clear_blocks = clear_blocks_dcbz128_ppc;
-            break;
-        default:
-            break;
+    case 32:
+        c->clear_blocks = clear_blocks_dcbz32_ppc;
+        break;
+    case 128:
+        c->clear_blocks = clear_blocks_dcbz128_ppc;
+        break;
+    default:
+        break;
     }
 
 #if HAVE_ALTIVEC

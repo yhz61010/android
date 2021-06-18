@@ -24,13 +24,15 @@
 #include "internal.h"
 #include "libavutil/intreadwrite.h"
 
-static av_cold int avui_decode_init(AVCodecContext *avctx) {
+static av_cold int avui_decode_init(AVCodecContext *avctx)
+{
     avctx->pix_fmt = AV_PIX_FMT_YUVA422P;
     return 0;
 }
 
 static int avui_decode_frame(AVCodecContext *avctx, void *data,
-                             int *got_frame, AVPacket *avpkt) {
+                             int *got_frame, AVPacket *avpkt)
+{
     int ret;
     AVFrame *pic = data;
     const uint8_t *src = avpkt->data, *extradata = avctx->extradata;
@@ -46,7 +48,7 @@ static int avui_decode_frame(AVCodecContext *avctx, void *data,
             break;
         }
         if (atom_size && atom_size <= extradata_size) {
-            extradata += atom_size;
+            extradata      += atom_size;
             extradata_size -= atom_size;
         } else {
             break;
@@ -73,12 +75,12 @@ static int avui_decode_frame(AVCodecContext *avctx, void *data,
     pic->pict_type = AV_PICTURE_TYPE_I;
 
     if (!interlaced) {
-        src += avctx->width * skip;
+        src  += avctx->width * skip;
         srca += avctx->width * skip;
     }
 
     for (i = 0; i < interlaced + 1; i++) {
-        src += avctx->width * skip;
+        src  += avctx->width * skip;
         srca += avctx->width * skip;
         if (interlaced && avctx->height == 486) {
             y = pic->data[0] + (1 - i) * pic->linesize[0];
@@ -94,11 +96,11 @@ static int avui_decode_frame(AVCodecContext *avctx, void *data,
 
         for (j = 0; j < avctx->height >> interlaced; j++) {
             for (k = 0; k < avctx->width >> 1; k++) {
-                u[k] = *src++;
-                y[2 * k] = *src++;
-                a[2 * k] = 0xFF - (transparent ? *srca++ : 0);
+                u[    k    ] = *src++;
+                y[2 * k    ] = *src++;
+                a[2 * k    ] = 0xFF - (transparent ? *srca++ : 0);
                 srca++;
-                v[k] = *src++;
+                v[    k    ] = *src++;
                 y[2 * k + 1] = *src++;
                 a[2 * k + 1] = 0xFF - (transparent ? *srca++ : 0);
                 srca++;
@@ -109,21 +111,21 @@ static int avui_decode_frame(AVCodecContext *avctx, void *data,
             v += (interlaced + 1) * pic->linesize[2];
             a += (interlaced + 1) * pic->linesize[3];
         }
-        src += 4;
+        src  += 4;
         srca += 4;
     }
-    *got_frame = 1;
+    *got_frame       = 1;
 
     return avpkt->size;
 }
 
 AVCodec ff_avui_decoder = {
-        .name         = "avui",
-        .long_name    = NULL_IF_CONFIG_SMALL("Avid Meridien Uncompressed"),
-        .type         = AVMEDIA_TYPE_VIDEO,
-        .id           = AV_CODEC_ID_AVUI,
-        .init         = avui_decode_init,
-        .decode       = avui_decode_frame,
-        .capabilities = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name         = "avui",
+    .long_name    = NULL_IF_CONFIG_SMALL("Avid Meridien Uncompressed"),
+    .type         = AVMEDIA_TYPE_VIDEO,
+    .id           = AV_CODEC_ID_AVUI,
+    .init         = avui_decode_init,
+    .decode       = avui_decode_frame,
+    .capabilities = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

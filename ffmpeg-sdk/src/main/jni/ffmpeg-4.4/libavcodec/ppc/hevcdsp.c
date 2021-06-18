@@ -107,7 +107,8 @@ static av_always_inline void scale(vec_s32 res[4], vec_s16 res_packed[2],
 #undef BIT_DEPTH
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_hevc_dsp_init_ppc(HEVCDSPContext *c, const int bit_depth) {
+av_cold void ff_hevc_dsp_init_ppc(HEVCDSPContext *c, const int bit_depth)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

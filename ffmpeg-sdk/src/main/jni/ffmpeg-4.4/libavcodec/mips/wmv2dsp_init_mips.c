@@ -23,11 +23,12 @@
 #include "libavutil/attributes.h"
 #include "wmv2dsp_mips.h"
 
-av_cold void ff_wmv2dsp_init_mips(WMV2DSPContext *c) {
+av_cold void ff_wmv2dsp_init_mips(WMV2DSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
-        c->idct_add = ff_wmv2_idct_add_mmi;
-        c->idct_put = ff_wmv2_idct_put_mmi;
+        c->idct_add  = ff_wmv2_idct_add_mmi;
+        c->idct_put  = ff_wmv2_idct_put_mmi;
     }
 }

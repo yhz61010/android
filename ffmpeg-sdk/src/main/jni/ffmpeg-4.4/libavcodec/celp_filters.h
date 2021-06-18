@@ -66,13 +66,12 @@ typedef struct CELPFContext {
                                            const float *in, int buffer_length,
                                            int filter_length);
 
-} CELPFContext;
+}CELPFContext;
 
 /**
  * Initialize CELPFContext.
  */
 void ff_celp_filter_init(CELPFContext *c);
-
 void ff_celp_filter_init_mips(CELPFContext *c);
 
 /**

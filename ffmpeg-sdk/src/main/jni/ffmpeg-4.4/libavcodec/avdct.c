@@ -33,45 +33,47 @@
 #define D AV_OPT_FLAG_DECODING_PARAM
 
 static const AVOption avdct_options[] = {
-        {"dct",             "DCT algorithm",              OFFSET(dct_algo),              AV_OPT_TYPE_INT,   {.i64 = DEFAULT},               0,       INT_MAX, V | E,     "dct"},
-        {"auto",            "autoselect a good one",                                  0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_AUTO},           INT_MIN, INT_MAX, V | E,     "dct"},
-        {"fastint",         "fast integer (experimental / for debugging)",            0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_FASTINT},        INT_MIN, INT_MAX, V | E,     "dct"},
-        {"int",             "accurate integer",                                       0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_INT},            INT_MIN, INT_MAX, V | E,     "dct"},
-        {"mmx",             "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_MMX},            INT_MIN, INT_MAX, V | E,     "dct"},
-        {"altivec",         "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_ALTIVEC},        INT_MIN, INT_MAX, V | E,     "dct"},
-        {"faan",            "floating point AAN DCT (experimental / for debugging)",  0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_FAAN},           INT_MIN, INT_MAX, V | E,     "dct"},
+{"dct", "DCT algorithm", OFFSET(dct_algo), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, 0, INT_MAX, V|E, "dct"},
+{"auto", "autoselect a good one", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_AUTO }, INT_MIN, INT_MAX, V|E, "dct"},
+{"fastint", "fast integer (experimental / for debugging)", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_FASTINT }, INT_MIN, INT_MAX, V|E, "dct"},
+{"int", "accurate integer", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_INT }, INT_MIN, INT_MAX, V|E, "dct"},
+{"mmx", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_MMX }, INT_MIN, INT_MAX, V|E, "dct"},
+{"altivec", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_ALTIVEC }, INT_MIN, INT_MAX, V|E, "dct"},
+{"faan", "floating point AAN DCT (experimental / for debugging)", 0, AV_OPT_TYPE_CONST, {.i64 = FF_DCT_FAAN }, INT_MIN, INT_MAX, V|E, "dct"},
 
-        {"idct",            "select IDCT implementation", OFFSET(idct_algo),             AV_OPT_TYPE_INT,   {.i64 = DEFAULT},               0,       INT_MAX, V | E | D, "idct"},
-        {"auto",            "autoselect a good one",                                  0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_AUTO},          INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"int",             "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_INT},           INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simple",          "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLE},        INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simplemmx",       "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEMMX},     INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"arm",             "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_ARM},           INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"altivec",         "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_ALTIVEC},       INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simplearm",       "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARM},     INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simplearmv5te",   "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARMV5TE}, INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simplearmv6",     "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARMV6},   INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"simpleneon",      "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLENEON},    INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"xvid",            "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_XVID},          INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"xvidmmx",         "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_XVID},          INT_MIN, INT_MAX, V | E | D, "idct"},
-        {"faani",           "floating point AAN IDCT (experimental / for debugging)", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_FAAN},          INT_MIN, INT_MAX, V | D | E, "idct"},
-        {"simpleauto",      "experimental / for debugging",                           0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEAUTO},    INT_MIN, INT_MAX, V | E | D, "idct"},
+{"idct", "select IDCT implementation", OFFSET(idct_algo), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, 0, INT_MAX, V|E|D, "idct"},
+{"auto", "autoselect a good one", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_AUTO }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"int", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_INT }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simple", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLE }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplemmx", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEMMX }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"arm", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_ARM }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"altivec", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_ALTIVEC }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplearm", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARM }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplearmv5te", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARMV5TE }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simplearmv6", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEARMV6 }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"simpleneon", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLENEON }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"xvid", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_XVID }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"xvidmmx", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_XVID }, INT_MIN, INT_MAX, V|E|D, "idct"},
+{"faani", "floating point AAN IDCT (experimental / for debugging)", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_FAAN }, INT_MIN, INT_MAX, V|D|E, "idct"},
+{"simpleauto", "experimental / for debugging", 0, AV_OPT_TYPE_CONST, {.i64 = FF_IDCT_SIMPLEAUTO }, INT_MIN, INT_MAX, V|E|D, "idct"},
 
-        {"bits_per_sample", "",                           OFFSET(bits_per_sample),       AV_OPT_TYPE_INT,   {.i64 = 8},                     0,       14, 0,},
-        {NULL},
+{"bits_per_sample", "", OFFSET(bits_per_sample), AV_OPT_TYPE_INT, {.i64 = 8 }, 0, 14, 0,},
+{NULL},
 };
 
 static const AVClass avdct_class = {
-        .class_name              = "AVDCT",
-        .option                  = avdct_options,
-        .version                 = LIBAVUTIL_VERSION_INT,
+    .class_name              = "AVDCT",
+    .option                  = avdct_options,
+    .version                 = LIBAVUTIL_VERSION_INT,
 };
 
-const AVClass *avcodec_dct_get_class(void) {
+const AVClass *avcodec_dct_get_class(void)
+{
     return &avdct_class;
 }
 
-AVDCT *avcodec_dct_alloc(void) {
+AVDCT *avcodec_dct_alloc(void)
+{
     AVDCT *dsp = av_mallocz(sizeof(AVDCT));
 
     if (!dsp)
@@ -83,14 +85,15 @@ AVDCT *avcodec_dct_alloc(void) {
     return dsp;
 }
 
-int avcodec_dct_init(AVDCT *dsp) {
+int avcodec_dct_init(AVDCT *dsp)
+{
     AVCodecContext *avctx = avcodec_alloc_context3(NULL);
 
     if (!avctx)
         return AVERROR(ENOMEM);
 
     avctx->idct_algo = dsp->idct_algo;
-    avctx->dct_algo = dsp->dct_algo;
+    avctx->dct_algo  = dsp->dct_algo;
     avctx->bits_per_raw_sample = dsp->bits_per_sample;
 
 #define COPY(src, name) memcpy(&dsp->name, &src.name, sizeof(dsp->name))

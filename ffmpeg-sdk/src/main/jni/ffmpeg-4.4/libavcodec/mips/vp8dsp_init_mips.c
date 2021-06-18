@@ -73,15 +73,17 @@
         ff_put_vp8_pixels##SIZE##_msa;
 
 
-av_cold void ff_vp8dsp_init_mips(VP8DSPContext *dsp) {
+
+av_cold void ff_vp8dsp_init_mips(VP8DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
-        dsp->vp8_luma_dc_wht = ff_vp8_luma_dc_wht_mmi;
+        dsp->vp8_luma_dc_wht    = ff_vp8_luma_dc_wht_mmi;
         dsp->vp8_luma_dc_wht_dc = ff_vp8_luma_dc_wht_dc_mmi;
-        dsp->vp8_idct_add = ff_vp8_idct_add_mmi;
-        dsp->vp8_idct_dc_add = ff_vp8_idct_dc_add_mmi;
-        dsp->vp8_idct_dc_add4y = ff_vp8_idct_dc_add4y_mmi;
+        dsp->vp8_idct_add       = ff_vp8_idct_add_mmi;
+        dsp->vp8_idct_dc_add    = ff_vp8_idct_dc_add_mmi;
+        dsp->vp8_idct_dc_add4y  = ff_vp8_idct_dc_add4y_mmi;
         dsp->vp8_idct_dc_add4uv = ff_vp8_idct_dc_add4uv_mmi;
 
         dsp->put_vp8_epel_pixels_tab[0][0][1] = ff_put_vp8_epel16_h4_mmi;
@@ -138,10 +140,10 @@ av_cold void ff_vp8dsp_init_mips(VP8DSPContext *dsp) {
         dsp->put_vp8_bilinear_pixels_tab[2][2][1] = ff_put_vp8_bilinear4_hv_mmi;
         dsp->put_vp8_bilinear_pixels_tab[2][2][2] = ff_put_vp8_bilinear4_hv_mmi;
 
-        dsp->put_vp8_epel_pixels_tab[0][0][0] = ff_put_vp8_pixels16_mmi;
+        dsp->put_vp8_epel_pixels_tab[0][0][0]     = ff_put_vp8_pixels16_mmi;
         dsp->put_vp8_bilinear_pixels_tab[0][0][0] = ff_put_vp8_pixels16_mmi;
 
-        dsp->put_vp8_epel_pixels_tab[1][0][0] = ff_put_vp8_pixels8_mmi;
+        dsp->put_vp8_epel_pixels_tab[1][0][0]     = ff_put_vp8_pixels8_mmi;
         dsp->put_vp8_bilinear_pixels_tab[1][0][0] = ff_put_vp8_pixels8_mmi;
 
         dsp->vp8_v_loop_filter16y = ff_vp8_v_loop_filter16_mmi;

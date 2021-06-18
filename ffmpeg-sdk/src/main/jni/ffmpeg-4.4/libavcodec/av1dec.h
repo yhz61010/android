@@ -60,10 +60,7 @@ typedef struct TileGroupInfo {
 } TileGroupInfo;
 
 typedef struct AV1DecContext {
-    const AVClass *
-
-    class;
-
+    const AVClass *class;
     AVCodecContext *avctx;
 
     enum AVPixelFormat pix_fmt;

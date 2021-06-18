@@ -25,7 +25,8 @@
 #include "constants.h"
 #include "libavutil/mips/generic_macros_msa.h"
 
-void ff_vc1_inv_trans_8x8_msa(int16_t block[64]) {
+void ff_vc1_inv_trans_8x8_msa(int16_t block[64])
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v4i32 in_r0, in_r1, in_r2, in_r3, in_r4, in_r5, in_r6, in_r7;
     v4i32 in_l0, in_l1, in_l2, in_l3, in_l4, in_l5, in_l6, in_l7;
@@ -136,12 +137,13 @@ void ff_vc1_inv_trans_8x8_msa(int16_t block[64]) {
     ST_SH8(in0, in1, in2, in3, in4, in5, in6, in7, block, 8);
 }
 
-void ff_vc1_inv_trans_4x8_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_4x8_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v4i32 in_r0, in_r1, in_r2, in_r3, in_r4, in_r5, in_r6, in_r7;
     v4i32 t1, t2, t3, t4, t5, t6, t7, t8;
     v4i32 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
-    v16i8 zero_m = {0};
+    v16i8 zero_m = { 0 };
     v4i32 cnst_17 = {17, 17, 17, 17};
     v4i32 cnst_22 = {22, 22, 22, 22};
     v4i32 cnst_10 = {10, 10, 10, 10};
@@ -226,11 +228,12 @@ void ff_vc1_inv_trans_4x8_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
     ST_W8(in0, in1, 0, 1, 2, 3, 0, 1, 2, 3, dest, linesize);
 }
 
-void ff_vc1_inv_trans_8x4_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_8x4_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     v4i32 in0, in1, in2, in3, in4, in5, in6, in7;
     v4i32 t1, t2, t3, t4, t5, t6, t7, t8;
     v4i32 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
-    v16i8 zero_m = {0};
+    v16i8 zero_m = { 0 };
     v4i32 cnst_17 = {17, 17, 17, 17};
     v4i32 cnst_22 = {22, 22, 22, 22};
     v4i32 cnst_10 = {10, 10, 10, 10};
@@ -309,13 +312,14 @@ void ff_vc1_inv_trans_8x4_msa(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
 
 static void put_vc1_mspel_mc_h_v_msa(uint8_t *dst, const uint8_t *src,
                                      ptrdiff_t stride, int hmode, int vmode,
-                                     int rnd) {
+                                     int rnd)
+{
     v8i16 in_r0, in_r1, in_r2, in_r3, in_l0, in_l1, in_l2, in_l3;
     v8i16 t0, t1, t2, t3, t4, t5, t6, t7;
     v8i16 t8, t9, t10, t11, t12, t13, t14, t15;
     v8i16 cnst_para0, cnst_para1, cnst_para2, cnst_para3, cnst_r;
     static const int para_value[][4] = {{4, 53, 18, 3},
-                                        {1, 9,  9,  1},
+                                        {1, 9, 9, 1},
                                         {3, 18, 53, 4}};
     static const int shift_value[] = {0, 5, 1, 5};
     int shift = (shift_value[hmode] + shift_value[vmode]) >> 1;
@@ -445,19 +449,13 @@ void ff_put_vc1_mspel_mc ## hmode ## vmode ## _16_msa(uint8_t *dst,           \
 }
 
 PUT_VC1_MSPEL_MC_MSA(1, 1);
-
 PUT_VC1_MSPEL_MC_MSA(1, 2);
-
 PUT_VC1_MSPEL_MC_MSA(1, 3);
 
 PUT_VC1_MSPEL_MC_MSA(2, 1);
-
 PUT_VC1_MSPEL_MC_MSA(2, 2);
-
 PUT_VC1_MSPEL_MC_MSA(2, 3);
 
 PUT_VC1_MSPEL_MC_MSA(3, 1);
-
 PUT_VC1_MSPEL_MC_MSA(3, 2);
-
 PUT_VC1_MSPEL_MC_MSA(3, 3);

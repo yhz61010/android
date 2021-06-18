@@ -23,12 +23,11 @@
 #include "libavcodec/dct.h"
 
 void ff_dct32_float_sse(FFTSample *out, const FFTSample *in);
-
 void ff_dct32_float_sse2(FFTSample *out, const FFTSample *in);
-
 void ff_dct32_float_avx(FFTSample *out, const FFTSample *in);
 
-av_cold void ff_dct_init_x86(DCTContext *s) {
+av_cold void ff_dct_init_x86(DCTContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #if ARCH_X86_32

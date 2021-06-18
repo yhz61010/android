@@ -317,7 +317,8 @@ DECLARE_LOOP_FILTER(sse4)
     c->put_vp8_bilinear_pixels_tab[IDX][2][2] = ff_put_vp8_bilinear ## SIZE ## _hv_ ## OPT
 
 
-av_cold void ff_vp78dsp_init_x86(VP8DSPContext *c) {
+av_cold void ff_vp78dsp_init_x86(VP8DSPContext *c)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 
@@ -366,7 +367,8 @@ av_cold void ff_vp78dsp_init_x86(VP8DSPContext *c) {
 #endif /* HAVE_X86ASM */
 }
 
-av_cold void ff_vp8dsp_init_x86(VP8DSPContext *c) {
+av_cold void ff_vp8dsp_init_x86(VP8DSPContext *c)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 

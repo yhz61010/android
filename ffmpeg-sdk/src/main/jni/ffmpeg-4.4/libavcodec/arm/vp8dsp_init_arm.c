@@ -23,7 +23,8 @@
 #include "libavcodec/vp8dsp.h"
 #include "vp8dsp.h"
 
-av_cold void ff_vp78dsp_init_arm(VP8DSPContext *dsp) {
+av_cold void ff_vp78dsp_init_arm(VP8DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_armv6(cpu_flags))
@@ -32,7 +33,8 @@ av_cold void ff_vp78dsp_init_arm(VP8DSPContext *dsp) {
         ff_vp78dsp_init_neon(dsp);
 }
 
-av_cold void ff_vp8dsp_init_arm(VP8DSPContext *dsp) {
+av_cold void ff_vp8dsp_init_arm(VP8DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_armv6(cpu_flags))

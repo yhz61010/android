@@ -23,17 +23,17 @@
 #include "libavcodec/mips/hevc_macros_msa.h"
 
 static const uint8_t ff_hevc_mask_arr[16 * 3] __attribute__((aligned(0x40))) = {
-        /* 8 width cases */
-        0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-        /* 4 width cases */
-        0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
-        /* 4 width cases */
-        8, 9, 9, 10, 10, 11, 11, 12, 24, 25, 25, 26, 26, 27, 27, 28
+    /* 8 width cases */
+    0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
+    /* 4 width cases */
+    0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
+    /* 4 width cases */
+    8, 9, 9, 10, 10, 11, 11, 12, 24, 25, 25, 26, 26, 27, 27, 28
 };
 
-#define HORIZ_8TAP_4WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, mask2, mask3, \
-                                   filt0, filt1, filt2, filt3, \
+#define HORIZ_8TAP_4WID_4VECS_FILT(src0, src1, src2, src3,                  \
+                                   mask0, mask1, mask2, mask3,              \
+                                   filt0, filt1, filt2, filt3,              \
                                    out0, out1)                              \
 {                                                                           \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m,  vec4_m, vec5_m, vec6_m, vec7_m;  \
@@ -48,9 +48,9 @@ static const uint8_t ff_hevc_mask_arr[16 * 3] __attribute__((aligned(0x40))) = {
     DPADD_SB2_SH(vec6_m, vec7_m, filt3, filt3, out0, out1);                 \
 }
 
-#define HORIZ_8TAP_8WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, mask2, mask3, \
-                                   filt0, filt1, filt2, filt3, \
+#define HORIZ_8TAP_8WID_4VECS_FILT(src0, src1, src2, src3,                    \
+                                   mask0, mask1, mask2, mask3,                \
+                                   filt0, filt1, filt2, filt3,                \
                                    out0, out1, out2, out3)                    \
 {                                                                             \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m, vec4_m, vec5_m, vec6_m, vec7_m;     \
@@ -73,8 +73,8 @@ static const uint8_t ff_hevc_mask_arr[16 * 3] __attribute__((aligned(0x40))) = {
                  out0, out1, out2, out3);                                     \
 }
 
-#define HORIZ_4TAP_4WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, filt0, filt1, \
+#define HORIZ_4TAP_4WID_4VECS_FILT(src0, src1, src2, src3,             \
+                                   mask0, mask1, filt0, filt1,         \
                                    out0, out1)                         \
 {                                                                      \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m;                              \
@@ -85,8 +85,8 @@ static const uint8_t ff_hevc_mask_arr[16 * 3] __attribute__((aligned(0x40))) = {
     DPADD_SB2_SH(vec2_m, vec3_m, filt1, filt1, out0, out1);            \
 }
 
-#define HORIZ_4TAP_8WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, filt0, filt1, \
+#define HORIZ_4TAP_8WID_4VECS_FILT(src0, src1, src2, src3,                    \
+                                   mask0, mask1, filt0, filt1,                \
                                    out0, out1, out2, out3)                    \
 {                                                                             \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m;                                     \
@@ -103,7 +103,8 @@ static const uint8_t ff_hevc_mask_arr[16 * 3] __attribute__((aligned(0x40))) = {
 
 static void copy_width8_msa(uint8_t *src, int32_t src_stride,
                             uint8_t *dst, int32_t dst_stride,
-                            int32_t height) {
+                            int32_t height)
+{
     int32_t cnt;
     uint64_t out0, out1, out2, out3, out4, out5, out6, out7;
 
@@ -144,7 +145,8 @@ static void copy_width8_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width12_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
 
     LD_UB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
@@ -157,7 +159,8 @@ static void copy_width12_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width16_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
 
@@ -192,7 +195,8 @@ static void copy_width16_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width24_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     uint64_t out0, out1, out2, out3, out4, out5, out6, out7;
@@ -214,7 +218,8 @@ static void copy_width24_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width32_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
 
@@ -230,7 +235,8 @@ static void copy_width32_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width48_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
     v16u8 src11;
@@ -250,7 +256,8 @@ static void copy_width48_msa(uint8_t *src, int32_t src_stride,
 
 static void copy_width64_msa(uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 src8, src9, src10, src11, src12, src13, src14, src15;
@@ -278,7 +285,8 @@ static void copy_width64_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16u8 mask0, mask1, mask2, mask3, out;
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2, filt3;
     v8i16 filt, out0, out1;
@@ -306,7 +314,8 @@ static void common_hz_8t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 filt0, filt1, filt2, filt3;
     v16i8 src0, src1, src2, src3;
     v16u8 mask0, mask1, mask2, mask3, out;
@@ -342,7 +351,8 @@ static void common_hz_8t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_4x16_msa(uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  const int8_t *filter) {
+                                  const int8_t *filter)
+{
     v16u8 mask0, mask1, mask2, mask3, out;
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2, filt3;
     v8i16 filt, out0, out1, out2, out3;
@@ -397,7 +407,8 @@ static void common_hz_8t_4x16_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_4w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     if (4 == height) {
         common_hz_8t_4x4_msa(src, src_stride, dst, dst_stride, filter);
     } else if (8 == height) {
@@ -409,7 +420,8 @@ static void common_hz_8t_4w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_8w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2, filt3;
     v16u8 mask0, mask1, mask2, mask3, tmp0, tmp1;
@@ -460,7 +472,8 @@ static void common_hz_8t_8w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_12w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 mask0, mask1, mask2, mask3, mask4, mask5, mask6, mask00;
     v16u8 tmp0, tmp1, tmp2;
@@ -538,7 +551,8 @@ static void common_hz_8t_12w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_16w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 mask0, mask1, mask2, mask3, out;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -595,7 +609,8 @@ static void common_hz_8t_16w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_24w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2, filt3;
     v16u8 mask0, mask1, mask2, mask3, mask4, mask5, mask6, mask7, out;
@@ -664,7 +679,8 @@ static void common_hz_8t_24w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_32w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 mask0, mask1, mask2, mask3, out;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -724,7 +740,8 @@ static void common_hz_8t_32w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_48w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2, filt3, vec0, vec1, vec2;
     v16i8 src4;
@@ -809,7 +826,8 @@ static void common_hz_8t_48w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_8t_64w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     int32_t loop_cnt;
     v16u8 mask0, mask1, mask2, mask3, out;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -887,7 +905,8 @@ static void common_hz_8t_64w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_4w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
@@ -955,7 +974,8 @@ static void common_vt_8t_4w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_8w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
     v16i8 src10_r, src32_r, src54_r, src76_r, src98_r, src21_r, src43_r;
@@ -1009,7 +1029,8 @@ static void common_vt_8t_8w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_12w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     uint32_t out2, out3;
     uint64_t out0, out1;
@@ -1110,7 +1131,8 @@ static void common_vt_8t_12w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_16w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
     v16i8 filt0, filt1, filt2, filt3;
@@ -1189,7 +1211,8 @@ static void common_vt_8t_16w_msa(uint8_t *src, int32_t src_stride,
 static void common_vt_8t_16w_mult_msa(uint8_t *src, int32_t src_stride,
                                       uint8_t *dst, int32_t dst_stride,
                                       const int8_t *filter, int32_t height,
-                                      int32_t width) {
+                                      int32_t width)
+{
     uint8_t *src_tmp;
     uint8_t *dst_tmp;
     uint32_t loop_cnt, cnt;
@@ -1276,7 +1299,8 @@ static void common_vt_8t_16w_mult_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_24w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     common_vt_8t_16w_mult_msa(src, src_stride, dst, dst_stride, filter, height,
                               16);
 
@@ -1286,21 +1310,24 @@ static void common_vt_8t_24w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_8t_32w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     common_vt_8t_16w_mult_msa(src, src_stride, dst, dst_stride, filter, height,
                               32);
 }
 
 static void common_vt_8t_48w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     common_vt_8t_16w_mult_msa(src, src_stride, dst, dst_stride, filter, height,
                               48);
 }
 
 static void common_vt_8t_64w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     common_vt_8t_16w_mult_msa(src, src_stride, dst, dst_stride, filter, height,
                               64);
 }
@@ -1311,7 +1338,8 @@ static void hevc_hv_uni_8t_4w_msa(uint8_t *src,
                                   int32_t dst_stride,
                                   const int8_t *filter_x,
                                   const int8_t *filter_y,
-                                  int32_t height) {
+                                  int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
@@ -1389,7 +1417,7 @@ static void hevc_hv_uni_8t_4w_msa(uint8_t *src,
         dst139 = HEVC_FILT_8TAP_SH(vec8, vec9, vec10, vec11, filt0, filt1,
                                    filt2, filt3);
         dst1410 = HEVC_FILT_8TAP_SH(vec12, vec13, vec14, vec15, filt0, filt1,
-                                    filt2, filt3);
+                                   filt2, filt3);
 
         dst76_r = __msa_ilvr_h(dst117, dst66);
         ILVRL_H2_SH(dst128, dst117, dst87_r, dst1211_r);
@@ -1444,7 +1472,8 @@ static void hevc_hv_uni_8t_8multx2mult_msa(uint8_t *src,
                                            int32_t dst_stride,
                                            const int8_t *filter_x,
                                            const int8_t *filter_y,
-                                           int32_t height, int32_t width) {
+                                           int32_t height, int32_t width)
+{
     uint32_t loop_cnt, cnt;
     uint8_t *src_tmp;
     uint8_t *dst_tmp;
@@ -1582,7 +1611,8 @@ static void hevc_hv_uni_8t_8w_msa(uint8_t *src,
                                   int32_t dst_stride,
                                   const int8_t *filter_x,
                                   const int8_t *filter_y,
-                                  int32_t height) {
+                                  int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 8);
 }
@@ -1593,7 +1623,8 @@ static void hevc_hv_uni_8t_12w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     uint32_t loop_cnt;
     uint8_t *src_tmp, *dst_tmp;
     v16u8 out0, out1;
@@ -1771,7 +1802,7 @@ static void hevc_hv_uni_8t_12w_msa(uint8_t *src,
         dst139 = HEVC_FILT_8TAP_SH(vec8, vec9, vec10, vec11, filt0, filt1,
                                    filt2, filt3);
         dst1410 = HEVC_FILT_8TAP_SH(vec12, vec13, vec14, vec15, filt0, filt1,
-                                    filt2, filt3);
+                                   filt2, filt3);
 
         dst76_r = __msa_ilvr_h(dst117, dst66);
         ILVRL_H2_SH(dst128, dst117, dst87_r, dst1211_r);
@@ -1826,7 +1857,8 @@ static void hevc_hv_uni_8t_16w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 16);
 }
@@ -1837,7 +1869,8 @@ static void hevc_hv_uni_8t_24w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 24);
 }
@@ -1848,7 +1881,8 @@ static void hevc_hv_uni_8t_32w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 32);
 }
@@ -1859,7 +1893,8 @@ static void hevc_hv_uni_8t_48w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 48);
 }
@@ -1870,14 +1905,16 @@ static void hevc_hv_uni_8t_64w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_8t_8multx2mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 64);
 }
 
 static void common_hz_4t_4x2_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 filt0, filt1, src0, src1, mask0, mask1, vec0, vec1;
     v16u8 out;
     v8i16 filt, res0;
@@ -1903,7 +1940,8 @@ static void common_hz_4t_4x2_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v8i16 filt, out0, out1;
     v16u8 out;
@@ -1929,7 +1967,8 @@ static void common_hz_4t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v16u8 out;
     v8i16 filt, out0, out1, out2, out3;
@@ -1963,7 +2002,8 @@ static void common_hz_4t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4x16_msa(uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  const int8_t *filter) {
+                                  const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16i8 filt0, filt1, mask0, mask1;
     v16u8 out;
@@ -2010,7 +2050,8 @@ static void common_hz_4t_4x16_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     if (2 == height) {
         common_hz_4t_4x2_msa(src, src_stride, dst, dst_stride, filter);
     } else if (4 == height) {
@@ -2024,7 +2065,8 @@ static void common_hz_4t_4w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_6w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v16u8 out4, out5;
     v8i16 filt, out0, out1, out2, out3;
@@ -2072,7 +2114,8 @@ static void common_hz_4t_6w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_8x2mult_msa(uint8_t *src, int32_t src_stride,
                                      uint8_t *dst, int32_t dst_stride,
-                                     const int8_t *filter, int32_t height) {
+                                     const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, filt0, filt1, mask0, mask1;
     v16u8 out;
@@ -2105,7 +2148,8 @@ static void common_hz_4t_8x2mult_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_8x4mult_msa(uint8_t *src, int32_t src_stride,
                                      uint8_t *dst, int32_t dst_stride,
-                                     const int8_t *filter, int32_t height) {
+                                     const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v16u8 tmp0, tmp1;
@@ -2138,7 +2182,8 @@ static void common_hz_4t_8x4mult_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_8w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     if ((2 == height) || (6 == height)) {
         common_hz_4t_8x2mult_msa(src, src_stride, dst, dst_stride, filter,
                                  height);
@@ -2150,7 +2195,8 @@ static void common_hz_4t_8w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_12w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1, mask2, mask3;
     v16i8 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
@@ -2203,7 +2249,8 @@ static void common_hz_4t_12w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_16w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16i8 filt0, filt1, mask0, mask1;
@@ -2265,7 +2312,8 @@ static void common_hz_4t_16w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_24w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint8_t *dst1 = dst + 16;
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -2347,7 +2395,8 @@ static void common_hz_4t_24w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_32w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16i8 filt0, filt1, mask0, mask1;
@@ -2414,7 +2463,8 @@ static void common_hz_4t_32w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_4x2_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4, src10_r, src32_r, src21_r, src43_r;
     v16i8 src2110, src4332, filt0, filt1;
     v16u8 out;
@@ -2444,7 +2494,8 @@ static void common_vt_4t_4x2_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_4x4multiple_msa(uint8_t *src, int32_t src_stride,
                                          uint8_t *dst, int32_t dst_stride,
-                                         const int8_t *filter, int32_t height) {
+                                         const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5;
     v16i8 src10_r, src32_r, src54_r, src21_r, src43_r, src65_r;
@@ -2489,7 +2540,8 @@ static void common_vt_4t_4x4multiple_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_4w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     if (2 == height) {
         common_vt_4t_4x2_msa(src, src_stride, dst, dst_stride, filter);
     } else {
@@ -2500,7 +2552,8 @@ static void common_vt_4t_4w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_6w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     v16u8 out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5, src6;
     v16i8 src10_r, src32_r, src21_r, src43_r, src54_r, src65_r;
@@ -2570,7 +2623,8 @@ static void common_vt_4t_6w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_8x2_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4;
     v8i16 src01, src12, src23, src34, tmp0, tmp1, filt, filt0, filt1;
     v16u8 out;
@@ -2595,7 +2649,8 @@ static void common_vt_4t_8x2_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_8x6_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     uint32_t loop_cnt;
     uint64_t out0, out1, out2;
     v16i8 src0, src1, src2, src3, src4, src5;
@@ -2647,7 +2702,8 @@ static void common_vt_4t_8x6_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_8x4mult_msa(uint8_t *src, int32_t src_stride,
                                      uint8_t *dst, int32_t dst_stride,
-                                     const int8_t *filter, int32_t height) {
+                                     const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src7, src8, src9, src10;
     v16i8 src10_r, src72_r, src98_r, src21_r, src87_r, src109_r, filt0, filt1;
@@ -2691,7 +2747,8 @@ static void common_vt_4t_8x4mult_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_8w_msa(uint8_t *src, int32_t src_stride,
                                 uint8_t *dst, int32_t dst_stride,
-                                const int8_t *filter, int32_t height) {
+                                const int8_t *filter, int32_t height)
+{
     if (2 == height) {
         common_vt_4t_8x2_msa(src, src_stride, dst, dst_stride, filter);
     } else if (6 == height) {
@@ -2704,7 +2761,8 @@ static void common_vt_4t_8w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_12w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6;
     v16u8 out0, out1;
@@ -2766,7 +2824,8 @@ static void common_vt_4t_12w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_16w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src5, src6;
     v16i8 src10_r, src32_r, src54_r, src21_r, src43_r, src65_r, src10_l;
@@ -2823,7 +2882,8 @@ static void common_vt_4t_16w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_24w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     uint64_t out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
@@ -2933,7 +2993,8 @@ static void common_vt_4t_24w_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_4t_32w_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter, int32_t height) {
+                                 const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, src6, src7, src8, src9, src10;
     v16i8 src10_r, src32_r, src76_r, src98_r;
@@ -3028,7 +3089,8 @@ static void hevc_hv_uni_4t_4x2_msa(uint8_t *src,
                                    uint8_t *dst,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
-                                   const int8_t *filter_y) {
+                                   const int8_t *filter_y)
+{
     v16u8 out;
     v16i8 src0, src1, src2, src3, src4;
     v8i16 filt0, filt1;
@@ -3082,7 +3144,8 @@ static void hevc_hv_uni_4t_4x4_msa(uint8_t *src,
                                    uint8_t *dst,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
-                                   const int8_t *filter_y) {
+                                   const int8_t *filter_y)
+{
     v16u8 out;
     v16i8 src0, src1, src2, src3, src4, src5, src6;
     v8i16 filt0, filt1;
@@ -3141,7 +3204,8 @@ static void hevc_hv_uni_4t_4multx8mult_msa(uint8_t *src,
                                            int32_t dst_stride,
                                            const int8_t *filter_x,
                                            const int8_t *filter_y,
-                                           int32_t height) {
+                                           int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5;
@@ -3238,7 +3302,8 @@ static void hevc_hv_uni_4t_4w_msa(uint8_t *src,
                                   int32_t dst_stride,
                                   const int8_t *filter_x,
                                   const int8_t *filter_y,
-                                  int32_t height) {
+                                  int32_t height)
+{
     if (2 == height) {
         hevc_hv_uni_4t_4x2_msa(src, src_stride, dst, dst_stride,
                                filter_x, filter_y);
@@ -3257,7 +3322,8 @@ static void hevc_hv_uni_4t_6w_msa(uint8_t *src,
                                   int32_t dst_stride,
                                   const int8_t *filter_x,
                                   const int8_t *filter_y,
-                                  int32_t height) {
+                                  int32_t height)
+{
     v16u8 out0, out1, out2;
     v16i8 src0, src1, src2, src3, src4, src5, src6;
     v16i8 src7, src8, src9, src10;
@@ -3360,8 +3426,8 @@ static void hevc_hv_uni_4t_6w_msa(uint8_t *src,
     PCKEV_H2_SH(dst1_l, dst0_l, dst3_l, dst2_l, tmp4, tmp5);
     SRARI_H4_SH(tmp0, tmp1, tmp2, tmp3, 6);
     SRARI_H2_SH(tmp4, tmp5, 6);
-    SAT_SH4_SH(tmp0, tmp1, tmp2, tmp3, 7);
-    SAT_SH2_SH(tmp4, tmp5, 7);
+    SAT_SH4_SH(tmp0, tmp1, tmp2, tmp3,7);
+    SAT_SH2_SH(tmp4, tmp5,7);
     out0 = PCKEV_XORI128_UB(tmp0, tmp1);
     out1 = PCKEV_XORI128_UB(tmp2, tmp3);
     out2 = PCKEV_XORI128_UB(tmp4, tmp5);
@@ -3374,7 +3440,8 @@ static void hevc_hv_uni_4t_8x2_msa(uint8_t *src,
                                    uint8_t *dst,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
-                                   const int8_t *filter_y) {
+                                   const int8_t *filter_y)
+{
     v16u8 out;
     v16i8 src0, src1, src2, src3, src4;
     v8i16 filt0, filt1;
@@ -3436,7 +3503,8 @@ static void hevc_hv_uni_4t_8multx4_msa(uint8_t *src,
                                        int32_t dst_stride,
                                        const int8_t *filter_x,
                                        const int8_t *filter_y,
-                                       int32_t width8mult) {
+                                       int32_t width8mult)
+{
     uint32_t cnt;
     v16u8 out0, out1;
     v16i8 src0, src1, src2, src3, src4, src5, src6, mask0, mask1;
@@ -3519,7 +3587,8 @@ static void hevc_hv_uni_4t_8x6_msa(uint8_t *src,
                                    uint8_t *dst,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
-                                   const int8_t *filter_y) {
+                                   const int8_t *filter_y)
+{
     v16u8 out0, out1, out2;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v8i16 filt0, filt1;
@@ -3623,7 +3692,8 @@ static void hevc_hv_uni_4t_8multx4mult_msa(uint8_t *src,
                                            const int8_t *filter_x,
                                            const int8_t *filter_y,
                                            int32_t height,
-                                           int32_t width8mult) {
+                                           int32_t width8mult)
+{
     uint32_t loop_cnt, cnt;
     uint8_t *src_tmp;
     uint8_t *dst_tmp;
@@ -3735,7 +3805,8 @@ static void hevc_hv_uni_4t_8w_msa(uint8_t *src,
                                   int32_t dst_stride,
                                   const int8_t *filter_x,
                                   const int8_t *filter_y,
-                                  int32_t height) {
+                                  int32_t height)
+{
     if (2 == height) {
         hevc_hv_uni_4t_8x2_msa(src, src_stride, dst, dst_stride,
                                filter_x, filter_y);
@@ -3757,7 +3828,8 @@ static void hevc_hv_uni_4t_12w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     uint32_t loop_cnt;
     uint8_t *src_tmp, *dst_tmp;
     v16u8 out0, out1;
@@ -3924,7 +3996,8 @@ static void hevc_hv_uni_4t_16w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     if (4 == height) {
         hevc_hv_uni_4t_8multx4_msa(src, src_stride, dst, dst_stride, filter_x,
                                    filter_y, 2);
@@ -3940,7 +4013,8 @@ static void hevc_hv_uni_4t_24w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_4t_8multx4mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 3);
 }
@@ -3951,7 +4025,8 @@ static void hevc_hv_uni_4t_32w_msa(uint8_t *src,
                                    int32_t dst_stride,
                                    const int8_t *filter_x,
                                    const int8_t *filter_y,
-                                   int32_t height) {
+                                   int32_t height)
+{
     hevc_hv_uni_4t_8multx4mult_msa(src, src_stride, dst, dst_stride,
                                    filter_x, filter_y, height, 4);
 }
@@ -3970,17 +4045,11 @@ void ff_hevc_put_hevc_uni_pel_pixels##WIDTH##_8_msa(uint8_t *dst,          \
 }
 
 UNI_MC_COPY(8);
-
 UNI_MC_COPY(12);
-
 UNI_MC_COPY(16);
-
 UNI_MC_COPY(24);
-
 UNI_MC_COPY(32);
-
 UNI_MC_COPY(48);
-
 UNI_MC_COPY(64);
 
 #undef UNI_MC_COPY
@@ -4002,63 +4071,37 @@ void ff_hevc_put_hevc_uni_##PEL##_##DIR##WIDTH##_8_msa(uint8_t *dst,           \
 }
 
 UNI_MC(qpel, h, 4, 8, hz, mx);
-
 UNI_MC(qpel, h, 8, 8, hz, mx);
-
 UNI_MC(qpel, h, 12, 8, hz, mx);
-
 UNI_MC(qpel, h, 16, 8, hz, mx);
-
 UNI_MC(qpel, h, 24, 8, hz, mx);
-
 UNI_MC(qpel, h, 32, 8, hz, mx);
-
 UNI_MC(qpel, h, 48, 8, hz, mx);
-
 UNI_MC(qpel, h, 64, 8, hz, mx);
 
 UNI_MC(qpel, v, 4, 8, vt, my);
-
 UNI_MC(qpel, v, 8, 8, vt, my);
-
 UNI_MC(qpel, v, 12, 8, vt, my);
-
 UNI_MC(qpel, v, 16, 8, vt, my);
-
 UNI_MC(qpel, v, 24, 8, vt, my);
-
 UNI_MC(qpel, v, 32, 8, vt, my);
-
 UNI_MC(qpel, v, 48, 8, vt, my);
-
 UNI_MC(qpel, v, 64, 8, vt, my);
 
 UNI_MC(epel, h, 4, 4, hz, mx);
-
 UNI_MC(epel, h, 6, 4, hz, mx);
-
 UNI_MC(epel, h, 8, 4, hz, mx);
-
 UNI_MC(epel, h, 12, 4, hz, mx);
-
 UNI_MC(epel, h, 16, 4, hz, mx);
-
 UNI_MC(epel, h, 24, 4, hz, mx);
-
 UNI_MC(epel, h, 32, 4, hz, mx);
 
 UNI_MC(epel, v, 4, 4, vt, my);
-
 UNI_MC(epel, v, 6, 4, vt, my);
-
 UNI_MC(epel, v, 8, 4, vt, my);
-
 UNI_MC(epel, v, 12, 4, vt, my);
-
 UNI_MC(epel, v, 16, 4, vt, my);
-
 UNI_MC(epel, v, 24, 4, vt, my);
-
 UNI_MC(epel, v, 32, 4, vt, my);
 
 #undef UNI_MC
@@ -4081,33 +4124,20 @@ void ff_hevc_put_hevc_uni_##PEL##_hv##WIDTH##_8_msa(uint8_t *dst,          \
 }
 
 UNI_MC_HV(qpel, 4, 8);
-
 UNI_MC_HV(qpel, 8, 8);
-
 UNI_MC_HV(qpel, 12, 8);
-
 UNI_MC_HV(qpel, 16, 8);
-
 UNI_MC_HV(qpel, 24, 8);
-
 UNI_MC_HV(qpel, 32, 8);
-
 UNI_MC_HV(qpel, 48, 8);
-
 UNI_MC_HV(qpel, 64, 8);
 
 UNI_MC_HV(epel, 4, 4);
-
 UNI_MC_HV(epel, 6, 4);
-
 UNI_MC_HV(epel, 8, 4);
-
 UNI_MC_HV(epel, 12, 4);
-
 UNI_MC_HV(epel, 16, 4);
-
 UNI_MC_HV(epel, 24, 4);
-
 UNI_MC_HV(epel, 32, 4);
 
 #undef UNI_MC_HV

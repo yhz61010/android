@@ -48,7 +48,8 @@ static VLC tone_vlc_tabs[7];
  * @param[out]    out_vlc     ptr to vlc table to be generated
  */
 static av_cold void build_canonical_huff(const uint8_t *cb, const uint8_t **xlat,
-                                         int *tab_offset, VLC *out_vlc) {
+                                         int *tab_offset, VLC *out_vlc)
+{
     int i, max_len;
     uint8_t bits[256];
     int index = 0;
@@ -56,7 +57,7 @@ static av_cold void build_canonical_huff(const uint8_t *cb, const uint8_t **xlat
     for (int b = 1; b <= 12; b++) {
         for (i = *cb++; i > 0; i--) {
             av_assert0(index < 256);
-            bits[index] = b;
+            bits[index]  = b;
             index++;
         }
     }
@@ -69,10 +70,11 @@ static av_cold void build_canonical_huff(const uint8_t *cb, const uint8_t **xlat
                              *xlat, 1, 1, 0, INIT_VLC_USE_NEW_STATIC, NULL);
 
     *tab_offset += 1 << max_len;
-    *xlat += index;
+    *xlat       += index;
 }
 
-av_cold void ff_atrac3p_init_vlcs(void) {
+av_cold void ff_atrac3p_init_vlcs(void)
+{
     int i, tab_offset = 0;
     const uint8_t *xlats;
 
@@ -122,7 +124,8 @@ av_cold void ff_atrac3p_init_vlcs(void) {
  * @return result code: 0 = OK, otherwise - error code
  */
 static int num_coded_units(GetBitContext *gb, Atrac3pChanParams *chan,
-                           Atrac3pChanUnitCtx *ctx, AVCodecContext *avctx) {
+                           Atrac3pChanUnitCtx *ctx, AVCodecContext *avctx)
+{
     chan->fill_mode = get_bits(gb, 2);
     if (!chan->fill_mode) {
         chan->num_coded_vals = ctx->num_quant_units;
@@ -152,10 +155,11 @@ static int num_coded_units(GetBitContext *gb, Atrac3pChanParams *chan,
  */
 static int add_wordlen_weights(Atrac3pChanUnitCtx *ctx,
                                Atrac3pChanParams *chan, int wtab_idx,
-                               AVCodecContext *avctx) {
+                               AVCodecContext *avctx)
+{
     int i;
     const int8_t *weights_tab =
-            &atrac3p_wl_weights[chan->ch_num * 3 + wtab_idx - 1][0];
+        &atrac3p_wl_weights[chan->ch_num * 3 + wtab_idx - 1][0];
 
     for (i = 0; i < ctx->num_quant_units; i++) {
         chan->qu_wordlen[i] += weights_tab[i];
@@ -181,7 +185,8 @@ static int add_wordlen_weights(Atrac3pChanUnitCtx *ctx,
  */
 static int subtract_sf_weights(Atrac3pChanUnitCtx *ctx,
                                Atrac3pChanParams *chan, int wtab_idx,
-                               AVCodecContext *avctx) {
+                               AVCodecContext *avctx)
+{
     int i;
     const int8_t *weights_tab = &atrac3p_sf_weights[wtab_idx - 1][0];
 
@@ -207,7 +212,8 @@ static int subtract_sf_weights(Atrac3pChanUnitCtx *ctx,
  * @param[in]    num_values   number of values to unpack
  */
 static inline void unpack_vq_shape(int start_val, const int8_t *shape_vec,
-                                   int *dst, int num_values) {
+                                   int *dst, int num_values)
+{
     int i;
 
     if (num_values) {
@@ -232,120 +238,121 @@ static inline void unpack_vq_shape(int start_val, const int8_t *shape_vec,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_channel_wordlen(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                  int ch_num, AVCodecContext *avctx) {
+                                  int ch_num, AVCodecContext *avctx)
+{
     int i, weight_idx = 0, delta, diff, pos, delta_bits, min_val, flag,
-            ret, start_val;
+        ret, start_val;
     VLC *vlc_tab;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     chan->fill_mode = 0;
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* coded using constant number of bits */
-            for (i = 0; i < ctx->num_quant_units; i++)
-                chan->qu_wordlen[i] = get_bits(gb, 3);
-            break;
-        case 1:
-            if (ch_num) {
-                if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
-                    return ret;
-
-                if (chan->num_coded_vals) {
-                    vlc_tab = &wl_vlc_tabs[get_bits(gb, 2)];
-
-                    for (i = 0; i < chan->num_coded_vals; i++) {
-                        delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                        chan->qu_wordlen[i] = (ref_chan->qu_wordlen[i] + delta) & 7;
-                    }
-                }
-            } else {
-                weight_idx = get_bits(gb, 2);
-                if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
-                    return ret;
-
-                if (chan->num_coded_vals) {
-                    pos = get_bits(gb, 5);
-                    if (pos > chan->num_coded_vals) {
-                        av_log(avctx, AV_LOG_ERROR,
-                               "WL mode 1: invalid position!\n");
-                        return AVERROR_INVALIDDATA;
-                    }
-
-                    delta_bits = get_bits(gb, 2);
-                    min_val = get_bits(gb, 3);
-
-                    for (i = 0; i < pos; i++)
-                        chan->qu_wordlen[i] = get_bits(gb, 3);
-
-                    for (i = pos; i < chan->num_coded_vals; i++)
-                        chan->qu_wordlen[i] = (min_val + get_bitsz(gb, delta_bits)) & 7;
-                }
-            }
-            break;
-        case 2:
-            if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
-                return ret;
-
-            if (ch_num && chan->num_coded_vals) {
-                vlc_tab = &wl_vlc_tabs[get_bits(gb, 2)];
-                delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                chan->qu_wordlen[0] = (ref_chan->qu_wordlen[0] + delta) & 7;
-
-                for (i = 1; i < chan->num_coded_vals; i++) {
-                    diff = ref_chan->qu_wordlen[i] - ref_chan->qu_wordlen[i - 1];
-                    delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                    chan->qu_wordlen[i] = (chan->qu_wordlen[i - 1] + diff + delta) & 7;
-                }
-            } else if (chan->num_coded_vals) {
-                flag = get_bits(gb, 1);
-                vlc_tab = &wl_vlc_tabs[get_bits(gb, 1)];
-
-                start_val = get_bits(gb, 3);
-                unpack_vq_shape(start_val,
-                                &atrac3p_wl_shapes[start_val][get_bits(gb, 4)][0],
-                                chan->qu_wordlen, chan->num_coded_vals);
-
-                if (!flag) {
-                    for (i = 0; i < chan->num_coded_vals; i++) {
-                        delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                        chan->qu_wordlen[i] = (chan->qu_wordlen[i] + delta) & 7;
-                    }
-                } else {
-                    for (i = 0; i < (chan->num_coded_vals & -2); i += 2)
-                        if (!get_bits1(gb)) {
-                            chan->qu_wordlen[i] = (chan->qu_wordlen[i] +
-                                                   get_vlc2(gb, vlc_tab->table,
-                                                            vlc_tab->bits, 1)) & 7;
-                            chan->qu_wordlen[i + 1] = (chan->qu_wordlen[i + 1] +
-                                                       get_vlc2(gb, vlc_tab->table,
-                                                                vlc_tab->bits, 1)) & 7;
-                        }
-
-                    if (chan->num_coded_vals & 1)
-                        chan->qu_wordlen[i] = (chan->qu_wordlen[i] +
-                                               get_vlc2(gb, vlc_tab->table,
-                                                        vlc_tab->bits, 1)) & 7;
-                }
-            }
-            break;
-        case 3:
-            weight_idx = get_bits(gb, 2);
+    case 0: /* coded using constant number of bits */
+        for (i = 0; i < ctx->num_quant_units; i++)
+            chan->qu_wordlen[i] = get_bits(gb, 3);
+        break;
+    case 1:
+        if (ch_num) {
             if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
                 return ret;
 
             if (chan->num_coded_vals) {
                 vlc_tab = &wl_vlc_tabs[get_bits(gb, 2)];
 
-                /* first coefficient is coded directly */
-                chan->qu_wordlen[0] = get_bits(gb, 3);
-
-                for (i = 1; i < chan->num_coded_vals; i++) {
+                for (i = 0; i < chan->num_coded_vals; i++) {
                     delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                    chan->qu_wordlen[i] = (chan->qu_wordlen[i - 1] + delta) & 7;
+                    chan->qu_wordlen[i] = (ref_chan->qu_wordlen[i] + delta) & 7;
                 }
             }
-            break;
+        } else {
+            weight_idx = get_bits(gb, 2);
+            if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
+                return ret;
+
+            if (chan->num_coded_vals) {
+                pos = get_bits(gb, 5);
+                if (pos > chan->num_coded_vals) {
+                    av_log(avctx, AV_LOG_ERROR,
+                           "WL mode 1: invalid position!\n");
+                    return AVERROR_INVALIDDATA;
+                }
+
+                delta_bits = get_bits(gb, 2);
+                min_val    = get_bits(gb, 3);
+
+                for (i = 0; i < pos; i++)
+                    chan->qu_wordlen[i] = get_bits(gb, 3);
+
+                for (i = pos; i < chan->num_coded_vals; i++)
+                    chan->qu_wordlen[i] = (min_val + get_bitsz(gb, delta_bits)) & 7;
+            }
+        }
+        break;
+    case 2:
+        if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
+            return ret;
+
+        if (ch_num && chan->num_coded_vals) {
+            vlc_tab = &wl_vlc_tabs[get_bits(gb, 2)];
+            delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+            chan->qu_wordlen[0] = (ref_chan->qu_wordlen[0] + delta) & 7;
+
+            for (i = 1; i < chan->num_coded_vals; i++) {
+                diff = ref_chan->qu_wordlen[i] - ref_chan->qu_wordlen[i - 1];
+                delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                chan->qu_wordlen[i] = (chan->qu_wordlen[i - 1] + diff + delta) & 7;
+            }
+        } else if (chan->num_coded_vals) {
+            flag    = get_bits(gb, 1);
+            vlc_tab = &wl_vlc_tabs[get_bits(gb, 1)];
+
+            start_val = get_bits(gb, 3);
+            unpack_vq_shape(start_val,
+                            &atrac3p_wl_shapes[start_val][get_bits(gb, 4)][0],
+                            chan->qu_wordlen, chan->num_coded_vals);
+
+            if (!flag) {
+                for (i = 0; i < chan->num_coded_vals; i++) {
+                    delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                    chan->qu_wordlen[i] = (chan->qu_wordlen[i] + delta) & 7;
+                }
+            } else {
+                for (i = 0; i < (chan->num_coded_vals & - 2); i += 2)
+                    if (!get_bits1(gb)) {
+                        chan->qu_wordlen[i]     = (chan->qu_wordlen[i] +
+                                                   get_vlc2(gb, vlc_tab->table,
+                                                            vlc_tab->bits, 1)) & 7;
+                        chan->qu_wordlen[i + 1] = (chan->qu_wordlen[i + 1] +
+                                                   get_vlc2(gb, vlc_tab->table,
+                                                            vlc_tab->bits, 1)) & 7;
+                    }
+
+                if (chan->num_coded_vals & 1)
+                    chan->qu_wordlen[i] = (chan->qu_wordlen[i] +
+                                           get_vlc2(gb, vlc_tab->table,
+                                                    vlc_tab->bits, 1)) & 7;
+            }
+        }
+        break;
+    case 3:
+        weight_idx = get_bits(gb, 2);
+        if ((ret = num_coded_units(gb, chan, ctx, avctx)) < 0)
+            return ret;
+
+        if (chan->num_coded_vals) {
+            vlc_tab = &wl_vlc_tabs[get_bits(gb, 2)];
+
+            /* first coefficient is coded directly */
+            chan->qu_wordlen[0] = get_bits(gb, 3);
+
+            for (i = 1; i < chan->num_coded_vals; i++) {
+                delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                chan->qu_wordlen[i] = (chan->qu_wordlen[i - 1] + delta) & 7;
+            }
+        }
+        break;
     }
 
     if (chan->fill_mode == 2) {
@@ -378,122 +385,123 @@ static int decode_channel_wordlen(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_channel_sf_idx(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                 int ch_num, AVCodecContext *avctx) {
+                                 int ch_num, AVCodecContext *avctx)
+{
     int i, weight_idx = 0, delta, diff, num_long_vals,
-            delta_bits, min_val, vlc_sel, start_val;
+        delta_bits, min_val, vlc_sel, start_val;
     VLC *vlc_tab;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* coded using constant number of bits */
-            for (i = 0; i < ctx->used_quant_units; i++)
-                chan->qu_sf_idx[i] = get_bits(gb, 6);
-            break;
-        case 1:
-            if (ch_num) {
-                vlc_tab = &sf_vlc_tabs[get_bits(gb, 2)];
+    case 0: /* coded using constant number of bits */
+        for (i = 0; i < ctx->used_quant_units; i++)
+            chan->qu_sf_idx[i] = get_bits(gb, 6);
+        break;
+    case 1:
+        if (ch_num) {
+            vlc_tab = &sf_vlc_tabs[get_bits(gb, 2)];
 
-                for (i = 0; i < ctx->used_quant_units; i++) {
-                    delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                    chan->qu_sf_idx[i] = (ref_chan->qu_sf_idx[i] + delta) & 0x3F;
-                }
-            } else {
-                weight_idx = get_bits(gb, 2);
-                if (weight_idx == 3) {
-                    UNPACK_SF_VQ_SHAPE(gb, chan->qu_sf_idx, ctx->used_quant_units);
-
-                    num_long_vals = get_bits(gb, 5);
-                    delta_bits = get_bits(gb, 2);
-                    min_val = get_bits(gb, 4) - 7;
-
-                    for (i = 0; i < num_long_vals; i++)
-                        chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] +
-                                              get_bits(gb, 4) - 7) & 0x3F;
-
-                    /* all others are: min_val + delta */
-                    for (i = num_long_vals; i < ctx->used_quant_units; i++)
-                        chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] + min_val +
-                                              get_bitsz(gb, delta_bits)) & 0x3F;
-                } else {
-                    num_long_vals = get_bits(gb, 5);
-                    delta_bits = get_bits(gb, 3);
-                    min_val = get_bits(gb, 6);
-                    if (num_long_vals > ctx->used_quant_units || delta_bits == 7) {
-                        av_log(avctx, AV_LOG_ERROR,
-                               "SF mode 1: invalid parameters!\n");
-                        return AVERROR_INVALIDDATA;
-                    }
-
-                    /* read full-precision SF indexes */
-                    for (i = 0; i < num_long_vals; i++)
-                        chan->qu_sf_idx[i] = get_bits(gb, 6);
-
-                    /* all others are: min_val + delta */
-                    for (i = num_long_vals; i < ctx->used_quant_units; i++)
-                        chan->qu_sf_idx[i] = (min_val +
-                                              get_bitsz(gb, delta_bits)) & 0x3F;
-                }
-            }
-            break;
-        case 2:
-            if (ch_num) {
-                vlc_tab = &sf_vlc_tabs[get_bits(gb, 2)];
-
+            for (i = 0; i < ctx->used_quant_units; i++) {
                 delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                chan->qu_sf_idx[0] = (ref_chan->qu_sf_idx[0] + delta) & 0x3F;
+                chan->qu_sf_idx[i] = (ref_chan->qu_sf_idx[i] + delta) & 0x3F;
+            }
+        } else {
+            weight_idx = get_bits(gb, 2);
+            if (weight_idx == 3) {
+                UNPACK_SF_VQ_SHAPE(gb, chan->qu_sf_idx, ctx->used_quant_units);
 
-                for (i = 1; i < ctx->used_quant_units; i++) {
-                    diff = ref_chan->qu_sf_idx[i] - ref_chan->qu_sf_idx[i - 1];
-                    delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                    chan->qu_sf_idx[i] = (chan->qu_sf_idx[i - 1] + diff + delta) & 0x3F;
-                }
+                num_long_vals = get_bits(gb, 5);
+                delta_bits    = get_bits(gb, 2);
+                min_val       = get_bits(gb, 4) - 7;
+
+                for (i = 0; i < num_long_vals; i++)
+                    chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] +
+                                          get_bits(gb, 4) - 7) & 0x3F;
+
+                /* all others are: min_val + delta */
+                for (i = num_long_vals; i < ctx->used_quant_units; i++)
+                    chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] + min_val +
+                                          get_bitsz(gb, delta_bits)) & 0x3F;
             } else {
-                vlc_tab = &sf_vlc_tabs[get_bits(gb, 2) + 4];
+                num_long_vals = get_bits(gb, 5);
+                delta_bits    = get_bits(gb, 3);
+                min_val       = get_bits(gb, 6);
+                if (num_long_vals > ctx->used_quant_units || delta_bits == 7) {
+                    av_log(avctx, AV_LOG_ERROR,
+                           "SF mode 1: invalid parameters!\n");
+                    return AVERROR_INVALIDDATA;
+                }
+
+                /* read full-precision SF indexes */
+                for (i = 0; i < num_long_vals; i++)
+                    chan->qu_sf_idx[i] = get_bits(gb, 6);
+
+                /* all others are: min_val + delta */
+                for (i = num_long_vals; i < ctx->used_quant_units; i++)
+                    chan->qu_sf_idx[i] = (min_val +
+                                          get_bitsz(gb, delta_bits)) & 0x3F;
+            }
+        }
+        break;
+    case 2:
+        if (ch_num) {
+            vlc_tab = &sf_vlc_tabs[get_bits(gb, 2)];
+
+            delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+            chan->qu_sf_idx[0] = (ref_chan->qu_sf_idx[0] + delta) & 0x3F;
+
+            for (i = 1; i < ctx->used_quant_units; i++) {
+                diff  = ref_chan->qu_sf_idx[i] - ref_chan->qu_sf_idx[i - 1];
+                delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                chan->qu_sf_idx[i] = (chan->qu_sf_idx[i - 1] + diff + delta) & 0x3F;
+            }
+        } else {
+            vlc_tab = &sf_vlc_tabs[get_bits(gb, 2) + 4];
+
+            UNPACK_SF_VQ_SHAPE(gb, chan->qu_sf_idx, ctx->used_quant_units);
+
+            for (i = 0; i < ctx->used_quant_units; i++) {
+                delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] +
+                                      sign_extend(delta, 4)) & 0x3F;
+            }
+        }
+        break;
+    case 3:
+        if (ch_num) {
+            /* copy coefficients from reference channel */
+            for (i = 0; i < ctx->used_quant_units; i++)
+                chan->qu_sf_idx[i] = ref_chan->qu_sf_idx[i];
+        } else {
+            weight_idx = get_bits(gb, 2);
+            vlc_sel    = get_bits(gb, 2);
+            vlc_tab    = &sf_vlc_tabs[vlc_sel];
+
+            if (weight_idx == 3) {
+                vlc_tab = &sf_vlc_tabs[vlc_sel + 4];
 
                 UNPACK_SF_VQ_SHAPE(gb, chan->qu_sf_idx, ctx->used_quant_units);
 
-                for (i = 0; i < ctx->used_quant_units; i++) {
+                diff               = (get_bits(gb, 4)    + 56)   & 0x3F;
+                chan->qu_sf_idx[0] = (chan->qu_sf_idx[0] + diff) & 0x3F;
+
+                for (i = 1; i < ctx->used_quant_units; i++) {
                     delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                    chan->qu_sf_idx[i] = (chan->qu_sf_idx[i] +
-                                          sign_extend(delta, 4)) & 0x3F;
+                    diff               = (diff + sign_extend(delta, 4)) & 0x3F;
+                    chan->qu_sf_idx[i] = (diff + chan->qu_sf_idx[i])    & 0x3F;
                 }
-            }
-            break;
-        case 3:
-            if (ch_num) {
-                /* copy coefficients from reference channel */
-                for (i = 0; i < ctx->used_quant_units; i++)
-                    chan->qu_sf_idx[i] = ref_chan->qu_sf_idx[i];
             } else {
-                weight_idx = get_bits(gb, 2);
-                vlc_sel = get_bits(gb, 2);
-                vlc_tab = &sf_vlc_tabs[vlc_sel];
+                /* 1st coefficient is coded directly */
+                chan->qu_sf_idx[0] = get_bits(gb, 6);
 
-                if (weight_idx == 3) {
-                    vlc_tab = &sf_vlc_tabs[vlc_sel + 4];
-
-                    UNPACK_SF_VQ_SHAPE(gb, chan->qu_sf_idx, ctx->used_quant_units);
-
-                    diff = (get_bits(gb, 4) + 56) & 0x3F;
-                    chan->qu_sf_idx[0] = (chan->qu_sf_idx[0] + diff) & 0x3F;
-
-                    for (i = 1; i < ctx->used_quant_units; i++) {
-                        delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                        diff = (diff + sign_extend(delta, 4)) & 0x3F;
-                        chan->qu_sf_idx[i] = (diff + chan->qu_sf_idx[i]) & 0x3F;
-                    }
-                } else {
-                    /* 1st coefficient is coded directly */
-                    chan->qu_sf_idx[0] = get_bits(gb, 6);
-
-                    for (i = 1; i < ctx->used_quant_units; i++) {
-                        delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
-                        chan->qu_sf_idx[i] = (chan->qu_sf_idx[i - 1] + delta) & 0x3F;
-                    }
+                for (i = 1; i < ctx->used_quant_units; i++) {
+                    delta = get_vlc2(gb, vlc_tab->table, vlc_tab->bits, 1);
+                    chan->qu_sf_idx[i] = (chan->qu_sf_idx[i - 1] + delta) & 0x3F;
                 }
             }
-            break;
+        }
+        break;
     }
 
     if (weight_idx && weight_idx < 3)
@@ -512,7 +520,8 @@ static int decode_channel_sf_idx(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_quant_wordlen(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                int num_channels, AVCodecContext *avctx) {
+                                int num_channels, AVCodecContext *avctx)
+{
     int ch_num, i, ret;
 
     for (ch_num = 0; ch_num < num_channels; ch_num++) {
@@ -544,7 +553,8 @@ static int decode_quant_wordlen(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_scale_factors(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                int num_channels, AVCodecContext *avctx) {
+                                int num_channels, AVCodecContext *avctx)
+{
     int ch_num, ret;
 
     if (!ctx->used_quant_units)
@@ -570,7 +580,8 @@ static int decode_scale_factors(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int get_num_ct_values(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                             AVCodecContext *avctx) {
+                             AVCodecContext *avctx)
+{
     int num_coded_vals;
 
     if (get_bits1(gb)) {
@@ -622,43 +633,44 @@ static int get_num_ct_values(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_channel_code_tab(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   int ch_num, AVCodecContext *avctx) {
+                                   int ch_num, AVCodecContext *avctx)
+{
     int i, num_vals, num_bits, pred;
     int mask = ctx->use_full_table ? 7 : 3; /* mask for modular arithmetic */
     VLC *vlc_tab, *delta_vlc;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     chan->table_type = get_bits1(gb);
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* directly coded */
-            num_bits = ctx->use_full_table + 2;
-            DEC_CT_IDX_COMMON(CODING_DIRECT);
-            break;
-        case 1: /* entropy-coded */
-            vlc_tab = ctx->use_full_table ? &ct_vlc_tabs[1]
+    case 0: /* directly coded */
+        num_bits = ctx->use_full_table + 2;
+        DEC_CT_IDX_COMMON(CODING_DIRECT);
+        break;
+    case 1: /* entropy-coded */
+        vlc_tab = ctx->use_full_table ? &ct_vlc_tabs[1]
+                                      : ct_vlc_tabs;
+        DEC_CT_IDX_COMMON(CODING_VLC);
+        break;
+    case 2: /* entropy-coded delta */
+        if (ctx->use_full_table) {
+            vlc_tab   = &ct_vlc_tabs[1];
+            delta_vlc = &ct_vlc_tabs[2];
+        } else {
+            vlc_tab   = ct_vlc_tabs;
+            delta_vlc = ct_vlc_tabs;
+        }
+        pred = 0;
+        DEC_CT_IDX_COMMON(CODING_VLC_DELTA);
+        break;
+    case 3: /* entropy-coded difference to master */
+        if (ch_num) {
+            vlc_tab = ctx->use_full_table ? &ct_vlc_tabs[3]
                                           : ct_vlc_tabs;
-            DEC_CT_IDX_COMMON(CODING_VLC);
-            break;
-        case 2: /* entropy-coded delta */
-            if (ctx->use_full_table) {
-                vlc_tab = &ct_vlc_tabs[1];
-                delta_vlc = &ct_vlc_tabs[2];
-            } else {
-                vlc_tab = ct_vlc_tabs;
-                delta_vlc = ct_vlc_tabs;
-            }
-            pred = 0;
-            DEC_CT_IDX_COMMON(CODING_VLC_DELTA);
-            break;
-        case 3: /* entropy-coded difference to master */
-            if (ch_num) {
-                vlc_tab = ctx->use_full_table ? &ct_vlc_tabs[3]
-                                              : ct_vlc_tabs;
-                DEC_CT_IDX_COMMON(CODING_VLC_DIFF);
-            }
-            break;
+            DEC_CT_IDX_COMMON(CODING_VLC_DIFF);
+        }
+        break;
     }
 
     return 0;
@@ -674,7 +686,8 @@ static int decode_channel_code_tab(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_code_table_indexes(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                     int num_channels, AVCodecContext *avctx) {
+                                     int num_channels, AVCodecContext *avctx)
+{
     int ch_num, ret;
 
     if (!ctx->used_quant_units)
@@ -706,12 +719,13 @@ static int decode_code_table_indexes(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @param[in]   num_specs   number of spectral lines to decode
  */
 static void decode_qu_spectra(GetBitContext *gb, const Atrac3pSpecCodeTab *tab,
-                              VLC *vlc_tab, int16_t *out, const int num_specs) {
+                              VLC *vlc_tab, int16_t *out, const int num_specs)
+{
     int i, j, pos, cf;
     int group_size = tab->group_size;
     int num_coeffs = tab->num_coeffs;
-    int bits = tab->bits;
-    int is_signed = tab->is_signed;
+    int bits       = tab->bits;
+    int is_signed  = tab->is_signed;
     unsigned val;
 
     for (pos = 0; pos < num_specs;) {
@@ -727,7 +741,7 @@ static void decode_qu_spectra(GetBitContext *gb, const Atrac3pSpecCodeTab *tab,
                         cf = -cf;
 
                     out[pos++] = cf;
-                    val >>= bits;
+                    val      >>= bits;
                 }
             }
         } else /* group skipped */
@@ -744,7 +758,8 @@ static void decode_qu_spectra(GetBitContext *gb, const Atrac3pSpecCodeTab *tab,
  * @param[in]     avctx         ptr to the AVCodecContext
  */
 static void decode_spectrum(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                            int num_channels, AVCodecContext *avctx) {
+                            int num_channels, AVCodecContext *avctx)
+{
     int i, ch_num, qu, wordlen, codetab, tab_index, num_specs;
     const Atrac3pSpecCodeTab *tab;
     Atrac3pChanParams *chan;
@@ -768,7 +783,7 @@ static void decode_spectrum(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                     codetab = atrac3p_ct_restricted_to_full[chan->table_type][wordlen - 1][codetab];
 
                 tab_index = (chan->table_type * 8 + codetab) * 7 + wordlen - 1;
-                tab = &atrac3p_spectra_tabs[tab_index];
+                tab       = &atrac3p_spectra_tabs[tab_index];
 
                 decode_qu_spectra(gb, tab, &spec_vlc_tabs[tab_index],
                                   &chan->spectrum[ff_atrac3p_qu_to_spec_pos[qu]],
@@ -808,7 +823,8 @@ static void decode_spectrum(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @param[in]   num_flags       number of flags to process
  * @return: 0 = all flag bits are zero, 1 = there is at least one non-zero flag bit
  */
-static int get_subband_flags(GetBitContext *gb, uint8_t *out, int num_flags) {
+static int get_subband_flags(GetBitContext *gb, uint8_t *out, int num_flags)
+{
     int i, result;
 
     memset(out, 0, num_flags);
@@ -833,7 +849,8 @@ static int get_subband_flags(GetBitContext *gb, uint8_t *out, int num_flags) {
  * @param[in]     num_channels  number of channels to process
  */
 static void decode_window_shape(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                int num_channels) {
+                                int num_channels)
+{
     int ch_num;
 
     for (ch_num = 0; ch_num < num_channels; ch_num++)
@@ -851,58 +868,59 @@ static void decode_window_shape(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_gainc_npoints(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                int ch_num, int coded_subbands) {
+                                int ch_num, int coded_subbands)
+{
     int i, delta, delta_bits, min_val;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* fixed-length coding */
-            for (i = 0; i < coded_subbands; i++)
-                chan->gain_data[i].num_points = get_bits(gb, 3);
-            break;
-        case 1: /* variable-length coding */
+    case 0: /* fixed-length coding */
+        for (i = 0; i < coded_subbands; i++)
+            chan->gain_data[i].num_points = get_bits(gb, 3);
+        break;
+    case 1: /* variable-length coding */
+        for (i = 0; i < coded_subbands; i++)
+            chan->gain_data[i].num_points =
+                get_vlc2(gb, gain_vlc_tabs[0].table,
+                         gain_vlc_tabs[0].bits, 1);
+        break;
+    case 2:
+        if (ch_num) { /* VLC modulo delta to master channel */
+            for (i = 0; i < coded_subbands; i++) {
+                delta = get_vlc2(gb, gain_vlc_tabs[1].table,
+                                 gain_vlc_tabs[1].bits, 1);
+                chan->gain_data[i].num_points =
+                    (ref_chan->gain_data[i].num_points + delta) & 7;
+            }
+        } else { /* VLC modulo delta to previous */
+            chan->gain_data[0].num_points =
+                get_vlc2(gb, gain_vlc_tabs[0].table,
+                         gain_vlc_tabs[0].bits, 1);
+
+            for (i = 1; i < coded_subbands; i++) {
+                delta = get_vlc2(gb, gain_vlc_tabs[1].table,
+                                 gain_vlc_tabs[1].bits, 1);
+                chan->gain_data[i].num_points =
+                    (chan->gain_data[i - 1].num_points + delta) & 7;
+            }
+        }
+        break;
+    case 3:
+        if (ch_num) { /* copy data from master channel */
             for (i = 0; i < coded_subbands; i++)
                 chan->gain_data[i].num_points =
-                        get_vlc2(gb, gain_vlc_tabs[0].table,
-                                 gain_vlc_tabs[0].bits, 1);
-            break;
-        case 2:
-            if (ch_num) { /* VLC modulo delta to master channel */
-                for (i = 0; i < coded_subbands; i++) {
-                    delta = get_vlc2(gb, gain_vlc_tabs[1].table,
-                                     gain_vlc_tabs[1].bits, 1);
-                    chan->gain_data[i].num_points =
-                            (ref_chan->gain_data[i].num_points + delta) & 7;
-                }
-            } else { /* VLC modulo delta to previous */
-                chan->gain_data[0].num_points =
-                        get_vlc2(gb, gain_vlc_tabs[0].table,
-                                 gain_vlc_tabs[0].bits, 1);
+                    ref_chan->gain_data[i].num_points;
+        } else { /* shorter delta to min */
+            delta_bits = get_bits(gb, 2);
+            min_val    = get_bits(gb, 3);
 
-                for (i = 1; i < coded_subbands; i++) {
-                    delta = get_vlc2(gb, gain_vlc_tabs[1].table,
-                                     gain_vlc_tabs[1].bits, 1);
-                    chan->gain_data[i].num_points =
-                            (chan->gain_data[i - 1].num_points + delta) & 7;
-                }
+            for (i = 0; i < coded_subbands; i++) {
+                chan->gain_data[i].num_points = min_val + get_bitsz(gb, delta_bits);
+                if (chan->gain_data[i].num_points > 7)
+                    return AVERROR_INVALIDDATA;
             }
-            break;
-        case 3:
-            if (ch_num) { /* copy data from master channel */
-                for (i = 0; i < coded_subbands; i++)
-                    chan->gain_data[i].num_points =
-                            ref_chan->gain_data[i].num_points;
-            } else { /* shorter delta to min */
-                delta_bits = get_bits(gb, 2);
-                min_val = get_bits(gb, 3);
-
-                for (i = 0; i < coded_subbands; i++) {
-                    chan->gain_data[i].num_points = min_val + get_bitsz(gb, delta_bits);
-                    if (chan->gain_data[i].num_points > 7)
-                        return AVERROR_INVALIDDATA;
-                }
-            }
+        }
     }
 
     return 0;
@@ -914,7 +932,8 @@ static int decode_gainc_npoints(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @param[out]   dst   ptr to the output array
  * @param[in]    ref   ptr to the reference channel
  */
-static inline void gainc_level_mode3s(AtracGainInfo *dst, AtracGainInfo *ref) {
+static inline void gainc_level_mode3s(AtracGainInfo *dst, AtracGainInfo *ref)
+{
     int i;
 
     for (i = 0; i < dst->num_points; i++)
@@ -930,7 +949,8 @@ static inline void gainc_level_mode3s(AtracGainInfo *dst, AtracGainInfo *ref) {
  */
 static inline void gainc_level_mode1m(GetBitContext *gb,
                                       Atrac3pChanUnitCtx *ctx,
-                                      AtracGainInfo *dst) {
+                                      AtracGainInfo *dst)
+{
     int i, delta;
 
     if (dst->num_points > 0)
@@ -954,73 +974,74 @@ static inline void gainc_level_mode1m(GetBitContext *gb,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_gainc_levels(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                               int ch_num, int coded_subbands) {
+                               int ch_num, int coded_subbands)
+{
     int sb, i, delta, delta_bits, min_val, pred;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* fixed-length coding */
+    case 0: /* fixed-length coding */
+        for (sb = 0; sb < coded_subbands; sb++)
+            for (i = 0; i < chan->gain_data[sb].num_points; i++)
+                chan->gain_data[sb].lev_code[i] = get_bits(gb, 4);
+        break;
+    case 1:
+        if (ch_num) { /* VLC modulo delta to master channel */
             for (sb = 0; sb < coded_subbands; sb++)
-                for (i = 0; i < chan->gain_data[sb].num_points; i++)
-                    chan->gain_data[sb].lev_code[i] = get_bits(gb, 4);
-            break;
-        case 1:
-            if (ch_num) { /* VLC modulo delta to master channel */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    for (i = 0; i < chan->gain_data[sb].num_points; i++) {
-                        delta = get_vlc2(gb, gain_vlc_tabs[5].table,
-                                         gain_vlc_tabs[5].bits, 1);
-                        pred = (i >= ref_chan->gain_data[sb].num_points)
-                               ? 7 : ref_chan->gain_data[sb].lev_code[i];
-                        chan->gain_data[sb].lev_code[i] = (pred + delta) & 0xF;
-                    }
-            } else { /* VLC modulo delta to previous */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    gainc_level_mode1m(gb, ctx, &chan->gain_data[sb]);
-            }
-            break;
-        case 2:
-            if (ch_num) { /* VLC modulo delta to previous or clone master */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    if (chan->gain_data[sb].num_points > 0) {
-                        if (get_bits1(gb))
-                            gainc_level_mode1m(gb, ctx, &chan->gain_data[sb]);
-                        else
-                            gainc_level_mode3s(&chan->gain_data[sb],
-                                               &ref_chan->gain_data[sb]);
-                    }
-            } else { /* VLC modulo delta to lev_codes of previous subband */
-                if (chan->gain_data[0].num_points > 0)
-                    gainc_level_mode1m(gb, ctx, &chan->gain_data[0]);
+                for (i = 0; i < chan->gain_data[sb].num_points; i++) {
+                    delta = get_vlc2(gb, gain_vlc_tabs[5].table,
+                                     gain_vlc_tabs[5].bits, 1);
+                    pred = (i >= ref_chan->gain_data[sb].num_points)
+                           ? 7 : ref_chan->gain_data[sb].lev_code[i];
+                    chan->gain_data[sb].lev_code[i] = (pred + delta) & 0xF;
+                }
+        } else { /* VLC modulo delta to previous */
+            for (sb = 0; sb < coded_subbands; sb++)
+                gainc_level_mode1m(gb, ctx, &chan->gain_data[sb]);
+        }
+        break;
+    case 2:
+        if (ch_num) { /* VLC modulo delta to previous or clone master */
+            for (sb = 0; sb < coded_subbands; sb++)
+                if (chan->gain_data[sb].num_points > 0) {
+                    if (get_bits1(gb))
+                        gainc_level_mode1m(gb, ctx, &chan->gain_data[sb]);
+                    else
+                        gainc_level_mode3s(&chan->gain_data[sb],
+                                           &ref_chan->gain_data[sb]);
+                }
+        } else { /* VLC modulo delta to lev_codes of previous subband */
+            if (chan->gain_data[0].num_points > 0)
+                gainc_level_mode1m(gb, ctx, &chan->gain_data[0]);
 
-                for (sb = 1; sb < coded_subbands; sb++)
-                    for (i = 0; i < chan->gain_data[sb].num_points; i++) {
-                        delta = get_vlc2(gb, gain_vlc_tabs[4].table,
-                                         gain_vlc_tabs[4].bits, 1);
-                        pred = (i >= chan->gain_data[sb - 1].num_points)
-                               ? 7 : chan->gain_data[sb - 1].lev_code[i];
-                        chan->gain_data[sb].lev_code[i] = (pred + delta) & 0xF;
-                    }
-            }
-            break;
-        case 3:
-            if (ch_num) { /* clone master */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    gainc_level_mode3s(&chan->gain_data[sb],
-                                       &ref_chan->gain_data[sb]);
-            } else { /* shorter delta to min */
-                delta_bits = get_bits(gb, 2);
-                min_val = get_bits(gb, 4);
+            for (sb = 1; sb < coded_subbands; sb++)
+                for (i = 0; i < chan->gain_data[sb].num_points; i++) {
+                    delta = get_vlc2(gb, gain_vlc_tabs[4].table,
+                                     gain_vlc_tabs[4].bits, 1);
+                    pred = (i >= chan->gain_data[sb - 1].num_points)
+                           ? 7 : chan->gain_data[sb - 1].lev_code[i];
+                    chan->gain_data[sb].lev_code[i] = (pred + delta) & 0xF;
+                }
+        }
+        break;
+    case 3:
+        if (ch_num) { /* clone master */
+            for (sb = 0; sb < coded_subbands; sb++)
+                gainc_level_mode3s(&chan->gain_data[sb],
+                                   &ref_chan->gain_data[sb]);
+        } else { /* shorter delta to min */
+            delta_bits = get_bits(gb, 2);
+            min_val    = get_bits(gb, 4);
 
-                for (sb = 0; sb < coded_subbands; sb++)
-                    for (i = 0; i < chan->gain_data[sb].num_points; i++) {
-                        chan->gain_data[sb].lev_code[i] = min_val + get_bitsz(gb, delta_bits);
-                        if (chan->gain_data[sb].lev_code[i] > 15)
-                            return AVERROR_INVALIDDATA;
-                    }
-            }
-            break;
+            for (sb = 0; sb < coded_subbands; sb++)
+                for (i = 0; i < chan->gain_data[sb].num_points; i++) {
+                    chan->gain_data[sb].lev_code[i] = min_val + get_bitsz(gb, delta_bits);
+                    if (chan->gain_data[sb].lev_code[i] > 15)
+                        return AVERROR_INVALIDDATA;
+                }
+        }
+        break;
     }
 
     return 0;
@@ -1035,7 +1056,8 @@ static int decode_gainc_levels(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @param[in]     pos    position of the value to be processed
  */
 static inline void gainc_loc_mode0(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   AtracGainInfo *dst, int pos) {
+                                   AtracGainInfo *dst, int pos)
+{
     int delta_bits;
 
     if (!pos || dst->loc_code[pos - 1] < 15)
@@ -1043,7 +1065,7 @@ static inline void gainc_loc_mode0(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
     else if (dst->loc_code[pos - 1] >= 30)
         dst->loc_code[pos] = 31;
     else {
-        delta_bits = av_log2(30 - dst->loc_code[pos - 1]) + 1;
+        delta_bits         = av_log2(30 - dst->loc_code[pos - 1]) + 1;
         dst->loc_code[pos] = dst->loc_code[pos - 1] +
                              get_bits(gb, delta_bits) + 1;
     }
@@ -1057,7 +1079,8 @@ static inline void gainc_loc_mode0(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @param[out]    dst    ptr to the output array
  */
 static inline void gainc_loc_mode1(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   AtracGainInfo *dst) {
+                                   AtracGainInfo *dst)
+{
     int i;
     VLC *tab;
 
@@ -1068,9 +1091,9 @@ static inline void gainc_loc_mode1(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
         for (i = 1; i < dst->num_points; i++) {
             /* switch VLC according to the curve direction
              * (ascending/descending) */
-            tab = (dst->lev_code[i] <= dst->lev_code[i - 1])
-                  ? &gain_vlc_tabs[7]
-                  : &gain_vlc_tabs[9];
+            tab              = (dst->lev_code[i] <= dst->lev_code[i - 1])
+                               ? &gain_vlc_tabs[7]
+                               : &gain_vlc_tabs[9];
             dst->loc_code[i] = dst->loc_code[i - 1] +
                                get_vlc2(gb, tab->table, tab->bits, 1);
         }
@@ -1089,129 +1112,130 @@ static inline void gainc_loc_mode1(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  */
 static int decode_gainc_loc_codes(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                                   int ch_num, int coded_subbands,
-                                  AVCodecContext *avctx) {
+                                  AVCodecContext *avctx)
+{
     int sb, i, delta, delta_bits, min_val, pred, more_than_ref;
     AtracGainInfo *dst, *ref;
     VLC *tab;
-    Atrac3pChanParams *chan = &ctx->channels[ch_num];
+    Atrac3pChanParams *chan     = &ctx->channels[ch_num];
     Atrac3pChanParams *ref_chan = &ctx->channels[0];
 
     switch (get_bits(gb, 2)) { /* switch according to coding mode */
-        case 0: /* sequence of numbers in ascending order */
-            for (sb = 0; sb < coded_subbands; sb++)
-                for (i = 0; i < chan->gain_data[sb].num_points; i++)
-                    gainc_loc_mode0(gb, ctx, &chan->gain_data[sb], i);
-            break;
-        case 1:
-            if (ch_num) {
-                for (sb = 0; sb < coded_subbands; sb++) {
-                    if (chan->gain_data[sb].num_points <= 0)
-                        continue;
-                    dst = &chan->gain_data[sb];
-                    ref = &ref_chan->gain_data[sb];
+    case 0: /* sequence of numbers in ascending order */
+        for (sb = 0; sb < coded_subbands; sb++)
+            for (i = 0; i < chan->gain_data[sb].num_points; i++)
+                gainc_loc_mode0(gb, ctx, &chan->gain_data[sb], i);
+        break;
+    case 1:
+        if (ch_num) {
+            for (sb = 0; sb < coded_subbands; sb++) {
+                if (chan->gain_data[sb].num_points <= 0)
+                    continue;
+                dst = &chan->gain_data[sb];
+                ref = &ref_chan->gain_data[sb];
 
-                    /* 1st value is vlc-coded modulo delta to master */
-                    delta = get_vlc2(gb, gain_vlc_tabs[10].table,
-                                     gain_vlc_tabs[10].bits, 1);
-                    pred = ref->num_points > 0 ? ref->loc_code[0] : 0;
-                    dst->loc_code[0] = (pred + delta) & 0x1F;
+                /* 1st value is vlc-coded modulo delta to master */
+                delta = get_vlc2(gb, gain_vlc_tabs[10].table,
+                                 gain_vlc_tabs[10].bits, 1);
+                pred = ref->num_points > 0 ? ref->loc_code[0] : 0;
+                dst->loc_code[0] = (pred + delta) & 0x1F;
 
-                    for (i = 1; i < dst->num_points; i++) {
-                        more_than_ref = i >= ref->num_points;
-                        if (dst->lev_code[i] > dst->lev_code[i - 1]) {
-                            /* ascending curve */
-                            if (more_than_ref) {
-                                delta =
-                                        get_vlc2(gb, gain_vlc_tabs[9].table,
-                                                 gain_vlc_tabs[9].bits, 1);
-                                dst->loc_code[i] = dst->loc_code[i - 1] + delta;
-                            } else {
-                                if (get_bits1(gb))
-                                    gainc_loc_mode0(gb, ctx, dst, i);  // direct coding
-                                else
-                                    dst->loc_code[i] = ref->loc_code[i];  // clone master
-                            }
-                        } else { /* descending curve */
-                            tab = more_than_ref ? &gain_vlc_tabs[7]
-                                                : &gain_vlc_tabs[10];
-                            delta = get_vlc2(gb, tab->table, tab->bits, 1);
-                            if (more_than_ref)
-                                dst->loc_code[i] = dst->loc_code[i - 1] + delta;
+                for (i = 1; i < dst->num_points; i++) {
+                    more_than_ref = i >= ref->num_points;
+                    if (dst->lev_code[i] > dst->lev_code[i - 1]) {
+                        /* ascending curve */
+                        if (more_than_ref) {
+                            delta =
+                                get_vlc2(gb, gain_vlc_tabs[9].table,
+                                         gain_vlc_tabs[9].bits, 1);
+                            dst->loc_code[i] = dst->loc_code[i - 1] + delta;
+                        } else {
+                            if (get_bits1(gb))
+                                gainc_loc_mode0(gb, ctx, dst, i);  // direct coding
                             else
-                                dst->loc_code[i] = (ref->loc_code[i] + delta) & 0x1F;
+                                dst->loc_code[i] = ref->loc_code[i];  // clone master
                         }
-                    }
-                }
-            } else /* VLC delta to previous */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    gainc_loc_mode1(gb, ctx, &chan->gain_data[sb]);
-            break;
-        case 2:
-            if (ch_num) {
-                for (sb = 0; sb < coded_subbands; sb++) {
-                    if (chan->gain_data[sb].num_points <= 0)
-                        continue;
-                    dst = &chan->gain_data[sb];
-                    ref = &ref_chan->gain_data[sb];
-                    if (dst->num_points > ref->num_points || get_bits1(gb))
-                        gainc_loc_mode1(gb, ctx, dst);
-                    else /* clone master for the whole subband */
-                        for (i = 0; i < chan->gain_data[sb].num_points; i++)
-                            dst->loc_code[i] = ref->loc_code[i];
-                }
-            } else {
-                /* data for the first subband is coded directly */
-                for (i = 0; i < chan->gain_data[0].num_points; i++)
-                    gainc_loc_mode0(gb, ctx, &chan->gain_data[0], i);
-
-                for (sb = 1; sb < coded_subbands; sb++) {
-                    if (chan->gain_data[sb].num_points <= 0)
-                        continue;
-                    dst = &chan->gain_data[sb];
-
-                    /* 1st value is vlc-coded modulo delta to the corresponding
-                     * value of the previous subband if any or zero */
-                    delta = get_vlc2(gb, gain_vlc_tabs[6].table,
-                                     gain_vlc_tabs[6].bits, 1);
-                    pred = dst[-1].num_points > 0
-                           ? dst[-1].loc_code[0] : 0;
-                    dst->loc_code[0] = (pred + delta) & 0x1F;
-
-                    for (i = 1; i < dst->num_points; i++) {
-                        more_than_ref = i >= dst[-1].num_points;
-                        /* Select VLC table according to curve direction and
-                         * presence of prediction. */
-                        tab = &gain_vlc_tabs[(dst->lev_code[i] > dst->lev_code[i - 1]) *
-                                             2 + more_than_ref + 6];
+                    } else { /* descending curve */
+                        tab   = more_than_ref ? &gain_vlc_tabs[7]
+                                              : &gain_vlc_tabs[10];
                         delta = get_vlc2(gb, tab->table, tab->bits, 1);
                         if (more_than_ref)
                             dst->loc_code[i] = dst->loc_code[i - 1] + delta;
                         else
-                            dst->loc_code[i] = (dst[-1].loc_code[i] + delta) & 0x1F;
+                            dst->loc_code[i] = (ref->loc_code[i] + delta) & 0x1F;
                     }
                 }
             }
-            break;
-        case 3:
-            if (ch_num) { /* clone master or direct or direct coding */
-                for (sb = 0; sb < coded_subbands; sb++)
-                    for (i = 0; i < chan->gain_data[sb].num_points; i++) {
-                        if (i >= ref_chan->gain_data[sb].num_points)
-                            gainc_loc_mode0(gb, ctx, &chan->gain_data[sb], i);
-                        else
-                            chan->gain_data[sb].loc_code[i] =
-                                    ref_chan->gain_data[sb].loc_code[i];
-                    }
-            } else { /* shorter delta to min */
-                delta_bits = get_bits(gb, 2) + 1;
-                min_val = get_bits(gb, 5);
-
-                for (sb = 0; sb < coded_subbands; sb++)
+        } else /* VLC delta to previous */
+            for (sb = 0; sb < coded_subbands; sb++)
+                gainc_loc_mode1(gb, ctx, &chan->gain_data[sb]);
+        break;
+    case 2:
+        if (ch_num) {
+            for (sb = 0; sb < coded_subbands; sb++) {
+                if (chan->gain_data[sb].num_points <= 0)
+                    continue;
+                dst = &chan->gain_data[sb];
+                ref = &ref_chan->gain_data[sb];
+                if (dst->num_points > ref->num_points || get_bits1(gb))
+                    gainc_loc_mode1(gb, ctx, dst);
+                else /* clone master for the whole subband */
                     for (i = 0; i < chan->gain_data[sb].num_points; i++)
-                        chan->gain_data[sb].loc_code[i] = min_val + i +
-                                                          get_bits(gb, delta_bits);
+                        dst->loc_code[i] = ref->loc_code[i];
             }
-            break;
+        } else {
+            /* data for the first subband is coded directly */
+            for (i = 0; i < chan->gain_data[0].num_points; i++)
+                gainc_loc_mode0(gb, ctx, &chan->gain_data[0], i);
+
+            for (sb = 1; sb < coded_subbands; sb++) {
+                if (chan->gain_data[sb].num_points <= 0)
+                    continue;
+                dst = &chan->gain_data[sb];
+
+                /* 1st value is vlc-coded modulo delta to the corresponding
+                 * value of the previous subband if any or zero */
+                delta = get_vlc2(gb, gain_vlc_tabs[6].table,
+                                 gain_vlc_tabs[6].bits, 1);
+                pred             = dst[-1].num_points > 0
+                                   ? dst[-1].loc_code[0] : 0;
+                dst->loc_code[0] = (pred + delta) & 0x1F;
+
+                for (i = 1; i < dst->num_points; i++) {
+                    more_than_ref = i >= dst[-1].num_points;
+                    /* Select VLC table according to curve direction and
+                     * presence of prediction. */
+                    tab = &gain_vlc_tabs[(dst->lev_code[i] > dst->lev_code[i - 1]) *
+                                                   2 + more_than_ref + 6];
+                    delta = get_vlc2(gb, tab->table, tab->bits, 1);
+                    if (more_than_ref)
+                        dst->loc_code[i] = dst->loc_code[i - 1] + delta;
+                    else
+                        dst->loc_code[i] = (dst[-1].loc_code[i] + delta) & 0x1F;
+                }
+            }
+        }
+        break;
+    case 3:
+        if (ch_num) { /* clone master or direct or direct coding */
+            for (sb = 0; sb < coded_subbands; sb++)
+                for (i = 0; i < chan->gain_data[sb].num_points; i++) {
+                    if (i >= ref_chan->gain_data[sb].num_points)
+                        gainc_loc_mode0(gb, ctx, &chan->gain_data[sb], i);
+                    else
+                        chan->gain_data[sb].loc_code[i] =
+                            ref_chan->gain_data[sb].loc_code[i];
+                }
+        } else { /* shorter delta to min */
+            delta_bits = get_bits(gb, 2) + 1;
+            min_val    = get_bits(gb, 5);
+
+            for (sb = 0; sb < coded_subbands; sb++)
+                for (i = 0; i < chan->gain_data[sb].num_points; i++)
+                    chan->gain_data[sb].loc_code[i] = min_val + i +
+                                                      get_bits(gb, delta_bits);
+        }
+        break;
     }
 
     /* Validate decoded information */
@@ -1241,7 +1265,8 @@ static int decode_gainc_loc_codes(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_gainc_data(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                             int num_channels, AVCodecContext *avctx) {
+                             int num_channels, AVCodecContext *avctx)
+{
     int ch_num, coded_subbands, sb, ret;
 
     for (ch_num = 0; ch_num < num_channels; ch_num++) {
@@ -1256,14 +1281,14 @@ static int decode_gainc_data(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                 ctx->channels[ch_num].num_gain_subbands = coded_subbands;
 
             if ((ret = decode_gainc_npoints(gb, ctx, ch_num, coded_subbands)) < 0 ||
-                (ret = decode_gainc_levels(gb, ctx, ch_num, coded_subbands)) < 0 ||
+                (ret = decode_gainc_levels(gb, ctx, ch_num, coded_subbands))  < 0 ||
                 (ret = decode_gainc_loc_codes(gb, ctx, ch_num, coded_subbands, avctx)) < 0)
                 return ret;
 
             if (coded_subbands > 0) { /* propagate gain data if requested */
                 for (sb = coded_subbands; sb < ctx->channels[ch_num].num_gain_subbands; sb++)
                     ctx->channels[ch_num].gain_data[sb] =
-                            ctx->channels[ch_num].gain_data[sb - 1];
+                        ctx->channels[ch_num].gain_data[sb - 1];
             }
         } else {
             ctx->channels[ch_num].num_gain_subbands = 0;
@@ -1283,7 +1308,8 @@ static int decode_gainc_data(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  *                                  1 - tone data present
  */
 static void decode_tones_envelope(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                  int ch_num, int band_has_tones[]) {
+                                  int ch_num, int band_has_tones[])
+{
     int sb;
     Atrac3pWavesData *dst = ctx->channels[ch_num].tones_info;
     Atrac3pWavesData *ref = ctx->channels[0].tones_info;
@@ -1293,20 +1319,20 @@ static void decode_tones_envelope(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
             if (!band_has_tones[sb])
                 continue;
             dst[sb].pend_env.has_start_point = get_bits1(gb);
-            dst[sb].pend_env.start_pos = dst[sb].pend_env.has_start_point
-                                         ? get_bits(gb, 5) : -1;
-            dst[sb].pend_env.has_stop_point = get_bits1(gb);
-            dst[sb].pend_env.stop_pos = dst[sb].pend_env.has_stop_point
-                                        ? get_bits(gb, 5) : 32;
+            dst[sb].pend_env.start_pos       = dst[sb].pend_env.has_start_point
+                                               ? get_bits(gb, 5) : -1;
+            dst[sb].pend_env.has_stop_point  = get_bits1(gb);
+            dst[sb].pend_env.stop_pos        = dst[sb].pend_env.has_stop_point
+                                               ? get_bits(gb, 5) : 32;
         }
     } else { /* mode 1(slave only): copy master */
         for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
             if (!band_has_tones[sb])
                 continue;
             dst[sb].pend_env.has_start_point = ref[sb].pend_env.has_start_point;
-            dst[sb].pend_env.has_stop_point = ref[sb].pend_env.has_stop_point;
-            dst[sb].pend_env.start_pos = ref[sb].pend_env.start_pos;
-            dst[sb].pend_env.stop_pos = ref[sb].pend_env.stop_pos;
+            dst[sb].pend_env.has_stop_point  = ref[sb].pend_env.has_stop_point;
+            dst[sb].pend_env.start_pos       = ref[sb].pend_env.start_pos;
+            dst[sb].pend_env.stop_pos        = ref[sb].pend_env.stop_pos;
         }
     }
 }
@@ -1324,39 +1350,40 @@ static void decode_tones_envelope(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  */
 static int decode_band_numwavs(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                                int ch_num, int band_has_tones[],
-                               AVCodecContext *avctx) {
+                               AVCodecContext *avctx)
+{
     int mode, sb, delta;
     Atrac3pWavesData *dst = ctx->channels[ch_num].tones_info;
     Atrac3pWavesData *ref = ctx->channels[0].tones_info;
 
     mode = get_bits(gb, ch_num + 1);
     switch (mode) {
-        case 0: /** fixed-length coding */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
-                if (band_has_tones[sb])
-                    dst[sb].num_wavs = get_bits(gb, 4);
-            break;
-        case 1: /** variable-length coding */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
-                if (band_has_tones[sb])
-                    dst[sb].num_wavs =
-                            get_vlc2(gb, tone_vlc_tabs[1].table,
-                                     tone_vlc_tabs[1].bits, 1);
-            break;
-        case 2: /** VLC modulo delta to master (slave only) */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
-                if (band_has_tones[sb]) {
-                    delta = get_vlc2(gb, tone_vlc_tabs[2].table,
-                                     tone_vlc_tabs[2].bits, 1);
-                    delta = sign_extend(delta, 3);
-                    dst[sb].num_wavs = (ref[sb].num_wavs + delta) & 0xF;
-                }
-            break;
-        case 3: /** copy master (slave only) */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
-                if (band_has_tones[sb])
-                    dst[sb].num_wavs = ref[sb].num_wavs;
-            break;
+    case 0: /** fixed-length coding */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
+            if (band_has_tones[sb])
+                dst[sb].num_wavs = get_bits(gb, 4);
+        break;
+    case 1: /** variable-length coding */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
+            if (band_has_tones[sb])
+                dst[sb].num_wavs =
+                    get_vlc2(gb, tone_vlc_tabs[1].table,
+                             tone_vlc_tabs[1].bits, 1);
+        break;
+    case 2: /** VLC modulo delta to master (slave only) */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
+            if (band_has_tones[sb]) {
+                delta = get_vlc2(gb, tone_vlc_tabs[2].table,
+                                 tone_vlc_tabs[2].bits, 1);
+                delta = sign_extend(delta, 3);
+                dst[sb].num_wavs = (ref[sb].num_wavs + delta) & 0xF;
+            }
+        break;
+    case 3: /** copy master (slave only) */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++)
+            if (band_has_tones[sb])
+                dst[sb].num_wavs = ref[sb].num_wavs;
+        break;
     }
 
     /** initialize start tone index for each subband */
@@ -1369,7 +1396,7 @@ static int decode_band_numwavs(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                        avctx->frame_number);
                 return AVERROR_INVALIDDATA;
             }
-            dst[sb].start_index = ctx->waves_info->tones_index;
+            dst[sb].start_index           = ctx->waves_info->tones_index;
             ctx->waves_info->tones_index += dst[sb].num_wavs;
         }
 
@@ -1386,7 +1413,8 @@ static int decode_band_numwavs(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  *                                  1 - tone data present
  */
 static void decode_tones_frequency(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   int ch_num, int band_has_tones[]) {
+                                   int ch_num, int band_has_tones[])
+{
     int sb, i, direction, nbits, pred, delta;
     Atrac3pWaveParam *iwav, *owav;
     Atrac3pWavesData *dst = ctx->channels[ch_num].tones_info;
@@ -1396,13 +1424,13 @@ static void decode_tones_frequency(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
         for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
             if (!band_has_tones[sb] || !dst[sb].num_wavs)
                 continue;
-            iwav = &ctx->waves_info->waves[dst[sb].start_index];
+            iwav      = &ctx->waves_info->waves[dst[sb].start_index];
             direction = (dst[sb].num_wavs > 1) ? get_bits1(gb) : 0;
             if (direction) { /** packed numbers in descending order */
                 if (dst[sb].num_wavs)
                     iwav[dst[sb].num_wavs - 1].freq_index = get_bits(gb, 10);
-                for (i = dst[sb].num_wavs - 2; i >= 0; i--) {
-                    nbits = av_log2(iwav[i + 1].freq_index) + 1;
+                for (i = dst[sb].num_wavs - 2; i >= 0 ; i--) {
+                    nbits = av_log2(iwav[i+1].freq_index) + 1;
                     iwav[i].freq_index = get_bits(gb, nbits);
                 }
             } else { /** packed numbers in ascending order */
@@ -1427,8 +1455,8 @@ static void decode_tones_frequency(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                 delta = get_vlc2(gb, tone_vlc_tabs[6].table,
                                  tone_vlc_tabs[6].bits, 1);
                 delta = sign_extend(delta, 8);
-                pred = (i < ref[sb].num_wavs) ? iwav[i].freq_index :
-                       (ref[sb].num_wavs ? iwav[ref[sb].num_wavs - 1].freq_index : 0);
+                pred  = (i < ref[sb].num_wavs) ? iwav[i].freq_index :
+                        (ref[sb].num_wavs ? iwav[ref[sb].num_wavs - 1].freq_index : 0);
                 owav[i].freq_index = (pred + delta) & 0x3FF;
             }
         }
@@ -1445,10 +1473,11 @@ static void decode_tones_frequency(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  *                                  1 - tone data present
  */
 static void decode_tones_amplitude(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   int ch_num, int band_has_tones[]) {
+                                   int ch_num, int band_has_tones[])
+{
     int mode, sb, j, i, diff, maxdiff, fi, delta, pred;
     Atrac3pWaveParam *wsrc, *wref;
-    int refwaves[48] = {0};
+    int refwaves[48] = { 0 };
     Atrac3pWavesData *dst = ctx->channels[ch_num].tones_info;
     Atrac3pWavesData *ref = ctx->channels[0].tones_info;
 
@@ -1463,7 +1492,7 @@ static void decode_tones_amplitude(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
                     diff = FFABS(wsrc[j].freq_index - wref[i].freq_index);
                     if (diff < maxdiff) {
                         maxdiff = diff;
-                        fi = i;
+                        fi      = i;
                     }
                 }
 
@@ -1480,57 +1509,57 @@ static void decode_tones_amplitude(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
     mode = get_bits(gb, ch_num + 1);
 
     switch (mode) {
-        case 0: /** fixed-length coding */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
-                if (!band_has_tones[sb] || !dst[sb].num_wavs)
-                    continue;
-                if (ctx->waves_info->amplitude_mode)
-                    for (i = 0; i < dst[sb].num_wavs; i++)
-                        ctx->waves_info->waves[dst[sb].start_index + i].amp_sf = get_bits(gb, 6);
-                else
-                    ctx->waves_info->waves[dst[sb].start_index].amp_sf = get_bits(gb, 6);
-            }
-            break;
-        case 1: /** min + VLC delta */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
-                if (!band_has_tones[sb] || !dst[sb].num_wavs)
-                    continue;
-                if (ctx->waves_info->amplitude_mode)
-                    for (i = 0; i < dst[sb].num_wavs; i++)
-                        ctx->waves_info->waves[dst[sb].start_index + i].amp_sf =
-                                get_vlc2(gb, tone_vlc_tabs[3].table,
-                                         tone_vlc_tabs[3].bits, 1) + 20;
-                else
-                    ctx->waves_info->waves[dst[sb].start_index].amp_sf =
-                            get_vlc2(gb, tone_vlc_tabs[4].table,
-                                     tone_vlc_tabs[4].bits, 1) + 24;
-            }
-            break;
-        case 2: /** VLC modulo delta to master (slave only) */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
-                if (!band_has_tones[sb] || !dst[sb].num_wavs)
-                    continue;
-                for (i = 0; i < dst[sb].num_wavs; i++) {
-                    delta = get_vlc2(gb, tone_vlc_tabs[5].table,
-                                     tone_vlc_tabs[5].bits, 1);
-                    delta = sign_extend(delta, 5);
-                    pred = refwaves[dst[sb].start_index + i] >= 0 ?
-                           ctx->waves_info->waves[refwaves[dst[sb].start_index + i]].amp_sf : 34;
-                    ctx->waves_info->waves[dst[sb].start_index + i].amp_sf = (pred + delta) & 0x3F;
-                }
-            }
-            break;
-        case 3: /** clone master (slave only) */
-            for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
-                if (!band_has_tones[sb])
-                    continue;
+    case 0: /** fixed-length coding */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
+            if (!band_has_tones[sb] || !dst[sb].num_wavs)
+                continue;
+            if (ctx->waves_info->amplitude_mode)
+                for (i = 0; i < dst[sb].num_wavs; i++)
+                    ctx->waves_info->waves[dst[sb].start_index + i].amp_sf = get_bits(gb, 6);
+            else
+                ctx->waves_info->waves[dst[sb].start_index].amp_sf = get_bits(gb, 6);
+        }
+        break;
+    case 1: /** min + VLC delta */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
+            if (!band_has_tones[sb] || !dst[sb].num_wavs)
+                continue;
+            if (ctx->waves_info->amplitude_mode)
                 for (i = 0; i < dst[sb].num_wavs; i++)
                     ctx->waves_info->waves[dst[sb].start_index + i].amp_sf =
-                            refwaves[dst[sb].start_index + i] >= 0
-                            ? ctx->waves_info->waves[refwaves[dst[sb].start_index + i]].amp_sf
-                            : 32;
+                        get_vlc2(gb, tone_vlc_tabs[3].table,
+                                 tone_vlc_tabs[3].bits, 1) + 20;
+            else
+                ctx->waves_info->waves[dst[sb].start_index].amp_sf =
+                    get_vlc2(gb, tone_vlc_tabs[4].table,
+                             tone_vlc_tabs[4].bits, 1) + 24;
+        }
+        break;
+    case 2: /** VLC modulo delta to master (slave only) */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
+            if (!band_has_tones[sb] || !dst[sb].num_wavs)
+                continue;
+            for (i = 0; i < dst[sb].num_wavs; i++) {
+                delta = get_vlc2(gb, tone_vlc_tabs[5].table,
+                                 tone_vlc_tabs[5].bits, 1);
+                delta = sign_extend(delta, 5);
+                pred  = refwaves[dst[sb].start_index + i] >= 0 ?
+                        ctx->waves_info->waves[refwaves[dst[sb].start_index + i]].amp_sf : 34;
+                ctx->waves_info->waves[dst[sb].start_index + i].amp_sf = (pred + delta) & 0x3F;
             }
-            break;
+        }
+        break;
+    case 3: /** clone master (slave only) */
+        for (sb = 0; sb < ctx->waves_info->num_tone_bands; sb++) {
+            if (!band_has_tones[sb])
+                continue;
+            for (i = 0; i < dst[sb].num_wavs; i++)
+                ctx->waves_info->waves[dst[sb].start_index + i].amp_sf =
+                    refwaves[dst[sb].start_index + i] >= 0
+                    ? ctx->waves_info->waves[refwaves[dst[sb].start_index + i]].amp_sf
+                    : 32;
+        }
+        break;
     }
 }
 
@@ -1544,7 +1573,8 @@ static void decode_tones_amplitude(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  *                                  1 - tone data present
  */
 static void decode_tones_phase(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                               int ch_num, int band_has_tones[]) {
+                               int ch_num, int band_has_tones[])
+{
     int sb, i;
     Atrac3pWaveParam *wparam;
     Atrac3pWavesData *dst = ctx->channels[ch_num].tones_info;
@@ -1568,7 +1598,8 @@ static void decode_tones_phase(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
  * @return result code: 0 = OK, otherwise - error code
  */
 static int decode_tones_info(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                             int num_channels, AVCodecContext *avctx) {
+                             int num_channels, AVCodecContext *avctx)
+{
     int ch_num, i, ret;
     int band_has_tones[16];
 
@@ -1589,12 +1620,12 @@ static int decode_tones_info(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
     }
 
     ctx->waves_info->num_tone_bands =
-            get_vlc2(gb, tone_vlc_tabs[0].table,
-                     tone_vlc_tabs[0].bits, 1) + 1;
+        get_vlc2(gb, tone_vlc_tabs[0].table,
+                 tone_vlc_tabs[0].bits, 1) + 1;
 
     if (num_channels == 2) {
         get_subband_flags(gb, ctx->waves_info->tone_sharing, ctx->waves_info->num_tone_bands);
-        get_subband_flags(gb, ctx->waves_info->tone_master, ctx->waves_info->num_tone_bands);
+        get_subband_flags(gb, ctx->waves_info->tone_master,  ctx->waves_info->num_tone_bands);
         get_subband_flags(gb, ctx->waves_info->invert_phase, ctx->waves_info->num_tone_bands);
     }
 
@@ -1629,7 +1660,8 @@ static int decode_tones_info(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
 }
 
 int ff_atrac3p_decode_channel_unit(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
-                                   int num_channels, AVCodecContext *avctx) {
+                                   int num_channels, AVCodecContext *avctx)
+{
     int ret;
 
     /* parse sound header */
@@ -1647,7 +1679,7 @@ int ff_atrac3p_decode_channel_unit(GetBitContext *gb, Atrac3pChanUnitCtx *ctx,
     if ((ret = decode_quant_wordlen(gb, ctx, num_channels, avctx)) < 0)
         return ret;
 
-    ctx->num_subbands = atrac3p_qu_to_subband[ctx->num_quant_units - 1] + 1;
+    ctx->num_subbands       = atrac3p_qu_to_subband[ctx->num_quant_units - 1] + 1;
     ctx->num_coded_subbands = ctx->used_quant_units
                               ? atrac3p_qu_to_subband[ctx->used_quant_units - 1] + 1
                               : 0;

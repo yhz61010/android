@@ -21,7 +21,8 @@
 #include "libavutil/mips/cpu.h"
 #include "libavcodec/mips/hevcdsp_mips.h"
 
-void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
+void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
@@ -229,21 +230,21 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->put_hevc_epel_uni[7][1][1] = ff_hevc_put_hevc_uni_epel_hv32_8_msa;
 
             c->put_hevc_qpel_uni_w[1][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels4_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels4_8_msa;
             c->put_hevc_qpel_uni_w[3][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels8_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels8_8_msa;
             c->put_hevc_qpel_uni_w[4][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels12_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels12_8_msa;
             c->put_hevc_qpel_uni_w[5][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels16_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels16_8_msa;
             c->put_hevc_qpel_uni_w[6][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels24_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels24_8_msa;
             c->put_hevc_qpel_uni_w[7][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels32_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels32_8_msa;
             c->put_hevc_qpel_uni_w[8][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels48_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels48_8_msa;
             c->put_hevc_qpel_uni_w[9][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels64_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels64_8_msa;
 
             c->put_hevc_qpel_uni_w[1][0][1] = ff_hevc_put_hevc_uni_w_qpel_h4_8_msa;
             c->put_hevc_qpel_uni_w[3][0][1] = ff_hevc_put_hevc_uni_w_qpel_h8_8_msa;
@@ -266,32 +267,32 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->put_hevc_qpel_uni_w[1][1][1] = ff_hevc_put_hevc_uni_w_qpel_hv4_8_msa;
             c->put_hevc_qpel_uni_w[3][1][1] = ff_hevc_put_hevc_uni_w_qpel_hv8_8_msa;
             c->put_hevc_qpel_uni_w[4][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv12_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv12_8_msa;
             c->put_hevc_qpel_uni_w[5][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv16_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv16_8_msa;
             c->put_hevc_qpel_uni_w[6][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv24_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv24_8_msa;
             c->put_hevc_qpel_uni_w[7][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv32_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv32_8_msa;
             c->put_hevc_qpel_uni_w[8][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv48_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv48_8_msa;
             c->put_hevc_qpel_uni_w[9][1][1] =
-                    ff_hevc_put_hevc_uni_w_qpel_hv64_8_msa;
+                ff_hevc_put_hevc_uni_w_qpel_hv64_8_msa;
 
             c->put_hevc_epel_uni_w[1][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels4_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels4_8_msa;
             c->put_hevc_epel_uni_w[2][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels6_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels6_8_msa;
             c->put_hevc_epel_uni_w[3][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels8_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels8_8_msa;
             c->put_hevc_epel_uni_w[4][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels12_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels12_8_msa;
             c->put_hevc_epel_uni_w[5][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels16_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels16_8_msa;
             c->put_hevc_epel_uni_w[6][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels24_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels24_8_msa;
             c->put_hevc_epel_uni_w[7][0][0] =
-                    ff_hevc_put_hevc_uni_w_pel_pixels32_8_msa;
+                ff_hevc_put_hevc_uni_w_pel_pixels32_8_msa;
 
             c->put_hevc_epel_uni_w[1][0][1] = ff_hevc_put_hevc_uni_w_epel_h4_8_msa;
             c->put_hevc_epel_uni_w[2][0][1] = ff_hevc_put_hevc_uni_w_epel_h6_8_msa;
@@ -313,13 +314,13 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->put_hevc_epel_uni_w[2][1][1] = ff_hevc_put_hevc_uni_w_epel_hv6_8_msa;
             c->put_hevc_epel_uni_w[3][1][1] = ff_hevc_put_hevc_uni_w_epel_hv8_8_msa;
             c->put_hevc_epel_uni_w[4][1][1] =
-                    ff_hevc_put_hevc_uni_w_epel_hv12_8_msa;
+                ff_hevc_put_hevc_uni_w_epel_hv12_8_msa;
             c->put_hevc_epel_uni_w[5][1][1] =
-                    ff_hevc_put_hevc_uni_w_epel_hv16_8_msa;
+                ff_hevc_put_hevc_uni_w_epel_hv16_8_msa;
             c->put_hevc_epel_uni_w[6][1][1] =
-                    ff_hevc_put_hevc_uni_w_epel_hv24_8_msa;
+                ff_hevc_put_hevc_uni_w_epel_hv24_8_msa;
             c->put_hevc_epel_uni_w[7][1][1] =
-                    ff_hevc_put_hevc_uni_w_epel_hv32_8_msa;
+                ff_hevc_put_hevc_uni_w_epel_hv32_8_msa;
 
             c->put_hevc_qpel_bi[1][0][0] = ff_hevc_put_hevc_bi_pel_pixels4_8_msa;
             c->put_hevc_qpel_bi[3][0][0] = ff_hevc_put_hevc_bi_pel_pixels8_8_msa;
@@ -390,21 +391,21 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->put_hevc_epel_bi[7][1][1] = ff_hevc_put_hevc_bi_epel_hv32_8_msa;
 
             c->put_hevc_qpel_bi_w[1][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels4_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels4_8_msa;
             c->put_hevc_qpel_bi_w[3][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels8_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels8_8_msa;
             c->put_hevc_qpel_bi_w[4][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels12_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels12_8_msa;
             c->put_hevc_qpel_bi_w[5][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels16_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels16_8_msa;
             c->put_hevc_qpel_bi_w[6][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels24_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels24_8_msa;
             c->put_hevc_qpel_bi_w[7][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels32_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels32_8_msa;
             c->put_hevc_qpel_bi_w[8][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels48_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels48_8_msa;
             c->put_hevc_qpel_bi_w[9][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels64_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels64_8_msa;
 
             c->put_hevc_qpel_bi_w[1][0][1] = ff_hevc_put_hevc_bi_w_qpel_h4_8_msa;
             c->put_hevc_qpel_bi_w[3][0][1] = ff_hevc_put_hevc_bi_w_qpel_h8_8_msa;
@@ -434,19 +435,19 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->put_hevc_qpel_bi_w[9][1][1] = ff_hevc_put_hevc_bi_w_qpel_hv64_8_msa;
 
             c->put_hevc_epel_bi_w[1][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels4_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels4_8_msa;
             c->put_hevc_epel_bi_w[2][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels6_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels6_8_msa;
             c->put_hevc_epel_bi_w[3][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels8_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels8_8_msa;
             c->put_hevc_epel_bi_w[4][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels12_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels12_8_msa;
             c->put_hevc_epel_bi_w[5][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels16_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels16_8_msa;
             c->put_hevc_epel_bi_w[6][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels24_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels24_8_msa;
             c->put_hevc_epel_bi_w[7][0][0] =
-                    ff_hevc_put_hevc_bi_w_pel_pixels32_8_msa;
+                ff_hevc_put_hevc_bi_w_pel_pixels32_8_msa;
 
             c->put_hevc_epel_bi_w[1][0][1] = ff_hevc_put_hevc_bi_w_epel_h4_8_msa;
             c->put_hevc_epel_bi_w[2][0][1] = ff_hevc_put_hevc_bi_w_epel_h6_8_msa;
@@ -494,9 +495,9 @@ void ff_hevc_dsp_init_mips(HEVCDSPContext *c, const int bit_depth) {
             c->hevc_v_loop_filter_luma_c = ff_hevc_loop_filter_luma_v_8_msa;
 
             c->hevc_h_loop_filter_chroma_c =
-                    ff_hevc_loop_filter_chroma_h_8_msa;
+                ff_hevc_loop_filter_chroma_h_8_msa;
             c->hevc_v_loop_filter_chroma_c =
-                    ff_hevc_loop_filter_chroma_v_8_msa;
+                ff_hevc_loop_filter_chroma_v_8_msa;
 
             c->idct[0] = ff_hevc_idct_4x4_msa;
             c->idct[1] = ff_hevc_idct_8x8_msa;

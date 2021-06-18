@@ -24,7 +24,8 @@
 #include "libavcodec/vc1dsp.h"
 #include "vc1dsp.h"
 
-av_cold void ff_vc1dsp_init_arm(VC1DSPContext *dsp) {
+av_cold void ff_vc1dsp_init_arm(VC1DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #if HAVE_ARMV6

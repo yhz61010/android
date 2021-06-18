@@ -106,7 +106,8 @@ static VLC sf_vlc[2][8];            /* Signed/unsigned, length */
 static VLC coeff_vlc[2][8][4];      /* Cookbook, precision, cookbook index */
 
 static inline int parse_gradient(ATRAC9Context *s, ATRAC9BlockData *b,
-                                 GetBitContext *gb) {
+                                 GetBitContext *gb)
+{
     int grad_range[2];
     int grad_value[2];
     int values, sign, base;
@@ -133,23 +134,24 @@ static inline int parse_gradient(ATRAC9Context *s, ATRAC9BlockData *b,
     if (b->grad_boundary > b->q_unit_cnt)
         return AVERROR_INVALIDDATA;
 
-    values = grad_value[1] - grad_value[0];
-    sign = 1 - 2 * (values < 0);
-    base = grad_value[0] + sign;
-    scale = (FFABS(values) - 1) / 31.0f;
-    curve = s->alloc_curve[grad_range[1] - grad_range[0] - 1];
+    values    = grad_value[1] - grad_value[0];
+    sign      = 1 - 2*(values < 0);
+    base      = grad_value[0] + sign;
+    scale     = (FFABS(values) - 1) / 31.0f;
+    curve     = s->alloc_curve[grad_range[1] - grad_range[0] - 1];
 
     for (int i = 0; i <= b->q_unit_cnt; i++)
         b->gradient[i] = grad_value[i >= grad_range[0]];
 
     for (int i = grad_range[0]; i < grad_range[1]; i++)
-        b->gradient[i] = base + sign * ((int) (scale * curve[i - grad_range[0]]));
+        b->gradient[i] = base + sign*((int)(scale*curve[i - grad_range[0]]));
 
     return 0;
 }
 
 static inline void calc_precision(ATRAC9Context *s, ATRAC9BlockData *b,
-                                  ATRAC9ChannelData *c) {
+                                  ATRAC9ChannelData *c)
+{
     memset(c->precision_mask, 0, sizeof(c->precision_mask));
     for (int i = 1; i < b->q_unit_cnt; i++) {
         const int delta = FFABS(c->scalefactors[i] - c->scalefactors[i - 1]) - 1;
@@ -166,15 +168,15 @@ static inline void calc_precision(ATRAC9Context *s, ATRAC9BlockData *b,
             if (c->precision_coarse[i] < 0)
                 continue;
             switch (b->grad_mode) {
-                case 1:
-                    c->precision_coarse[i] >>= 1;
-                    break;
-                case 2:
-                    c->precision_coarse[i] = (3 * c->precision_coarse[i]) >> 3;
-                    break;
-                case 3:
-                    c->precision_coarse[i] >>= 2;
-                    break;
+            case 1:
+                c->precision_coarse[i] >>= 1;
+                break;
+            case 2:
+                c->precision_coarse[i] = (3 * c->precision_coarse[i]) >> 3;
+                break;
+            case 3:
+                c->precision_coarse[i] >>= 2;
+                break;
             }
         }
     } else {
@@ -199,7 +201,8 @@ static inline void calc_precision(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline int parse_band_ext(ATRAC9Context *s, ATRAC9BlockData *b,
-                                 GetBitContext *gb, int stereo) {
+                                 GetBitContext *gb, int stereo)
+{
     int ext_band = 0;
 
     if (b->has_band_ext) {
@@ -254,9 +257,9 @@ static inline int parse_band_ext(ATRAC9Context *s, ATRAC9BlockData *b,
 
 static inline int read_scalefactors(ATRAC9Context *s, ATRAC9BlockData *b,
                                     ATRAC9ChannelData *c, GetBitContext *gb,
-                                    int channel_idx, int first_in_pkt) {
-    static const uint8_t mode_map[2][4] = {{0, 1, 2, 3},
-                                           {0, 2, 3, 4}};
+                                    int channel_idx, int first_in_pkt)
+{
+    static const uint8_t mode_map[2][4] = { { 0, 1, 2, 3 }, { 0, 2, 3, 4 } };
     const int mode = mode_map[channel_idx][get_bits(gb, 2)];
 
     memset(c->scalefactors, 0, sizeof(c->scalefactors));
@@ -267,81 +270,81 @@ static inline int read_scalefactors(ATRAC9Context *s, ATRAC9BlockData *b,
     }
 
     switch (mode) {
-        case 0: { /* VLC delta offset */
-            const uint8_t *sf_weights = at9_tab_sf_weights[get_bits(gb, 3)];
-            const int base = get_bits(gb, 5);
-            const int len = get_bits(gb, 2) + 3;
-            const VLC *tab = &sf_vlc[0][len];
+    case 0: { /* VLC delta offset */
+        const uint8_t *sf_weights = at9_tab_sf_weights[get_bits(gb, 3)];
+        const int base = get_bits(gb, 5);
+        const int len = get_bits(gb, 2) + 3;
+        const VLC *tab = &sf_vlc[0][len];
 
-            c->scalefactors[0] = get_bits(gb, len);
+        c->scalefactors[0] = get_bits(gb, len);
 
-            for (int i = 1; i < b->band_ext_q_unit; i++) {
-                int val = c->scalefactors[i - 1] + get_vlc2(gb, tab->table,
-                                                            ATRAC9_SF_VLC_BITS, 1);
-                c->scalefactors[i] = val & ((1 << len) - 1);
-            }
-
-            for (int i = 0; i < b->band_ext_q_unit; i++)
-                c->scalefactors[i] += base - sf_weights[i];
-
-            break;
+        for (int i = 1; i < b->band_ext_q_unit; i++) {
+            int val = c->scalefactors[i - 1] + get_vlc2(gb, tab->table,
+                                                        ATRAC9_SF_VLC_BITS, 1);
+            c->scalefactors[i] = val & ((1 << len) - 1);
         }
-        case 1: { /* CLC offset */
-            const int len = get_bits(gb, 2) + 2;
-            const int base = len < 5 ? get_bits(gb, 5) : 0;
-            for (int i = 0; i < b->band_ext_q_unit; i++)
-                c->scalefactors[i] = base + get_bits(gb, len);
-            break;
+
+        for (int i = 0; i < b->band_ext_q_unit; i++)
+            c->scalefactors[i] += base - sf_weights[i];
+
+        break;
+    }
+    case 1: { /* CLC offset */
+        const int len = get_bits(gb, 2) + 2;
+        const int base = len < 5 ? get_bits(gb, 5) : 0;
+        for (int i = 0; i < b->band_ext_q_unit; i++)
+            c->scalefactors[i] = base + get_bits(gb, len);
+        break;
+    }
+    case 2:
+    case 4: { /* VLC dist to baseline */
+        const int *baseline = mode == 4 ? c->scalefactors_prev :
+                              channel_idx ? b->channel[0].scalefactors :
+                              c->scalefactors_prev;
+        const int baseline_len = mode == 4 ? b->q_unit_cnt_prev :
+                                 channel_idx ? b->band_ext_q_unit :
+                                 b->q_unit_cnt_prev;
+
+        const int len = get_bits(gb, 2) + 2;
+        const int unit_cnt = FFMIN(b->band_ext_q_unit, baseline_len);
+        const VLC *tab = &sf_vlc[1][len];
+
+        for (int i = 0; i < unit_cnt; i++) {
+            int dist = get_vlc2(gb, tab->table, ATRAC9_SF_VLC_BITS, 1);
+            c->scalefactors[i] = baseline[i] + dist;
         }
-        case 2:
-        case 4: { /* VLC dist to baseline */
-            const int *baseline = mode == 4 ? c->scalefactors_prev :
-                                  channel_idx ? b->channel[0].scalefactors :
-                                  c->scalefactors_prev;
-            const int baseline_len = mode == 4 ? b->q_unit_cnt_prev :
-                                     channel_idx ? b->band_ext_q_unit :
-                                     b->q_unit_cnt_prev;
 
-            const int len = get_bits(gb, 2) + 2;
-            const int unit_cnt = FFMIN(b->band_ext_q_unit, baseline_len);
-            const VLC *tab = &sf_vlc[1][len];
+        for (int i = unit_cnt; i < b->band_ext_q_unit; i++)
+            c->scalefactors[i] = get_bits(gb, 5);
 
-            for (int i = 0; i < unit_cnt; i++) {
-                int dist = get_vlc2(gb, tab->table, ATRAC9_SF_VLC_BITS, 1);
-                c->scalefactors[i] = baseline[i] + dist;
-            }
+        break;
+    }
+    case 3: { /* VLC offset with baseline */
+        const int *baseline = channel_idx ? b->channel[0].scalefactors :
+                              c->scalefactors_prev;
+        const int baseline_len = channel_idx ? b->band_ext_q_unit :
+                                 b->q_unit_cnt_prev;
 
-            for (int i = unit_cnt; i < b->band_ext_q_unit; i++)
-                c->scalefactors[i] = get_bits(gb, 5);
+        const int base = get_bits(gb, 5) - (1 << (5 - 1));
+        const int len = get_bits(gb, 2) + 1;
+        const int unit_cnt = FFMIN(b->band_ext_q_unit, baseline_len);
+        const VLC *tab = &sf_vlc[0][len];
 
-            break;
+        c->scalefactors[0] = get_bits(gb, len);
+
+        for (int i = 1; i < unit_cnt; i++) {
+            int val = c->scalefactors[i - 1] + get_vlc2(gb, tab->table,
+                                                        ATRAC9_SF_VLC_BITS, 1);
+            c->scalefactors[i] = val & ((1 << len) - 1);
         }
-        case 3: { /* VLC offset with baseline */
-            const int *baseline = channel_idx ? b->channel[0].scalefactors :
-                                  c->scalefactors_prev;
-            const int baseline_len = channel_idx ? b->band_ext_q_unit :
-                                     b->q_unit_cnt_prev;
 
-            const int base = get_bits(gb, 5) - (1 << (5 - 1));
-            const int len = get_bits(gb, 2) + 1;
-            const int unit_cnt = FFMIN(b->band_ext_q_unit, baseline_len);
-            const VLC *tab = &sf_vlc[0][len];
+        for (int i = 0; i < unit_cnt; i++)
+            c->scalefactors[i] += base + baseline[i];
 
-            c->scalefactors[0] = get_bits(gb, len);
-
-            for (int i = 1; i < unit_cnt; i++) {
-                int val = c->scalefactors[i - 1] + get_vlc2(gb, tab->table,
-                                                            ATRAC9_SF_VLC_BITS, 1);
-                c->scalefactors[i] = val & ((1 << len) - 1);
-            }
-
-            for (int i = 0; i < unit_cnt; i++)
-                c->scalefactors[i] += base + baseline[i];
-
-            for (int i = unit_cnt; i < b->band_ext_q_unit; i++)
-                c->scalefactors[i] = get_bits(gb, 5);
-            break;
-        }
+        for (int i = unit_cnt; i < b->band_ext_q_unit; i++)
+            c->scalefactors[i] = get_bits(gb, 5);
+        break;
+    }
     }
 
     for (int i = 0; i < b->band_ext_q_unit; i++)
@@ -354,7 +357,8 @@ static inline int read_scalefactors(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline void calc_codebook_idx(ATRAC9Context *s, ATRAC9BlockData *b,
-                                     ATRAC9ChannelData *c) {
+                                     ATRAC9ChannelData *c)
+{
     int avg = 0;
     const int last_sf = c->scalefactors[c->q_unit_cnt];
 
@@ -375,10 +379,10 @@ static inline void calc_codebook_idx(ATRAC9Context *s, ATRAC9BlockData *b,
 
     for (int i = 8; i < c->q_unit_cnt; i++) {
         const int prev = c->scalefactors[i - 1];
-        const int cur = c->scalefactors[i];
+        const int cur  = c->scalefactors[i    ];
         const int next = c->scalefactors[i + 1];
-        const int min = FFMIN(prev, next);
-        if ((cur - min >= 3 || 2 * cur - prev - next >= 3))
+        const int min  = FFMIN(prev, next);
+        if ((cur - min >= 3 || 2*cur - prev - next >= 3))
             c->codebookset[i] = 1;
     }
 
@@ -397,7 +401,8 @@ static inline void calc_codebook_idx(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline void read_coeffs_coarse(ATRAC9Context *s, ATRAC9BlockData *b,
-                                      ATRAC9ChannelData *c, GetBitContext *gb) {
+                                      ATRAC9ChannelData *c, GetBitContext *gb)
+{
     const int max_prec = s->samplerate_idx > 7 ? 1 : 7;
 
     memset(c->q_coeffs_coarse, 0, sizeof(c->q_coeffs_coarse));
@@ -432,13 +437,14 @@ static inline void read_coeffs_coarse(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline void read_coeffs_fine(ATRAC9Context *s, ATRAC9BlockData *b,
-                                    ATRAC9ChannelData *c, GetBitContext *gb) {
+                                    ATRAC9ChannelData *c, GetBitContext *gb)
+{
     memset(c->q_coeffs_fine, 0, sizeof(c->q_coeffs_fine));
 
     for (int i = 0; i < c->q_unit_cnt; i++) {
         const int start = at9_q_unit_to_coeff_idx[i + 0];
-        const int end = at9_q_unit_to_coeff_idx[i + 1];
-        const int len = c->precision_fine[i] + 1;
+        const int end   = at9_q_unit_to_coeff_idx[i + 1];
+        const int len   = c->precision_fine[i] + 1;
 
         if (c->precision_fine[i] <= 0)
             continue;
@@ -449,27 +455,29 @@ static inline void read_coeffs_fine(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline void dequantize(ATRAC9Context *s, ATRAC9BlockData *b,
-                              ATRAC9ChannelData *c) {
+                              ATRAC9ChannelData *c)
+{
     memset(c->coeffs, 0, sizeof(c->coeffs));
 
     for (int i = 0; i < c->q_unit_cnt; i++) {
         const int start = at9_q_unit_to_coeff_idx[i + 0];
-        const int end = at9_q_unit_to_coeff_idx[i + 1];
+        const int end   = at9_q_unit_to_coeff_idx[i + 1];
 
         const float coarse_c = at9_quant_step_coarse[c->precision_coarse[i]];
-        const float fine_c = at9_quant_step_fine[c->precision_fine[i]];
+        const float fine_c   = at9_quant_step_fine[c->precision_fine[i]];
 
         for (int j = start; j < end; j++) {
             const float vc = c->q_coeffs_coarse[j] * coarse_c;
-            const float vf = c->q_coeffs_fine[j] * fine_c;
+            const float vf = c->q_coeffs_fine[j]   * fine_c;
             c->coeffs[j] = vc + vf;
         }
     }
 }
 
 static inline void apply_intensity_stereo(ATRAC9Context *s, ATRAC9BlockData *b,
-                                          const int stereo) {
-    float *src = b->channel[b->cpe_base_channel].coeffs;
+                                          const int stereo)
+{
+    float *src = b->channel[ b->cpe_base_channel].coeffs;
     float *dst = b->channel[!b->cpe_base_channel].coeffs;
 
     if (!stereo)
@@ -479,21 +487,22 @@ static inline void apply_intensity_stereo(ATRAC9Context *s, ATRAC9BlockData *b,
         return;
 
     for (int i = b->stereo_q_unit; i < b->q_unit_cnt; i++) {
-        const int sign = b->is_signs[i];
+        const int sign  = b->is_signs[i];
         const int start = at9_q_unit_to_coeff_idx[i + 0];
-        const int end = at9_q_unit_to_coeff_idx[i + 1];
+        const int end   = at9_q_unit_to_coeff_idx[i + 1];
         for (int j = start; j < end; j++)
-            dst[j] = sign * src[j];
+            dst[j] = sign*src[j];
     }
 }
 
 static inline void apply_scalefactors(ATRAC9Context *s, ATRAC9BlockData *b,
-                                      const int stereo) {
+                                      const int stereo)
+{
     for (int i = 0; i <= stereo; i++) {
         float *coeffs = b->channel[i].coeffs;
         for (int j = 0; j < b->q_unit_cnt; j++) {
             const int start = at9_q_unit_to_coeff_idx[j + 0];
-            const int end = at9_q_unit_to_coeff_idx[j + 1];
+            const int end   = at9_q_unit_to_coeff_idx[j + 1];
             const int scalefactor = b->channel[i].scalefactors[j];
             const float scale = at9_scalefactor_c[scalefactor];
             for (int k = start; k < end; k++)
@@ -503,7 +512,8 @@ static inline void apply_scalefactors(ATRAC9Context *s, ATRAC9BlockData *b,
 }
 
 static inline void fill_with_noise(ATRAC9Context *s, ATRAC9ChannelData *c,
-                                   int start, int count) {
+                                   int start, int count)
+{
     float maxval = 0.0f;
     for (int i = 0; i < count; i += 2) {
         double tmp[2];
@@ -518,29 +528,31 @@ static inline void fill_with_noise(ATRAC9Context *s, ATRAC9ChannelData *c,
 }
 
 static inline void scale_band_ext_coeffs(ATRAC9ChannelData *c, float sf[6],
-                                         const int s_unit, const int e_unit) {
+                                         const int s_unit, const int e_unit)
+{
     for (int i = s_unit; i < e_unit; i++) {
         const int start = at9_q_unit_to_coeff_idx[i + 0];
-        const int end = at9_q_unit_to_coeff_idx[i + 1];
+        const int end   = at9_q_unit_to_coeff_idx[i + 1];
         for (int j = start; j < end; j++)
             c->coeffs[j] *= sf[i - s_unit];
     }
 }
 
 static inline void apply_band_extension(ATRAC9Context *s, ATRAC9BlockData *b,
-                                        const int stereo) {
+                                       const int stereo)
+{
     const int g_units[4] = { /* A, B, C, total units */
-            b->q_unit_cnt,
-            at9_tab_band_ext_group[b->q_unit_cnt - 13][0],
-            at9_tab_band_ext_group[b->q_unit_cnt - 13][1],
-            FFMAX(g_units[2], 22),
+        b->q_unit_cnt,
+        at9_tab_band_ext_group[b->q_unit_cnt - 13][0],
+        at9_tab_band_ext_group[b->q_unit_cnt - 13][1],
+        FFMAX(g_units[2], 22),
     };
 
     const int g_bins[4] = { /* A, B, C, total bins */
-            at9_q_unit_to_coeff_idx[g_units[0]],
-            at9_q_unit_to_coeff_idx[g_units[1]],
-            at9_q_unit_to_coeff_idx[g_units[2]],
-            at9_q_unit_to_coeff_idx[g_units[3]],
+        at9_q_unit_to_coeff_idx[g_units[0]],
+        at9_q_unit_to_coeff_idx[g_units[1]],
+        at9_q_unit_to_coeff_idx[g_units[2]],
+        at9_q_unit_to_coeff_idx[g_units[3]],
     };
 
     for (int ch = 0; ch <= stereo; ch++) {
@@ -552,87 +564,88 @@ static inline void apply_band_extension(ATRAC9Context *s, ATRAC9BlockData *b,
                 c->coeffs[g_bins[i] + j] = c->coeffs[g_bins[i] - j - 1];
 
         switch (c->band_ext) {
-            case 0: {
-                float sf[6] = {0.0f};
-                const int l = g_units[3] - g_units[0] - 1;
-                const int n_start = at9_q_unit_to_coeff_idx[g_units[3] - 1];
-                const int n_cnt = at9_q_unit_to_coeff_cnt[g_units[3] - 1];
-                switch (at9_tab_band_ext_group[b->q_unit_cnt - 13][2]) {
-                    case 3:
-                        sf[0] = at9_band_ext_scales_m0[0][0][c->band_ext_data[0]];
-                        sf[1] = at9_band_ext_scales_m0[0][1][c->band_ext_data[0]];
-                        sf[2] = at9_band_ext_scales_m0[0][2][c->band_ext_data[1]];
-                        sf[3] = at9_band_ext_scales_m0[0][3][c->band_ext_data[2]];
-                        sf[4] = at9_band_ext_scales_m0[0][4][c->band_ext_data[3]];
-                        break;
-                    case 4:
-                        sf[0] = at9_band_ext_scales_m0[1][0][c->band_ext_data[0]];
-                        sf[1] = at9_band_ext_scales_m0[1][1][c->band_ext_data[0]];
-                        sf[2] = at9_band_ext_scales_m0[1][2][c->band_ext_data[1]];
-                        sf[3] = at9_band_ext_scales_m0[1][3][c->band_ext_data[2]];
-                        sf[4] = at9_band_ext_scales_m0[1][4][c->band_ext_data[3]];
-                        break;
-                    case 5:
-                        sf[0] = at9_band_ext_scales_m0[2][0][c->band_ext_data[0]];
-                        sf[1] = at9_band_ext_scales_m0[2][1][c->band_ext_data[1]];
-                        sf[2] = at9_band_ext_scales_m0[2][2][c->band_ext_data[1]];
-                        break;
-                }
-
-                sf[l] = at9_scalefactor_c[c->scalefactors[g_units[0]]];
-
-                fill_with_noise(s, c, n_start, n_cnt);
-                scale_band_ext_coeffs(c, sf, g_units[0], g_units[3]);
+        case 0: {
+            float sf[6] = { 0.0f };
+            const int l = g_units[3] - g_units[0] - 1;
+            const int n_start = at9_q_unit_to_coeff_idx[g_units[3] - 1];
+            const int n_cnt   = at9_q_unit_to_coeff_cnt[g_units[3] - 1];
+            switch (at9_tab_band_ext_group[b->q_unit_cnt - 13][2]) {
+            case 3:
+                sf[0] = at9_band_ext_scales_m0[0][0][c->band_ext_data[0]];
+                sf[1] = at9_band_ext_scales_m0[0][1][c->band_ext_data[0]];
+                sf[2] = at9_band_ext_scales_m0[0][2][c->band_ext_data[1]];
+                sf[3] = at9_band_ext_scales_m0[0][3][c->band_ext_data[2]];
+                sf[4] = at9_band_ext_scales_m0[0][4][c->band_ext_data[3]];
+                break;
+            case 4:
+                sf[0] = at9_band_ext_scales_m0[1][0][c->band_ext_data[0]];
+                sf[1] = at9_band_ext_scales_m0[1][1][c->band_ext_data[0]];
+                sf[2] = at9_band_ext_scales_m0[1][2][c->band_ext_data[1]];
+                sf[3] = at9_band_ext_scales_m0[1][3][c->band_ext_data[2]];
+                sf[4] = at9_band_ext_scales_m0[1][4][c->band_ext_data[3]];
+                break;
+            case 5:
+                sf[0] = at9_band_ext_scales_m0[2][0][c->band_ext_data[0]];
+                sf[1] = at9_band_ext_scales_m0[2][1][c->band_ext_data[1]];
+                sf[2] = at9_band_ext_scales_m0[2][2][c->band_ext_data[1]];
                 break;
             }
-            case 1: {
-                float sf[6];
-                for (int i = g_units[0]; i < g_units[3]; i++)
-                    sf[i - g_units[0]] = at9_scalefactor_c[c->scalefactors[i]];
 
-                fill_with_noise(s, c, g_bins[0], g_bins[3] - g_bins[0]);
-                scale_band_ext_coeffs(c, sf, g_units[0], g_units[3]);
-                break;
-            }
-            case 2: {
-                const float g_sf[2] = {
-                        at9_band_ext_scales_m2[c->band_ext_data[0]],
-                        at9_band_ext_scales_m2[c->band_ext_data[1]],
-                };
+            sf[l] = at9_scalefactor_c[c->scalefactors[g_units[0]]];
 
-                for (int i = 0; i < 2; i++)
-                    for (int j = g_bins[i + 0]; j < g_bins[i + 1]; j++)
-                        c->coeffs[j] *= g_sf[i];
-                break;
-            }
-            case 3: {
-                float scale = at9_band_ext_scales_m3[c->band_ext_data[0]][0];
-                float rate = at9_band_ext_scales_m3[c->band_ext_data[1]][1];
-                rate = pow(2, rate);
-                for (int i = g_bins[0]; i < g_bins[3]; i++) {
-                    scale *= rate;
-                    c->coeffs[i] *= scale;
-                }
-                break;
-            }
-            case 4: {
-                const float m = at9_band_ext_scales_m4[c->band_ext_data[0]];
-                const float g_sf[3] = {0.7079468f * m, 0.5011902f * m, 0.3548279f * m};
+            fill_with_noise(s, c, n_start, n_cnt);
+            scale_band_ext_coeffs(c, sf, g_units[0], g_units[3]);
+            break;
+        }
+        case 1: {
+            float sf[6];
+            for (int i = g_units[0]; i < g_units[3]; i++)
+                sf[i - g_units[0]] = at9_scalefactor_c[c->scalefactors[i]];
 
-                for (int i = 0; i < 3; i++)
-                    for (int j = g_bins[i + 0]; j < g_bins[i + 1]; j++)
-                        c->coeffs[j] *= g_sf[i];
-                break;
+            fill_with_noise(s, c, g_bins[0], g_bins[3] - g_bins[0]);
+            scale_band_ext_coeffs(c, sf, g_units[0], g_units[3]);
+            break;
+        }
+        case 2: {
+            const float g_sf[2] = {
+                at9_band_ext_scales_m2[c->band_ext_data[0]],
+                at9_band_ext_scales_m2[c->band_ext_data[1]],
+            };
+
+            for (int i = 0; i < 2; i++)
+                for (int j = g_bins[i + 0]; j < g_bins[i + 1]; j++)
+                    c->coeffs[j] *= g_sf[i];
+            break;
+        }
+        case 3: {
+            float scale = at9_band_ext_scales_m3[c->band_ext_data[0]][0];
+            float rate  = at9_band_ext_scales_m3[c->band_ext_data[1]][1];
+            rate = pow(2, rate);
+            for (int i = g_bins[0]; i < g_bins[3]; i++) {
+                scale *= rate;
+                c->coeffs[i] *= scale;
             }
+            break;
+        }
+        case 4: {
+            const float m = at9_band_ext_scales_m4[c->band_ext_data[0]];
+            const float g_sf[3] = { 0.7079468f*m, 0.5011902f*m, 0.3548279f*m };
+
+            for (int i = 0; i < 3; i++)
+                for (int j = g_bins[i + 0]; j < g_bins[i + 1]; j++)
+                    c->coeffs[j] *= g_sf[i];
+            break;
+        }
         }
     }
 }
 
 static int atrac9_decode_block(ATRAC9Context *s, GetBitContext *gb,
                                ATRAC9BlockData *b, AVFrame *frame,
-                               int frame_idx, int block_idx) {
+                               int frame_idx, int block_idx)
+{
     const int first_in_pkt = !get_bits1(gb);
-    const int reuse_params = get_bits1(gb);
+    const int reuse_params =  get_bits1(gb);
     const int stereo = s->block_config->type[block_idx] == ATRAC9_BLOCK_TYPE_CPE;
 
     if (s->block_config->type[block_idx] == ATRAC9_BLOCK_TYPE_LFE) {
@@ -652,12 +665,12 @@ static int atrac9_decode_block(ATRAC9Context *s, GetBitContext *gb,
 
         for (int i = 0; i < c->q_unit_cnt; i++) {
             const int start = at9_q_unit_to_coeff_idx[i + 0];
-            const int end = at9_q_unit_to_coeff_idx[i + 1];
+            const int end   = at9_q_unit_to_coeff_idx[i + 1];
             for (int j = start; j < end; j++)
                 c->q_coeffs_coarse[j] = get_bits(gb, c->precision_coarse[i] + 1);
         }
 
-        dequantize(s, b, c);
+        dequantize        (s, b, c);
         apply_scalefactors(s, b, 0);
 
         goto imdct;
@@ -721,7 +734,7 @@ static int atrac9_decode_block(ATRAC9Context *s, GetBitContext *gb,
         b->cpe_base_channel = get_bits1(gb);
         if (get_bits1(gb)) {
             for (int i = b->stereo_q_unit; i < b->q_unit_cnt; i++)
-                b->is_signs[i] = 1 - 2 * get_bits1(gb);
+                b->is_signs[i] = 1 - 2*get_bits1(gb);
         } else {
             for (int i = 0; i < FF_ARRAY_ELEMS(b->is_signs); i++)
                 b->is_signs[i] = 1;
@@ -736,44 +749,45 @@ static int atrac9_decode_block(ATRAC9Context *s, GetBitContext *gb,
     for (int i = 0; i <= stereo; i++) {
         ATRAC9ChannelData *c = &b->channel[i];
         c->q_unit_cnt = i == b->cpe_base_channel ? b->q_unit_cnt :
-                        b->stereo_q_unit;
+                                                   b->stereo_q_unit;
         if (read_scalefactors(s, b, c, gb, i, first_in_pkt))
             return AVERROR_INVALIDDATA;
 
-        calc_precision(s, b, c);
-        calc_codebook_idx(s, b, c);
+        calc_precision    (s, b, c);
+        calc_codebook_idx (s, b, c);
         read_coeffs_coarse(s, b, c, gb);
-        read_coeffs_fine(s, b, c, gb);
-        dequantize(s, b, c);
+        read_coeffs_fine  (s, b, c, gb);
+        dequantize        (s, b, c);
     }
 
     b->q_unit_cnt_prev = b->has_band_ext ? b->band_ext_q_unit : b->q_unit_cnt;
 
     apply_intensity_stereo(s, b, stereo);
-    apply_scalefactors(s, b, stereo);
+    apply_scalefactors    (s, b, stereo);
 
     if (b->has_band_ext && b->has_band_ext_data)
-        apply_band_extension(s, b, stereo);
+        apply_band_extension  (s, b, stereo);
 
-    imdct:
+imdct:
     for (int i = 0; i <= stereo; i++) {
         ATRAC9ChannelData *c = &b->channel[i];
         const int dst_idx = s->block_config->plane_map[block_idx][i];
         const int wsize = 1 << s->frame_log2;
-        const ptrdiff_t offset = wsize * frame_idx * sizeof(float);
-        float *dst = (float *) (frame->extended_data[dst_idx] + offset);
+        const ptrdiff_t offset = wsize*frame_idx*sizeof(float);
+        float *dst = (float *)(frame->extended_data[dst_idx] + offset);
 
         s->imdct.imdct_half(&s->imdct, s->temp, c->coeffs);
         s->fdsp->vector_fmul_window(dst, c->prev_win, s->temp,
                                     s->imdct_win, wsize >> 1);
-        memcpy(c->prev_win, s->temp + (wsize >> 1), sizeof(float) * wsize >> 1);
+        memcpy(c->prev_win, s->temp + (wsize >> 1), sizeof(float)*wsize >> 1);
     }
 
     return 0;
 }
 
 static int atrac9_decode_frame(AVCodecContext *avctx, void *data,
-                               int *got_frame_ptr, AVPacket *avpkt) {
+                               int *got_frame_ptr, AVPacket *avpkt)
+{
     int ret;
     GetBitContext gb;
     AVFrame *frame = data;
@@ -801,7 +815,8 @@ static int atrac9_decode_frame(AVCodecContext *avctx, void *data,
     return avctx->block_align;
 }
 
-static void atrac9_decode_flush(AVCodecContext *avctx) {
+static void atrac9_decode_flush(AVCodecContext *avctx)
+{
     ATRAC9Context *s = avctx->priv_data;
 
     for (int j = 0; j < s->block_config->count; j++) {
@@ -814,7 +829,8 @@ static void atrac9_decode_flush(AVCodecContext *avctx) {
     }
 }
 
-static av_cold int atrac9_decode_close(AVCodecContext *avctx) {
+static av_cold int atrac9_decode_close(AVCodecContext *avctx)
+{
     ATRAC9Context *s = avctx->priv_data;
 
     ff_mdct_end(&s->imdct);
@@ -825,19 +841,21 @@ static av_cold int atrac9_decode_close(AVCodecContext *avctx) {
 
 static av_cold void atrac9_init_vlc(VLC *vlc, int nb_bits, int nb_codes,
                                     const uint8_t (**tab)[2],
-                                    unsigned *buf_offset, int offset) {
+                                    unsigned *buf_offset, int offset)
+{
     static VLC_TYPE vlc_buf[24812][2];
 
-    vlc->table = &vlc_buf[*buf_offset];
+    vlc->table           = &vlc_buf[*buf_offset];
     vlc->table_allocated = FF_ARRAY_ELEMS(vlc_buf) - *buf_offset;
     ff_init_vlc_from_lengths(vlc, nb_bits, nb_codes,
                              &(*tab)[0][1], 2, &(*tab)[0][0], 2, 1,
                              offset, INIT_VLC_STATIC_OVERLONG, NULL);
     *buf_offset += vlc->table_size;
-    *tab += nb_codes;
+    *tab        += nb_codes;
 }
 
-static av_cold void atrac9_init_static(void) {
+static av_cold void atrac9_init_static(void)
+{
     const uint8_t (*tab)[2];
     unsigned offset = 0;
 
@@ -875,7 +893,8 @@ static av_cold void atrac9_init_static(void) {
     }
 }
 
-static av_cold int atrac9_decode_init(AVCodecContext *avctx) {
+static av_cold int atrac9_decode_init(AVCodecContext *avctx)
+{
     static AVOnce static_table_init = AV_ONCE_INIT;
     GetBitContext gb;
     ATRAC9Context *s = avctx->priv_data;
@@ -919,8 +938,8 @@ static av_cold int atrac9_decode_init(AVCodecContext *avctx) {
     s->block_config = &at9_block_layout[block_config_idx];
 
     avctx->channel_layout = s->block_config->channel_layout;
-    avctx->channels = av_get_channel_layout_nb_channels(avctx->channel_layout);
-    avctx->sample_fmt = AV_SAMPLE_FMT_FLTP;
+    avctx->channels       = av_get_channel_layout_nb_channels(avctx->channel_layout);
+    avctx->sample_fmt     = AV_SAMPLE_FMT_FLTP;
 
     if (get_bits1(&gb)) {
         av_log(avctx, AV_LOG_ERROR, "Incorrect verification bit!\n");
@@ -937,7 +956,7 @@ static av_cold int atrac9_decode_init(AVCodecContext *avctx) {
     }
 
     s->frame_count = 1 << superframe_idx;
-    s->frame_log2 = at9_tab_sri_frame_log2[s->samplerate_idx];
+    s->frame_log2  = at9_tab_sri_frame_log2[s->samplerate_idx];
 
     if (ff_mdct_init(&s->imdct, s->frame_log2 + 1, 1, 1.0f / 32768.0f))
         return AVERROR(ENOMEM);
@@ -948,12 +967,12 @@ static av_cold int atrac9_decode_init(AVCodecContext *avctx) {
 
     /* iMDCT window */
     for (int i = 0; i < (1 << s->frame_log2); i++) {
-        const int len = 1 << s->frame_log2;
-        const float sidx = (i + 0.5f) / len;
+        const int   len  = 1 << s->frame_log2;
+        const float sidx = (      i + 0.5f) / len;
         const float eidx = (len - i - 0.5f) / len;
-        const float s_c = sinf(sidx * M_PI - M_PI_2) * 0.5f + 0.5f;
-        const float e_c = sinf(eidx * M_PI - M_PI_2) * 0.5f + 0.5f;
-        s->imdct_win[i] = s_c / ((s_c * s_c) + (e_c * e_c));
+        const float s_c  = sinf(sidx*M_PI - M_PI_2)*0.5f + 0.5f;
+        const float e_c  = sinf(eidx*M_PI - M_PI_2)*0.5f + 0.5f;
+        s->imdct_win[i]  = s_c / ((s_c * s_c) + (e_c * e_c));
     }
 
     /* Allocation curve */
@@ -968,15 +987,15 @@ static av_cold int atrac9_decode_init(AVCodecContext *avctx) {
 }
 
 AVCodec ff_atrac9_decoder = {
-        .name           = "atrac9",
-        .long_name      = NULL_IF_CONFIG_SMALL("ATRAC9 (Adaptive TRansform Acoustic Coding 9)"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_ATRAC9,
-        .priv_data_size = sizeof(ATRAC9Context),
-        .init           = atrac9_decode_init,
-        .close          = atrac9_decode_close,
-        .decode         = atrac9_decode_frame,
-        .flush          = atrac9_decode_flush,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
-        .capabilities   = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+    .name           = "atrac9",
+    .long_name      = NULL_IF_CONFIG_SMALL("ATRAC9 (Adaptive TRansform Acoustic Coding 9)"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_ATRAC9,
+    .priv_data_size = sizeof(ATRAC9Context),
+    .init           = atrac9_decode_init,
+    .close          = atrac9_decode_close,
+    .decode         = atrac9_decode_frame,
+    .flush          = atrac9_decode_flush,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
+    .capabilities   = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
 };

@@ -26,7 +26,8 @@
 
 static int cbs_vp9_read_s(CodedBitstreamContext *ctx, GetBitContext *gbc,
                           int width, const char *name,
-                          const int *subscripts, int32_t *write_to) {
+                          const int *subscripts, int32_t *write_to)
+{
     uint32_t magnitude;
     int position, sign;
     int32_t value;
@@ -36,13 +37,13 @@ static int cbs_vp9_read_s(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
     if (get_bits_left(gbc) < width + 1) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid signed value at "
-                                           "%s: bitstream ended.\n", name);
+               "%s: bitstream ended.\n", name);
         return AVERROR_INVALIDDATA;
     }
 
     magnitude = get_bits(gbc, width);
-    sign = get_bits1(gbc);
-    value = sign ? -(int32_t) magnitude : magnitude;
+    sign      = get_bits1(gbc);
+    value     = sign ? -(int32_t)magnitude : magnitude;
 
     if (ctx->trace_enable) {
         char bits[33];
@@ -62,14 +63,15 @@ static int cbs_vp9_read_s(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
 static int cbs_vp9_write_s(CodedBitstreamContext *ctx, PutBitContext *pbc,
                            int width, const char *name,
-                           const int *subscripts, int32_t value) {
+                           const int *subscripts, int32_t value)
+{
     uint32_t magnitude;
     int sign;
 
     if (put_bits_left(pbc) < width + 1)
         return AVERROR(ENOSPC);
 
-    sign = value < 0;
+    sign      = value < 0;
     magnitude = sign ? -value : value;
 
     if (ctx->trace_enable) {
@@ -92,7 +94,8 @@ static int cbs_vp9_write_s(CodedBitstreamContext *ctx, PutBitContext *pbc,
 
 static int cbs_vp9_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc,
                                   uint32_t range_min, uint32_t range_max,
-                                  const char *name, uint32_t *write_to) {
+                                  const char *name, uint32_t *write_to)
+{
     uint32_t value;
     int position, i;
     char bits[8];
@@ -104,7 +107,7 @@ static int cbs_vp9_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc
     for (i = 0, value = range_min; value < range_max;) {
         if (get_bits_left(gbc) < 1) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid increment value at "
-                                               "%s: bitstream ended.\n", name);
+                   "%s: bitstream ended.\n", name);
             return AVERROR_INVALIDDATA;
         }
         if (get_bits1(gbc)) {
@@ -127,20 +130,15 @@ static int cbs_vp9_read_increment(CodedBitstreamContext *ctx, GetBitContext *gbc
 
 static int cbs_vp9_write_increment(CodedBitstreamContext *ctx, PutBitContext *pbc,
                                    uint32_t range_min, uint32_t range_max,
-                                   const char *name, uint32_t value) {
+                                   const char *name, uint32_t value)
+{
     int len;
 
     av_assert0(range_min <= range_max && range_max - range_min < 8);
     if (value < range_min || value > range_max) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "%s out of range: "
-                                           "%"
-        PRIu32
-        ", but must be in [%"
-        PRIu32
-        ",%"
-        PRIu32
-        "].\n",
-                name, value, range_min, range_max);
+               "%"PRIu32", but must be in [%"PRIu32",%"PRIu32"].\n",
+               name, value, range_min, range_max);
         return AVERROR_INVALIDDATA;
     }
 
@@ -173,7 +171,8 @@ static int cbs_vp9_write_increment(CodedBitstreamContext *ctx, PutBitContext *pb
 
 static int cbs_vp9_read_le(CodedBitstreamContext *ctx, GetBitContext *gbc,
                            int width, const char *name,
-                           const int *subscripts, uint32_t *write_to) {
+                           const int *subscripts, uint32_t *write_to)
+{
     uint32_t value;
     int position, b;
 
@@ -184,7 +183,7 @@ static int cbs_vp9_read_le(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
     if (get_bits_left(gbc) < width) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid le value at "
-                                           "%s: bitstream ended.\n", name);
+               "%s: bitstream ended.\n", name);
         return AVERROR_INVALIDDATA;
     }
 
@@ -210,7 +209,8 @@ static int cbs_vp9_read_le(CodedBitstreamContext *ctx, GetBitContext *gbc,
 
 static int cbs_vp9_write_le(CodedBitstreamContext *ctx, PutBitContext *pbc,
                             int width, const char *name,
-                            const int *subscripts, uint32_t value) {
+                            const int *subscripts, uint32_t value)
+{
     int b;
 
     av_assert0(width % 8 == 0);
@@ -410,7 +410,8 @@ static int cbs_vp9_write_le(CodedBitstreamContext *ctx, PutBitContext *pbc,
 
 static int cbs_vp9_split_fragment(CodedBitstreamContext *ctx,
                                   CodedBitstreamFragment *frag,
-                                  int header) {
+                                  int header)
+{
     uint8_t superframe_header;
     int err;
 
@@ -427,7 +428,7 @@ static int cbs_vp9_split_fragment(CodedBitstreamContext *ctx,
         int i;
 
         index_size = 2 + (((superframe_header & 0x18) >> 3) + 1) *
-                         ((superframe_header & 0x07) + 1);
+                          ((superframe_header & 0x07) + 1);
 
         if (index_size > frag->data_size)
             return AVERROR_INVALIDDATA;
@@ -445,10 +446,8 @@ static int cbs_vp9_split_fragment(CodedBitstreamContext *ctx,
         for (i = 0; i <= sfi.frames_in_superframe_minus_1; i++) {
             if (pos + sfi.frame_sizes[i] + index_size > frag->data_size) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR, "Frame %d too large "
-                                                   "in superframe: %"
-                PRIu32
-                " bytes.\n",
-                        i, sfi.frame_sizes[i]);
+                       "in superframe: %"PRIu32" bytes.\n",
+                       i, sfi.frame_sizes[i]);
                 return AVERROR_INVALIDDATA;
             }
 
@@ -463,10 +462,8 @@ static int cbs_vp9_split_fragment(CodedBitstreamContext *ctx,
         }
         if (pos + index_size != frag->data_size) {
             av_log(ctx->log_ctx, AV_LOG_WARNING, "Extra padding at "
-                                                 "end of superframe: %"
-            SIZE_SPECIFIER
-            " bytes.\n",
-                    frag->data_size - (pos + index_size));
+                   "end of superframe: %"SIZE_SPECIFIER" bytes.\n",
+                   frag->data_size - (pos + index_size));
         }
 
         return 0;
@@ -483,7 +480,8 @@ static int cbs_vp9_split_fragment(CodedBitstreamContext *ctx,
 }
 
 static int cbs_vp9_read_unit(CodedBitstreamContext *ctx,
-                             CodedBitstreamUnit *unit) {
+                             CodedBitstreamUnit *unit)
+{
     VP9RawFrame *frame;
     GetBitContext gbc;
     int err, pos;
@@ -513,7 +511,7 @@ static int cbs_vp9_read_unit(CodedBitstreamContext *ctx,
         if (!frame->data_ref)
             return AVERROR(ENOMEM);
 
-        frame->data = unit->data + pos;
+        frame->data      = unit->data      + pos;
         frame->data_size = unit->data_size - pos;
     }
 
@@ -522,7 +520,8 @@ static int cbs_vp9_read_unit(CodedBitstreamContext *ctx,
 
 static int cbs_vp9_write_unit(CodedBitstreamContext *ctx,
                               CodedBitstreamUnit *unit,
-                              PutBitContext *pbc) {
+                              PutBitContext *pbc)
+{
     VP9RawFrame *frame = unit->content;
     int err;
 
@@ -546,7 +545,8 @@ static int cbs_vp9_write_unit(CodedBitstreamContext *ctx,
 }
 
 static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
-                                     CodedBitstreamFragment *frag) {
+                                     CodedBitstreamFragment *frag)
+{
     int err;
 
     if (frag->nb_units == 1) {
@@ -558,7 +558,7 @@ static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
         if (!frag->data_ref)
             return AVERROR(ENOMEM);
 
-        frag->data = frame->data;
+        frag->data      = frame->data;
         frag->data_size = frame->data_size;
 
     } else {
@@ -573,7 +573,7 @@ static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
 
         if (frag->nb_units > 8) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Too many frames to "
-                                               "make superframe: %d.\n", frag->nb_units);
+                   "make superframe: %d.\n", frag->nb_units);
             return AVERROR(EINVAL);
         }
 
@@ -588,8 +588,8 @@ static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
             size_len = av_log2(max) / 8 + 1;
         av_assert0(size_len <= 4);
 
-        sfi.superframe_marker = VP9_SUPERFRAME_MARKER;
-        sfi.bytes_per_framesize_minus_1 = size_len - 1;
+        sfi.superframe_marker            = VP9_SUPERFRAME_MARKER;
+        sfi.bytes_per_framesize_minus_1  = size_len - 1;
         sfi.frames_in_superframe_minus_1 = frag->nb_units - 1;
 
         size = 2;
@@ -618,7 +618,7 @@ static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
         err = cbs_vp9_write_superframe_index(ctx, &pbc, &sfi);
         if (err < 0) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Failed to write "
-                                               "superframe index.\n");
+                   "superframe index.\n");
             av_buffer_unref(&ref);
             return err;
         }
@@ -626,37 +626,38 @@ static int cbs_vp9_assemble_fragment(CodedBitstreamContext *ctx,
         av_assert0(put_bits_left(&pbc) == 0);
         flush_put_bits(&pbc);
 
-        frag->data_ref = ref;
-        frag->data = data;
+        frag->data_ref  = ref;
+        frag->data      = data;
         frag->data_size = size;
     }
 
     return 0;
 }
 
-static void cbs_vp9_flush(CodedBitstreamContext *ctx) {
+static void cbs_vp9_flush(CodedBitstreamContext *ctx)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
 
     memset(vp9->ref, 0, sizeof(vp9->ref));
 }
 
 static const CodedBitstreamUnitTypeDescriptor cbs_vp9_unit_types[] = {
-        CBS_UNIT_TYPE_INTERNAL_REF(0, VP9RawFrame, data),
-        CBS_UNIT_TYPE_END_OF_LIST
+    CBS_UNIT_TYPE_INTERNAL_REF(0, VP9RawFrame, data),
+    CBS_UNIT_TYPE_END_OF_LIST
 };
 
 const CodedBitstreamType ff_cbs_type_vp9 = {
-        .codec_id          = AV_CODEC_ID_VP9,
+    .codec_id          = AV_CODEC_ID_VP9,
 
-        .priv_data_size    = sizeof(CodedBitstreamVP9Context),
+    .priv_data_size    = sizeof(CodedBitstreamVP9Context),
 
-        .unit_types        = cbs_vp9_unit_types,
+    .unit_types        = cbs_vp9_unit_types,
 
-        .split_fragment    = &cbs_vp9_split_fragment,
-        .read_unit         = &cbs_vp9_read_unit,
-        .write_unit        = &cbs_vp9_write_unit,
+    .split_fragment    = &cbs_vp9_split_fragment,
+    .read_unit         = &cbs_vp9_read_unit,
+    .write_unit        = &cbs_vp9_write_unit,
 
-        .flush             = &cbs_vp9_flush,
+    .flush             = &cbs_vp9_flush,
 
-        .assemble_fragment = &cbs_vp9_assemble_fragment,
+    .assemble_fragment = &cbs_vp9_assemble_fragment,
 };

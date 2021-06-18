@@ -21,9 +21,10 @@
 #include "libavutil/mips/generic_macros_msa.h"
 #include "idctdsp_mips.h"
 
-static void simple_idct_msa(int16_t *block) {
+static void simple_idct_msa(int16_t *block)
+{
     int32_t const_val;
-    v8i16 weights = {0, 22725, 21407, 19266, 16383, 12873, 8867, 4520};
+    v8i16 weights = { 0, 22725, 21407, 19266, 16383, 12873, 8867, 4520 };
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 w1, w3, w5, w7;
     v8i16 const0, const1, const2, const3, const4, const5, const6, const7;
@@ -33,7 +34,7 @@ static void simple_idct_msa(int16_t *block) {
     v4i32 b0_r, b1_r, b2_r, b3_r, b0_l, b1_l, b2_l, b3_l;
     v4i32 w2, w4, w6;
     v8i16 select_vec, temp;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
     v4i32 const_val0 = __msa_ldi_w(1);
     v4i32 const_val1 = __msa_ldi_w(1);
 
@@ -182,10 +183,11 @@ static void simple_idct_msa(int16_t *block) {
 }
 
 static void simple_idct_put_msa(uint8_t *dst, int32_t dst_stride,
-                                int16_t *block) {
+                                int16_t *block)
+{
     int32_t const_val;
     uint64_t tmp0, tmp1, tmp2, tmp3;
-    v8i16 weights = {0, 22725, 21407, 19266, 16383, 12873, 8867, 4520};
+    v8i16 weights = { 0, 22725, 21407, 19266, 16383, 12873, 8867, 4520 };
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 w1, w3, w5, w7;
     v8i16 const0, const1, const2, const3, const4, const5, const6, const7;
@@ -195,7 +197,7 @@ static void simple_idct_put_msa(uint8_t *dst, int32_t dst_stride,
     v4i32 b0_r, b1_r, b2_r, b3_r, b0_l, b1_l, b2_l, b3_l;
     v4i32 w2, w4, w6;
     v8i16 select_vec, temp;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
     v4i32 const_val0 = __msa_ldi_w(1);
     v4i32 const_val1 = __msa_ldi_w(1);
 
@@ -357,10 +359,11 @@ static void simple_idct_put_msa(uint8_t *dst, int32_t dst_stride,
 }
 
 static void simple_idct_add_msa(uint8_t *dst, int32_t dst_stride,
-                                int16_t *block) {
+                                int16_t *block)
+{
     int32_t const_val;
     uint64_t tmp0, tmp1, tmp2, tmp3;
-    v8i16 weights = {0, 22725, 21407, 19266, 16383, 12873, 8867, 4520};
+    v8i16 weights = { 0, 22725, 21407, 19266, 16383, 12873, 8867, 4520 };
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 w1, w3, w5, w7;
     v8i16 const0, const1, const2, const3, const4, const5, const6, const7;
@@ -372,7 +375,7 @@ static void simple_idct_add_msa(uint8_t *dst, int32_t dst_stride,
     v4i32 b0_r, b1_r, b2_r, b3_r, b0_l, b1_l, b2_l, b3_l;
     v4i32 w2, w4, w6;
     v8i16 select_vec, temp;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
     v4i32 const_val0 = __msa_ldi_w(1);
     v4i32 const_val1 = __msa_ldi_w(1);
 
@@ -504,10 +507,10 @@ static void simple_idct_add_msa(uint8_t *dst, int32_t dst_stride,
                 temp3_l, temp3_r, temp0_r, temp1_r, temp2_r, temp3_r);
     ILVR_B4_SW(zero, in0, zero, in1, zero, in2, zero, in3,
                temp0_l, temp1_l, temp2_l, temp3_l);
-    in0 = (v8i16)(temp0_r) + (v8i16)(temp0_l);
-    in1 = (v8i16)(temp1_r) + (v8i16)(temp1_l);
-    in2 = (v8i16)(temp2_r) + (v8i16)(temp2_l);
-    in3 = (v8i16)(temp3_r) + (v8i16)(temp3_l);
+    in0 = (v8i16) (temp0_r) + (v8i16) (temp0_l);
+    in1 = (v8i16) (temp1_r) + (v8i16) (temp1_l);
+    in2 = (v8i16) (temp2_r) + (v8i16) (temp2_l);
+    in3 = (v8i16) (temp3_r) + (v8i16) (temp3_l);
     CLIP_SH4_0_255(in0, in1, in2, in3);
     PCKEV_B4_SH(in0, in0, in1, in1, in2, in2, in3, in3,
                 in0, in1, in2, in3);
@@ -524,10 +527,10 @@ static void simple_idct_add_msa(uint8_t *dst, int32_t dst_stride,
                 a0_r, a1_r, a2_r, a3_r);
     ILVR_B4_SW(zero, in4, zero, in5, zero, in6, zero, in7,
                a3_l, a2_l, a1_l, a0_l);
-    in4 = (v8i16)(a3_r) + (v8i16)(a3_l);
-    in5 = (v8i16)(a2_r) + (v8i16)(a2_l);
-    in6 = (v8i16)(a1_r) + (v8i16)(a1_l);
-    in7 = (v8i16)(a0_r) + (v8i16)(a0_l);
+    in4 = (v8i16) (a3_r) + (v8i16) (a3_l);
+    in5 = (v8i16) (a2_r) + (v8i16) (a2_l);
+    in6 = (v8i16) (a1_r) + (v8i16) (a1_l);
+    in7 = (v8i16) (a0_r) + (v8i16) (a0_l);
     CLIP_SH4_0_255(in4, in5, in6, in7);
     PCKEV_B4_SH(in4, in4, in5, in5, in6, in6, in7, in7,
                 in4, in5, in6, in7);
@@ -538,14 +541,17 @@ static void simple_idct_add_msa(uint8_t *dst, int32_t dst_stride,
     SD4(tmp0, tmp1, tmp2, tmp3, dst + 4 * dst_stride, dst_stride);
 }
 
-void ff_simple_idct_msa(int16_t *block) {
+void ff_simple_idct_msa(int16_t *block)
+{
     simple_idct_msa(block);
 }
 
-void ff_simple_idct_put_msa(uint8_t *dst, ptrdiff_t dst_stride, int16_t *block) {
+void ff_simple_idct_put_msa(uint8_t *dst, ptrdiff_t dst_stride, int16_t *block)
+{
     simple_idct_put_msa(dst, dst_stride, block);
 }
 
-void ff_simple_idct_add_msa(uint8_t *dst, ptrdiff_t dst_stride, int16_t *block) {
+void ff_simple_idct_add_msa(uint8_t *dst, ptrdiff_t dst_stride, int16_t *block)
+{
     simple_idct_add_msa(dst, dst_stride, block);
 }

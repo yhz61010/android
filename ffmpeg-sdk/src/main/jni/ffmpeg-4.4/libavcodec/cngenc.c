@@ -33,7 +33,8 @@ typedef struct CNGContext {
     double *ref_coef;
 } CNGContext;
 
-static av_cold int cng_encode_close(AVCodecContext *avctx) {
+static av_cold int cng_encode_close(AVCodecContext *avctx)
+{
     CNGContext *p = avctx->priv_data;
     ff_lpc_end(&p->lpc);
     av_freep(&p->samples32);
@@ -41,7 +42,8 @@ static av_cold int cng_encode_close(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int cng_encode_init(AVCodecContext *avctx) {
+static av_cold int cng_encode_init(AVCodecContext *avctx)
+{
     CNGContext *p = avctx->priv_data;
     int ret;
 
@@ -63,12 +65,13 @@ static av_cold int cng_encode_init(AVCodecContext *avctx) {
 }
 
 static int cng_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
-                            const AVFrame *frame, int *got_packet_ptr) {
+                            const AVFrame *frame, int *got_packet_ptr)
+{
     CNGContext *p = avctx->priv_data;
     int ret, i;
     double energy = 0;
     int qdbov;
-    int16_t *samples = (int16_t *) frame->data[0];
+    int16_t *samples = (int16_t*) frame->data[0];
 
     if ((ret = ff_alloc_packet2(avctx, avpkt, 1 + p->order, 1 + p->order))) {
         av_log(avctx, AV_LOG_ERROR, "Error getting output packet\n");
@@ -98,15 +101,15 @@ static int cng_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 }
 
 AVCodec ff_comfortnoise_encoder = {
-        .name           = "comfortnoise",
-        .long_name      = NULL_IF_CONFIG_SMALL("RFC 3389 comfort noise generator"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_COMFORT_NOISE,
-        .priv_data_size = sizeof(CNGContext),
-        .init           = cng_encode_init,
-        .encode2        = cng_encode_frame,
-        .close          = cng_encode_close,
-        .sample_fmts    = (const enum AVSampleFormat[]) {AV_SAMPLE_FMT_S16,
-                                                         AV_SAMPLE_FMT_NONE},
-        .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
+    .name           = "comfortnoise",
+    .long_name      = NULL_IF_CONFIG_SMALL("RFC 3389 comfort noise generator"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_COMFORT_NOISE,
+    .priv_data_size = sizeof(CNGContext),
+    .init           = cng_encode_init,
+    .encode2        = cng_encode_frame,
+    .close          = cng_encode_close,
+    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE },
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

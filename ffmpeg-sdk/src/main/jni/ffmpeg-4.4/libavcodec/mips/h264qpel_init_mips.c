@@ -22,7 +22,8 @@
 #include "libavutil/mips/cpu.h"
 #include "h264dsp_mips.h"
 
-av_cold void ff_h264qpel_init_mips(H264QpelContext *c, int bit_depth) {
+av_cold void ff_h264qpel_init_mips(H264QpelContext *c, int bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {

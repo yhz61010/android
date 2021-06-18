@@ -30,11 +30,12 @@
 
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *got_frame,
-                        AVPacket *avpkt) {
+                        AVPacket *avpkt)
+{
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
+    int buf_size       = avpkt->size;
     GetBitContext gb;
-    AVFrame *const p = data;
+    AVFrame * const p = data;
     int x, y, ret;
 
     if (avctx->height <= 0 || avctx->width <= 0) {
@@ -57,13 +58,13 @@ static int decode_frame(AVCodecContext *avctx,
 
     for (y = 0; y < avctx->height; y++) {
         uint8_t *luma = &p->data[0][y * p->linesize[0]];
-        uint8_t *cb = &p->data[1][y * p->linesize[1]];
-        uint8_t *cr = &p->data[2][y * p->linesize[2]];
+        uint8_t *cb   = &p->data[1][y * p->linesize[1]];
+        uint8_t *cr   = &p->data[2][y * p->linesize[2]];
         for (x = 0; x < avctx->width; x += 4) {
-            luma[3] = (get_bits(&gb, 5) * 33) >> 2;
-            luma[2] = (get_bits(&gb, 5) * 33) >> 2;
-            luma[1] = (get_bits(&gb, 5) * 33) >> 2;
-            luma[0] = (get_bits(&gb, 5) * 33) >> 2;
+            luma[3] = (get_bits(&gb, 5)*33) >> 2;
+            luma[2] = (get_bits(&gb, 5)*33) >> 2;
+            luma[1] = (get_bits(&gb, 5)*33) >> 2;
+            luma[0] = (get_bits(&gb, 5)*33) >> 2;
             luma += 4;
             *(cb++) = get_bits(&gb, 6) << 2;
             *(cr++) = get_bits(&gb, 6) << 2;
@@ -75,19 +76,20 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     avctx->pix_fmt = AV_PIX_FMT_YUV411P;
     return 0;
 }
 
 AVCodec ff_cljr_decoder = {
-        .name           = "cljr",
-        .long_name      = NULL_IF_CONFIG_SMALL("Cirrus Logic AccuPak"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_CLJR,
-        .init           = decode_init,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "cljr",
+    .long_name      = NULL_IF_CONFIG_SMALL("Cirrus Logic AccuPak"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_CLJR,
+    .init           = decode_init,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 

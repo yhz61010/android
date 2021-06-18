@@ -22,7 +22,8 @@
 #include "pixblockdsp_mips.h"
 
 static void diff_pixels_msa(int16_t *block, const uint8_t *src1,
-                            const uint8_t *src2, int32_t stride) {
+                            const uint8_t *src2, int32_t stride)
+{
     v16u8 in10, in11, in12, in13, in14, in15, in16, in17;
     v16u8 in20, in21, in22, in23, in24, in25, in26, in27;
     v8i16 out0, out1, out2, out3, out4, out5, out6, out7;
@@ -40,11 +41,12 @@ static void diff_pixels_msa(int16_t *block, const uint8_t *src1,
 
 static void copy_8bit_to_16bit_width8_msa(const uint8_t *src, int32_t src_stride,
                                           int16_t *dst, int32_t dst_stride,
-                                          int32_t height) {
+                                          int32_t height)
+{
     uint8_t *dst_ptr;
     int32_t cnt;
     v16u8 src0, src1, src2, src3;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     dst_ptr = (uint8_t *) dst;
 
@@ -62,7 +64,8 @@ static void copy_8bit_to_16bit_width8_msa(const uint8_t *src, int32_t src_stride
 
 static void copy_16multx8mult_msa(const uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  int32_t height, int32_t width) {
+                                  int32_t height, int32_t width)
+{
     int32_t cnt, loop_cnt;
     const uint8_t *src_tmp;
     uint8_t *dst_tmp;
@@ -89,7 +92,8 @@ static void copy_16multx8mult_msa(const uint8_t *src, int32_t src_stride,
 
 static void copy_width16_msa(const uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
 
@@ -121,16 +125,19 @@ static void copy_width16_msa(const uint8_t *src, int32_t src_stride,
 }
 
 void ff_get_pixels_16_msa(int16_t *av_restrict dest, const uint8_t *src,
-                          ptrdiff_t stride) {
+                          ptrdiff_t stride)
+{
     copy_width16_msa(src, stride, (uint8_t *) dest, 16, 8);
 }
 
 void ff_get_pixels_8_msa(int16_t *av_restrict dest, const uint8_t *src,
-                         ptrdiff_t stride) {
+                         ptrdiff_t stride)
+{
     copy_8bit_to_16bit_width8_msa(src, stride, dest, 8, 8);
 }
 
 void ff_diff_pixels_msa(int16_t *av_restrict block, const uint8_t *src1,
-                        const uint8_t *src2, ptrdiff_t stride) {
+                        const uint8_t *src2, ptrdiff_t stride)
+{
     diff_pixels_msa(block, src1, src2, stride);
 }

@@ -31,7 +31,8 @@ typedef struct {
     int id; ///< current event id, ReadOrder field
 } ASSEncodeContext;
 
-static av_cold int ass_encode_init(AVCodecContext *avctx) {
+static av_cold int ass_encode_init(AVCodecContext *avctx)
+{
     avctx->extradata = av_malloc(avctx->subtitle_header_size + 1);
     if (!avctx->extradata)
         return AVERROR(ENOMEM);
@@ -43,11 +44,12 @@ static av_cold int ass_encode_init(AVCodecContext *avctx) {
 
 static int ass_encode_frame(AVCodecContext *avctx,
                             unsigned char *buf, int bufsize,
-                            const AVSubtitle *sub) {
+                            const AVSubtitle *sub)
+{
     ASSEncodeContext *s = avctx->priv_data;
     int i, len, total_len = 0;
 
-    for (i = 0; i < sub->num_rects; i++) {
+    for (i=0; i<sub->num_rects; i++) {
         char ass_line[2048];
         const char *ass = sub->rects[i]->ass;
         long int layer;
@@ -62,7 +64,7 @@ static int ass_encode_frame(AVCodecContext *avctx,
         if (!strncmp(ass, "Dialogue: ", 10)) {
             if (i > 0) {
                 av_log(avctx, AV_LOG_ERROR, "ASS encoder supports only one "
-                                            "ASS rectangle field.\n");
+                       "ASS rectangle field.\n");
                 return AVERROR_INVALIDDATA;
             }
 
@@ -87,9 +89,9 @@ static int ass_encode_frame(AVCodecContext *avctx,
         }
 #endif
 
-        len = av_strlcpy(buf + total_len, ass, bufsize - total_len);
+        len = av_strlcpy(buf+total_len, ass, bufsize-total_len);
 
-        if (len > bufsize - total_len - 1) {
+        if (len > bufsize-total_len-1) {
             av_log(avctx, AV_LOG_ERROR, "Buffer too small for ASS event.\n");
             return AVERROR_BUFFER_TOO_SMALL;
         }

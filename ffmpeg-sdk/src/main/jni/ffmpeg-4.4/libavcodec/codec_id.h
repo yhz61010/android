@@ -530,7 +530,7 @@ enum AVCodecID {
     AV_CODEC_ID_DVB_TELETEXT,
     AV_CODEC_ID_SRT,
 
-    AV_CODEC_ID_MICRODVD = 0x17800,
+    AV_CODEC_ID_MICRODVD   = 0x17800,
     AV_CODEC_ID_EIA_608,
     AV_CODEC_ID_JACOSUB,
     AV_CODEC_ID_SAMI,
@@ -554,7 +554,7 @@ enum AVCodecID {
 
     AV_CODEC_ID_SCTE_35, ///< Contain timestamp estimated through PCR of program stream.
     AV_CODEC_ID_EPG,
-    AV_CODEC_ID_BINTEXT = 0x18800,
+    AV_CODEC_ID_BINTEXT    = 0x18800,
     AV_CODEC_ID_XBIN,
     AV_CODEC_ID_IDF,
     AV_CODEC_ID_OTF,

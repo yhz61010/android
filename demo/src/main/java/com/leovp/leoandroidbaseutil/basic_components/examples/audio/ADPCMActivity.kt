@@ -2,9 +2,9 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio
 
 import android.media.AudioFormat
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.fail
 import com.leovp.androidbase.exts.kotlin.toByteArrayLE
 import com.leovp.androidbase.exts.kotlin.toShortArrayLE
 import com.leovp.androidbase.utils.file.FileUtil
@@ -13,7 +13,7 @@ import com.leovp.audio.AudioPlayer
 import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.ffmpeg_javacpp.audio.adpcm.AdpcmImaQTDecoder
+import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtDecoder
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlin.concurrent.thread
@@ -24,7 +24,6 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     private val adpcm = ADPCMCodec()
-    private val adpcmQT = AdpcmImaQTDecoder(44100, 2)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +52,11 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     fun onPlayRawAdpcmClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val player = AudioPlayer(this, AudioDecoderInfo(44100, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT), AudioType.PCM)
+        val decoderInfo = AudioDecoderInfo(44100, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        val player = AudioPlayer(this, decoderInfo, AudioType.PCM)
+
+        val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, 2)
+
 //        val adpcmIMAQtPcmFile = FileUtil.createFile(this, "adpcm_ima_qt_44100_2channels_s16le.pcm")
         thread {
 //            val os = BufferedOutputStream(FileOutputStream(adpcmIMAQtPcmFile))
@@ -62,12 +65,19 @@ class ADPCMActivity : BaseDemonstrationActivity() {
             val chunkSize: Int = adpcmQT.chunkSize()
             for (i in musicBytes.indices step chunkSize) {
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
-                val pcmBytes: ByteArray = adpcmQT.decode(chunk)?.first ?: fail("Decode ADPCM error!")
-//                os.write(pcmBytes)
-                player.play(pcmBytes)
+
+//                val pcmBytes: ByteArray = adpcmQT.decode(chunk)?.first ?: fail("Decode ADPCM error!")
+
+                val st = SystemClock.elapsedRealtimeNanos()
+                val pcmResultBean: com.leovp.ffmpeg.base.DecodedAudioResult = adpcmQT.decode(chunk)
+//                os.write(pcmChunkBytes)
+                if (LogContext.enableLog) LogContext.log.i("PCM[${pcmResultBean.leftChannelData.size}][${pcmResultBean.rightChannelData.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
+
+                player.play(pcmResultBean.leftChannelData)
             }
 //            os.flush()
 //            os.close()
+            adpcmQT.release()
             if (LogContext.enableLog) LogContext.log.i("PCM wrote.")
         }
     }

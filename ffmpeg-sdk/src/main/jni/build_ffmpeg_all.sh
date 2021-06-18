@@ -43,14 +43,20 @@ pushd ffmpeg
     --ranlib=${TOOLCHAINS}/bin/llvm-ranlib \
     --strip=${TOOLCHAINS}/bin/llvm-strip \
     --disable-everything \
+    --disable-programs \
     --disable-x86asm \
     --disable-inline-asm \
+    --disable-swresample \
     --disable-swscale \
+    --disable-avfilter \
+    --disable-avdevice \
     --enable-decoder=adpcm_ima_qt \
     --disable-static \
     --enable-shared \
     --enable-small \
     --enable-pic
+
+# --disable-avformat \
 
 make clean
 make -j6

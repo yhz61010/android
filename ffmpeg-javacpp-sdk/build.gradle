@@ -35,45 +35,29 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
-    externalNativeBuild {
-        ndkBuild {
-            path "src/main/jni/Android.mk"
-        }
-    }
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/libs']
         }
     }
-    packagingOptions {
-        pickFirst "lib/armeabi-v7a/libavutil.so"
-        pickFirst "lib/armeabi-v7a/libavcodec.so"
-        pickFirst "lib/armeabi-v7a/libswresample.so"
-        pickFirst "lib/armeabi-v7a/libavfilter.so"
-        pickFirst "lib/armeabi-v7a/libavdevice.so"
-        pickFirst "lib/armeabi-v7a/libavformat.so"
-        pickFirst "lib/armeabi-v7a/libswscale.so"
-        pickFirst "lib/armeabi-v7a/libadpcm-ima-qt.so"
-        pickFirst "lib/armeabi-v7a/libc++_shared.so"
-
-        pickFirst "lib/arm64-v8a/libavutil.so"
-        pickFirst "lib/arm64-v8a/libavcodec.so"
-        pickFirst "lib/arm64-v8a/libswresample.so"
-        pickFirst "lib/arm64-v8a/libavfilter.so"
-        pickFirst "lib/arm64-v8a/libavdevice.so"
-        pickFirst "lib/arm64-v8a/libavformat.so"
-        pickFirst "lib/arm64-v8a/libswscale.so"
-        pickFirst "lib/arm64-v8a/libadpcm-ima-qt.so"
-        pickFirst "lib/arm64-v8a/libc++_shared.so"
-    }
 }
 
 dependencies {
-    api fileTree(dir: "libs", include: ["*.jar"])
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 //    api "androidx.appcompat:appcompat:$appcompatVersion"
 //    api "com.google.android.material:material:$rootProject.ext.materialVersion"
 
     api project(':androidbase-sdk')
+
+    // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
+    api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion", classifier: 'android-arm'
+    api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion"
+
+    // https://mvnrepository.com/artifact/org.bytedeco/javacpp
+    api group: 'org.bytedeco', name: 'javacpp', version: "$javacppVersion", classifier: 'android-arm'
+    api group: 'org.bytedeco', name: 'javacpp', version: "$javacppVersion"
+
+    // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
+//    api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion" // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
 }

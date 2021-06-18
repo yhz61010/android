@@ -1,4 +1,4 @@
-package com.leovp.ffmpeg.audio.adpcm
+package com.leovp.ffmpeg_javacpp.audio.adpcm
 
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avutil.AVDictionary

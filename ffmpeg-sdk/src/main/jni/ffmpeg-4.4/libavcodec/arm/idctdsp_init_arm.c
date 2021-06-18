@@ -36,44 +36,49 @@ void ff_add_pixels_clamped_arm(const int16_t *block, uint8_t *dest,
 /* XXX: those functions should be suppressed ASAP when all IDCTs are
  * converted */
 static void j_rev_dct_arm_put(uint8_t *dest, ptrdiff_t line_size,
-                              int16_t *block) {
+                              int16_t *block)
+{
     ff_j_rev_dct_arm(block);
     ff_put_pixels_clamped_c(block, dest, line_size);
 }
 
 static void j_rev_dct_arm_add(uint8_t *dest, ptrdiff_t line_size,
-                              int16_t *block) {
+                              int16_t *block)
+{
     ff_j_rev_dct_arm(block);
     ff_add_pixels_clamped_arm(block, dest, line_size);
 }
 
 static void simple_idct_arm_put(uint8_t *dest, ptrdiff_t line_size,
-                                int16_t *block) {
+                                int16_t *block)
+{
     ff_simple_idct_arm(block);
     ff_put_pixels_clamped_c(block, dest, line_size);
 }
 
 static void simple_idct_arm_add(uint8_t *dest, ptrdiff_t line_size,
-                                int16_t *block) {
+                                int16_t *block)
+{
     ff_simple_idct_arm(block);
     ff_add_pixels_clamped_arm(block, dest, line_size);
 }
 
 av_cold void ff_idctdsp_init_arm(IDCTDSPContext *c, AVCodecContext *avctx,
-                                 unsigned high_bit_depth) {
+                                 unsigned high_bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (!avctx->lowres && !high_bit_depth) {
         if ((avctx->idct_algo == FF_IDCT_AUTO && !(avctx->flags & AV_CODEC_FLAG_BITEXACT)) ||
             avctx->idct_algo == FF_IDCT_ARM) {
-            c->idct_put = j_rev_dct_arm_put;
-            c->idct_add = j_rev_dct_arm_add;
-            c->idct = ff_j_rev_dct_arm;
+            c->idct_put  = j_rev_dct_arm_put;
+            c->idct_add  = j_rev_dct_arm_add;
+            c->idct      = ff_j_rev_dct_arm;
             c->perm_type = FF_IDCT_PERM_LIBMPEG2;
         } else if (avctx->idct_algo == FF_IDCT_SIMPLEARM) {
-            c->idct_put = simple_idct_arm_put;
-            c->idct_add = simple_idct_arm_add;
-            c->idct = ff_simple_idct_arm;
+            c->idct_put  = simple_idct_arm_put;
+            c->idct_add  = simple_idct_arm_add;
+            c->idct      = ff_simple_idct_arm;
             c->perm_type = FF_IDCT_PERM_NONE;
         }
     }

@@ -53,7 +53,8 @@ static void xvid_idct_mmxext_add(uint8_t *dest, ptrdiff_t line_size, short *bloc
 #endif
 
 av_cold void ff_xvid_idct_init_x86(IDCTDSPContext *c, AVCodecContext *avctx,
-                                   unsigned high_bit_depth) {
+                                   unsigned high_bit_depth)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 

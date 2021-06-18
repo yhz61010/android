@@ -51,11 +51,12 @@ static inline void dct_unquantize_h263_helper_c(int16_t *block, int qmul, int qa
 #endif
 
 static void dct_unquantize_h263_intra_armv5te(MpegEncContext *s,
-                                              int16_t *block, int n, int qscale) {
+                                  int16_t *block, int n, int qscale)
+{
     int level, qmul, qadd;
     int nCoeffs;
 
-    av_assert2(s->block_last_index[n] >= 0);
+    av_assert2(s->block_last_index[n]>=0);
 
     qmul = qscale << 1;
 
@@ -65,35 +66,37 @@ static void dct_unquantize_h263_intra_armv5te(MpegEncContext *s,
         else
             level = block[0] * s->c_dc_scale;
         qadd = (qscale - 1) | 1;
-    } else {
+    }else{
         qadd = 0;
         level = block[0];
     }
-    if (s->ac_pred)
-        nCoeffs = 63;
+    if(s->ac_pred)
+        nCoeffs=63;
     else
-        nCoeffs = s->inter_scantable.raster_end[s->block_last_index[n]];
+        nCoeffs= s->inter_scantable.raster_end[ s->block_last_index[n] ];
 
     ff_dct_unquantize_h263_armv5te(block, qmul, qadd, nCoeffs + 1);
     block[0] = level;
 }
 
 static void dct_unquantize_h263_inter_armv5te(MpegEncContext *s,
-                                              int16_t *block, int n, int qscale) {
+                                  int16_t *block, int n, int qscale)
+{
     int qmul, qadd;
     int nCoeffs;
 
-    av_assert2(s->block_last_index[n] >= 0);
+    av_assert2(s->block_last_index[n]>=0);
 
     qadd = (qscale - 1) | 1;
     qmul = qscale << 1;
 
-    nCoeffs = s->inter_scantable.raster_end[s->block_last_index[n]];
+    nCoeffs= s->inter_scantable.raster_end[ s->block_last_index[n] ];
 
     ff_dct_unquantize_h263_armv5te(block, qmul, qadd, nCoeffs + 1);
 }
 
-av_cold void ff_mpv_common_init_armv5te(MpegEncContext *s) {
+av_cold void ff_mpv_common_init_armv5te(MpegEncContext *s)
+{
     s->dct_unquantize_h263_intra = dct_unquantize_h263_intra_armv5te;
     s->dct_unquantize_h263_inter = dct_unquantize_h263_inter_armv5te;
 }

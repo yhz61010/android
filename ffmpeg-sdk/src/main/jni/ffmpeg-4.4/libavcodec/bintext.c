@@ -46,7 +46,8 @@ typedef struct XbinContext {
     int x, y;
 } XbinContext;
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     XbinContext *s = avctx->priv_data;
     uint8_t *p;
     int i;
@@ -57,8 +58,8 @@ static av_cold int decode_init(AVCodecContext *avctx) {
         s->font_height = p[0];
         s->flags = p[1];
         p += 2;
-        if (avctx->extradata_size < 2 + (!!(s->flags & BINTEXT_PALETTE)) * 3 * 16
-                                    + (!!(s->flags & BINTEXT_FONT)) * s->font_height * 256) {
+        if(avctx->extradata_size < 2 + (!!(s->flags & BINTEXT_PALETTE))*3*16
+                                     + (!!(s->flags & BINTEXT_FONT))*s->font_height*256) {
             av_log(avctx, AV_LOG_ERROR, "not enough extradata\n");
             return AVERROR_INVALIDDATA;
         }
@@ -84,16 +85,16 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     if ((s->flags & BINTEXT_FONT)) {
         s->font = p;
     } else {
-        switch (s->font_height) {
-            default:
-                av_log(avctx, AV_LOG_WARNING, "font height %i not supported\n", s->font_height);
-                s->font_height = 8;
-            case 8:
-                s->font = avpriv_cga_font;
-                break;
-            case 16:
-                s->font = avpriv_vga16_font;
-                break;
+        switch(s->font_height) {
+        default:
+            av_log(avctx, AV_LOG_WARNING, "font height %i not supported\n", s->font_height);
+            s->font_height = 8;
+        case 8:
+            s->font = avpriv_cga_font;
+            break;
+        case 16:
+            s->font = avpriv_vga16_font;
+            break;
         }
     }
     if (avctx->width < FONT_WIDTH || avctx->height < s->font_height) {
@@ -105,23 +106,24 @@ static av_cold int decode_init(AVCodecContext *avctx) {
 }
 
 #define DEFAULT_BG_COLOR 0
-
-av_unused static void hscroll(AVCodecContext *avctx) {
+av_unused static void hscroll(AVCodecContext *avctx)
+{
     XbinContext *s = avctx->priv_data;
     if (s->y < avctx->height - s->font_height) {
         s->y += s->font_height;
     } else {
-        memmove(s->frame->data[0], s->frame->data[0] + s->font_height * s->frame->linesize[0],
-                (avctx->height - s->font_height) * s->frame->linesize[0]);
-        memset(s->frame->data[0] + (avctx->height - s->font_height) * s->frame->linesize[0],
-               DEFAULT_BG_COLOR, s->font_height * s->frame->linesize[0]);
+        memmove(s->frame->data[0], s->frame->data[0] + s->font_height*s->frame->linesize[0],
+            (avctx->height - s->font_height)*s->frame->linesize[0]);
+        memset(s->frame->data[0] + (avctx->height - s->font_height)*s->frame->linesize[0],
+            DEFAULT_BG_COLOR, s->font_height * s->frame->linesize[0]);
     }
 }
 
 /**
  * Draw character to screen
  */
-static void draw_char(AVCodecContext *avctx, int c, int a) {
+static void draw_char(AVCodecContext *avctx, int c, int a)
+{
     XbinContext *s = avctx->priv_data;
     if (s->y > avctx->height - s->font_height)
         return;
@@ -136,12 +138,13 @@ static void draw_char(AVCodecContext *avctx, int c, int a) {
 }
 
 static int decode_frame(AVCodecContext *avctx,
-                        void *data, int *got_frame,
-                        AVPacket *avpkt) {
+                            void *data, int *got_frame,
+                            AVPacket *avpkt)
+{
     XbinContext *s = avctx->priv_data;
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
-    const uint8_t *buf_end = buf + buf_size;
+    const uint8_t *buf_end = buf+buf_size;
     int ret;
 
     if ((avctx->width / FONT_WIDTH) * (avctx->height / s->font_height) / 256 > buf_size)
@@ -151,53 +154,53 @@ static int decode_frame(AVCodecContext *avctx,
     s->x = s->y = 0;
     if ((ret = ff_get_buffer(avctx, s->frame, 0)) < 0)
         return ret;
-    s->frame->pict_type = AV_PICTURE_TYPE_I;
+    s->frame->pict_type           = AV_PICTURE_TYPE_I;
     s->frame->palette_has_changed = 1;
     memcpy(s->frame->data[1], s->palette, 16 * 4);
 
     if (avctx->codec_id == AV_CODEC_ID_XBIN) {
         while (buf + 2 < buf_end) {
-            int i, c, a;
-            int type = *buf >> 6;
+            int i,c,a;
+            int type  = *buf >> 6;
             int count = (*buf & 0x3F) + 1;
             buf++;
             switch (type) {
-                case 0: //no compression
-                    for (i = 0; i < count && buf + 1 < buf_end; i++) {
-                        draw_char(avctx, buf[0], buf[1]);
-                        buf += 2;
-                    }
-                    break;
-                case 1: //character compression
-                    c = *buf++;
-                    for (i = 0; i < count && buf < buf_end; i++)
-                        draw_char(avctx, c, *buf++);
-                    break;
-                case 2: //attribute compression
-                    a = *buf++;
-                    for (i = 0; i < count && buf < buf_end; i++)
-                        draw_char(avctx, *buf++, a);
-                    break;
-                case 3: //character/attribute compression
-                    c = *buf++;
-                    a = *buf++;
-                    for (i = 0; i < count && buf < buf_end; i++)
-                        draw_char(avctx, c, a);
-                    break;
+            case 0: //no compression
+                for (i = 0; i < count && buf + 1 < buf_end; i++) {
+                    draw_char(avctx, buf[0], buf[1]);
+                    buf += 2;
+                }
+                break;
+            case 1: //character compression
+                c = *buf++;
+                for (i = 0; i < count && buf < buf_end; i++)
+                    draw_char(avctx, c, *buf++);
+                break;
+            case 2: //attribute compression
+                a = *buf++;
+                for (i = 0; i < count && buf < buf_end; i++)
+                    draw_char(avctx, *buf++, a);
+                break;
+            case 3: //character/attribute compression
+                c = *buf++;
+                a = *buf++;
+                for (i = 0; i < count && buf < buf_end; i++)
+                    draw_char(avctx, c, a);
+                break;
             }
         }
     } else if (avctx->codec_id == AV_CODEC_ID_IDF) {
         while (buf + 2 < buf_end) {
             if (AV_RL16(buf) == 1) {
-                int i;
-                if (buf + 6 > buf_end)
-                    break;
-                for (i = 0; i < buf[2]; i++)
-                    draw_char(avctx, buf[4], buf[5]);
-                buf += 6;
+               int i;
+               if (buf + 6 > buf_end)
+                   break;
+               for (i = 0; i < buf[2]; i++)
+                   draw_char(avctx, buf[4], buf[5]);
+               buf += 6;
             } else {
-                draw_char(avctx, buf[0], buf[1]);
-                buf += 2;
+               draw_char(avctx, buf[0], buf[1]);
+               buf += 2;
             }
         }
     } else {
@@ -207,7 +210,7 @@ static int decode_frame(AVCodecContext *avctx,
         }
     }
 
-    *got_frame = 1;
+    *got_frame      = 1;
     return buf_size;
 }
 

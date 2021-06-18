@@ -498,7 +498,8 @@ static void ff_imdct_calc_mips(FFTContext *s, FFTSample *output, const FFTSample
 #endif /* !HAVE_MIPS32R6 && !HAVE_MIPS64R6 */
 #endif /* HAVE_INLINE_ASM */
 
-av_cold void ff_fft_init_mips(FFTContext *s) {
+av_cold void ff_fft_init_mips(FFTContext *s)
+{
     ff_fft_lut_init();
     ff_init_ff_cos_tabs(17);
 

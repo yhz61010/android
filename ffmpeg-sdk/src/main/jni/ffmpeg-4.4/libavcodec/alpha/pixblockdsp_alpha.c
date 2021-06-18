@@ -23,14 +23,15 @@
 #include "asm.h"
 
 static void get_pixels_mvi(int16_t *restrict block,
-                           const uint8_t *restrict pixels, ptrdiff_t stride) {
+                           const uint8_t *restrict pixels, ptrdiff_t stride)
+{
     int h = 8;
 
     do {
         uint64_t p;
 
         p = ldq(pixels);
-        stq(unpkbw(p), block);
+        stq(unpkbw(p),       block);
         stq(unpkbw(p >> 32), block + 4);
 
         pixels += stride;
@@ -39,7 +40,8 @@ static void get_pixels_mvi(int16_t *restrict block,
 }
 
 static void diff_pixels_mvi(int16_t *block, const uint8_t *s1, const uint8_t *s2,
-                            ptrdiff_t stride) {
+                            ptrdiff_t stride)
+{
     int h = 8;
     uint64_t mask = 0x4040;
 
@@ -57,7 +59,7 @@ static void diff_pixels_mvi(int16_t *block, const uint8_t *s1, const uint8_t *s2
         d += 4 * a;             /* ...so we can use s4addq here.      */
         signs = zap(-1, c);
 
-        stq(unpkbw(d) | (unpkbw(signs) << 8), block);
+        stq(unpkbw(d)       | (unpkbw(signs)       << 8), block);
         stq(unpkbw(d >> 32) | (unpkbw(signs >> 32) << 8), block + 4);
 
         s1 += stride;
@@ -67,7 +69,8 @@ static void diff_pixels_mvi(int16_t *block, const uint8_t *s1, const uint8_t *s2
 }
 
 av_cold void ff_pixblockdsp_init_alpha(PixblockDSPContext *c, AVCodecContext *avctx,
-                                       unsigned high_bit_depth) {
+                                       unsigned high_bit_depth)
+{
     if (amask(AMASK_MVI) == 0) {
         if (!high_bit_depth)
             c->get_pixels = get_pixels_mvi;

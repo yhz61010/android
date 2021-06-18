@@ -24,36 +24,38 @@
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 
-static const char *type_string(int type) {
+static const char *type_string(int type)
+{
     switch (type) {
-        case AVIO_ENTRY_DIRECTORY:
-            return "<DIR>";
-        case AVIO_ENTRY_FILE:
-            return "<FILE>";
-        case AVIO_ENTRY_BLOCK_DEVICE:
-            return "<BLOCK DEVICE>";
-        case AVIO_ENTRY_CHARACTER_DEVICE:
-            return "<CHARACTER DEVICE>";
-        case AVIO_ENTRY_NAMED_PIPE:
-            return "<PIPE>";
-        case AVIO_ENTRY_SYMBOLIC_LINK:
-            return "<LINK>";
-        case AVIO_ENTRY_SOCKET:
-            return "<SOCKET>";
-        case AVIO_ENTRY_SERVER:
-            return "<SERVER>";
-        case AVIO_ENTRY_SHARE:
-            return "<SHARE>";
-        case AVIO_ENTRY_WORKGROUP:
-            return "<WORKGROUP>";
-        case AVIO_ENTRY_UNKNOWN:
-        default:
-            break;
+    case AVIO_ENTRY_DIRECTORY:
+        return "<DIR>";
+    case AVIO_ENTRY_FILE:
+        return "<FILE>";
+    case AVIO_ENTRY_BLOCK_DEVICE:
+        return "<BLOCK DEVICE>";
+    case AVIO_ENTRY_CHARACTER_DEVICE:
+        return "<CHARACTER DEVICE>";
+    case AVIO_ENTRY_NAMED_PIPE:
+        return "<PIPE>";
+    case AVIO_ENTRY_SYMBOLIC_LINK:
+        return "<LINK>";
+    case AVIO_ENTRY_SOCKET:
+        return "<SOCKET>";
+    case AVIO_ENTRY_SERVER:
+        return "<SERVER>";
+    case AVIO_ENTRY_SHARE:
+        return "<SHARE>";
+    case AVIO_ENTRY_WORKGROUP:
+        return "<WORKGROUP>";
+    case AVIO_ENTRY_UNKNOWN:
+    default:
+        break;
     }
     return "<UNKNOWN>";
 }
 
-static int list_op(const char *input_dir) {
+static int list_op(const char *input_dir)
+{
     AVIODirEntry *entry = NULL;
     AVIODirContext *ctx = NULL;
     int cnt, ret;
@@ -75,51 +77,40 @@ static int list_op(const char *input_dir) {
         if (entry->filemode == -1) {
             snprintf(filemode, 4, "???");
         } else {
-            snprintf(filemode, 4, "%3"
-            PRIo64, entry->filemode);
+            snprintf(filemode, 4, "%3"PRIo64, entry->filemode);
         }
-        snprintf(uid_and_gid, 20, "%"
-        PRId64
-        "(%"
-        PRId64
-        ")", entry->user_id, entry->group_id);
+        snprintf(uid_and_gid, 20, "%"PRId64"(%"PRId64")", entry->user_id, entry->group_id);
         if (cnt == 0)
             av_log(NULL, AV_LOG_INFO, "%-9s %12s %30s %10s %s %16s %16s %16s\n",
                    "TYPE", "SIZE", "NAME", "UID(GID)", "UGO", "MODIFIED",
                    "ACCESSED", "STATUS_CHANGED");
-        av_log(NULL, AV_LOG_INFO, "%-9s %12"
-        PRId64
-        " %30s %10s %s %16"
-        PRId64
-        " %16"
-        PRId64
-        " %16"
-        PRId64
-        "\n",
-                type_string(entry->type),
-                entry->size,
-                entry->name,
-                uid_and_gid,
-                filemode,
-                entry->modification_timestamp,
-                entry->access_timestamp,
-                entry->status_change_timestamp);
+        av_log(NULL, AV_LOG_INFO, "%-9s %12"PRId64" %30s %10s %s %16"PRId64" %16"PRId64" %16"PRId64"\n",
+               type_string(entry->type),
+               entry->size,
+               entry->name,
+               uid_and_gid,
+               filemode,
+               entry->modification_timestamp,
+               entry->access_timestamp,
+               entry->status_change_timestamp);
         avio_free_directory_entry(&entry);
         cnt++;
     };
 
-    fail:
+  fail:
     avio_close_dir(&ctx);
     return ret;
 }
 
-static void usage(const char *program_name) {
+static void usage(const char *program_name)
+{
     fprintf(stderr, "usage: %s input_dir\n"
-                    "API example program to show how to list files in directory "
-                    "accessed through AVIOContext.\n", program_name);
+            "API example program to show how to list files in directory "
+            "accessed through AVIOContext.\n", program_name);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int ret;
 
     av_log_set_level(AV_LOG_DEBUG);

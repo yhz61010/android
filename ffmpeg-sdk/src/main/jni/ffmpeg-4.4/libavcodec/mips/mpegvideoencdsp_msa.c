@@ -21,7 +21,8 @@
 #include "h263dsp_mips.h"
 #include "libavutil/mips/generic_macros_msa.h"
 
-static int32_t sum_u8src_16width_msa(uint8_t *src, int32_t stride) {
+static int32_t sum_u8src_16width_msa(uint8_t *src, int32_t stride)
+{
     uint32_t sum = 0;
     v16u8 in0, in1, in2, in3, in4, in5, in6, in7;
     v16u8 in8, in9, in10, in11, in12, in13, in14, in15;
@@ -55,6 +56,7 @@ static int32_t sum_u8src_16width_msa(uint8_t *src, int32_t stride) {
     return sum;
 }
 
-int ff_pix_sum_msa(uint8_t *pix, int line_size) {
+int ff_pix_sum_msa(uint8_t *pix, int line_size)
+{
     return sum_u8src_16width_msa(pix, line_size);
 }

@@ -66,35 +66,22 @@ static void op##_##filter##sz##_hv_##bpp##_neon(uint8_t *dst, ptrdiff_t dst_stri
     decl_filter_funcs(put, hv, sz, bpp); \
     decl_filter_funcs(avg, hv, sz, bpp)
 
-declare_fpel(copy, 128,);
-
-declare_fpel(copy, 64,);
-
-declare_fpel(copy, 32,);
-
-declare_fpel(copy, 16,);
-
-declare_fpel(copy, 8,);
-
+declare_fpel(copy, 128, );
+declare_fpel(copy, 64,  );
+declare_fpel(copy, 32,  );
+declare_fpel(copy, 16,  );
+declare_fpel(copy, 8,   );
 declare_fpel(avg, 64, _16);
-
 declare_fpel(avg, 32, _16);
-
 declare_fpel(avg, 16, _16);
-
-declare_fpel(avg, 8, _16);
-
-declare_fpel(avg, 4, _16);
+declare_fpel(avg, 8,  _16);
+declare_fpel(avg, 4,  _16);
 
 decl_mc_funcs(64, BPP);
-
 decl_mc_funcs(32, BPP);
-
 decl_mc_funcs(16, BPP);
-
-decl_mc_funcs(8, BPP);
-
-decl_mc_funcs(4, BPP);
+decl_mc_funcs(8,  BPP);
+decl_mc_funcs(4,  BPP);
 
 #define define_8tap_2d_funcs(sz, bpp)        \
     define_8tap_2d_fn(put, regular, sz, bpp) \
@@ -105,17 +92,14 @@ decl_mc_funcs(4, BPP);
     define_8tap_2d_fn(avg, smooth,  sz, bpp)
 
 define_8tap_2d_funcs(64, BPP)
-
 define_8tap_2d_funcs(32, BPP)
-
 define_8tap_2d_funcs(16, BPP)
-
-define_8tap_2d_funcs(8, BPP)
-
-define_8tap_2d_funcs(4, BPP)
+define_8tap_2d_funcs(8,  BPP)
+define_8tap_2d_funcs(4,  BPP)
 
 
-static av_cold void vp9dsp_mc_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_mc_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -148,14 +132,14 @@ static av_cold void vp9dsp_mc_init_arm(VP9DSPContext *dsp) {
         init_copy_avg(0, 64, 128);
         init_copy_avg(1, 32, 64);
         init_copy_avg(2, 16, 32);
-        init_copy_avg(3, 8, 16);
-        init_copy_avg(4, 4, 8);
+        init_copy_avg(3, 8,  16);
+        init_copy_avg(4, 4,  8);
 
         init_mc_funcs_dirs(0, 64, BPP);
         init_mc_funcs_dirs(1, 32, BPP);
         init_mc_funcs_dirs(2, 16, BPP);
-        init_mc_funcs_dirs(3, 8, BPP);
-        init_mc_funcs_dirs(4, 4, BPP);
+        init_mc_funcs_dirs(3, 8,  BPP);
+        init_mc_funcs_dirs(4, 4,  BPP);
     }
 }
 
@@ -171,18 +155,15 @@ void ff_vp9_##type_a##_##type_b##_##sz##x##sz##_add_##bpp##_neon(uint8_t *_dst, 
     define_itxfm(idct,  iadst, sz, bpp); \
     define_itxfm(iadst, iadst, sz, bpp)
 
-define_itxfm_funcs(4, BPP);
-
-define_itxfm_funcs(8, BPP);
-
+define_itxfm_funcs(4,  BPP);
+define_itxfm_funcs(8,  BPP);
 define_itxfm_funcs(16, BPP);
-
 define_itxfm(idct, idct, 32, BPP);
+define_itxfm(iwht, iwht, 4,  BPP);
 
-define_itxfm(iwht, iwht, 4, BPP);
 
-
-static av_cold void vp9dsp_itxfm_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_itxfm_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -200,11 +181,11 @@ static av_cold void vp9dsp_itxfm_init_arm(VP9DSPContext *dsp) {
     dsp->itxfm_add[tx][ADST_ADST] = ff_vp9_##nm##_add_##bpp##_neon
 #define init_idct(tx, nm, bpp) init_idct2(tx, nm, bpp)
 
-        init_itxfm(TX_4X4, 4x4, BPP);
-        init_itxfm(TX_8X8, 8x8, BPP);
+        init_itxfm(TX_4X4,   4x4,   BPP);
+        init_itxfm(TX_8X8,   8x8,   BPP);
         init_itxfm(TX_16X16, 16x16, BPP);
         init_idct(TX_32X32, idct_idct_32x32, BPP);
-        init_idct(4, iwht_iwht_4x4, BPP);
+        init_idct(4,        iwht_iwht_4x4,   BPP);
     }
 }
 
@@ -215,23 +196,19 @@ void ff_vp9_loop_filter_##dir##_##wd##_##size##_##bpp##_neon(uint8_t *dst, ptrdi
     define_loop_filter(h, wd, size, bpp);  \
     define_loop_filter(v, wd, size, bpp)
 
-define_loop_filters(4, 8, BPP);
-
-define_loop_filters(8, 8, BPP);
-
-define_loop_filters(16, 8, BPP);
+define_loop_filters(4,  8,  BPP);
+define_loop_filters(8,  8,  BPP);
+define_loop_filters(16, 8,  BPP);
 
 define_loop_filters(16, 16, BPP);
 
 define_loop_filters(44, 16, BPP);
-
 define_loop_filters(48, 16, BPP);
-
 define_loop_filters(84, 16, BPP);
-
 define_loop_filters(88, 16, BPP);
 
-static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -273,7 +250,8 @@ static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp) {
     }
 }
 
-av_cold void INIT_FUNC(VP9DSPContext *dsp) {
+av_cold void INIT_FUNC(VP9DSPContext *dsp)
+{
     vp9dsp_mc_init_arm(dsp);
     vp9dsp_loopfilter_init_arm(dsp);
     vp9dsp_itxfm_init_arm(dsp);

@@ -29,7 +29,6 @@ void ff_mlp_filter_channel_arm(int32_t *state, const int32_t *coeff,
                                int firorder, int iirorder,
                                unsigned int filter_shift, int32_t mask,
                                int blocksize, int32_t *sample_buffer);
-
 void ff_mlp_rematrix_channel_arm(int32_t *samples,
                                  const int32_t *coeffs,
                                  const uint8_t *bypassed_lsbs,
@@ -42,11 +41,11 @@ void ff_mlp_rematrix_channel_arm(int32_t *samples,
                                  int access_unit_size_pow2,
                                  int32_t mask);
 
-#define DECLARE_PACK(order, channels, shift) \
+#define DECLARE_PACK(order,channels,shift) \
     int32_t ff_mlp_pack_output_##order##order_##channels##ch_##shift##shift_armv6(int32_t, uint16_t, int32_t (*)[], void *, uint8_t*, int8_t *, uint8_t, int);
-#define ENUMERATE_PACK(order, channels, shift) \
+#define ENUMERATE_PACK(order,channels,shift) \
     ff_mlp_pack_output_##order##order_##channels##ch_##shift##shift_armv6,
-#define PACK_CHANNELS(macro, order, channels) \
+#define PACK_CHANNELS(macro,order,channels) \
         macro(order,channels,0) \
         macro(order,channels,1) \
         macro(order,channels,2) \
@@ -54,14 +53,13 @@ void ff_mlp_rematrix_channel_arm(int32_t *samples,
         macro(order,channels,4) \
         macro(order,channels,5) \
         macro(order,channels,mixed)
-#define PACK_ORDER(macro, order) \
+#define PACK_ORDER(macro,order) \
         PACK_CHANNELS(macro,order,2) \
         PACK_CHANNELS(macro,order,6) \
         PACK_CHANNELS(macro,order,8)
 #define PACK_ALL(macro) \
         PACK_ORDER(macro,outof) \
         PACK_ORDER(macro,in)
-
 PACK_ALL(DECLARE_PACK)
 
 #define ff_mlp_pack_output_outoforder_2ch_mixedshift_armv6 0
@@ -91,11 +89,12 @@ PACK_ALL(DECLARE_PACK)
 static int32_t (*mlp_select_pack_output_armv6(uint8_t *ch_assign,
                                               int8_t *output_shift,
                                               uint8_t max_matrix_channel,
-                                              int is32))(int32_t, uint16_t, int32_t (*)[], void *, uint8_t *, int8_t *, uint8_t, int) {
+                                              int is32))(int32_t, uint16_t, int32_t (*)[], void *, uint8_t*, int8_t *, uint8_t, int)
+{
     int ch_index;
     int shift = output_shift[0] < 0 || output_shift[0] > 5 ? 6 : output_shift[0];
     int inorder = 1;
-    static int32_t (*const routine[2 * 3 * 7 ])(int32_t, uint16_t, int32_t (*)[], void *, uint8_t *, int8_t *, uint8_t, int) = {
+    static int32_t (*const routine[2*3*7])(int32_t, uint16_t, int32_t (*)[], void *, uint8_t*, int8_t *, uint8_t, int) = {
             PACK_ALL(ENUMERATE_PACK)
     };
     int i;
@@ -104,17 +103,17 @@ static int32_t (*mlp_select_pack_output_armv6(uint8_t *ch_assign,
         return ff_mlp_pack_output;
 
     switch (max_matrix_channel) {
-        case 1:
-            ch_index = 0;
-            break;
-        case 5:
-            ch_index = 1;
-            break;
-        case 7:
-            ch_index = 2;
-            break;
-        default:
-            return ff_mlp_pack_output;
+    case 1:
+        ch_index = 0;
+        break;
+    case 5:
+        ch_index = 1;
+        break;
+    case 7:
+        ch_index = 2;
+        break;
+    default:
+        return ff_mlp_pack_output;
     }
 
     for (i = 0; i <= max_matrix_channel; i++) {
@@ -131,10 +130,11 @@ static int32_t (*mlp_select_pack_output_armv6(uint8_t *ch_assign,
         return ff_mlp_pack_output; // can't currently handle both an order array and a shift array
 #endif
 
-    return routine[(inorder * 3 + ch_index) * 7 + shift];
+    return routine[(inorder*3+ch_index)*7+shift];
 }
 
-av_cold void ff_mlpdsp_init_arm(MLPDSPContext *c) {
+av_cold void ff_mlpdsp_init_arm(MLPDSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_armv5te(cpu_flags)) {

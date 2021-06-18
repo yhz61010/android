@@ -40,7 +40,8 @@ typedef struct CNGContext {
     AVLFG lfg;
 } CNGContext;
 
-static av_cold int cng_decode_close(AVCodecContext *avctx) {
+static av_cold int cng_decode_close(AVCodecContext *avctx)
+{
     CNGContext *p = avctx->priv_data;
     av_freep(&p->refl_coef);
     av_freep(&p->target_refl_coef);
@@ -50,21 +51,22 @@ static av_cold int cng_decode_close(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int cng_decode_init(AVCodecContext *avctx) {
+static av_cold int cng_decode_init(AVCodecContext *avctx)
+{
     CNGContext *p = avctx->priv_data;
 
-    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
-    avctx->channels = 1;
+    avctx->sample_fmt  = AV_SAMPLE_FMT_S16;
+    avctx->channels    = 1;
     avctx->sample_rate = 8000;
 
-    p->order = 12;
-    avctx->frame_size = 640;
-    p->refl_coef = av_mallocz_array(p->order, sizeof(*p->refl_coef));
+    p->order            = 12;
+    avctx->frame_size   = 640;
+    p->refl_coef        = av_mallocz_array(p->order, sizeof(*p->refl_coef));
     p->target_refl_coef = av_mallocz_array(p->order, sizeof(*p->target_refl_coef));
-    p->lpc_coef = av_mallocz_array(p->order, sizeof(*p->lpc_coef));
-    p->filter_out = av_mallocz_array(avctx->frame_size + p->order,
+    p->lpc_coef         = av_mallocz_array(p->order, sizeof(*p->lpc_coef));
+    p->filter_out       = av_mallocz_array(avctx->frame_size + p->order,
                                      sizeof(*p->filter_out));
-    p->excitation = av_mallocz_array(avctx->frame_size, sizeof(*p->excitation));
+    p->excitation       = av_mallocz_array(avctx->frame_size, sizeof(*p->excitation));
     if (!p->refl_coef || !p->target_refl_coef || !p->lpc_coef ||
         !p->filter_out || !p->excitation) {
         return AVERROR(ENOMEM);
@@ -75,33 +77,35 @@ static av_cold int cng_decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static void make_lpc_coefs(float *lpc, const float *refl, int order) {
+static void make_lpc_coefs(float *lpc, const float *refl, int order)
+{
     float buf[100];
     float *next, *cur;
     int m, i;
     next = buf;
-    cur = lpc;
+    cur  = lpc;
     for (m = 0; m < order; m++) {
         next[m] = refl[m];
         for (i = 0; i < m; i++)
             next[i] = cur[i] + refl[m] * cur[m - i - 1];
-        FFSWAP(
-        float*, next, cur);
+        FFSWAP(float*, next, cur);
     }
     if (cur != lpc)
         memcpy(lpc, cur, sizeof(*lpc) * order);
 }
 
-static void cng_decode_flush(AVCodecContext *avctx) {
+static void cng_decode_flush(AVCodecContext *avctx)
+{
     CNGContext *p = avctx->priv_data;
     p->inited = 0;
 }
 
 static int cng_decode_frame(AVCodecContext *avctx, void *data,
-                            int *got_frame_ptr, AVPacket *avpkt) {
+                            int *got_frame_ptr, AVPacket *avpkt)
+{
     AVFrame *frame = data;
     CNGContext *p = avctx->priv_data;
-    int buf_size = avpkt->size;
+    int buf_size  = avpkt->size;
     int ret, i;
     int16_t *buf_out;
     float e = 1.0;
@@ -124,7 +128,7 @@ static int cng_decode_frame(AVCodecContext *avctx, void *data,
     if (p->inited) {
         p->energy = p->energy / 2 + p->target_energy / 2;
         for (i = 0; i < p->order; i++)
-            p->refl_coef[i] = 0.6 * p->refl_coef[i] + 0.4 * p->target_refl_coef[i];
+            p->refl_coef[i] = 0.6 *p->refl_coef[i] + 0.4 * p->target_refl_coef[i];
     } else {
         p->energy = p->target_energy;
         memcpy(p->refl_coef, p->target_refl_coef, p->order * sizeof(*p->refl_coef));
@@ -133,7 +137,7 @@ static int cng_decode_frame(AVCodecContext *avctx, void *data,
     make_lpc_coefs(p->lpc_coef, p->refl_coef, p->order);
 
     for (i = 0; i < p->order; i++)
-        e *= 1.0 - p->refl_coef[i] * p->refl_coef[i];
+        e *= 1.0 - p->refl_coef[i]*p->refl_coef[i];
 
     scaling = sqrt(e * p->energy / 1081109975);
     for (i = 0; i < avctx->frame_size; i++) {
@@ -146,7 +150,7 @@ static int cng_decode_frame(AVCodecContext *avctx, void *data,
     frame->nb_samples = avctx->frame_size;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
-    buf_out = (int16_t *) frame->data[0];
+    buf_out = (int16_t *)frame->data[0];
     for (i = 0; i < avctx->frame_size; i++)
         buf_out[i] = av_clip_int16(p->filter_out[i + p->order]);
     memcpy(p->filter_out, p->filter_out + avctx->frame_size,
@@ -158,18 +162,18 @@ static int cng_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_comfortnoise_decoder = {
-        .name           = "comfortnoise",
-        .long_name      = NULL_IF_CONFIG_SMALL("RFC 3389 comfort noise generator"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_COMFORT_NOISE,
-        .priv_data_size = sizeof(CNGContext),
-        .init           = cng_decode_init,
-        .decode         = cng_decode_frame,
-        .flush          = cng_decode_flush,
-        .close          = cng_decode_close,
-        .sample_fmts    = (const enum AVSampleFormat[]) {AV_SAMPLE_FMT_S16,
-                                                         AV_SAMPLE_FMT_NONE},
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE |
-                          FF_CODEC_CAP_INIT_CLEANUP,
+    .name           = "comfortnoise",
+    .long_name      = NULL_IF_CONFIG_SMALL("RFC 3389 comfort noise generator"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_COMFORT_NOISE,
+    .priv_data_size = sizeof(CNGContext),
+    .init           = cng_decode_init,
+    .decode         = cng_decode_frame,
+    .flush          = cng_decode_flush,
+    .close          = cng_decode_close,
+    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE },
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE |
+                      FF_CODEC_CAP_INIT_CLEANUP,
 };

@@ -34,25 +34,26 @@
 #include "put_bits.h"
 
 const uint32_t avpriv_dca_sample_rates[16] = {
-        0, 8000, 16000, 32000, 0, 0, 11025, 22050, 44100, 0, 0,
-        12000, 24000, 48000, 96000, 192000
+    0, 8000, 16000, 32000, 0, 0, 11025, 22050, 44100, 0, 0,
+    12000, 24000, 48000, 96000, 192000
 };
 
 const uint32_t ff_dca_sampling_freqs[16] = {
-        8000, 16000, 32000, 64000, 128000, 22050, 44100, 88200,
-        176400, 352800, 12000, 24000, 48000, 96000, 192000, 384000,
+      8000,  16000, 32000, 64000, 128000, 22050,  44100,  88200,
+    176400, 352800, 12000, 24000,  48000, 96000, 192000, 384000,
 };
 
 const uint8_t ff_dca_freq_ranges[16] = {
-        0, 1, 2, 3, 4, 1, 2, 3, 4, 4, 0, 1, 2, 3, 4, 4
+    0, 1, 2, 3, 4, 1, 2, 3, 4, 4, 0, 1, 2, 3, 4, 4
 };
 
 const uint8_t ff_dca_bits_per_sample[8] = {
-        16, 16, 20, 20, 0, 24, 24, 0
+    16, 16, 20, 20, 0, 24, 24, 0
 };
 
 int avpriv_dca_convert_bitstream(const uint8_t *src, int src_size, uint8_t *dst,
-                                 int max_size) {
+                             int max_size)
+{
     uint32_t mrk;
     int i, tmp;
     PutBitContext pb;
@@ -62,32 +63,33 @@ int avpriv_dca_convert_bitstream(const uint8_t *src, int src_size, uint8_t *dst,
 
     mrk = AV_RB32(src);
     switch (mrk) {
-        case DCA_SYNCWORD_CORE_BE:
-        case DCA_SYNCWORD_SUBSTREAM:
-            memcpy(dst, src, src_size);
-            return src_size;
-        case DCA_SYNCWORD_CORE_LE:
-            for (i = 0; i < (src_size + 1) >> 1; i++) {
-                AV_WB16(dst, AV_RL16(src));
-                src += 2;
-                dst += 2;
-            }
-            return src_size;
-        case DCA_SYNCWORD_CORE_14B_BE:
-        case DCA_SYNCWORD_CORE_14B_LE:
-            init_put_bits(&pb, dst, max_size);
-            for (i = 0; i < (src_size + 1) >> 1; i++, src += 2) {
-                tmp = ((mrk == DCA_SYNCWORD_CORE_14B_BE) ? AV_RB16(src) : AV_RL16(src)) & 0x3FFF;
-                put_bits(&pb, 14, tmp);
-            }
-            flush_put_bits(&pb);
-            return (put_bits_count(&pb) + 7) >> 3;
-        default:
-            return AVERROR_INVALIDDATA;
+    case DCA_SYNCWORD_CORE_BE:
+    case DCA_SYNCWORD_SUBSTREAM:
+        memcpy(dst, src, src_size);
+        return src_size;
+    case DCA_SYNCWORD_CORE_LE:
+        for (i = 0; i < (src_size + 1) >> 1; i++) {
+            AV_WB16(dst, AV_RL16(src));
+            src += 2;
+            dst += 2;
+        }
+        return src_size;
+    case DCA_SYNCWORD_CORE_14B_BE:
+    case DCA_SYNCWORD_CORE_14B_LE:
+        init_put_bits(&pb, dst, max_size);
+        for (i = 0; i < (src_size + 1) >> 1; i++, src += 2) {
+            tmp = ((mrk == DCA_SYNCWORD_CORE_14B_BE) ? AV_RB16(src) : AV_RL16(src)) & 0x3FFF;
+            put_bits(&pb, 14, tmp);
+        }
+        flush_put_bits(&pb);
+        return (put_bits_count(&pb) + 7) >> 3;
+    default:
+        return AVERROR_INVALIDDATA;
     }
 }
 
-int ff_dca_parse_core_frame_header(DCACoreFrameHeader *h, GetBitContext *gb) {
+int ff_dca_parse_core_frame_header(DCACoreFrameHeader *h, GetBitContext *gb)
+{
     if (get_bits_long(gb, 32) != DCA_SYNCWORD_CORE_BE)
         return DCA_PARSE_ERROR_SYNC_WORD;
 
@@ -144,7 +146,8 @@ int ff_dca_parse_core_frame_header(DCACoreFrameHeader *h, GetBitContext *gb) {
     return 0;
 }
 
-int avpriv_dca_parse_core_frame_header(DCACoreFrameHeader *h, const uint8_t *buf, int size) {
+int avpriv_dca_parse_core_frame_header(DCACoreFrameHeader *h, const uint8_t *buf, int size)
+{
     GetBitContext gb;
     int ret;
 

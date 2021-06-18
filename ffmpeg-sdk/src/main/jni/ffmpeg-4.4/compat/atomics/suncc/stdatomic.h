@@ -80,7 +80,8 @@ typedef intptr_t atomic_ptrdiff_t;
 typedef intptr_t atomic_intmax_t;
 typedef intptr_t atomic_uintmax_t;
 
-static inline void atomic_store(intptr_t *object, intptr_t desired) {
+static inline void atomic_store(intptr_t *object, intptr_t desired)
+{
     *object = desired;
     __machine_rw_barrier();
 }
@@ -88,7 +89,8 @@ static inline void atomic_store(intptr_t *object, intptr_t desired) {
 #define atomic_store_explicit(object, desired, order) \
     atomic_store(object, desired)
 
-static inline intptr_t atomic_load(intptr_t *object) {
+static inline intptr_t atomic_load(intptr_t *object)
+{
     __machine_rw_barrier();
     return *object;
 }
@@ -103,9 +105,10 @@ static inline intptr_t atomic_load(intptr_t *object) {
     atomic_exchange(object, desired)
 
 static inline int atomic_compare_exchange_strong(intptr_t *object, intptr_t *expected,
-                                                 intptr_t desired) {
-    intptr_t old = *expected;
-    *expected = (intptr_t) atomic_cas_ptr(object, (void *) old, (void *) desired);
+                                                 intptr_t desired)
+{
+    intptr_t  old = *expected;
+    *expected = (intptr_t)atomic_cas_ptr(object, (void *)old, (void *)desired);
     return *expected == old;
 }
 
@@ -118,14 +121,16 @@ static inline int atomic_compare_exchange_strong(intptr_t *object, intptr_t *exp
 #define atomic_compare_exchange_weak_explicit(object, expected, desired, success, failure) \
     atomic_compare_exchange_weak(object, expected, desired)
 
-static inline intptr_t atomic_fetch_add(intptr_t *object, intptr_t operand) {
+static inline intptr_t atomic_fetch_add(intptr_t *object, intptr_t operand)
+{
     return atomic_add_ptr_nv(object, operand) - operand;
 }
 
 #define atomic_fetch_sub(object, operand) \
     atomic_fetch_add(object, -(operand))
 
-static inline intptr_t atomic_fetch_or(intptr_t *object, intptr_t operand) {
+static inline intptr_t atomic_fetch_or(intptr_t *object, intptr_t operand)
+{
     intptr_t old;
     do {
         old = atomic_load(object);
@@ -133,7 +138,8 @@ static inline intptr_t atomic_fetch_or(intptr_t *object, intptr_t operand) {
     return old;
 }
 
-static inline intptr_t atomic_fetch_xor(intptr_t *object, intptr_t operand) {
+static inline intptr_t atomic_fetch_xor(intptr_t *object, intptr_t operand)
+{
     intptr_t old;
     do {
         old = atomic_load(object);
@@ -141,7 +147,8 @@ static inline intptr_t atomic_fetch_xor(intptr_t *object, intptr_t operand) {
     return old;
 }
 
-static inline intptr_t atomic_fetch_and(intptr_t *object, intptr_t operand) {
+static inline intptr_t atomic_fetch_and(intptr_t *object, intptr_t operand)
+{
     intptr_t old;
     do {
         old = atomic_load(object);

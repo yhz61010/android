@@ -47,7 +47,8 @@ typedef struct CRIContext {
     uint64_t tile_size[4];
 } CRIContext;
 
-static av_cold int cri_decode_init(AVCodecContext *avctx) {
+static av_cold int cri_decode_init(AVCodecContext *avctx)
+{
     CRIContext *s = avctx->priv_data;
     const AVCodec *codec;
     int ret;
@@ -78,7 +79,8 @@ static av_cold int cri_decode_init(AVCodecContext *avctx) {
 }
 
 static void unpack_10bit(GetByteContext *gb, uint16_t *dst, int shift,
-                         int w, int h, ptrdiff_t stride) {
+                         int w, int h, ptrdiff_t stride)
+{
     int count = w * h;
     int pos = 0;
 
@@ -168,10 +170,11 @@ static void unpack_10bit(GetByteContext *gb, uint16_t *dst, int shift,
 }
 
 static int cri_decode_frame(AVCodecContext *avctx, void *data,
-                            int *got_frame, AVPacket *avpkt) {
+                            int *got_frame, AVPacket *avpkt)
+{
     CRIContext *s = avctx->priv_data;
-    GetByteContext * gb = &s->gb;
-    ThreadFrame frame = {.f = data};
+    GetByteContext *gb = &s->gb;
+    ThreadFrame frame = { .f = data };
     int ret, bps, hflip = 0, vflip = 0;
     AVFrameSideData *rotation;
     int compressed = 0;
@@ -188,117 +191,117 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
         float framerate;
         int width, height;
 
-        key = bytestream2_get_le32(gb);
+        key    = bytestream2_get_le32(gb);
         length = bytestream2_get_le32(gb);
 
         switch (key) {
-            case 1:
-                if (length != 4)
-                    return AVERROR_INVALIDDATA;
+        case 1:
+            if (length != 4)
+                return AVERROR_INVALIDDATA;
 
-                if (bytestream2_get_le32(gb) != MKTAG('D', 'V', 'C', 'C'))
-                    return AVERROR_INVALIDDATA;
-                break;
-            case 100:
-                if (length < 16)
-                    return AVERROR_INVALIDDATA;
-                width = bytestream2_get_le32(gb);
-                height = bytestream2_get_le32(gb);
-                s->color_model = bytestream2_get_le32(gb);
-                if (bytestream2_get_le32(gb) != 1)
-                    return AVERROR_INVALIDDATA;
-                ret = ff_set_dimensions(avctx, width, height);
-                if (ret < 0)
-                    return ret;
-                length -= 16;
-                goto skip;
-            case 101:
-                if (length != 4)
-                    return AVERROR_INVALIDDATA;
+            if (bytestream2_get_le32(gb) != MKTAG('D', 'V', 'C', 'C'))
+                return AVERROR_INVALIDDATA;
+            break;
+        case 100:
+            if (length < 16)
+                return AVERROR_INVALIDDATA;
+            width   = bytestream2_get_le32(gb);
+            height  = bytestream2_get_le32(gb);
+            s->color_model = bytestream2_get_le32(gb);
+            if (bytestream2_get_le32(gb) != 1)
+                return AVERROR_INVALIDDATA;
+            ret = ff_set_dimensions(avctx, width, height);
+            if (ret < 0)
+                return ret;
+            length -= 16;
+            goto skip;
+        case 101:
+            if (length != 4)
+                return AVERROR_INVALIDDATA;
 
-                if (bytestream2_get_le32(gb) != 0)
-                    return AVERROR_INVALIDDATA;
-                break;
-            case 102:
-                bytestream2_get_buffer(gb, codec_name, FFMIN(length, sizeof(codec_name) - 1));
-                length -= FFMIN(length, sizeof(codec_name) - 1);
-                if (strncmp(codec_name, "cintel_craw", FFMIN(length, sizeof(codec_name) - 1)))
-                    return AVERROR_INVALIDDATA;
-                compressed = 1;
-                goto skip;
-            case 103:
-                if (bytestream2_get_bytes_left(gb) < length)
-                    return AVERROR_INVALIDDATA;
-                s->data = gb->buffer;
-                s->data_size = length;
-                goto skip;
-            case 105:
-                hflip = bytestream2_get_byte(gb) != 0;
-                length--;
-                goto skip;
-            case 106:
-                vflip = bytestream2_get_byte(gb) != 0;
-                length--;
-                goto skip;
-            case 107:
-                if (length != 4)
-                    return AVERROR_INVALIDDATA;
-                framerate = av_int2float(bytestream2_get_le32(gb));
-                avctx->framerate.num = framerate * 1000;
-                avctx->framerate.den = 1000;
-                break;
-            case 119:
-                if (length != 32)
-                    return AVERROR_INVALIDDATA;
+            if (bytestream2_get_le32(gb) != 0)
+                return AVERROR_INVALIDDATA;
+            break;
+        case 102:
+            bytestream2_get_buffer(gb, codec_name, FFMIN(length, sizeof(codec_name) - 1));
+            length -= FFMIN(length, sizeof(codec_name) - 1);
+            if (strncmp(codec_name, "cintel_craw", FFMIN(length, sizeof(codec_name) - 1)))
+                return AVERROR_INVALIDDATA;
+            compressed = 1;
+            goto skip;
+        case 103:
+            if (bytestream2_get_bytes_left(gb) < length)
+                return AVERROR_INVALIDDATA;
+            s->data = gb->buffer;
+            s->data_size = length;
+            goto skip;
+        case 105:
+            hflip = bytestream2_get_byte(gb) != 0;
+            length--;
+            goto skip;
+        case 106:
+            vflip = bytestream2_get_byte(gb) != 0;
+            length--;
+            goto skip;
+        case 107:
+            if (length != 4)
+                return AVERROR_INVALIDDATA;
+            framerate = av_int2float(bytestream2_get_le32(gb));
+            avctx->framerate.num = framerate * 1000;
+            avctx->framerate.den = 1000;
+            break;
+        case 119:
+            if (length != 32)
+                return AVERROR_INVALIDDATA;
 
-                for (int i = 0; i < 4; i++)
-                    s->tile_size[i] = bytestream2_get_le64(gb);
-                break;
-            default:
-                av_log(avctx, AV_LOG_DEBUG, "skipping unknown key %u of length %u\n", key, length);
-            skip:
-                bytestream2_skip(gb, length);
+            for (int i = 0; i < 4; i++)
+                s->tile_size[i] = bytestream2_get_le64(gb);
+            break;
+        default:
+            av_log(avctx, AV_LOG_DEBUG, "skipping unknown key %u of length %u\n", key, length);
+skip:
+            bytestream2_skip(gb, length);
         }
     }
 
     switch (s->color_model) {
-        case 76:
-        case 88:
-            avctx->pix_fmt = AV_PIX_FMT_BAYER_BGGR16;
-            break;
-        case 77:
-        case 89:
-            avctx->pix_fmt = AV_PIX_FMT_BAYER_GBRG16;
-            break;
-        case 78:
-        case 90:
-            avctx->pix_fmt = AV_PIX_FMT_BAYER_RGGB16;
-            break;
-        case 45:
-        case 79:
-        case 91:
-            avctx->pix_fmt = AV_PIX_FMT_BAYER_GRBG16;
-            break;
+    case 76:
+    case 88:
+        avctx->pix_fmt = AV_PIX_FMT_BAYER_BGGR16;
+        break;
+    case 77:
+    case 89:
+        avctx->pix_fmt = AV_PIX_FMT_BAYER_GBRG16;
+        break;
+    case 78:
+    case 90:
+        avctx->pix_fmt = AV_PIX_FMT_BAYER_RGGB16;
+        break;
+    case 45:
+    case 79:
+    case 91:
+        avctx->pix_fmt = AV_PIX_FMT_BAYER_GRBG16;
+        break;
     }
 
     switch (s->color_model) {
-        case 45:
-            bps = 10;
-            break;
-        case 76:
-        case 77:
-        case 78:
-        case 79:
-            bps = 12;
-            break;
-        case 88:
-        case 89:
-        case 90:
-        case 91:
-            bps = 16;
-            break;
-        default:
-            return AVERROR_INVALIDDATA;
+    case 45:
+        bps = 10;
+        break;
+    case 76:
+    case 77:
+    case 78:
+    case 79:
+        bps = 12;
+        break;
+    case 88:
+    case 89:
+    case 90:
+    case 91:
+        bps = 16;
+        break;
+    default:
+        return AVERROR_INVALIDDATA;
     }
 
     if (compressed) {
@@ -321,8 +324,7 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
     avctx->bits_per_raw_sample = bps;
 
     if (!compressed && s->color_model == 45) {
-        uint16_t * dst = (uint16_t * )
-        p->data[0];
+        uint16_t *dst = (uint16_t *)p->data[0];
         GetByteContext gb;
 
         bytestream2_init(&gb, s->data, s->data_size);
@@ -336,7 +338,7 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
             return ret;
 
         for (int y = 0; y < avctx->height; y++) {
-            uint16_t *dst = (uint16_t * )(p->data[0] + y * p->linesize[0]);
+            uint16_t *dst = (uint16_t *)(p->data[0] + y * p->linesize[0]);
 
             if (get_bits_left(&gbit) < avctx->width * bps)
                 break;
@@ -349,7 +351,7 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
 
         for (int tile = 0; tile < 4; tile++) {
             av_packet_unref(s->jpkt);
-            s->jpkt->data = (uint8_t *) s->data + offset;
+            s->jpkt->data = (uint8_t *)s->data + offset;
             s->jpkt->size = s->tile_size[tile];
 
             ret = avcodec_send_packet(s->jpeg_avctx, s->jpkt);
@@ -360,7 +362,7 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
 
             ret = avcodec_receive_frame(s->jpeg_avctx, s->jpgframe);
             if (ret < 0 || s->jpgframe->format != AV_PIX_FMT_GRAY16 ||
-                s->jpeg_avctx->width * 2 != avctx->width ||
+                s->jpeg_avctx->width  * 2 != avctx->width ||
                 s->jpeg_avctx->height * 2 != avctx->height) {
                 if (ret < 0) {
                     av_log(avctx, AV_LOG_ERROR,
@@ -379,8 +381,8 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
             }
 
             for (int y = 0; y < s->jpeg_avctx->height; y++) {
-                const int hw = s->jpgframe->width / 2;
-                uint16_t *dst = (uint16_t * )(p->data[0] + (y * 2) * p->linesize[0] + tile * hw * 2);
+                const int hw =  s->jpgframe->width / 2;
+                uint16_t *dst = (uint16_t *)(p->data[0] + (y * 2) * p->linesize[0] + tile * hw * 2);
                 const uint16_t *src = (const uint16_t *)(s->jpgframe->data[0] + y * s->jpgframe->linesize[0]);
 
                 memcpy(dst, src, hw * 2);
@@ -398,8 +400,8 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
         rotation = av_frame_new_side_data(p, AV_FRAME_DATA_DISPLAYMATRIX,
                                           sizeof(int32_t) * 9);
         if (rotation) {
-            av_display_rotation_set((int32_t *) rotation->data, 0.f);
-            av_display_matrix_flip((int32_t *) rotation->data, hflip, vflip);
+            av_display_rotation_set((int32_t *)rotation->data, 0.f);
+            av_display_matrix_flip((int32_t *)rotation->data, hflip, vflip);
         }
     }
 
@@ -411,7 +413,8 @@ static int cri_decode_frame(AVCodecContext *avctx, void *data,
     return 0;
 }
 
-static av_cold int cri_decode_close(AVCodecContext *avctx) {
+static av_cold int cri_decode_close(AVCodecContext *avctx)
+{
     CRIContext *s = avctx->priv_data;
 
     av_frame_free(&s->jpgframe);
@@ -422,14 +425,14 @@ static av_cold int cri_decode_close(AVCodecContext *avctx) {
 }
 
 AVCodec ff_cri_decoder = {
-        .name           = "cri",
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_CRI,
-        .priv_data_size = sizeof(CRIContext),
-        .init           = cri_decode_init,
-        .decode         = cri_decode_frame,
-        .close          = cri_decode_close,
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
-        .long_name      = NULL_IF_CONFIG_SMALL("Cintel RAW"),
+    .name           = "cri",
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_CRI,
+    .priv_data_size = sizeof(CRIContext),
+    .init           = cri_decode_init,
+    .decode         = cri_decode_frame,
+    .close          = cri_decode_close,
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
+    .long_name      = NULL_IF_CONFIG_SMALL("Cintel RAW"),
 };

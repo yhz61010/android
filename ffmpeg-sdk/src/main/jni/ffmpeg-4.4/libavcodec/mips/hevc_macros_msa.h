@@ -21,7 +21,7 @@
 #ifndef AVCODEC_MIPS_HEVC_MACROS_MSA_H
 #define AVCODEC_MIPS_HEVC_MACROS_MSA_H
 
-#define HEVC_FILT_8TAP_SH(in0, in1, in2, in3, \
+#define HEVC_FILT_8TAP_SH(in0, in1, in2, in3,                    \
                           filt0, filt1, filt2, filt3)            \
 ( {                                                              \
     v8i16 out_m;                                                 \
@@ -32,7 +32,7 @@
     out_m;                                                       \
 } )
 
-#define HEVC_FILT_8TAP(in0, in1, in2, in3, \
+#define HEVC_FILT_8TAP(in0, in1, in2, in3,                       \
                        filt0, filt1, filt2, filt3)               \
 ( {                                                              \
     v4i32 out_m;                                                 \

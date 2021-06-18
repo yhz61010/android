@@ -23,10 +23,11 @@
 
 static void avc_wgt_4x2_msa(uint8_t *data, ptrdiff_t stride,
                             int32_t log2_denom, int32_t src_weight,
-                            int32_t offset_in) {
+                            int32_t offset_in)
+{
     uint32_t tp0, tp1, offset_val;
-    v16u8 zero = {0};
-    v16u8 src0 = {0};
+    v16u8 zero = { 0 };
+    v16u8 src0 = { 0 };
     v8i16 src0_r, tmp0, wgt, denom, offset;
 
     offset_val = (unsigned) offset_in << log2_denom;
@@ -49,9 +50,10 @@ static void avc_wgt_4x2_msa(uint8_t *data, ptrdiff_t stride,
 
 static void avc_wgt_4x4_msa(uint8_t *data, ptrdiff_t stride,
                             int32_t log2_denom, int32_t src_weight,
-                            int32_t offset_in) {
+                            int32_t offset_in)
+{
     uint32_t tp0, tp1, tp2, tp3, offset_val;
-    v16u8 src0 = {0};
+    v16u8 src0 = { 0 };
     v8i16 src0_r, src1_r, tmp0, tmp1, wgt, denom, offset;
 
     offset_val = (unsigned) offset_in << log2_denom;
@@ -75,9 +77,10 @@ static void avc_wgt_4x4_msa(uint8_t *data, ptrdiff_t stride,
 
 static void avc_wgt_4x8_msa(uint8_t *data, ptrdiff_t stride,
                             int32_t log2_denom, int32_t src_weight,
-                            int32_t offset_in) {
+                            int32_t offset_in)
+{
     uint32_t tp0, tp1, tp2, tp3, offset_val;
-    v16u8 src0 = {0}, src1 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 };
     v8i16 src0_r, src1_r, src2_r, src3_r, tmp0, tmp1, tmp2, tmp3;
     v8i16 wgt, denom, offset;
 
@@ -106,10 +109,11 @@ static void avc_wgt_4x8_msa(uint8_t *data, ptrdiff_t stride,
 
 static void avc_wgt_8x4_msa(uint8_t *data, ptrdiff_t stride,
                             int32_t log2_denom, int32_t src_weight,
-                            int32_t offset_in) {
+                            int32_t offset_in)
+{
     uint32_t offset_val;
     uint64_t tp0, tp1, tp2, tp3;
-    v16u8 src0 = {0}, src1 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 };
     v8i16 src0_r, src1_r, src2_r, src3_r, tmp0, tmp1, tmp2, tmp3;
     v8i16 wgt, denom, offset;
 
@@ -136,10 +140,11 @@ static void avc_wgt_8x4_msa(uint8_t *data, ptrdiff_t stride,
 }
 
 static void avc_wgt_8x8_msa(uint8_t *data, ptrdiff_t stride, int32_t log2_denom,
-                            int32_t src_weight, int32_t offset_in) {
+                            int32_t src_weight, int32_t offset_in)
+{
     uint32_t offset_val;
     uint64_t tp0, tp1, tp2, tp3;
-    v16u8 src0 = {0}, src1 = {0}, src2 = {0}, src3 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 }, src2 = { 0 }, src3 = { 0 };
     v8i16 src0_r, src1_r, src2_r, src3_r, src4_r, src5_r, src6_r, src7_r;
     v8i16 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     v8i16 wgt, denom, offset;
@@ -178,10 +183,11 @@ static void avc_wgt_8x8_msa(uint8_t *data, ptrdiff_t stride, int32_t log2_denom,
 
 static void avc_wgt_8x16_msa(uint8_t *data, ptrdiff_t stride,
                              int32_t log2_denom, int32_t src_weight,
-                             int32_t offset_in) {
+                             int32_t offset_in)
+{
     uint32_t offset_val, cnt;
     uint64_t tp0, tp1, tp2, tp3;
-    v16u8 src0 = {0}, src1 = {0}, src2 = {0}, src3 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 }, src2 = { 0 }, src3 = { 0 };
     v8i16 src0_r, src1_r, src2_r, src3_r, src4_r, src5_r, src6_r, src7_r;
     v8i16 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     v8i16 wgt, denom, offset;
@@ -223,10 +229,11 @@ static void avc_wgt_8x16_msa(uint8_t *data, ptrdiff_t stride,
 
 static void avc_biwgt_4x2_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                               int32_t log2_denom, int32_t src_weight,
-                              int32_t dst_weight, int32_t offset_in) {
+                              int32_t dst_weight, int32_t offset_in)
+{
     uint32_t tp0, tp1;
     v16i8 src_wgt, dst_wgt, wgt, vec0;
-    v16u8 src0 = {0}, dst0 = {0};
+    v16u8 src0 = { 0 }, dst0 = { 0 };
     v8i16 tmp0, denom, offset, max255 = __msa_ldi_h(255);
 
     offset_in = (unsigned) ((offset_in + 1) | 1) << log2_denom;
@@ -255,7 +262,8 @@ static void avc_biwgt_4x2_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 
 static void avc_biwgt_4x4_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                               int32_t log2_denom, int32_t src_weight,
-                              int32_t dst_weight, int32_t offset_in) {
+                              int32_t dst_weight, int32_t offset_in)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16i8 src_wgt, dst_wgt, wgt, vec0, vec1;
     v16u8 src0, dst0;
@@ -288,7 +296,8 @@ static void avc_biwgt_4x4_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 
 static void avc_biwgt_4x8_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                               int32_t log2_denom, int32_t src_weight,
-                              int32_t dst_weight, int32_t offset_in) {
+                              int32_t dst_weight, int32_t offset_in)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16i8 src_wgt, dst_wgt, wgt, vec0, vec1, vec2, vec3;
     v16u8 src0, src1, dst0, dst1;
@@ -327,7 +336,8 @@ static void avc_biwgt_4x8_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 
 static void avc_biwgt_8x4_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                               int32_t log2_denom, int32_t src_weight,
-                              int32_t dst_weight, int32_t offset_in) {
+                              int32_t dst_weight, int32_t offset_in)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16i8 src_wgt, dst_wgt, wgt, vec0, vec1, vec2, vec3;
     v16u8 src0, src1, dst0, dst1;
@@ -364,7 +374,8 @@ static void avc_biwgt_8x4_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 
 static void avc_biwgt_8x8_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                               int32_t log2_denom, int32_t src_weight,
-                              int32_t dst_weight, int32_t offset_in) {
+                              int32_t dst_weight, int32_t offset_in)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16i8 src_wgt, dst_wgt, wgt, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
     v16u8 src0, src1, src2, src3, dst0, dst1, dst2, dst3;
@@ -414,7 +425,8 @@ static void avc_biwgt_8x8_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 
 static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
                                int32_t log2_denom, int32_t src_weight,
-                               int32_t dst_weight, int32_t offset_in) {
+                               int32_t dst_weight, int32_t offset_in)
+{
     uint8_t cnt;
     uint64_t tp0, tp1, tp2, tp3;
     v16i8 src_wgt, dst_wgt, wgt;
@@ -474,9 +486,9 @@ static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
     }
 }
 
-#define AVC_LPF_P0P1P2_OR_Q0Q1Q2(p3_or_q3_org_in, p0_or_q0_org_in, \
-                                 q3_or_p3_org_in, p1_or_q1_org_in, \
-                                 p2_or_q2_org_in, q1_or_p1_org_in, \
+#define AVC_LPF_P0P1P2_OR_Q0Q1Q2(p3_or_q3_org_in, p0_or_q0_org_in,          \
+                                 q3_or_p3_org_in, p1_or_q1_org_in,          \
+                                 p2_or_q2_org_in, q1_or_p1_org_in,          \
                                  p0_or_q0_out, p1_or_q1_out, p2_or_q2_out)  \
 {                                                                           \
     v8i16 threshold;                                                        \
@@ -501,7 +513,7 @@ static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 }
 
 /* data[-u32_img_width] = (uint8_t)((2 * p1 + p0 + q1 + 2) >> 2); */
-#define AVC_LPF_P0_OR_Q0(p0_or_q0_org_in, q1_or_p1_org_in, \
+#define AVC_LPF_P0_OR_Q0(p0_or_q0_org_in, q1_or_p1_org_in,   \
                          p1_or_q1_org_in, p0_or_q0_out)      \
 {                                                            \
     (p0_or_q0_out) = (p0_or_q0_org_in) + (q1_or_p1_org_in);  \
@@ -510,8 +522,8 @@ static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
     (p0_or_q0_out) = __msa_srari_h((p0_or_q0_out), 2);       \
 }
 
-#define AVC_LPF_P1_OR_Q1(p0_or_q0_org_in, q0_or_p0_org_in, \
-                         p1_or_q1_org_in, p2_or_q2_org_in, \
+#define AVC_LPF_P1_OR_Q1(p0_or_q0_org_in, q0_or_p0_org_in,    \
+                         p1_or_q1_org_in, p2_or_q2_org_in,    \
                          negate_tc_in, tc_in, p1_or_q1_out)   \
 {                                                             \
     v8i16 clip3, temp;                                        \
@@ -525,9 +537,9 @@ static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
     p1_or_q1_out = p1_or_q1_org_in + clip3;                   \
 }
 
-#define AVC_LPF_P0Q0(q0_or_p0_org_in, p0_or_q0_org_in, \
-                     p1_or_q1_org_in, q1_or_p1_org_in, \
-                     negate_threshold_in, threshold_in, \
+#define AVC_LPF_P0Q0(q0_or_p0_org_in, p0_or_q0_org_in,          \
+                     p1_or_q1_org_in, q1_or_p1_org_in,          \
+                     negate_threshold_in, threshold_in,         \
                      p0_or_q0_out, q0_or_p0_out)                \
 {                                                               \
     v8i16 q0_sub_p0, p1_sub_q1, delta;                          \
@@ -671,7 +683,8 @@ static void avc_biwgt_8x16_msa(uint8_t *src, uint8_t *dst, ptrdiff_t stride,
 static void avc_loopfilter_luma_intra_edge_hor_msa(uint8_t *data,
                                                    uint8_t alpha_in,
                                                    uint8_t beta_in,
-                                                   ptrdiff_t img_width) {
+                                                   ptrdiff_t img_width)
+{
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0;
     v16u8 is_less_than, is_less_than_beta, is_less_than_alpha;
     v16u8 p1_org, p0_org, q0_org, q1_org;
@@ -690,16 +703,16 @@ static void avc_loopfilter_luma_intra_edge_hor_msa(uint8_t *data,
 
     if (!__msa_test_bz_v(is_less_than)) {
         v16u8 p2_asub_p0, q2_asub_q0, p0, q0, negate_is_less_than_beta;
-        v8i16 p0_r = {0};
-        v8i16 q0_r = {0};
-        v8i16 p0_l = {0};
-        v8i16 q0_l = {0};
-        v16i8 zero = {0};
+        v8i16 p0_r = { 0 };
+        v8i16 q0_r = { 0 };
+        v8i16 p0_l = { 0 };
+        v8i16 q0_l = { 0 };
+        v16i8 zero = { 0 };
         v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
         v8i16 p1_org_l, p0_org_l, q0_org_l, q1_org_l;
         v16u8 q2_org = LD_UB(data + (2 * img_width));
         v16u8 p2_org = LD_UB(data - (3 * img_width));
-        v16u8 tmp_flag = (v16u8) __msa_fill_b((alpha_in >> 2) + 2);
+        v16u8 tmp_flag = (v16u8)__msa_fill_b((alpha_in >> 2) + 2);
 
         UNPCK_UB_SH(p1_org, p1_org_r, p1_org_l);
         UNPCK_UB_SH(p0_org, p0_org_r, p0_org_l);
@@ -722,10 +735,10 @@ static void avc_loopfilter_luma_intra_edge_hor_msa(uint8_t *data,
             v8i16 p3_org_l, p3_org_r;
             v16u8 p3_org = LD_UB(data - (img_width << 2));
             v16u8 p2, p1;
-            v8i16 p2_r = {0};
-            v8i16 p2_l = {0};
-            v8i16 p1_r = {0};
-            v8i16 p1_l = {0};
+            v8i16 p2_r = { 0 };
+            v8i16 p2_l = { 0 };
+            v8i16 p1_r = { 0 };
+            v8i16 p1_l = { 0 };
 
             ILVR_B2_SH(zero, p3_org, zero, p2_org, p3_org_r, p2_r);
             AVC_LPF_P0P1P2_OR_Q0Q1Q2(p3_org_r, p0_org_r, q0_org_r, p1_org_r,
@@ -767,10 +780,10 @@ static void avc_loopfilter_luma_intra_edge_hor_msa(uint8_t *data,
             v8i16 q3_org_r, q3_org_l;
             v16u8 q3_org = LD_UB(data + (3 * img_width));
             v16u8 q1, q2;
-            v8i16 q2_r = {0};
-            v8i16 q2_l = {0};
-            v8i16 q1_r = {0};
-            v8i16 q1_l = {0};
+            v8i16 q2_r = { 0 };
+            v8i16 q2_l = { 0 };
+            v8i16 q1_r = { 0 };
+            v8i16 q1_l = { 0 };
 
             ILVR_B2_SH(zero, q3_org, zero, q2_org, q3_org_r, q2_r);
             AVC_LPF_P0P1P2_OR_Q0Q1Q2(q3_org_r, q0_org_r, p0_org_r, q1_org_r,
@@ -803,7 +816,8 @@ static void avc_loopfilter_luma_intra_edge_hor_msa(uint8_t *data,
 static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
                                                    uint8_t alpha_in,
                                                    uint8_t beta_in,
-                                                   ptrdiff_t img_width) {
+                                                   ptrdiff_t img_width)
+{
     uint8_t *src = data - 4;
     v16u8 alpha, beta, p0_asub_q0;
     v16u8 is_less_than_alpha, is_less_than, is_less_than_beta;
@@ -841,11 +855,11 @@ static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
     is_less_than = is_less_than_beta & is_less_than;
 
     if (!__msa_test_bz_v(is_less_than)) {
-        v8i16 p0_r = {0};
-        v8i16 q0_r = {0};
-        v8i16 p0_l = {0};
-        v8i16 q0_l = {0};
-        v16i8 zero = {0};
+        v8i16 p0_r = { 0 };
+        v8i16 q0_r = { 0 };
+        v8i16 p0_l = { 0 };
+        v8i16 q0_l = { 0 };
+        v16i8 zero = { 0 };
         v16u8 tmp_flag, p0, q0, p2_asub_p0, q2_asub_q0;
         v16u8 negate_is_less_than_beta;
         v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
@@ -870,10 +884,10 @@ static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
         if (!__msa_test_bz_v(is_less_than_beta)) {
             v16u8 p2, p1;
             v8i16 p3_org_r, p3_org_l;
-            v8i16 p2_l = {0};
-            v8i16 p2_r = {0};
-            v8i16 p1_l = {0};
-            v8i16 p1_r = {0};
+            v8i16 p2_l = { 0 };
+            v8i16 p2_r = { 0 };
+            v8i16 p1_l = { 0 };
+            v8i16 p1_r = { 0 };
 
             ILVR_B2_SH(zero, p3_org, zero, p2_org, p3_org_r, p2_r);
             AVC_LPF_P0P1P2_OR_Q0Q1Q2(p3_org_r, p0_org_r, q0_org_r, p1_org_r,
@@ -881,7 +895,7 @@ static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
 
             ILVL_B2_SH(zero, p3_org, zero, p2_org, p3_org_l, p2_l);
             AVC_LPF_P0P1P2_OR_Q0Q1Q2(p3_org_l, p0_org_l, q0_org_l, p1_org_l,
-                                     p2_l, q1_org_l, p0_l, p1_l, p2_l);
+                                         p2_l, q1_org_l, p0_l, p1_l, p2_l);
 
             PCKEV_B3_UB(p0_l, p0_r, p1_l, p1_r, p2_l, p2_r, p0, p1, p2);
             p0_org = __msa_bmnz_v(p0_org, p0, is_less_than_beta);
@@ -907,10 +921,10 @@ static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
         if (!__msa_test_bz_v(is_less_than_beta)) {
             v16u8 q1, q2;
             v8i16 q3_org_r, q3_org_l;
-            v8i16 q1_l = {0};
-            v8i16 q1_r = {0};
-            v8i16 q2_l = {0};
-            v8i16 q2_r = {0};
+            v8i16 q1_l = { 0 };
+            v8i16 q1_r = { 0 };
+            v8i16 q2_l = { 0 };
+            v8i16 q2_r = { 0 };
 
             ILVR_B2_SH(zero, q3_org, zero, q2_org, q3_org_r, q2_r);
             AVC_LPF_P0P1P2_OR_Q0Q1Q2(q3_org_r, q0_org_r, p0_org_r, q1_org_r,
@@ -932,37 +946,38 @@ static void avc_loopfilter_luma_intra_edge_ver_msa(uint8_t *data,
         q0 = (v16u8) __msa_pckev_b((v16i8) q0_l, (v16i8) q0_r);
         q0_org = __msa_bmnz_v(q0_org, q0, negate_is_less_than_beta);
 
-        {
-            v8i16 tp0, tp1, tp2, tp3, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    {
+        v8i16 tp0, tp1, tp2, tp3, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 
-            ILVRL_B2_SH(p1_org, p2_org, tp0, tp2);
-            ILVRL_B2_SH(q0_org, p0_org, tp1, tp3);
-            ILVRL_B2_SH(q2_org, q1_org, tmp2, tmp5);
+        ILVRL_B2_SH(p1_org, p2_org, tp0, tp2);
+        ILVRL_B2_SH(q0_org, p0_org, tp1, tp3);
+        ILVRL_B2_SH(q2_org, q1_org, tmp2, tmp5);
 
-            ILVRL_H2_SH(tp1, tp0, tmp3, tmp4);
-            ILVRL_H2_SH(tp3, tp2, tmp6, tmp7);
+        ILVRL_H2_SH(tp1, tp0, tmp3, tmp4);
+        ILVRL_H2_SH(tp3, tp2, tmp6, tmp7);
 
-            src = data - 3;
-            ST_W4(tmp3, 0, 1, 2, 3, src, img_width);
-            ST_H4(tmp2, 0, 1, 2, 3, src + 4, img_width);
-            src += 4 * img_width;
-            ST_W4(tmp4, 0, 1, 2, 3, src, img_width);
-            ST_H4(tmp2, 4, 5, 6, 7, src + 4, img_width);
-            src += 4 * img_width;
+        src = data - 3;
+        ST_W4(tmp3, 0, 1, 2, 3, src, img_width);
+        ST_H4(tmp2, 0, 1, 2, 3, src + 4, img_width);
+        src += 4 * img_width;
+        ST_W4(tmp4, 0, 1, 2, 3, src, img_width);
+        ST_H4(tmp2, 4, 5, 6, 7, src + 4, img_width);
+        src += 4 * img_width;
 
-            ST_W4(tmp6, 0, 1, 2, 3, src, img_width);
-            ST_H4(tmp5, 0, 1, 2, 3, src + 4, img_width);
-            src += 4 * img_width;
-            ST_W4(tmp7, 0, 1, 2, 3, src, img_width);
-            ST_H4(tmp5, 4, 5, 6, 7, src + 4, img_width);
-        }
+        ST_W4(tmp6, 0, 1, 2, 3, src, img_width);
+        ST_H4(tmp5, 0, 1, 2, 3, src + 4, img_width);
+        src += 4 * img_width;
+        ST_W4(tmp7, 0, 1, 2, 3, src, img_width);
+        ST_H4(tmp5, 4, 5, 6, 7, src + 4, img_width);
+    }
     }
 }
 
 static void avc_h_loop_filter_luma_mbaff_intra_msa(uint8_t *src,
                                                    ptrdiff_t stride,
                                                    int32_t alpha_in,
-                                                   int32_t beta_in) {
+                                                   int32_t beta_in)
+{
     uint64_t load0, load1;
     uint32_t out0, out2;
     uint16_t out1, out3;
@@ -975,15 +990,15 @@ static void avc_h_loop_filter_luma_mbaff_intra_msa(uint8_t *src,
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0, p2_asub_p0, q2_asub_q0;
     v16u8 is_less_than, is_less_than_alpha, is_less_than_beta;
     v16u8 is_less_than_beta1, is_less_than_beta2;
-    v16i8 src0 = {0};
-    v16i8 src1 = {0};
-    v16i8 src2 = {0};
-    v16i8 src3 = {0};
-    v16i8 src4 = {0};
-    v16i8 src5 = {0};
-    v16i8 src6 = {0};
-    v16i8 src7 = {0};
-    v16i8 zeros = {0};
+    v16i8 src0 = { 0 };
+    v16i8 src1 = { 0 };
+    v16i8 src2 = { 0 };
+    v16i8 src3 = { 0 };
+    v16i8 src4 = { 0 };
+    v16i8 src5 = { 0 };
+    v16i8 src6 = { 0 };
+    v16i8 src7 = { 0 };
+    v16i8 zeros = { 0 };
 
     load0 = LD(src - 4);
     load1 = LD(src + stride - 4);
@@ -1161,12 +1176,13 @@ static void avc_h_loop_filter_luma_mbaff_intra_msa(uint8_t *src,
 static void avc_loopfilter_cb_or_cr_intra_edge_hor_msa(uint8_t *data_cb_or_cr,
                                                        uint8_t alpha_in,
                                                        uint8_t beta_in,
-                                                       ptrdiff_t img_width) {
+                                                       ptrdiff_t img_width)
+{
     v16u8 alpha, beta;
     v16u8 is_less_than;
     v8i16 p0_or_q0, q0_or_p0;
     v16u8 p1_or_q1_org, p0_or_q0_org, q0_or_p0_org, q1_or_p1_org;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0;
     v16u8 is_less_than_alpha, is_less_than_beta;
     v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
@@ -1197,9 +1213,9 @@ static void avc_loopfilter_cb_or_cr_intra_edge_hor_msa(uint8_t *data_cb_or_cr,
         PCKEV_B2_SH(zero, p0_or_q0, zero, q0_or_p0, p0_or_q0, q0_or_p0);
 
         p0_or_q0_org =
-                __msa_bmnz_v(p0_or_q0_org, (v16u8) p0_or_q0, is_less_than);
+            __msa_bmnz_v(p0_or_q0_org, (v16u8) p0_or_q0, is_less_than);
         q0_or_p0_org =
-                __msa_bmnz_v(q0_or_p0_org, (v16u8) q0_or_p0, is_less_than);
+            __msa_bmnz_v(q0_or_p0_org, (v16u8) q0_or_p0, is_less_than);
 
         ST_UB(q0_or_p0_org, data_cb_or_cr);
         ST_UB(p0_or_q0_org, data_cb_or_cr - img_width);
@@ -1209,12 +1225,13 @@ static void avc_loopfilter_cb_or_cr_intra_edge_hor_msa(uint8_t *data_cb_or_cr,
 static void avc_loopfilter_cb_or_cr_intra_edge_ver_msa(uint8_t *data_cb_or_cr,
                                                        uint8_t alpha_in,
                                                        uint8_t beta_in,
-                                                       ptrdiff_t img_width) {
+                                                       ptrdiff_t img_width)
+{
     v8i16 tmp1;
     v16u8 alpha, beta, is_less_than;
     v8i16 p0_or_q0, q0_or_p0;
     v16u8 p1_or_q1_org, p0_or_q0_org, q0_or_p0_org, q1_or_p1_org;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0;
     v16u8 is_less_than_alpha, is_less_than_beta;
     v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
@@ -1255,9 +1272,9 @@ static void avc_loopfilter_cb_or_cr_intra_edge_ver_msa(uint8_t *data_cb_or_cr,
         PCKEV_B2_SH(zero, p0_or_q0, zero, q0_or_p0, p0_or_q0, q0_or_p0);
 
         p0_or_q0_org =
-                __msa_bmnz_v(p0_or_q0_org, (v16u8) p0_or_q0, is_less_than);
+            __msa_bmnz_v(p0_or_q0_org, (v16u8) p0_or_q0, is_less_than);
         q0_or_p0_org =
-                __msa_bmnz_v(q0_or_p0_org, (v16u8) q0_or_p0, is_less_than);
+            __msa_bmnz_v(q0_or_p0_org, (v16u8) q0_or_p0, is_less_than);
         tmp1 = (v8i16) __msa_ilvr_b((v16i8) q0_or_p0_org, (v16i8) p0_or_q0_org);
 
         data_cb_or_cr -= 1;
@@ -1274,8 +1291,9 @@ static void avc_loopfilter_luma_inter_edge_ver_msa(uint8_t *data,
                                                    uint8_t tc2, uint8_t tc3,
                                                    uint8_t alpha_in,
                                                    uint8_t beta_in,
-                                                   ptrdiff_t img_width) {
-    v16u8 tmp_vec, bs = {0};
+                                                   ptrdiff_t img_width)
+{
+    v16u8 tmp_vec, bs = { 0 };
 
     tmp_vec = (v16u8) __msa_fill_b(bs0);
     bs = (v16u8) __msa_insve_w((v4i32) bs, 0, (v4i32) tmp_vec);
@@ -1292,8 +1310,8 @@ static void avc_loopfilter_luma_inter_edge_ver_msa(uint8_t *data,
         v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0, alpha, beta;
         v16u8 is_less_than, is_less_than_beta, is_less_than_alpha;
         v16u8 is_bs_greater_than0;
-        v16u8 tc = {0};
-        v16i8 zero = {0};
+        v16u8 tc = { 0 };
+        v16i8 zero = { 0 };
 
         tmp_vec = (v16u8) __msa_fill_b(tc0);
         tc = (v16u8) __msa_insve_w((v4i32) tc, 0, (v4i32) tmp_vec);
@@ -1361,8 +1379,8 @@ static void avc_loopfilter_luma_inter_edge_ver_msa(uint8_t *data,
 
             if (!__msa_test_bz_v(is_less_than_beta)) {
                 v16u8 p1;
-                v8i16 p1_r = {0};
-                v8i16 p1_l = {0};
+                v8i16 p1_r = { 0 };
+                v8i16 p1_l = { 0 };
                 v8i16 p2_org_r = (v8i16) __msa_ilvr_b(zero, (v16i8) p2_org);
                 v8i16 p2_org_l = (v8i16) __msa_ilvl_b(zero, (v16i8) p2_org);
 
@@ -1387,8 +1405,8 @@ static void avc_loopfilter_luma_inter_edge_ver_msa(uint8_t *data,
 
             if (!__msa_test_bz_v(is_less_than_beta)) {
                 v16u8 q1;
-                v8i16 q1_r = {0};
-                v8i16 q1_l = {0};
+                v8i16 q1_r = { 0 };
+                v8i16 q1_l = { 0 };
                 v8i16 q2_org_r = (v8i16) __msa_ilvr_b(zero, (v16i8) q2_org);
                 v8i16 q2_org_l = (v8i16) __msa_ilvl_b(zero, (v16i8) q2_org);
 
@@ -1431,117 +1449,117 @@ static void avc_loopfilter_luma_inter_edge_ver_msa(uint8_t *data,
             p0_org = __msa_bmnz_v(p0_org, p0, is_less_than);
             q0_org = __msa_bmnz_v(q0_org, q0, is_less_than);
 
-            {
-                v16i8 tp0, tp1, tp2, tp3;
-                v8i16 tmp2, tmp5;
-                v4i32 tmp3, tmp4, tmp6, tmp7;
-                uint32_t out0, out2;
-                uint16_t out1, out3;
+        {
+            v16i8 tp0, tp1, tp2, tp3;
+            v8i16 tmp2, tmp5;
+            v4i32 tmp3, tmp4, tmp6, tmp7;
+            uint32_t out0, out2;
+            uint16_t out1, out3;
 
-                src = data - 3;
+            src = data - 3;
 
-                ILVRL_B2_SB(p1_org, p2_org, tp0, tp2);
-                ILVRL_B2_SB(q0_org, p0_org, tp1, tp3);
-                ILVRL_B2_SH(q2_org, q1_org, tmp2, tmp5);
+            ILVRL_B2_SB(p1_org, p2_org, tp0, tp2);
+            ILVRL_B2_SB(q0_org, p0_org, tp1, tp3);
+            ILVRL_B2_SH(q2_org, q1_org, tmp2, tmp5);
 
-                ILVRL_H2_SW(tp1, tp0, tmp3, tmp4);
-                ILVRL_H2_SW(tp3, tp2, tmp6, tmp7);
+            ILVRL_H2_SW(tp1, tp0, tmp3, tmp4);
+            ILVRL_H2_SW(tp3, tp2, tmp6, tmp7);
 
-                out0 = __msa_copy_u_w(tmp3, 0);
-                out1 = __msa_copy_u_h(tmp2, 0);
-                out2 = __msa_copy_u_w(tmp3, 1);
-                out3 = __msa_copy_u_h(tmp2, 1);
+            out0 = __msa_copy_u_w(tmp3, 0);
+            out1 = __msa_copy_u_h(tmp2, 0);
+            out2 = __msa_copy_u_w(tmp3, 1);
+            out3 = __msa_copy_u_h(tmp2, 1);
 
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp3, 2);
-                out1 = __msa_copy_u_h(tmp2, 2);
-                out2 = __msa_copy_u_w(tmp3, 3);
-                out3 = __msa_copy_u_h(tmp2, 3);
+            out0 = __msa_copy_u_w(tmp3, 2);
+            out1 = __msa_copy_u_h(tmp2, 2);
+            out2 = __msa_copy_u_w(tmp3, 3);
+            out3 = __msa_copy_u_h(tmp2, 3);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp4, 0);
-                out1 = __msa_copy_u_h(tmp2, 4);
-                out2 = __msa_copy_u_w(tmp4, 1);
-                out3 = __msa_copy_u_h(tmp2, 5);
+            out0 = __msa_copy_u_w(tmp4, 0);
+            out1 = __msa_copy_u_h(tmp2, 4);
+            out2 = __msa_copy_u_w(tmp4, 1);
+            out3 = __msa_copy_u_h(tmp2, 5);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp4, 2);
-                out1 = __msa_copy_u_h(tmp2, 6);
-                out2 = __msa_copy_u_w(tmp4, 3);
-                out3 = __msa_copy_u_h(tmp2, 7);
+            out0 = __msa_copy_u_w(tmp4, 2);
+            out1 = __msa_copy_u_h(tmp2, 6);
+            out2 = __msa_copy_u_w(tmp4, 3);
+            out3 = __msa_copy_u_h(tmp2, 7);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp6, 0);
-                out1 = __msa_copy_u_h(tmp5, 0);
-                out2 = __msa_copy_u_w(tmp6, 1);
-                out3 = __msa_copy_u_h(tmp5, 1);
+            out0 = __msa_copy_u_w(tmp6, 0);
+            out1 = __msa_copy_u_h(tmp5, 0);
+            out2 = __msa_copy_u_w(tmp6, 1);
+            out3 = __msa_copy_u_h(tmp5, 1);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp6, 2);
-                out1 = __msa_copy_u_h(tmp5, 2);
-                out2 = __msa_copy_u_w(tmp6, 3);
-                out3 = __msa_copy_u_h(tmp5, 3);
+            out0 = __msa_copy_u_w(tmp6, 2);
+            out1 = __msa_copy_u_h(tmp5, 2);
+            out2 = __msa_copy_u_w(tmp6, 3);
+            out3 = __msa_copy_u_h(tmp5, 3);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp7, 0);
-                out1 = __msa_copy_u_h(tmp5, 4);
-                out2 = __msa_copy_u_w(tmp7, 1);
-                out3 = __msa_copy_u_h(tmp5, 5);
+            out0 = __msa_copy_u_w(tmp7, 0);
+            out1 = __msa_copy_u_h(tmp5, 4);
+            out2 = __msa_copy_u_w(tmp7, 1);
+            out3 = __msa_copy_u_h(tmp5, 5);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
 
-                out0 = __msa_copy_u_w(tmp7, 2);
-                out1 = __msa_copy_u_h(tmp5, 6);
-                out2 = __msa_copy_u_w(tmp7, 3);
-                out3 = __msa_copy_u_h(tmp5, 7);
+            out0 = __msa_copy_u_w(tmp7, 2);
+            out1 = __msa_copy_u_h(tmp5, 6);
+            out2 = __msa_copy_u_w(tmp7, 3);
+            out3 = __msa_copy_u_h(tmp5, 7);
 
-                src += img_width;
-                SW(out0, src);
-                SH(out1, (src + 4));
-                src += img_width;
-                SW(out2, src);
-                SH(out3, (src + 4));
-            }
+            src += img_width;
+            SW(out0, src);
+            SH(out1, (src + 4));
+            src += img_width;
+            SW(out2, src);
+            SH(out3, (src + 4));
+        }
         }
     }
 }
@@ -1553,9 +1571,10 @@ static void avc_loopfilter_luma_inter_edge_hor_msa(uint8_t *data,
                                                    uint8_t tc2, uint8_t tc3,
                                                    uint8_t alpha_in,
                                                    uint8_t beta_in,
-                                                   ptrdiff_t image_width) {
+                                                   ptrdiff_t image_width)
+{
     v16u8 tmp_vec;
-    v16u8 bs = {0};
+    v16u8 bs = { 0 };
 
     tmp_vec = (v16u8) __msa_fill_b(bs0);
     bs = (v16u8) __msa_insve_w((v4i32) bs, 0, (v4i32) tmp_vec);
@@ -1574,8 +1593,8 @@ static void avc_loopfilter_luma_inter_edge_hor_msa(uint8_t *data,
         v8i16 p0_r, q0_r, p0_l, q0_l;
         v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
         v8i16 p1_org_l, p0_org_l, q0_org_l, q1_org_l;
-        v16i8 zero = {0};
-        v16i8 tc = {0};
+        v16i8 zero = { 0 };
+        v16i8 tc = { 0 };
 
         tmp_vec = (v16u8) __msa_fill_b(tc0);
         tc = (v16i8) __msa_insve_w((v4i32) tc, 0, (v4i32) tmp_vec);
@@ -1626,8 +1645,8 @@ static void avc_loopfilter_luma_inter_edge_hor_msa(uint8_t *data,
 
             if (!__msa_test_bz_v(is_less_than_beta)) {
                 v16u8 p1;
-                v8i16 p1_r = {0};
-                v8i16 p1_l = {0};
+                v8i16 p1_r = { 0 };
+                v8i16 p1_l = { 0 };
                 v8i16 p2_org_r = (v8i16) __msa_ilvr_b(zero, (v16i8) p2_org);
                 v8i16 p2_org_l = (v8i16) __msa_ilvl_b(zero, (v16i8) p2_org);
 
@@ -1653,8 +1672,8 @@ static void avc_loopfilter_luma_inter_edge_hor_msa(uint8_t *data,
 
             if (!__msa_test_bz_v(is_less_than_beta)) {
                 v16u8 q1;
-                v8i16 q1_r = {0};
-                v8i16 q1_l = {0};
+                v8i16 q1_r = { 0 };
+                v8i16 q1_l = { 0 };
                 v8i16 q2_org_r = (v8i16) __msa_ilvr_b(zero, (v16i8) q2_org);
                 v8i16 q2_org_l = (v8i16) __msa_ilvl_b(zero, (v16i8) q2_org);
 
@@ -1703,33 +1722,34 @@ static void avc_loopfilter_luma_inter_edge_hor_msa(uint8_t *data,
 
 static void avc_h_loop_filter_luma_mbaff_msa(uint8_t *in, ptrdiff_t stride,
                                              int32_t alpha_in, int32_t beta_in,
-                                             int8_t *tc0) {
+                                             int8_t *tc0)
+{
     uint8_t *data = in;
     uint32_t out0, out1, out2, out3;
     uint64_t load;
     uint32_t tc_val;
     v16u8 alpha, beta;
-    v16i8 inp0 = {0};
-    v16i8 inp1 = {0};
-    v16i8 inp2 = {0};
-    v16i8 inp3 = {0};
-    v16i8 inp4 = {0};
-    v16i8 inp5 = {0};
-    v16i8 inp6 = {0};
-    v16i8 inp7 = {0};
+    v16i8 inp0 = { 0 };
+    v16i8 inp1 = { 0 };
+    v16i8 inp2 = { 0 };
+    v16i8 inp3 = { 0 };
+    v16i8 inp4 = { 0 };
+    v16i8 inp5 = { 0 };
+    v16i8 inp6 = { 0 };
+    v16i8 inp7 = { 0 };
     v16i8 src0, src1, src2, src3;
     v8i16 src4, src5, src6, src7;
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0, p2_asub_p0, q2_asub_q0;
     v16u8 is_less_than, is_less_than_alpha, is_less_than_beta;
     v16u8 is_less_than_beta1, is_less_than_beta2;
     v8i16 tc, tc_orig_r, tc_plus1;
-    v16u8 is_tc_orig1, is_tc_orig2, tc_orig = {0};
+    v16u8 is_tc_orig1, is_tc_orig2, tc_orig = { 0 };
     v8i16 p0_ilvr_q0, p0_add_q0, q0_sub_p0, p1_sub_q1;
     v8i16 src2_r, src3_r;
     v8i16 p2_r, p1_r, q2_r, q1_r;
     v16u8 p2, q2, p0, q0;
     v4i32 dst0, dst1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     alpha = (v16u8) __msa_fill_b(alpha_in);
     beta = (v16u8) __msa_fill_b(beta_in);
@@ -1926,11 +1946,12 @@ static void avc_loopfilter_cb_or_cr_inter_edge_hor_msa(uint8_t *data,
                                                        uint8_t tc2, uint8_t tc3,
                                                        uint8_t alpha_in,
                                                        uint8_t beta_in,
-                                                       ptrdiff_t img_width) {
+                                                       ptrdiff_t img_width)
+{
     v16u8 alpha, beta;
     v8i16 tmp_vec;
-    v8i16 bs = {0};
-    v8i16 tc = {0};
+    v8i16 bs = { 0 };
+    v8i16 tc = { 0 };
     v16u8 p0, q0, p0_asub_q0, p1_asub_p0, q1_asub_q0;
     v16u8 is_less_than;
     v16u8 is_less_than_beta, is_less_than_alpha, is_bs_greater_than0;
@@ -1939,7 +1960,7 @@ static void avc_loopfilter_cb_or_cr_inter_edge_hor_msa(uint8_t *data,
     v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
     v16i8 negate_tc, sign_negate_tc;
     v8i16 tc_r, negate_tc_r;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     tmp_vec = (v8i16) __msa_fill_b(bs0);
     bs = __msa_insve_h(bs, 0, tmp_vec);
@@ -1960,7 +1981,7 @@ static void avc_loopfilter_cb_or_cr_inter_edge_hor_msa(uint8_t *data,
         tmp_vec = (v8i16) __msa_fill_b(tc3);
         tc = __msa_insve_h(tc, 3, tmp_vec);
 
-        is_bs_greater_than0 = (v16u8)(zero < (v16i8) bs);
+        is_bs_greater_than0 = (v16u8) (zero < (v16i8) bs);
 
         alpha = (v16u8) __msa_fill_b(alpha_in);
         beta = (v16u8) __msa_fill_b(beta_in);
@@ -2011,23 +2032,24 @@ static void avc_loopfilter_cb_or_cr_inter_edge_ver_msa(uint8_t *data,
                                                        uint8_t tc2, uint8_t tc3,
                                                        uint8_t alpha_in,
                                                        uint8_t beta_in,
-                                                       ptrdiff_t img_width) {
+                                                       ptrdiff_t img_width)
+{
     uint8_t *src;
     v16u8 alpha, beta;
     v16u8 p0_asub_q0, p1_asub_p0, q1_asub_q0;
     v16u8 is_less_than, is_less_than_beta, is_less_than_alpha;
     v16u8 p0, q0;
-    v8i16 p0_r = {0};
-    v8i16 q0_r = {0};
+    v8i16 p0_r = { 0 };
+    v8i16 q0_r = { 0 };
     v16u8 p1_org, p0_org, q0_org, q1_org;
     v8i16 p1_org_r, p0_org_r, q0_org_r, q1_org_r;
     v16u8 is_bs_greater_than0;
     v8i16 tc_r, negate_tc_r;
     v16i8 negate_tc, sign_negate_tc;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 row0, row1, row2, row3, row4, row5, row6, row7;
-    v8i16 tmp1, tmp_vec, bs = {0};
-    v8i16 tc = {0};
+    v8i16 tmp1, tmp_vec, bs = { 0 };
+    v8i16 tc = { 0 };
 
     tmp_vec = (v8i16) __msa_fill_b(bs0);
     bs = __msa_insve_h(bs, 0, tmp_vec);
@@ -2048,7 +2070,7 @@ static void avc_loopfilter_cb_or_cr_inter_edge_ver_msa(uint8_t *data,
         tmp_vec = (v8i16) __msa_fill_b(tc3);
         tc = __msa_insve_h(tc, 3, tmp_vec);
 
-        is_bs_greater_than0 = (v16u8)(zero < (v16i8) bs);
+        is_bs_greater_than0 = (v16u8) (zero < (v16i8) bs);
 
         LD_UB8((data - 2), img_width,
                row0, row1, row2, row3, row4, row5, row6, row7);
@@ -2100,7 +2122,8 @@ static void avc_loopfilter_cb_or_cr_inter_edge_ver_msa(uint8_t *data,
 
 static void avc_h_loop_filter_chroma422_msa(uint8_t *src, ptrdiff_t stride,
                                             int32_t alpha_in, int32_t beta_in,
-                                            int8_t *tc0) {
+                                            int8_t *tc0)
+{
     int32_t col, tc_val;
     v16u8 alpha, beta, res;
 
@@ -2125,7 +2148,8 @@ static void avc_h_loop_filter_chroma422_mbaff_msa(uint8_t *src,
                                                   ptrdiff_t stride,
                                                   int32_t alpha_in,
                                                   int32_t beta_in,
-                                                  int8_t *tc0) {
+                                                  int8_t *tc0)
+{
     int32_t col, tc_val;
     int16_t out0, out1;
     v16u8 alpha, beta, res;
@@ -2154,7 +2178,8 @@ static void avc_h_loop_filter_chroma422_mbaff_msa(uint8_t *src,
 }
 
 void ff_h264_h_lpf_luma_inter_msa(uint8_t *data, ptrdiff_t img_width,
-                                  int alpha, int beta, int8_t *tc) {
+                                  int alpha, int beta, int8_t *tc)
+{
     uint8_t bs0 = 1;
     uint8_t bs1 = 1;
     uint8_t bs2 = 1;
@@ -2175,7 +2200,8 @@ void ff_h264_h_lpf_luma_inter_msa(uint8_t *data, ptrdiff_t img_width,
 }
 
 void ff_h264_v_lpf_luma_inter_msa(uint8_t *data, ptrdiff_t img_width,
-                                  int alpha, int beta, int8_t *tc) {
+                                  int alpha, int beta, int8_t *tc)
+{
 
     uint8_t bs0 = 1;
     uint8_t bs1 = 1;
@@ -2197,7 +2223,8 @@ void ff_h264_v_lpf_luma_inter_msa(uint8_t *data, ptrdiff_t img_width,
 }
 
 void ff_h264_h_lpf_chroma_inter_msa(uint8_t *data, ptrdiff_t img_width,
-                                    int alpha, int beta, int8_t *tc) {
+                                    int alpha, int beta, int8_t *tc)
+{
     uint8_t bs0 = 1;
     uint8_t bs1 = 1;
     uint8_t bs2 = 1;
@@ -2218,7 +2245,8 @@ void ff_h264_h_lpf_chroma_inter_msa(uint8_t *data, ptrdiff_t img_width,
 }
 
 void ff_h264_v_lpf_chroma_inter_msa(uint8_t *data, ptrdiff_t img_width,
-                                    int alpha, int beta, int8_t *tc) {
+                                    int alpha, int beta, int8_t *tc)
+{
     uint8_t bs0 = 1;
     uint8_t bs1 = 1;
     uint8_t bs2 = 1;
@@ -2239,28 +2267,32 @@ void ff_h264_v_lpf_chroma_inter_msa(uint8_t *data, ptrdiff_t img_width,
 }
 
 void ff_h264_h_lpf_luma_intra_msa(uint8_t *data, ptrdiff_t img_width,
-                                  int alpha, int beta) {
+                                  int alpha, int beta)
+{
     avc_loopfilter_luma_intra_edge_ver_msa(data, (uint8_t) alpha,
                                            (uint8_t) beta,
                                            img_width);
 }
 
 void ff_h264_v_lpf_luma_intra_msa(uint8_t *data, ptrdiff_t img_width,
-                                  int alpha, int beta) {
+                                  int alpha, int beta)
+{
     avc_loopfilter_luma_intra_edge_hor_msa(data, (uint8_t) alpha,
                                            (uint8_t) beta,
                                            img_width);
 }
 
 void ff_h264_h_lpf_chroma_intra_msa(uint8_t *data, ptrdiff_t img_width,
-                                    int alpha, int beta) {
+                                    int alpha, int beta)
+{
     avc_loopfilter_cb_or_cr_intra_edge_ver_msa(data, (uint8_t) alpha,
                                                (uint8_t) beta,
                                                img_width);
 }
 
 void ff_h264_v_lpf_chroma_intra_msa(uint8_t *data, ptrdiff_t img_width,
-                                    int alpha, int beta) {
+                                    int alpha, int beta)
+{
     avc_loopfilter_cb_or_cr_intra_edge_hor_msa(data, (uint8_t) alpha,
                                                (uint8_t) beta,
                                                img_width);
@@ -2269,7 +2301,8 @@ void ff_h264_v_lpf_chroma_intra_msa(uint8_t *data, ptrdiff_t img_width,
 void ff_h264_h_loop_filter_chroma422_msa(uint8_t *src,
                                          ptrdiff_t ystride,
                                          int32_t alpha, int32_t beta,
-                                         int8_t *tc0) {
+                                         int8_t *tc0)
+{
     avc_h_loop_filter_chroma422_msa(src, ystride, alpha, beta, tc0);
 }
 
@@ -2277,7 +2310,8 @@ void ff_h264_h_loop_filter_chroma422_mbaff_msa(uint8_t *src,
                                                ptrdiff_t ystride,
                                                int32_t alpha,
                                                int32_t beta,
-                                               int8_t *tc0) {
+                                               int8_t *tc0)
+{
     avc_h_loop_filter_chroma422_mbaff_msa(src, ystride, alpha, beta, tc0);
 }
 
@@ -2285,22 +2319,25 @@ void ff_h264_h_loop_filter_luma_mbaff_msa(uint8_t *src,
                                           ptrdiff_t ystride,
                                           int32_t alpha,
                                           int32_t beta,
-                                          int8_t *tc0) {
+                                          int8_t *tc0)
+{
     avc_h_loop_filter_luma_mbaff_msa(src, ystride, alpha, beta, tc0);
 }
 
 void ff_h264_h_loop_filter_luma_mbaff_intra_msa(uint8_t *src,
                                                 ptrdiff_t ystride,
                                                 int32_t alpha,
-                                                int32_t beta) {
+                                                int32_t beta)
+{
     avc_h_loop_filter_luma_mbaff_intra_msa(src, ystride, alpha, beta);
 }
 
 void ff_weight_h264_pixels16_8_msa(uint8_t *src, ptrdiff_t stride,
                                    int height, int log2_denom,
-                                   int weight_src, int offset_in) {
+                                   int weight_src, int offset_in)
+{
     uint32_t offset_val;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
     v8i16 src0_l, src1_l, src2_l, src3_l, src0_r, src1_r, src2_r, src3_r;
@@ -2395,7 +2432,8 @@ void ff_weight_h264_pixels16_8_msa(uint8_t *src, ptrdiff_t stride,
 
 void ff_weight_h264_pixels8_8_msa(uint8_t *src, ptrdiff_t stride,
                                   int height, int log2_denom,
-                                  int weight_src, int offset) {
+                                  int weight_src, int offset)
+{
     if (4 == height) {
         avc_wgt_8x4_msa(src, stride, log2_denom, weight_src, offset);
     } else if (8 == height) {
@@ -2407,7 +2445,8 @@ void ff_weight_h264_pixels8_8_msa(uint8_t *src, ptrdiff_t stride,
 
 void ff_weight_h264_pixels4_8_msa(uint8_t *src, ptrdiff_t stride,
                                   int height, int log2_denom,
-                                  int weight_src, int offset) {
+                                  int weight_src, int offset)
+{
     if (2 == height) {
         avc_wgt_4x2_msa(src, stride, log2_denom, weight_src, offset);
     } else if (4 == height) {
@@ -2420,7 +2459,8 @@ void ff_weight_h264_pixels4_8_msa(uint8_t *src, ptrdiff_t stride,
 void ff_biweight_h264_pixels16_8_msa(uint8_t *dst, uint8_t *src,
                                      ptrdiff_t stride, int height,
                                      int log2_denom, int weight_dst,
-                                     int weight_src, int offset_in) {
+                                     int weight_src, int offset_in)
+{
     v16i8 src_wgt, dst_wgt, wgt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
@@ -2528,7 +2568,8 @@ void ff_biweight_h264_pixels16_8_msa(uint8_t *dst, uint8_t *src,
 void ff_biweight_h264_pixels8_8_msa(uint8_t *dst, uint8_t *src,
                                     ptrdiff_t stride, int height,
                                     int log2_denom, int weight_dst,
-                                    int weight_src, int offset) {
+                                    int weight_src, int offset)
+{
     if (4 == height) {
         avc_biwgt_8x4_msa(src, dst, stride, log2_denom, weight_src, weight_dst,
                           offset);
@@ -2544,7 +2585,8 @@ void ff_biweight_h264_pixels8_8_msa(uint8_t *dst, uint8_t *src,
 void ff_biweight_h264_pixels4_8_msa(uint8_t *dst, uint8_t *src,
                                     ptrdiff_t stride, int height,
                                     int log2_denom, int weight_dst,
-                                    int weight_src, int offset) {
+                                    int weight_src, int offset)
+{
     if (2 == height) {
         avc_biwgt_4x2_msa(src, dst, stride, log2_denom, weight_src, weight_dst,
                           offset);

@@ -40,33 +40,33 @@
 #define PS_AP_LINKS 3
 #define PS_MAX_AP_DELAY 5
 #define PS_BASELINE 0  ///< Operate in Baseline PS mode
-///< Baseline implies 10 or 20 stereo bands,
-///< mixing mode A, and no ipd/opd
+                       ///< Baseline implies 10 or 20 stereo bands,
+                       ///< mixing mode A, and no ipd/opd
 
 #define numQMFSlots 32 //numTimeSlots * RATE
 
 typedef struct PSCommonContext {
-    int start;
-    int enable_iid;
-    int iid_quant;
-    int nr_iid_par;
-    int nr_ipdopd_par;
-    int enable_icc;
-    int icc_mode;
-    int nr_icc_par;
-    int enable_ext;
-    int frame_class;
-    int num_env_old;
-    int num_env;
-    int enable_ipdopd;
-    int border_position[PS_MAX_NUM_ENV + 1];
+    int    start;
+    int    enable_iid;
+    int    iid_quant;
+    int    nr_iid_par;
+    int    nr_ipdopd_par;
+    int    enable_icc;
+    int    icc_mode;
+    int    nr_icc_par;
+    int    enable_ext;
+    int    frame_class;
+    int    num_env_old;
+    int    num_env;
+    int    enable_ipdopd;
+    int    border_position[PS_MAX_NUM_ENV+1];
     int8_t iid_par[PS_MAX_NUM_ENV][PS_MAX_NR_IIDICC]; ///< Inter-channel Intensity Difference Parameters
     int8_t icc_par[PS_MAX_NUM_ENV][PS_MAX_NR_IIDICC]; ///< Inter-Channel Coherence Parameters
     /* ipd/opd is iid/icc sized so that the same functions can handle both */
     int8_t ipd_par[PS_MAX_NUM_ENV][PS_MAX_NR_IIDICC]; ///< Inter-channel Phase Difference Parameters
     int8_t opd_par[PS_MAX_NUM_ENV][PS_MAX_NR_IIDICC]; ///< Overall Phase Difference Parameters
-    int is34bands;
-    int is34bands_old;
+    int    is34bands;
+    int    is34bands_old;
 } PSCommonContext;
 
 typedef struct PSContext {
@@ -93,14 +93,10 @@ extern const int8_t ff_k_to_i_20[];
 extern const int8_t ff_k_to_i_34[];
 
 void ff_ps_init_common(void);
-
 void AAC_RENAME(ff_ps_init)(void);
-
 void AAC_RENAME(ff_ps_ctx_init)(PSContext *ps);
-
 int ff_ps_read_data(AVCodecContext *avctx, GetBitContext *gb,
-                    PSCommonContext *ps, int bits_left);
-
+                     PSCommonContext *ps, int bits_left);
 int AAC_RENAME(ff_ps_apply)(AVCodecContext *avctx, PSContext *ps, INTFLOAT L[2][38][64], INTFLOAT R[2][38][64], int top);
 
 #endif /* AVCODEC_AACPS_H */

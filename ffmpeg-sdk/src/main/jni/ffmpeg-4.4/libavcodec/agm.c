@@ -36,21 +36,21 @@
 #include "internal.h"
 
 static const uint8_t unscaled_luma[64] = {
-        16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19,
-        26, 58, 60, 55, 14, 13, 16, 24, 40, 57, 69, 56,
-        14, 17, 22, 29, 51, 87, 80, 62, 18, 22, 37, 56,
-        68, 109, 103, 77, 24, 35, 55, 64, 81, 104, 113, 92,
-        49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95, 98,
-        112, 100, 103, 99
+    16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19,
+    26, 58, 60, 55, 14, 13, 16, 24, 40, 57, 69, 56,
+    14, 17, 22, 29, 51, 87, 80, 62, 18, 22, 37, 56,
+    68,109,103, 77, 24, 35, 55, 64, 81,104,113, 92,
+    49, 64, 78, 87,103,121,120,101, 72, 92, 95, 98,
+    112,100,103,99
 };
 
 static const uint8_t unscaled_chroma[64] = {
-        17, 18, 24, 47, 99, 99, 99, 99, 18, 21, 26, 66,
-        99, 99, 99, 99, 24, 26, 56, 99, 99, 99, 99, 99,
-        47, 66, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99
+    17, 18, 24, 47, 99, 99, 99, 99, 18, 21, 26, 66,
+    99, 99, 99, 99, 24, 26, 56, 99, 99, 99, 99, 99,
+    47, 66, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99
 };
 
 typedef struct MotionVector {
@@ -58,10 +58,10 @@ typedef struct MotionVector {
 } MotionVector;
 
 typedef struct AGMContext {
-    const AVClass *class;
+    const AVClass  *class;
     AVCodecContext *avctx;
-    GetBitContext gb;
-    GetByteContext gbyte;
+    GetBitContext   gb;
+    GetByteContext  gbyte;
 
     int key_frame;
     int bitstream_size;
@@ -80,7 +80,7 @@ typedef struct AGMContext {
     unsigned output_size;
 
     MotionVector *mvectors;
-    unsigned mvectors_size;
+    unsigned      mvectors_size;
 
     VLC vlc;
 
@@ -95,13 +95,14 @@ typedef struct AGMContext {
     int16_t *wblocks;
     unsigned wblocks_size;
 
-    int *map;
-    unsigned map_size;
+    int      *map;
+    unsigned  map_size;
 
     IDCTDSPContext idsp;
 } AGMContext;
 
-static int read_code(GetBitContext *gb, int *oskip, int *level, int *map, int mode) {
+static int read_code(GetBitContext *gb, int *oskip, int *level, int *map, int mode)
+{
     int len = 0, skip = 0, max;
 
     if (get_bits_left(gb) < 2)
@@ -109,50 +110,50 @@ static int read_code(GetBitContext *gb, int *oskip, int *level, int *map, int mo
 
     if (show_bits(gb, 2)) {
         switch (show_bits(gb, 4)) {
-            case 1:
-            case 9:
-                len = 1;
-                skip = 3;
-                break;
-            case 2:
-                len = 3;
-                skip = 4;
-                break;
-            case 3:
-                len = 7;
-                skip = 4;
-                break;
-            case 5:
-            case 13:
-                len = 2;
-                skip = 3;
-                break;
-            case 6:
-                len = 4;
-                skip = 4;
-                break;
-            case 7:
-                len = 8;
-                skip = 4;
-                break;
-            case 10:
-                len = 5;
-                skip = 4;
-                break;
-            case 11:
-                len = 9;
-                skip = 4;
-                break;
-            case 14:
-                len = 6;
-                skip = 4;
-                break;
-            case 15:
-                len = ((show_bits(gb, 5) & 0x10) | 0xA0) >> 4;
-                skip = 5;
-                break;
-            default:
-                return AVERROR_INVALIDDATA;
+        case 1:
+        case 9:
+            len = 1;
+            skip = 3;
+            break;
+        case 2:
+            len = 3;
+            skip = 4;
+            break;
+        case 3:
+            len = 7;
+            skip = 4;
+            break;
+        case 5:
+        case 13:
+            len = 2;
+            skip = 3;
+            break;
+        case 6:
+            len = 4;
+            skip = 4;
+            break;
+        case 7:
+            len = 8;
+            skip = 4;
+            break;
+        case 10:
+            len = 5;
+            skip = 4;
+            break;
+        case 11:
+            len = 9;
+            skip = 4;
+            break;
+        case 14:
+            len = 6;
+            skip = 4;
+            break;
+        case 15:
+            len = ((show_bits(gb, 5) & 0x10) | 0xA0) >> 4;
+            skip = 5;
+            break;
+        default:
+            return AVERROR_INVALIDDATA;
         }
 
         skip_bits(gb, skip);
@@ -193,7 +194,8 @@ static int read_code(GetBitContext *gb, int *oskip, int *level, int *map, int mo
 }
 
 static int decode_intra_blocks(AGMContext *s, GetBitContext *gb,
-                               const int *quant_matrix, int *skip, int *dc_level) {
+                               const int *quant_matrix, int *skip, int *dc_level)
+{
     const uint8_t *scantable = s->scantable.permutated;
     int level, ret, map = 0;
 
@@ -234,7 +236,8 @@ static int decode_intra_blocks(AGMContext *s, GetBitContext *gb,
 
 static int decode_inter_blocks(AGMContext *s, GetBitContext *gb,
                                const int *quant_matrix, int *skip,
-                               int *map) {
+                               int *map)
+{
     const uint8_t *scantable = s->scantable.permutated;
     int level, ret;
 
@@ -268,7 +271,8 @@ static int decode_inter_blocks(AGMContext *s, GetBitContext *gb,
 }
 
 static int decode_intra_block(AGMContext *s, GetBitContext *gb,
-                              const int *quant_matrix, int *skip, int *dc_level) {
+                              const int *quant_matrix, int *skip, int *dc_level)
+{
     const uint8_t *scantable = s->scantable.permutated;
     const int offset = s->plus ? 0 : 1024;
     int16_t *block = s->block;
@@ -308,7 +312,8 @@ static int decode_intra_block(AGMContext *s, GetBitContext *gb,
 
 static int decode_intra_plane(AGMContext *s, GetBitContext *gb, int size,
                               const int *quant_matrix, AVFrame *frame,
-                              int plane) {
+                              int plane)
+{
     int ret, skip = 0, dc_level = 0;
     const int offset = s->plus ? 0 : 1024;
 
@@ -356,7 +361,8 @@ static int decode_intra_plane(AGMContext *s, GetBitContext *gb, int size,
 
 static int decode_inter_block(AGMContext *s, GetBitContext *gb,
                               const int *quant_matrix, int *skip,
-                              int *map) {
+                              int *map)
+{
     const uint8_t *scantable = s->scantable.permutated;
     int16_t *block = s->block;
     int level, ret;
@@ -385,7 +391,8 @@ static int decode_inter_block(AGMContext *s, GetBitContext *gb,
 
 static int decode_inter_plane(AGMContext *s, GetBitContext *gb, int size,
                               const int *quant_matrix, AVFrame *frame,
-                              AVFrame *prev, int plane) {
+                              AVFrame *prev, int plane)
+{
     int ret, skip = 0;
 
     if ((ret = init_get_bits8(gb, s->gbyte.buffer, size)) < 0)
@@ -414,7 +421,7 @@ static int decode_inter_plane(AGMContext *s, GetBitContext *gb, int size,
                 int mv_x = s->mvectors[mvpos].x / (1 + !shift);
                 int mv_y = s->mvectors[mvpos].y / (1 + !shift);
                 int h = s->avctx->coded_height >> !shift;
-                int w = s->avctx->coded_width >> !shift;
+                int w = s->avctx->coded_width  >> !shift;
                 int map = s->map[x];
 
                 if (orig_mv_x >= -32) {
@@ -429,7 +436,7 @@ static int decode_inter_plane(AGMContext *s, GetBitContext *gb, int size,
                         s->idsp.idct(s->wblocks + x * 64);
                         for (int i = 0; i < 64; i++)
                             s->wblocks[i + x * 64] = (s->wblocks[i + x * 64] + 1) & 0xFFFC;
-                        s->idsp.add_pixels_clamped(&s->wblocks[x * 64], frame->data[plane] + (s->blocks_h - 1 - y) * 8 * frame->linesize[plane] + x * 8,
+                        s->idsp.add_pixels_clamped(&s->wblocks[x*64], frame->data[plane] + (s->blocks_h - 1 - y) * 8 * frame->linesize[plane] + x * 8,
                                                    frame->linesize[plane]);
                     }
                 } else if (map) {
@@ -447,7 +454,7 @@ static int decode_inter_plane(AGMContext *s, GetBitContext *gb, int size,
                 int mv_x = s->mvectors[mvpos].x / (1 + !shift);
                 int mv_y = s->mvectors[mvpos].y / (1 + !shift);
                 int h = s->avctx->coded_height >> !shift;
-                int w = s->avctx->coded_width >> !shift;
+                int w = s->avctx->coded_width  >> !shift;
                 int map = 0;
 
                 ret = decode_inter_block(s, gb, quant_matrix, &skip, &map);
@@ -524,31 +531,32 @@ static int decode_inter_plane(AGMContext *s, GetBitContext *gb, int size,
     return 0;
 }
 
-static void compute_quant_matrix(AGMContext *s, double qscale) {
+static void compute_quant_matrix(AGMContext *s, double qscale)
+{
     int luma[64], chroma[64];
     double f = 1.0 - fabs(qscale);
 
     if (!s->key_frame && (s->flags & 2)) {
         if (qscale >= 0.0) {
             for (int i = 0; i < 64; i++) {
-                luma[i] = FFMAX(1, 16 * f);
+                luma[i]   = FFMAX(1, 16 * f);
                 chroma[i] = FFMAX(1, 16 * f);
             }
         } else {
             for (int i = 0; i < 64; i++) {
-                luma[i] = FFMAX(1, 16 - qscale * 32);
+                luma[i]   = FFMAX(1, 16 - qscale * 32);
                 chroma[i] = FFMAX(1, 16 - qscale * 32);
             }
         }
     } else {
         if (qscale >= 0.0) {
             for (int i = 0; i < 64; i++) {
-                luma[i] = FFMAX(1, unscaled_luma[(i & 7) * 8 + (i >> 3)] * f);
+                luma[i]   = FFMAX(1, unscaled_luma  [(i & 7) * 8 + (i >> 3)] * f);
                 chroma[i] = FFMAX(1, unscaled_chroma[(i & 7) * 8 + (i >> 3)] * f);
             }
         } else {
             for (int i = 0; i < 64; i++) {
-                luma[i] = FFMAX(1, 255.0 - (255 - unscaled_luma[(i & 7) * 8 + (i >> 3)]) * f);
+                luma[i]   = FFMAX(1, 255.0 - (255 - unscaled_luma  [(i & 7) * 8 + (i >> 3)]) * f);
                 chroma[i] = FFMAX(1, 255.0 - (255 - unscaled_chroma[(i & 7) * 8 + (i >> 3)]) * f);
             }
         }
@@ -557,12 +565,13 @@ static void compute_quant_matrix(AGMContext *s, double qscale) {
     for (int i = 0; i < 64; i++) {
         int pos = ff_zigzag_direct[i];
 
-        s->luma_quant_matrix[i] = luma[pos] * ((pos / 8) & 1 ? -1 : 1);
+        s->luma_quant_matrix[i]   = luma[pos]   * ((pos / 8) & 1 ? -1 : 1);
         s->chroma_quant_matrix[i] = chroma[pos] * ((pos / 8) & 1 ? -1 : 1);
     }
 }
 
-static int decode_raw_intra_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame) {
+static int decode_raw_intra_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame)
+{
     uint8_t *dst = frame->data[0] + (avctx->height - 1) * frame->linesize[0];
     uint8_t r = 0, g = 0, b = 0;
 
@@ -571,12 +580,12 @@ static int decode_raw_intra_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AV
 
     for (int y = 0; y < avctx->height; y++) {
         for (int x = 0; x < avctx->width; x++) {
-            dst[x * 3 + 0] = bytestream2_get_byteu(gbyte) + r;
-            r = dst[x * 3 + 0];
-            dst[x * 3 + 1] = bytestream2_get_byteu(gbyte) + g;
-            g = dst[x * 3 + 1];
-            dst[x * 3 + 2] = bytestream2_get_byteu(gbyte) + b;
-            b = dst[x * 3 + 2];
+            dst[x*3+0] = bytestream2_get_byteu(gbyte) + r;
+            r = dst[x*3+0];
+            dst[x*3+1] = bytestream2_get_byteu(gbyte) + g;
+            g = dst[x*3+1];
+            dst[x*3+2] = bytestream2_get_byteu(gbyte) + b;
+            b = dst[x*3+2];
         }
         dst -= frame->linesize[0];
     }
@@ -585,10 +594,11 @@ static int decode_raw_intra_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AV
 }
 
 av_always_inline static int fill_pixels(uint8_t **y0, uint8_t **y1,
-                                        uint8_t **u, uint8_t **v,
-                                        int ylinesize, int ulinesize, int vlinesize,
-                                        uint8_t *fill,
-                                        int *nx, int *ny, int *np, int w, int h) {
+                       uint8_t **u, uint8_t **v,
+                       int ylinesize, int ulinesize, int vlinesize,
+                       uint8_t *fill,
+                       int *nx, int *ny, int *np, int w, int h)
+{
     uint8_t *y0dst = *y0;
     uint8_t *y1dst = *y1;
     uint8_t *udst = *u;
@@ -596,10 +606,10 @@ av_always_inline static int fill_pixels(uint8_t **y0, uint8_t **y1,
     int x = *nx, y = *ny, pos = *np;
 
     if (pos == 0) {
-        y0dst[2 * x + 0] += fill[0];
-        y0dst[2 * x + 1] += fill[1];
-        y1dst[2 * x + 0] += fill[2];
-        y1dst[2 * x + 1] += fill[3];
+        y0dst[2*x+0] += fill[0];
+        y0dst[2*x+1] += fill[1];
+        y1dst[2*x+0] += fill[2];
+        y1dst[2*x+1] += fill[3];
         pos++;
     } else if (pos == 1) {
         udst[x] += fill[0];
@@ -610,29 +620,29 @@ av_always_inline static int fill_pixels(uint8_t **y0, uint8_t **y1,
             y++;
             if (y >= h)
                 return 1;
-            y0dst -= 2 * ylinesize;
-            y1dst -= 2 * ylinesize;
-            udst -= ulinesize;
-            vdst -= vlinesize;
+            y0dst -= 2*ylinesize;
+            y1dst -= 2*ylinesize;
+            udst  -=   ulinesize;
+            vdst  -=   vlinesize;
         }
-        y0dst[2 * x + 0] += fill[2];
-        y0dst[2 * x + 1] += fill[3];
+        y0dst[2*x+0] += fill[2];
+        y0dst[2*x+1] += fill[3];
         pos++;
     } else if (pos == 2) {
-        y1dst[2 * x + 0] += fill[0];
-        y1dst[2 * x + 1] += fill[1];
-        udst[x] += fill[2];
-        vdst[x] += fill[3];
+        y1dst[2*x+0] += fill[0];
+        y1dst[2*x+1] += fill[1];
+        udst[x]      += fill[2];
+        vdst[x]      += fill[3];
         x++;
         if (x >= w) {
             x = 0;
             y++;
             if (y >= h)
                 return 1;
-            y0dst -= 2 * ylinesize;
-            y1dst -= 2 * ylinesize;
-            udst -= ulinesize;
-            vdst -= vlinesize;
+            y0dst -= 2*ylinesize;
+            y1dst -= 2*ylinesize;
+            udst  -=   ulinesize;
+            vdst  -=   vlinesize;
         }
         pos = 0;
     }
@@ -648,7 +658,8 @@ av_always_inline static int fill_pixels(uint8_t **y0, uint8_t **y1,
     return 0;
 }
 
-static int decode_runlen_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame) {
+static int decode_runlen_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame)
+{
     uint8_t *dst = frame->data[0] + (avctx->height - 1) * frame->linesize[0];
     int runlen, y = 0, x = 0;
     uint8_t fill[4];
@@ -700,7 +711,8 @@ static int decode_runlen_rgb(AVCodecContext *avctx, GetByteContext *gbyte, AVFra
     return 0;
 }
 
-static int decode_runlen(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame) {
+static int decode_runlen(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame)
+{
     uint8_t *y0dst = frame->data[0] + (avctx->height - 1) * frame->linesize[0];
     uint8_t *y1dst = y0dst - frame->linesize[0];
     uint8_t *udst = frame->data[1] + ((avctx->height >> 1) - 1) * frame->linesize[1];
@@ -749,7 +761,8 @@ static int decode_runlen(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *
     return 0;
 }
 
-static int decode_raw_intra(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame) {
+static int decode_raw_intra(AVCodecContext *avctx, GetByteContext *gbyte, AVFrame *frame)
+{
     uint8_t *y0dst = frame->data[0] + (avctx->height - 1) * frame->linesize[0];
     uint8_t *y1dst = y0dst - frame->linesize[0];
     uint8_t *udst = frame->data[1] + ((avctx->height >> 1) - 1) * frame->linesize[1];
@@ -758,36 +771,37 @@ static int decode_raw_intra(AVCodecContext *avctx, GetByteContext *gbyte, AVFram
 
     for (int y = 0; y < avctx->height / 2; y++) {
         for (int x = 0; x < avctx->width / 2; x++) {
-            y0dst[x * 2 + 0] = bytestream2_get_byte(gbyte) + ly0;
-            ly0 = y0dst[x * 2 + 0];
-            y0dst[x * 2 + 1] = bytestream2_get_byte(gbyte) + ly1;
-            ly1 = y0dst[x * 2 + 1];
-            y1dst[x * 2 + 0] = bytestream2_get_byte(gbyte) + ly2;
-            ly2 = y1dst[x * 2 + 0];
-            y1dst[x * 2 + 1] = bytestream2_get_byte(gbyte) + ly3;
-            ly3 = y1dst[x * 2 + 1];
+            y0dst[x*2+0] = bytestream2_get_byte(gbyte) + ly0;
+            ly0 = y0dst[x*2+0];
+            y0dst[x*2+1] = bytestream2_get_byte(gbyte) + ly1;
+            ly1 = y0dst[x*2+1];
+            y1dst[x*2+0] = bytestream2_get_byte(gbyte) + ly2;
+            ly2 = y1dst[x*2+0];
+            y1dst[x*2+1] = bytestream2_get_byte(gbyte) + ly3;
+            ly3 = y1dst[x*2+1];
             udst[x] = bytestream2_get_byte(gbyte) + lu;
             lu = udst[x];
             vdst[x] = bytestream2_get_byte(gbyte) + lv;
             lv = vdst[x];
         }
 
-        y0dst -= 2 * frame->linesize[0];
-        y1dst -= 2 * frame->linesize[0];
-        udst -= frame->linesize[1];
-        vdst -= frame->linesize[2];
+        y0dst -= 2*frame->linesize[0];
+        y1dst -= 2*frame->linesize[0];
+        udst  -= frame->linesize[1];
+        vdst  -= frame->linesize[2];
     }
 
     return 0;
 }
 
-static int decode_intra(AVCodecContext *avctx, GetBitContext *gb, AVFrame *frame) {
+static int decode_intra(AVCodecContext *avctx, GetBitContext *gb, AVFrame *frame)
+{
     AGMContext *s = avctx->priv_data;
     int ret;
 
     compute_quant_matrix(s, (2 * s->compression - 100) / 100.0);
 
-    s->blocks_w = avctx->coded_width >> 3;
+    s->blocks_w = avctx->coded_width  >> 3;
     s->blocks_h = avctx->coded_height >> 3;
 
     ret = decode_intra_plane(s, gb, s->size[0], s->luma_quant_matrix, frame, 0);
@@ -796,7 +810,7 @@ static int decode_intra(AVCodecContext *avctx, GetBitContext *gb, AVFrame *frame
 
     bytestream2_skip(&s->gbyte, s->size[0]);
 
-    s->blocks_w = avctx->coded_width >> 4;
+    s->blocks_w = avctx->coded_width  >> 4;
     s->blocks_h = avctx->coded_height >> 4;
 
     ret = decode_intra_plane(s, gb, s->size[1], s->chroma_quant_matrix, frame, 2);
@@ -805,7 +819,7 @@ static int decode_intra(AVCodecContext *avctx, GetBitContext *gb, AVFrame *frame
 
     bytestream2_skip(&s->gbyte, s->size[1]);
 
-    s->blocks_w = avctx->coded_width >> 4;
+    s->blocks_w = avctx->coded_width  >> 4;
     s->blocks_h = avctx->coded_height >> 4;
 
     ret = decode_intra_plane(s, gb, s->size[2], s->chroma_quant_matrix, frame, 1);
@@ -815,7 +829,8 @@ static int decode_intra(AVCodecContext *avctx, GetBitContext *gb, AVFrame *frame
     return 0;
 }
 
-static int decode_motion_vectors(AVCodecContext *avctx, GetBitContext *gb) {
+static int decode_motion_vectors(AVCodecContext *avctx, GetBitContext *gb)
+{
     AGMContext *s = avctx->priv_data;
     int nb_mvs = ((avctx->coded_height + 15) >> 4) * ((avctx->coded_width + 15) >> 4);
     int ret, skip = 0, value, map;
@@ -856,7 +871,8 @@ static int decode_motion_vectors(AVCodecContext *avctx, GetBitContext *gb) {
 }
 
 static int decode_inter(AVCodecContext *avctx, GetBitContext *gb,
-                        AVFrame *frame, AVFrame *prev) {
+                        AVFrame *frame, AVFrame *prev)
+{
     AGMContext *s = avctx->priv_data;
     int ret;
 
@@ -868,7 +884,7 @@ static int decode_inter(AVCodecContext *avctx, GetBitContext *gb,
             return ret;
     }
 
-    s->blocks_w = avctx->coded_width >> 3;
+    s->blocks_w = avctx->coded_width  >> 3;
     s->blocks_h = avctx->coded_height >> 3;
 
     ret = decode_inter_plane(s, gb, s->size[0], s->luma_quant_matrix, frame, prev, 0);
@@ -877,7 +893,7 @@ static int decode_inter(AVCodecContext *avctx, GetBitContext *gb,
 
     bytestream2_skip(&s->gbyte, s->size[0]);
 
-    s->blocks_w = avctx->coded_width >> 4;
+    s->blocks_w = avctx->coded_width  >> 4;
     s->blocks_h = avctx->coded_height >> 4;
 
     ret = decode_inter_plane(s, gb, s->size[1], s->chroma_quant_matrix, frame, prev, 2);
@@ -886,7 +902,7 @@ static int decode_inter(AVCodecContext *avctx, GetBitContext *gb,
 
     bytestream2_skip(&s->gbyte, s->size[1]);
 
-    s->blocks_w = avctx->coded_width >> 4;
+    s->blocks_w = avctx->coded_width  >> 4;
     s->blocks_h = avctx->coded_height >> 4;
 
     ret = decode_inter_plane(s, gb, s->size[2], s->chroma_quant_matrix, frame, prev, 1);
@@ -901,7 +917,8 @@ typedef struct Node {
     int child[2];
 } Node;
 
-static void get_tree_codes(uint32_t *codes, Node *nodes, int idx, uint32_t pfx, int bitpos) {
+static void get_tree_codes(uint32_t *codes, Node *nodes, int idx, uint32_t pfx, int bitpos)
+{
     if (idx < 256 && idx >= 0) {
         codes[idx] = pfx;
     } else if (idx >= 0) {
@@ -910,9 +927,10 @@ static void get_tree_codes(uint32_t *codes, Node *nodes, int idx, uint32_t pfx, 
     }
 }
 
-static int make_new_tree(const uint8_t *bitlens, uint32_t *codes) {
+static int make_new_tree(const uint8_t *bitlens, uint32_t *codes)
+{
     int zlcount = 0, curlen, idx, nindex, last, llast;
-    int blcounts[32] = {0};
+    int blcounts[32] = { 0 };
     int syms[8192];
     Node nodes[512];
     int node_idx[1024];
@@ -988,13 +1006,14 @@ static int make_new_tree(const uint8_t *bitlens, uint32_t *codes) {
         nindex = idx;
     }
 
-    next:
+next:
 
     get_tree_codes(codes, nodes, 256, 0, 0);
     return 0;
 }
 
-static int build_huff(const uint8_t *bitlen, VLC *vlc) {
+static int build_huff(const uint8_t *bitlen, VLC *vlc)
+{
     uint32_t new_codes[256];
     uint8_t bits[256];
     uint8_t symbols[256];
@@ -1022,7 +1041,8 @@ static int build_huff(const uint8_t *bitlen, VLC *vlc) {
                               INIT_VLC_LE);
 }
 
-static int decode_huffman2(AVCodecContext *avctx, int header, int size) {
+static int decode_huffman2(AVCodecContext *avctx, int header, int size)
+{
     AGMContext *s = avctx->priv_data;
     GetBitContext *gb = &s->gb;
     uint8_t lens[256];
@@ -1044,7 +1064,7 @@ static int decode_huffman2(AVCodecContext *avctx, int header, int size) {
     x = get_bits(gb, 1);
     len = 4 + get_bits(gb, 1);
     if (x) {
-        int cb[8] = {0};
+        int cb[8] = { 0 };
         int count = get_bits(gb, 3) + 1;
 
         for (int i = 0; i < count; i++)
@@ -1074,10 +1094,11 @@ static int decode_huffman2(AVCodecContext *avctx, int header, int size) {
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data,
-                        int *got_frame, AVPacket *avpkt) {
+                        int *got_frame, AVPacket *avpkt)
+{
     AGMContext *s = avctx->priv_data;
     GetBitContext *gb = &s->gb;
-    GetByteContext * gbyte = &s->gbyte;
+    GetByteContext *gbyte = &s->gbyte;
     AVFrame *frame = data;
     int w, h, width, height, header;
     unsigned compressed_size;
@@ -1136,7 +1157,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
             s->flags |= 1;
         }
 
-        width = avctx->width;
+        width  = avctx->width;
         height = avctx->height;
         if (w < width || h < height || w & 7 || h & 7)
             return AVERROR_INVALIDDATA;
@@ -1177,7 +1198,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
         else
             ret = decode_intra(avctx, gb, frame);
     } else {
-        if (s->prev_frame->width != frame->width ||
+        if (s->prev_frame-> width != frame->width ||
             s->prev_frame->height != frame->height)
             return AVERROR_INVALIDDATA;
 
@@ -1202,15 +1223,16 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     if ((ret = av_frame_ref(s->prev_frame, frame)) < 0)
         return ret;
 
-    frame->crop_top = avctx->coded_height - avctx->height;
-    frame->crop_left = avctx->coded_width - avctx->width;
+    frame->crop_top  = avctx->coded_height - avctx->height;
+    frame->crop_left = avctx->coded_width  - avctx->width;
 
     *got_frame = 1;
 
     return avpkt->size;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     AGMContext *s = avctx->priv_data;
 
     s->rgb = avctx->codec_tag == MKTAG('A', 'G', 'M', '4');
@@ -1238,13 +1260,15 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static void decode_flush(AVCodecContext *avctx) {
+static void decode_flush(AVCodecContext *avctx)
+{
     AGMContext *s = avctx->priv_data;
 
     av_frame_unref(s->prev_frame);
 }
 
-static av_cold int decode_close(AVCodecContext *avctx) {
+static av_cold int decode_close(AVCodecContext *avctx)
+{
     AGMContext *s = avctx->priv_data;
 
     ff_free_vlc(&s->vlc);
@@ -1262,17 +1286,17 @@ static av_cold int decode_close(AVCodecContext *avctx) {
 }
 
 AVCodec ff_agm_decoder = {
-        .name             = "agm",
-        .long_name        = NULL_IF_CONFIG_SMALL("Amuse Graphics Movie"),
-        .type             = AVMEDIA_TYPE_VIDEO,
-        .id               = AV_CODEC_ID_AGM,
-        .priv_data_size   = sizeof(AGMContext),
-        .init             = decode_init,
-        .close            = decode_close,
-        .decode           = decode_frame,
-        .flush            = decode_flush,
-        .capabilities     = AV_CODEC_CAP_DR1,
-        .caps_internal    = FF_CODEC_CAP_INIT_THREADSAFE |
-                            FF_CODEC_CAP_INIT_CLEANUP |
-                            FF_CODEC_CAP_EXPORTS_CROPPING,
+    .name             = "agm",
+    .long_name        = NULL_IF_CONFIG_SMALL("Amuse Graphics Movie"),
+    .type             = AVMEDIA_TYPE_VIDEO,
+    .id               = AV_CODEC_ID_AGM,
+    .priv_data_size   = sizeof(AGMContext),
+    .init             = decode_init,
+    .close            = decode_close,
+    .decode           = decode_frame,
+    .flush            = decode_flush,
+    .capabilities     = AV_CODEC_CAP_DR1,
+    .caps_internal    = FF_CODEC_CAP_INIT_THREADSAFE |
+                        FF_CODEC_CAP_INIT_CLEANUP |
+                        FF_CODEC_CAP_EXPORTS_CROPPING,
 };

@@ -22,7 +22,8 @@
 #include "blockdsp_mips.h"
 
 static void copy_8bit_value_width8_msa(uint8_t *src, uint8_t val,
-                                       int32_t src_stride, int32_t height) {
+                                       int32_t src_stride, int32_t height)
+{
     int32_t cnt;
     uint64_t dst0;
     v16u8 val0;
@@ -37,7 +38,8 @@ static void copy_8bit_value_width8_msa(uint8_t *src, uint8_t val,
 }
 
 static void copy_8bit_value_width16_msa(uint8_t *src, uint8_t val,
-                                        int32_t src_stride, int32_t height) {
+                                        int32_t src_stride, int32_t height)
+{
     int32_t cnt;
     v16u8 val0;
 
@@ -50,9 +52,10 @@ static void copy_8bit_value_width16_msa(uint8_t *src, uint8_t val,
 }
 
 static void memset_zero_16width_msa(uint8_t *src, int32_t stride,
-                                    int32_t height) {
+                                    int32_t height)
+{
     int8_t cnt;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
 
     for (cnt = (height / 2); cnt--;) {
         ST_UB(zero, src);
@@ -62,18 +65,22 @@ static void memset_zero_16width_msa(uint8_t *src, int32_t stride,
     }
 }
 
-void ff_fill_block16_msa(uint8_t *src, uint8_t val, ptrdiff_t stride, int height) {
+void ff_fill_block16_msa(uint8_t *src, uint8_t val, ptrdiff_t stride, int height)
+{
     copy_8bit_value_width16_msa(src, val, stride, height);
 }
 
-void ff_fill_block8_msa(uint8_t *src, uint8_t val, ptrdiff_t stride, int height) {
+void ff_fill_block8_msa(uint8_t *src, uint8_t val, ptrdiff_t stride, int height)
+{
     copy_8bit_value_width8_msa(src, val, stride, height);
 }
 
-void ff_clear_block_msa(int16_t *block) {
+void ff_clear_block_msa(int16_t *block)
+{
     memset_zero_16width_msa((uint8_t *) block, 16, 8);
 }
 
-void ff_clear_blocks_msa(int16_t *block) {
+void ff_clear_blocks_msa(int16_t *block)
+{
     memset_zero_16width_msa((uint8_t *) block, 16, 8 * 6);
 }

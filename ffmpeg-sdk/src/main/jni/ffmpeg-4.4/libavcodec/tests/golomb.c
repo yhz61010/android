@@ -31,7 +31,8 @@
 #define COUNT 8191
 #define SIZE (COUNT * 4)
 
-int main(void) {
+int main(void)
+{
     int i, ret = 0;
     uint8_t *temp;
     PutBitContext pb;
@@ -71,7 +72,7 @@ int main(void) {
         j = get_ue_golomb_long(&gb);
         if (j != EXTEND(i)) {
             fprintf(stderr, "get_ue_golomb_long: expected %d, got %d. "
-                            "bits: %8x\n", EXTEND(i), j, s);
+                    "bits: %8x\n", EXTEND(i), j, s);
             ret = 1;
         }
     }
@@ -89,7 +90,7 @@ int main(void) {
         j = get_ue_golomb_long(&gb);
         if (j != EXTEND_L(i)) {
             fprintf(stderr, "get_ue_golomb_long: expected %d, got %d. "
-                            "bits: %8x\n", EXTEND_L(i), j, s);
+                    "bits: %8x\n", EXTEND_L(i), j, s);
             ret = 1;
         }
     }

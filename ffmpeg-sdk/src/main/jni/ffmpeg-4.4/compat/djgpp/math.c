@@ -27,21 +27,21 @@ type name(type x, type y) \
 }
 
 FUN(fmin, double, <)
-
 FUN(fmax, double, >)
-
 FUN(fminf, float, <)
-
 FUN(fmaxf, float, >)
 
-long double fmodl(long double x, long double y) {
+long double fmodl(long double x, long double y)
+{
     return fmod(x, y);
 }
 
-long double scalbnl(long double x, int exp) {
+long double scalbnl(long double x, int exp)
+{
     return scalbn(x, exp);
 }
 
-long double copysignl(long double x, long double y) {
+long double copysignl(long double x, long double y)
+{
     return copysign(x, y);
 }

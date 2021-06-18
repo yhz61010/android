@@ -844,41 +844,40 @@ AVCodec * codec_list[] = {
     NULL
 };
 #else
-
 #include "libavcodec/codec_list.c"
-
 #endif
 
 static AVOnce av_codec_static_init = AV_ONCE_INIT;
-
-static void av_codec_init_static(void) {
+static void av_codec_init_static(void)
+{
     for (int i = 0; codec_list[i]; i++) {
         if (codec_list[i]->init_static_data)
-            codec_list[i]->init_static_data((AVCodec *) codec_list[i]);
+            codec_list[i]->init_static_data((AVCodec*)codec_list[i]);
     }
 }
 
-const AVCodec *av_codec_iterate(void **opaque) {
-    uintptr_t i = (uintptr_t) * opaque;
+const AVCodec *av_codec_iterate(void **opaque)
+{
+    uintptr_t i = (uintptr_t)*opaque;
     const AVCodec *c = codec_list[i];
 
     ff_thread_once(&av_codec_static_init, av_codec_init_static);
 
     if (c)
-        *opaque = (void *) (i + 1);
+        *opaque = (void*)(i + 1);
 
     return c;
 }
 
 #if FF_API_NEXT
 FF_DISABLE_DEPRECATION_WARNINGS
-static AVOnce
-av_codec_next_init = AV_ONCE_INIT;
+static AVOnce av_codec_next_init = AV_ONCE_INIT;
 
-static void av_codec_init_next(void) {
-    AVCodec * prev = NULL, *p;
+static void av_codec_init_next(void)
+{
+    AVCodec *prev = NULL, *p;
     void *i = 0;
-    while ((p = (AVCodec *) av_codec_iterate(&i))) {
+    while ((p = (AVCodec*)av_codec_iterate(&i))) {
         if (prev)
             prev->next = p;
         prev = p;
@@ -886,36 +885,40 @@ static void av_codec_init_next(void) {
 }
 
 
-av_cold void avcodec_register(AVCodec *codec) {
+
+av_cold void avcodec_register(AVCodec *codec)
+{
     ff_thread_once(&av_codec_next_init, av_codec_init_next);
 }
 
-AVCodec *av_codec_next(const AVCodec *c) {
+AVCodec *av_codec_next(const AVCodec *c)
+{
     ff_thread_once(&av_codec_next_init, av_codec_init_next);
 
     if (c)
         return c->next;
     else
-        return (AVCodec *) codec_list[0];
+        return (AVCodec*)codec_list[0];
 }
 
-void avcodec_register_all(void) {
+void avcodec_register_all(void)
+{
     ff_thread_once(&av_codec_next_init, av_codec_init_next);
 }
-
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
-static enum AVCodecID remap_deprecated_codec_id(enum AVCodecID id) {
-    switch (id) {
+static enum AVCodecID remap_deprecated_codec_id(enum AVCodecID id)
+{
+    switch(id){
         //This is for future deprecatec codec ids, its empty since
         //last major bump but will fill up again over time, please don't remove it
-        default                                         :
-            return id;
+        default                                         : return id;
     }
 }
 
-static AVCodec *find_codec(enum AVCodecID id, int (*x)(const AVCodec *)) {
+static AVCodec *find_codec(enum AVCodecID id, int (*x)(const AVCodec *))
+{
     const AVCodec *p, *experimental = NULL;
     void *i = 0;
 
@@ -928,22 +931,25 @@ static AVCodec *find_codec(enum AVCodecID id, int (*x)(const AVCodec *)) {
             if (p->capabilities & AV_CODEC_CAP_EXPERIMENTAL && !experimental) {
                 experimental = p;
             } else
-                return (AVCodec *) p;
+                return (AVCodec*)p;
         }
     }
 
-    return (AVCodec *) experimental;
+    return (AVCodec*)experimental;
 }
 
-AVCodec *avcodec_find_encoder(enum AVCodecID id) {
+AVCodec *avcodec_find_encoder(enum AVCodecID id)
+{
     return find_codec(id, av_codec_is_encoder);
 }
 
-AVCodec *avcodec_find_decoder(enum AVCodecID id) {
+AVCodec *avcodec_find_decoder(enum AVCodecID id)
+{
     return find_codec(id, av_codec_is_decoder);
 }
 
-static AVCodec *find_codec_by_name(const char *name, int (*x)(const AVCodec *)) {
+static AVCodec *find_codec_by_name(const char *name, int (*x)(const AVCodec *))
+{
     void *i = 0;
     const AVCodec *p;
 
@@ -954,16 +960,18 @@ static AVCodec *find_codec_by_name(const char *name, int (*x)(const AVCodec *)) 
         if (!x(p))
             continue;
         if (strcmp(name, p->name) == 0)
-            return (AVCodec *) p;
+            return (AVCodec*)p;
     }
 
     return NULL;
 }
 
-AVCodec *avcodec_find_encoder_by_name(const char *name) {
+AVCodec *avcodec_find_encoder_by_name(const char *name)
+{
     return find_codec_by_name(name, av_codec_is_encoder);
 }
 
-AVCodec *avcodec_find_decoder_by_name(const char *name) {
+AVCodec *avcodec_find_decoder_by_name(const char *name)
+{
     return find_codec_by_name(name, av_codec_is_decoder);
 }

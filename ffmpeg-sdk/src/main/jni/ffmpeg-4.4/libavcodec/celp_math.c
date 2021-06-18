@@ -63,23 +63,24 @@ int ff_exp2(uint16_t power)
  * tab_log2[i] = (1<<15) * log2(1 + i/32), i=0..32
  */
 static const uint16_t tab_log2[33] =
-        {
+{
 #ifdef G729_BITEXACT
-                0,   1455,   2866,   4236,   5568,   6863,   8124,   9352,
-            10549,  11716,  12855,  13967,  15054,  16117,  17156,  18172,
-            19167,  20142,  21097,  22033,  22951,  23852,  24735,  25603,
-            26455,  27291,  28113,  28922,  29716,  30497,  31266,  32023,  32767,
+      0,   1455,   2866,   4236,   5568,   6863,   8124,   9352,
+  10549,  11716,  12855,  13967,  15054,  16117,  17156,  18172,
+  19167,  20142,  21097,  22033,  22951,  23852,  24735,  25603,
+  26455,  27291,  28113,  28922,  29716,  30497,  31266,  32023,  32767,
 #else
-                4, 1459, 2870, 4240, 5572, 6867, 8127, 9355,
-                10552, 11719, 12858, 13971, 15057, 16120, 17158, 18175,
-                19170, 20145, 21100, 22036, 22954, 23854, 24738, 25605,
-                26457, 27294, 28116, 28924, 29719, 30500, 31269, 32025, 32769,
+      4,   1459,   2870,   4240,   5572,   6867,   8127,   9355,
+  10552,  11719,  12858,  13971,  15057,  16120,  17158,  18175,
+  19170,  20145,  21100,  22036,  22954,  23854,  24738,  25605,
+  26457,  27294,  28116,  28924,  29719,  30500,  31269,  32025,  32769,
 #endif
-        };
+};
 
-int ff_log2_q15(uint32_t value) {
-    uint8_t power_int;
-    uint8_t frac_x0;
+int ff_log2_q15(uint32_t value)
+{
+    uint8_t  power_int;
+    uint8_t  frac_x0;
     uint16_t frac_dx;
 
     // Stripping zeros from beginning
@@ -91,12 +92,13 @@ int ff_log2_q15(uint32_t value) {
     frac_dx = (value & 0x03fff800) >> 11;
 
     value = tab_log2[frac_x0];
-    value += (frac_dx * (tab_log2[frac_x0 + 1] - tab_log2[frac_x0])) >> 15;
+    value += (frac_dx * (tab_log2[frac_x0+1] - tab_log2[frac_x0])) >> 15;
 
     return (power_int << 15) + value;
 }
 
-int64_t ff_dot_product(const int16_t *a, const int16_t *b, int length) {
+int64_t ff_dot_product(const int16_t *a, const int16_t *b, int length)
+{
     int i;
     int64_t sum = 0;
 
@@ -106,19 +108,21 @@ int64_t ff_dot_product(const int16_t *a, const int16_t *b, int length) {
     return sum;
 }
 
-float ff_dot_productf(const float *a, const float *b, int length) {
+float ff_dot_productf(const float* a, const float* b, int length)
+{
     float sum = 0;
     int i;
 
-    for (i = 0; i < length; i++)
+    for(i=0; i<length; i++)
         sum += a[i] * b[i];
 
     return sum;
 }
 
-void ff_celp_math_init(CELPMContext *c) {
-    c->dot_productf = ff_dot_productf;
+void ff_celp_math_init(CELPMContext *c)
+{
+    c->dot_productf   = ff_dot_productf;
 
-    if (HAVE_MIPSFPU)
+    if(HAVE_MIPSFPU)
         ff_celp_math_init_mips(c);
 }

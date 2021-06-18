@@ -45,11 +45,8 @@ typedef struct CBSBSFType {
 // structure must be the first member of the BSF private context (to be
 // pointed to by AVBSFContext.priv_data).
 typedef struct CBSBSFContext {
-    const AVClass         *
-
-    class;
-
-    const CBSBSFType *type;
+    const AVClass         *class;
+    const CBSBSFType      *type;
 
     CodedBitstreamContext *input;
     CodedBitstreamContext *output;

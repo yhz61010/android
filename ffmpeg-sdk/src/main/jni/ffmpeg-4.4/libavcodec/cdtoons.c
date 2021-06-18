@@ -44,7 +44,7 @@ typedef struct CDToonsSprite {
     unsigned int alloc_size;
     uint32_t size;
     uint8_t *data;
-    int active;
+    int      active;
 } CDToonsSprite;
 
 typedef struct CDToonsContext {
@@ -57,7 +57,8 @@ typedef struct CDToonsContext {
 
 static int cdtoons_render_sprite(AVCodecContext *avctx, const uint8_t *data,
                                  uint32_t data_size,
-                                 int dst_x, int dst_y, int width, int height) {
+                                 int dst_x, int dst_y, int width, int height)
+{
     CDToonsContext *c = avctx->priv_data;
     const uint8_t *next_line = data;
     const uint8_t *end = data + data_size;
@@ -80,7 +81,7 @@ static int cdtoons_render_sprite(AVCodecContext *avctx, const uint8_t *data,
 
     for (int y = 0; y < height; y++) {
         /* one scanline at a time, size is provided */
-        data = next_line;
+        data      = next_line;
         if (end - data < 2)
             return 1;
         line_size = bytestream_get_be16(&data);
@@ -93,7 +94,7 @@ static int cdtoons_render_sprite(AVCodecContext *avctx, const uint8_t *data,
         dest = c->frame->data[0] + (dst_y + y) * c->frame->linesize[0] + dst_x;
 
         to_skip = skip;
-        x = 0;
+        x       = 0;
         while (x < width - skip) {
             int raw, size, step;
             uint8_t val;
@@ -101,9 +102,9 @@ static int cdtoons_render_sprite(AVCodecContext *avctx, const uint8_t *data,
             if (data >= end)
                 return 1;
 
-            val = bytestream_get_byte(&data);
-            raw = !(val & 0x80);
-            size = (int) (val & 0x7F) + 1;
+            val  = bytestream_get_byte(&data);
+            raw  = !(val & 0x80);
+            size = (int)(val & 0x7F) + 1;
 
             /* skip the start of a scanline if it is off-screen */
             if (to_skip >= size) {
@@ -150,7 +151,8 @@ static int cdtoons_render_sprite(AVCodecContext *avctx, const uint8_t *data,
 }
 
 static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
-                                int *got_frame, AVPacket *avpkt) {
+                                int *got_frame, AVPacket *avpkt)
+{
     CDToonsContext *c = avctx->priv_data;
     const uint8_t *buf = avpkt->data;
     const uint8_t *eod = avpkt->data + avpkt->size;
@@ -172,21 +174,21 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
 
     /* a lot of the header is useless junk in the absence of
      * dirty rectangling etc */
-    buf += 2; /* version? (always 9?) */
-    frame_id = bytestream_get_be16(&buf);
-    buf += 2; /* blocks_valid_until */
-    buf += 1;
-    background_color = bytestream_get_byte(&buf);
-    buf += 16; /* clip rect, dirty rect */
-    buf += 4; /* flags */
-    sprite_count = bytestream_get_be16(&buf);
-    sprite_offset = bytestream_get_be16(&buf);
-    buf += 2; /* max block id? */
-    referenced_count = bytestream_get_byte(&buf);
-    buf += 1;
-    palette_id = bytestream_get_be16(&buf);
-    palette_set = bytestream_get_byte(&buf);
-    buf += 5;
+    buf               += 2; /* version? (always 9?) */
+    frame_id           = bytestream_get_be16(&buf);
+    buf               += 2; /* blocks_valid_until */
+    buf               += 1;
+    background_color   = bytestream_get_byte(&buf);
+    buf               += 16; /* clip rect, dirty rect */
+    buf               += 4; /* flags */
+    sprite_count       = bytestream_get_be16(&buf);
+    sprite_offset      = bytestream_get_be16(&buf);
+    buf               += 2; /* max block id? */
+    referenced_count   = bytestream_get_byte(&buf);
+    buf               += 1;
+    palette_id         = bytestream_get_be16(&buf);
+    palette_set        = bytestream_get_byte(&buf);
+    buf               += 5;
 
     if (sprite_offset > buf_size)
         return AVERROR_INVALIDDATA;
@@ -213,17 +215,17 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
         }
 
         c->sprites[sprite_id].flags = bytestream_get_be16(&buf);
-        size = bytestream_get_be32(&buf);
+        size                        = bytestream_get_be32(&buf);
         if (size < 14) {
             av_log(avctx, AV_LOG_ERROR,
                    "Sprite only has %d bytes of data.\n", size);
             return AVERROR_INVALIDDATA;
         }
         size -= 14;
-        c->sprites[sprite_id].size = size;
+        c->sprites[sprite_id].size        = size;
         c->sprites[sprite_id].owner_frame = frame_id;
         c->sprites[sprite_id].start_frame = bytestream_get_be16(&buf);
-        c->sprites[sprite_id].end_frame = bytestream_get_be16(&buf);
+        c->sprites[sprite_id].end_frame   = bytestream_get_be16(&buf);
         buf += 2;
 
         if (size > buf_size || buf + size > eod)
@@ -245,7 +247,7 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
             av_log(avctx, AV_LOG_WARNING, "Ran (seriously) out of data for embedded sprites.\n");
             return AVERROR_INVALIDDATA;
         }
-        tag = bytestream_get_be32(&buf);
+        tag  = bytestream_get_be32(&buf);
         size = bytestream_get_be32(&buf);
         if (tag == MKBETAG('D', 'i', 'f', 'f')) {
             uint16_t diff_count;
@@ -254,7 +256,7 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
                 return AVERROR_INVALIDDATA;
             }
             diff_count = bytestream_get_be16(&buf);
-            buf += 8; /* clip rect? */
+            buf       += 8; /* clip rect? */
             for (int i = 0; i < diff_count; i++) {
                 int16_t top, left;
                 uint16_t diff_size, width, height;
@@ -264,18 +266,18 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
                     return AVERROR_INVALIDDATA;
                 }
 
-                top = bytestream_get_be16(&buf);
-                left = bytestream_get_be16(&buf);
-                buf += 4; /* bottom, right */
-                diff_size = bytestream_get_be32(&buf);
-                width = bytestream_get_be16(&buf);
-                height = bytestream_get_be16(&buf);
+                top        = bytestream_get_be16(&buf);
+                left       = bytestream_get_be16(&buf);
+                buf       += 4; /* bottom, right */
+                diff_size  = bytestream_get_be32(&buf);
+                width      = bytestream_get_be16(&buf);
+                height     = bytestream_get_be16(&buf);
                 if (diff_size < 8 || diff_size - 4 > eod - buf) {
                     av_log(avctx, AV_LOG_WARNING, "Ran (seriously) out of data for Diff frame data.\n");
                     return AVERROR_INVALIDDATA;
                 }
                 if (cdtoons_render_sprite(avctx, buf + 4, diff_size - 8,
-                                          left, top, width, height)) {
+                                      left, top, width, height)) {
                     av_log(avctx, AV_LOG_WARNING, "Ran beyond end of sprite while rendering.\n");
                 }
                 buf += diff_size - 4;
@@ -284,7 +286,7 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
         } else {
             /* we don't care about any other entries */
             if (size < 8 || size - 8 > eod - buf) {
-                av_log(avctx, AV_LOG_WARNING, "Ran out of data for ignored entry (size %X, %d left).\n", size, (int) (eod - buf));
+                av_log(avctx, AV_LOG_WARNING, "Ran out of data for ignored entry (size %X, %d left).\n", size, (int)(eod - buf));
                 return AVERROR_INVALIDDATA;
             }
             buf += (size - 8);
@@ -309,10 +311,10 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
         }
 
         sprite_id = bytestream_get_be16(&buf);
-        top = bytestream_get_be16(&buf);
-        left = bytestream_get_be16(&buf);
-        buf += 2; /* bottom */
-        right = bytestream_get_be16(&buf);
+        top       = bytestream_get_be16(&buf);
+        left      = bytestream_get_be16(&buf);
+        buf      += 2; /* bottom */
+        right     = bytestream_get_be16(&buf);
 
         if ((i == 0) && (sprite_id == 0)) {
             /* clear background */
@@ -339,12 +341,12 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
             continue;
         }
 
-        height = bytestream_get_be16(&block_data);
-        width = bytestream_get_be16(&block_data);
+        height      = bytestream_get_be16(&block_data);
+        width       = bytestream_get_be16(&block_data);
         block_data += 10;
         if (cdtoons_render_sprite(avctx, block_data,
-                                  c->sprites[sprite_id].size - 14,
-                                  left, top, width, height)) {
+                              c->sprites[sprite_id].size - 14,
+                              left, top, width, height)) {
             av_log(avctx, AV_LOG_WARNING, "Ran beyond end of sprite while rendering.\n");
         }
     }
@@ -373,19 +375,19 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
             for (int i = 0; i < 256; i++) {
                 /* QuickTime-ish palette: 16-bit RGB components */
                 unsigned r, g, b;
-                r = *palette_data;
-                g = *(palette_data + 2);
-                b = *(palette_data + 4);
-                c->pal[i] = (0xFFU << 24) | (r << 16) | (g << 8) | b;
+                r             = *palette_data;
+                g             = *(palette_data + 2);
+                b             = *(palette_data + 4);
+                c->pal[i]     = (0xFFU << 24) | (r << 16) | (g << 8) | b;
                 palette_data += 6;
             }
             /* first palette entry indicates transparency */
-            c->pal[0] = 0;
+            c->pal[0]                     = 0;
             c->frame->palette_has_changed = 1;
         }
     }
 
-    done:
+done:
     /* discard outdated blocks */
     for (int i = 0; i < CDTOONS_MAX_SPRITES; i++) {
         if (c->sprites[i].end_frame > frame_id)
@@ -404,19 +406,21 @@ static int cdtoons_decode_frame(AVCodecContext *avctx, void *data,
     return buf_size;
 }
 
-static av_cold int cdtoons_decode_init(AVCodecContext *avctx) {
+static av_cold int cdtoons_decode_init(AVCodecContext *avctx)
+{
     CDToonsContext *c = avctx->priv_data;
 
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
     c->last_pal_id = 0;
-    c->frame = av_frame_alloc();
+    c->frame       = av_frame_alloc();
     if (!c->frame)
         return AVERROR(ENOMEM);
 
     return 0;
 }
 
-static void cdtoons_flush(AVCodecContext *avctx) {
+static void cdtoons_flush(AVCodecContext *avctx)
+{
     CDToonsContext *c = avctx->priv_data;
 
     c->last_pal_id = 0;
@@ -424,7 +428,8 @@ static void cdtoons_flush(AVCodecContext *avctx) {
         c->sprites[i].active = 0;
 }
 
-static av_cold int cdtoons_decode_end(AVCodecContext *avctx) {
+static av_cold int cdtoons_decode_end(AVCodecContext *avctx)
+{
     CDToonsContext *c = avctx->priv_data;
 
     for (int i = 0; i < CDTOONS_MAX_SPRITES; i++) {
@@ -438,15 +443,15 @@ static av_cold int cdtoons_decode_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_cdtoons_decoder = {
-        .name           = "cdtoons",
-        .long_name      = NULL_IF_CONFIG_SMALL("CDToons video"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_CDTOONS,
-        .priv_data_size = sizeof(CDToonsContext),
-        .init           = cdtoons_decode_init,
-        .close          = cdtoons_decode_end,
-        .decode         = cdtoons_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .flush          = cdtoons_flush,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "cdtoons",
+    .long_name      = NULL_IF_CONFIG_SMALL("CDToons video"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_CDTOONS,
+    .priv_data_size = sizeof(CDToonsContext),
+    .init           = cdtoons_decode_init,
+    .close          = cdtoons_decode_end,
+    .decode         = cdtoons_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .flush          = cdtoons_flush,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

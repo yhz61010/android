@@ -29,7 +29,8 @@
 #define sem_destroy(psem)           dispatch_release(*psem)
 
 static inline int compat_sem_init(dispatch_semaphore_t *psem,
-                                  int unused, int val) {
+                                  int unused, int val)
+{
     int ret = !!(*psem = dispatch_semaphore_create(val)) - 1;
     if (ret < 0)
         errno = ENOMEM;

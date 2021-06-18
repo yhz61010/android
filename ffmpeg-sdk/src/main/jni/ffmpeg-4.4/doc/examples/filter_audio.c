@@ -60,16 +60,17 @@
 #define VOLUME_VAL 0.90
 
 static int init_filter_graph(AVFilterGraph **graph, AVFilterContext **src,
-                             AVFilterContext **sink) {
+                             AVFilterContext **sink)
+{
     AVFilterGraph *filter_graph;
     AVFilterContext *abuffer_ctx;
-    const AVFilter *abuffer;
+    const AVFilter  *abuffer;
     AVFilterContext *volume_ctx;
-    const AVFilter *volume;
+    const AVFilter  *volume;
     AVFilterContext *aformat_ctx;
-    const AVFilter *aformat;
+    const AVFilter  *aformat;
     AVFilterContext *abuffersink_ctx;
-    const AVFilter *abuffersink;
+    const AVFilter  *abuffersink;
 
     AVDictionary *options_dict = NULL;
     uint8_t options_str[1024];
@@ -100,10 +101,10 @@ static int init_filter_graph(AVFilterGraph **graph, AVFilterContext **src,
 
     /* Set the filter options through the AVOptions API. */
     av_get_channel_layout_string(ch_layout, sizeof(ch_layout), 0, INPUT_CHANNEL_LAYOUT);
-    av_opt_set(abuffer_ctx, "channel_layout", ch_layout, AV_OPT_SEARCH_CHILDREN);
-    av_opt_set(abuffer_ctx, "sample_fmt", av_get_sample_fmt_name(INPUT_FORMAT), AV_OPT_SEARCH_CHILDREN);
-    av_opt_set_q(abuffer_ctx, "time_base", (AVRational) {1, INPUT_SAMPLERATE}, AV_OPT_SEARCH_CHILDREN);
-    av_opt_set_int(abuffer_ctx, "sample_rate", INPUT_SAMPLERATE, AV_OPT_SEARCH_CHILDREN);
+    av_opt_set    (abuffer_ctx, "channel_layout", ch_layout,                            AV_OPT_SEARCH_CHILDREN);
+    av_opt_set    (abuffer_ctx, "sample_fmt",     av_get_sample_fmt_name(INPUT_FORMAT), AV_OPT_SEARCH_CHILDREN);
+    av_opt_set_q  (abuffer_ctx, "time_base",      (AVRational){ 1, INPUT_SAMPLERATE },  AV_OPT_SEARCH_CHILDREN);
+    av_opt_set_int(abuffer_ctx, "sample_rate",    INPUT_SAMPLERATE,                     AV_OPT_SEARCH_CHILDREN);
 
     /* Now initialize the filter; we pass NULL options, since we have already
      * set all the options above. */
@@ -153,10 +154,9 @@ static int init_filter_graph(AVFilterGraph **graph, AVFilterContext **src,
     /* A third way of passing the options is in a string of the form
      * key1=value1:key2=value2.... */
     snprintf(options_str, sizeof(options_str),
-             "sample_fmts=%s:sample_rates=%d:channel_layouts=0x%"
-    PRIx64,
-            av_get_sample_fmt_name(AV_SAMPLE_FMT_S16), 44100,
-            (uint64_t) AV_CH_LAYOUT_STEREO);
+             "sample_fmts=%s:sample_rates=%d:channel_layouts=0x%"PRIx64,
+             av_get_sample_fmt_name(AV_SAMPLE_FMT_S16), 44100,
+             (uint64_t)AV_CH_LAYOUT_STEREO);
     err = avfilter_init_str(aformat_ctx, options_str);
     if (err < 0) {
         av_log(NULL, AV_LOG_ERROR, "Could not initialize the aformat filter.\n");
@@ -204,19 +204,20 @@ static int init_filter_graph(AVFilterGraph **graph, AVFilterContext **src,
     }
 
     *graph = filter_graph;
-    *src = abuffer_ctx;
-    *sink = abuffersink_ctx;
+    *src   = abuffer_ctx;
+    *sink  = abuffersink_ctx;
 
     return 0;
 }
 
 /* Do something useful with the filtered data: this simple
  * example just prints the MD5 checksum of each plane to stdout. */
-static int process_output(struct AVMD5 *md5, AVFrame *frame) {
-    int planar = av_sample_fmt_is_planar(frame->format);
-    int channels = av_get_channel_layout_nb_channels(frame->channel_layout);
-    int planes = planar ? channels : 1;
-    int bps = av_get_bytes_per_sample(frame->format);
+static int process_output(struct AVMD5 *md5, AVFrame *frame)
+{
+    int planar     = av_sample_fmt_is_planar(frame->format);
+    int channels   = av_get_channel_layout_nb_channels(frame->channel_layout);
+    int planes     = planar ? channels : 1;
+    int bps        = av_get_bytes_per_sample(frame->format);
     int plane_size = bps * frame->nb_samples * (planar ? 1 : channels);
     int i, j;
 
@@ -238,17 +239,18 @@ static int process_output(struct AVMD5 *md5, AVFrame *frame) {
 
 /* Construct a frame of audio data to be filtered;
  * this simple example just synthesizes a sine wave. */
-static int get_input(AVFrame *frame, int frame_num) {
+static int get_input(AVFrame *frame, int frame_num)
+{
     int err, i, j;
 
 #define FRAME_SIZE 1024
 
     /* Set up the frame properties and allocate the buffer for the data. */
-    frame->sample_rate = INPUT_SAMPLERATE;
-    frame->format = INPUT_FORMAT;
+    frame->sample_rate    = INPUT_SAMPLERATE;
+    frame->format         = INPUT_FORMAT;
     frame->channel_layout = INPUT_CHANNEL_LAYOUT;
-    frame->nb_samples = FRAME_SIZE;
-    frame->pts = frame_num * FRAME_SIZE;
+    frame->nb_samples     = FRAME_SIZE;
+    frame->pts            = frame_num * FRAME_SIZE;
 
     err = av_frame_get_buffer(frame, 0);
     if (err < 0)
@@ -256,7 +258,7 @@ static int get_input(AVFrame *frame, int frame_num) {
 
     /* Fill the data for each channel. */
     for (i = 0; i < 5; i++) {
-        float *data = (float *) frame->extended_data[i];
+        float *data = (float*)frame->extended_data[i];
 
         for (j = 0; j < frame->nb_samples; j++)
             data[j] = sin(2 * M_PI * (frame_num + j) * (i + 1) / FRAME_SIZE);
@@ -265,7 +267,8 @@ static int get_input(AVFrame *frame, int frame_num) {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     struct AVMD5 *md5;
     AVFilterGraph *graph;
     AVFilterContext *src, *sink;
@@ -279,7 +282,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    duration = atof(argv[1]);
+    duration  = atof(argv[1]);
     nb_frames = duration * INPUT_SAMPLERATE / FRAME_SIZE;
     if (nb_frames <= 0) {
         fprintf(stderr, "Invalid duration: %s\n", argv[1]);
@@ -287,7 +290,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Allocate the frame we will be using to store the data. */
-    frame = av_frame_alloc();
+    frame  = av_frame_alloc();
     if (!frame) {
         fprintf(stderr, "Error allocating the frame\n");
         return 1;
@@ -353,7 +356,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
 
-    fail:
+fail:
     av_strerror(err, errstr, sizeof(errstr));
     fprintf(stderr, "%s\n", errstr);
     return 1;

@@ -47,10 +47,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/**
-* @file
-* Reference: libavcodec/iirfilter.c
-*/
+ /**
+ * @file
+ * Reference: libavcodec/iirfilter.c
+ */
 
 #include "config.h"
 #include "libavcodec/iirfilter.h"

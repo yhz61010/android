@@ -17,7 +17,8 @@
  */
 
 static int FUNC(obu_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                            AV1RawOBUHeader *current) {
+                            AV1RawOBUHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int err;
 
@@ -41,12 +42,13 @@ static int FUNC(obu_header)(CodedBitstreamContext *ctx, RWContext *rw,
     }
 
     priv->temporal_id = current->temporal_id;
-    priv->spatial_id = current->spatial_id;
+    priv->spatial_id  = current->spatial_id;
 
     return 0;
 }
 
-static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw, int nb_bits) {
+static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw, int nb_bits)
+{
     int err;
 
     av_assert0(nb_bits > 0);
@@ -62,7 +64,8 @@ static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw, int nb
     return 0;
 }
 
-static int FUNC(byte_alignment)(CodedBitstreamContext *ctx, RWContext *rw) {
+static int FUNC(byte_alignment)(CodedBitstreamContext *ctx, RWContext *rw)
+{
     int err;
 
     while (byte_alignment(rw) != 0)
@@ -72,7 +75,8 @@ static int FUNC(byte_alignment)(CodedBitstreamContext *ctx, RWContext *rw) {
 }
 
 static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
-                              AV1RawColorConfig *current, int seq_profile) {
+                              AV1RawColorConfig *current, int seq_profile)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int err;
 
@@ -98,9 +102,9 @@ static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
         fb(8, transfer_characteristics);
         fb(8, matrix_coefficients);
     } else {
-        infer(color_primaries, AVCOL_PRI_UNSPECIFIED);
+        infer(color_primaries,          AVCOL_PRI_UNSPECIFIED);
         infer(transfer_characteristics, AVCOL_TRC_UNSPECIFIED);
-        infer(matrix_coefficients, AVCOL_SPC_UNSPECIFIED);
+        infer(matrix_coefficients,      AVCOL_SPC_UNSPECIFIED);
     }
 
     if (current->mono_chrome) {
@@ -111,10 +115,10 @@ static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
         infer(chroma_sample_position, AV1_CSP_UNKNOWN);
         infer(separate_uv_delta_q, 0);
 
-    } else if (current->color_primaries == AVCOL_PRI_BT709 &&
+    } else if (current->color_primaries          == AVCOL_PRI_BT709 &&
                current->transfer_characteristics == AVCOL_TRC_IEC61966_2_1 &&
-               current->matrix_coefficients == AVCOL_SPC_RGB) {
-        infer(color_range, 1);
+               current->matrix_coefficients      == AVCOL_SPC_RGB) {
+        infer(color_range,   1);
         infer(subsampling_x, 0);
         infer(subsampling_y, 0);
         flag(separate_uv_delta_q);
@@ -142,7 +146,7 @@ static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
         }
         if (current->subsampling_x && current->subsampling_y) {
             fc(2, chroma_sample_position, AV1_CSP_UNKNOWN,
-               AV1_CSP_COLOCATED);
+                                          AV1_CSP_COLOCATED);
         }
 
         flag(separate_uv_delta_q);
@@ -152,11 +156,12 @@ static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(timing_info)(CodedBitstreamContext *ctx, RWContext *rw,
-                             AV1RawTimingInfo *current) {
+                             AV1RawTimingInfo *current)
+{
     int err;
 
     fc(32, num_units_in_display_tick, 1, MAX_UINT_BITS(32));
-    fc(32, time_scale, 1, MAX_UINT_BITS(32));
+    fc(32, time_scale,                1, MAX_UINT_BITS(32));
 
     flag(equal_picture_interval);
     if (current->equal_picture_interval)
@@ -166,39 +171,41 @@ static int FUNC(timing_info)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(decoder_model_info)(CodedBitstreamContext *ctx, RWContext *rw,
-                                    AV1RawDecoderModelInfo *current) {
+                                    AV1RawDecoderModelInfo *current)
+{
     int err;
 
     fb(5, buffer_delay_length_minus_1);
     fb(32, num_units_in_decoding_tick);
-    fb(5, buffer_removal_time_length_minus_1);
-    fb(5, frame_presentation_time_length_minus_1);
+    fb(5,  buffer_removal_time_length_minus_1);
+    fb(5,  frame_presentation_time_length_minus_1);
 
     return 0;
 }
 
 static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     AV1RawSequenceHeader *current) {
+                                     AV1RawSequenceHeader *current)
+{
     int i, err;
 
     HEADER("Sequence Header");
 
     fc(3, seq_profile, FF_PROFILE_AV1_MAIN,
-       FF_PROFILE_AV1_PROFESSIONAL);
+                       FF_PROFILE_AV1_PROFESSIONAL);
     flag(still_picture);
     flag(reduced_still_picture_header);
 
     if (current->reduced_still_picture_header) {
-        infer(timing_info_present_flag, 0);
-        infer(decoder_model_info_present_flag, 0);
+        infer(timing_info_present_flag,           0);
+        infer(decoder_model_info_present_flag,    0);
         infer(initial_display_delay_present_flag, 0);
-        infer(operating_points_cnt_minus_1, 0);
-        infer(operating_point_idc[0], 0);
+        infer(operating_points_cnt_minus_1,       0);
+        infer(operating_point_idc[0],             0);
 
         fb(5, seq_level_idx[0]);
 
         infer(seq_tier[0], 0);
-        infer(decoder_model_present_for_this_op[0], 0);
+        infer(decoder_model_present_for_this_op[0],         0);
         infer(initial_display_delay_present_for_this_op[0], 0);
 
     } else {
@@ -209,7 +216,7 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
             flag(decoder_model_info_present_flag);
             if (current->decoder_model_info_present_flag) {
                 CHECK(FUNC(decoder_model_info)
-                              (ctx, rw, &current->decoder_model_info));
+                          (ctx, rw, &current->decoder_model_info));
             }
         } else {
             infer(decoder_model_info_present_flag, 0);
@@ -220,7 +227,7 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
         fb(5, operating_points_cnt_minus_1);
         for (i = 0; i <= current->operating_points_cnt_minus_1; i++) {
             fbs(12, operating_point_idc[i], 1, i);
-            fbs(5, seq_level_idx[i], 1, i);
+            fbs(5,  seq_level_idx[i], 1, i);
 
             if (current->seq_level_idx[i] > 7)
                 flags(seq_tier[i], 1, i);
@@ -250,7 +257,7 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
     fb(4, frame_width_bits_minus_1);
     fb(4, frame_height_bits_minus_1);
 
-    fb(current->frame_width_bits_minus_1 + 1, max_frame_width_minus_1);
+    fb(current->frame_width_bits_minus_1  + 1, max_frame_width_minus_1);
     fb(current->frame_height_bits_minus_1 + 1, max_frame_height_minus_1);
 
     if (current->reduced_still_picture_header)
@@ -268,12 +275,12 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
 
     if (current->reduced_still_picture_header) {
         infer(enable_interintra_compound, 0);
-        infer(enable_masked_compound, 0);
-        infer(enable_warped_motion, 0);
-        infer(enable_dual_filter, 0);
-        infer(enable_order_hint, 0);
-        infer(enable_jnt_comp, 0);
-        infer(enable_ref_frame_mvs, 0);
+        infer(enable_masked_compound,     0);
+        infer(enable_warped_motion,       0);
+        infer(enable_dual_filter,         0);
+        infer(enable_order_hint,          0);
+        infer(enable_jnt_comp,            0);
+        infer(enable_ref_frame_mvs,       0);
 
         infer(seq_force_screen_content_tools,
               AV1_SELECT_SCREEN_CONTENT_TOOLS);
@@ -290,7 +297,7 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
             flag(enable_jnt_comp);
             flag(enable_ref_frame_mvs);
         } else {
-            infer(enable_jnt_comp, 0);
+            infer(enable_jnt_comp,      0);
             infer(enable_ref_frame_mvs, 0);
         }
 
@@ -327,7 +334,8 @@ static int FUNC(sequence_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
     return 0;
 }
 
-static int FUNC(temporal_delimiter_obu)(CodedBitstreamContext *ctx, RWContext *rw) {
+static int FUNC(temporal_delimiter_obu)(CodedBitstreamContext *ctx, RWContext *rw)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
 
     HEADER("Temporal Delimiter");
@@ -338,12 +346,13 @@ static int FUNC(temporal_delimiter_obu)(CodedBitstreamContext *ctx, RWContext *r
 }
 
 static int FUNC(set_frame_refs)(CodedBitstreamContext *ctx, RWContext *rw,
-                                AV1RawFrameHeader *current) {
+                                AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     static const uint8_t ref_frame_list[AV1_NUM_REF_FRAMES - 2] = {
-            AV1_REF_FRAME_LAST2, AV1_REF_FRAME_LAST3, AV1_REF_FRAME_BWDREF,
-            AV1_REF_FRAME_ALTREF2, AV1_REF_FRAME_ALTREF
+        AV1_REF_FRAME_LAST2, AV1_REF_FRAME_LAST3, AV1_REF_FRAME_BWDREF,
+        AV1_REF_FRAME_ALTREF2, AV1_REF_FRAME_ALTREF
     };
     int8_t ref_frame_idx[AV1_REFS_PER_FRAME], used_frame[AV1_NUM_REF_FRAMES];
     int8_t shifted_order_hints[AV1_NUM_REF_FRAMES];
@@ -413,7 +422,7 @@ static int FUNC(set_frame_refs)(CodedBitstreamContext *ctx, RWContext *rw,
 
     for (i = 0; i < AV1_REFS_PER_FRAME - 2; i++) {
         int ref_frame = ref_frame_list[i];
-        if (ref_frame_idx[ref_frame - AV1_REF_FRAME_LAST] < 0) {
+        if (ref_frame_idx[ref_frame - AV1_REF_FRAME_LAST] < 0 ) {
             ref = -1;
             for (j = 0; j < AV1_NUM_REF_FRAMES; j++) {
                 int hint = shifted_order_hints[j];
@@ -448,8 +457,9 @@ static int FUNC(set_frame_refs)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(superres_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                 AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                                 AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int denom, err;
 
@@ -473,20 +483,21 @@ static int FUNC(superres_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(frame_size)(CodedBitstreamContext *ctx, RWContext *rw,
-                            AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                            AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int err;
 
     if (current->frame_size_override_flag) {
-        fb(seq->frame_width_bits_minus_1 + 1, frame_width_minus_1);
+        fb(seq->frame_width_bits_minus_1 + 1,  frame_width_minus_1);
         fb(seq->frame_height_bits_minus_1 + 1, frame_height_minus_1);
     } else {
-        infer(frame_width_minus_1, seq->max_frame_width_minus_1);
+        infer(frame_width_minus_1,  seq->max_frame_width_minus_1);
         infer(frame_height_minus_1, seq->max_frame_height_minus_1);
     }
 
-    priv->frame_width = current->frame_width_minus_1 + 1;
+    priv->frame_width  = current->frame_width_minus_1  + 1;
     priv->frame_height = current->frame_height_minus_1 + 1;
 
     CHECK(FUNC(superres_params)(ctx, rw, current));
@@ -495,7 +506,8 @@ static int FUNC(frame_size)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(render_size)(CodedBitstreamContext *ctx, RWContext *rw,
-                             AV1RawFrameHeader *current) {
+                             AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int err;
 
@@ -505,18 +517,19 @@ static int FUNC(render_size)(CodedBitstreamContext *ctx, RWContext *rw,
         fb(16, render_width_minus_1);
         fb(16, render_height_minus_1);
     } else {
-        infer(render_width_minus_1, current->frame_width_minus_1);
+        infer(render_width_minus_1,  current->frame_width_minus_1);
         infer(render_height_minus_1, current->frame_height_minus_1);
     }
 
-    priv->render_width = current->render_width_minus_1 + 1;
+    priv->render_width  = current->render_width_minus_1  + 1;
     priv->render_height = current->render_height_minus_1 + 1;
 
     return 0;
 }
 
 static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      AV1RawFrameHeader *current) {
+                                      AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int i, err;
 
@@ -524,7 +537,7 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
         flags(found_ref[i], 1, i);
         if (current->found_ref[i]) {
             AV1ReferenceFrameState *ref =
-                    &priv->ref[current->ref_frame_idx[i]];
+                &priv->ref[current->ref_frame_idx[i]];
 
             if (!ref->valid) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR,
@@ -534,16 +547,16 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
                 return AVERROR_INVALIDDATA;
             }
 
-            infer(frame_width_minus_1, ref->upscaled_width - 1);
-            infer(frame_height_minus_1, ref->frame_height - 1);
-            infer(render_width_minus_1, ref->render_width - 1);
+            infer(frame_width_minus_1,   ref->upscaled_width - 1);
+            infer(frame_height_minus_1,  ref->frame_height - 1);
+            infer(render_width_minus_1,  ref->render_width - 1);
             infer(render_height_minus_1, ref->render_height - 1);
 
             priv->upscaled_width = ref->upscaled_width;
-            priv->frame_width = priv->upscaled_width;
-            priv->frame_height = ref->frame_height;
-            priv->render_width = ref->render_width;
-            priv->render_height = ref->render_height;
+            priv->frame_width    = priv->upscaled_width;
+            priv->frame_height   = ref->frame_height;
+            priv->render_width   = ref->render_width;
+            priv->render_height  = ref->render_height;
             break;
         }
     }
@@ -559,7 +572,8 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(interpolation_filter)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      AV1RawFrameHeader *current) {
+                                      AV1RawFrameHeader *current)
+{
     int err;
 
     flag(is_filter_switchable);
@@ -573,8 +587,9 @@ static int FUNC(interpolation_filter)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
-                           AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                           AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int mi_cols, mi_rows, sb_cols, sb_rows, sb_shift, sb_size;
     int max_tile_width_sb, max_tile_height_sb, max_tile_area_sb;
@@ -582,7 +597,7 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
     int min_log2_tiles, min_log2_tile_rows;
     int i, err;
 
-    mi_cols = 2 * ((priv->frame_width + 7) >> 3);
+    mi_cols = 2 * ((priv->frame_width  + 7) >> 3);
     mi_rows = 2 * ((priv->frame_height + 7) >> 3);
 
     sb_cols = seq->use_128x128_superblock ? ((mi_cols + 31) >> 5)
@@ -591,10 +606,10 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
                                           : ((mi_rows + 15) >> 4);
 
     sb_shift = seq->use_128x128_superblock ? 5 : 4;
-    sb_size = sb_shift + 2;
+    sb_size  = sb_shift + 2;
 
     max_tile_width_sb = AV1_MAX_TILE_WIDTH >> sb_size;
-    max_tile_area_sb = AV1_MAX_TILE_AREA >> (2 * sb_size);
+    max_tile_area_sb  = AV1_MAX_TILE_AREA  >> (2 * sb_size);
 
     min_log2_tile_cols = cbs_av1_tile_log2(max_tile_width_sb, sb_cols);
     max_log2_tile_cols = cbs_av1_tile_log2(1, FFMIN(sb_cols, AV1_MAX_TILE_COLS));
@@ -610,7 +625,7 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
         increment(tile_cols_log2, min_log2_tile_cols, max_log2_tile_cols);
 
         tile_width_sb = (sb_cols + (1 << current->tile_cols_log2) - 1) >>
-                                                                       current->tile_cols_log2;
+            current->tile_cols_log2;
         current->tile_cols = (sb_cols + tile_width_sb - 1) / tile_width_sb;
 
         min_log2_tile_rows = FFMAX(min_log2_tiles - current->tile_cols_log2, 0);
@@ -618,7 +633,7 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
         increment(tile_rows_log2, min_log2_tile_rows, max_log2_tile_rows);
 
         tile_height_sb = (sb_rows + (1 << current->tile_rows_log2) - 1) >>
-                                                                        current->tile_rows_log2;
+            current->tile_rows_log2;
         current->tile_rows = (sb_rows + tile_height_sb - 1) / tile_height_sb;
 
         for (i = 0; i < current->tile_cols - 1; i++)
@@ -679,8 +694,9 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(quantization_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                                     AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int err;
 
@@ -725,21 +741,22 @@ static int FUNC(quantization_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
-    static const uint8_t bits[AV1_SEG_LVL_MAX] = {8, 6, 6, 6, 6, 3, 0, 0};
-    static const uint8_t sign[AV1_SEG_LVL_MAX] = {1, 1, 1, 1, 1, 0, 0, 0};
-    static const uint8_t default_feature_enabled[AV1_SEG_LVL_MAX] = {0};
-    static const int16_t default_feature_value[AV1_SEG_LVL_MAX] = {0};
+                                     AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
+    static const uint8_t bits[AV1_SEG_LVL_MAX] = { 8, 6, 6, 6, 6, 3, 0, 0 };
+    static const uint8_t sign[AV1_SEG_LVL_MAX] = { 1, 1, 1, 1, 1, 0, 0, 0 };
+    static const uint8_t default_feature_enabled[AV1_SEG_LVL_MAX] = { 0 };
+    static const int16_t default_feature_value[AV1_SEG_LVL_MAX] = { 0 };
     int i, j, err;
 
     flag(segmentation_enabled);
 
     if (current->segmentation_enabled) {
         if (current->primary_ref_frame == AV1_PRIMARY_REF_NONE) {
-            infer(segmentation_update_map, 1);
+            infer(segmentation_update_map,      1);
             infer(segmentation_temporal_update, 0);
-            infer(segmentation_update_data, 1);
+            infer(segmentation_update_data,     1);
         } else {
             flag(segmentation_update_map);
             if (current->segmentation_update_map)
@@ -758,9 +775,9 @@ static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
                 ref_feature_value = default_feature_value;
             } else {
                 ref_feature_enabled =
-                        priv->ref[current->ref_frame_idx[current->primary_ref_frame]].feature_enabled[i];
+                    priv->ref[current->ref_frame_idx[current->primary_ref_frame]].feature_enabled[i];
                 ref_feature_value =
-                        priv->ref[current->ref_frame_idx[current->primary_ref_frame]].feature_value[i];
+                    priv->ref[current->ref_frame_idx[current->primary_ref_frame]].feature_value[i];
             }
 
             for (j = 0; j < AV1_SEG_LVL_MAX; j++) {
@@ -785,7 +802,7 @@ static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
         for (i = 0; i < AV1_MAX_SEGMENTS; i++) {
             for (j = 0; j < AV1_SEG_LVL_MAX; j++) {
                 infer(feature_enabled[i][j], 0);
-                infer(feature_value[i][j], 0);
+                infer(feature_value[i][j],   0);
             }
         }
     }
@@ -794,7 +811,8 @@ static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(delta_q_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                AV1RawFrameHeader *current) {
+                                AV1RawFrameHeader *current)
+{
     int err;
 
     if (current->base_q_idx > 0)
@@ -809,7 +827,8 @@ static int FUNC(delta_q_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(delta_lf_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                 AV1RawFrameHeader *current) {
+                                 AV1RawFrameHeader *current)
+{
     int err;
 
     if (current->delta_q_present) {
@@ -821,36 +840,37 @@ static int FUNC(delta_lf_params)(CodedBitstreamContext *ctx, RWContext *rw,
             fb(2, delta_lf_res);
             flag(delta_lf_multi);
         } else {
-            infer(delta_lf_res, 0);
+            infer(delta_lf_res,   0);
             infer(delta_lf_multi, 0);
         }
     } else {
         infer(delta_lf_present, 0);
-        infer(delta_lf_res, 0);
-        infer(delta_lf_multi, 0);
+        infer(delta_lf_res,     0);
+        infer(delta_lf_multi,   0);
     }
 
     return 0;
 }
 
 static int FUNC(loop_filter_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                    AV1RawFrameHeader *current) {
+                                    AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     static const int8_t default_loop_filter_ref_deltas[AV1_TOTAL_REFS_PER_FRAME] =
-            {1, 0, 0, 0, -1, 0, -1, -1};
-    static const int8_t default_loop_filter_mode_deltas[2] = {0, 0};
+        { 1, 0, 0, 0, -1, 0, -1, -1 };
+    static const int8_t default_loop_filter_mode_deltas[2] = { 0, 0 };
     int i, err;
 
     if (priv->coded_lossless || current->allow_intrabc) {
         infer(loop_filter_level[0], 0);
         infer(loop_filter_level[1], 0);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_INTRA], 1);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST], 0);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST2], 0);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST3], 0);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_BWDREF], 0);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_GOLDEN], -1);
-        infer(loop_filter_ref_deltas[AV1_REF_FRAME_ALTREF], -1);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_INTRA],    1);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST],     0);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST2],    0);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_LAST3],    0);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_BWDREF],   0);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_GOLDEN],  -1);
+        infer(loop_filter_ref_deltas[AV1_REF_FRAME_ALTREF],  -1);
         infer(loop_filter_ref_deltas[AV1_REF_FRAME_ALTREF2], -1);
         for (i = 0; i < 2; i++)
             infer(loop_filter_mode_deltas[i], 0);
@@ -879,9 +899,9 @@ static int FUNC(loop_filter_params)(CodedBitstreamContext *ctx, RWContext *rw,
             ref_loop_filter_mode_deltas = default_loop_filter_mode_deltas;
         } else {
             ref_loop_filter_ref_deltas =
-                    priv->ref[current->ref_frame_idx[current->primary_ref_frame]].loop_filter_ref_deltas;
+                priv->ref[current->ref_frame_idx[current->primary_ref_frame]].loop_filter_ref_deltas;
             ref_loop_filter_mode_deltas =
-                    priv->ref[current->ref_frame_idx[current->primary_ref_frame]].loop_filter_mode_deltas;
+                priv->ref[current->ref_frame_idx[current->primary_ref_frame]].loop_filter_mode_deltas;
         }
 
         flag(loop_filter_delta_update);
@@ -916,8 +936,9 @@ static int FUNC(loop_filter_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(cdef_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                             AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                             AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int i, err;
 
@@ -925,8 +946,8 @@ static int FUNC(cdef_params)(CodedBitstreamContext *ctx, RWContext *rw,
         !seq->enable_cdef) {
         infer(cdef_damping_minus_3, 0);
         infer(cdef_bits, 0);
-        infer(cdef_y_pri_strength[0], 0);
-        infer(cdef_y_sec_strength[0], 0);
+        infer(cdef_y_pri_strength[0],  0);
+        infer(cdef_y_sec_strength[0],  0);
         infer(cdef_uv_pri_strength[0], 0);
         infer(cdef_uv_sec_strength[0], 0);
 
@@ -950,10 +971,11 @@ static int FUNC(cdef_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(lr_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                           AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                           AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
-    int uses_lr, uses_chroma_lr;
+    int uses_lr,  uses_chroma_lr;
     int i, err;
 
     if (priv->all_lossless || current->allow_intrabc ||
@@ -978,8 +1000,8 @@ static int FUNC(lr_params)(CodedBitstreamContext *ctx, RWContext *rw,
         else
             increment(lr_unit_shift, 0, 2);
 
-        if (seq->color_config.subsampling_x &&
-            seq->color_config.subsampling_y && uses_chroma_lr) {
+        if(seq->color_config.subsampling_x &&
+           seq->color_config.subsampling_y && uses_chroma_lr) {
             fb(1, lr_uv_shift);
         } else {
             infer(lr_uv_shift, 0);
@@ -990,7 +1012,8 @@ static int FUNC(lr_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(read_tx_mode)(CodedBitstreamContext *ctx, RWContext *rw,
-                              AV1RawFrameHeader *current) {
+                              AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int err;
 
@@ -1003,7 +1026,8 @@ static int FUNC(read_tx_mode)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(frame_reference_mode)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      AV1RawFrameHeader *current) {
+                                      AV1RawFrameHeader *current)
+{
     int err;
 
     if (current->frame_type == AV1_FRAME_INTRA_ONLY ||
@@ -1016,8 +1040,9 @@ static int FUNC(frame_reference_mode)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(skip_mode_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                  AV1RawFrameHeader *current) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                                  AV1RawFrameHeader *current)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int skip_mode_allowed;
     int err;
@@ -1027,11 +1052,11 @@ static int FUNC(skip_mode_params)(CodedBitstreamContext *ctx, RWContext *rw,
         !current->reference_select || !seq->enable_order_hint) {
         skip_mode_allowed = 0;
     } else {
-        int forward_idx, backward_idx;
+        int forward_idx,  backward_idx;
         int forward_hint, backward_hint;
         int ref_hint, dist, i;
 
-        forward_idx = -1;
+        forward_idx  = -1;
         backward_idx = -1;
         for (i = 0; i < AV1_REFS_PER_FRAME; i++) {
             ref_hint = priv->ref[current->ref_frame_idx[i]].order_hint;
@@ -1041,14 +1066,14 @@ static int FUNC(skip_mode_params)(CodedBitstreamContext *ctx, RWContext *rw,
                 if (forward_idx < 0 ||
                     cbs_av1_get_relative_dist(seq, ref_hint,
                                               forward_hint) > 0) {
-                    forward_idx = i;
+                    forward_idx  = i;
                     forward_hint = ref_hint;
                 }
             } else if (dist > 0) {
                 if (backward_idx < 0 ||
                     cbs_av1_get_relative_dist(seq, ref_hint,
                                               backward_hint) < 0) {
-                    backward_idx = i;
+                    backward_idx  = i;
                     backward_hint = ref_hint;
                 }
             }
@@ -1071,7 +1096,7 @@ static int FUNC(skip_mode_params)(CodedBitstreamContext *ctx, RWContext *rw,
                     if (second_forward_idx < 0 ||
                         cbs_av1_get_relative_dist(seq, ref_hint,
                                                   second_forward_hint) > 0) {
-                        second_forward_idx = i;
+                        second_forward_idx  = i;
                         second_forward_hint = ref_hint;
                     }
                 }
@@ -1096,20 +1121,21 @@ static int FUNC(skip_mode_params)(CodedBitstreamContext *ctx, RWContext *rw,
 
 static int FUNC(global_motion_param)(CodedBitstreamContext *ctx, RWContext *rw,
                                      AV1RawFrameHeader *current,
-                                     int type, int ref, int idx) {
+                                     int type, int ref, int idx)
+{
     uint32_t abs_bits, prec_bits, num_syms;
     int err;
 
     if (idx < 2) {
         if (type == AV1_WARP_MODEL_TRANSLATION) {
-            abs_bits = AV1_GM_ABS_TRANS_ONLY_BITS - !current->allow_high_precision_mv;
+            abs_bits  = AV1_GM_ABS_TRANS_ONLY_BITS  - !current->allow_high_precision_mv;
             prec_bits = AV1_GM_TRANS_ONLY_PREC_BITS - !current->allow_high_precision_mv;
         } else {
-            abs_bits = AV1_GM_ABS_TRANS_BITS;
+            abs_bits  = AV1_GM_ABS_TRANS_BITS;
             prec_bits = AV1_GM_TRANS_PREC_BITS;
         }
     } else {
-        abs_bits = AV1_GM_ABS_ALPHA_BITS;
+        abs_bits  = AV1_GM_ABS_ALPHA_BITS;
         prec_bits = AV1_GM_ALPHA_PREC_BITS;
     }
 
@@ -1117,13 +1143,14 @@ static int FUNC(global_motion_param)(CodedBitstreamContext *ctx, RWContext *rw,
     subexp(gm_params[ref][idx], num_syms, 2, ref, idx);
 
     // Actual gm_params value is not reconstructed here.
-    (void) prec_bits;
+    (void)prec_bits;
 
     return 0;
 }
 
 static int FUNC(global_motion_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      AV1RawFrameHeader *current) {
+                                      AV1RawFrameHeader *current)
+{
     int ref, type;
     int err;
 
@@ -1168,8 +1195,9 @@ static int FUNC(global_motion_params)(CodedBitstreamContext *ctx, RWContext *rw,
 
 static int FUNC(film_grain_params)(CodedBitstreamContext *ctx, RWContext *rw,
                                    AV1RawFilmGrainParams *current,
-                                   AV1RawFrameHeader *frame_header) {
-    CodedBitstreamAV1Context *priv = ctx->priv_data;
+                                   AV1RawFrameHeader *frame_header)
+{
+    CodedBitstreamAV1Context  *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq = priv->sequence_header;
     int num_pos_luma, num_pos_chroma;
     int i, err;
@@ -1273,7 +1301,8 @@ static int FUNC(film_grain_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     AV1RawFrameHeader *current) {
+                                     AV1RawFrameHeader *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq;
     int id_len, diff_len, all_frames, frame_is_intra, order_hint_bits;
@@ -1281,7 +1310,7 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
     if (!priv->sequence_header) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "No sequence header available: "
-                                           "unable to decode frame header.\n");
+               "unable to decode frame header.\n");
         return AVERROR_INVALIDDATA;
     }
     seq = priv->sequence_header;
@@ -1292,8 +1321,8 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
     if (seq->reduced_still_picture_header) {
         infer(show_existing_frame, 0);
-        infer(frame_type, AV1_FRAME_KEY);
-        infer(show_frame, 1);
+        infer(frame_type,     AV1_FRAME_KEY);
+        infer(show_frame,     1);
         infer(showable_frame, 0);
         frame_is_intra = 1;
 
@@ -1308,7 +1337,7 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
             if (!ref->valid) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR, "Missing reference frame needed for "
-                                                   "show_existing_frame (frame_to_show_map_idx = %d).\n",
+                       "show_existing_frame (frame_to_show_map_idx = %d).\n",
                        current->frame_to_show_map_idx);
                 return AVERROR_INVALIDDATA;
             }
@@ -1328,19 +1357,19 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
                 // Section 7.21
                 infer(current_frame_id, ref->frame_id);
-                priv->upscaled_width = ref->upscaled_width;
-                priv->frame_width = ref->frame_width;
-                priv->frame_height = ref->frame_height;
-                priv->render_width = ref->render_width;
-                priv->render_height = ref->render_height;
-                priv->bit_depth = ref->bit_depth;
-                priv->order_hint = ref->order_hint;
+                priv->upscaled_width  = ref->upscaled_width;
+                priv->frame_width     = ref->frame_width;
+                priv->frame_height    = ref->frame_height;
+                priv->render_width    = ref->render_width;
+                priv->render_height   = ref->render_height;
+                priv->bit_depth       = ref->bit_depth;
+                priv->order_hint      = ref->order_hint;
             } else
                 infer(refresh_frame_flags, 0);
 
-            infer(frame_width_minus_1, ref->upscaled_width - 1);
-            infer(frame_height_minus_1, ref->frame_height - 1);
-            infer(render_width_minus_1, ref->render_width - 1);
+            infer(frame_width_minus_1,   ref->upscaled_width - 1);
+            infer(frame_height_minus_1,  ref->frame_height - 1);
+            infer(render_width_minus_1,  ref->render_width - 1);
             infer(render_height_minus_1, ref->render_height - 1);
 
             // Section 7.20
@@ -1419,13 +1448,13 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
     if (current->frame_type == AV1_FRAME_SWITCH)
         infer(frame_size_override_flag, 1);
-    else if (seq->reduced_still_picture_header)
+    else if(seq->reduced_still_picture_header)
         infer(frame_size_override_flag, 0);
     else
         flag(frame_size_override_flag);
 
     order_hint_bits =
-            seq->enable_order_hint ? seq->order_hint_bits_minus_1 + 1 : 0;
+        seq->enable_order_hint ? seq->order_hint_bits_minus_1 + 1 : 0;
     if (order_hint_bits > 0)
         fb(order_hint_bits, order_hint);
     else
@@ -1443,8 +1472,8 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
             for (i = 0; i <= seq->operating_points_cnt_minus_1; i++) {
                 if (seq->decoder_model_present_for_this_op[i]) {
                     int op_pt_idc = seq->operating_point_idc[i];
-                    int in_temporal_layer = (op_pt_idc >> priv->temporal_id) & 1;
-                    int in_spatial_layer = (op_pt_idc >> (priv->spatial_id + 8)) & 1;
+                    int in_temporal_layer = (op_pt_idc >>  priv->temporal_id    ) & 1;
+                    int in_spatial_layer  = (op_pt_idc >> (priv->spatial_id + 8)) & 1;
                     if (seq->operating_point_idc[i] == 0 ||
                         (in_temporal_layer && in_spatial_layer)) {
                         fbs(seq->decoder_model_info.buffer_removal_time_length_minus_1 + 1,
@@ -1576,14 +1605,14 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
         }
         qindex = av_clip_uintp2(qindex, 8);
 
-        if (qindex || current->delta_q_y_dc ||
+        if (qindex                || current->delta_q_y_dc ||
             current->delta_q_u_ac || current->delta_q_u_dc ||
             current->delta_q_v_ac || current->delta_q_v_dc) {
             priv->coded_lossless = 0;
         }
     }
     priv->all_lossless = priv->coded_lossless &&
-                         priv->frame_width == priv->upscaled_width;
+        priv->frame_width == priv->upscaled_width;
 
     CHECK(FUNC(loop_filter_params)(ctx, rw, current));
 
@@ -1610,30 +1639,30 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
     CHECK(FUNC(film_grain_params)(ctx, rw, &current->film_grain, current));
 
     av_log(ctx->log_ctx, AV_LOG_DEBUG, "Frame %d:  size %dx%d  "
-                                       "upscaled %d  render %dx%d  subsample %dx%d  "
-                                       "bitdepth %d  tiles %dx%d.\n", priv->order_hint,
+           "upscaled %d  render %dx%d  subsample %dx%d  "
+           "bitdepth %d  tiles %dx%d.\n", priv->order_hint,
            priv->frame_width, priv->frame_height, priv->upscaled_width,
            priv->render_width, priv->render_height,
            seq->color_config.subsampling_x + 1,
            seq->color_config.subsampling_y + 1, priv->bit_depth,
            priv->tile_rows, priv->tile_cols);
 
-    update_refs:
+update_refs:
     for (i = 0; i < AV1_NUM_REF_FRAMES; i++) {
         if (current->refresh_frame_flags & (1 << i)) {
             priv->ref[i] = (AV1ReferenceFrameState) {
-                    .valid          = 1,
-                    .frame_id       = current->current_frame_id,
-                    .upscaled_width = priv->upscaled_width,
-                    .frame_width    = priv->frame_width,
-                    .frame_height   = priv->frame_height,
-                    .render_width   = priv->render_width,
-                    .render_height  = priv->render_height,
-                    .frame_type     = current->frame_type,
-                    .subsampling_x  = seq->color_config.subsampling_x,
-                    .subsampling_y  = seq->color_config.subsampling_y,
-                    .bit_depth      = priv->bit_depth,
-                    .order_hint     = priv->order_hint,
+                .valid          = 1,
+                .frame_id       = current->current_frame_id,
+                .upscaled_width = priv->upscaled_width,
+                .frame_width    = priv->frame_width,
+                .frame_height   = priv->frame_height,
+                .render_width   = priv->render_width,
+                .render_height  = priv->render_height,
+                .frame_type     = current->frame_type,
+                .subsampling_x  = seq->color_config.subsampling_x,
+                .subsampling_y  = seq->color_config.subsampling_y,
+                .bit_depth      = priv->bit_depth,
+                .order_hint     = priv->order_hint,
             };
             memcpy(priv->ref[i].loop_filter_ref_deltas, current->loop_filter_ref_deltas,
                    sizeof(current->loop_filter_ref_deltas));
@@ -1651,7 +1680,8 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
 
 static int FUNC(frame_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
                                   AV1RawFrameHeader *current, int redundant,
-                                  AVBufferRef *rw_buffer_ref) {
+                                  AVBufferRef *rw_buffer_ref)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int start_pos, fh_bits, fh_bytes, err;
     uint8_t *fh_start;
@@ -1659,7 +1689,7 @@ static int FUNC(frame_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
     if (priv->seen_frame_header) {
         if (!redundant) {
             av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid repeated "
-                                               "frame header OBU.\n");
+                   "frame header OBU.\n");
             return AVERROR_INVALIDDATA;
         } else {
             GetBitContext fh;
@@ -1713,7 +1743,7 @@ static int FUNC(frame_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
                 flush_put_bits(&tmp);
             }
 
-            fh_bits = put_bits_count(rw) - start_pos;
+            fh_bits  = put_bits_count(rw) - start_pos;
             fh_start = rw->buf + start_pos / 8;
 #endif
             fh_bytes = (fh_bits + 7) / 8;
@@ -1727,7 +1757,7 @@ static int FUNC(frame_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
                 priv->frame_header = fh_start;
             } else {
                 priv->frame_header_ref =
-                        av_buffer_alloc(fh_bytes + AV_INPUT_BUFFER_PADDING_SIZE);
+                    av_buffer_alloc(fh_bytes + AV_INPUT_BUFFER_PADDING_SIZE);
                 if (!priv->frame_header_ref)
                     return AVERROR(ENOMEM);
                 priv->frame_header = priv->frame_header_ref->data;
@@ -1740,7 +1770,8 @@ static int FUNC(frame_header_obu)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(tile_group_obu)(CodedBitstreamContext *ctx, RWContext *rw,
-                                AV1RawTileGroup *current) {
+                                AV1RawTileGroup *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     int num_tiles, tile_bits;
     int err;
@@ -1778,7 +1809,8 @@ static int FUNC(tile_group_obu)(CodedBitstreamContext *ctx, RWContext *rw,
 
 static int FUNC(frame_obu)(CodedBitstreamContext *ctx, RWContext *rw,
                            AV1RawFrame *current,
-                           AVBufferRef *rw_buffer_ref) {
+                           AVBufferRef *rw_buffer_ref)
+{
     int err;
 
     CHECK(FUNC(frame_header_obu)(ctx, rw, &current->header,
@@ -1792,7 +1824,8 @@ static int FUNC(frame_obu)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(tile_list_obu)(CodedBitstreamContext *ctx, RWContext *rw,
-                               AV1RawTileList *current) {
+                               AV1RawTileList *current)
+{
     int err;
 
     fb(8, output_frame_width_in_tiles_minus_1);
@@ -1806,7 +1839,8 @@ static int FUNC(tile_list_obu)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(metadata_hdr_cll)(CodedBitstreamContext *ctx, RWContext *rw,
-                                  AV1RawMetadataHDRCLL *current) {
+                                  AV1RawMetadataHDRCLL *current)
+{
     int err;
 
     fb(16, max_cll);
@@ -1816,7 +1850,8 @@ static int FUNC(metadata_hdr_cll)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(metadata_hdr_mdcv)(CodedBitstreamContext *ctx, RWContext *rw,
-                                   AV1RawMetadataHDRMDCV *current) {
+                                   AV1RawMetadataHDRMDCV *current)
+{
     int err, i;
 
     for (i = 0; i < 3; i++) {
@@ -1830,21 +1865,22 @@ static int FUNC(metadata_hdr_mdcv)(CodedBitstreamContext *ctx, RWContext *rw,
     fc(32, luminance_max, 1, MAX_UINT_BITS(32));
     // luminance_min must be lower than luminance_max. Convert luminance_max from
     // 24.8 fixed point to 18.14 fixed point in order to compare them.
-    fc(32, luminance_min, 0, FFMIN(((uint64_t) current->luminance_max << 6) - 1,
+    fc(32, luminance_min, 0, FFMIN(((uint64_t)current->luminance_max << 6) - 1,
                                    MAX_UINT_BITS(32)));
 
     return 0;
 }
 
 static int FUNC(scalability_structure)(CodedBitstreamContext *ctx, RWContext *rw,
-                                       AV1RawMetadataScalability *current) {
+                                       AV1RawMetadataScalability *current)
+{
     CodedBitstreamAV1Context *priv = ctx->priv_data;
     const AV1RawSequenceHeader *seq;
     int err, i, j;
 
     if (!priv->sequence_header) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "No sequence header available: "
-                                           "unable to parse scalability metadata.\n");
+               "unable to parse scalability metadata.\n");
         return AVERROR_INVALIDDATA;
     }
     seq = priv->sequence_header;
@@ -1883,7 +1919,8 @@ static int FUNC(scalability_structure)(CodedBitstreamContext *ctx, RWContext *rw
 }
 
 static int FUNC(metadata_scalability)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      AV1RawMetadataScalability *current) {
+                                      AV1RawMetadataScalability *current)
+{
     int err;
 
     fb(8, scalability_mode_idc);
@@ -1895,7 +1932,8 @@ static int FUNC(metadata_scalability)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(metadata_itut_t35)(CodedBitstreamContext *ctx, RWContext *rw,
-                                   AV1RawMetadataITUTT35 *current) {
+                                   AV1RawMetadataITUTT35 *current)
+{
     int err;
     size_t i;
 
@@ -1922,7 +1960,8 @@ static int FUNC(metadata_itut_t35)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(metadata_timecode)(CodedBitstreamContext *ctx, RWContext *rw,
-                                   AV1RawMetadataTimecode *current) {
+                                   AV1RawMetadataTimecode *current)
+{
     int err;
 
     fb(5, counting_type);
@@ -1934,7 +1973,7 @@ static int FUNC(metadata_timecode)(CodedBitstreamContext *ctx, RWContext *rw,
     if (current->full_timestamp_flag) {
         fc(6, seconds_value, 0, 59);
         fc(6, minutes_value, 0, 59);
-        fc(5, hours_value, 0, 23);
+        fc(5, hours_value,   0, 23);
     } else {
         flag(seconds_flag);
         if (current->seconds_flag) {
@@ -1959,37 +1998,39 @@ static int FUNC(metadata_timecode)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(metadata_obu)(CodedBitstreamContext *ctx, RWContext *rw,
-                              AV1RawMetadata *current) {
+                              AV1RawMetadata *current)
+{
     int err;
 
     leb128(metadata_type);
 
     switch (current->metadata_type) {
-        case AV1_METADATA_TYPE_HDR_CLL:
-            CHECK(FUNC(metadata_hdr_cll)(ctx, rw, &current->metadata.hdr_cll));
-            break;
-        case AV1_METADATA_TYPE_HDR_MDCV:
-            CHECK(FUNC(metadata_hdr_mdcv)(ctx, rw, &current->metadata.hdr_mdcv));
-            break;
-        case AV1_METADATA_TYPE_SCALABILITY:
-            CHECK(FUNC(metadata_scalability)(ctx, rw, &current->metadata.scalability));
-            break;
-        case AV1_METADATA_TYPE_ITUT_T35:
-            CHECK(FUNC(metadata_itut_t35)(ctx, rw, &current->metadata.itut_t35));
-            break;
-        case AV1_METADATA_TYPE_TIMECODE:
-            CHECK(FUNC(metadata_timecode)(ctx, rw, &current->metadata.timecode));
-            break;
-        default:
-            // Unknown metadata type.
-            return AVERROR_PATCHWELCOME;
+    case AV1_METADATA_TYPE_HDR_CLL:
+        CHECK(FUNC(metadata_hdr_cll)(ctx, rw, &current->metadata.hdr_cll));
+        break;
+    case AV1_METADATA_TYPE_HDR_MDCV:
+        CHECK(FUNC(metadata_hdr_mdcv)(ctx, rw, &current->metadata.hdr_mdcv));
+        break;
+    case AV1_METADATA_TYPE_SCALABILITY:
+        CHECK(FUNC(metadata_scalability)(ctx, rw, &current->metadata.scalability));
+        break;
+    case AV1_METADATA_TYPE_ITUT_T35:
+        CHECK(FUNC(metadata_itut_t35)(ctx, rw, &current->metadata.itut_t35));
+        break;
+    case AV1_METADATA_TYPE_TIMECODE:
+        CHECK(FUNC(metadata_timecode)(ctx, rw, &current->metadata.timecode));
+        break;
+    default:
+        // Unknown metadata type.
+        return AVERROR_PATCHWELCOME;
     }
 
     return 0;
 }
 
 static int FUNC(padding_obu)(CodedBitstreamContext *ctx, RWContext *rw,
-                             AV1RawPadding *current) {
+                             AV1RawPadding *current)
+{
     int i, err;
 
     HEADER("Padding");

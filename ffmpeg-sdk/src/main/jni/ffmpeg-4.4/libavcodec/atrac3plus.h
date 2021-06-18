@@ -50,9 +50,9 @@
 
 /** ATRAC3+ channel unit types */
 enum Atrac3pChannelUnitTypes {
-    CH_UNIT_MONO = 0, ///< unit containing one coded channel
-    CH_UNIT_STEREO = 1, ///< unit containing two jointly-coded channels
-    CH_UNIT_EXTENSION = 2, ///< unit containing extension information
+    CH_UNIT_MONO       = 0, ///< unit containing one coded channel
+    CH_UNIT_STEREO     = 1, ///< unit containing two jointly-coded channels
+    CH_UNIT_EXTENSION  = 2, ///< unit containing extension information
     CH_UNIT_TERMINATOR = 3  ///< unit sequence terminator
 };
 
@@ -81,10 +81,10 @@ typedef struct Atrac3pWavesData {
 
 /** Parameters of a single sine wave */
 typedef struct Atrac3pWaveParam {
-    int freq_index;   ///< wave frequency index
-    int amp_sf;       ///< quantized amplitude scale factor
-    int amp_index;    ///< quantized amplitude index
-    int phase_index;  ///< quantized phase index
+    int   freq_index;   ///< wave frequency index
+    int   amp_sf;       ///< quantized amplitude scale factor
+    int   amp_index;    ///< quantized amplitude index
+    int   phase_index;  ///< quantized phase index
 } Atrac3pWaveParam;
 
 /** Sound channel parameters */

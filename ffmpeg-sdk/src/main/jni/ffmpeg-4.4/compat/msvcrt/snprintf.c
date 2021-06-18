@@ -31,7 +31,8 @@
 #define EOVERFLOW EFBIG
 #endif
 
-int avpriv_snprintf(char *s, size_t n, const char *fmt, ...) {
+int avpriv_snprintf(char *s, size_t n, const char *fmt, ...)
+{
     va_list ap;
     int ret;
 
@@ -43,7 +44,8 @@ int avpriv_snprintf(char *s, size_t n, const char *fmt, ...) {
 }
 
 int avpriv_vsnprintf(char *s, size_t n, const char *fmt,
-                     va_list ap) {
+                     va_list ap)
+{
     int ret;
     va_list ap_copy;
 

@@ -22,47 +22,47 @@
 #include "libavcodec/mips/hevcdsp_mips.h"
 
 static const int16_t gt8x8_cnst[16] __attribute__ ((aligned (64))) = {
-        64, 64, 83, 36, 89, 50, 18, 75, 64, -64, 36, -83, 75, -89, -50, -18
+    64, 64, 83, 36, 89, 50, 18, 75, 64, -64, 36, -83, 75, -89, -50, -18
 };
 
 static const int16_t gt16x16_cnst[64] __attribute__ ((aligned (64))) = {
-        64, 83, 64, 36, 89, 75, 50, 18, 90, 80, 57, 25, 70, 87, 9, 43,
-        64, 36, -64, -83, 75, -18, -89, -50, 87, 9, -80, -70, -43, 57, -25, -90,
-        64, -36, -64, 83, 50, -89, 18, 75, 80, -70, -25, 90, -87, 9, 43, 57,
-        64, -83, 64, -36, 18, -50, 75, -89, 70, -87, 90, -80, 9, -43, -57, 25
+    64, 83, 64, 36, 89, 75, 50, 18, 90, 80, 57, 25, 70, 87, 9, 43,
+    64, 36, -64, -83, 75, -18, -89, -50, 87, 9, -80, -70, -43, 57, -25, -90,
+    64, -36, -64, 83, 50, -89, 18, 75, 80, -70, -25, 90, -87, 9, 43, 57,
+    64, -83, 64, -36, 18, -50, 75, -89, 70, -87, 90, -80, 9, -43, -57, 25
 };
 
 static const int16_t gt32x32_cnst0[256] __attribute__ ((aligned (64))) = {
-        90, 90, 88, 85, 82, 78, 73, 67, 61, 54, 46, 38, 31, 22, 13, 4,
-        90, 82, 67, 46, 22, -4, -31, -54, -73, -85, -90, -88, -78, -61, -38, -13,
-        88, 67, 31, -13, -54, -82, -90, -78, -46, -4, 38, 73, 90, 85, 61, 22,
-        85, 46, -13, -67, -90, -73, -22, 38, 82, 88, 54, -4, -61, -90, -78, -31,
-        82, 22, -54, -90, -61, 13, 78, 85, 31, -46, -90, -67, 4, 73, 88, 38,
-        78, -4, -82, -73, 13, 85, 67, -22, -88, -61, 31, 90, 54, -38, -90, -46,
-        73, -31, -90, -22, 78, 67, -38, -90, -13, 82, 61, -46, -88, -4, 85, 54,
-        67, -54, -78, 38, 85, -22, -90, 4, 90, 13, -88, -31, 82, 46, -73, -61,
-        61, -73, -46, 82, 31, -88, -13, 90, -4, -90, 22, 85, -38, -78, 54, 67,
-        54, -85, -4, 88, -46, -61, 82, 13, -90, 38, 67, -78, -22, 90, -31, -73,
-        46, -90, 38, 54, -90, 31, 61, -88, 22, 67, -85, 13, 73, -82, 4, 78,
-        38, -88, 73, -4, -67, 90, -46, -31, 85, -78, 13, 61, -90, 54, 22, -82,
-        31, -78, 90, -61, 4, 54, -88, 82, -38, -22, 73, -90, 67, -13, -46, 85,
-        22, -61, 85, -90, 73, -38, -4, 46, -78, 90, -82, 54, -13, -31, 67, -88,
-        13, -38, 61, -78, 88, -90, 85, -73, 54, -31, 4, 22, -46, 67, -82, 90,
-        4, -13, 22, -31, 38, -46, 54, -61, 67, -73, 78, -82, 85, -88, 90, -90
+    90, 90, 88, 85, 82, 78, 73, 67, 61, 54, 46, 38, 31, 22, 13, 4,
+    90, 82, 67, 46, 22, -4, -31, -54, -73, -85, -90, -88, -78, -61, -38, -13,
+    88, 67, 31, -13, -54, -82, -90, -78, -46, -4, 38, 73, 90, 85, 61, 22,
+    85, 46, -13, -67, -90, -73, -22, 38, 82, 88, 54, -4, -61, -90, -78, -31,
+    82, 22, -54, -90, -61, 13, 78, 85, 31, -46, -90, -67, 4, 73, 88, 38,
+    78, -4, -82, -73, 13, 85, 67, -22, -88, -61, 31, 90, 54, -38, -90, -46,
+    73, -31, -90, -22, 78, 67, -38, -90, -13, 82, 61, -46, -88, -4, 85, 54,
+    67, -54, -78, 38, 85, -22, -90, 4, 90, 13, -88, -31, 82, 46, -73, -61,
+    61, -73, -46, 82, 31, -88, -13, 90, -4, -90, 22, 85, -38, -78, 54, 67,
+    54, -85, -4, 88, -46, -61, 82, 13, -90, 38, 67, -78, -22, 90, -31, -73,
+    46, -90, 38, 54, -90, 31, 61, -88, 22, 67, -85, 13, 73, -82, 4, 78,
+    38, -88, 73, -4, -67, 90, -46, -31, 85, -78, 13, 61, -90, 54, 22, -82,
+    31, -78, 90, -61, 4, 54, -88, 82, -38, -22, 73, -90, 67, -13, -46, 85,
+    22, -61, 85, -90, 73, -38, -4, 46, -78, 90, -82, 54, -13, -31, 67, -88,
+    13, -38, 61, -78, 88, -90, 85, -73, 54, -31, 4, 22, -46, 67, -82, 90,
+    4, -13, 22, -31, 38, -46, 54, -61, 67, -73, 78, -82, 85, -88, 90, -90
 };
 
 static const int16_t gt32x32_cnst1[64] __attribute__ ((aligned (64))) = {
-        90, 87, 80, 70, 57, 43, 25, 9, 87, 57, 9, -43, -80, -90, -70, -25,
-        80, 9, -70, -87, -25, 57, 90, 43, 70, -43, -87, 9, 90, 25, -80, -57,
-        57, -80, -25, 90, -9, -87, 43, 70, 43, -90, 57, 25, -87, 70, 9, -80,
-        25, -70, 90, -80, 43, 9, -57, 87, 9, -25, 43, -57, 70, -80, 87, -90
+    90, 87, 80, 70, 57, 43, 25, 9, 87, 57, 9, -43, -80, -90, -70, -25,
+    80, 9, -70, -87, -25, 57, 90, 43, 70, -43, -87, 9, 90, 25, -80, -57,
+    57, -80, -25, 90, -9, -87, 43, 70, 43, -90, 57, 25, -87, 70, 9, -80,
+    25, -70, 90, -80, 43, 9, -57, 87, 9, -25, 43, -57, 70, -80, 87, -90
 };
 
 static const int16_t gt32x32_cnst2[16] __attribute__ ((aligned (64))) = {
-        89, 75, 50, 18, 75, -18, -89, -50, 50, -89, 18, 75, 18, -50, 75, -89
+    89, 75, 50, 18, 75, -18, -89, -50, 50, -89, 18, 75, 18, -50, 75, -89
 };
 
-#define HEVC_IDCT4x4_COL(in_r0, in_l0, in_r1, in_l1, \
+#define HEVC_IDCT4x4_COL(in_r0, in_l0, in_r1, in_l1,          \
                          sum0, sum1, sum2, sum3, shift)       \
 {                                                             \
     v4i32 vec0, vec1, vec2, vec3, vec4, vec5;                 \
@@ -185,9 +185,9 @@ static const int16_t gt32x32_cnst2[16] __attribute__ ((aligned (64))) = {
     PCKEV_H2_SH(sum1_l, sum1_r, sum2_l, sum2_r, in2, in5);               \
 }
 
-#define HEVC_IDCT16x16_COL(src0_r, src1_r, src2_r, src3_r, \
-                           src4_r, src5_r, src6_r, src7_r, \
-                           src0_l, src1_l, src2_l, src3_l, \
+#define HEVC_IDCT16x16_COL(src0_r, src1_r, src2_r, src3_r,                \
+                           src4_r, src5_r, src6_r, src7_r,                \
+                           src0_l, src1_l, src2_l, src3_l,                \
                            src4_l, src5_l, src6_l, src7_l, shift)         \
 {                                                                         \
     int16_t *ptr0, *ptr1;                                                 \
@@ -274,7 +274,7 @@ static const int16_t gt32x32_cnst2[16] __attribute__ ((aligned (64))) = {
     ST_SW2(tmp1_r, tmp1_l, (input + store_idx * 8), 4);               \
 }
 
-#define HEVC_IDCT_LUMA4x4_COL(in_r0, in_l0, in_r1, in_l1, \
+#define HEVC_IDCT_LUMA4x4_COL(in_r0, in_l0, in_r1, in_l1,     \
                               res0, res1, res2, res3, shift)  \
 {                                                             \
     v4i32 vec0, vec1, vec2, vec3;                             \
@@ -305,11 +305,12 @@ static const int16_t gt32x32_cnst2[16] __attribute__ ((aligned (64))) = {
     SAT_SW4_SW(res0, res1, res2, res3, 15);                   \
 }
 
-static void hevc_idct_4x4_msa(int16_t *coeffs) {
+static void hevc_idct_4x4_msa(int16_t *coeffs)
+{
     v8i16 in0, in1;
     v4i32 in_r0, in_l0, in_r1, in_l1;
     v4i32 sum0, sum1, sum2, sum3;
-    v8i16 zeros = {0};
+    v8i16 zeros = { 0 };
 
     LD_SH2(coeffs, 8, in0, in1);
     ILVRL_H2_SW(zeros, in0, in_r0, in_l0);
@@ -327,7 +328,8 @@ static void hevc_idct_4x4_msa(int16_t *coeffs) {
     ST_SH2(in0, in1, coeffs, 8);
 }
 
-static void hevc_idct_8x8_msa(int16_t *coeffs) {
+static void hevc_idct_8x8_msa(int16_t *coeffs)
+{
     const int16_t *filter = &gt8x8_cnst[0];
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
 
@@ -341,7 +343,8 @@ static void hevc_idct_8x8_msa(int16_t *coeffs) {
     ST_SH8(in0, in1, in2, in3, in4, in5, in6, in7, coeffs, 8);
 }
 
-static void hevc_idct_16x16_msa(int16_t *coeffs) {
+static void hevc_idct_16x16_msa(int16_t *coeffs)
+{
     int16_t i, j, k;
     int16_t buf[256];
     int16_t *buf_ptr = &buf[0];
@@ -423,7 +426,8 @@ static void hevc_idct_16x16_msa(int16_t *coeffs) {
 }
 
 static void hevc_idct_8x32_column_msa(int16_t *coeffs, uint8_t buf_pitch,
-                                      uint8_t round) {
+                                      uint8_t round)
+{
     uint8_t i;
     const int16_t *filter_ptr0 = &gt32x32_cnst0[0];
     const int16_t *filter_ptr1 = &gt32x32_cnst1[0];
@@ -443,7 +447,7 @@ static void hevc_idct_8x32_column_msa(int16_t *coeffs, uint8_t buf_pitch,
     v4i32 sum0_r, sum0_l, sum1_r, sum1_l, tmp0_r, tmp0_l, tmp1_r, tmp1_l;
 
     /* Align pointer to 64 byte boundary */
-    tmp_buf_ptr = (int32_t * )(((uintptr_t) tmp_buf_ptr) & ~(uintptr_t) 63);
+    tmp_buf_ptr = (int32_t *)(((uintptr_t) tmp_buf_ptr) & ~(uintptr_t) 63);
 
     /* process coeff 4, 12, 20, 28 */
     LD_SH4(src2, 8 * buf_pitch, in0, in1, in2, in3);
@@ -594,7 +598,8 @@ static void hevc_idct_8x32_column_msa(int16_t *coeffs, uint8_t buf_pitch,
     }
 }
 
-static void hevc_idct_transpose_32x8_to_8x32(int16_t *coeffs, int16_t *tmp_buf) {
+static void hevc_idct_transpose_32x8_to_8x32(int16_t *coeffs, int16_t *tmp_buf)
+{
     uint8_t i;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
 
@@ -606,7 +611,8 @@ static void hevc_idct_transpose_32x8_to_8x32(int16_t *coeffs, int16_t *tmp_buf) 
     }
 }
 
-static void hevc_idct_transpose_8x32_to_32x8(int16_t *tmp_buf, int16_t *coeffs) {
+static void hevc_idct_transpose_8x32_to_32x8(int16_t *tmp_buf, int16_t *coeffs)
+{
     uint8_t i;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
 
@@ -618,7 +624,8 @@ static void hevc_idct_transpose_8x32_to_32x8(int16_t *tmp_buf, int16_t *coeffs) 
     }
 }
 
-static void hevc_idct_32x32_msa(int16_t *coeffs) {
+static void hevc_idct_32x32_msa(int16_t *coeffs)
+{
     uint8_t row_cnt, col_cnt;
     int16_t *src = coeffs;
     int16_t tmp_buf[8 * 32 + 31];
@@ -627,7 +634,7 @@ static void hevc_idct_32x32_msa(int16_t *coeffs) {
     uint8_t buf_pitch;
 
     /* Align pointer to 64 byte boundary */
-    tmp_buf_ptr = (int16_t * )(((uintptr_t) tmp_buf_ptr) & ~(uintptr_t) 63);
+    tmp_buf_ptr = (int16_t *)(((uintptr_t) tmp_buf_ptr) & ~(uintptr_t) 63);
 
     /* column transform */
     round = 7;
@@ -650,7 +657,8 @@ static void hevc_idct_32x32_msa(int16_t *coeffs) {
     }
 }
 
-static void hevc_idct_dc_4x4_msa(int16_t *coeffs) {
+static void hevc_idct_dc_4x4_msa(int16_t *coeffs)
+{
     int32_t val;
     v8i16 dst;
 
@@ -661,7 +669,8 @@ static void hevc_idct_dc_4x4_msa(int16_t *coeffs) {
     ST_SH2(dst, dst, coeffs, 8);
 }
 
-static void hevc_idct_dc_8x8_msa(int16_t *coeffs) {
+static void hevc_idct_dc_8x8_msa(int16_t *coeffs)
+{
     int32_t val;
     v8i16 dst;
 
@@ -672,7 +681,8 @@ static void hevc_idct_dc_8x8_msa(int16_t *coeffs) {
     ST_SH8(dst, dst, dst, dst, dst, dst, dst, dst, coeffs, 8);
 }
 
-static void hevc_idct_dc_16x16_msa(int16_t *coeffs) {
+static void hevc_idct_dc_16x16_msa(int16_t *coeffs)
+{
     uint8_t loop;
     int32_t val;
     v8i16 dst;
@@ -687,7 +697,8 @@ static void hevc_idct_dc_16x16_msa(int16_t *coeffs) {
     }
 }
 
-static void hevc_idct_dc_32x32_msa(int16_t *coeffs) {
+static void hevc_idct_dc_32x32_msa(int16_t *coeffs)
+{
     uint8_t loop;
     int32_t val;
     v8i16 dst;
@@ -702,11 +713,12 @@ static void hevc_idct_dc_32x32_msa(int16_t *coeffs) {
     }
 }
 
-static void hevc_addblk_4x4_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
+static void hevc_addblk_4x4_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
+{
     uint32_t dst0, dst1, dst2, dst3;
     v8i16 dst_r0, dst_l0, in0, in1;
-    v4i32 dst_vec = {0};
-    v16u8 zeros = {0};
+    v4i32 dst_vec = { 0 };
+    v16u8 zeros = { 0 };
 
     LD_SH2(coeffs, 8, in0, in1);
     LW4(dst, stride, dst0, dst1, dst2, dst3);
@@ -718,14 +730,15 @@ static void hevc_addblk_4x4_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
     ST_W4(dst_vec, 0, 1, 2, 3, dst, stride);
 }
 
-static void hevc_addblk_8x8_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
+static void hevc_addblk_8x8_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
+{
     uint8_t *temp_dst = dst;
     uint64_t dst0, dst1, dst2, dst3;
-    v2i64 dst_vec0 = {0};
-    v2i64 dst_vec1 = {0};
+    v2i64 dst_vec0 = { 0 };
+    v2i64 dst_vec1 = { 0 };
     v8i16 dst_r0, dst_l0, dst_r1, dst_l1;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
-    v16u8 zeros = {0};
+    v16u8 zeros = { 0 };
 
     LD_SH8(coeffs, 8, in0, in1, in2, in3, in4, in5, in6, in7);
     LD4(temp_dst, stride, dst0, dst1, dst2, dst3);
@@ -753,7 +766,8 @@ static void hevc_addblk_8x8_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
     ST_D4(dst_r0, dst_r1, 0, 1, 0, 1, dst + 4 * stride, stride);
 }
 
-static void hevc_addblk_16x16_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
+static void hevc_addblk_16x16_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
+{
     uint8_t loop_cnt;
     uint8_t *temp_dst = dst;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
@@ -819,7 +833,8 @@ static void hevc_addblk_16x16_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
     ST_UB4(dst0, dst1, dst2, dst3, dst, stride);
 }
 
-static void hevc_addblk_32x32_msa(int16_t *coeffs, uint8_t *dst, int32_t stride) {
+static void hevc_addblk_32x32_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
+{
     uint8_t loop_cnt;
     uint8_t *temp_dst = dst;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
@@ -923,7 +938,8 @@ static void hevc_addblk_32x32_msa(int16_t *coeffs, uint8_t *dst, int32_t stride)
     ST_UB2(dst2, dst3, dst, 16);
 }
 
-static void hevc_idct_luma_4x4_msa(int16_t *coeffs) {
+static void hevc_idct_luma_4x4_msa(int16_t *coeffs)
+{
     v8i16 in0, in1, dst0, dst1;
     v4i32 in_r0, in_l0, in_r1, in_l1, res0, res1, res2, res3;
 
@@ -944,54 +960,67 @@ static void hevc_idct_luma_4x4_msa(int16_t *coeffs) {
     ST_SH2(dst0, dst1, coeffs, 8);
 }
 
-void ff_hevc_idct_4x4_msa(int16_t *coeffs, int col_limit) {
+void ff_hevc_idct_4x4_msa(int16_t *coeffs, int col_limit)
+{
     hevc_idct_4x4_msa(coeffs);
 }
 
-void ff_hevc_idct_8x8_msa(int16_t *coeffs, int col_limit) {
+void ff_hevc_idct_8x8_msa(int16_t *coeffs, int col_limit)
+{
     hevc_idct_8x8_msa(coeffs);
 }
 
-void ff_hevc_idct_16x16_msa(int16_t *coeffs, int col_limit) {
+void ff_hevc_idct_16x16_msa(int16_t *coeffs, int col_limit)
+{
     hevc_idct_16x16_msa(coeffs);
 }
 
-void ff_hevc_idct_32x32_msa(int16_t *coeffs, int col_limit) {
+void ff_hevc_idct_32x32_msa(int16_t *coeffs, int col_limit)
+{
     hevc_idct_32x32_msa(coeffs);
 }
 
-void ff_hevc_addblk_4x4_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride) {
+void ff_hevc_addblk_4x4_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride)
+{
     hevc_addblk_4x4_msa(coeffs, dst, stride);
 }
 
-void ff_hevc_addblk_8x8_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride) {
+void ff_hevc_addblk_8x8_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride)
+{
     hevc_addblk_8x8_msa(coeffs, dst, stride);
 }
 
-void ff_hevc_addblk_16x16_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride) {
+void ff_hevc_addblk_16x16_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride)
+{
     hevc_addblk_16x16_msa(coeffs, dst, stride);
 }
 
-void ff_hevc_addblk_32x32_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride) {
+void ff_hevc_addblk_32x32_msa(uint8_t *dst, int16_t *coeffs, ptrdiff_t stride)
+{
     hevc_addblk_32x32_msa(coeffs, dst, stride);
 }
 
-void ff_hevc_idct_dc_4x4_msa(int16_t *coeffs) {
+void ff_hevc_idct_dc_4x4_msa(int16_t *coeffs)
+{
     hevc_idct_dc_4x4_msa(coeffs);
 }
 
-void ff_hevc_idct_dc_8x8_msa(int16_t *coeffs) {
+void ff_hevc_idct_dc_8x8_msa(int16_t *coeffs)
+{
     hevc_idct_dc_8x8_msa(coeffs);
 }
 
-void ff_hevc_idct_dc_16x16_msa(int16_t *coeffs) {
+void ff_hevc_idct_dc_16x16_msa(int16_t *coeffs)
+{
     hevc_idct_dc_16x16_msa(coeffs);
 }
 
-void ff_hevc_idct_dc_32x32_msa(int16_t *coeffs) {
+void ff_hevc_idct_dc_32x32_msa(int16_t *coeffs)
+{
     hevc_idct_dc_32x32_msa(coeffs);
 }
 
-void ff_hevc_idct_luma_4x4_msa(int16_t *coeffs) {
+void ff_hevc_idct_luma_4x4_msa(int16_t *coeffs)
+{
     hevc_idct_luma_4x4_msa(coeffs);
 }

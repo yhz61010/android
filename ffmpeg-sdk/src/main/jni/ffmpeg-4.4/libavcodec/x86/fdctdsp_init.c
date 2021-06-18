@@ -24,7 +24,8 @@
 #include "fdct.h"
 
 av_cold void ff_fdctdsp_init_x86(FDCTDSPContext *c, AVCodecContext *avctx,
-                                 unsigned high_bit_depth) {
+                                 unsigned high_bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
     const int dct_algo = avctx->dct_algo;
 

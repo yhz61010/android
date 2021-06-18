@@ -20,7 +20,6 @@
 #define COMPAT_ATOMICS_WIN32_STDATOMIC_H
 
 #define WIN32_LEAN_AND_MEAN
-
 #include <stddef.h>
 #include <stdint.h>
 #include <windows.h>
@@ -103,10 +102,11 @@ do {                                    \
     atomic_exchange(object, desired)
 
 static inline int atomic_compare_exchange_strong(intptr_t *object, intptr_t *expected,
-                                                 intptr_t desired) {
+                                                 intptr_t desired)
+{
     intptr_t old = *expected;
-    *expected = (intptr_t) InterlockedCompareExchangePointer(
-            (PVOID *) object, (PVOID) desired, (PVOID) old);
+    *expected = (intptr_t)InterlockedCompareExchangePointer(
+        (PVOID *)object, (PVOID)desired, (PVOID)old);
     return *expected == old;
 }
 

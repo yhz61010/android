@@ -37,7 +37,8 @@
 #define ROUND_TO_ZERO 0.1054f
 #define C_QUANT 0.4054f
 
-static inline void abs_pow34_v(float *out, const float *in, const int size) {
+static inline void abs_pow34_v(float *out, const float *in, const int size)
+{
     int i;
     for (i = 0; i < size; i++) {
         float a = fabsf(in[i]);
@@ -45,7 +46,8 @@ static inline void abs_pow34_v(float *out, const float *in, const int size) {
     }
 }
 
-static inline float pos_pow34(float a) {
+static inline float pos_pow34(float a)
+{
     return sqrtf(a * sqrtf(a));
 }
 
@@ -54,18 +56,20 @@ static inline float pos_pow34(float a) {
  * @return absolute value of the quantized coefficient
  * @see 3GPP TS26.403 5.6.2 "Scalefactor determination"
  */
-static inline int quant(float coef, const float Q, const float rounding) {
+static inline int quant(float coef, const float Q, const float rounding)
+{
     float a = coef * Q;
     return sqrtf(a * sqrtf(a)) + rounding;
 }
 
 static inline void quantize_bands(int *out, const float *in, const float *scaled,
                                   int size, int is_signed, int maxval, const float Q34,
-                                  const float rounding) {
+                                  const float rounding)
+{
     int i;
     for (i = 0; i < size; i++) {
         float qc = scaled[i] * Q34;
-        int tmp = (int) FFMIN(qc + rounding, (float) maxval);
+        int tmp = (int)FFMIN(qc + rounding, (float)maxval);
         if (is_signed && in[i] < 0.0f) {
             tmp = -tmp;
         }
@@ -73,18 +77,20 @@ static inline void quantize_bands(int *out, const float *in, const float *scaled
     }
 }
 
-static inline float find_max_val(int group_len, int swb_size, const float *scaled) {
+static inline float find_max_val(int group_len, int swb_size, const float *scaled)
+{
     float maxval = 0.0f;
     int w2, i;
     for (w2 = 0; w2 < group_len; w2++) {
         for (i = 0; i < swb_size; i++) {
-            maxval = FFMAX(maxval, scaled[w2 * 128 + i]);
+            maxval = FFMAX(maxval, scaled[w2*128+i]);
         }
     }
     return maxval;
 }
 
-static inline int find_min_book(float maxval, int sf) {
+static inline int find_min_book(float maxval, int sf)
+{
     float Q34 = ff_aac_pow34sf_tab[POW_SF2_ZERO - sf + SCALE_ONE_POS - SCALE_DIV_512];
     int qmaxval, cb;
     qmaxval = maxval * Q34 + C_QUANT;
@@ -106,7 +112,7 @@ static inline float find_form_factor(int group_len, int swb_size, float thresh,
         float e = 0.0f, e2 = 0.0f, var = 0.0f, maxval = 0.0f;
         float nzl = 0;
         for (i = 0; i < swb_size; i++) {
-            float s = fabsf(scaled[w2 * 128 + i]);
+            float s = fabsf(scaled[w2*128+i]);
             maxval = FFMAX(maxval, s);
             e += s;
             e2 += s *= s;
@@ -129,14 +135,14 @@ static inline float find_form_factor(int group_len, int swb_size, float thresh,
 
             /** compute variance */
             for (i = 0; i < swb_size; i++) {
-                float d = fabsf(scaled[w2 * 128 + i]) - e;
-                var += d * d;
+                float d = fabsf(scaled[w2*128+i]) - e;
+                var += d*d;
             }
             var = sqrtf(var * iswb_sizem1);
 
             e2 *= iswb_size;
-            frm = e / FFMIN(e + 4 * var, maxval);
-            form += e2 * sqrtf(frm) / FFMAX(0.5f, nzl);
+            frm = e / FFMIN(e+4*var,maxval);
+            form += e2 * sqrtf(frm) / FFMAX(0.5f,nzl);
             weight += e2;
         }
     }
@@ -148,23 +154,26 @@ static inline float find_form_factor(int group_len, int swb_size, float thresh,
 }
 
 /** Return the minimum scalefactor where the quantized coef does not clip. */
-static inline uint8_t coef2minsf(float coef) {
-    return av_clip_uint8(log2f(coef) * 4 - 69 + SCALE_ONE_POS - SCALE_DIV_512);
+static inline uint8_t coef2minsf(float coef)
+{
+    return av_clip_uint8(log2f(coef)*4 - 69 + SCALE_ONE_POS - SCALE_DIV_512);
 }
 
 /** Return the maximum scalefactor where the quantized coef is not zero. */
-static inline uint8_t coef2maxsf(float coef) {
-    return av_clip_uint8(log2f(coef) * 4 + 6 + SCALE_ONE_POS - SCALE_DIV_512);
+static inline uint8_t coef2maxsf(float coef)
+{
+    return av_clip_uint8(log2f(coef)*4 +  6 + SCALE_ONE_POS - SCALE_DIV_512);
 }
 
 /*
  * Returns the closest possible index to an array of float values, given a value.
  */
-static inline int quant_array_idx(const float val, const float *arr, const int num) {
+static inline int quant_array_idx(const float val, const float *arr, const int num)
+{
     int i, index = 0;
     float quant_min_err = INFINITY;
     for (i = 0; i < num; i++) {
-        float error = (val - arr[i]) * (val - arr[i]);
+        float error = (val - arr[i])*(val - arr[i]);
         if (error < quant_min_err) {
             quant_min_err = error;
             index = i;
@@ -176,8 +185,9 @@ static inline int quant_array_idx(const float val, const float *arr, const int n
 /**
  * approximates exp10f(-3.0f*(0.5f + 0.5f * cosf(FFMIN(b,15.5f) / 15.5f)))
  */
-static av_always_inline float bval2bmax(float b) {
-    return 0.001f + 0.0035f * (b * b * b) / (15.5f * 15.5f * 15.5f);
+static av_always_inline float bval2bmax(float b)
+{
+    return 0.001f + 0.0035f * (b*b*b) / (15.5f*15.5f*15.5f);
 }
 
 /*
@@ -186,7 +196,8 @@ static av_always_inline float bval2bmax(float b) {
  * map to valid, nonzero bands of the form w*16+g (with w being the initial
  * window of the window group, only) are left indetermined.
  */
-static inline void ff_init_nextband_map(const SingleChannelElement *sce, uint8_t *nextband) {
+static inline void ff_init_nextband_map(const SingleChannelElement *sce, uint8_t *nextband)
+{
     unsigned char prevband = 0;
     int w, g;
     /** Just a safe default */
@@ -196,8 +207,8 @@ static inline void ff_init_nextband_map(const SingleChannelElement *sce, uint8_t
     /** Now really navigate the nonzero band chain */
     for (w = 0; w < sce->ics.num_windows; w += sce->ics.group_len[w]) {
         for (g = 0; g < sce->ics.num_swb; g++) {
-            if (!sce->zeroes[w * 16 + g] && sce->band_type[w * 16 + g] < RESERVED_BT)
-                prevband = nextband[prevband] = w * 16 + g;
+            if (!sce->zeroes[w*16+g] && sce->band_type[w*16+g] < RESERVED_BT)
+                prevband = nextband[prevband] = w*16+g;
         }
     }
     nextband[prevband] = prevband; /* terminate */
@@ -207,12 +218,9 @@ static inline void ff_init_nextband_map(const SingleChannelElement *sce, uint8_t
  * Updates nextband to reflect a removed band (equivalent to
  * calling ff_init_nextband_map after marking a band as zero)
  */
-static inline void ff_nextband_remove(uint8_t * nextband, int
-prevband,
-int band
-)
+static inline void ff_nextband_remove(uint8_t *nextband, int prevband, int band)
 {
-nextband[prevband] = nextband[band];
+    nextband[prevband] = nextband[band];
 }
 
 /*
@@ -222,10 +230,11 @@ nextband[prevband] = nextband[band];
  * band, in encoding order, or negative if there was no such band.
  */
 static inline int ff_sfdelta_can_remove_band(const SingleChannelElement *sce,
-                                             const uint8_t *nextband, int prev_sf, int band) {
+    const uint8_t *nextband, int prev_sf, int band)
+{
     return prev_sf >= 0
-           && sce->sf_idx[nextband[band]] >= (prev_sf - SCALE_MAX_DIFF)
-           && sce->sf_idx[nextband[band]] <= (prev_sf + SCALE_MAX_DIFF);
+        && sce->sf_idx[nextband[band]] >= (prev_sf - SCALE_MAX_DIFF)
+        && sce->sf_idx[nextband[band]] <= (prev_sf + SCALE_MAX_DIFF);
 }
 
 /*
@@ -235,11 +244,12 @@ static inline int ff_sfdelta_can_remove_band(const SingleChannelElement *sce,
  * band, in encoding order, or negative if there was no such band.
  */
 static inline int ff_sfdelta_can_replace(const SingleChannelElement *sce,
-                                         const uint8_t *nextband, int prev_sf, int new_sf, int band) {
+    const uint8_t *nextband, int prev_sf, int new_sf, int band)
+{
     return new_sf >= (prev_sf - SCALE_MAX_DIFF)
-           && new_sf <= (prev_sf + SCALE_MAX_DIFF)
-           && sce->sf_idx[nextband[band]] >= (new_sf - SCALE_MAX_DIFF)
-           && sce->sf_idx[nextband[band]] <= (new_sf + SCALE_MAX_DIFF);
+        && new_sf <= (prev_sf + SCALE_MAX_DIFF)
+        && sce->sf_idx[nextband[band]] >= (new_sf - SCALE_MAX_DIFF)
+        && sce->sf_idx[nextband[band]] <= (new_sf + SCALE_MAX_DIFF);
 }
 
 /**
@@ -249,11 +259,9 @@ static inline int ff_sfdelta_can_replace(const SingleChannelElement *sce,
  *
  * @return  Returns a 32-bit pseudorandom integer
  */
-static av_always_inline int lcg_random(unsigned previous_val) {
-    union {
-        unsigned u;
-        int s;
-    } v = {previous_val * 1664525u + 1013904223};
+static av_always_inline int lcg_random(unsigned previous_val)
+{
+    union { unsigned u; int s; } v = { previous_val * 1664525u + 1013904223 };
     return v.s;
 }
 

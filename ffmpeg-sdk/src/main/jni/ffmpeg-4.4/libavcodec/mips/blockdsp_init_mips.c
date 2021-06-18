@@ -22,7 +22,8 @@
 #include "libavutil/mips/cpu.h"
 #include "blockdsp_mips.h"
 
-void ff_blockdsp_init_mips(BlockDSPContext *c) {
+void ff_blockdsp_init_mips(BlockDSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {

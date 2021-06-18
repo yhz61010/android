@@ -52,7 +52,8 @@ static void vorbis_inverse_coupling_altivec(float *mag, float *ang,
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_vorbisdsp_init_ppc(VorbisDSPContext *c) {
+av_cold void ff_vorbisdsp_init_ppc(VorbisDSPContext *c)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

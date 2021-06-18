@@ -379,7 +379,8 @@ static void avg_cavs_qpel16_mc00_sse2(uint8_t *dst, const uint8_t *src,
 #endif
 
 static av_cold void cavsdsp_init_mmx(CAVSDSPContext *c,
-                                     AVCodecContext *avctx) {
+                                     AVCodecContext *avctx)
+{
 #if HAVE_MMX_EXTERNAL
     c->put_cavs_qpel_pixels_tab[0][0] = put_cavs_qpel16_mc00_mmx;
     c->put_cavs_qpel_pixels_tab[1][0] = put_cavs_qpel8_mc00_mmx;
@@ -426,7 +427,8 @@ static av_cold void cavsdsp_init_3dnow(CAVSDSPContext *c,
 }
 #endif /* HAVE_AMD3DNOW_INLINE */
 
-av_cold void ff_cavsdsp_init_x86(CAVSDSPContext *c, AVCodecContext *avctx) {
+av_cold void ff_cavsdsp_init_x86(CAVSDSPContext *c, AVCodecContext *avctx)
+{
     av_unused int cpu_flags = av_get_cpu_flags();
 
     if (X86_MMX(cpu_flags))

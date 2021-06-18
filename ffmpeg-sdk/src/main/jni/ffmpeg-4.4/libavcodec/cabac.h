@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-extern const uint8_t ff_h264_cabac_tables[512 + 4 * 2 * 64 + 4 * 64 + 63];
+extern const uint8_t ff_h264_cabac_tables[512 + 4*2*64 + 4*64 + 63];
 #define H264_NORM_SHIFT_OFFSET 0
 #define H264_LPS_RANGE_OFFSET 512
 #define H264_MLPS_STATE_OFFSET 1024
@@ -38,13 +38,13 @@ extern const uint8_t ff_h264_cabac_tables[512 + 4 * 2 * 64 + 4 * 64 + 63];
 #define CABAC_BITS 16
 #define CABAC_MASK ((1<<CABAC_BITS)-1)
 
-typedef struct CABACContext {
+typedef struct CABACContext{
     int low;
     int range;
     const uint8_t *bytestream_start;
     const uint8_t *bytestream;
     const uint8_t *bytestream_end;
-} CABACContext;
+}CABACContext;
 
 int ff_init_cabac_decoder(CABACContext *c, const uint8_t *buf, int buf_size);
 

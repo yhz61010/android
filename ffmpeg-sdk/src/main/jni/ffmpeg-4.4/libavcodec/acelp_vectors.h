@@ -41,23 +41,22 @@ typedef struct ACELPVContext {
                                  float weight_coeff_a, float weight_coeff_b,
                                  int length);
 
-} ACELPVContext;
+}ACELPVContext;
 
 /**
  * Initialize ACELPVContext.
  */
 void ff_acelp_vectors_init(ACELPVContext *c);
-
 void ff_acelp_vectors_init_mips(ACELPVContext *c);
 
 /** Sparse representation for the algebraic codebook (fixed) vector */
 typedef struct AMRFixed {
-    int n;
-    int x[10];
-    float y[10];
-    int no_repeat_mask;
-    int pitch_lag;
-    float pitch_fac;
+    int      n;
+    int      x[10];
+    float    y[10];
+    int      no_repeat_mask;
+    int      pitch_lag;
+    float    pitch_fac;
 } AMRFixed;
 
 /**
@@ -170,7 +169,7 @@ extern const float ff_pow_0_55[10];
  *
  * Used in G.729 @@8k, G.729 @@4.4k, G.729 @@6.4k, AMR @@7.95k, AMR @@7.40k
  */
-void ff_acelp_fc_pulse_per_track(int16_t *fc_v,
+void ff_acelp_fc_pulse_per_track(int16_t* fc_v,
                                  const uint8_t *tab1,
                                  const uint8_t *tab2,
                                  int pulse_indexes,
@@ -211,7 +210,7 @@ void ff_decode_10_pulses_35bits(const int16_t *fixed_index,
  *
  *  out[i] = (in_a[i]*weight_a + in_b[i]*weight_b + rounder) >> shift
  */
-void ff_acelp_weighted_vector_sum(int16_t *out,
+void ff_acelp_weighted_vector_sum(int16_t* out,
                                   const int16_t *in_a,
                                   const int16_t *in_b,
                                   int16_t weight_coeff_a,

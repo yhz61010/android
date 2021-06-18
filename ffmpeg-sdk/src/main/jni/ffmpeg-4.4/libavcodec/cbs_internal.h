@@ -38,15 +38,15 @@ enum CBSContentType {
 };
 
 enum {
-    // Maximum number of unit types described by the same unit type
-    // descriptor.
-    CBS_MAX_UNIT_TYPES = 3,
-    // Maximum number of reference buffer offsets in any one unit.
-    CBS_MAX_REF_OFFSETS = 2,
-    // Special value used in a unit type descriptor to indicate that it
-    // applies to a large range of types rather than a set of discrete
-    // values.
-    CBS_UNIT_TYPE_RANGE = -1,
+      // Maximum number of unit types described by the same unit type
+      // descriptor.
+      CBS_MAX_UNIT_TYPES  = 3,
+      // Maximum number of reference buffer offsets in any one unit.
+      CBS_MAX_REF_OFFSETS = 2,
+      // Special value used in a unit type descriptor to indicate that it
+      // applies to a large range of types rather than a set of discrete
+      // values.
+      CBS_UNIT_TYPE_RANGE = -1,
 };
 
 typedef const struct CodedBitstreamUnitTypeDescriptor {
@@ -80,8 +80,7 @@ typedef const struct CodedBitstreamUnitTypeDescriptor {
     size_t ref_offsets[CBS_MAX_REF_OFFSETS];
 
     void (*content_free)(void *opaque, uint8_t *data);
-
-    int (*content_clone)(AVBufferRef **ref, CodedBitstreamUnit *unit);
+    int  (*content_clone)(AVBufferRef **ref, CodedBitstreamUnit *unit);
 } CodedBitstreamUnitTypeDescriptor;
 
 typedef struct CodedBitstreamType {

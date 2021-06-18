@@ -96,7 +96,8 @@ do {                                    \
 #define atomic_load_explicit(object, order) \
     atomic_load(object)
 
-static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired) {
+static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired)
+{
     intptr_t ret = *object;
     *object = desired;
     return ret;
@@ -106,7 +107,8 @@ static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired) {
     atomic_exchange(object, desired)
 
 static inline int atomic_compare_exchange_strong(intptr_t *object, intptr_t *expected,
-                                                 intptr_t desired) {
+                                                 intptr_t desired)
+{
     int ret;
     if (*object == *expected) {
         *object = desired;
@@ -137,13 +139,9 @@ static inline intptr_t atomic_fetch_ ## opname(intptr_t *object, intptr_t operan
 }
 
 FETCH_MODIFY(add, +)
-
 FETCH_MODIFY(sub, -)
-
-FETCH_MODIFY(or, |)
-
+FETCH_MODIFY(or,  |)
 FETCH_MODIFY(xor, ^)
-
 FETCH_MODIFY(and, &)
 
 #undef FETCH_MODIFY

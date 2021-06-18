@@ -30,8 +30,8 @@ typedef struct ACELPFContext {
     * Floating point version of ff_acelp_interpolate()
     */
     void (*acelp_interpolatef)(float *out, const float *in,
-                               const float *filter_coeffs, int precision,
-                               int frac_pos, int filter_length, int length);
+                            const float *filter_coeffs, int precision,
+                            int frac_pos, int filter_length, int length);
 
     /**
      * Apply an order 2 rational transfer function in-place.
@@ -50,13 +50,12 @@ typedef struct ACELPFContext {
                                                   float gain,
                                                   float mem[2], int n);
 
-} ACELPFContext;
+}ACELPFContext;
 
 /**
  * Initialize ACELPFContext.
  */
 void ff_acelp_filter_init(ACELPFContext *c);
-
 void ff_acelp_filter_init_mips(ACELPFContext *c);
 
 /**
@@ -84,8 +83,8 @@ extern const int16_t ff_acelp_interp_filter[61];
  * interpolation filter. filter_coeffs[0] should the central (unpaired) coefficient.
  * See ff_acelp_interp_filter for an example.
  */
-void ff_acelp_interpolate(int16_t *out, const int16_t *in,
-                          const int16_t *filter_coeffs, int precision,
+void ff_acelp_interpolate(int16_t* out, const int16_t* in,
+                          const int16_t* filter_coeffs, int precision,
                           int frac_pos, int filter_length, int length);
 
 /**
@@ -119,8 +118,8 @@ void ff_acelp_interpolatef(float *out, const float *in,
  *         fixed-point all coefficients are the same as in G.729. Thus this
  *         routine can be used for the fixed-point AMR decoder, too.
  */
-void ff_acelp_high_pass_filter(int16_t *out, int hpf_f[2],
-                               const int16_t *in, int length);
+void ff_acelp_high_pass_filter(int16_t* out, int hpf_f[2],
+                               const int16_t* in, int length);
 
 /**
  * Apply an order 2 rational transfer function in-place.

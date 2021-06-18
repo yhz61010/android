@@ -35,7 +35,7 @@
         tt1 = vec_perm(a, b, align);  \
  }
 #else
-#define GET_T(tt0, tt1, src, a, b){       \
+#define GET_T(tt0,tt1,src,a,b){       \
         tt0 = vec_vsx_ld(0, src);     \
         tt1 = vec_vsx_ld(16, src);    \
  }
@@ -80,7 +80,8 @@ static int32_t scalarproduct_and_madd_int16_altivec(int16_t *v1,
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_llauddsp_init_ppc(LLAudDSPContext *c) {
+av_cold void ff_llauddsp_init_ppc(LLAudDSPContext *c)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

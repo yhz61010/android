@@ -36,7 +36,7 @@
 #include "avcodec.h"
 
 typedef struct ADXChannelState {
-    int s1, s2;
+    int s1,s2;
 } ADXChannelState;
 
 typedef struct ADXContext {

@@ -40,7 +40,7 @@
     ST_SB4(tmp0_m, tmp1_m, tmp2_m, tmp3_m, pdst_m, stride);                 \
 }
 
-#define PCKEV_AVG_ST8x4_UB(in1, dst0, in2, dst1, in3, dst2, in4, dst3, \
+#define PCKEV_AVG_ST8x4_UB(in1, dst0, in2, dst1, in3, dst2, in4, dst3,  \
                            pdst, stride)                                \
 {                                                                       \
     v16u8 tmp0_m, tmp1_m, tmp2_m, tmp3_m;                               \
@@ -54,11 +54,12 @@
 
 static void common_hz_bil_4w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t out0, out1;
     v16u8 src0, src1, src0_sld1, src1_sld1, res0, res1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     for (loop_cnt = (height >> 1); loop_cnt--;) {
         LD_UB2(src, src_stride, src0, src1);
@@ -78,10 +79,11 @@ static void common_hz_bil_4w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hz_bil_8w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     v16i8 src0, src1, src2, src3, src0_sld1, src1_sld1, src2_sld1, src3_sld1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     for (loop_cnt = (height >> 2); loop_cnt--;) {
         LD_SB4(src, src_stride, src0, src1, src2, src3);
@@ -97,7 +99,8 @@ static void common_hz_bil_8w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hz_bil_16w_msa(const uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  uint8_t height) {
+                                  uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 src8, src9, src10, src11, src12, src13, src14, src15;
@@ -119,11 +122,12 @@ static void common_hz_bil_16w_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_hz_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16i8 src0_sld1, src1_sld1, src2_sld1, src3_sld1;
     v16i8 src4_sld1, src5_sld1, src6_sld1, src7_sld1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     LD_SB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
     src += (8 * src_stride);
@@ -141,9 +145,10 @@ static void common_hz_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_hz_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16i8 src0, src1, src2, src3, src0_sld1, src1_sld1, src2_sld1, src3_sld1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     LD_SB4(src, src_stride, src0, src1, src2, src3);
     SLDI_B4_SB(zeros, src0, zeros, src1, zeros, src2, zeros, src3, 1,
@@ -154,7 +159,8 @@ static void common_hz_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hz_bil_no_rnd_16x16_msa(const uint8_t *src,
                                            int32_t src_stride,
-                                           uint8_t *dst, int32_t dst_stride) {
+                                           uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 src9, src10, src11, src12, src13, src14, src15;
 
@@ -188,7 +194,8 @@ static void common_hz_bil_no_rnd_16x16_msa(const uint8_t *src,
 
 static void common_hz_bil_no_rnd_8x16_msa(const uint8_t *src,
                                           int32_t src_stride,
-                                          uint8_t *dst, int32_t dst_stride) {
+                                          uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 src9, src10, src11, src12, src13, src14, src15;
 
@@ -206,13 +213,14 @@ static void common_hz_bil_no_rnd_8x16_msa(const uint8_t *src,
 static void common_hz_bil_and_aver_dst_4w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t dst0, dst1, out0, out1;
     v16u8 src0, src1, src0_sld1, src1_sld1, res0, res1;
-    v16u8 tmp0 = {0};
-    v16u8 tmp1 = {0};
-    v16i8 zeros = {0};
+    v16u8 tmp0 = { 0 };
+    v16u8 tmp1 = { 0 };
+    v16i8 zeros = { 0 };
 
     for (loop_cnt = (height >> 1); loop_cnt--;) {
         LD_UB2(src, src_stride, src0, src1);
@@ -240,10 +248,11 @@ static void common_hz_bil_and_aver_dst_4w_msa(const uint8_t *src,
 static void common_hz_bil_and_aver_dst_8w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     v16i8 src0, src1, src2, src3, src0_sld1, src1_sld1, src2_sld1, src3_sld1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     for (loop_cnt = (height >> 2); loop_cnt--;) {
         LD_SB4(src, src_stride, src0, src1, src2, src3);
@@ -261,7 +270,8 @@ static void common_hz_bil_and_aver_dst_8w_msa(const uint8_t *src,
 static void common_hz_bil_and_aver_dst_16w_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst, int32_t dst_stride,
-                                               uint8_t height) {
+                                               uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 src9, src10, src11, src12, src13, src14, src15;
@@ -283,7 +293,8 @@ static void common_hz_bil_and_aver_dst_16w_msa(const uint8_t *src,
 
 static void common_vt_bil_4w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t out0, out1;
     v16u8 src0, src1, src2, res0, res1;
@@ -310,7 +321,8 @@ static void common_vt_bil_4w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_vt_bil_8w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4;
 
@@ -331,7 +343,8 @@ static void common_vt_bil_8w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_vt_bil_16w_msa(const uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  uint8_t height) {
+                                  uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
 
@@ -354,7 +367,8 @@ static void common_vt_bil_16w_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_vt_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
 
     LD_UB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
@@ -370,7 +384,8 @@ static void common_vt_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_vt_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4;
 
     LD_UB5(src, src_stride, src0, src1, src2, src3, src4);
@@ -380,7 +395,8 @@ static void common_vt_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_vt_bil_no_rnd_16x16_msa(const uint8_t *src,
                                            int32_t src_stride,
-                                           uint8_t *dst, int32_t dst_stride) {
+                                           uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 src9, src10, src11, src12, src13, src14, src15, src16;
 
@@ -406,7 +422,8 @@ static void common_vt_bil_no_rnd_16x16_msa(const uint8_t *src,
 
 static void common_vt_bil_no_rnd_8x16_msa(const uint8_t *src,
                                           int32_t src_stride,
-                                          uint8_t *dst, int32_t dst_stride) {
+                                          uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
 
     LD_UB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
@@ -423,12 +440,13 @@ static void common_vt_bil_no_rnd_8x16_msa(const uint8_t *src,
 static void common_vt_bil_and_aver_dst_4w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t out0, out1, dst0, dst1;
     v16u8 src0, src1, src2;
-    v16u8 tmp0 = {0};
-    v16u8 tmp1 = {0};
+    v16u8 tmp0 = { 0 };
+    v16u8 tmp1 = { 0 };
     v16u8 res0, res1;
 
     src0 = LD_UB(src);
@@ -456,7 +474,8 @@ static void common_vt_bil_and_aver_dst_4w_msa(const uint8_t *src,
 static void common_vt_bil_and_aver_dst_8w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4;
 
@@ -477,7 +496,8 @@ static void common_vt_bil_and_aver_dst_8w_msa(const uint8_t *src,
 static void common_vt_bil_and_aver_dst_16w_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst, int32_t dst_stride,
-                                               uint8_t height) {
+                                               uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 res0, res1, res2, res3, res4, res5, res6, res7;
@@ -508,13 +528,14 @@ static void common_vt_bil_and_aver_dst_16w_msa(const uint8_t *src,
 
 static void common_hv_bil_4w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t res0, res1;
     v16i8 src0, src1, src2, src0_sld1, src1_sld1, src2_sld1;
     v16u8 src0_r, src1_r, src2_r, res;
     v8u16 add0, add1, add2, sum0, sum1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     src0 = LD_SB(src);
     src += src_stride;
@@ -544,14 +565,15 @@ static void common_hv_bil_4w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hv_bil_8w_msa(const uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 uint8_t height) {
+                                 uint8_t height)
+{
     uint8_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4;
     v16i8 src0_sld1, src1_sld1, src2_sld1, src3_sld1, src4_sld1;
     v16u8 src0_r, src1_r, src2_r, src3_r, src4_r;
     v8u16 add0, add1, add2, add3, add4;
     v8u16 sum0, sum1, sum2, sum3;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     src0 = LD_SB(src);
     src += src_stride;
@@ -580,7 +602,8 @@ static void common_hv_bil_8w_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hv_bil_16w_msa(const uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  uint8_t height) {
+                                  uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9;
     v16u8 src10, src11, src12, src13, src14, src15, src16, src17;
@@ -636,7 +659,8 @@ static void common_hv_bil_16w_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_hv_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 src0_sld1, src1_sld1, src2_sld1, src3_sld1;
     v16u8 src4_sld1, src5_sld1, src6_sld1, src7_sld1, src8_sld1;
@@ -645,7 +669,7 @@ static void common_hv_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
     v8u16 add0, add1, add2, add3, add4, add5, add6, add7, add8;
     v8u16 sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7;
     v16i8 out0, out1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     LD_UB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
     src += (8 * src_stride);
@@ -683,14 +707,15 @@ static void common_hv_bil_no_rnd_8x8_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_hv_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
-                                         uint8_t *dst, int32_t dst_stride) {
+                                         uint8_t *dst, int32_t dst_stride)
+{
     v16i8 src0, src1, src2, src3, src4;
     v16i8 src0_sld1, src1_sld1, src2_sld1, src3_sld1, src4_sld1;
     v8u16 src0_r, src1_r, src2_r, src3_r, src4_r;
     v8u16 add0, add1, add2, add3, add4;
     v8u16 sum0, sum1, sum2, sum3;
     v16i8 out0, out1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     LD_SB4(src, src_stride, src0, src1, src2, src3);
     src += (4 * src_stride);
@@ -717,7 +742,8 @@ static void common_hv_bil_no_rnd_4x8_msa(const uint8_t *src, int32_t src_stride,
 
 static void common_hv_bil_no_rnd_16x16_msa(const uint8_t *src,
                                            int32_t src_stride,
-                                           uint8_t *dst, int32_t dst_stride) {
+                                           uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9;
     v16u8 src10, src11, src12, src13, src14, src15, src16, src17;
     v8u16 src0_r, src1_r, src2_r, src3_r, src4_r, src5_r, src6_r, src7_r;
@@ -833,7 +859,8 @@ static void common_hv_bil_no_rnd_16x16_msa(const uint8_t *src,
 
 static void common_hv_bil_no_rnd_8x16_msa(const uint8_t *src,
                                           int32_t src_stride,
-                                          uint8_t *dst, int32_t dst_stride) {
+                                          uint8_t *dst, int32_t dst_stride)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9;
     v16u8 src10, src11, src12, src13, src14, src15, src16, src17;
     v8u16 src0_r, src1_r, src2_r, src3_r, src4_r, src5_r, src6_r, src7_r;
@@ -897,14 +924,15 @@ static void common_hv_bil_no_rnd_8x16_msa(const uint8_t *src,
 static void common_hv_bil_and_aver_dst_4w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     uint32_t out0, out1;
     v16i8 src0, src1, src2, src0_sld1, src1_sld1, src2_sld1;
     v16u8 src0_r, src1_r, src2_r;
     v8u16 add0, add1, add2, sum0, sum1;
     v16u8 dst0, dst1, res0, res1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     src0 = LD_SB(src);
     src += src_stride;
@@ -938,7 +966,8 @@ static void common_hv_bil_and_aver_dst_4w_msa(const uint8_t *src,
 static void common_hv_bil_and_aver_dst_8w_msa(const uint8_t *src,
                                               int32_t src_stride,
                                               uint8_t *dst, int32_t dst_stride,
-                                              uint8_t height) {
+                                              uint8_t height)
+{
     uint8_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4;
     v16i8 src0_sld1, src1_sld1, src2_sld1, src3_sld1, src4_sld1;
@@ -946,7 +975,7 @@ static void common_hv_bil_and_aver_dst_8w_msa(const uint8_t *src,
     v16u8 src0_r, src1_r, src2_r, src3_r, src4_r;
     v8u16 add0, add1, add2, add3, add4;
     v8u16 sum0, sum1, sum2, sum3;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     src0 = LD_SB(src);
     src += src_stride;
@@ -977,7 +1006,8 @@ static void common_hv_bil_and_aver_dst_8w_msa(const uint8_t *src,
 static void common_hv_bil_and_aver_dst_16w_msa(const uint8_t *src,
                                                int32_t src_stride,
                                                uint8_t *dst, int32_t dst_stride,
-                                               uint8_t height) {
+                                               uint8_t height)
+{
     uint8_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, src9, src10;
     v16u8 src11, src12, src13, src14, src15, src16, src17;
@@ -1047,7 +1077,8 @@ static void common_hv_bil_and_aver_dst_16w_msa(const uint8_t *src,
 
 static void copy_width8_msa(const uint8_t *src, int32_t src_stride,
                             uint8_t *dst, int32_t dst_stride,
-                            int32_t height) {
+                            int32_t height)
+{
     int32_t cnt;
     uint64_t out0, out1, out2, out3, out4, out5, out6, out7;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -1132,7 +1163,8 @@ static void copy_width8_msa(const uint8_t *src, int32_t src_stride,
 
 static void copy_16multx8mult_msa(const uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  int32_t height, int32_t width) {
+                                  int32_t height, int32_t width)
+{
     int32_t cnt, loop_cnt;
     const uint8_t *src_tmp;
     uint8_t *dst_tmp;
@@ -1159,7 +1191,8 @@ static void copy_16multx8mult_msa(const uint8_t *src, int32_t src_stride,
 
 static void copy_width16_msa(const uint8_t *src, int32_t src_stride,
                              uint8_t *dst, int32_t dst_stride,
-                             int32_t height) {
+                             int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
 
@@ -1192,7 +1225,8 @@ static void copy_width16_msa(const uint8_t *src, int32_t src_stride,
 
 static void avg_width4_msa(const uint8_t *src, int32_t src_stride,
                            uint8_t *dst, int32_t dst_stride,
-                           int32_t height) {
+                           int32_t height)
+{
     int32_t cnt;
     uint32_t out0, out1, out2, out3;
     v16u8 src0, src1, src2, src3;
@@ -1236,7 +1270,8 @@ static void avg_width4_msa(const uint8_t *src, int32_t src_stride,
 
 static void avg_width8_msa(const uint8_t *src, int32_t src_stride,
                            uint8_t *dst, int32_t dst_stride,
-                           int32_t height) {
+                           int32_t height)
+{
     int32_t cnt;
     uint64_t out0, out1, out2, out3;
     v16u8 src0, src1, src2, src3;
@@ -1261,7 +1296,8 @@ static void avg_width8_msa(const uint8_t *src, int32_t src_stride,
 
 static void avg_width16_msa(const uint8_t *src, int32_t src_stride,
                             uint8_t *dst, int32_t dst_stride,
-                            int32_t height) {
+                            int32_t height)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
@@ -1281,62 +1317,74 @@ static void avg_width16_msa(const uint8_t *src, int32_t src_stride,
 }
 
 void ff_put_pixels16_msa(uint8_t *block, const uint8_t *pixels,
-                         ptrdiff_t line_size, int h) {
+                         ptrdiff_t line_size, int h)
+{
     copy_width16_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels16_x2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hz_bil_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels16_y2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_vt_bil_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels16_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                             ptrdiff_t line_size, int h) {
+                             ptrdiff_t line_size, int h)
+{
     common_hv_bil_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels8_msa(uint8_t *block, const uint8_t *pixels,
-                        ptrdiff_t line_size, int h) {
+                        ptrdiff_t line_size, int h)
+{
     copy_width8_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels8_x2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_hz_bil_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels8_y2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_vt_bil_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels8_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hv_bil_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels4_x2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_hz_bil_4w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels4_y2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_vt_bil_4w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_pixels4_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hv_bil_4w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_put_no_rnd_pixels16_x2_msa(uint8_t *block, const uint8_t *pixels,
-                                   ptrdiff_t line_size, int h) {
+                                   ptrdiff_t line_size, int h)
+{
     if (h == 16) {
         common_hz_bil_no_rnd_16x16_msa(pixels, line_size, block, line_size);
     } else if (h == 8) {
@@ -1345,7 +1393,8 @@ void ff_put_no_rnd_pixels16_x2_msa(uint8_t *block, const uint8_t *pixels,
 }
 
 void ff_put_no_rnd_pixels16_y2_msa(uint8_t *block, const uint8_t *pixels,
-                                   ptrdiff_t line_size, int h) {
+                                   ptrdiff_t line_size, int h)
+{
     if (h == 16) {
         common_vt_bil_no_rnd_16x16_msa(pixels, line_size, block, line_size);
     } else if (h == 8) {
@@ -1355,7 +1404,8 @@ void ff_put_no_rnd_pixels16_y2_msa(uint8_t *block, const uint8_t *pixels,
 
 void ff_put_no_rnd_pixels16_xy2_msa(uint8_t *block,
                                     const uint8_t *pixels,
-                                    ptrdiff_t line_size, int h) {
+                                    ptrdiff_t line_size, int h)
+{
     if (h == 16) {
         common_hv_bil_no_rnd_16x16_msa(pixels, line_size, block, line_size);
     } else if (h == 8) {
@@ -1364,7 +1414,8 @@ void ff_put_no_rnd_pixels16_xy2_msa(uint8_t *block,
 }
 
 void ff_put_no_rnd_pixels8_x2_msa(uint8_t *block, const uint8_t *pixels,
-                                  ptrdiff_t line_size, int h) {
+                                  ptrdiff_t line_size, int h)
+{
     if (h == 8) {
         common_hz_bil_no_rnd_8x8_msa(pixels, line_size, block, line_size);
     } else if (h == 4) {
@@ -1373,7 +1424,8 @@ void ff_put_no_rnd_pixels8_x2_msa(uint8_t *block, const uint8_t *pixels,
 }
 
 void ff_put_no_rnd_pixels8_y2_msa(uint8_t *block, const uint8_t *pixels,
-                                  ptrdiff_t line_size, int h) {
+                                  ptrdiff_t line_size, int h)
+{
     if (h == 8) {
         common_vt_bil_no_rnd_8x8_msa(pixels, line_size, block, line_size);
     } else if (h == 4) {
@@ -1382,7 +1434,8 @@ void ff_put_no_rnd_pixels8_y2_msa(uint8_t *block, const uint8_t *pixels,
 }
 
 void ff_put_no_rnd_pixels8_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                                   ptrdiff_t line_size, int h) {
+                                   ptrdiff_t line_size, int h)
+{
     if (h == 8) {
         common_hv_bil_no_rnd_8x8_msa(pixels, line_size, block, line_size);
     } else if (h == 4) {
@@ -1391,61 +1444,73 @@ void ff_put_no_rnd_pixels8_xy2_msa(uint8_t *block, const uint8_t *pixels,
 }
 
 void ff_avg_pixels16_msa(uint8_t *block, const uint8_t *pixels,
-                         ptrdiff_t line_size, int h) {
+                         ptrdiff_t line_size, int h)
+{
     avg_width16_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels16_x2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hz_bil_and_aver_dst_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels16_y2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_vt_bil_and_aver_dst_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels16_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                             ptrdiff_t line_size, int h) {
+                             ptrdiff_t line_size, int h)
+{
     common_hv_bil_and_aver_dst_16w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels8_msa(uint8_t *block, const uint8_t *pixels,
-                        ptrdiff_t line_size, int h) {
+                        ptrdiff_t line_size, int h)
+{
     avg_width8_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels8_x2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_hz_bil_and_aver_dst_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels8_y2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_vt_bil_and_aver_dst_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels8_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hv_bil_and_aver_dst_8w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels4_msa(uint8_t *block, const uint8_t *pixels,
-                        ptrdiff_t line_size, int h) {
+                        ptrdiff_t line_size, int h)
+{
     avg_width4_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels4_x2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_hz_bil_and_aver_dst_4w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels4_y2_msa(uint8_t *block, const uint8_t *pixels,
-                           ptrdiff_t line_size, int h) {
+                           ptrdiff_t line_size, int h)
+{
     common_vt_bil_and_aver_dst_4w_msa(pixels, line_size, block, line_size, h);
 }
 
 void ff_avg_pixels4_xy2_msa(uint8_t *block, const uint8_t *pixels,
-                            ptrdiff_t line_size, int h) {
+                            ptrdiff_t line_size, int h)
+{
     common_hv_bil_and_aver_dst_4w_msa(pixels, line_size, block, line_size, h);
 }

@@ -538,7 +538,8 @@ QPEL16(mmxext)
         c->avg_h264_qpel_pixels_tab[1][x + y * 4] = ff_avg_h264_qpel8_mc  ## x ## y ## _10_ ## CPU; \
     } while (0)
 
-av_cold void ff_h264qpel_init_x86(H264QpelContext *c, int bit_depth) {
+av_cold void ff_h264qpel_init_x86(H264QpelContext *c, int bit_depth)
+{
 #if HAVE_X86ASM
     int high_bit_depth = bit_depth > 8;
     int cpu_flags = av_get_cpu_flags();

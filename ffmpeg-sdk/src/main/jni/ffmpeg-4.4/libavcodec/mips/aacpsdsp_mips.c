@@ -448,7 +448,8 @@ static void ps_stereo_interpolate_mips(float (*l)[2], float (*r)[2],
 #endif /* HAVE_MIPSFPU */
 #endif /* HAVE_INLINE_ASM */
 
-void ff_psdsp_init_mips(PSDSPContext *s) {
+void ff_psdsp_init_mips(PSDSPContext *s)
+{
 #if HAVE_INLINE_ASM
 #if HAVE_MIPSFPU
     s->hybrid_analysis_ileave = ps_hybrid_analysis_ileave_mips;

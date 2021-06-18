@@ -20,13 +20,14 @@
 
 #include <stdlib.h>
 
-int main(void) {
+int main(void)
+{
     unsigned u;
 
-    for (u = 0; u < 65536; u++) {
-        unsigned s = u * u;
+    for(u=0; u<65536; u++) {
+        unsigned s = u*u;
         unsigned root = ff_sqrt(s);
-        unsigned root_m1 = ff_sqrt(s - 1);
+        unsigned root_m1 = ff_sqrt(s-1);
         if (s && root != u) {
             fprintf(stderr, "ff_sqrt failed at %u with %u\n", s, root);
             return 1;

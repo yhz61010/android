@@ -83,7 +83,8 @@ static int32_t scalarproduct_int16_vsx(const int16_t *v1, const int16_t *v2, int
 
 #endif /* HAVE_VSX */
 
-av_cold void ff_audiodsp_init_ppc(AudioDSPContext *c) {
+av_cold void ff_audiodsp_init_ppc(AudioDSPContext *c)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

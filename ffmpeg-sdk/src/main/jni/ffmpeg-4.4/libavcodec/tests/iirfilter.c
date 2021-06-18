@@ -27,9 +27,10 @@
 #define FILT_ORDER 4
 #define SIZE 1024
 
-int main(void) {
+int main(void)
+{
     struct FFIIRFilterCoeffs *fcoeffs = NULL;
-    struct FFIIRFilterState *fstate = NULL;
+    struct FFIIRFilterState  *fstate  = NULL;
     float cutoff_coeff = 0.4;
     int16_t x[SIZE], y[SIZE];
     int i;
@@ -37,7 +38,7 @@ int main(void) {
     fcoeffs = ff_iir_filter_init_coeffs(NULL, FF_FILTER_TYPE_BUTTERWORTH,
                                         FF_FILTER_MODE_LOWPASS, FILT_ORDER,
                                         cutoff_coeff, 0.0, 0.0);
-    fstate = ff_iir_filter_init_state(FILT_ORDER);
+    fstate  = ff_iir_filter_init_state(FILT_ORDER);
 
     for (i = 0; i < SIZE; i++)
         x[i] = lrint(0.75 * INT16_MAX * sin(0.5 * M_PI * i * i / SIZE));

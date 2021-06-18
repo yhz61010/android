@@ -49,7 +49,7 @@ enum subbands {
 
 typedef struct {
     int pos;
-    int32_t buffer[2 * FILTER_TAPS];
+    int32_t buffer[2*FILTER_TAPS];
 } FilterSignal;
 
 typedef struct {
@@ -133,14 +133,14 @@ RSHIFT_SIZE(64)
  * The 2 sets are a mirror of each other.
  */
 static const int32_t aptx_qmf_outer_coeffs[NB_FILTERS][FILTER_TAPS] = {
-        {
-                730,  -413, -9611, 43626,  -121026, 269973, -585547, 2801966,
-                697128,  -160481, 27611,  8478,    -10043, 3511,  688,  -897,
-        },
-        {
-                -897, 688,  3511,  -10043, 8478,    27611,  -160481, 697128,
-                2801966, -585547, 269973, -121026, 43626,  -9611, -413, 730,
-        },
+    {
+        730, -413, -9611, 43626, -121026, 269973, -585547, 2801966,
+        697128, -160481, 27611, 8478, -10043, 3511, 688, -897,
+    },
+    {
+        -897, 688, 3511, -10043, 8478, 27611, -160481, 697128,
+        2801966, -585547, 269973, -121026, 43626, -9611, -413, 730,
+    },
 };
 
 /*
@@ -148,23 +148,24 @@ static const int32_t aptx_qmf_outer_coeffs[NB_FILTERS][FILTER_TAPS] = {
  * The 2 sets are a mirror of each other.
  */
 static const int32_t aptx_qmf_inner_coeffs[NB_FILTERS][FILTER_TAPS] = {
-        {
-                1033,  -584, -13592, 61697,  -171156, 381799, -828088, 3962579,
-                985888,  -226954, 39048,  11990,   -14203, 4966,   973,  -1268,
-        },
-        {
-                -1268, 973,  4966,   -14203, 11990,   39048,  -226954, 985888,
-                3962579, -828088, 381799, -171156, 61697,  -13592, -584, 1033,
-        },
+    {
+       1033, -584, -13592, 61697, -171156, 381799, -828088, 3962579,
+       985888, -226954, 39048, 11990, -14203, 4966, 973, -1268,
+    },
+    {
+      -1268, 973, 4966, -14203, 11990, 39048, -226954, 985888,
+      3962579, -828088, 381799, -171156, 61697, -13592, -584, 1033,
+    },
 };
 
 /*
  * Push one sample into a circular signal buffer.
  */
 av_always_inline
-static void aptx_qmf_filter_signal_push(FilterSignal *signal, int32_t sample) {
-    signal->buffer[signal->pos] = sample;
-    signal->buffer[signal->pos + FILTER_TAPS] = sample;
+static void aptx_qmf_filter_signal_push(FilterSignal *signal, int32_t sample)
+{
+    signal->buffer[signal->pos            ] = sample;
+    signal->buffer[signal->pos+FILTER_TAPS] = sample;
     signal->pos = (signal->pos + 1) & (FILTER_TAPS - 1);
 }
 
@@ -173,28 +174,22 @@ static void aptx_qmf_filter_signal_push(FilterSignal *signal, int32_t sample) {
  * to 24 bits by applying the specified right shifting.
  */
 av_always_inline
-static int32_t
-aptx_qmf_convolution(FilterSignal
-*signal,
-const int32_t coeffs[FILTER_TAPS],
-int shift
-)
+static int32_t aptx_qmf_convolution(FilterSignal *signal,
+                                    const int32_t coeffs[FILTER_TAPS],
+                                    int shift)
 {
-int32_t *sig = &signal->buffer[signal->pos];
-int64_t e = 0;
-int i;
+    int32_t *sig = &signal->buffer[signal->pos];
+    int64_t e = 0;
+    int i;
 
-for (
-i = 0;
-i < FILTER_TAPS; i++)
-e += MUL64(sig[i], coeffs[i]);
+    for (i = 0; i < FILTER_TAPS; i++)
+        e += MUL64(sig[i], coeffs[i]);
 
-return
-rshift64_clip24(e, shift
-);
+    return rshift64_clip24(e, shift);
 }
 
-static inline int32_t aptx_quantized_parity(Channel *channel) {
+static inline int32_t aptx_quantized_parity(Channel *channel)
+{
     int32_t parity = channel->dither_parity;
     int subband;
 
@@ -206,9 +201,10 @@ static inline int32_t aptx_quantized_parity(Channel *channel) {
 
 /* For each sample, ensure that the parity of all subbands of all channels
  * is 0 except once every 8 samples where the parity is forced to 1. */
-static inline int aptx_check_parity(Channel channels[NB_CHANNELS], int32_t *idx) {
+static inline int aptx_check_parity(Channel channels[NB_CHANNELS], int32_t *idx)
+{
     int32_t parity = aptx_quantized_parity(&channels[LEFT])
-                     ^aptx_quantized_parity(&channels[RIGHT]);
+                   ^ aptx_quantized_parity(&channels[RIGHT]);
 
     int eighth = *idx == 7;
     *idx = (*idx + 1) & 7;
@@ -217,9 +213,8 @@ static inline int aptx_check_parity(Channel channels[NB_CHANNELS], int32_t *idx)
 }
 
 void ff_aptx_invert_quantize_and_prediction(Channel *channel, int hd);
-
 void ff_aptx_generate_dither(Channel *channel);
 
-int ff_aptx_init(AVCodecContext * avctx);
+int ff_aptx_init(AVCodecContext *avctx);
 
 #endif /* AVCODEC_APTX_H */

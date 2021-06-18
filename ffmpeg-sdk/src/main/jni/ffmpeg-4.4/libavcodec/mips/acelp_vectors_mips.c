@@ -96,7 +96,8 @@ static void ff_weighted_vector_sumf_mips(
 #endif /* !HAVE_MIPS32R6 && !HAVE_MIPS64R6 */
 #endif /* HAVE_INLINE_ASM */
 
-void ff_acelp_vectors_init_mips(ACELPVContext *c) {
+void ff_acelp_vectors_init_mips(ACELPVContext *c)
+{
 #if HAVE_INLINE_ASM
 #if !HAVE_MIPS32R6 && !HAVE_MIPS64R6
     c->weighted_vector_sumf = ff_weighted_vector_sumf_mips;

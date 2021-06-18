@@ -27,7 +27,8 @@
 #include "get_bits.h"
 #include "mpeg4audio.h"
 
-int ff_adts_header_parse(GetBitContext *gbc, AACADTSHeaderInfo *hdr) {
+int ff_adts_header_parse(GetBitContext *gbc, AACADTSHeaderInfo *hdr)
+{
     int size, rdb, ch, sr;
     int aot, crc_abs;
 
@@ -37,8 +38,8 @@ int ff_adts_header_parse(GetBitContext *gbc, AACADTSHeaderInfo *hdr) {
     skip_bits1(gbc);             /* id */
     skip_bits(gbc, 2);           /* layer */
     crc_abs = get_bits1(gbc);    /* protection_absent */
-    aot = get_bits(gbc, 2);  /* profile_objecttype */
-    sr = get_bits(gbc, 4);  /* sample_frequency_index */
+    aot     = get_bits(gbc, 2);  /* profile_objecttype */
+    sr      = get_bits(gbc, 4);  /* sample_frequency_index */
     if (!avpriv_mpeg4audio_sample_rates[sr])
         return AAC_AC3_PARSE_ERROR_SAMPLE_RATE;
     skip_bits1(gbc);             /* private_bit */
@@ -57,14 +58,14 @@ int ff_adts_header_parse(GetBitContext *gbc, AACADTSHeaderInfo *hdr) {
     skip_bits(gbc, 11);          /* adts_buffer_fullness */
     rdb = get_bits(gbc, 2);      /* number_of_raw_data_blocks_in_frame */
 
-    hdr->object_type = aot + 1;
-    hdr->chan_config = ch;
-    hdr->crc_absent = crc_abs;
+    hdr->object_type    = aot + 1;
+    hdr->chan_config    = ch;
+    hdr->crc_absent     = crc_abs;
     hdr->num_aac_frames = rdb + 1;
     hdr->sampling_index = sr;
-    hdr->sample_rate = avpriv_mpeg4audio_sample_rates[sr];
-    hdr->samples = (rdb + 1) * 1024;
-    hdr->bit_rate = size * 8 * hdr->sample_rate / hdr->samples;
+    hdr->sample_rate    = avpriv_mpeg4audio_sample_rates[sr];
+    hdr->samples        = (rdb + 1) * 1024;
+    hdr->bit_rate       = size * 8 * hdr->sample_rate / hdr->samples;
 
     return size;
 }

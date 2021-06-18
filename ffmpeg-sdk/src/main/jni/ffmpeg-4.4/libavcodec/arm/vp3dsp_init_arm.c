@@ -24,22 +24,20 @@
 #include "libavcodec/vp3dsp.h"
 
 void ff_vp3_idct_put_neon(uint8_t *dest, ptrdiff_t stride, int16_t *data);
-
 void ff_vp3_idct_add_neon(uint8_t *dest, ptrdiff_t stride, int16_t *data);
-
 void ff_vp3_idct_dc_add_neon(uint8_t *dest, ptrdiff_t stride, int16_t *data);
 
 void ff_vp3_v_loop_filter_neon(uint8_t *, int, int *);
-
 void ff_vp3_h_loop_filter_neon(uint8_t *, int, int *);
 
-av_cold void ff_vp3dsp_init_arm(VP3DSPContext *c, int flags) {
+av_cold void ff_vp3dsp_init_arm(VP3DSPContext *c, int flags)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
-        c->idct_put = ff_vp3_idct_put_neon;
-        c->idct_add = ff_vp3_idct_add_neon;
-        c->idct_dc_add = ff_vp3_idct_dc_add_neon;
+        c->idct_put      = ff_vp3_idct_put_neon;
+        c->idct_add      = ff_vp3_idct_add_neon;
+        c->idct_dc_add   = ff_vp3_idct_dc_add_neon;
         c->v_loop_filter = ff_vp3_v_loop_filter_neon;
         c->h_loop_filter = ff_vp3_h_loop_filter_neon;
     }

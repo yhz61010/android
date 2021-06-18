@@ -38,7 +38,8 @@ struct BitpackedContext {
 
 /* For this format, it's a simple passthrough */
 static int bitpacked_decode_uyvy422(AVCodecContext *avctx, AVFrame *frame,
-                                    const AVPacket *avpkt) {
+                                    const AVPacket *avpkt)
+{
     int ret;
 
     /* there is no need to copy as the data already match
@@ -55,11 +56,12 @@ static int bitpacked_decode_uyvy422(AVCodecContext *avctx, AVFrame *frame,
 }
 
 static int bitpacked_decode_yuv422p10(AVCodecContext *avctx, AVFrame *frame,
-                                      const AVPacket *avpkt) {
-    uint64_t frame_size = (uint64_t) avctx->width * (uint64_t) avctx->height * 20;
-    uint64_t packet_size = (uint64_t) avpkt->size * 8;
+                                      const AVPacket *avpkt)
+{
+    uint64_t frame_size = (uint64_t)avctx->width * (uint64_t)avctx->height * 20;
+    uint64_t packet_size = (uint64_t)avpkt->size * 8;
     GetBitContext bc;
-    uint16_t * y, *u, *v;
+    uint16_t *y, *u, *v;
     int ret, i, j;
 
     ret = ff_get_buffer(avctx, frame, 0);
@@ -77,9 +79,9 @@ static int bitpacked_decode_yuv422p10(AVCodecContext *avctx, AVFrame *frame,
         return ret;
 
     for (i = 0; i < avctx->height; i++) {
-        y = (uint16_t * )(frame->data[0] + i * frame->linesize[0]);
-        u = (uint16_t * )(frame->data[1] + i * frame->linesize[1]);
-        v = (uint16_t * )(frame->data[2] + i * frame->linesize[2]);
+        y = (uint16_t*)(frame->data[0] + i * frame->linesize[0]);
+        u = (uint16_t*)(frame->data[1] + i * frame->linesize[1]);
+        v = (uint16_t*)(frame->data[2] + i * frame->linesize[2]);
 
         for (j = 0; j < avctx->width; j += 2) {
             *u++ = get_bits(&bc, 10);
@@ -92,7 +94,8 @@ static int bitpacked_decode_yuv422p10(AVCodecContext *avctx, AVFrame *frame,
     return 0;
 }
 
-static av_cold int bitpacked_init_decoder(AVCodecContext *avctx) {
+static av_cold int bitpacked_init_decoder(AVCodecContext *avctx)
+{
     struct BitpackedContext *bc = avctx->priv_data;
 
     if (!avctx->codec_tag || !avctx->width || !avctx->height)
@@ -115,7 +118,8 @@ static av_cold int bitpacked_init_decoder(AVCodecContext *avctx) {
 }
 
 static int bitpacked_decode(AVCodecContext *avctx, void *data, int *got_frame,
-                            AVPacket *avpkt) {
+                            AVPacket *avpkt)
+{
     struct BitpackedContext *bc = avctx->priv_data;
     int buf_size = avpkt->size;
     AVFrame *frame = data;
@@ -134,16 +138,16 @@ static int bitpacked_decode(AVCodecContext *avctx, void *data, int *got_frame,
 }
 
 AVCodec ff_bitpacked_decoder = {
-        .name   = "bitpacked",
-        .long_name = NULL_IF_CONFIG_SMALL("Bitpacked"),
-        .type = AVMEDIA_TYPE_VIDEO,
-        .id = AV_CODEC_ID_BITPACKED,
-        .priv_data_size        = sizeof(struct BitpackedContext),
-        .init = bitpacked_init_decoder,
-        .decode = bitpacked_decode,
-        .capabilities = AV_CODEC_CAP_EXPERIMENTAL,
-        .codec_tags     = (const uint32_t[]){
-            MKTAG('U', 'Y', 'V', 'Y'),
-                    FF_CODEC_TAGS_END,
-        },
+    .name   = "bitpacked",
+    .long_name = NULL_IF_CONFIG_SMALL("Bitpacked"),
+    .type = AVMEDIA_TYPE_VIDEO,
+    .id = AV_CODEC_ID_BITPACKED,
+    .priv_data_size        = sizeof(struct BitpackedContext),
+    .init = bitpacked_init_decoder,
+    .decode = bitpacked_decode,
+    .capabilities = AV_CODEC_CAP_EXPERIMENTAL,
+    .codec_tags     = (const uint32_t []){
+        MKTAG('U', 'Y', 'V', 'Y'),
+        FF_CODEC_TAGS_END,
+    },
 };

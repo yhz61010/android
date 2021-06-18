@@ -22,7 +22,8 @@
 #include "libavutil/bswap.h"
 #include "bswapdsp.h"
 
-static void bswap_buf(uint32_t *dst, const uint32_t *src, int w) {
+static void bswap_buf(uint32_t *dst, const uint32_t *src, int w)
+{
     int i;
 
     for (i = 0; i + 8 <= w; i += 8) {
@@ -39,13 +40,15 @@ static void bswap_buf(uint32_t *dst, const uint32_t *src, int w) {
         dst[i + 0] = av_bswap32(src[i + 0]);
 }
 
-static void bswap16_buf(uint16_t *dst, const uint16_t *src, int len) {
+static void bswap16_buf(uint16_t *dst, const uint16_t *src, int len)
+{
     while (len--)
         *dst++ = av_bswap16(*src++);
 }
 
-av_cold void ff_bswapdsp_init(BswapDSPContext *c) {
-    c->bswap_buf = bswap_buf;
+av_cold void ff_bswapdsp_init(BswapDSPContext *c)
+{
+    c->bswap_buf   = bswap_buf;
     c->bswap16_buf = bswap16_buf;
 
     if (ARCH_X86)

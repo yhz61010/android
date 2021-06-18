@@ -82,27 +82,31 @@
 #undef xu
 
 
-static void cbs_jpeg_free_application_data(void *opaque, uint8_t *content) {
-    JPEGRawApplicationData *ad = (JPEGRawApplicationData *) content;
+static void cbs_jpeg_free_application_data(void *opaque, uint8_t *content)
+{
+    JPEGRawApplicationData *ad = (JPEGRawApplicationData*)content;
     av_buffer_unref(&ad->Ap_ref);
     av_freep(&content);
 }
 
-static void cbs_jpeg_free_comment(void *opaque, uint8_t *content) {
-    JPEGRawComment *comment = (JPEGRawComment *) content;
+static void cbs_jpeg_free_comment(void *opaque, uint8_t *content)
+{
+    JPEGRawComment *comment = (JPEGRawComment*)content;
     av_buffer_unref(&comment->Cm_ref);
     av_freep(&content);
 }
 
-static void cbs_jpeg_free_scan(void *opaque, uint8_t *content) {
-    JPEGRawScan *scan = (JPEGRawScan *) content;
+static void cbs_jpeg_free_scan(void *opaque, uint8_t *content)
+{
+    JPEGRawScan *scan = (JPEGRawScan*)content;
     av_buffer_unref(&scan->data_ref);
     av_freep(&content);
 }
 
 static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
                                    CodedBitstreamFragment *frag,
-                                   int header) {
+                                   int header)
+{
     AVBufferRef *data_ref;
     uint8_t *data;
     size_t data_size;
@@ -117,28 +121,28 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
     for (i = 0; i + 1 < frag->data_size && frag->data[i] != 0xff; i++);
     if (i > 0) {
         av_log(ctx->log_ctx, AV_LOG_WARNING, "Discarding %d bytes at "
-                                             "beginning of image.\n", i);
+               "beginning of image.\n", i);
     }
     for (++i; i + 1 < frag->data_size && frag->data[i] == 0xff; i++);
     if (i + 1 >= frag->data_size && frag->data[i]) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid JPEG image: "
-                                           "no SOI marker found.\n");
+               "no SOI marker found.\n");
         return AVERROR_INVALIDDATA;
     }
     marker = frag->data[i];
     if (marker != JPEG_MARKER_SOI) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid JPEG image: first "
-                                           "marker is %02x, should be SOI.\n", marker);
+               "marker is %02x, should be SOI.\n", marker);
         return AVERROR_INVALIDDATA;
     }
     for (++i; i + 1 < frag->data_size && frag->data[i] == 0xff; i++);
     if (i + 1 >= frag->data_size) {
         av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid JPEG image: "
-                                           "no image content found.\n");
+               "no image content found.\n");
         return AVERROR_INVALIDDATA;
     }
     marker = frag->data[i];
-    start = i + 1;
+    start  = i + 1;
 
     for (unit = 0;; unit++) {
         if (marker == JPEG_MARKER_EOI) {
@@ -156,7 +160,7 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
                     if (frag->data[i] == 0x00)
                         continue;
                     next_marker = frag->data[i];
-                    next_start = i + 1;
+                    next_start  = i + 1;
                 }
                 break;
             }
@@ -164,13 +168,13 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
             i = start;
             if (i + 2 > frag->data_size) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid JPEG image: "
-                                                   "truncated at %02x marker.\n", marker);
+                       "truncated at %02x marker.\n", marker);
                 return AVERROR_INVALIDDATA;
             }
             length = AV_RB16(frag->data + i);
             if (i + length > frag->data_size) {
                 av_log(ctx->log_ctx, AV_LOG_ERROR, "Invalid JPEG image: "
-                                                   "truncated at %02x marker segment.\n", marker);
+                       "truncated at %02x marker segment.\n", marker);
                 return AVERROR_INVALIDDATA;
             }
             end = start + length;
@@ -185,7 +189,7 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
                     next_marker = -1;
                 } else {
                     next_marker = frag->data[i];
-                    next_start = i + 1;
+                    next_start  = i + 1;
                 }
             }
         }
@@ -197,8 +201,8 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
                 return AVERROR_INVALIDDATA;
 
             data_ref = NULL;
-            data = av_malloc(end - start +
-                             AV_INPUT_BUFFER_PADDING_SIZE);
+            data     = av_malloc(end - start +
+                                 AV_INPUT_BUFFER_PADDING_SIZE);
             if (!data)
                 return AVERROR(ENOMEM);
 
@@ -217,9 +221,9 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
             memset(data + data_size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
         } else {
-            data = frag->data + start;
+            data      = frag->data + start;
             data_size = end - start;
-            data_ref = frag->data_ref;
+            data_ref  = frag->data_ref;
         }
 
         err = ff_cbs_insert_unit_data(frag, unit, marker,
@@ -230,14 +234,15 @@ static int cbs_jpeg_split_fragment(CodedBitstreamContext *ctx,
         if (next_marker == -1)
             break;
         marker = next_marker;
-        start = next_start;
+        start  = next_start;
     }
 
     return 0;
 }
 
 static int cbs_jpeg_read_unit(CodedBitstreamContext *ctx,
-                              CodedBitstreamUnit *unit) {
+                              CodedBitstreamUnit *unit)
+{
     GetBitContext gbc;
     int err;
 
@@ -288,7 +293,7 @@ static int cbs_jpeg_read_unit(CodedBitstreamContext *ctx,
         av_assert0(pos % 8 == 0);
         if (pos > 0) {
             scan->data_size = unit->data_size - pos / 8;
-            scan->data_ref = av_buffer_ref(unit->data_ref);
+            scan->data_ref  = av_buffer_ref(unit->data_ref);
             if (!scan->data_ref)
                 return AVERROR(ENOMEM);
             scan->data = unit->data + pos / 8;
@@ -309,11 +314,11 @@ static int cbs_jpeg_read_unit(CodedBitstreamContext *ctx,
             } \
             break
             SEGMENT(DQT, JPEGRawQuantisationTableSpecification, dqt, NULL);
-            SEGMENT(DHT, JPEGRawHuffmanTableSpecification, dht, NULL);
-            SEGMENT(COM, JPEGRawComment, comment, &cbs_jpeg_free_comment);
+            SEGMENT(DHT, JPEGRawHuffmanTableSpecification,      dht, NULL);
+            SEGMENT(COM, JPEGRawComment,  comment, &cbs_jpeg_free_comment);
 #undef SEGMENT
-            default:
-                return AVERROR(ENOSYS);
+        default:
+            return AVERROR(ENOSYS);
         }
     }
 
@@ -322,7 +327,8 @@ static int cbs_jpeg_read_unit(CodedBitstreamContext *ctx,
 
 static int cbs_jpeg_write_scan(CodedBitstreamContext *ctx,
                                CodedBitstreamUnit *unit,
-                               PutBitContext *pbc) {
+                               PutBitContext *pbc)
+{
     JPEGRawScan *scan = unit->content;
     int err;
 
@@ -347,7 +353,8 @@ static int cbs_jpeg_write_scan(CodedBitstreamContext *ctx,
 
 static int cbs_jpeg_write_segment(CodedBitstreamContext *ctx,
                                   CodedBitstreamUnit *unit,
-                                  PutBitContext *pbc) {
+                                  PutBitContext *pbc)
+{
     int err;
 
     if (unit->type >= JPEG_MARKER_SOF0 &&
@@ -365,8 +372,8 @@ static int cbs_jpeg_write_segment(CodedBitstreamContext *ctx,
             SEGMENT(DQT, dqt);
             SEGMENT(DHT, dht);
             SEGMENT(COM, comment);
-            default:
-                return AVERROR_PATCHWELCOME;
+        default:
+            return AVERROR_PATCHWELCOME;
         }
     }
 
@@ -375,15 +382,17 @@ static int cbs_jpeg_write_segment(CodedBitstreamContext *ctx,
 
 static int cbs_jpeg_write_unit(CodedBitstreamContext *ctx,
                                CodedBitstreamUnit *unit,
-                               PutBitContext *pbc) {
+                               PutBitContext *pbc)
+{
     if (unit->type == JPEG_MARKER_SOS)
-        return cbs_jpeg_write_scan(ctx, unit, pbc);
+        return cbs_jpeg_write_scan   (ctx, unit, pbc);
     else
         return cbs_jpeg_write_segment(ctx, unit, pbc);
 }
 
 static int cbs_jpeg_assemble_fragment(CodedBitstreamContext *ctx,
-                                      CodedBitstreamFragment *frag) {
+                                       CodedBitstreamFragment *frag)
+{
     const CodedBitstreamUnit *unit;
     uint8_t *data;
     size_t size, dp, sp;
@@ -443,17 +452,17 @@ static int cbs_jpeg_assemble_fragment(CodedBitstreamContext *ctx,
     av_assert0(dp == size);
 
     memset(data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-    frag->data = data;
+    frag->data      = data;
     frag->data_size = size;
 
     return 0;
 }
 
 const CodedBitstreamType ff_cbs_type_jpeg = {
-        .codec_id          = AV_CODEC_ID_MJPEG,
+    .codec_id          = AV_CODEC_ID_MJPEG,
 
-        .split_fragment    = &cbs_jpeg_split_fragment,
-        .read_unit         = &cbs_jpeg_read_unit,
-        .write_unit        = &cbs_jpeg_write_unit,
-        .assemble_fragment = &cbs_jpeg_assemble_fragment,
+    .split_fragment    = &cbs_jpeg_split_fragment,
+    .read_unit         = &cbs_jpeg_read_unit,
+    .write_unit        = &cbs_jpeg_write_unit,
+    .assemble_fragment = &cbs_jpeg_assemble_fragment,
 };

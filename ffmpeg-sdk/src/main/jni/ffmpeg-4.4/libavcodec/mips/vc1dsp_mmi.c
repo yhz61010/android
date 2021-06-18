@@ -123,80 +123,74 @@
         "punpcklhw  "#o2",      %[ftmp2],   %[ftmp4]                  \n\t"
 
 /* Do inverse transform on 8x8 block */
-void ff_vc1_inv_trans_8x8_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_8x8_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     int dc = block[0];
     double ftmp[9];
     mips_reg addr[1];
     int count;
 
-    dc = (3 * dc + 1) >> 1;
+    dc = (3 * dc +  1) >> 1;
     dc = (3 * dc + 16) >> 5;
 
     __asm__ volatile(
-    "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
-    "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
-    "li         %[count],   0x02                                    \n\t"
+        "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
+        "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
+        "li         %[count],   0x02                                    \n\t"
 
-    "1:                                                             \n\t"
-    MMI_LDC1( %[ftmp1], %[dest], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[dest],        %[linesize]             \n\t"
-    MMI_LDC1( %[ftmp2], %[addr0], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[addr0],       %[linesize]             \n\t"
-    MMI_LDC1( %[ftmp3], %[addr0], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[addr0],       %[linesize]             \n\t"
-    MMI_LDC1( %[ftmp4], %[addr0], 0x00)
+        "1:                                                             \n\t"
+        MMI_LDC1(%[ftmp1], %[dest], 0x00)
+        PTR_ADDU   "%[addr0],   %[dest],        %[linesize]             \n\t"
+        MMI_LDC1(%[ftmp2], %[addr0], 0x00)
+        PTR_ADDU   "%[addr0],   %[addr0],       %[linesize]             \n\t"
+        MMI_LDC1(%[ftmp3], %[addr0], 0x00)
+        PTR_ADDU   "%[addr0],   %[addr0],       %[linesize]             \n\t"
+        MMI_LDC1(%[ftmp4], %[addr0], 0x00)
 
-    "punpckhbh  %[ftmp5],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp6],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp7],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp8],   %[ftmp4],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp5],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp6],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp7],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp8],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
 
-    "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
-    "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
-    "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
-    "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
-    "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
-    "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
-    "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
-    "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
+        "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
+        "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
+        "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
+        "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
+        "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
+        "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
+        "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
+        "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
 
-    "packushb   %[ftmp1],   %[ftmp1],       %[ftmp5]                \n\t"
-    "packushb   %[ftmp2],   %[ftmp2],       %[ftmp6]                \n\t"
-    "packushb   %[ftmp3],   %[ftmp3],       %[ftmp7]                \n\t"
-    "packushb   %[ftmp4],   %[ftmp4],       %[ftmp8]                \n\t"
+        "packushb   %[ftmp1],   %[ftmp1],       %[ftmp5]                \n\t"
+        "packushb   %[ftmp2],   %[ftmp2],       %[ftmp6]                \n\t"
+        "packushb   %[ftmp3],   %[ftmp3],       %[ftmp7]                \n\t"
+        "packushb   %[ftmp4],   %[ftmp4],       %[ftmp8]                \n\t"
 
-    MMI_SDC1( %[ftmp1], %[dest], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[dest],        %[linesize]             \n\t"
-    MMI_SDC1( %[ftmp2], %[addr0], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[addr0],       %[linesize]             \n\t"
-    MMI_SDC1( %[ftmp3], %[addr0], 0x00)
-    PTR_ADDU
-    "%[addr0],   %[addr0],       %[linesize]             \n\t"
-    MMI_SDC1( %[ftmp4], %[addr0], 0x00)
+        MMI_SDC1(%[ftmp1], %[dest], 0x00)
+        PTR_ADDU   "%[addr0],   %[dest],        %[linesize]             \n\t"
+        MMI_SDC1(%[ftmp2], %[addr0], 0x00)
+        PTR_ADDU   "%[addr0],   %[addr0],       %[linesize]             \n\t"
+        MMI_SDC1(%[ftmp3], %[addr0], 0x00)
+        PTR_ADDU   "%[addr0],   %[addr0],       %[linesize]             \n\t"
+        MMI_SDC1(%[ftmp4], %[addr0], 0x00)
 
-    "addiu      %[count],   %[count],       -0x01                   \n\t"
-    PTR_ADDU
-    "%[dest],    %[addr0],       %[linesize]             \n\t"
-    "bnez       %[count],   1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8]),
-    [addr0]"=&r"(addr[0]),
-    [count]"=&r"(count),          [dest]"+&r"(dest)
-    : [linesize]"r"((mips_reg) linesize),
-    [dc]"f"(dc)
-    : "memory"
+        "addiu      %[count],   %[count],       -0x01                   \n\t"
+        PTR_ADDU   "%[dest],    %[addr0],       %[linesize]             \n\t"
+        "bnez       %[count],   1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8]),
+          [addr0]"=&r"(addr[0]),
+          [count]"=&r"(count),          [dest]"+&r"(dest)
+        : [linesize]"r"((mips_reg)linesize),
+          [dc]"f"(dc)
+        : "memory"
     );
 }
 
@@ -422,58 +416,59 @@ void ff_vc1_inv_trans_8x8_mmi(int16_t block[64])
 #endif
 
 /* Do inverse transform on 8x4 part of block */
-void ff_vc1_inv_trans_8x4_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_8x4_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     int dc = block[0];
     double ftmp[9];
 
-    dc = (3 * dc + 1) >> 1;
+    dc = ( 3 * dc +  1) >> 1;
     dc = (17 * dc + 64) >> 7;
 
     __asm__ volatile(
-    "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
-    "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
+        "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
+        "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
 
-    MMI_LDC1( %[ftmp1], %[dest0], 0x00)
-    MMI_LDC1( %[ftmp2], %[dest1], 0x00)
-    MMI_LDC1( %[ftmp3], %[dest2], 0x00)
-    MMI_LDC1( %[ftmp4], %[dest3], 0x00)
+        MMI_LDC1(%[ftmp1], %[dest0], 0x00)
+        MMI_LDC1(%[ftmp2], %[dest1], 0x00)
+        MMI_LDC1(%[ftmp3], %[dest2], 0x00)
+        MMI_LDC1(%[ftmp4], %[dest3], 0x00)
 
-    "punpckhbh  %[ftmp5],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp6],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp7],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpckhbh  %[ftmp8],   %[ftmp4],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp5],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp6],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp7],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpckhbh  %[ftmp8],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
 
-    "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
-    "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
-    "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
-    "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
-    "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
-    "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
-    "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
-    "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
+        "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
+        "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
+        "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
+        "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
+        "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
+        "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
+        "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
+        "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
 
-    "packushb   %[ftmp1],   %[ftmp1],       %[ftmp5]                \n\t"
-    "packushb   %[ftmp2],   %[ftmp2],       %[ftmp6]                \n\t"
-    "packushb   %[ftmp3],   %[ftmp3],       %[ftmp7]                \n\t"
-    "packushb   %[ftmp4],   %[ftmp4],       %[ftmp8]                \n\t"
+        "packushb   %[ftmp1],   %[ftmp1],       %[ftmp5]                \n\t"
+        "packushb   %[ftmp2],   %[ftmp2],       %[ftmp6]                \n\t"
+        "packushb   %[ftmp3],   %[ftmp3],       %[ftmp7]                \n\t"
+        "packushb   %[ftmp4],   %[ftmp4],       %[ftmp8]                \n\t"
 
-    MMI_SDC1( %[ftmp1], %[dest0], 0x00)
-    MMI_SDC1( %[ftmp2], %[dest1], 0x00)
-    MMI_SDC1( %[ftmp3], %[dest2], 0x00)
-    MMI_SDC1( %[ftmp4], %[dest3], 0x00)
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8])
-    : [dest0]"r"(dest + 0 * linesize),  [dest1]"r"(dest + 1 * linesize),
-    [dest2]"r"(dest + 2 * linesize),  [dest3]"r"(dest + 3 * linesize),
-    [dc]"f"(dc)
-    : "memory"
+        MMI_SDC1(%[ftmp1], %[dest0], 0x00)
+        MMI_SDC1(%[ftmp2], %[dest1], 0x00)
+        MMI_SDC1(%[ftmp3], %[dest2], 0x00)
+        MMI_SDC1(%[ftmp4], %[dest3], 0x00)
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8])
+        : [dest0]"r"(dest+0*linesize),  [dest1]"r"(dest+1*linesize),
+          [dest2]"r"(dest+2*linesize),  [dest3]"r"(dest+3*linesize),
+          [dc]"f"(dc)
+        : "memory"
     );
 }
 
@@ -872,75 +867,75 @@ void ff_vc1_inv_trans_8x4_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
 #endif
 
 /* Do inverse transform on 4x8 parts of block */
-void ff_vc1_inv_trans_4x8_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_4x8_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     int dc = block[0];
     double ftmp[9];
     DECLARE_VAR_LOW32;
 
-    dc = (17 * dc + 4) >> 3;
+    dc = (17 * dc +  4) >> 3;
     dc = (12 * dc + 64) >> 7;
 
     __asm__ volatile(
-    "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
-    "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
+        "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
+        "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
 
-    MMI_LWC1( %[ftmp1], %[dest0], 0x00)
-    MMI_LWC1( %[ftmp2], %[dest1], 0x00)
-    MMI_LWC1( %[ftmp3], %[dest2], 0x00)
-    MMI_LWC1( %[ftmp4], %[dest3], 0x00)
-    MMI_LWC1( %[ftmp5], %[dest4], 0x00)
-    MMI_LWC1( %[ftmp6], %[dest5], 0x00)
-    MMI_LWC1( %[ftmp7], %[dest6], 0x00)
-    MMI_LWC1( %[ftmp8], %[dest7], 0x00)
+        MMI_LWC1(%[ftmp1], %[dest0], 0x00)
+        MMI_LWC1(%[ftmp2], %[dest1], 0x00)
+        MMI_LWC1(%[ftmp3], %[dest2], 0x00)
+        MMI_LWC1(%[ftmp4], %[dest3], 0x00)
+        MMI_LWC1(%[ftmp5], %[dest4], 0x00)
+        MMI_LWC1(%[ftmp6], %[dest5], 0x00)
+        MMI_LWC1(%[ftmp7], %[dest6], 0x00)
+        MMI_LWC1(%[ftmp8], %[dest7], 0x00)
 
-    "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp5],   %[ftmp5],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp6],   %[ftmp6],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp7],   %[ftmp7],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp8],   %[ftmp8],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp5],   %[ftmp5],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp6],   %[ftmp6],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp7],   %[ftmp7],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp8],   %[ftmp8],       %[ftmp0]                \n\t"
 
-    "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
-    "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
-    "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
-    "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
-    "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
-    "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
-    "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
-    "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
+        "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
+        "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
+        "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
+        "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
+        "paddsh     %[ftmp5],   %[ftmp5],       %[dc]                   \n\t"
+        "paddsh     %[ftmp6],   %[ftmp6],       %[dc]                   \n\t"
+        "paddsh     %[ftmp7],   %[ftmp7],       %[dc]                   \n\t"
+        "paddsh     %[ftmp8],   %[ftmp8],       %[dc]                   \n\t"
 
-    "packushb   %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp5],   %[ftmp5],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp6],   %[ftmp6],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp7],   %[ftmp7],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp8],   %[ftmp8],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp5],   %[ftmp5],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp6],   %[ftmp6],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp7],   %[ftmp7],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp8],   %[ftmp8],       %[ftmp0]                \n\t"
 
-    MMI_SWC1( %[ftmp1], %[dest0], 0x00)
-    MMI_SWC1( %[ftmp2], %[dest1], 0x00)
-    MMI_SWC1( %[ftmp3], %[dest2], 0x00)
-    MMI_SWC1( %[ftmp4], %[dest3], 0x00)
-    MMI_SWC1( %[ftmp5], %[dest4], 0x00)
-    MMI_SWC1( %[ftmp6], %[dest5], 0x00)
-    MMI_SWC1( %[ftmp7], %[dest6], 0x00)
-    MMI_SWC1( %[ftmp8], %[dest7], 0x00)
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-            RESTRICT_ASM_LOW32
-            [ftmp8]
-    "=&f"(ftmp[8])
-    : [dest0]"r"(dest + 0 * linesize),  [dest1]"r"(dest + 1 * linesize),
-    [dest2]"r"(dest + 2 * linesize),  [dest3]"r"(dest + 3 * linesize),
-    [dest4]"r"(dest + 4 * linesize),  [dest5]"r"(dest + 5 * linesize),
-    [dest6]"r"(dest + 6 * linesize),  [dest7]"r"(dest + 7 * linesize),
-    [dc]"f"(dc)
-    : "memory"
+        MMI_SWC1(%[ftmp1], %[dest0], 0x00)
+        MMI_SWC1(%[ftmp2], %[dest1], 0x00)
+        MMI_SWC1(%[ftmp3], %[dest2], 0x00)
+        MMI_SWC1(%[ftmp4], %[dest3], 0x00)
+        MMI_SWC1(%[ftmp5], %[dest4], 0x00)
+        MMI_SWC1(%[ftmp6], %[dest5], 0x00)
+        MMI_SWC1(%[ftmp7], %[dest6], 0x00)
+        MMI_SWC1(%[ftmp8], %[dest7], 0x00)
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          RESTRICT_ASM_LOW32
+          [ftmp8]"=&f"(ftmp[8])
+        : [dest0]"r"(dest+0*linesize),  [dest1]"r"(dest+1*linesize),
+          [dest2]"r"(dest+2*linesize),  [dest3]"r"(dest+3*linesize),
+          [dest4]"r"(dest+4*linesize),  [dest5]"r"(dest+5*linesize),
+          [dest6]"r"(dest+6*linesize),  [dest7]"r"(dest+7*linesize),
+          [dc]"f"(dc)
+        : "memory"
     );
 }
 
@@ -1128,357 +1123,352 @@ void ff_vc1_inv_trans_4x8_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
 #endif
 
 /* Do inverse transform on 4x4 part of block */
-void ff_vc1_inv_trans_4x4_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_4x4_dc_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     int dc = block[0];
     double ftmp[5];
     DECLARE_VAR_LOW32;
 
-    dc = (17 * dc + 4) >> 3;
+    dc = (17 * dc +  4) >> 3;
     dc = (17 * dc + 64) >> 7;
 
     __asm__ volatile(
-    "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
-    "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
+        "xor        %[ftmp0],   %[ftmp0],       %[ftmp0]                \n\t"
+        "pshufh     %[dc],      %[dc],          %[ftmp0]                \n\t"
 
-    MMI_LWC1( %[ftmp1], %[dest0], 0x00)
-    MMI_LWC1( %[ftmp2], %[dest1], 0x00)
-    MMI_LWC1( %[ftmp3], %[dest2], 0x00)
-    MMI_LWC1( %[ftmp4], %[dest3], 0x00)
+        MMI_LWC1(%[ftmp1], %[dest0], 0x00)
+        MMI_LWC1(%[ftmp2], %[dest1], 0x00)
+        MMI_LWC1(%[ftmp3], %[dest2], 0x00)
+        MMI_LWC1(%[ftmp4], %[dest3], 0x00)
 
-    "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "punpcklbh  %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
 
-    "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
-    "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
-    "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
-    "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
+        "paddsh     %[ftmp1],   %[ftmp1],       %[dc]                   \n\t"
+        "paddsh     %[ftmp2],   %[ftmp2],       %[dc]                   \n\t"
+        "paddsh     %[ftmp3],   %[ftmp3],       %[dc]                   \n\t"
+        "paddsh     %[ftmp4],   %[ftmp4],       %[dc]                   \n\t"
 
-    "packushb   %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
-    "packushb   %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp1],   %[ftmp1],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp2],   %[ftmp2],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp3],   %[ftmp3],       %[ftmp0]                \n\t"
+        "packushb   %[ftmp4],   %[ftmp4],       %[ftmp0]                \n\t"
 
-    MMI_SWC1( %[ftmp1], %[dest0], 0x00)
-    MMI_SWC1( %[ftmp2], %[dest1], 0x00)
-    MMI_SWC1( %[ftmp3], %[dest2], 0x00)
-    MMI_SWC1( %[ftmp4], %[dest3], 0x00)
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-            RESTRICT_ASM_LOW32
-            [ftmp4]
-    "=&f"(ftmp[4])
-    : [dest0]"r"(dest + 0 * linesize),  [dest1]"r"(dest + 1 * linesize),
-    [dest2]"r"(dest + 2 * linesize),  [dest3]"r"(dest + 3 * linesize),
-    [dc]"f"(dc)
-    : "memory"
+        MMI_SWC1(%[ftmp1], %[dest0], 0x00)
+        MMI_SWC1(%[ftmp2], %[dest1], 0x00)
+        MMI_SWC1(%[ftmp3], %[dest2], 0x00)
+        MMI_SWC1(%[ftmp4], %[dest3], 0x00)
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          RESTRICT_ASM_LOW32
+          [ftmp4]"=&f"(ftmp[4])
+        : [dest0]"r"(dest+0*linesize),  [dest1]"r"(dest+1*linesize),
+          [dest2]"r"(dest+2*linesize),  [dest3]"r"(dest+3*linesize),
+          [dc]"f"(dc)
+        : "memory"
     );
 }
 
-void ff_vc1_inv_trans_4x4_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+void ff_vc1_inv_trans_4x4_mmi(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     int16_t *src = block;
     int16_t *dst = block;
     double ftmp[16];
     uint32_t count = 4, tmp[1];
     int16_t coeff[16] = {17, 22, 17, 10,
-                         17, 10, -17, -22,
-                         17, -10, -17, 22,
-                         17, -22, 17, -10};
-    DECLARE_ALIGNED(8,
-    const uint64_t, ff_pw_4_local) = { 0x0000000400000004ULL };
-    DECLARE_ALIGNED(8,
-    const uint64_t, ff_pw_64_local)= { 0x0000004000000040ULL };
+                         17, 10,-17,-22,
+                         17,-10,-17, 22,
+                         17,-22, 17,-10};
+    DECLARE_ALIGNED(8, const uint64_t, ff_pw_4_local) = {0x0000000400000004ULL};
+    DECLARE_ALIGNED(8, const uint64_t, ff_pw_64_local)= {0x0000004000000040ULL};
     // 1st loop
     __asm__ volatile (
 
-    "li         %[tmp0],    0x03                                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp0]                                \n\t"
-    MMI_LDC1( %[ftmp2], %[coeff], 0x00)
-    MMI_LDC1( %[ftmp3], %[coeff], 0x08)
-    MMI_LDC1( %[ftmp4], %[coeff], 0x10)
-    MMI_LDC1( %[ftmp5], %[coeff], 0x18)
-    "1:                                                             \n\t"
-    /* ftmp8: dst3,dst2,dst1,dst0 */
-    MMI_LDC1( %[ftmp1], %[src], 0x00)
-    "pmaddhw    %[ftmp6],   %[ftmp2],   %[ftmp1]                    \n\t"
-    "pmaddhw    %[ftmp7],   %[ftmp3],   %[ftmp1]                    \n\t"
-    "pmaddhw    %[ftmp8],   %[ftmp4],   %[ftmp1]                    \n\t"
-    "pmaddhw    %[ftmp9],   %[ftmp5],   %[ftmp1]                    \n\t"
-    "punpcklwd  %[ftmp10],  %[ftmp6],   %[ftmp7]                    \n\t"
-    "punpckhwd  %[ftmp11],  %[ftmp6],   %[ftmp7]                    \n\t"
-    "punpcklwd  %[ftmp6],   %[ftmp8],   %[ftmp9]                    \n\t"
-    "punpckhwd  %[ftmp7],   %[ftmp8],   %[ftmp9]                    \n\t"
-    "paddw      %[ftmp8],   %[ftmp10],  %[ftmp11]                   \n\t"
-    "paddw      %[ftmp9],   %[ftmp6],   %[ftmp7]                    \n\t"
-    "paddw      %[ftmp8],   %[ftmp8],   %[ff_pw_4]                  \n\t"
-    "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_4]                  \n\t"
-    "psraw      %[ftmp8],   %[ftmp8],   %[ftmp0]                    \n\t"
-    "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
-    "punpcklhw  %[ftmp6],   %[ftmp8],   %[ftmp9]                    \n\t"
-    "punpckhhw  %[ftmp7],   %[ftmp8],   %[ftmp9]                    \n\t"
-    "punpcklhw  %[ftmp8],   %[ftmp6],   %[ftmp7]                    \n\t"
-    MMI_SDC1( %[ftmp8], %[dst], 0x00)
+        "li         %[tmp0],    0x03                                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp0]                                \n\t"
+        MMI_LDC1(%[ftmp2], %[coeff], 0x00)
+        MMI_LDC1(%[ftmp3], %[coeff], 0x08)
+        MMI_LDC1(%[ftmp4], %[coeff], 0x10)
+        MMI_LDC1(%[ftmp5], %[coeff], 0x18)
+        "1:                                                             \n\t"
+        /* ftmp8: dst3,dst2,dst1,dst0 */
+        MMI_LDC1(%[ftmp1], %[src], 0x00)
+        "pmaddhw    %[ftmp6],   %[ftmp2],   %[ftmp1]                    \n\t"
+        "pmaddhw    %[ftmp7],   %[ftmp3],   %[ftmp1]                    \n\t"
+        "pmaddhw    %[ftmp8],   %[ftmp4],   %[ftmp1]                    \n\t"
+        "pmaddhw    %[ftmp9],   %[ftmp5],   %[ftmp1]                    \n\t"
+        "punpcklwd  %[ftmp10],  %[ftmp6],   %[ftmp7]                    \n\t"
+        "punpckhwd  %[ftmp11],  %[ftmp6],   %[ftmp7]                    \n\t"
+        "punpcklwd  %[ftmp6],   %[ftmp8],   %[ftmp9]                    \n\t"
+        "punpckhwd  %[ftmp7],   %[ftmp8],   %[ftmp9]                    \n\t"
+        "paddw      %[ftmp8],   %[ftmp10],  %[ftmp11]                   \n\t"
+        "paddw      %[ftmp9],   %[ftmp6],   %[ftmp7]                    \n\t"
+        "paddw      %[ftmp8],   %[ftmp8],   %[ff_pw_4]                  \n\t"
+        "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_4]                  \n\t"
+        "psraw      %[ftmp8],   %[ftmp8],   %[ftmp0]                    \n\t"
+        "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
+        "punpcklhw  %[ftmp6],   %[ftmp8],   %[ftmp9]                    \n\t"
+        "punpckhhw  %[ftmp7],   %[ftmp8],   %[ftmp9]                    \n\t"
+        "punpcklhw  %[ftmp8],   %[ftmp6],   %[ftmp7]                    \n\t"
+        MMI_SDC1(%[ftmp8], %[dst], 0x00)
 
-    PTR_ADDIU
-    "%[src],     %[src],     0x10                        \n\t"
-    PTR_ADDIU
-    "%[dst],     %[dst],     0x10                        \n\t"
-    "addiu      %[count],   %[count],   -0x01                       \n\t"
-    "bnez       %[count],   1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
-    [ftmp10]"=&f"(ftmp[10]),      [ftmp11]"=&f"(ftmp[11]),
-    [tmp0]"=&r"(tmp[0]),          [count]"+&r"(count),
-    [src]"+&r"(src),              [dst]"+&r"(dst)
-    : [ff_pw_4]"f"(ff_pw_4_local),  [coeff]"r"(coeff)
-    : "memory"
+        PTR_ADDIU  "%[src],     %[src],     0x10                        \n\t"
+        PTR_ADDIU  "%[dst],     %[dst],     0x10                        \n\t"
+        "addiu      %[count],   %[count],   -0x01                       \n\t"
+        "bnez       %[count],   1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
+          [ftmp10]"=&f"(ftmp[10]),      [ftmp11]"=&f"(ftmp[11]),
+          [tmp0]"=&r"(tmp[0]),          [count]"+&r"(count),
+          [src]"+&r"(src),              [dst]"+&r"(dst)
+        : [ff_pw_4]"f"(ff_pw_4_local),  [coeff]"r"(coeff)
+        : "memory"
     );
 
     src = block;
 
     // 2nd loop
     __asm__ volatile (
-    "li         %[tmp0],    0x07                                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp0]                                \n\t"
-    "li         %[tmp0],    0x44                                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp15]                               \n\t"
+        "li         %[tmp0],    0x07                                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp0]                                \n\t"
+        "li         %[tmp0],    0x44                                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp15]                               \n\t"
 
-    MMI_LDC1( %[ftmp1], %[src], 0x00)
-    MMI_LDC1( %[ftmp2], %[src], 0x10)
-    MMI_LDC1( %[ftmp3], %[src], 0x20)
-    MMI_LDC1( %[ftmp4], %[src], 0x30)
-    "punpcklhw  %[ftmp5],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "punpckhhw  %[ftmp6],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "punpcklhw  %[ftmp7],   %[ftmp3],   %[ftmp4]                    \n\t"
-    "punpckhhw  %[ftmp8],   %[ftmp3],   %[ftmp4]                    \n\t"
+        MMI_LDC1(%[ftmp1], %[src], 0x00)
+        MMI_LDC1(%[ftmp2], %[src], 0x10)
+        MMI_LDC1(%[ftmp3], %[src], 0x20)
+        MMI_LDC1(%[ftmp4], %[src], 0x30)
+        "punpcklhw  %[ftmp5],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "punpckhhw  %[ftmp6],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "punpcklhw  %[ftmp7],   %[ftmp3],   %[ftmp4]                    \n\t"
+        "punpckhhw  %[ftmp8],   %[ftmp3],   %[ftmp4]                    \n\t"
 
-    /* ftmp11: dst03,dst02,dst01,dst00 */
-    "li         %[tmp0],    0x00160011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
-    "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
-    "li         %[tmp0],    0x000a0011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
-    "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
-    "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
-    "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
-    "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
-    "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpcklhw  %[ftmp11],  %[ftmp1],   %[ftmp2]                    \n\t"
+        /* ftmp11: dst03,dst02,dst01,dst00 */
+        "li         %[tmp0],    0x00160011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
+        "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
+        "li         %[tmp0],    0x000a0011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
+        "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
+        "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
+        "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
+        "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
+        "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpcklhw  %[ftmp11],  %[ftmp1],   %[ftmp2]                    \n\t"
 
-    /* ftmp12: dst13,dst12,dst11,dst10 */
-    "li         %[tmp0],    0x000a0011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
-    "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
-    "li         %[tmp0],    0xffeaffef                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
-    "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
-    "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
-    "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
-    "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
-    "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpcklhw  %[ftmp12],  %[ftmp1],   %[ftmp2]                    \n\t"
+        /* ftmp12: dst13,dst12,dst11,dst10 */
+        "li         %[tmp0],    0x000a0011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
+        "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
+        "li         %[tmp0],    0xffeaffef                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
+        "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
+        "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
+        "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
+        "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
+        "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpcklhw  %[ftmp12],  %[ftmp1],   %[ftmp2]                    \n\t"
 
-    /* ftmp13: dst23,dst22,dst21,dst20 */
-    "li         %[tmp0],    0xfff60011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
-    "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
-    "li         %[tmp0],    0x0016ffef                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
-    "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
-    "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
-    "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
-    "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
-    "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpcklhw  %[ftmp13],  %[ftmp1],   %[ftmp2]                    \n\t"
+        /* ftmp13: dst23,dst22,dst21,dst20 */
+        "li         %[tmp0],    0xfff60011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
+        "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
+        "li         %[tmp0],    0x0016ffef                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
+        "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
+        "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
+        "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
+        "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
+        "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpcklhw  %[ftmp13],  %[ftmp1],   %[ftmp2]                    \n\t"
 
-    /* ftmp14: dst33,dst32,dst31,dst30 */
-    "li         %[tmp0],    0xffea0011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
-    "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
-    "li         %[tmp0],    0xfff60011                              \n\t"
-    "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
-    "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
-    "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
-    "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
-    "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
-    "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
-    "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
-    "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
-    "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
-    "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
-    "punpcklhw  %[ftmp14],  %[ftmp1],   %[ftmp2]                    \n\t"
+        /* ftmp14: dst33,dst32,dst31,dst30 */
+        "li         %[tmp0],    0xffea0011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp3]                                \n\t"
+        "pshufh     %[ftmp3],   %[ftmp3],   %[ftmp15]                   \n\t"
+        "li         %[tmp0],    0xfff60011                              \n\t"
+        "mtc1       %[tmp0],    %[ftmp4]                                \n\t"
+        "pshufh     %[ftmp4],   %[ftmp4],   %[ftmp15]                   \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp5],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp7],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp1],   %[ftmp2]                    \n\t"
+        "pmaddhw    %[ftmp1],   %[ftmp6],   %[ftmp3]                    \n\t"
+        "pmaddhw    %[ftmp2],   %[ftmp8],   %[ftmp4]                    \n\t"
+        "paddw      %[ftmp10],  %[ftmp1],   %[ftmp2]                    \n\t"
+        "paddw      %[ftmp9],   %[ftmp9],   %[ff_pw_64]                 \n\t"
+        "paddw      %[ftmp10],  %[ftmp10],  %[ff_pw_64]                 \n\t"
+        "psraw      %[ftmp9],   %[ftmp9],   %[ftmp0]                    \n\t"
+        "psraw      %[ftmp10],  %[ftmp10],  %[ftmp0]                    \n\t"
+        "punpcklhw  %[ftmp1],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpckhhw  %[ftmp2],   %[ftmp9],   %[ftmp10]                   \n\t"
+        "punpcklhw  %[ftmp14],  %[ftmp1],   %[ftmp2]                    \n\t"
 
-    MMI_LWC1( %[ftmp1], %[dest], 0x00)
-    PTR_ADDU
-    "%[tmp0],   %[dest],    %[linesize]                 \n\t"
-    MMI_LWC1( %[ftmp2], %[tmp0], 0x00)
-    PTR_ADDU
-    "%[tmp0],   %[tmp0],    %[linesize]                 \n\t"
-    MMI_LWC1( %[ftmp3], %[tmp0], 0x00)
-    PTR_ADDU
-    "%[tmp0],   %[tmp0],    %[linesize]                 \n\t"
-    MMI_LWC1( %[ftmp4], %[tmp0], 0x00)
-    "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
-    "punpcklbh  %[ftmp1],   %[ftmp1],   %[ftmp0]                    \n\t"
-    "punpcklbh  %[ftmp2],   %[ftmp2],   %[ftmp0]                    \n\t"
-    "punpcklbh  %[ftmp3],   %[ftmp3],   %[ftmp0]                    \n\t"
-    "punpcklbh  %[ftmp4],   %[ftmp4],   %[ftmp0]                    \n\t"
-    "paddh      %[ftmp1],   %[ftmp1],   %[ftmp11]                   \n\t"
-    "paddh      %[ftmp2],   %[ftmp2],   %[ftmp12]                   \n\t"
-    "paddh      %[ftmp3],   %[ftmp3],   %[ftmp13]                   \n\t"
-    "paddh      %[ftmp4],   %[ftmp4],   %[ftmp14]                   \n\t"
-    "packushb   %[ftmp1],   %[ftmp1],   %[ftmp0]                    \n\t"
-    "packushb   %[ftmp2],   %[ftmp2],   %[ftmp0]                    \n\t"
-    "packushb   %[ftmp3],   %[ftmp3],   %[ftmp0]                    \n\t"
-    "packushb   %[ftmp4],   %[ftmp4],   %[ftmp0]                    \n\t"
+        MMI_LWC1(%[ftmp1], %[dest], 0x00)
+        PTR_ADDU    "%[tmp0],   %[dest],    %[linesize]                 \n\t"
+        MMI_LWC1(%[ftmp2], %[tmp0], 0x00)
+        PTR_ADDU    "%[tmp0],   %[tmp0],    %[linesize]                 \n\t"
+        MMI_LWC1(%[ftmp3], %[tmp0], 0x00)
+        PTR_ADDU    "%[tmp0],   %[tmp0],    %[linesize]                 \n\t"
+        MMI_LWC1(%[ftmp4], %[tmp0], 0x00)
+        "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
+        "punpcklbh  %[ftmp1],   %[ftmp1],   %[ftmp0]                    \n\t"
+        "punpcklbh  %[ftmp2],   %[ftmp2],   %[ftmp0]                    \n\t"
+        "punpcklbh  %[ftmp3],   %[ftmp3],   %[ftmp0]                    \n\t"
+        "punpcklbh  %[ftmp4],   %[ftmp4],   %[ftmp0]                    \n\t"
+        "paddh      %[ftmp1],   %[ftmp1],   %[ftmp11]                   \n\t"
+        "paddh      %[ftmp2],   %[ftmp2],   %[ftmp12]                   \n\t"
+        "paddh      %[ftmp3],   %[ftmp3],   %[ftmp13]                   \n\t"
+        "paddh      %[ftmp4],   %[ftmp4],   %[ftmp14]                   \n\t"
+        "packushb   %[ftmp1],   %[ftmp1],   %[ftmp0]                    \n\t"
+        "packushb   %[ftmp2],   %[ftmp2],   %[ftmp0]                    \n\t"
+        "packushb   %[ftmp3],   %[ftmp3],   %[ftmp0]                    \n\t"
+        "packushb   %[ftmp4],   %[ftmp4],   %[ftmp0]                    \n\t"
 
-    MMI_SWC1( %[ftmp1], %[dest], 0x00)
-    PTR_ADDU
-    "%[tmp0],    %[dest],    %[linesize]                 \n\t"
-    MMI_SWC1( %[ftmp2], %[tmp0], 0x00)
-    PTR_ADDU
-    "%[tmp0],    %[tmp0],    %[linesize]                 \n\t"
-    MMI_SWC1( %[ftmp3], %[tmp0], 0x00)
-    PTR_ADDU
-    "%[tmp0],    %[tmp0],    %[linesize]                 \n\t"
-    MMI_SWC1( %[ftmp4], %[tmp0], 0x00)
+        MMI_SWC1(%[ftmp1], %[dest], 0x00)
+        PTR_ADDU   "%[tmp0],    %[dest],    %[linesize]                 \n\t"
+        MMI_SWC1(%[ftmp2], %[tmp0], 0x00)
+        PTR_ADDU   "%[tmp0],    %[tmp0],    %[linesize]                 \n\t"
+        MMI_SWC1(%[ftmp3], %[tmp0], 0x00)
+        PTR_ADDU   "%[tmp0],    %[tmp0],    %[linesize]                 \n\t"
+        MMI_SWC1(%[ftmp4], %[tmp0], 0x00)
 
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
-    [ftmp10]"=&f"(ftmp[10]),      [ftmp11]"=&f"(ftmp[11]),
-    [ftmp12]"=&f"(ftmp[12]),      [ftmp13]"=&f"(ftmp[13]),
-    [ftmp14]"=&f"(ftmp[14]),      [ftmp15]"=&f"(ftmp[15]),
-    [tmp0]"=&r"(tmp[0])
-    : [ff_pw_64]"f"(ff_pw_64_local),
-    [src]"r"(src), [dest]"r"(dest), [linesize]"r"(linesize)
-    :"memory"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
+          [ftmp10]"=&f"(ftmp[10]),      [ftmp11]"=&f"(ftmp[11]),
+          [ftmp12]"=&f"(ftmp[12]),      [ftmp13]"=&f"(ftmp[13]),
+          [ftmp14]"=&f"(ftmp[14]),      [ftmp15]"=&f"(ftmp[15]),
+          [tmp0]"=&r"(tmp[0])
+        : [ff_pw_64]"f"(ff_pw_64_local),
+          [src]"r"(src), [dest]"r"(dest), [linesize]"r"(linesize)
+        :"memory"
     );
 }
 
 /* Apply overlap transform to horizontal edge */
-void ff_vc1_h_overlap_mmi(uint8_t *src, int stride) {
+void ff_vc1_h_overlap_mmi(uint8_t *src, int stride)
+{
     int i;
     int a, b, c, d;
     int d1, d2;
     int rnd = 1;
     for (i = 0; i < 8; i++) {
-        a = src[-2];
-        b = src[-1];
-        c = src[0];
-        d = src[1];
+        a  = src[-2];
+        b  = src[-1];
+        c  = src[0];
+        d  = src[1];
         d1 = (a - d + 3 + rnd) >> 3;
         d2 = (a - d + b - c + 4 - rnd) >> 3;
 
         src[-2] = a - d1;
         src[-1] = av_clip_uint8(b - d2);
-        src[0] = av_clip_uint8(c + d2);
-        src[1] = d + d1;
-        src += stride;
-        rnd = !rnd;
+        src[0]  = av_clip_uint8(c + d2);
+        src[1]  = d + d1;
+        src    += stride;
+        rnd     = !rnd;
     }
 }
 
-void ff_vc1_h_s_overlap_mmi(int16_t *left, int16_t *right, int left_stride, int right_stride, int flags) {
+void ff_vc1_h_s_overlap_mmi(int16_t *left, int16_t *right, int left_stride, int right_stride, int flags)
+{
     int i;
     int a, b, c, d;
     int d1, d2;
     int rnd1 = flags & 2 ? 3 : 4;
     int rnd2 = 7 - rnd1;
     for (i = 0; i < 8; i++) {
-        a = left[6];
-        b = left[7];
-        c = right[0];
-        d = right[1];
+        a  = left[6];
+        b  = left[7];
+        c  = right[0];
+        d  = right[1];
         d1 = a - d;
         d2 = a - d + b - c;
 
-        left[6] = ((a << 3) - d1 + rnd1) >> 3;
-        left[7] = ((b << 3) - d2 + rnd2) >> 3;
+        left[6]  = ((a << 3) - d1 + rnd1) >> 3;
+        left[7]  = ((b << 3) - d2 + rnd2) >> 3;
         right[0] = ((c << 3) + d2 + rnd1) >> 3;
         right[1] = ((d << 3) + d1 + rnd2) >> 3;
 
         right += right_stride;
-        left += left_stride;
+        left  += left_stride;
         if (flags & 1) {
-            rnd2 = 7 - rnd2;
-            rnd1 = 7 - rnd1;
+            rnd2   = 7 - rnd2;
+            rnd1   = 7 - rnd1;
         }
     }
 }
 
 /* Apply overlap transform to vertical edge */
-void ff_vc1_v_overlap_mmi(uint8_t *src, int stride) {
+void ff_vc1_v_overlap_mmi(uint8_t *src, int stride)
+{
     int i;
     int a, b, c, d;
     int d1, d2;
     int rnd = 1;
     for (i = 0; i < 8; i++) {
-        a = src[-2 * stride];
-        b = src[-stride];
-        c = src[0];
-        d = src[stride];
+        a  = src[-2 * stride];
+        b  = src[-stride];
+        c  = src[0];
+        d  = src[stride];
         d1 = (a - d + 3 + rnd) >> 3;
         d2 = (a - d + b - c + 4 - rnd) >> 3;
 
         src[-2 * stride] = a - d1;
-        src[-stride] = av_clip_uint8(b - d2);
-        src[0] = av_clip_uint8(c + d2);
-        src[stride] = d + d1;
+        src[-stride]     = av_clip_uint8(b - d2);
+        src[0]           = av_clip_uint8(c + d2);
+        src[stride]      = d + d1;
         src++;
         rnd = !rnd;
     }
 }
 
-void ff_vc1_v_s_overlap_mmi(int16_t *top, int16_t *bottom) {
+void ff_vc1_v_s_overlap_mmi(int16_t *top, int16_t *bottom)
+{
     int i;
     int a, b, c, d;
     int d1, d2;
     int rnd1 = 4, rnd2 = 3;
     for (i = 0; i < 8; i++) {
-        a = top[48];
-        b = top[56];
-        c = bottom[0];
-        d = bottom[8];
+        a  = top[48];
+        b  = top[56];
+        c  = bottom[0];
+        d  = bottom[8];
         d1 = a - d;
         d2 = a - d + b - c;
 
-        top[48] = ((a << 3) - d1 + rnd1) >> 3;
-        top[56] = ((b << 3) - d2 + rnd2) >> 3;
+        top[48]   = ((a << 3) - d1 + rnd1) >> 3;
+        top[56]   = ((b << 3) - d2 + rnd2) >> 3;
         bottom[0] = ((c << 3) + d2 + rnd1) >> 3;
         bottom[8] = ((d << 3) + d1 + rnd2) >> 3;
 
@@ -1497,7 +1487,8 @@ void ff_vc1_v_s_overlap_mmi(int16_t *top, int16_t *bottom) {
  * @return whether other 3 pairs should be filtered or not
  * @see 8.6
  */
-static av_always_inline int vc1_filter_line(uint8_t *src, int stride, int pq) {
+static av_always_inline int vc1_filter_line(uint8_t *src, int stride, int pq)
+{
     int a0 = (2 * (src[-2 * stride] - src[1 * stride]) -
               5 * (src[-1 * stride] - src[0 * stride]) + 4) >> 3;
     int a0_sign = a0 >> 31;        /* Store sign */
@@ -1506,19 +1497,19 @@ static av_always_inline int vc1_filter_line(uint8_t *src, int stride, int pq) {
     if (a0 < pq) {
         int a1 = FFABS((2 * (src[-4 * stride] - src[-1 * stride]) -
                         5 * (src[-3 * stride] - src[-2 * stride]) + 4) >> 3);
-        int a2 = FFABS((2 * (src[0 * stride] - src[3 * stride]) -
-                        5 * (src[1 * stride] - src[2 * stride]) + 4) >> 3);
+        int a2 = FFABS((2 * (src[ 0 * stride] - src[ 3 * stride]) -
+                        5 * (src[ 1 * stride] - src[ 2 * stride]) + 4) >> 3);
         if (a1 < a0 || a2 < a0) {
-            int clip = src[-1 * stride] - src[0 * stride];
+            int clip      = src[-1 * stride] - src[0 * stride];
             int clip_sign = clip >> 31;
 
             clip = ((clip ^ clip_sign) - clip_sign) >> 1;
             if (clip) {
-                int a3 = FFMIN(a1, a2);
-                int d = 5 * (a3 - a0);
+                int a3     = FFMIN(a1, a2);
+                int d      = 5 * (a3 - a0);
                 int d_sign = (d >> 31);
 
-                d = ((d ^ d_sign) - d_sign) >> 3;
+                d       = ((d ^ d_sign) - d_sign) >> 3;
                 d_sign ^= a0_sign;
 
                 if (d_sign ^ clip_sign)
@@ -1527,7 +1518,7 @@ static av_always_inline int vc1_filter_line(uint8_t *src, int stride, int pq) {
                     d = FFMIN(d, clip);
                     d = (d ^ d_sign) - d_sign; /* Restore sign */
                     src[-1 * stride] = av_clip_uint8(src[-1 * stride] - d);
-                    src[0 * stride] = av_clip_uint8(src[0 * stride] + d);
+                    src[ 0 * stride] = av_clip_uint8(src[ 0 * stride] + d);
                 }
                 return 1;
             }
@@ -1546,7 +1537,8 @@ static av_always_inline int vc1_filter_line(uint8_t *src, int stride, int pq) {
  * @see 8.6
  */
 static inline void vc1_loop_filter(uint8_t *src, int step, int stride,
-                                   int len, int pq) {
+                                   int len, int pq)
+{
     int i;
     int filt3;
 
@@ -1561,47 +1553,54 @@ static inline void vc1_loop_filter(uint8_t *src, int step, int stride,
     }
 }
 
-void ff_vc1_v_loop_filter4_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_v_loop_filter4_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, 1, stride, 4, pq);
 }
 
-void ff_vc1_h_loop_filter4_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_h_loop_filter4_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, stride, 1, 4, pq);
 }
 
-void ff_vc1_v_loop_filter8_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_v_loop_filter8_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, 1, stride, 8, pq);
 }
 
-void ff_vc1_h_loop_filter8_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_h_loop_filter8_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, stride, 1, 8, pq);
 }
 
-void ff_vc1_v_loop_filter16_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_v_loop_filter16_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, 1, stride, 16, pq);
 }
 
-void ff_vc1_h_loop_filter16_mmi(uint8_t *src, int stride, int pq) {
+void ff_vc1_h_loop_filter16_mmi(uint8_t *src, int stride, int pq)
+{
     vc1_loop_filter(src, stride, 1, 16, pq);
 }
 
 void ff_put_vc1_mspel_mc00_mmi(uint8_t *dst, const uint8_t *src,
-                               ptrdiff_t stride, int rnd) {
+                               ptrdiff_t stride, int rnd)
+{
     ff_put_pixels8_8_mmi(dst, src, stride, 8);
 }
-
 void ff_put_vc1_mspel_mc00_16_mmi(uint8_t *dst, const uint8_t *src,
-                                  ptrdiff_t stride, int rnd) {
+                                  ptrdiff_t stride, int rnd)
+{
     ff_put_pixels16_8_mmi(dst, src, stride, 16);
 }
-
 void ff_avg_vc1_mspel_mc00_mmi(uint8_t *dst, const uint8_t *src,
-                               ptrdiff_t stride, int rnd) {
+                               ptrdiff_t stride, int rnd)
+{
     ff_avg_pixels8_8_mmi(dst, src, stride, 8);
 }
-
 void ff_avg_vc1_mspel_mc00_16_mmi(uint8_t *dst, const uint8_t *src,
-                                  ptrdiff_t stride, int rnd) {
+                                  ptrdiff_t stride, int rnd)
+{
     ff_avg_pixels16_8_mmi(dst, src, stride, 16);
 }
 
@@ -1659,45 +1658,41 @@ void ff_avg_vc1_mspel_mc00_16_mmi(uint8_t *dst, const uint8_t *src,
 /** Sacrificing $f12 makes it possible to pipeline loads from src */
 static void vc1_put_ver_16b_shift2_mmi(int16_t *dst,
                                        const uint8_t *src, mips_reg stride,
-                                       int rnd, int64_t shift) {
+                                       int rnd, int64_t shift)
+{
     DECLARE_VAR_LOW32;
     DECLARE_VAR_ADDRT;
 
     __asm__ volatile(
-    "xor        $f0,    $f0,    $f0             \n\t"
-    "li         $8,     0x03                    \n\t"
-    LOAD_ROUNDER_MMI("%[rnd]")
-    "ldc1       $f12,   %[ff_pw_9]              \n\t"
-    "1:                                         \n\t"
-    MMI_ULWC1($f4, %[src], 0x00)
-    PTR_ADDU
-    "%[src], %[src], %[stride]       \n\t"
-    MMI_ULWC1($f6, %[src], 0x00)
-    "punpcklbh  $f4,    $f4,    $f0             \n\t"
-    "punpcklbh  $f6,    $f6,    $f0             \n\t"
-    SHIFT2_LINE(0, $f2, $f4, $f6, $f8)
-    SHIFT2_LINE(24, $f4, $f6, $f8, $f2)
-    SHIFT2_LINE(48, $f6, $f8, $f2, $f4)
-    SHIFT2_LINE(72, $f8, $f2, $f4, $f6)
-    SHIFT2_LINE(96, $f2, $f4, $f6, $f8)
-    SHIFT2_LINE(120, $f4, $f6, $f8, $f2)
-    SHIFT2_LINE(144, $f6, $f8, $f2, $f4)
-    SHIFT2_LINE(168, $f8, $f2, $f4, $f6)
-    PTR_SUBU
-    "%[src], %[src], %[stride2]      \n\t"
-    PTR_ADDIU
-    "%[dst], %[dst], 0x08            \n\t"
-    "addiu      $8,     $8,    -0x01            \n\t"
-    "bnez       $8,     1b                      \n\t"
-    : RESTRICT_ASM_LOW32
-    RESTRICT_ASM_ADDRT
-    [src]
-    "+r"(src),               [dst]"+r"(dst)
-    : [stride]"r"(stride),          [stride1]"r"(-2 * stride),
-    [shift]"f"(shift),            [rnd]"m"(rnd),
-    [stride2]"r"(9 * stride - 4),     [ff_pw_9]"m"(ff_pw_9)
-    : "$8", "$9", "$f0", "$f2", "$f4", "$f6", "$f8", "$f10", "$f12",
-            "$f14", "$f16", "memory"
+        "xor        $f0,    $f0,    $f0             \n\t"
+        "li         $8,     0x03                    \n\t"
+        LOAD_ROUNDER_MMI("%[rnd]")
+        "ldc1       $f12,   %[ff_pw_9]              \n\t"
+        "1:                                         \n\t"
+        MMI_ULWC1($f4, %[src], 0x00)
+        PTR_ADDU   "%[src], %[src], %[stride]       \n\t"
+        MMI_ULWC1($f6, %[src], 0x00)
+        "punpcklbh  $f4,    $f4,    $f0             \n\t"
+        "punpcklbh  $f6,    $f6,    $f0             \n\t"
+        SHIFT2_LINE(  0, $f2, $f4, $f6, $f8)
+        SHIFT2_LINE( 24, $f4, $f6, $f8, $f2)
+        SHIFT2_LINE( 48, $f6, $f8, $f2, $f4)
+        SHIFT2_LINE( 72, $f8, $f2, $f4, $f6)
+        SHIFT2_LINE( 96, $f2, $f4, $f6, $f8)
+        SHIFT2_LINE(120, $f4, $f6, $f8, $f2)
+        SHIFT2_LINE(144, $f6, $f8, $f2, $f4)
+        SHIFT2_LINE(168, $f8, $f2, $f4, $f6)
+        PTR_SUBU   "%[src], %[src], %[stride2]      \n\t"
+        PTR_ADDIU  "%[dst], %[dst], 0x08            \n\t"
+        "addiu      $8,     $8,    -0x01            \n\t"
+        "bnez       $8,     1b                      \n\t"
+        : RESTRICT_ASM_LOW32            RESTRICT_ASM_ADDRT
+          [src]"+r"(src),               [dst]"+r"(dst)
+        : [stride]"r"(stride),          [stride1]"r"(-2*stride),
+          [shift]"f"(shift),            [rnd]"m"(rnd),
+          [stride2]"r"(9*stride-4),     [ff_pw_9]"m"(ff_pw_9)
+        : "$8", "$9", "$f0", "$f2", "$f4", "$f6", "$f8", "$f10", "$f12",
+          "$f14", "$f16", "memory"
     );
 }
 
@@ -1759,7 +1754,6 @@ static void OPNAME ## vc1_hor_16b_shift2_mmi(uint8_t *dst, mips_reg stride, \
 }
 
 VC1_HOR_16B_SHIFT2(OP_PUT, put_)
-
 VC1_HOR_16B_SHIFT2(OP_AVG, avg_)
 
 /**
@@ -1832,7 +1826,6 @@ static void OPNAME ## vc1_shift2_mmi(uint8_t *dst, const uint8_t *src,      \
 }
 
 VC1_SHIFT2(OP_PUT, put_)
-
 VC1_SHIFT2(OP_AVG, avg_)
 
 /**
@@ -2061,36 +2054,26 @@ OPNAME ## vc1_## NAME ## _mmi(uint8_t *dst, const uint8_t *src,             \
 
 /** 1/4 shift bicubic interpolation */
 MSPEL_FILTER13_8B(shift1, %[offset_x3], %[offset_x2], %[offset_x1], $0, OP_PUT, put_)
-
 MSPEL_FILTER13_8B(shift1, %[offset_x3], %[offset_x2], %[offset_x1], $0, OP_AVG, avg_)
-
 MSPEL_FILTER13_VER_16B(shift1, %[stride_x3], %[stride_x2], %[stride_x1], $0)
-
 MSPEL_FILTER13_HOR_16B(shift1, 6, 4, 2, 0, OP_PUT, put_)
-
 MSPEL_FILTER13_HOR_16B(shift1, 6, 4, 2, 0, OP_AVG, avg_)
 
 /** 3/4 shift bicubic interpolation */
 MSPEL_FILTER13_8B(shift3, $0, %[offset_x1], %[offset_x2], %[offset_x3], OP_PUT, put_)
-
 MSPEL_FILTER13_8B(shift3, $0, %[offset_x1], %[offset_x2], %[offset_x3], OP_AVG, avg_)
-
 MSPEL_FILTER13_VER_16B(shift3, $0, %[stride_x1], %[stride_x2], %[stride_x3])
-
 MSPEL_FILTER13_HOR_16B(shift3, 0, 2, 4, 6, OP_PUT, put_)
-
 MSPEL_FILTER13_HOR_16B(shift3, 0, 2, 4, 6, OP_AVG, avg_)
 
 typedef void (*vc1_mspel_mc_filter_ver_16bits)
-        (int16_t *dst, const uint8_t *src, mips_reg src_stride, int rnd,
-         int64_t shift);
-
+             (int16_t *dst, const uint8_t *src, mips_reg src_stride, int rnd,
+              int64_t shift);
 typedef void (*vc1_mspel_mc_filter_hor_16bits)
-        (uint8_t *dst, mips_reg dst_stride, const int16_t *src, int rnd);
-
+             (uint8_t *dst, mips_reg dst_stride, const int16_t *src, int rnd);
 typedef void (*vc1_mspel_mc_filter_8bits)
-        (uint8_t *dst, const uint8_t *src, mips_reg stride, int rnd,
-         mips_reg offset);
+             (uint8_t *dst, const uint8_t *src, mips_reg stride, int rnd,
+              mips_reg offset);
 
 /**
  * Interpolate fractional pel values by applying proper vertical then
@@ -2153,7 +2136,6 @@ static void OP ## vc1_mspel_mc_16(uint8_t *dst, const uint8_t *src,         \
 }
 
 VC1_MSPEL_MC(put_)
-
 VC1_MSPEL_MC(avg_)
 
 /** Macro to ease bicubic filter interpolation functions declarations */
@@ -2188,33 +2170,22 @@ void ff_avg_vc1_mspel_mc ## a ## b ## _16_mmi(uint8_t *dst,                 \
 }
 
 DECLARE_FUNCTION(0, 1)
-
 DECLARE_FUNCTION(0, 2)
-
 DECLARE_FUNCTION(0, 3)
 
 DECLARE_FUNCTION(1, 0)
-
 DECLARE_FUNCTION(1, 1)
-
 DECLARE_FUNCTION(1, 2)
-
 DECLARE_FUNCTION(1, 3)
 
 DECLARE_FUNCTION(2, 0)
-
 DECLARE_FUNCTION(2, 1)
-
 DECLARE_FUNCTION(2, 2)
-
 DECLARE_FUNCTION(2, 3)
 
 DECLARE_FUNCTION(3, 0)
-
 DECLARE_FUNCTION(3, 1)
-
 DECLARE_FUNCTION(3, 2)
-
 DECLARE_FUNCTION(3, 3)
 
 #define CHROMA_MC_8_MMI                                                     \
@@ -2273,11 +2244,12 @@ DECLARE_FUNCTION(3, 3)
 
 void ff_put_no_rnd_vc1_chroma_mc8_mmi(uint8_t *dst /* align 8 */,
                                       uint8_t *src /* align 1 */,
-                                      ptrdiff_t stride, int h, int x, int y) {
+                                      ptrdiff_t stride, int h, int x, int y)
+{
     const int A = (8 - x) * (8 - y);
-    const int B = (x) * (8 - y);
-    const int C = (8 - x) * (y);
-    const int D = (x) * (y);
+    const int B =     (x) * (8 - y);
+    const int C = (8 - x) *     (y);
+    const int D =     (x) *     (y);
     double ftmp[10];
     uint32_t tmp[1];
     DECLARE_VAR_ALL64;
@@ -2286,55 +2258,53 @@ void ff_put_no_rnd_vc1_chroma_mc8_mmi(uint8_t *dst /* align 8 */,
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     __asm__ volatile(
-    "li         %[tmp0],    0x06                                    \n\t"
-    "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp9]                                \n\t"
-    "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
-    "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
-    "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
-    "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
+        "li         %[tmp0],    0x06                                    \n\t"
+        "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp9]                                \n\t"
+        "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
+        "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
+        "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
+        "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
 
-    "1:                                                             \n\t"
-    MMI_ULDC1( %[ftmp1], %[src], 0x00)
-    MMI_ULDC1( %[ftmp2], %[src], 0x01)
-    PTR_ADDU
-    "%[src],     %[src],     %[stride]                   \n\t"
-    MMI_ULDC1( %[ftmp3], %[src], 0x00)
-    MMI_ULDC1( %[ftmp4], %[src], 0x01)
+        "1:                                                             \n\t"
+        MMI_ULDC1(%[ftmp1], %[src], 0x00)
+        MMI_ULDC1(%[ftmp2], %[src], 0x01)
+        PTR_ADDU   "%[src],     %[src],     %[stride]                   \n\t"
+        MMI_ULDC1(%[ftmp3], %[src], 0x00)
+        MMI_ULDC1(%[ftmp4], %[src], 0x01)
 
-    CHROMA_MC_8_MMI
+        CHROMA_MC_8_MMI
 
-    MMI_SDC1( %[ftmp1], %[dst], 0x00)
-    "addiu      %[h],       %[h],      -0x01                        \n\t"
-    PTR_ADDU
-    "%[dst],     %[dst],     %[stride]                   \n\t"
-    "bnez       %[h],       1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
-            RESTRICT_ASM_ALL64
-    RESTRICT_ASM_ADDRT
-    [tmp0]
-    "=&r"(tmp[0]),
-    [src]"+&r"(src),              [dst]"+&r"(dst),
-    [h]"+&r"(h)
-    : [stride]"r"((mips_reg) stride),
-    [A]"f"(A),                    [B]"f"(B),
-    [C]"f"(C),                    [D]"f"(D),
-    [ff_pw_28]"f"(ff_pw_28)
-    : "memory"
+        MMI_SDC1(%[ftmp1], %[dst], 0x00)
+        "addiu      %[h],       %[h],      -0x01                        \n\t"
+        PTR_ADDU   "%[dst],     %[dst],     %[stride]                   \n\t"
+        "bnez       %[h],       1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
+          RESTRICT_ASM_ALL64
+          RESTRICT_ASM_ADDRT
+          [tmp0]"=&r"(tmp[0]),
+          [src]"+&r"(src),              [dst]"+&r"(dst),
+          [h]"+&r"(h)
+        : [stride]"r"((mips_reg)stride),
+          [A]"f"(A),                    [B]"f"(B),
+          [C]"f"(C),                    [D]"f"(D),
+          [ff_pw_28]"f"(ff_pw_28)
+        : "memory"
     );
 }
 
 void ff_put_no_rnd_vc1_chroma_mc4_mmi(uint8_t *dst /* align 8 */,
                                       uint8_t *src /* align 1 */,
-                                      ptrdiff_t stride, int h, int x, int y) {
+                                      ptrdiff_t stride, int h, int x, int y)
+{
     const int A = (8 - x) * (8 - y);
-    const int B = (x) * (8 - y);
-    const int C = (8 - x) * (y);
-    const int D = (x) * (y);
+    const int B =     (x) * (8 - y);
+    const int C = (8 - x) *     (y);
+    const int D =     (x) *     (y);
     double ftmp[6];
     uint32_t tmp[1];
     DECLARE_VAR_LOW32;
@@ -2343,53 +2313,51 @@ void ff_put_no_rnd_vc1_chroma_mc4_mmi(uint8_t *dst /* align 8 */,
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     __asm__ volatile(
-    "li         %[tmp0],    0x06                                    \n\t"
-    "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp5]                                \n\t"
-    "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
-    "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
-    "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
-    "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
+        "li         %[tmp0],    0x06                                    \n\t"
+        "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp5]                                \n\t"
+        "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
+        "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
+        "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
+        "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
 
-    "1:                                                             \n\t"
-    MMI_ULWC1( %[ftmp1], %[src], 0x00)
-    MMI_ULWC1( %[ftmp2], %[src], 0x01)
-    PTR_ADDU
-    "%[src],     %[src],     %[stride]                   \n\t"
-    MMI_ULWC1( %[ftmp3], %[src], 0x00)
-    MMI_ULWC1( %[ftmp4], %[src], 0x01)
+        "1:                                                             \n\t"
+        MMI_ULWC1(%[ftmp1], %[src], 0x00)
+        MMI_ULWC1(%[ftmp2], %[src], 0x01)
+        PTR_ADDU   "%[src],     %[src],     %[stride]                   \n\t"
+        MMI_ULWC1(%[ftmp3], %[src], 0x00)
+        MMI_ULWC1(%[ftmp4], %[src], 0x01)
 
-    CHROMA_MC_4_MMI
+        CHROMA_MC_4_MMI
 
-    MMI_SWC1( %[ftmp1], %[dst], 0x00)
-    "addiu      %[h],       %[h],      -0x01                        \n\t"
-    PTR_ADDU
-    "%[dst],     %[dst],     %[stride]                   \n\t"
-    "bnez       %[h],       1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [tmp0]"=&r"(tmp[0]),
-            RESTRICT_ASM_LOW32
-    RESTRICT_ASM_ADDRT
-    [src]
-    "+&r"(src),              [dst]"+&r"(dst),
-    [h]"+&r"(h)
-    : [stride]"r"((mips_reg) stride),
-    [A]"f"(A),                    [B]"f"(B),
-    [C]"f"(C),                    [D]"f"(D),
-    [ff_pw_28]"f"(ff_pw_28)
-    : "memory"
+        MMI_SWC1(%[ftmp1], %[dst], 0x00)
+        "addiu      %[h],       %[h],      -0x01                        \n\t"
+        PTR_ADDU   "%[dst],     %[dst],     %[stride]                   \n\t"
+        "bnez       %[h],       1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [tmp0]"=&r"(tmp[0]),
+          RESTRICT_ASM_LOW32
+          RESTRICT_ASM_ADDRT
+          [src]"+&r"(src),              [dst]"+&r"(dst),
+          [h]"+&r"(h)
+        : [stride]"r"((mips_reg)stride),
+          [A]"f"(A),                    [B]"f"(B),
+          [C]"f"(C),                    [D]"f"(D),
+          [ff_pw_28]"f"(ff_pw_28)
+        : "memory"
     );
 }
 
 void ff_avg_no_rnd_vc1_chroma_mc8_mmi(uint8_t *dst /* align 8 */,
                                       uint8_t *src /* align 1 */,
-                                      ptrdiff_t stride, int h, int x, int y) {
+                                      ptrdiff_t stride, int h, int x, int y)
+{
     const int A = (8 - x) * (8 - y);
-    const int B = (x) * (8 - y);
-    const int C = (8 - x) * (y);
-    const int D = (x) * (y);
+    const int B =     (x) * (8 - y);
+    const int C = (8 - x) *     (y);
+    const int D =     (x) *     (y);
     double ftmp[10];
     uint32_t tmp[1];
     DECLARE_VAR_ALL64;
@@ -2398,58 +2366,56 @@ void ff_avg_no_rnd_vc1_chroma_mc8_mmi(uint8_t *dst /* align 8 */,
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     __asm__ volatile(
-    "li         %[tmp0],    0x06                                    \n\t"
-    "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp9]                                \n\t"
-    "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
-    "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
-    "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
-    "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
+        "li         %[tmp0],    0x06                                    \n\t"
+        "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp9]                                \n\t"
+        "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
+        "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
+        "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
+        "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
 
-    "1:                                                             \n\t"
-    MMI_ULDC1( %[ftmp1], %[src], 0x00)
-    MMI_ULDC1( %[ftmp2], %[src], 0x01)
-    PTR_ADDU
-    "%[src],     %[src],     %[stride]                   \n\t"
-    MMI_ULDC1( %[ftmp3], %[src], 0x00)
-    MMI_ULDC1( %[ftmp4], %[src], 0x01)
+        "1:                                                             \n\t"
+        MMI_ULDC1(%[ftmp1], %[src], 0x00)
+        MMI_ULDC1(%[ftmp2], %[src], 0x01)
+        PTR_ADDU   "%[src],     %[src],     %[stride]                   \n\t"
+        MMI_ULDC1(%[ftmp3], %[src], 0x00)
+        MMI_ULDC1(%[ftmp4], %[src], 0x01)
 
-    CHROMA_MC_8_MMI
+        CHROMA_MC_8_MMI
 
-    MMI_LDC1( %[ftmp2], %[dst], 0x00)
-    "pavgb      %[ftmp1],   %[ftmp1],   %[ftmp2]                    \n\t"
+        MMI_LDC1(%[ftmp2], %[dst], 0x00)
+        "pavgb      %[ftmp1],   %[ftmp1],   %[ftmp2]                    \n\t"
 
-    MMI_SDC1( %[ftmp1], %[dst], 0x00)
-    "addiu      %[h],       %[h],      -0x01                        \n\t"
-    PTR_ADDU
-    "%[dst],     %[dst],     %[stride]                   \n\t"
-    "bnez       %[h],       1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
-    [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
-    [tmp0]"=&r"(tmp[0]),
-            RESTRICT_ASM_ALL64
-    RESTRICT_ASM_ADDRT
-    [src]
-    "+&r"(src),              [dst]"+&r"(dst),
-    [h]"+&r"(h)
-    : [stride]"r"((mips_reg) stride),
-    [A]"f"(A),                    [B]"f"(B),
-    [C]"f"(C),                    [D]"f"(D),
-    [ff_pw_28]"f"(ff_pw_28)
-    : "memory"
+        MMI_SDC1(%[ftmp1], %[dst], 0x00)
+        "addiu      %[h],       %[h],      -0x01                        \n\t"
+        PTR_ADDU   "%[dst],     %[dst],     %[stride]                   \n\t"
+        "bnez       %[h],       1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [ftmp6]"=&f"(ftmp[6]),        [ftmp7]"=&f"(ftmp[7]),
+          [ftmp8]"=&f"(ftmp[8]),        [ftmp9]"=&f"(ftmp[9]),
+          [tmp0]"=&r"(tmp[0]),
+          RESTRICT_ASM_ALL64
+          RESTRICT_ASM_ADDRT
+          [src]"+&r"(src),              [dst]"+&r"(dst),
+          [h]"+&r"(h)
+        : [stride]"r"((mips_reg)stride),
+          [A]"f"(A),                    [B]"f"(B),
+          [C]"f"(C),                    [D]"f"(D),
+          [ff_pw_28]"f"(ff_pw_28)
+        : "memory"
     );
 }
 
 void ff_avg_no_rnd_vc1_chroma_mc4_mmi(uint8_t *dst /* align 8 */,
                                       uint8_t *src /* align 1 */,
-                                      ptrdiff_t stride, int h, int x, int y) {
+                                      ptrdiff_t stride, int h, int x, int y)
+{
     const int A = (8 - x) * (8 - y);
-    const int B = (x) * (8 - y);
-    const int C = (8 - x) * (y);
-    const int D = (x) * (y);
+    const int B = (    x) * (8 - y);
+    const int C = (8 - x) * (    y);
+    const int D = (    x) * (    y);
     double ftmp[6];
     uint32_t tmp[1];
     DECLARE_VAR_LOW32;
@@ -2458,45 +2424,42 @@ void ff_avg_no_rnd_vc1_chroma_mc4_mmi(uint8_t *dst /* align 8 */,
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     __asm__ volatile(
-    "li         %[tmp0],    0x06                                    \n\t"
-    "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
-    "mtc1       %[tmp0],    %[ftmp5]                                \n\t"
-    "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
-    "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
-    "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
-    "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
+        "li         %[tmp0],    0x06                                    \n\t"
+        "xor        %[ftmp0],   %[ftmp0],   %[ftmp0]                    \n\t"
+        "mtc1       %[tmp0],    %[ftmp5]                                \n\t"
+        "pshufh     %[A],       %[A],       %[ftmp0]                    \n\t"
+        "pshufh     %[B],       %[B],       %[ftmp0]                    \n\t"
+        "pshufh     %[C],       %[C],       %[ftmp0]                    \n\t"
+        "pshufh     %[D],       %[D],       %[ftmp0]                    \n\t"
 
-    "1:                                                             \n\t"
-    MMI_ULWC1( %[ftmp1], %[src], 0x00)
-    MMI_ULWC1( %[ftmp2], %[src], 0x01)
-    PTR_ADDU
-    "%[src],     %[src],     %[stride]                   \n\t"
-    MMI_ULWC1( %[ftmp3], %[src], 0x00)
-    MMI_ULWC1( %[ftmp4], %[src], 0x01)
+        "1:                                                             \n\t"
+        MMI_ULWC1(%[ftmp1], %[src], 0x00)
+        MMI_ULWC1(%[ftmp2], %[src], 0x01)
+        PTR_ADDU   "%[src],     %[src],     %[stride]                   \n\t"
+        MMI_ULWC1(%[ftmp3], %[src], 0x00)
+        MMI_ULWC1(%[ftmp4], %[src], 0x01)
 
-    CHROMA_MC_4_MMI
+        CHROMA_MC_4_MMI
 
-    MMI_LWC1( %[ftmp2], %[dst], 0x00)
-    "pavgb      %[ftmp1],   %[ftmp1],   %[ftmp2]                    \n\t"
+        MMI_LWC1(%[ftmp2], %[dst], 0x00)
+        "pavgb      %[ftmp1],   %[ftmp1],   %[ftmp2]                    \n\t"
 
-    MMI_SWC1( %[ftmp1], %[dst], 0x00)
-    "addiu      %[h],       %[h],      -0x01                        \n\t"
-    PTR_ADDU
-    "%[dst],     %[dst],     %[stride]                   \n\t"
-    "bnez       %[h],       1b                                      \n\t"
-    : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
-    [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
-    [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
-    [tmp0]"=&r"(tmp[0]),
-            RESTRICT_ASM_LOW32
-    RESTRICT_ASM_ADDRT
-    [src]
-    "+&r"(src),              [dst]"+&r"(dst),
-    [h]"+&r"(h)
-    : [stride]"r"((mips_reg) stride),
-    [A]"f"(A),                    [B]"f"(B),
-    [C]"f"(C),                    [D]"f"(D),
-    [ff_pw_28]"f"(ff_pw_28)
-    : "memory"
+        MMI_SWC1(%[ftmp1], %[dst], 0x00)
+        "addiu      %[h],       %[h],      -0x01                        \n\t"
+        PTR_ADDU   "%[dst],     %[dst],     %[stride]                   \n\t"
+        "bnez       %[h],       1b                                      \n\t"
+        : [ftmp0]"=&f"(ftmp[0]),        [ftmp1]"=&f"(ftmp[1]),
+          [ftmp2]"=&f"(ftmp[2]),        [ftmp3]"=&f"(ftmp[3]),
+          [ftmp4]"=&f"(ftmp[4]),        [ftmp5]"=&f"(ftmp[5]),
+          [tmp0]"=&r"(tmp[0]),
+          RESTRICT_ASM_LOW32
+          RESTRICT_ASM_ADDRT
+          [src]"+&r"(src),              [dst]"+&r"(dst),
+          [h]"+&r"(h)
+        : [stride]"r"((mips_reg)stride),
+          [A]"f"(A),                    [B]"f"(B),
+          [C]"f"(C),                    [D]"f"(D),
+          [ff_pw_28]"f"(ff_pw_28)
+        : "memory"
     );
 }

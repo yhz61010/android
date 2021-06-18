@@ -26,7 +26,7 @@
 
 #include "libavutil/common.h"
 
-#if AV_GCC_VERSION_AT_LEAST(2, 96)
+#if AV_GCC_VERSION_AT_LEAST(2,96)
 # define likely(x)      __builtin_expect((x) != 0, 1)
 # define unlikely(x)    __builtin_expect((x) != 0, 0)
 #else
@@ -39,14 +39,15 @@
 #define AMASK_CIX (1 << 2)
 #define AMASK_MVI (1 << 8)
 
-static inline uint64_t BYTE_VEC(uint64_t x) {
-    x |= x << 8;
+static inline uint64_t BYTE_VEC(uint64_t x)
+{
+    x |= x <<  8;
     x |= x << 16;
     x |= x << 32;
     return x;
 }
-
-static inline uint64_t WORD_VEC(uint64_t x) {
+static inline uint64_t WORD_VEC(uint64_t x)
+{
     x |= x << 16;
     x |= x << 32;
     return x;

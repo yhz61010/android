@@ -33,14 +33,15 @@ static int video_stream_idx = -1;
 static AVFrame *frame = NULL;
 static int video_frame_count = 0;
 
-static int decode_packet(const AVPacket *pkt) {
+static int decode_packet(const AVPacket *pkt)
+{
     int ret = avcodec_send_packet(video_dec_ctx, pkt);
     if (ret < 0) {
         fprintf(stderr, "Error while sending a packet to the decoder: %s\n", av_err2str(ret));
         return ret;
     }
 
-    while (ret >= 0) {
+    while (ret >= 0)  {
         ret = avcodec_receive_frame(video_dec_ctx, frame);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             break;
@@ -56,15 +57,13 @@ static int decode_packet(const AVPacket *pkt) {
             video_frame_count++;
             sd = av_frame_get_side_data(frame, AV_FRAME_DATA_MOTION_VECTORS);
             if (sd) {
-                const AVMotionVector *mvs = (const AVMotionVector *) sd->data;
+                const AVMotionVector *mvs = (const AVMotionVector *)sd->data;
                 for (i = 0; i < sd->size / sizeof(*mvs); i++) {
                     const AVMotionVector *mv = &mvs[i];
-                    printf("%d,%2d,%2d,%2d,%4d,%4d,%4d,%4d,0x%"
-                    PRIx64
-                    "\n",
-                            video_frame_count, mv->source,
-                            mv->w, mv->h, mv->src_x, mv->src_y,
-                            mv->dst_x, mv->dst_y, mv->flags);
+                    printf("%d,%2d,%2d,%2d,%4d,%4d,%4d,%4d,0x%"PRIx64"\n",
+                        video_frame_count, mv->source,
+                        mv->w, mv->h, mv->src_x, mv->src_y,
+                        mv->dst_x, mv->dst_y, mv->flags);
                 }
             }
             av_frame_unref(frame);
@@ -74,7 +73,8 @@ static int decode_packet(const AVPacket *pkt) {
     return 0;
 }
 
-static int open_codec_context(AVFormatContext *fmt_ctx, enum AVMediaType type) {
+static int open_codec_context(AVFormatContext *fmt_ctx, enum AVMediaType type)
+{
     int ret;
     AVStream *st;
     AVCodecContext *dec_ctx = NULL;
@@ -118,9 +118,10 @@ static int open_codec_context(AVFormatContext *fmt_ctx, enum AVMediaType type) {
     return 0;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int ret = 0;
-    AVPacket pkt = {0};
+    AVPacket pkt = { 0 };
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <video>\n", argv[0]);
@@ -169,7 +170,7 @@ int main(int argc, char **argv) {
     /* flush cached frames */
     decode_packet(NULL);
 
-    end:
+end:
     avcodec_free_context(&video_dec_ctx);
     avformat_close_input(&fmt_ctx);
     av_frame_free(&frame);

@@ -30,14 +30,14 @@
 
 /* not permutated inverse zigzag_direct + 1 for MMX quantizer */
 DECLARE_ALIGNED(16, static const uint16_t, inv_zigzag_direct16)[64] = {
-1,  2,  6,  7,  15, 16, 28, 29,
-3,  5,  8,  14, 17, 27, 30, 43,
-4,  9,  13, 18, 26, 31, 42, 44,
-10, 12, 19, 25, 32, 41, 45, 54,
-11, 20, 24, 33, 40, 46, 53, 55,
-21, 23, 34, 39, 47, 52, 56, 61,
-22, 35, 38, 48, 51, 57, 60, 62,
-36, 37, 49, 50, 58, 59, 63, 64,
+    1,  2,  6,  7,  15, 16, 28, 29,
+    3,  5,  8,  14, 17, 27, 30, 43,
+    4,  9,  13, 18, 26, 31, 42, 44,
+    10, 12, 19, 25, 32, 41, 45, 54,
+    11, 20, 24, 33, 40, 46, 53, 55,
+    21, 23, 34, 39, 47, 52, 56, 61,
+    22, 35, 38, 48, 51, 57, 60, 62,
+    36, 37, 49, 50, 58, 59, 63, 64,
 };
 
 #if HAVE_6REGS
@@ -211,7 +211,8 @@ static void  denoise_dct_sse2(MpegEncContext *s, int16_t *block){
 #endif /* HAVE_SSE2_INLINE */
 #endif /* HAVE_INLINE_ASM */
 
-av_cold void ff_dct_encode_init_x86(MpegEncContext *s) {
+av_cold void ff_dct_encode_init_x86(MpegEncContext *s)
+{
     const int dct_algo = s->avctx->dct_algo;
 
     if (dct_algo == FF_DCT_AUTO || dct_algo == FF_DCT_MMX) {

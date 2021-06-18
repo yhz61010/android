@@ -89,11 +89,12 @@
 DECLARE_ALIGNED(32, static int, AAC_RENAME2(aac_kbd_long_1024))[1024];
 DECLARE_ALIGNED(32, static int, AAC_RENAME2(aac_kbd_short_128))[128];
 
-static av_always_inline void reset_predict_state(PredictorState *ps) {
-    ps->r0.mant = 0;
-    ps->r0.exp = 0;
-    ps->r1.mant = 0;
-    ps->r1.exp = 0;
+static av_always_inline void reset_predict_state(PredictorState *ps)
+{
+    ps->r0.mant   = 0;
+    ps->r0.exp   = 0;
+    ps->r1.mant   = 0;
+    ps->r1.exp   = 0;
     ps->cor0.mant = 0;
     ps->cor0.exp = 0;
     ps->cor1.mant = 0;
@@ -104,16 +105,18 @@ static av_always_inline void reset_predict_state(PredictorState *ps) {
     ps->var1.exp = 1;
 }
 
-static const int exp2tab[4] = {Q31(1.0000000000 / 2), Q31(1.1892071150 / 2), Q31(1.4142135624 / 2), Q31(1.6817928305 / 2)};  // 2^0, 2^0.25, 2^0.5, 2^0.75
+static const int exp2tab[4] = { Q31(1.0000000000/2), Q31(1.1892071150/2), Q31(1.4142135624/2), Q31(1.6817928305/2) };  // 2^0, 2^0.25, 2^0.5, 2^0.75
 
-static inline int *DEC_SPAIR(int *dst, unsigned idx) {
+static inline int *DEC_SPAIR(int *dst, unsigned idx)
+{
     dst[0] = (idx & 15) - 4;
     dst[1] = (idx >> 4 & 15) - 4;
 
     return dst + 2;
 }
 
-static inline int *DEC_SQUAD(int *dst, unsigned idx) {
+static inline int *DEC_SQUAD(int *dst, unsigned idx)
+{
     dst[0] = (idx & 3) - 1;
     dst[1] = (idx >> 2 & 3) - 1;
     dst[2] = (idx >> 4 & 3) - 1;
@@ -122,44 +125,48 @@ static inline int *DEC_SQUAD(int *dst, unsigned idx) {
     return dst + 4;
 }
 
-static inline int *DEC_UPAIR(int *dst, unsigned idx, unsigned sign) {
+static inline int *DEC_UPAIR(int *dst, unsigned idx, unsigned sign)
+{
     dst[0] = (idx & 15) * (1 - (sign & 0xFFFFFFFE));
     dst[1] = (idx >> 4 & 15) * (1 - ((sign & 1) * 2));
 
     return dst + 2;
 }
 
-static inline int *DEC_UQUAD(int *dst, unsigned idx, unsigned sign) {
+static inline int *DEC_UQUAD(int *dst, unsigned idx, unsigned sign)
+{
     unsigned nz = idx >> 12;
 
-    dst[0] = (idx & 3) * (1 + (((int) sign >> 31) * 2));
+    dst[0] = (idx & 3) * (1 + (((int)sign >> 31) * 2));
     sign <<= nz & 1;
     nz >>= 1;
-    dst[1] = (idx >> 2 & 3) * (1 + (((int) sign >> 31) * 2));
+    dst[1] = (idx >> 2 & 3) * (1 + (((int)sign >> 31) * 2));
     sign <<= nz & 1;
     nz >>= 1;
-    dst[2] = (idx >> 4 & 3) * (1 + (((int) sign >> 31) * 2));
+    dst[2] = (idx >> 4 & 3) * (1 + (((int)sign >> 31) * 2));
     sign <<= nz & 1;
     nz >>= 1;
-    dst[3] = (idx >> 6 & 3) * (1 + (((int) sign >> 31) * 2));
+    dst[3] = (idx >> 6 & 3) * (1 + (((int)sign >> 31) * 2));
 
     return dst + 4;
 }
 
-static void vector_pow43(int *coefs, int len) {
+static void vector_pow43(int *coefs, int len)
+{
     int i, coef;
 
-    for (i = 0; i < len; i++) {
+    for (i=0; i<len; i++) {
         coef = coefs[i];
         if (coef < 0)
-            coef = -(int) ff_cbrt_tab_fixed[(-coef) & 8191];
+            coef = -(int)ff_cbrt_tab_fixed[(-coef) & 8191];
         else
-            coef = (int) ff_cbrt_tab_fixed[coef & 8191];
+            coef =  (int)ff_cbrt_tab_fixed[  coef  & 8191];
         coefs[i] = coef;
     }
 }
 
-static void subband_scale(int *dst, int *src, int scale, int offset, int len, void *log_context) {
+static void subband_scale(int *dst, int *src, int scale, int offset, int len, void *log_context)
+{
     int ssign = scale < 0 ? -1 : 1;
     int s = FFABS(scale);
     unsigned int round;
@@ -168,30 +175,29 @@ static void subband_scale(int *dst, int *src, int scale, int offset, int len, vo
     s = offset - (s >> 2);
 
     if (s > 31) {
-        for (i = 0; i < len; i++) {
+        for (i=0; i<len; i++) {
             dst[i] = 0;
         }
     } else if (s > 0) {
-        round = 1 << (s - 1);
-        for (i = 0; i < len; i++) {
-            out = (int) (((int64_t)
-            src[i] * c) >> 32);
-            dst[i] = ((int) (out + round) >> s) * ssign;
+        round = 1 << (s-1);
+        for (i=0; i<len; i++) {
+            out = (int)(((int64_t)src[i] * c) >> 32);
+            dst[i] = ((int)(out+round) >> s) * ssign;
         }
     } else if (s > -32) {
         s = s + 32;
-        round = 1U << (s - 1);
-        for (i = 0; i < len; i++) {
-            out = (int) ((int64_t)((int64_t)
-            src[i] * c + round) >> s);
-            dst[i] = out * (unsigned) ssign;
+        round = 1U << (s-1);
+        for (i=0; i<len; i++) {
+            out = (int)((int64_t)((int64_t)src[i] * c + round) >> s);
+            dst[i] = out * (unsigned)ssign;
         }
     } else {
         av_log(log_context, AV_LOG_ERROR, "Overflow in subband_scale()\n");
     }
 }
 
-static void noise_scale(int *coefs, int scale, int band_energy, int len) {
+static void noise_scale(int *coefs, int scale, int band_energy, int len)
+{
     int s = -scale;
     unsigned int round;
     int i, out, c = exp2tab[s & 3];
@@ -206,118 +212,98 @@ static void noise_scale(int *coefs, int scale, int band_energy, int len) {
     s = 21 + nlz - (s >> 2);
 
     if (s > 31) {
-        for (i = 0; i < len; i++) {
+        for (i=0; i<len; i++) {
             coefs[i] = 0;
         }
     } else if (s >= 0) {
-        round = s ? 1 << (s - 1) : 0;
-        for (i = 0; i < len; i++) {
-            out = (int) (((int64_t)
-            coefs[i] * c) >> 32);
-            coefs[i] = -((int) (out + round) >> s);
+        round = s ? 1 << (s-1) : 0;
+        for (i=0; i<len; i++) {
+            out = (int)(((int64_t)coefs[i] * c) >> 32);
+            coefs[i] = -((int)(out+round) >> s);
         }
-    } else {
+    }
+    else {
         s = s + 32;
         if (s > 0) {
-            round = 1 << (s - 1);
-            for (i = 0; i < len; i++) {
-                out = (int) ((int64_t)((int64_t)
-                coefs[i] * c + round) >> s);
+            round = 1 << (s-1);
+            for (i=0; i<len; i++) {
+                out = (int)((int64_t)((int64_t)coefs[i] * c + round) >> s);
                 coefs[i] = -out;
             }
         } else {
-            for (i = 0; i < len; i++)
-                coefs[i] = -(int64_t)
-            coefs[i] * c * (1 << -s);
+            for (i=0; i<len; i++)
+                coefs[i] = -(int64_t)coefs[i] * c * (1 << -s);
         }
     }
 }
 
-static av_always_inline SoftFloat
-flt16_round(SoftFloat
-pf)
+static av_always_inline SoftFloat flt16_round(SoftFloat pf)
 {
-SoftFloat tmp;
-int s;
+    SoftFloat tmp;
+    int s;
 
-tmp.
-exp = pf.exp;
-s = pf.mant >> 31;
-tmp.
-mant = (pf.mant ^ s) - s;
-tmp.
-mant = (tmp.mant + 0x00200000U) & 0xFFC00000U;
-tmp.
-mant = (tmp.mant ^ s) - s;
+    tmp.exp = pf.exp;
+    s = pf.mant >> 31;
+    tmp.mant = (pf.mant ^ s) - s;
+    tmp.mant = (tmp.mant + 0x00200000U) & 0xFFC00000U;
+    tmp.mant = (tmp.mant ^ s) - s;
 
-return
-tmp;
+    return tmp;
 }
 
-static av_always_inline SoftFloat
-flt16_even(SoftFloat
-pf)
+static av_always_inline SoftFloat flt16_even(SoftFloat pf)
 {
-SoftFloat tmp;
-int s;
+    SoftFloat tmp;
+    int s;
 
-tmp.
-exp = pf.exp;
-s = pf.mant >> 31;
-tmp.
-mant = (pf.mant ^ s) - s;
-tmp.
-mant = (tmp.mant + 0x001FFFFFU + (tmp.mant & 0x00400000U >> 16)) & 0xFFC00000U;
-tmp.
-mant = (tmp.mant ^ s) - s;
+    tmp.exp = pf.exp;
+    s = pf.mant >> 31;
+    tmp.mant = (pf.mant ^ s) - s;
+    tmp.mant = (tmp.mant + 0x001FFFFFU + (tmp.mant & 0x00400000U >> 16)) & 0xFFC00000U;
+    tmp.mant = (tmp.mant ^ s) - s;
 
-return
-tmp;
+    return tmp;
 }
 
-static av_always_inline SoftFloat
-flt16_trunc(SoftFloat
-pf)
+static av_always_inline SoftFloat flt16_trunc(SoftFloat pf)
 {
-SoftFloat pun;
-int s;
+    SoftFloat pun;
+    int s;
 
-pun.
-exp = pf.exp;
-s = pf.mant >> 31;
-pun.
-mant = (pf.mant ^ s) - s;
-pun.
-mant = pun.mant & 0xFFC00000U;
-pun.
-mant = (pun.mant ^ s) - s;
+    pun.exp = pf.exp;
+    s = pf.mant >> 31;
+    pun.mant = (pf.mant ^ s) - s;
+    pun.mant = pun.mant & 0xFFC00000U;
+    pun.mant = (pun.mant ^ s) - s;
 
-return
-pun;
+    return pun;
 }
 
 static av_always_inline void predict(PredictorState *ps, int *coef,
-                                     int output_enable) {
-    const SoftFloat a = {1023410176, 0};  // 61.0 / 64
-    const SoftFloat alpha = {973078528, 0};  // 29.0 / 32
+                                     int output_enable)
+{
+    const SoftFloat a     = { 1023410176, 0 };  // 61.0 / 64
+    const SoftFloat alpha = {  973078528, 0 };  // 29.0 / 32
     SoftFloat e0, e1;
     SoftFloat pv;
     SoftFloat k1, k2;
-    SoftFloat r0 = ps->r0, r1 = ps->r1;
+    SoftFloat   r0 = ps->r0,     r1 = ps->r1;
     SoftFloat cor0 = ps->cor0, cor1 = ps->cor1;
     SoftFloat var0 = ps->var0, var1 = ps->var1;
     SoftFloat tmp;
 
     if (var0.exp > 1 || (var0.exp == 1 && var0.mant > 0x20000000)) {
         k1 = av_mul_sf(cor0, flt16_even(av_div_sf(a, var0)));
-    } else {
+    }
+    else {
         k1.mant = 0;
         k1.exp = 0;
     }
 
     if (var1.exp > 1 || (var1.exp == 1 && var1.mant > 0x20000000)) {
         k2 = av_mul_sf(cor1, flt16_even(av_div_sf(a, var1)));
-    } else {
+    }
+    else {
         k2.mant = 0;
         k2.exp = 0;
     }
@@ -329,9 +315,9 @@ static av_always_inline void predict(PredictorState *ps, int *coef,
 
         if (shift < 31) {
             if (shift > 0) {
-                *coef += (unsigned) ((pv.mant + (1 << (shift - 1))) >> shift);
+                *coef += (unsigned)((pv.mant + (1 << (shift - 1))) >> shift);
             } else
-                *coef += (unsigned) pv.mant << -shift;
+                *coef += (unsigned)pv.mant << -shift;
         }
     }
 
@@ -353,14 +339,14 @@ static av_always_inline void predict(PredictorState *ps, int *coef,
 
 
 static const int cce_scale_fixed[8] = {
-        Q30(1.0),          //2^(0/8)
-        Q30(1.0905077327), //2^(1/8)
-        Q30(1.1892071150), //2^(2/8)
-        Q30(1.2968395547), //2^(3/8)
-        Q30(1.4142135624), //2^(4/8)
-        Q30(1.5422108254), //2^(5/8)
-        Q30(1.6817928305), //2^(6/8)
-        Q30(1.8340080864), //2^(7/8)
+    Q30(1.0),          //2^(0/8)
+    Q30(1.0905077327), //2^(1/8)
+    Q30(1.1892071150), //2^(2/8)
+    Q30(1.2968395547), //2^(3/8)
+    Q30(1.4142135624), //2^(4/8)
+    Q30(1.5422108254), //2^(5/8)
+    Q30(1.6817928305), //2^(6/8)
+    Q30(1.8340080864), //2^(7/8)
 };
 
 /**
@@ -369,8 +355,9 @@ static const int cce_scale_fixed[8] = {
  * @param   index   index into coupling gain array
  */
 static void apply_dependent_coupling_fixed(AACContext *ac,
-                                           SingleChannelElement *target,
-                                           ChannelElement *cce, int index) {
+                                     SingleChannelElement *target,
+                                     ChannelElement *cce, int index)
+{
     IndividualChannelStream *ics = &cce->ch[0].ics;
     const uint16_t *offsets = ics->swb_offset;
     int *dest = target->coeffs;
@@ -389,10 +376,11 @@ static void apply_dependent_coupling_fixed(AACContext *ac,
 
                 if (gain < 0) {
                     c = -cce_scale_fixed[-gain & 7];
-                    shift = (-gain - 1024) >> 3;
-                } else {
+                    shift = (-gain-1024) >> 3;
+                }
+                else {
                     c = cce_scale_fixed[gain & 7];
-                    shift = (gain - 1024) >> 3;
+                    shift = (gain-1024) >> 3;
                 }
 
                 if (shift < -31) {
@@ -403,21 +391,17 @@ static void apply_dependent_coupling_fixed(AACContext *ac,
 
                     for (group = 0; group < ics->group_len[g]; group++) {
                         for (k = offsets[i]; k < offsets[i + 1]; k++) {
-                            tmp = (int) (((int64_t)
-                            src[group * 128 + k] * c + \
-                                       (int64_t)
-                            0x1000000000) >> 37);
-                            dest[group * 128 + k] += (tmp + (int64_t)
-                            round) >> shift;
+                            tmp = (int)(((int64_t)src[group * 128 + k] * c + \
+                                       (int64_t)0x1000000000) >> 37);
+                            dest[group * 128 + k] += (tmp + (int64_t)round) >> shift;
                         }
                     }
-                } else {
+                }
+                else {
                     for (group = 0; group < ics->group_len[g]; group++) {
                         for (k = offsets[i]; k < offsets[i + 1]; k++) {
-                            tmp = (int) (((int64_t)
-                            src[group * 128 + k] * c + \
-                                        (int64_t)
-                            0x1000000000) >> 37);
+                            tmp = (int)(((int64_t)src[group * 128 + k] * c + \
+                                        (int64_t)0x1000000000) >> 37);
                             dest[group * 128 + k] += tmp * (1U << shift);
                         }
                     }
@@ -425,7 +409,7 @@ static void apply_dependent_coupling_fixed(AACContext *ac,
             }
         }
         dest += ics->group_len[g] * 128;
-        src += ics->group_len[g] * 128;
+        src  += ics->group_len[g] * 128;
     }
 }
 
@@ -435,8 +419,9 @@ static void apply_dependent_coupling_fixed(AACContext *ac,
  * @param   index   index into coupling gain array
  */
 static void apply_independent_coupling_fixed(AACContext *ac,
-                                             SingleChannelElement *target,
-                                             ChannelElement *cce, int index) {
+                                       SingleChannelElement *target,
+                                       ChannelElement *cce, int index)
+{
     int i, c, shift, round, tmp;
     const int gain = cce->coup.gain[index][0];
     const int *src = cce->ch[0].ret;
@@ -444,7 +429,7 @@ static void apply_independent_coupling_fixed(AACContext *ac,
     const int len = 1024 << (ac->oc[1].m4ac.sbr == 1);
 
     c = cce_scale_fixed[gain & 7];
-    shift = (gain - 1024) >> 3;
+    shift = (gain-1024) >> 3;
     if (shift < -31) {
         return;
     } else if (shift < 0) {
@@ -452,38 +437,35 @@ static void apply_independent_coupling_fixed(AACContext *ac,
         round = 1 << (shift - 1);
 
         for (i = 0; i < len; i++) {
-            tmp = (int) (((int64_t)
-            src[i] * c + (int64_t)
-            0x1000000000) >> 37);
+            tmp = (int)(((int64_t)src[i] * c + (int64_t)0x1000000000) >> 37);
             dest[i] += (tmp + round) >> shift;
         }
-    } else {
-        for (i = 0; i < len; i++) {
-            tmp = (int) (((int64_t)
-            src[i] * c + (int64_t)
-            0x1000000000) >> 37);
-            dest[i] += tmp * (1U << shift);
-        }
+    }
+    else {
+      for (i = 0; i < len; i++) {
+          tmp = (int)(((int64_t)src[i] * c + (int64_t)0x1000000000) >> 37);
+          dest[i] += tmp * (1U << shift);
+      }
     }
 }
 
 #include "aacdec_template.c"
 
 AVCodec ff_aac_fixed_decoder = {
-        .name            = "aac_fixed",
-        .long_name       = NULL_IF_CONFIG_SMALL("AAC (Advanced Audio Coding)"),
-        .type            = AVMEDIA_TYPE_AUDIO,
-        .id              = AV_CODEC_ID_AAC,
-        .priv_data_size  = sizeof(AACContext),
-        .init            = aac_decode_init,
-        .close           = aac_decode_close,
-        .decode          = aac_decode_frame,
-        .sample_fmts     = (const enum AVSampleFormat[]) {
-                AV_SAMPLE_FMT_S32P, AV_SAMPLE_FMT_NONE
-        },
-        .capabilities    = AV_CODEC_CAP_CHANNEL_CONF | AV_CODEC_CAP_DR1,
-        .caps_internal   = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
-        .channel_layouts = aac_channel_layout,
-        .profiles        = NULL_IF_CONFIG_SMALL(ff_aac_profiles),
-        .flush = flush,
+    .name            = "aac_fixed",
+    .long_name       = NULL_IF_CONFIG_SMALL("AAC (Advanced Audio Coding)"),
+    .type            = AVMEDIA_TYPE_AUDIO,
+    .id              = AV_CODEC_ID_AAC,
+    .priv_data_size  = sizeof(AACContext),
+    .init            = aac_decode_init,
+    .close           = aac_decode_close,
+    .decode          = aac_decode_frame,
+    .sample_fmts     = (const enum AVSampleFormat[]) {
+        AV_SAMPLE_FMT_S32P, AV_SAMPLE_FMT_NONE
+    },
+    .capabilities    = AV_CODEC_CAP_CHANNEL_CONF | AV_CODEC_CAP_DR1,
+    .caps_internal   = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
+    .channel_layouts = aac_channel_layout,
+    .profiles        = NULL_IF_CONFIG_SMALL(ff_aac_profiles),
+    .flush = flush,
 };

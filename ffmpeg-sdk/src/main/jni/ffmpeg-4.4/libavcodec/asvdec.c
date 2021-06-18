@@ -46,7 +46,8 @@ static VLC dc_ccp_vlc;
 static VLC ac_ccp_vlc;
 static VLC asv2_level_vlc;
 
-static av_cold void init_vlcs(void) {
+static av_cold void init_vlcs(void)
+{
     INIT_VLC_STATIC(&ccp_vlc, CCP_VLC_BITS, 17,
                     &ff_asv_ccp_tab[0][1], 2, 1,
                     &ff_asv_ccp_tab[0][0], 2, 1, 32);
@@ -64,7 +65,8 @@ static av_cold void init_vlcs(void) {
                        &ff_asv2_level_tab[0][0], 4, 2, 1024);
 }
 
-static inline int asv1_get_level(GetBitContext *gb) {
+static inline int asv1_get_level(GetBitContext *gb)
+{
     int code = get_vlc2(gb, level_vlc.table, ASV1_LEVEL_VLC_BITS, 1);
 
     if (code == 3)
@@ -74,7 +76,8 @@ static inline int asv1_get_level(GetBitContext *gb) {
 }
 
 // get_vlc2() is big-endian in this file
-static inline int asv2_get_vlc2(GetBitContext *gb, VLC_TYPE (*table)[2], int bits) {
+static inline int asv2_get_vlc2(GetBitContext *gb, VLC_TYPE (*table)[2], int bits)
+{
     unsigned int index;
     int code, n;
 
@@ -82,8 +85,8 @@ static inline int asv2_get_vlc2(GetBitContext *gb, VLC_TYPE (*table)[2], int bit
     UPDATE_CACHE_LE(re, gb);
 
     index = SHOW_UBITS_LE(re, gb, bits);
-    code = table[index][0];
-    n = table[index][1];
+    code  = table[index][0];
+    n     = table[index][1];
     LAST_SKIP_BITS(re, gb, n);
 
     CLOSE_READER(re, gb);
@@ -91,7 +94,8 @@ static inline int asv2_get_vlc2(GetBitContext *gb, VLC_TYPE (*table)[2], int bit
     return code;
 }
 
-static inline int asv2_get_level(GetBitContext *gb) {
+static inline int asv2_get_level(GetBitContext *gb)
+{
     int code = asv2_get_vlc2(gb, asv2_level_vlc.table, ASV2_LEVEL_VLC_BITS);
 
     if (code == 31)
@@ -100,7 +104,8 @@ static inline int asv2_get_level(GetBitContext *gb) {
         return code - 31;
 }
 
-static inline int asv1_decode_block(ASV1Context *a, int16_t block[64]) {
+static inline int asv1_decode_block(ASV1Context *a, int16_t block[64])
+{
     int i;
 
     block[0] = 8 * get_bits(&a->gb, 8);
@@ -130,7 +135,8 @@ static inline int asv1_decode_block(ASV1Context *a, int16_t block[64]) {
     return 0;
 }
 
-static inline int asv2_decode_block(ASV1Context *a, int16_t block[64]) {
+static inline int asv2_decode_block(ASV1Context *a, int16_t block[64])
+{
     int i, count, ccp;
 
     count = get_bits_le(&a->gb, 4);
@@ -165,7 +171,8 @@ static inline int asv2_decode_block(ASV1Context *a, int16_t block[64]) {
     return 0;
 }
 
-static inline int decode_mb(ASV1Context *a, int16_t block[6][64]) {
+static inline int decode_mb(ASV1Context *a, int16_t block[6][64])
+{
     int i, ret;
 
     a->bdsp.clear_blocks(block[0]);
@@ -184,17 +191,18 @@ static inline int decode_mb(ASV1Context *a, int16_t block[6][64]) {
     return 0;
 }
 
-static inline void idct_put(ASV1Context *a, AVFrame *frame, int mb_x, int mb_y) {
+static inline void idct_put(ASV1Context *a, AVFrame *frame, int mb_x, int mb_y)
+{
     int16_t(*block)[64] = a->block;
     int linesize = frame->linesize[0];
 
-    uint8_t *dest_y = frame->data[0] + (mb_y * 16 * linesize) + mb_x * 16;
-    uint8_t *dest_cb = frame->data[1] + (mb_y * 8 * frame->linesize[1]) + mb_x * 8;
-    uint8_t *dest_cr = frame->data[2] + (mb_y * 8 * frame->linesize[2]) + mb_x * 8;
+    uint8_t *dest_y  = frame->data[0] + (mb_y * 16 * linesize)           + mb_x * 16;
+    uint8_t *dest_cb = frame->data[1] + (mb_y *  8 * frame->linesize[1]) + mb_x *  8;
+    uint8_t *dest_cr = frame->data[2] + (mb_y *  8 * frame->linesize[2]) + mb_x *  8;
 
-    a->idsp.idct_put(dest_y, linesize, block[0]);
-    a->idsp.idct_put(dest_y + 8, linesize, block[1]);
-    a->idsp.idct_put(dest_y + 8 * linesize, linesize, block[2]);
+    a->idsp.idct_put(dest_y,                    linesize, block[0]);
+    a->idsp.idct_put(dest_y + 8,                linesize, block[1]);
+    a->idsp.idct_put(dest_y + 8 * linesize,     linesize, block[2]);
     a->idsp.idct_put(dest_y + 8 * linesize + 8, linesize, block[3]);
 
     if (!(a->avctx->flags & AV_CODEC_FLAG_GRAY)) {
@@ -204,10 +212,11 @@ static inline void idct_put(ASV1Context *a, AVFrame *frame, int mb_x, int mb_y) 
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
-                        AVPacket *avpkt) {
+                        AVPacket *avpkt)
+{
     ASV1Context *const a = avctx->priv_data;
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
+    int buf_size       = avpkt->size;
     AVFrame *const p = data;
     int mb_x, mb_y, ret;
 
@@ -225,9 +234,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         if (!a->bitstream_buffer)
             return AVERROR(ENOMEM);
 
-        a->bbdsp.bswap_buf((uint32_t * )
-        a->bitstream_buffer,
-        (const uint32_t *) buf, buf_size / 4);
+        a->bbdsp.bswap_buf((uint32_t *) a->bitstream_buffer,
+                           (const uint32_t *) buf, buf_size / 4);
         ret = init_get_bits8(&a->gb, a->bitstream_buffer, buf_size);
     } else {
         ret = init_get_bits8_le(&a->gb, buf, buf_size);
@@ -271,10 +279,11 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     return (get_bits_count(&a->gb) + 31) / 32 * 4;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     static AVOnce init_static_once = AV_ONCE_INIT;
     ASV1Context *const a = avctx->priv_data;
-    const int scale = avctx->codec_id == AV_CODEC_ID_ASV1 ? 1 : 2;
+    const int scale      = avctx->codec_id == AV_CODEC_ID_ASV1 ? 1 : 2;
     int i;
 
     if (avctx->extradata_size < 1) {
@@ -307,7 +316,8 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int decode_end(AVCodecContext *avctx) {
+static av_cold int decode_end(AVCodecContext *avctx)
+{
     ASV1Context *const a = avctx->priv_data;
 
     av_freep(&a->bitstream_buffer);

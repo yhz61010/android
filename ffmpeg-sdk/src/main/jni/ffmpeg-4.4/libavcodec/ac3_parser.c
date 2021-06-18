@@ -251,13 +251,14 @@ AVCodecParser ff_ac3_parser = {
 #else
 
 int avpriv_ac3_parse_header(AC3HeaderInfo **phdr, const uint8_t *buf,
-                            size_t size) {
+                            size_t size)
+{
     return AVERROR(ENOSYS);
 }
 
 int av_ac3_parse_header(const uint8_t *buf, size_t size,
-                        uint8_t *bitstream_id, uint16_t *frame_size) {
+                        uint8_t *bitstream_id, uint16_t *frame_size)
+{
     return AVERROR(ENOSYS);
 }
-
 #endif

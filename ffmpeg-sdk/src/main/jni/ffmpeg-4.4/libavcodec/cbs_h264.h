@@ -256,12 +256,12 @@ typedef struct H264RawSEIPicTiming {
 
 typedef struct H264RawSEIPanScanRect {
     uint32_t pan_scan_rect_id;
-    uint8_t pan_scan_rect_cancel_flag;
-    uint8_t pan_scan_cnt_minus1;
-    int32_t pan_scan_rect_left_offset[3];
-    int32_t pan_scan_rect_right_offset[3];
-    int32_t pan_scan_rect_top_offset[3];
-    int32_t pan_scan_rect_bottom_offset[3];
+    uint8_t  pan_scan_rect_cancel_flag;
+    uint8_t  pan_scan_cnt_minus1;
+    int32_t  pan_scan_rect_left_offset[3];
+    int32_t  pan_scan_rect_right_offset[3];
+    int32_t  pan_scan_rect_top_offset[3];
+    int32_t  pan_scan_rect_bottom_offset[3];
     uint16_t pan_scan_rect_repetition_period;
 } H264RawSEIPanScanRect;
 
@@ -283,7 +283,7 @@ typedef struct H264RawSEIDisplayOrientation {
 
 typedef struct H264RawSEI {
     H264RawNALUnitHeader nal_unit_header;
-    SEIRawMessageList message_list;
+    SEIRawMessageList    message_list;
 } H264RawSEI;
 
 typedef struct H264RawSliceHeader {
@@ -367,10 +367,10 @@ typedef struct H264RawSliceHeader {
 typedef struct H264RawSlice {
     H264RawSliceHeader header;
 
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_size;
-    int data_bit_start;
+    size_t       data_size;
+    int          data_bit_start;
 } H264RawSlice;
 
 typedef struct H264RawFiller {

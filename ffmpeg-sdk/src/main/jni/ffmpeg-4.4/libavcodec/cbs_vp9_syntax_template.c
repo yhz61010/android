@@ -17,7 +17,8 @@
  */
 
 static int FUNC(frame_sync_code)(CodedBitstreamContext *ctx, RWContext *rw,
-                                 VP9RawFrameHeader *current) {
+                                 VP9RawFrameHeader *current)
+{
     int err;
 
     fixed(8, frame_sync_byte_0, VP9_FRAME_SYNC_0);
@@ -28,7 +29,8 @@ static int FUNC(frame_sync_code)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
-                              VP9RawFrameHeader *current, int profile) {
+                              VP9RawFrameHeader *current, int profile)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
     int err;
 
@@ -66,17 +68,18 @@ static int FUNC(color_config)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(frame_size)(CodedBitstreamContext *ctx, RWContext *rw,
-                            VP9RawFrameHeader *current) {
+                            VP9RawFrameHeader *current)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
     int err;
 
     f(16, frame_width_minus_1);
     f(16, frame_height_minus_1);
 
-    vp9->frame_width = current->frame_width_minus_1 + 1;
+    vp9->frame_width  = current->frame_width_minus_1  + 1;
     vp9->frame_height = current->frame_height_minus_1 + 1;
 
-    vp9->mi_cols = (vp9->frame_width + 7) >> 3;
+    vp9->mi_cols = (vp9->frame_width  + 7) >> 3;
     vp9->mi_rows = (vp9->frame_height + 7) >> 3;
     vp9->sb64_cols = (vp9->mi_cols + 7) >> 3;
     vp9->sb64_rows = (vp9->mi_rows + 7) >> 3;
@@ -85,7 +88,8 @@ static int FUNC(frame_size)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(render_size)(CodedBitstreamContext *ctx, RWContext *rw,
-                             VP9RawFrameHeader *current) {
+                             VP9RawFrameHeader *current)
+{
     int err;
 
     f(1, render_and_frame_size_different);
@@ -99,7 +103,8 @@ static int FUNC(render_size)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      VP9RawFrameHeader *current) {
+                                      VP9RawFrameHeader *current)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
     int err, i;
 
@@ -107,14 +112,14 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
         fs(1, found_ref[i], 1, i);
         if (current->found_ref[i]) {
             VP9ReferenceFrameState *ref =
-                    &vp9->ref[current->ref_frame_idx[i]];
+                &vp9->ref[current->ref_frame_idx[i]];
 
-            vp9->frame_width = ref->frame_width;
-            vp9->frame_height = ref->frame_height;
+            vp9->frame_width   = ref->frame_width;
+            vp9->frame_height  = ref->frame_height;
 
             vp9->subsampling_x = ref->subsampling_x;
             vp9->subsampling_y = ref->subsampling_y;
-            vp9->bit_depth = ref->bit_depth;
+            vp9->bit_depth     = ref->bit_depth;
 
             break;
         }
@@ -122,7 +127,7 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
     if (i >= VP9_REFS_PER_FRAME)
         CHECK(FUNC(frame_size)(ctx, rw, current));
     else {
-        vp9->mi_cols = (vp9->frame_width + 7) >> 3;
+        vp9->mi_cols = (vp9->frame_width  + 7) >> 3;
         vp9->mi_rows = (vp9->frame_height + 7) >> 3;
         vp9->sb64_cols = (vp9->mi_cols + 7) >> 3;
         vp9->sb64_rows = (vp9->mi_rows + 7) >> 3;
@@ -133,7 +138,8 @@ static int FUNC(frame_size_with_refs)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(interpolation_filter)(CodedBitstreamContext *ctx, RWContext *rw,
-                                      VP9RawFrameHeader *current) {
+                                      VP9RawFrameHeader *current)
+{
     int err;
 
     f(1, is_filter_switchable);
@@ -144,7 +150,8 @@ static int FUNC(interpolation_filter)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(loop_filter_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                    VP9RawFrameHeader *current) {
+                                    VP9RawFrameHeader *current)
+{
     int err, i;
 
     f(6, loop_filter_level);
@@ -171,7 +178,8 @@ static int FUNC(loop_filter_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(quantization_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     VP9RawFrameHeader *current) {
+                                     VP9RawFrameHeader *current)
+{
     int err;
 
     f(8, base_q_idx);
@@ -184,9 +192,10 @@ static int FUNC(quantization_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     VP9RawFrameHeader *current) {
-    static const uint8_t segmentation_feature_bits[VP9_SEG_LVL_MAX] = {8, 6, 2, 0};
-    static const uint8_t segmentation_feature_signed[VP9_SEG_LVL_MAX] = {1, 1, 0, 0};
+                                     VP9RawFrameHeader *current)
+{
+    static const uint8_t segmentation_feature_bits[VP9_SEG_LVL_MAX]   = { 8, 6, 2, 0 };
+    static const uint8_t segmentation_feature_signed[VP9_SEG_LVL_MAX] = { 1, 1, 0, 0 };
 
     int err, i, j;
 
@@ -222,7 +231,7 @@ static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
                             infer(feature_sign[i][j], 0);
                     } else {
                         infer(feature_value[i][j], 0);
-                        infer(feature_sign[i][j], 0);
+                        infer(feature_sign[i][j],  0);
                     }
                 }
             }
@@ -233,7 +242,8 @@ static int FUNC(segmentation_params)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
-                           VP9RawFrameHeader *current) {
+                           VP9RawFrameHeader *current)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
     int min_log2_tile_cols, max_log2_tile_cols;
     int err;
@@ -253,7 +263,8 @@ static int FUNC(tile_info)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                                     VP9RawFrameHeader *current) {
+                                     VP9RawFrameHeader *current)
+{
     CodedBitstreamVP9Context *vp9 = ctx->priv_data;
     int err, i;
 
@@ -269,8 +280,8 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
     if (current->show_existing_frame) {
         f(3, frame_to_show_map_idx);
         infer(header_size_in_bytes, 0);
-        infer(refresh_frame_flags, 0x00);
-        infer(loop_filter_level, 0);
+        infer(refresh_frame_flags,  0x00);
+        infer(loop_filter_level,    0);
         return 0;
     }
 
@@ -287,55 +298,55 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
         infer(refresh_frame_flags, 0xff);
 
     } else {
-        if (current->show_frame == 0)
-            f(1, intra_only);
-        else
-            infer(intra_only, 0);
+         if (current->show_frame == 0)
+             f(1, intra_only);
+         else
+             infer(intra_only, 0);
 
-        if (current->error_resilient_mode == 0)
-            f(2, reset_frame_context);
-        else
-            infer(reset_frame_context, 0);
+         if (current->error_resilient_mode == 0)
+             f(2, reset_frame_context);
+         else
+             infer(reset_frame_context, 0);
 
-        if (current->intra_only == 1) {
-            CHECK(FUNC(frame_sync_code)(ctx, rw, current));
+         if (current->intra_only == 1) {
+             CHECK(FUNC(frame_sync_code)(ctx, rw, current));
 
-            if (vp9->profile > 0) {
-                CHECK(FUNC(color_config)(ctx, rw, current, vp9->profile));
-            } else {
-                infer(color_space, 1);
-                infer(subsampling_x, 1);
-                infer(subsampling_y, 1);
-                vp9->bit_depth = 8;
+             if (vp9->profile > 0) {
+                 CHECK(FUNC(color_config)(ctx, rw, current, vp9->profile));
+             } else {
+                 infer(color_space,   1);
+                 infer(subsampling_x, 1);
+                 infer(subsampling_y, 1);
+                 vp9->bit_depth = 8;
 
-                vp9->subsampling_x = current->subsampling_x;
-                vp9->subsampling_y = current->subsampling_y;
-            }
+                 vp9->subsampling_x = current->subsampling_x;
+                 vp9->subsampling_y = current->subsampling_y;
+             }
 
-            f(8, refresh_frame_flags);
+             f(8, refresh_frame_flags);
 
-            CHECK(FUNC(frame_size)(ctx, rw, current));
-            CHECK(FUNC(render_size)(ctx, rw, current));
-        } else {
-            f(8, refresh_frame_flags);
+             CHECK(FUNC(frame_size)(ctx, rw, current));
+             CHECK(FUNC(render_size)(ctx, rw, current));
+         } else {
+             f(8, refresh_frame_flags);
 
-            for (i = 0; i < VP9_REFS_PER_FRAME; i++) {
-                fs(3, ref_frame_idx[i], 1, i);
-                fs(1, ref_frame_sign_bias[VP9_LAST_FRAME + i],
-                   1, VP9_LAST_FRAME + i);
-            }
+             for (i = 0; i < VP9_REFS_PER_FRAME; i++) {
+                 fs(3, ref_frame_idx[i], 1, i);
+                 fs(1, ref_frame_sign_bias[VP9_LAST_FRAME + i],
+                    1, VP9_LAST_FRAME + i);
+             }
 
-            CHECK(FUNC(frame_size_with_refs)(ctx, rw, current));
-            f(1, allow_high_precision_mv);
-            CHECK(FUNC(interpolation_filter)(ctx, rw, current));
-        }
+             CHECK(FUNC(frame_size_with_refs)(ctx, rw, current));
+             f(1, allow_high_precision_mv);
+             CHECK(FUNC(interpolation_filter)(ctx, rw, current));
+         }
     }
 
     if (current->error_resilient_mode == 0) {
         f(1, refresh_frame_context);
         f(1, frame_parallel_decoding_mode);
     } else {
-        infer(refresh_frame_context, 0);
+        infer(refresh_frame_context,        0);
         infer(frame_parallel_decoding_mode, 1);
     }
 
@@ -351,17 +362,17 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
     for (i = 0; i < VP9_NUM_REF_FRAMES; i++) {
         if (current->refresh_frame_flags & (1 << i)) {
             vp9->ref[i] = (VP9ReferenceFrameState) {
-                    .frame_width    = vp9->frame_width,
-                    .frame_height   = vp9->frame_height,
-                    .subsampling_x  = vp9->subsampling_x,
-                    .subsampling_y  = vp9->subsampling_y,
-                    .bit_depth      = vp9->bit_depth,
+                .frame_width    = vp9->frame_width,
+                .frame_height   = vp9->frame_height,
+                .subsampling_x  = vp9->subsampling_x,
+                .subsampling_y  = vp9->subsampling_y,
+                .bit_depth      = vp9->bit_depth,
             };
         }
     }
 
     av_log(ctx->log_ctx, AV_LOG_DEBUG, "Frame:  size %dx%d  "
-                                       "subsample %dx%d  bit_depth %d  tiles %dx%d.\n",
+           "subsample %dx%d  bit_depth %d  tiles %dx%d.\n",
            vp9->frame_width, vp9->frame_height,
            vp9->subsampling_x, vp9->subsampling_y,
            vp9->bit_depth, 1 << current->tile_cols_log2,
@@ -370,7 +381,8 @@ static int FUNC(uncompressed_header)(CodedBitstreamContext *ctx, RWContext *rw,
     return 0;
 }
 
-static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw) {
+static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw)
+{
     int err;
     while (byte_alignment(rw) != 0)
         fixed(1, zero_bit, 0);
@@ -379,7 +391,8 @@ static int FUNC(trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw) {
 }
 
 static int FUNC(frame)(CodedBitstreamContext *ctx, RWContext *rw,
-                       VP9RawFrame *current) {
+                       VP9RawFrame *current)
+{
     int err;
 
     HEADER("Frame");
@@ -392,7 +405,8 @@ static int FUNC(frame)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(superframe_index)(CodedBitstreamContext *ctx, RWContext *rw,
-                                  VP9RawSuperframeIndex *current) {
+                                  VP9RawSuperframeIndex *current)
+{
     int err, i;
 
     HEADER("Superframe Index");

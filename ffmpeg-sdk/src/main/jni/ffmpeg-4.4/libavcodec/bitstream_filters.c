@@ -64,25 +64,25 @@ extern const AVBitStreamFilter ff_vp9_superframe_split_bsf;
 
 #include "libavcodec/bsf_list.c"
 
-const AVBitStreamFilter *av_bsf_iterate(void **opaque) {
-    uintptr_t i = (uintptr_t) * opaque;
+const AVBitStreamFilter *av_bsf_iterate(void **opaque)
+{
+    uintptr_t i = (uintptr_t)*opaque;
     const AVBitStreamFilter *f = bitstream_filters[i];
 
     if (f)
-        *opaque = (void *) (i + 1);
+        *opaque = (void*)(i + 1);
 
     return f;
 }
 
 #if FF_API_NEXT
-
 const AVBitStreamFilter *av_bsf_next(void **opaque) {
     return av_bsf_iterate(opaque);
 }
-
 #endif
 
-const AVBitStreamFilter *av_bsf_get_by_name(const char *name) {
+const AVBitStreamFilter *av_bsf_get_by_name(const char *name)
+{
     const AVBitStreamFilter *f = NULL;
     void *i = 0;
 
@@ -119,7 +119,8 @@ const AVClass *ff_bsf_child_class_next(const AVClass *prev)
 }
 #endif
 
-const AVClass *ff_bsf_child_class_iterate(void **opaque) {
+const AVClass *ff_bsf_child_class_iterate(void **opaque)
+{
     const AVBitStreamFilter *f;
 
     /* find next filter with priv options */

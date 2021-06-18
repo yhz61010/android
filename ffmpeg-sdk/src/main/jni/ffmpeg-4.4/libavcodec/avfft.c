@@ -25,7 +25,8 @@
 
 /* FFT */
 
-FFTContext *av_fft_init(int nbits, int inverse) {
+FFTContext *av_fft_init(int nbits, int inverse)
+{
     FFTContext *s = av_mallocz(sizeof(*s));
 
     if (s && ff_fft_init(s, nbits, inverse))
@@ -34,15 +35,18 @@ FFTContext *av_fft_init(int nbits, int inverse) {
     return s;
 }
 
-void av_fft_permute(FFTContext *s, FFTComplex *z) {
+void av_fft_permute(FFTContext *s, FFTComplex *z)
+{
     s->fft_permute(s, z);
 }
 
-void av_fft_calc(FFTContext *s, FFTComplex *z) {
+void av_fft_calc(FFTContext *s, FFTComplex *z)
+{
     s->fft_calc(s, z);
 }
 
-av_cold void av_fft_end(FFTContext *s) {
+av_cold void av_fft_end(FFTContext *s)
+{
     if (s) {
         ff_fft_end(s);
         av_free(s);

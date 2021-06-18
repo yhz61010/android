@@ -41,7 +41,8 @@
  *    with 1/3 resolution, 19  < pitch_delay <  85
  *    integers only,       85 <= pitch_delay <= 143
  */
-static inline int ff_acelp_decode_8bit_to_1st_delay3(int ac_index) {
+static inline int ff_acelp_decode_8bit_to_1st_delay3(int ac_index)
+{
     ac_index += 58;
     if (ac_index > 254)
         ac_index = 3 * ac_index - 510;
@@ -64,8 +65,9 @@ static inline int ff_acelp_decode_8bit_to_1st_delay3(int ac_index) {
  *         AMR @@7.4k for the second subframe.
  */
 static inline int ff_acelp_decode_5_6_bit_to_2nd_delay3(int ac_index,
-                                                        int pitch_delay_min) {
-    return 3 * pitch_delay_min + ac_index - 2;
+                                                        int pitch_delay_min)
+{
+        return 3 * pitch_delay_min + ac_index - 2;
 }
 
 /**
@@ -85,7 +87,8 @@ static inline int ff_acelp_decode_5_6_bit_to_2nd_delay3(int ac_index,
  *         AMR @@5.15k, AMR @@4.75k for the second subframe.
  */
 static inline int ff_acelp_decode_4bit_to_2nd_delay3(int ac_index,
-                                                     int pitch_delay_min) {
+                                                     int pitch_delay_min)
+{
     if (ac_index < 4)
         return 3 * (ac_index + pitch_delay_min);
     else if (ac_index < 12)
@@ -107,7 +110,8 @@ static inline int ff_acelp_decode_4bit_to_2nd_delay3(int ac_index,
  *
  * @remark The routine is used in AMR @@12.2k for the first and third subframes.
  */
-static inline int ff_acelp_decode_9bit_to_1st_delay6(int ac_index) {
+static inline int ff_acelp_decode_9bit_to_1st_delay6(int ac_index)
+{
     if (ac_index < 463)
         return ac_index + 105;
     else
@@ -129,7 +133,8 @@ static inline int ff_acelp_decode_9bit_to_1st_delay6(int ac_index) {
  * @remark The routine is used in AMR @@12.2k for the second and fourth subframes.
  */
 static inline int ff_acelp_decode_6bit_to_2nd_delay6(int ac_index,
-                                                     int pitch_delay_min) {
+                                                     int pitch_delay_min)
+{
     return 6 * pitch_delay_min + ac_index - 3;
 }
 
@@ -150,7 +155,7 @@ static inline int ff_acelp_decode_6bit_to_2nd_delay6(int ac_index,
  * @remark The routine is used in G.729 and AMR (all modes).
  */
 void ff_acelp_update_past_gain(
-        int16_t *quant_energy,
+        int16_t* quant_energy,
         int gain_corr_factor,
         int log2_ma_pred_order,
         int erasure);
@@ -227,14 +232,14 @@ void ff_acelp_update_past_gain(
  * @remark The routine is used in G.729 and AMR (all modes).
  */
 int16_t ff_acelp_decode_gain_code(
-        AudioDSPContext *adsp,
-        int gain_corr_factor,
-        const int16_t *fc_v,
-        int mr_energy,
-        const int16_t *quant_energy,
-        const int16_t *ma_prediction_coeff,
-        int subframe_size,
-        int max_pred_order);
+    AudioDSPContext *adsp,
+    int gain_corr_factor,
+    const int16_t* fc_v,
+    int mr_energy,
+    const int16_t* quant_energy,
+    const int16_t* ma_prediction_coeff,
+    int subframe_size,
+    int max_pred_order);
 
 /**
  * Calculate fixed gain (part of section 6.1.3 of AMR spec)

@@ -14,6 +14,7 @@ import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtDecoder
+import com.leovp.ffmpeg.base.DecodedAudioResult
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlin.concurrent.thread
@@ -69,7 +70,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 //                val pcmBytes: ByteArray = adpcmQT.decode(chunk)?.first ?: fail("Decode ADPCM error!")
 
                 val st = SystemClock.elapsedRealtimeNanos()
-                val pcmResultBean: com.leovp.ffmpeg.base.DecodedAudioResult = adpcmQT.decode(chunk)
+                val pcmResultBean: DecodedAudioResult = adpcmQT.decode(chunk)
 //                os.write(pcmChunkBytes)
                 if (LogContext.enableLog) LogContext.log.i("PCM[${pcmResultBean.leftChannelData.size}][${pcmResultBean.rightChannelData.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
 

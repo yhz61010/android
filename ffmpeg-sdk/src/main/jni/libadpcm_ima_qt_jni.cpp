@@ -11,7 +11,7 @@ extern "C"
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_jni", __VA_ARGS__))
 
 //#define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
-#define ADPCM_PACKAGE "com/leovp/adpcm/adpcm_ima_qt/"
+#define ADPCM_PACKAGE_BASE "com/leovp/ffmpeg/"
 
 AVCodecContext *ctx = nullptr;
 
@@ -31,6 +31,10 @@ JNIEXPORT jint init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     }
 
     return ret;
+}
+
+JNIEXPORT jint chunkSize() {
+    return 34 * ctx->channels;
 }
 
 JNIEXPORT void release(JNIEnv *env, jobject obj) {
@@ -92,7 +96,7 @@ JNIEXPORT jobject decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
     av_packet_free(&pkt);
 
     // Get the class we wish to return an instance of
-    jclass resultClass = env->FindClass(ADPCM_PACKAGE"base/DecodedAudioResult");
+    jclass resultClass = env->FindClass(ADPCM_PACKAGE_BASE"base/DecodedAudioResult");
     // Get the method id of an empty constructor in clazz
     jmethodID constructor = env->GetMethodID(resultClass, "<init>", "()V");
     // Create an instance of clazz
@@ -116,10 +120,11 @@ JNIEXPORT jstring getVersion(JNIEnv *env, jobject thiz) {
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"init",       "(II)I",                                          (void *) init},
-        {"release",    "()V",                                            (void *) release},
-        {"decode",     "([B)L" ADPCM_PACKAGE "base/DecodedAudioResult;", (void *) decode},
-        {"getVersion", "()Ljava/lang/String;",                           (void *) getVersion},
+        {"init",       "(II)I",                                               (void *) init},
+        {"release",    "()V",                                                 (void *) release},
+        {"chunkSize",  "()I",                                                 (void *) chunkSize},
+        {"decode",     "([B)L" ADPCM_PACKAGE_BASE "base/DecodedAudioResult;", (void *) decode},
+        {"getVersion", "()Ljava/lang/String;",                                (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -130,7 +135,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return JNI_ERR;
     }
 
-    jclass clz = env->FindClass(ADPCM_PACKAGE"AdpcmImaQtDecoder");
+    jclass clz = env->FindClass(ADPCM_PACKAGE_BASE"audio/adpcm/AdpcmImaQtDecoder");
     if (clz == nullptr) {
         LOGE("JNI_OnLoad FindClass error.");
         return JNI_ERR;

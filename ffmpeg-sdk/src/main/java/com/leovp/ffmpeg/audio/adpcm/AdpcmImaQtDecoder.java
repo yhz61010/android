@@ -1,6 +1,6 @@
-package com.leovp.adpcm.adpcm_ima_qt;
+package com.leovp.ffmpeg.audio.adpcm;
 
-import com.leovp.adpcm.adpcm_ima_qt.base.DecodedAudioResult;
+import com.leovp.ffmpeg.base.DecodedAudioResult;
 
 /**
  * Author: Michael Leo
@@ -15,6 +15,14 @@ public class AdpcmImaQtDecoder {
     public native DecodedAudioResult decode(byte[] adpcmBytes);
 
     public native String getVersion();
+
+    /**
+     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples).
+     * Channel data is interleaved per-chunk.
+     * <p>
+     * The return result is 34 bytes * channels
+     */
+    public native int chunkSize();
 
     static {
         System.loadLibrary("adpcm-ima-qt");

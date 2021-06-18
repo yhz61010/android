@@ -85,15 +85,15 @@ typedef int16_t                 SHORTFLOAT;
 
 #define AC3_RENAME(x)           x
 #define AC3_NORM(norm)          (1.0f/(norm))
-#define AC3_MUL(a, b)            ((a) * (b))
+#define AC3_MUL(a,b)            ((a) * (b))
 #define AC3_RANGE(x)            (dynamic_range_tab[(x)])
 #define AC3_HEAVY_RANGE(x)      (ff_ac3_heavy_dynamic_range_tab[(x)])
 #define AC3_DYNAMIC_RANGE(x)    (powf(x,  s->drc_scale))
 #define AC3_SPX_BLEND(x)        (x)* (1.0f/32)
 #define AC3_DYNAMIC_RANGE1      1.0f
 
-typedef float INTFLOAT;
-typedef float SHORTFLOAT;
+typedef float                   INTFLOAT;
+typedef float                   SHORTFLOAT;
 
 #endif /* USE_FIXED */
 

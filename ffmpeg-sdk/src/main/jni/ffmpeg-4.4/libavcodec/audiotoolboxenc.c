@@ -23,7 +23,6 @@
 #include <AudioToolbox/AudioToolbox.h>
 
 #define FF_BUFQUEUE_SIZE 256
-
 #include "libavfilter/bufferqueue.h"
 
 #include "config.h"
@@ -50,42 +49,44 @@ typedef struct ATDecodeContext {
     int eof;
     int frame_size;
 
-    AVFrame *encoding_frame;
+    AVFrame* encoding_frame;
 } ATDecodeContext;
 
-static UInt32 ffat_get_format_id(enum AVCodecID codec, int profile) {
+static UInt32 ffat_get_format_id(enum AVCodecID codec, int profile)
+{
     switch (codec) {
-        case AV_CODEC_ID_AAC:
-            switch (profile) {
-                case FF_PROFILE_AAC_LOW:
-                default:
-                    return kAudioFormatMPEG4AAC;
-                case FF_PROFILE_AAC_HE:
-                    return kAudioFormatMPEG4AAC_HE;
-                case FF_PROFILE_AAC_HE_V2:
-                    return kAudioFormatMPEG4AAC_HE_V2;
-                case FF_PROFILE_AAC_LD:
-                    return kAudioFormatMPEG4AAC_LD;
-                case FF_PROFILE_AAC_ELD:
-                    return kAudioFormatMPEG4AAC_ELD;
-            }
-        case AV_CODEC_ID_ADPCM_IMA_QT:
-            return kAudioFormatAppleIMA4;
-        case AV_CODEC_ID_ALAC:
-            return kAudioFormatAppleLossless;
-        case AV_CODEC_ID_ILBC:
-            return kAudioFormatiLBC;
-        case AV_CODEC_ID_PCM_ALAW:
-            return kAudioFormatALaw;
-        case AV_CODEC_ID_PCM_MULAW:
-            return kAudioFormatULaw;
+    case AV_CODEC_ID_AAC:
+        switch (profile) {
+        case FF_PROFILE_AAC_LOW:
         default:
-            av_assert0(!"Invalid codec ID!");
-            return 0;
+            return kAudioFormatMPEG4AAC;
+        case FF_PROFILE_AAC_HE:
+            return kAudioFormatMPEG4AAC_HE;
+        case FF_PROFILE_AAC_HE_V2:
+            return kAudioFormatMPEG4AAC_HE_V2;
+        case FF_PROFILE_AAC_LD:
+            return kAudioFormatMPEG4AAC_LD;
+        case FF_PROFILE_AAC_ELD:
+            return kAudioFormatMPEG4AAC_ELD;
+        }
+    case AV_CODEC_ID_ADPCM_IMA_QT:
+        return kAudioFormatAppleIMA4;
+    case AV_CODEC_ID_ALAC:
+        return kAudioFormatAppleLossless;
+    case AV_CODEC_ID_ILBC:
+        return kAudioFormatiLBC;
+    case AV_CODEC_ID_PCM_ALAW:
+        return kAudioFormatALaw;
+    case AV_CODEC_ID_PCM_MULAW:
+        return kAudioFormatULaw;
+    default:
+        av_assert0(!"Invalid codec ID!");
+        return 0;
     }
 }
 
-static void ffat_update_ctx(AVCodecContext *avctx) {
+static void ffat_update_ctx(AVCodecContext *avctx)
+{
     ATDecodeContext *at = avctx->priv_data;
     UInt32 size = sizeof(unsigned);
     AudioConverterPrimeInfo prime_info;
@@ -124,7 +125,8 @@ static void ffat_update_ctx(AVCodecContext *avctx) {
     }
 }
 
-static int read_descr(GetByteContext *gb, int *tag) {
+static int read_descr(GetByteContext *gb, int *tag)
+{
     int len = 0;
     int count = 4;
     *tag = bytestream2_get_byte(gb);
@@ -137,7 +139,8 @@ static int read_descr(GetByteContext *gb, int *tag) {
     return len;
 }
 
-static int get_ilbc_mode(AVCodecContext *avctx) {
+static int get_ilbc_mode(AVCodecContext *avctx)
+{
     if (avctx->block_align == 38)
         return 20;
     else if (avctx->block_align == 50)
@@ -148,7 +151,8 @@ static int get_ilbc_mode(AVCodecContext *avctx) {
         return 30;
 }
 
-static av_cold int get_channel_label(int channel) {
+static av_cold int get_channel_label(int channel)
+{
     uint64_t map = 1 << channel;
     if (map <= AV_CH_LOW_FREQUENCY)
         return channel + 1;
@@ -172,7 +176,8 @@ static av_cold int get_channel_label(int channel) {
         return -1;
 }
 
-static int remap_layout(AudioChannelLayout *layout, uint64_t in_layout, int count) {
+static int remap_layout(AudioChannelLayout *layout, uint64_t in_layout, int count)
+{
     int i;
     int c = 0;
     layout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
@@ -192,61 +197,63 @@ static int remap_layout(AudioChannelLayout *layout, uint64_t in_layout, int coun
     return 0;
 }
 
-static int get_aac_tag(uint64_t in_layout) {
+static int get_aac_tag(uint64_t in_layout)
+{
     switch (in_layout) {
-        case AV_CH_LAYOUT_MONO:
-            return kAudioChannelLayoutTag_Mono;
-        case AV_CH_LAYOUT_STEREO:
-            return kAudioChannelLayoutTag_Stereo;
-        case AV_CH_LAYOUT_QUAD:
-            return kAudioChannelLayoutTag_AAC_Quadraphonic;
-        case AV_CH_LAYOUT_OCTAGONAL:
-            return kAudioChannelLayoutTag_AAC_Octagonal;
-        case AV_CH_LAYOUT_SURROUND:
-            return kAudioChannelLayoutTag_AAC_3_0;
-        case AV_CH_LAYOUT_4POINT0:
-            return kAudioChannelLayoutTag_AAC_4_0;
-        case AV_CH_LAYOUT_5POINT0:
-            return kAudioChannelLayoutTag_AAC_5_0;
-        case AV_CH_LAYOUT_5POINT1:
-            return kAudioChannelLayoutTag_AAC_5_1;
-        case AV_CH_LAYOUT_6POINT0:
-            return kAudioChannelLayoutTag_AAC_6_0;
-        case AV_CH_LAYOUT_6POINT1:
-            return kAudioChannelLayoutTag_AAC_6_1;
-        case AV_CH_LAYOUT_7POINT0:
-            return kAudioChannelLayoutTag_AAC_7_0;
-        case AV_CH_LAYOUT_7POINT1_WIDE_BACK:
-            return kAudioChannelLayoutTag_AAC_7_1;
-        case AV_CH_LAYOUT_7POINT1:
-            return kAudioChannelLayoutTag_MPEG_7_1_C;
-        default:
-            return 0;
+    case AV_CH_LAYOUT_MONO:
+        return kAudioChannelLayoutTag_Mono;
+    case AV_CH_LAYOUT_STEREO:
+        return kAudioChannelLayoutTag_Stereo;
+    case AV_CH_LAYOUT_QUAD:
+        return kAudioChannelLayoutTag_AAC_Quadraphonic;
+    case AV_CH_LAYOUT_OCTAGONAL:
+        return kAudioChannelLayoutTag_AAC_Octagonal;
+    case AV_CH_LAYOUT_SURROUND:
+        return kAudioChannelLayoutTag_AAC_3_0;
+    case AV_CH_LAYOUT_4POINT0:
+        return kAudioChannelLayoutTag_AAC_4_0;
+    case AV_CH_LAYOUT_5POINT0:
+        return kAudioChannelLayoutTag_AAC_5_0;
+    case AV_CH_LAYOUT_5POINT1:
+        return kAudioChannelLayoutTag_AAC_5_1;
+    case AV_CH_LAYOUT_6POINT0:
+        return kAudioChannelLayoutTag_AAC_6_0;
+    case AV_CH_LAYOUT_6POINT1:
+        return kAudioChannelLayoutTag_AAC_6_1;
+    case AV_CH_LAYOUT_7POINT0:
+        return kAudioChannelLayoutTag_AAC_7_0;
+    case AV_CH_LAYOUT_7POINT1_WIDE_BACK:
+        return kAudioChannelLayoutTag_AAC_7_1;
+    case AV_CH_LAYOUT_7POINT1:
+        return kAudioChannelLayoutTag_MPEG_7_1_C;
+    default:
+        return 0;
     }
 }
 
-static av_cold int ffat_init_encoder(AVCodecContext *avctx) {
+static av_cold int ffat_init_encoder(AVCodecContext *avctx)
+{
     ATDecodeContext *at = avctx->priv_data;
     OSStatus status;
 
     AudioStreamBasicDescription in_format = {
-            .mSampleRate = avctx->sample_rate,
-            .mFormatID = kAudioFormatLinearPCM,
-            .mFormatFlags = ((avctx->sample_fmt == AV_SAMPLE_FMT_FLT ||
-                              avctx->sample_fmt == AV_SAMPLE_FMT_DBL) ? kAudioFormatFlagIsFloat
-                                                                      : avctx->sample_fmt == AV_SAMPLE_FMT_U8 ? 0
-                                                                                                              : kAudioFormatFlagIsSignedInteger)
-                            | kAudioFormatFlagIsPacked,
-            .mBytesPerPacket = av_get_bytes_per_sample(avctx->sample_fmt) * avctx->channels,
-            .mFramesPerPacket = 1,
-            .mBytesPerFrame = av_get_bytes_per_sample(avctx->sample_fmt) * avctx->channels,
-            .mChannelsPerFrame = avctx->channels,
-            .mBitsPerChannel = av_get_bytes_per_sample(avctx->sample_fmt) * 8,
+        .mSampleRate = avctx->sample_rate,
+        .mFormatID = kAudioFormatLinearPCM,
+        .mFormatFlags = ((avctx->sample_fmt == AV_SAMPLE_FMT_FLT ||
+                          avctx->sample_fmt == AV_SAMPLE_FMT_DBL) ? kAudioFormatFlagIsFloat
+                        : avctx->sample_fmt == AV_SAMPLE_FMT_U8 ? 0
+                        : kAudioFormatFlagIsSignedInteger)
+                        | kAudioFormatFlagIsPacked,
+        .mBytesPerPacket = av_get_bytes_per_sample(avctx->sample_fmt) * avctx->channels,
+        .mFramesPerPacket = 1,
+        .mBytesPerFrame = av_get_bytes_per_sample(avctx->sample_fmt) * avctx->channels,
+        .mChannelsPerFrame = avctx->channels,
+        .mBitsPerChannel = av_get_bytes_per_sample(avctx->sample_fmt) * 8,
     };
     AudioStreamBasicDescription out_format = {
-            .mSampleRate = avctx->sample_rate,
-            .mFormatID = ffat_get_format_id(avctx->codec_id, avctx->profile),
-            .mChannelsPerFrame = in_format.mChannelsPerFrame,
+        .mSampleRate = avctx->sample_rate,
+        .mFormatID = ffat_get_format_id(avctx->codec_id, avctx->profile),
+        .mChannelsPerFrame = in_format.mChannelsPerFrame,
     };
     UInt32 layout_size = sizeof(AudioChannelLayout) +
                          sizeof(AudioChannelDescription) * avctx->channels;
@@ -257,14 +264,14 @@ static av_cold int ffat_init_encoder(AVCodecContext *avctx) {
 
     if (avctx->codec_id == AV_CODEC_ID_ILBC) {
         int mode = get_ilbc_mode(avctx);
-        out_format.mFramesPerPacket = 8000 * mode / 1000;
-        out_format.mBytesPerPacket = (mode == 20 ? 38 : 50);
+        out_format.mFramesPerPacket  = 8000 * mode / 1000;
+        out_format.mBytesPerPacket   = (mode == 20 ? 38 : 50);
     }
 
     status = AudioConverterNew(&in_format, &out_format, &at->converter);
 
     if (status != 0) {
-        av_log(avctx, AV_LOG_ERROR, "AudioToolbox init error: %i\n", (int) status);
+        av_log(avctx, AV_LOG_ERROR, "AudioToolbox init error: %i\n", (int)status);
         av_free(channel_layout);
         return AVERROR_UNKNOWN;
     }
@@ -379,8 +386,8 @@ static av_cold int ffat_init_encoder(AVCodecContext *avctx) {
             return AVERROR(ENOMEM);
         if (avctx->codec_id == AV_CODEC_ID_ALAC) {
             avctx->extradata_size = 0x24;
-            AV_WB32(avctx->extradata, 0x24);
-            AV_WB32(avctx->extradata + 4, MKBETAG('a', 'l', 'a', 'c'));
+            AV_WB32(avctx->extradata,     0x24);
+            AV_WB32(avctx->extradata + 4, MKBETAG('a','l','a','c'));
             extradata = avctx->extradata + 12;
             avctx->extradata_size = 0x24;
         } else {
@@ -390,7 +397,7 @@ static av_cold int ffat_init_encoder(AVCodecContext *avctx) {
                                            kAudioConverterCompressionMagicCookie,
                                            &extradata_size, extradata);
         if (status != 0) {
-            av_log(avctx, AV_LOG_ERROR, "AudioToolbox cookie error: %i\n", (int) status);
+            av_log(avctx, AV_LOG_ERROR, "AudioToolbox cookie error: %i\n", (int)status);
             return AVERROR_UNKNOWN;
         } else if (avctx->codec_id == AV_CODEC_ID_AAC) {
             GetByteContext gb;
@@ -447,8 +454,9 @@ static av_cold int ffat_init_encoder(AVCodecContext *avctx) {
 static OSStatus ffat_encode_callback(AudioConverterRef converter, UInt32 *nb_packets,
                                      AudioBufferList *data,
                                      AudioStreamPacketDescription **packets,
-                                     void *inctx) {
-    AVCodecContext * avctx = inctx;
+                                     void *inctx)
+{
+    AVCodecContext *avctx = inctx;
     ATDecodeContext *at = avctx->priv_data;
     AVFrame *frame;
     int ret;
@@ -465,12 +473,12 @@ static OSStatus ffat_encode_callback(AudioConverterRef converter, UInt32 *nb_pac
 
     frame = ff_bufqueue_get(&at->frame_queue);
 
-    data->mNumberBuffers = 1;
+    data->mNumberBuffers              = 1;
     data->mBuffers[0].mNumberChannels = avctx->channels;
-    data->mBuffers[0].mDataByteSize = frame->nb_samples *
-                                      av_get_bytes_per_sample(avctx->sample_fmt) *
-                                      avctx->channels;
-    data->mBuffers[0].mData = frame->data[0];
+    data->mBuffers[0].mDataByteSize   = frame->nb_samples *
+                                        av_get_bytes_per_sample(avctx->sample_fmt) *
+                                        avctx->channels;
+    data->mBuffers[0].mData           = frame->data[0];
     if (*nb_packets > frame->nb_samples)
         *nb_packets = frame->nb_samples;
 
@@ -487,18 +495,19 @@ static OSStatus ffat_encode_callback(AudioConverterRef converter, UInt32 *nb_pac
 }
 
 static int ffat_encode(AVCodecContext *avctx, AVPacket *avpkt,
-                       const AVFrame *frame, int *got_packet_ptr) {
+                       const AVFrame *frame, int *got_packet_ptr)
+{
     ATDecodeContext *at = avctx->priv_data;
     OSStatus ret;
 
     AudioBufferList out_buffers = {
-            .mNumberBuffers = 1,
-            .mBuffers = {
-                    {
-                            .mNumberChannels = avctx->channels,
-                            .mDataByteSize = at->pkt_size,
-                    }
+        .mNumberBuffers = 1,
+        .mBuffers = {
+            {
+                .mNumberChannels = avctx->channels,
+                .mDataByteSize = at->pkt_size,
             }
+        }
     };
     AudioStreamPacketDescription out_pkt_desc = {0};
 
@@ -555,14 +564,16 @@ static int ffat_encode(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
-static av_cold void ffat_encode_flush(AVCodecContext *avctx) {
+static av_cold void ffat_encode_flush(AVCodecContext *avctx)
+{
     ATDecodeContext *at = avctx->priv_data;
     AudioConverterReset(at->converter);
     ff_bufqueue_discard_all(&at->frame_queue);
     ff_bufqueue_discard_all(&at->used_frame_queue);
 }
 
-static av_cold int ffat_close_encoder(AVCodecContext *avctx) {
+static av_cold int ffat_close_encoder(AVCodecContext *avctx)
+{
     ATDecodeContext *at = avctx->priv_data;
     AudioConverterDispose(at->converter);
     ff_bufqueue_discard_all(&at->frame_queue);
@@ -573,26 +584,26 @@ static av_cold int ffat_close_encoder(AVCodecContext *avctx) {
 }
 
 static const AVProfile aac_profiles[] = {
-        {FF_PROFILE_AAC_LOW,   "LC"},
-        {FF_PROFILE_AAC_HE,    "HE-AAC"},
-        {FF_PROFILE_AAC_HE_V2, "HE-AACv2"},
-        {FF_PROFILE_AAC_LD,    "LD"},
-        {FF_PROFILE_AAC_ELD,   "ELD"},
-        {FF_PROFILE_UNKNOWN},
+    { FF_PROFILE_AAC_LOW,   "LC"       },
+    { FF_PROFILE_AAC_HE,    "HE-AAC"   },
+    { FF_PROFILE_AAC_HE_V2, "HE-AACv2" },
+    { FF_PROFILE_AAC_LD,    "LD"       },
+    { FF_PROFILE_AAC_ELD,   "ELD"      },
+    { FF_PROFILE_UNKNOWN },
 };
 
 #define AE AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
 #if !TARGET_OS_IPHONE
-        {"aac_at_mode", "ratecontrol mode", offsetof(ATDecodeContext, mode), AV_OPT_TYPE_INT, {.i64 = -1}, -1, kAudioCodecBitRateControlMode_Variable, AE, "mode"},
+    {"aac_at_mode", "ratecontrol mode", offsetof(ATDecodeContext, mode), AV_OPT_TYPE_INT, {.i64 = -1}, -1, kAudioCodecBitRateControlMode_Variable, AE, "mode"},
         {"auto", "VBR if global quality is given; CBR otherwise", 0, AV_OPT_TYPE_CONST, {.i64 = -1}, INT_MIN, INT_MAX, AE, "mode"},
-        {"cbr", "constant bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_Constant}, INT_MIN, INT_MAX, AE, "mode"},
-        {"abr", "long-term average bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_LongTermAverage}, INT_MIN, INT_MAX, AE, "mode"},
+        {"cbr",  "constant bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_Constant}, INT_MIN, INT_MAX, AE, "mode"},
+        {"abr",  "long-term average bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_LongTermAverage}, INT_MIN, INT_MAX, AE, "mode"},
         {"cvbr", "constrained variable bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_VariableConstrained}, INT_MIN, INT_MAX, AE, "mode"},
-        {"vbr", "variable bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_Variable}, INT_MIN, INT_MAX, AE, "mode"},
+        {"vbr" , "variable bitrate", 0, AV_OPT_TYPE_CONST, {.i64 = kAudioCodecBitRateControlMode_Variable}, INT_MIN, INT_MAX, AE, "mode"},
 #endif
-        {"aac_at_quality", "quality vs speed control", offsetof(ATDecodeContext, quality), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 2, AE},
-        {NULL},
+    {"aac_at_quality", "quality vs speed control", offsetof(ATDecodeContext, quality), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 2, AE},
+    { NULL },
 };
 
 #define FFAT_ENC_CLASS(NAME) \
@@ -628,24 +639,24 @@ static const AVOption options[] = {
     };
 
 static const uint64_t aac_at_channel_layouts[] = {
-        AV_CH_LAYOUT_MONO,
-        AV_CH_LAYOUT_STEREO,
-        AV_CH_LAYOUT_SURROUND,
-        AV_CH_LAYOUT_4POINT0,
-        AV_CH_LAYOUT_5POINT0,
-        AV_CH_LAYOUT_5POINT1,
-        AV_CH_LAYOUT_6POINT0,
-        AV_CH_LAYOUT_6POINT1,
-        AV_CH_LAYOUT_7POINT0,
-        AV_CH_LAYOUT_7POINT1_WIDE_BACK,
-        AV_CH_LAYOUT_QUAD,
-        AV_CH_LAYOUT_OCTAGONAL,
-        0,
+    AV_CH_LAYOUT_MONO,
+    AV_CH_LAYOUT_STEREO,
+    AV_CH_LAYOUT_SURROUND,
+    AV_CH_LAYOUT_4POINT0,
+    AV_CH_LAYOUT_5POINT0,
+    AV_CH_LAYOUT_5POINT1,
+    AV_CH_LAYOUT_6POINT0,
+    AV_CH_LAYOUT_6POINT1,
+    AV_CH_LAYOUT_7POINT0,
+    AV_CH_LAYOUT_7POINT1_WIDE_BACK,
+    AV_CH_LAYOUT_QUAD,
+    AV_CH_LAYOUT_OCTAGONAL,
+    0,
 };
 
-FFAT_ENC(aac, AV_CODEC_ID_AAC, aac_profiles, , .channel_layouts = aac_at_channel_layouts)
+FFAT_ENC(aac,          AV_CODEC_ID_AAC,          aac_profiles, , .channel_layouts = aac_at_channel_layouts)
 //FFAT_ENC(adpcm_ima_qt, AV_CODEC_ID_ADPCM_IMA_QT, NULL)
-FFAT_ENC(alac, AV_CODEC_ID_ALAC, NULL, | AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
-FFAT_ENC(ilbc, AV_CODEC_ID_ILBC, NULL)
-FFAT_ENC(pcm_alaw, AV_CODEC_ID_PCM_ALAW, NULL)
-FFAT_ENC(pcm_mulaw, AV_CODEC_ID_PCM_MULAW, NULL)
+FFAT_ENC(alac,         AV_CODEC_ID_ALAC,         NULL, | AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
+FFAT_ENC(ilbc,         AV_CODEC_ID_ILBC,         NULL)
+FFAT_ENC(pcm_alaw,     AV_CODEC_ID_PCM_ALAW,     NULL)
+FFAT_ENC(pcm_mulaw,    AV_CODEC_ID_PCM_MULAW,    NULL)

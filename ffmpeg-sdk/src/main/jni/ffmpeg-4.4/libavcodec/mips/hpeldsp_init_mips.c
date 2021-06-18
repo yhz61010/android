@@ -23,7 +23,8 @@
 #include "../hpeldsp.h"
 #include "libavcodec/mips/hpeldsp_mips.h"
 
-void ff_hpeldsp_init_mips(HpelDSPContext *c, int flags) {
+void ff_hpeldsp_init_mips(HpelDSPContext *c, int flags)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {

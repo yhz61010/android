@@ -33,35 +33,36 @@
 #include "packet_internal.h"
 
 #if FF_API_INIT_PACKET
-
-void av_init_packet(AVPacket *pkt) {
-    pkt->pts = AV_NOPTS_VALUE;
-    pkt->dts = AV_NOPTS_VALUE;
-    pkt->pos = -1;
-    pkt->duration = 0;
+void av_init_packet(AVPacket *pkt)
+{
+    pkt->pts                  = AV_NOPTS_VALUE;
+    pkt->dts                  = AV_NOPTS_VALUE;
+    pkt->pos                  = -1;
+    pkt->duration             = 0;
 #if FF_API_CONVERGENCE_DURATION
-    FF_DISABLE_DEPRECATION_WARNINGS
+FF_DISABLE_DEPRECATION_WARNINGS
     pkt->convergence_duration = 0;
-    FF_ENABLE_DEPRECATION_WARNINGS
+FF_ENABLE_DEPRECATION_WARNINGS
 #endif
-    pkt->flags = 0;
-    pkt->stream_index = 0;
-    pkt->buf = NULL;
-    pkt->side_data = NULL;
-    pkt->side_data_elems = 0;
+    pkt->flags                = 0;
+    pkt->stream_index         = 0;
+    pkt->buf                  = NULL;
+    pkt->side_data            = NULL;
+    pkt->side_data_elems      = 0;
 }
-
 #endif
 
-static void get_packet_defaults(AVPacket *pkt) {
+static void get_packet_defaults(AVPacket *pkt)
+{
     memset(pkt, 0, sizeof(*pkt));
 
-    pkt->pts = AV_NOPTS_VALUE;
-    pkt->dts = AV_NOPTS_VALUE;
-    pkt->pos = -1;
+    pkt->pts             = AV_NOPTS_VALUE;
+    pkt->dts             = AV_NOPTS_VALUE;
+    pkt->pos             = -1;
 }
 
-AVPacket *av_packet_alloc(void) {
+AVPacket *av_packet_alloc(void)
+{
     AVPacket *pkt = av_mallocz(sizeof(AVPacket));
     if (!pkt)
         return pkt;
@@ -71,7 +72,8 @@ AVPacket *av_packet_alloc(void) {
     return pkt;
 }
 
-void av_packet_free(AVPacket **pkt) {
+void av_packet_free(AVPacket **pkt)
+{
     if (!pkt || !*pkt)
         return;
 
@@ -79,7 +81,8 @@ void av_packet_free(AVPacket **pkt) {
     av_freep(pkt);
 }
 
-static int packet_alloc(AVBufferRef **buf, int size) {
+static int packet_alloc(AVBufferRef **buf, int size)
+{
     int ret;
     if (size < 0 || size >= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
         return AVERROR(EINVAL);
@@ -93,31 +96,34 @@ static int packet_alloc(AVBufferRef **buf, int size) {
     return 0;
 }
 
-int av_new_packet(AVPacket *pkt, int size) {
+int av_new_packet(AVPacket *pkt, int size)
+{
     AVBufferRef *buf = NULL;
     int ret = packet_alloc(&buf, size);
     if (ret < 0)
         return ret;
 
     get_packet_defaults(pkt);
-    pkt->buf = buf;
-    pkt->data = buf->data;
-    pkt->size = size;
+    pkt->buf      = buf;
+    pkt->data     = buf->data;
+    pkt->size     = size;
 
     return 0;
 }
 
-void av_shrink_packet(AVPacket *pkt, int size) {
+void av_shrink_packet(AVPacket *pkt, int size)
+{
     if (pkt->size <= size)
         return;
     pkt->size = size;
     memset(pkt->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 }
 
-int av_grow_packet(AVPacket *pkt, int grow_by) {
+int av_grow_packet(AVPacket *pkt, int grow_by)
+{
     int new_size;
-    av_assert0((unsigned) pkt->size <= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
-    if ((unsigned) grow_by >
+    av_assert0((unsigned)pkt->size <= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
+    if ((unsigned)grow_by >
         INT_MAX - (pkt->size + AV_INPUT_BUFFER_PADDING_SIZE))
         return AVERROR(ENOMEM);
 
@@ -157,7 +163,8 @@ int av_grow_packet(AVPacket *pkt, int grow_by) {
     return 0;
 }
 
-int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size) {
+int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size)
+{
     if (size >= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
         return AVERROR(EINVAL);
 
@@ -173,7 +180,6 @@ int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size) {
 }
 
 #if FF_API_AVPACKET_OLD_API
-
 FF_DISABLE_DEPRECATION_WARNINGS
 #define ALLOC_MALLOC(data, size) data = av_malloc(size)
 #define ALLOC_BUF(data, size)                \
@@ -203,15 +209,16 @@ do {                                         \
     } while (0)
 
 /* Makes duplicates of data, side_data, but does not copy any other fields */
-static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup) {
-    pkt->data = NULL;
+static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup)
+{
+    pkt->data      = NULL;
     pkt->side_data = NULL;
     pkt->side_data_elems = 0;
     if (pkt->buf) {
         AVBufferRef *ref = av_buffer_ref(src->buf);
         if (!ref)
             return AVERROR(ENOMEM);
-        pkt->buf = ref;
+        pkt->buf  = ref;
         pkt->data = ref->data;
     } else {
         DUP_DATA(pkt->data, src->data, pkt->size, 1, ALLOC_BUF);
@@ -225,23 +232,24 @@ static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup) {
     }
     return 0;
 
-    failed_alloc:
+failed_alloc:
     av_packet_unref(pkt);
     return AVERROR(ENOMEM);
 }
 
-int av_copy_packet_side_data(AVPacket *pkt, const AVPacket *src) {
+int av_copy_packet_side_data(AVPacket *pkt, const AVPacket *src)
+{
     if (src->side_data_elems) {
         int i;
         DUP_DATA(pkt->side_data, src->side_data,
-                 src->side_data_elems * sizeof(*src->side_data), 0, ALLOC_MALLOC);
+                src->side_data_elems * sizeof(*src->side_data), 0, ALLOC_MALLOC);
         if (src != pkt) {
             memset(pkt->side_data, 0,
                    src->side_data_elems * sizeof(*src->side_data));
         }
         for (i = 0; i < src->side_data_elems; i++) {
             DUP_DATA(pkt->side_data[i].data, src->side_data[i].data,
-                     src->side_data[i].size, 1, ALLOC_MALLOC);
+                    src->side_data[i].size, 1, ALLOC_MALLOC);
             pkt->side_data[i].size = src->side_data[i].size;
             pkt->side_data[i].type = src->side_data[i].type;
         }
@@ -249,12 +257,13 @@ int av_copy_packet_side_data(AVPacket *pkt, const AVPacket *src) {
     pkt->side_data_elems = src->side_data_elems;
     return 0;
 
-    failed_alloc:
+failed_alloc:
     av_packet_unref(pkt);
     return AVERROR(ENOMEM);
 }
 
-int av_dup_packet(AVPacket *pkt) {
+int av_dup_packet(AVPacket *pkt)
+{
     AVPacket tmp_pkt;
 
     if (!pkt->buf && pkt->data) {
@@ -264,15 +273,16 @@ int av_dup_packet(AVPacket *pkt) {
     return 0;
 }
 
-int av_copy_packet(AVPacket *dst, const AVPacket *src) {
+int av_copy_packet(AVPacket *dst, const AVPacket *src)
+{
     *dst = *src;
     return copy_packet_data(dst, src, 0);
 }
-
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
-void av_packet_free_side_data(AVPacket *pkt) {
+void av_packet_free_side_data(AVPacket *pkt)
+{
     int i;
     for (i = 0; i < pkt->side_data_elems; i++)
         av_freep(&pkt->side_data[i].data);
@@ -281,24 +291,24 @@ void av_packet_free_side_data(AVPacket *pkt) {
 }
 
 #if FF_API_AVPACKET_OLD_API
-
 FF_DISABLE_DEPRECATION_WARNINGS
-void av_free_packet(AVPacket *pkt) {
+void av_free_packet(AVPacket *pkt)
+{
     if (pkt) {
         if (pkt->buf)
             av_buffer_unref(&pkt->buf);
-        pkt->data = NULL;
-        pkt->size = 0;
+        pkt->data            = NULL;
+        pkt->size            = 0;
 
         av_packet_free_side_data(pkt);
     }
 }
-
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
 int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
-                            uint8_t *data, size_t size) {
+                            uint8_t *data, size_t size)
+{
     AVPacketSideData *tmp;
     int i, elems = pkt->side_data_elems;
 
@@ -313,7 +323,7 @@ int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
         }
     }
 
-    if ((unsigned) elems + 1 > AV_PKT_DATA_NB)
+    if ((unsigned)elems + 1 > AV_PKT_DATA_NB)
         return AVERROR(ERANGE);
 
     tmp = av_realloc(pkt->side_data, (elems + 1) * sizeof(*tmp));
@@ -331,7 +341,8 @@ int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
 
 
 uint8_t *av_packet_new_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
-                                 buffer_size_t size) {
+                                 buffer_size_t size)
+{
     int ret;
     uint8_t *data;
 
@@ -355,7 +366,8 @@ uint8_t *av_packet_new_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
 }
 
 uint8_t *av_packet_get_side_data(const AVPacket *pkt, enum AVPacketSideDataType type,
-                                 buffer_size_t *size) {
+                                 buffer_size_t *size)
+{
     int i;
 
     for (i = 0; i < pkt->side_data_elems; i++) {
@@ -370,70 +382,40 @@ uint8_t *av_packet_get_side_data(const AVPacket *pkt, enum AVPacketSideDataType 
     return NULL;
 }
 
-const char *av_packet_side_data_name(enum AVPacketSideDataType type) {
-    switch (type) {
-        case AV_PKT_DATA_PALETTE:
-            return "Palette";
-        case AV_PKT_DATA_NEW_EXTRADATA:
-            return "New Extradata";
-        case AV_PKT_DATA_PARAM_CHANGE:
-            return "Param Change";
-        case AV_PKT_DATA_H263_MB_INFO:
-            return "H263 MB Info";
-        case AV_PKT_DATA_REPLAYGAIN:
-            return "Replay Gain";
-        case AV_PKT_DATA_DISPLAYMATRIX:
-            return "Display Matrix";
-        case AV_PKT_DATA_STEREO3D:
-            return "Stereo 3D";
-        case AV_PKT_DATA_AUDIO_SERVICE_TYPE:
-            return "Audio Service Type";
-        case AV_PKT_DATA_QUALITY_STATS:
-            return "Quality stats";
-        case AV_PKT_DATA_FALLBACK_TRACK:
-            return "Fallback track";
-        case AV_PKT_DATA_CPB_PROPERTIES:
-            return "CPB properties";
-        case AV_PKT_DATA_SKIP_SAMPLES:
-            return "Skip Samples";
-        case AV_PKT_DATA_JP_DUALMONO:
-            return "JP Dual Mono";
-        case AV_PKT_DATA_STRINGS_METADATA:
-            return "Strings Metadata";
-        case AV_PKT_DATA_SUBTITLE_POSITION:
-            return "Subtitle Position";
-        case AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL:
-            return "Matroska BlockAdditional";
-        case AV_PKT_DATA_WEBVTT_IDENTIFIER:
-            return "WebVTT ID";
-        case AV_PKT_DATA_WEBVTT_SETTINGS:
-            return "WebVTT Settings";
-        case AV_PKT_DATA_METADATA_UPDATE:
-            return "Metadata Update";
-        case AV_PKT_DATA_MPEGTS_STREAM_ID:
-            return "MPEGTS Stream ID";
-        case AV_PKT_DATA_MASTERING_DISPLAY_METADATA:
-            return "Mastering display metadata";
-        case AV_PKT_DATA_CONTENT_LIGHT_LEVEL:
-            return "Content light level metadata";
-        case AV_PKT_DATA_SPHERICAL:
-            return "Spherical Mapping";
-        case AV_PKT_DATA_A53_CC:
-            return "A53 Closed Captions";
-        case AV_PKT_DATA_ENCRYPTION_INIT_INFO:
-            return "Encryption initialization data";
-        case AV_PKT_DATA_ENCRYPTION_INFO:
-            return "Encryption info";
-        case AV_PKT_DATA_AFD:
-            return "Active Format Description data";
-        case AV_PKT_DATA_PRFT:
-            return "Producer Reference Time";
-        case AV_PKT_DATA_ICC_PROFILE:
-            return "ICC Profile";
-        case AV_PKT_DATA_DOVI_CONF:
-            return "DOVI configuration record";
-        case AV_PKT_DATA_S12M_TIMECODE:
-            return "SMPTE ST 12-1:2014 timecode";
+const char *av_packet_side_data_name(enum AVPacketSideDataType type)
+{
+    switch(type) {
+    case AV_PKT_DATA_PALETTE:                    return "Palette";
+    case AV_PKT_DATA_NEW_EXTRADATA:              return "New Extradata";
+    case AV_PKT_DATA_PARAM_CHANGE:               return "Param Change";
+    case AV_PKT_DATA_H263_MB_INFO:               return "H263 MB Info";
+    case AV_PKT_DATA_REPLAYGAIN:                 return "Replay Gain";
+    case AV_PKT_DATA_DISPLAYMATRIX:              return "Display Matrix";
+    case AV_PKT_DATA_STEREO3D:                   return "Stereo 3D";
+    case AV_PKT_DATA_AUDIO_SERVICE_TYPE:         return "Audio Service Type";
+    case AV_PKT_DATA_QUALITY_STATS:              return "Quality stats";
+    case AV_PKT_DATA_FALLBACK_TRACK:             return "Fallback track";
+    case AV_PKT_DATA_CPB_PROPERTIES:             return "CPB properties";
+    case AV_PKT_DATA_SKIP_SAMPLES:               return "Skip Samples";
+    case AV_PKT_DATA_JP_DUALMONO:                return "JP Dual Mono";
+    case AV_PKT_DATA_STRINGS_METADATA:           return "Strings Metadata";
+    case AV_PKT_DATA_SUBTITLE_POSITION:          return "Subtitle Position";
+    case AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL:   return "Matroska BlockAdditional";
+    case AV_PKT_DATA_WEBVTT_IDENTIFIER:          return "WebVTT ID";
+    case AV_PKT_DATA_WEBVTT_SETTINGS:            return "WebVTT Settings";
+    case AV_PKT_DATA_METADATA_UPDATE:            return "Metadata Update";
+    case AV_PKT_DATA_MPEGTS_STREAM_ID:           return "MPEGTS Stream ID";
+    case AV_PKT_DATA_MASTERING_DISPLAY_METADATA: return "Mastering display metadata";
+    case AV_PKT_DATA_CONTENT_LIGHT_LEVEL:        return "Content light level metadata";
+    case AV_PKT_DATA_SPHERICAL:                  return "Spherical Mapping";
+    case AV_PKT_DATA_A53_CC:                     return "A53 Closed Captions";
+    case AV_PKT_DATA_ENCRYPTION_INIT_INFO:       return "Encryption initialization data";
+    case AV_PKT_DATA_ENCRYPTION_INFO:            return "Encryption info";
+    case AV_PKT_DATA_AFD:                        return "Active Format Description data";
+    case AV_PKT_DATA_PRFT:                       return "Producer Reference Time";
+    case AV_PKT_DATA_ICC_PROFILE:                return "ICC Profile";
+    case AV_PKT_DATA_DOVI_CONF:                  return "DOVI configuration record";
+    case AV_PKT_DATA_S12M_TIMECODE:              return "SMPTE ST 12-1:2014 timecode";
     }
     return NULL;
 }
@@ -442,14 +424,14 @@ const char *av_packet_side_data_name(enum AVPacketSideDataType type) {
 
 #define FF_MERGE_MARKER 0x8c4d9d108e25e9feULL
 
-int av_packet_merge_side_data(AVPacket *pkt) {
-    if (pkt->side_data_elems) {
+int av_packet_merge_side_data(AVPacket *pkt){
+    if(pkt->side_data_elems){
         AVBufferRef *buf;
         int i;
         uint8_t *p;
-        uint64_t size = pkt->size + 8LL + AV_INPUT_BUFFER_PADDING_SIZE;
-        AVPacket old = *pkt;
-        for (i = 0; i < old.side_data_elems; i++) {
+        uint64_t size= pkt->size + 8LL + AV_INPUT_BUFFER_PADDING_SIZE;
+        AVPacket old= *pkt;
+        for (i=0; i<old.side_data_elems; i++) {
             size += old.side_data[i].size + 5LL;
         }
         if (size > INT_MAX)
@@ -461,13 +443,13 @@ int av_packet_merge_side_data(AVPacket *pkt) {
         pkt->data = p = buf->data;
         pkt->size = size - AV_INPUT_BUFFER_PADDING_SIZE;
         bytestream_put_buffer(&p, old.data, old.size);
-        for (i = old.side_data_elems - 1; i >= 0; i--) {
+        for (i=old.side_data_elems-1; i>=0; i--) {
             bytestream_put_buffer(&p, old.side_data[i].data, old.side_data[i].size);
             bytestream_put_be32(&p, old.side_data[i].size);
-            *p++ = old.side_data[i].type | ((i == old.side_data_elems - 1) * 128);
+            *p++ = old.side_data[i].type | ((i==old.side_data_elems-1)*128);
         }
         bytestream_put_be64(&p, FF_MERGE_MARKER);
-        av_assert0(p - pkt->data == pkt->size);
+        av_assert0(p-pkt->data == pkt->size);
         memset(p, 0, AV_INPUT_BUFFER_PADDING_SIZE);
         av_packet_unref(&old);
         pkt->side_data_elems = 0;
@@ -477,22 +459,22 @@ int av_packet_merge_side_data(AVPacket *pkt) {
     return 0;
 }
 
-int av_packet_split_side_data(AVPacket *pkt) {
-    if (!pkt->side_data_elems && pkt->size > 12 && AV_RB64(pkt->data + pkt->size - 8) == FF_MERGE_MARKER) {
+int av_packet_split_side_data(AVPacket *pkt){
+    if (!pkt->side_data_elems && pkt->size >12 && AV_RB64(pkt->data + pkt->size - 8) == FF_MERGE_MARKER){
         int i;
         unsigned int size;
         uint8_t *p;
 
         p = pkt->data + pkt->size - 8 - 5;
-        for (i = 1;; i++) {
+        for (i=1; ; i++){
             size = AV_RB32(p);
-            if (size > INT_MAX - 5 || p - pkt->data < size)
+            if (size>INT_MAX - 5 || p - pkt->data < size)
                 return 0;
-            if (p[4] & 128)
+            if (p[4]&128)
                 break;
             if (p - pkt->data < size + 5)
                 return 0;
-            p -= size + 5;
+            p-= size+5;
         }
 
         if (i > AV_PKT_DATA_NB)
@@ -502,34 +484,32 @@ int av_packet_split_side_data(AVPacket *pkt) {
         if (!pkt->side_data)
             return AVERROR(ENOMEM);
 
-        p = pkt->data + pkt->size - 8 - 5;
-        for (i = 0;; i++) {
-            size = AV_RB32(p);
-            av_assert0(size <= INT_MAX - 5 && p - pkt->data >= size);
+        p= pkt->data + pkt->size - 8 - 5;
+        for (i=0; ; i++){
+            size= AV_RB32(p);
+            av_assert0(size<=INT_MAX - 5 && p - pkt->data >= size);
             pkt->side_data[i].data = av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
             pkt->side_data[i].size = size;
-            pkt->side_data[i].type = p[4] & 127;
+            pkt->side_data[i].type = p[4]&127;
             if (!pkt->side_data[i].data)
                 return AVERROR(ENOMEM);
-            memcpy(pkt->side_data[i].data, p - size, size);
+            memcpy(pkt->side_data[i].data, p-size, size);
             pkt->size -= size + 5;
-            if (p[4] & 128)
+            if(p[4]&128)
                 break;
-            p -= size + 5;
+            p-= size+5;
         }
         pkt->size -= 8;
-        pkt->side_data_elems = i + 1;
+        pkt->side_data_elems = i+1;
         return 1;
     }
     return 0;
 }
-
 #endif
 
 #if FF_API_BUFFER_SIZE_T
 uint8_t *av_packet_pack_dictionary(AVDictionary *dict, int *size)
 #else
-
 uint8_t *av_packet_pack_dictionary(AVDictionary *dict, size_t *size)
 #endif
 {
@@ -545,13 +525,13 @@ uint8_t *av_packet_pack_dictionary(AVDictionary *dict, size_t *size)
 
         while ((t = av_dict_get(dict, "", t, AV_DICT_IGNORE_SUFFIX))) {
             for (int i = 0; i < 2; i++) {
-                const char *str = i ? t->value : t->key;
+                const char  *str = i ? t->value : t->key;
                 const size_t len = strlen(str) + 1;
 
                 if (pass)
                     memcpy(data + total_length, str, len);
 #if FF_API_BUFFER_SIZE_T
-                    else if (len > INT_MAX - total_length)
+                else if (len > INT_MAX - total_length)
 #else
                 else if (len > SIZE_MAX - total_length)
 #endif
@@ -573,7 +553,6 @@ uint8_t *av_packet_pack_dictionary(AVDictionary *dict, size_t *size)
 #if FF_API_BUFFER_SIZE_T
 int av_packet_unpack_dictionary(const uint8_t *data, int size, AVDictionary **dict)
 #else
-
 int av_packet_unpack_dictionary(const uint8_t *data, size_t size,
                                 AVDictionary **dict)
 #endif
@@ -603,7 +582,8 @@ int av_packet_unpack_dictionary(const uint8_t *data, size_t size,
 }
 
 int av_packet_shrink_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
-                               buffer_size_t size) {
+                               buffer_size_t size)
+{
     int i;
 
     for (i = 0; i < pkt->side_data_elems; i++) {
@@ -617,23 +597,24 @@ int av_packet_shrink_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
     return AVERROR(ENOENT);
 }
 
-int av_packet_copy_props(AVPacket *dst, const AVPacket *src) {
+int av_packet_copy_props(AVPacket *dst, const AVPacket *src)
+{
     int i;
 
-    dst->pts = src->pts;
-    dst->dts = src->dts;
-    dst->pos = src->pos;
-    dst->duration = src->duration;
+    dst->pts                  = src->pts;
+    dst->dts                  = src->dts;
+    dst->pos                  = src->pos;
+    dst->duration             = src->duration;
 #if FF_API_CONVERGENCE_DURATION
-    FF_DISABLE_DEPRECATION_WARNINGS
+FF_DISABLE_DEPRECATION_WARNINGS
     dst->convergence_duration = src->convergence_duration;
-    FF_ENABLE_DEPRECATION_WARNINGS
+FF_ENABLE_DEPRECATION_WARNINGS
 #endif
-    dst->flags = src->flags;
-    dst->stream_index = src->stream_index;
+    dst->flags                = src->flags;
+    dst->stream_index         = src->stream_index;
 
-    dst->side_data = NULL;
-    dst->side_data_elems = 0;
+    dst->side_data            = NULL;
+    dst->side_data_elems      = 0;
     for (i = 0; i < src->side_data_elems; i++) {
         enum AVPacketSideDataType type = src->side_data[i].type;
         buffer_size_t size = src->side_data[i].size;
@@ -650,13 +631,15 @@ int av_packet_copy_props(AVPacket *dst, const AVPacket *src) {
     return 0;
 }
 
-void av_packet_unref(AVPacket *pkt) {
+void av_packet_unref(AVPacket *pkt)
+{
     av_packet_free_side_data(pkt);
     av_buffer_unref(&pkt->buf);
     get_packet_defaults(pkt);
 }
 
-int av_packet_ref(AVPacket *dst, const AVPacket *src) {
+int av_packet_ref(AVPacket *dst, const AVPacket *src)
+{
     int ret;
 
     dst->buf = NULL;
@@ -686,12 +669,13 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src) {
     dst->size = src->size;
 
     return 0;
-    fail:
+fail:
     av_packet_unref(dst);
     return ret;
 }
 
-AVPacket *av_packet_clone(const AVPacket *src) {
+AVPacket *av_packet_clone(const AVPacket *src)
+{
     AVPacket *ret = av_packet_alloc();
 
     if (!ret)
@@ -703,12 +687,14 @@ AVPacket *av_packet_clone(const AVPacket *src) {
     return ret;
 }
 
-void av_packet_move_ref(AVPacket *dst, AVPacket *src) {
+void av_packet_move_ref(AVPacket *dst, AVPacket *src)
+{
     *dst = *src;
     get_packet_defaults(src);
 }
 
-int av_packet_make_refcounted(AVPacket *pkt) {
+int av_packet_make_refcounted(AVPacket *pkt)
+{
     int ret;
 
     if (pkt->buf)
@@ -726,7 +712,8 @@ int av_packet_make_refcounted(AVPacket *pkt) {
     return 0;
 }
 
-int av_packet_make_writable(AVPacket *pkt) {
+int av_packet_make_writable(AVPacket *pkt)
+{
     AVBufferRef *buf = NULL;
     int ret;
 
@@ -741,13 +728,14 @@ int av_packet_make_writable(AVPacket *pkt) {
         memcpy(buf->data, pkt->data, pkt->size);
 
     av_buffer_unref(&pkt->buf);
-    pkt->buf = buf;
+    pkt->buf  = buf;
     pkt->data = buf->data;
 
     return 0;
 }
 
-void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb) {
+void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
+{
     if (pkt->pts != AV_NOPTS_VALUE)
         pkt->pts = av_rescale_q(pkt->pts, src_tb, dst_tb);
     if (pkt->dts != AV_NOPTS_VALUE)
@@ -755,18 +743,19 @@ void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb) {
     if (pkt->duration > 0)
         pkt->duration = av_rescale_q(pkt->duration, src_tb, dst_tb);
 #if FF_API_CONVERGENCE_DURATION
-    FF_DISABLE_DEPRECATION_WARNINGS
+FF_DISABLE_DEPRECATION_WARNINGS
     if (pkt->convergence_duration > 0)
         pkt->convergence_duration = av_rescale_q(pkt->convergence_duration, src_tb, dst_tb);
-    FF_ENABLE_DEPRECATION_WARNINGS
+FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 }
 
 int avpriv_packet_list_put(PacketList **packet_buffer,
                            PacketList **plast_pktl,
-                           AVPacket *pkt,
+                           AVPacket      *pkt,
                            int (*copy)(AVPacket *dst, const AVPacket *src),
-                           int flags) {
+                           int flags)
+{
     PacketList *pktl = av_mallocz(sizeof(PacketList));
     int ret;
 
@@ -800,12 +789,13 @@ int avpriv_packet_list_put(PacketList **packet_buffer,
 
 int avpriv_packet_list_get(PacketList **pkt_buffer,
                            PacketList **pkt_buffer_end,
-                           AVPacket *pkt) {
+                           AVPacket      *pkt)
+{
     PacketList *pktl;
     if (!*pkt_buffer)
         return AVERROR(EAGAIN);
-    pktl = *pkt_buffer;
-    *pkt = pktl->pkt;
+    pktl        = *pkt_buffer;
+    *pkt        = pktl->pkt;
     *pkt_buffer = pktl->next;
     if (!pktl->next)
         *pkt_buffer_end = NULL;
@@ -813,7 +803,8 @@ int avpriv_packet_list_get(PacketList **pkt_buffer,
     return 0;
 }
 
-void avpriv_packet_list_free(PacketList **pkt_buf, PacketList **pkt_buf_end) {
+void avpriv_packet_list_free(PacketList **pkt_buf, PacketList **pkt_buf_end)
+{
     PacketList *tmp = *pkt_buf;
 
     while (tmp) {
@@ -822,35 +813,37 @@ void avpriv_packet_list_free(PacketList **pkt_buf, PacketList **pkt_buf_end) {
         av_packet_unref(&pktl->pkt);
         av_freep(&pktl);
     }
-    *pkt_buf = NULL;
+    *pkt_buf     = NULL;
     *pkt_buf_end = NULL;
 }
 
-int ff_side_data_set_encoder_stats(AVPacket *pkt, int quality, int64_t *error, int error_count, int pict_type) {
+int ff_side_data_set_encoder_stats(AVPacket *pkt, int quality, int64_t *error, int error_count, int pict_type)
+{
     uint8_t *side_data;
     buffer_size_t side_data_size;
     int i;
 
     side_data = av_packet_get_side_data(pkt, AV_PKT_DATA_QUALITY_STATS, &side_data_size);
     if (!side_data) {
-        side_data_size = 4 + 4 + 8 * error_count;
+        side_data_size = 4+4+8*error_count;
         side_data = av_packet_new_side_data(pkt, AV_PKT_DATA_QUALITY_STATS,
                                             side_data_size);
     }
 
-    if (!side_data || side_data_size < 4 + 4 + 8 * error_count)
+    if (!side_data || side_data_size < 4+4+8*error_count)
         return AVERROR(ENOMEM);
 
-    AV_WL32(side_data, quality);
+    AV_WL32(side_data   , quality  );
     side_data[4] = pict_type;
     side_data[5] = error_count;
-    for (i = 0; i < error_count; i++)
-        AV_WL64(side_data + 8 + 8 * i, error[i]);
+    for (i = 0; i<error_count; i++)
+        AV_WL64(side_data+8 + 8*i , error[i]);
 
     return 0;
 }
 
-int ff_side_data_set_prft(AVPacket *pkt, int64_t timestamp) {
+int ff_side_data_set_prft(AVPacket *pkt, int64_t timestamp)
+{
     AVProducerReferenceTime *prft;
     uint8_t *side_data;
     buffer_size_t side_data_size;
@@ -864,7 +857,7 @@ int ff_side_data_set_prft(AVPacket *pkt, int64_t timestamp) {
     if (!side_data || side_data_size < sizeof(AVProducerReferenceTime))
         return AVERROR(ENOMEM);
 
-    prft = (AVProducerReferenceTime *) side_data;
+    prft = (AVProducerReferenceTime *)side_data;
     prft->wallclock = timestamp;
     prft->flags = 0;
 

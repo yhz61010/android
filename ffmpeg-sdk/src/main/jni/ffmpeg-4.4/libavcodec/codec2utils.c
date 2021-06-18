@@ -24,9 +24,9 @@
 #include "libavcodec/codec2utils.h"
 
 #if LIBAVCODEC_VERSION_MAJOR < 59
-
-int avpriv_codec2_mode_bit_rate(void *logctx, int mode) {
-    int frame_size = avpriv_codec2_mode_frame_size(logctx, mode);
+int avpriv_codec2_mode_bit_rate(void *logctx, int mode)
+{
+    int frame_size  = avpriv_codec2_mode_frame_size(logctx, mode);
     int block_align = avpriv_codec2_mode_block_align(logctx, mode);
 
     if (frame_size <= 0 || block_align <= 0) {
@@ -36,17 +36,18 @@ int avpriv_codec2_mode_bit_rate(void *logctx, int mode) {
     return 8 * 8000 * block_align / frame_size;
 }
 
-int avpriv_codec2_mode_frame_size(void *logctx, int mode) {
-    int frame_size_table[CODEC2_MODE_MAX + 1] = {
-            160,    // 3200
-            160,    // 2400
-            320,    // 1600
-            320,    // 1400
-            320,    // 1300
-            320,    // 1200
-            320,    // 700
-            320,    // 700B
-            320,    // 700C
+int avpriv_codec2_mode_frame_size(void *logctx, int mode)
+{
+    int frame_size_table[CODEC2_MODE_MAX+1] = {
+        160,    // 3200
+        160,    // 2400
+        320,    // 1600
+        320,    // 1400
+        320,    // 1300
+        320,    // 1200
+        320,    // 700
+        320,    // 700B
+        320,    // 700C
     };
 
     if (mode < 0 || mode > CODEC2_MODE_MAX) {
@@ -57,17 +58,18 @@ int avpriv_codec2_mode_frame_size(void *logctx, int mode) {
     }
 }
 
-int avpriv_codec2_mode_block_align(void *logctx, int mode) {
-    int block_align_table[CODEC2_MODE_MAX + 1] = {
-            8,      // 3200
-            6,      // 2400
-            8,      // 1600
-            7,      // 1400
-            7,      // 1300
-            6,      // 1200
-            4,      // 700
-            4,      // 700B
-            4,      // 700C
+int avpriv_codec2_mode_block_align(void *logctx, int mode)
+{
+    int block_align_table[CODEC2_MODE_MAX+1] = {
+        8,      // 3200
+        6,      // 2400
+        8,      // 1600
+        7,      // 1400
+        7,      // 1300
+        6,      // 1200
+        4,      // 700
+        4,      // 700B
+        4,      // 700C
     };
 
     if (mode < 0 || mode > CODEC2_MODE_MAX) {
@@ -77,5 +79,4 @@ int avpriv_codec2_mode_block_align(void *logctx, int mode) {
         return block_align_table[mode];
     }
 }
-
 #endif

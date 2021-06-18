@@ -19,7 +19,8 @@
 #include "libavcodec/mpeg12.h"
 #include "libavcodec/mpeg12data.h"
 
-int main(void) {
+int main(void)
+{
     int i;
 
 #define TEST_MATCH(frame_rate, code, ext_n, ext_d) do { \
@@ -55,32 +56,32 @@ int main(void) {
     // between 24 and 24000/1001.)
     for (i = 1; i <= 8; i++) {
         TEST_MATCH(av_sub_q(ff_mpeg12_frame_rate_tab[i],
-                            (AVRational) {1, 1000}), i, 0, 0);
+                            (AVRational) { 1, 1000 }), i, 0, 0);
         TEST_MATCH(av_add_q(ff_mpeg12_frame_rate_tab[i],
-                            (AVRational) {1, 1000}), i, 0, 0);
+                            (AVRational) { 1, 1000 }), i, 0, 0);
     }
 
     // Exactly constructable framerates should be exact.  Note that some
     // values can be made in multiple ways (e.g. 12 = 24 / 2 == 60 / 5),
     // and there is no reason to favour any particular choice.
-    TEST_EXACT(1, 1);
-    TEST_EXACT(2, 1);
-    TEST_EXACT(12, 1);
-    TEST_EXACT(15000, 1001);
-    TEST_EXACT(15, 1);
-    TEST_EXACT(120, 1);
+    TEST_EXACT(     1,    1);
+    TEST_EXACT(     2,    1);
+    TEST_EXACT(    12,    1);
+    TEST_EXACT( 15000, 1001);
+    TEST_EXACT(    15,    1);
+    TEST_EXACT(   120,    1);
     TEST_EXACT(120000, 1001);
-    TEST_EXACT(200, 1);
-    TEST_EXACT(240, 1);
+    TEST_EXACT(   200,    1);
+    TEST_EXACT(   240,    1);
 
     // Values higher than 240 (the highest representable, as 60 * 4 / 1)
     // should be mapped to 240.
     for (i = 240; i < 1000; i += 10)
-        TEST_MATCH(((AVRational) {i, 1}), 8, 3, 0);
+        TEST_MATCH(((AVRational) { i, 1 }), 8, 3, 0);
     // Values lower than 24000/32032 (the lowest representable, as
     // 24000/1001 * 1 / 32) should be mapped to 24000/32032.
     for (i = 74; i > 0; i--)
-        TEST_MATCH(((AVRational) {i, 100}), 1, 0, 31);
+        TEST_MATCH(((AVRational) { i, 100 }), 1, 0, 31);
 
     return 0;
 }

@@ -365,7 +365,8 @@ static void avg_pixels8_xy2_altivec(uint8_t *block, const uint8_t *pixels, ptrdi
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_hpeldsp_init_ppc(HpelDSPContext *c, int flags) {
+av_cold void ff_hpeldsp_init_ppc(HpelDSPContext *c, int flags)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

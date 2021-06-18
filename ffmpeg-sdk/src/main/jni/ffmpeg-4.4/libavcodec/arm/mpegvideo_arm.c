@@ -37,11 +37,11 @@ AV_CHECK_OFFSET(MpegEncContext, h263_aic,         H263_AIC);
 
 void ff_dct_unquantize_h263_inter_neon(MpegEncContext *s, int16_t *block,
                                        int n, int qscale);
-
 void ff_dct_unquantize_h263_intra_neon(MpegEncContext *s, int16_t *block,
                                        int n, int qscale);
 
-av_cold void ff_mpv_common_init_arm(MpegEncContext *s) {
+av_cold void ff_mpv_common_init_arm(MpegEncContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_armv5te(cpu_flags))

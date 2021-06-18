@@ -24,7 +24,8 @@
 #include "adts_header.h"
 #include "adts_parser.h"
 
-int av_adts_header_parse(const uint8_t *buf, uint32_t *samples, uint8_t *frames) {
+int av_adts_header_parse(const uint8_t *buf, uint32_t *samples, uint8_t *frames)
+{
 #if CONFIG_ADTS_HEADER
     GetBitContext gb;
     AACADTSHeaderInfo hdr;

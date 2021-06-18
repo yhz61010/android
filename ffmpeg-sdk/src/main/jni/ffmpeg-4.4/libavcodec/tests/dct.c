@@ -29,11 +29,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
 #include <math.h>
 
 #include "libavutil/cpu.h"
@@ -54,48 +52,46 @@
 
 struct algo {
     const char *name;
-
     void (*func)(int16_t *block);
-
     enum idct_permutation_type perm_type;
     int cpu_flag;
     int nonspec;
 };
 
 static const struct algo fdct_tab[] = {
-        {"REF-DBL", ff_ref_fdct, FF_IDCT_PERM_NONE},
-        {"IJG-AAN-INT", ff_fdct_ifast, FF_IDCT_PERM_NONE},
-        {"IJG-LLM-INT", ff_jpeg_fdct_islow_8, FF_IDCT_PERM_NONE},
+    { "REF-DBL",     ff_ref_fdct,          FF_IDCT_PERM_NONE },
+    { "IJG-AAN-INT", ff_fdct_ifast,        FF_IDCT_PERM_NONE },
+    { "IJG-LLM-INT", ff_jpeg_fdct_islow_8, FF_IDCT_PERM_NONE },
 #if CONFIG_FAANDCT
-        { "FAAN",        ff_faandct,           FF_IDCT_PERM_NONE },
+    { "FAAN",        ff_faandct,           FF_IDCT_PERM_NONE },
 #endif /* CONFIG_FAANDCT */
 };
 
-static void ff_prores_idct_wrap(int16_t *dst) {
-    LOCAL_ALIGNED(16, int16_t, qmat,[64]);
+static void ff_prores_idct_wrap(int16_t *dst){
+    LOCAL_ALIGNED(16, int16_t, qmat, [64]);
     int i;
 
-    for (i = 0; i < 64; i++) {
-        qmat[i] = 4;
+    for(i=0; i<64; i++){
+        qmat[i]=4;
     }
     ff_prores_idct_10(dst, qmat);
-    for (i = 0; i < 64; i++) {
-        dst[i] -= 512;
+    for(i=0; i<64; i++) {
+         dst[i] -= 512;
     }
 }
 
 static const struct algo idct_tab[] = {
-        {"REF-DBL", ff_ref_idct, FF_IDCT_PERM_NONE},
-        {"INT", ff_j_rev_dct, FF_IDCT_PERM_LIBMPEG2},
-        {"SIMPLE-C", ff_simple_idct_int16_8bit, FF_IDCT_PERM_NONE},
-        {"SIMPLE-C10", ff_simple_idct_int16_10bit, FF_IDCT_PERM_NONE},
-        {"SIMPLE-C12", ff_simple_idct_int16_12bit, FF_IDCT_PERM_NONE, 0, 1},
-        {"PR-C", ff_prores_idct_wrap, FF_IDCT_PERM_NONE, 0, 1},
+    { "REF-DBL",     ff_ref_idct,          FF_IDCT_PERM_NONE },
+    { "INT",         ff_j_rev_dct,         FF_IDCT_PERM_LIBMPEG2 },
+    { "SIMPLE-C",    ff_simple_idct_int16_8bit,     FF_IDCT_PERM_NONE },
+    { "SIMPLE-C10",  ff_simple_idct_int16_10bit,    FF_IDCT_PERM_NONE },
+    { "SIMPLE-C12",  ff_simple_idct_int16_12bit,    FF_IDCT_PERM_NONE, 0, 1 },
+    { "PR-C",        ff_prores_idct_wrap,  FF_IDCT_PERM_NONE, 0, 1 },
 #if CONFIG_FAANIDCT
-        { "FAANI",       ff_faanidct,          FF_IDCT_PERM_NONE },
+    { "FAANI",       ff_faanidct,          FF_IDCT_PERM_NONE },
 #endif /* CONFIG_FAANIDCT */
 #if CONFIG_MPEG4_DECODER
-        { "XVID",        ff_xvid_idct,         FF_IDCT_PERM_NONE, 0, 1 },
+    { "XVID",        ff_xvid_idct,         FF_IDCT_PERM_NONE, 0, 1 },
 #endif /* CONFIG_MPEG4_DECODER */
 };
 
@@ -108,8 +104,8 @@ static const struct algo idct_tab[] = {
 #elif ARCH_X86
 #include "x86/dct.c"
 #else
-static const struct algo fdct_tab_arch[] = {{0}};
-static const struct algo idct_tab_arch[] = {{0}};
+static const struct algo fdct_tab_arch[] = { { 0 } };
+static const struct algo idct_tab_arch[] = { { 0 } };
 #endif
 
 #define AANSCALE_BITS 12
@@ -120,37 +116,39 @@ static const struct algo idct_tab_arch[] = {{0}};
 DECLARE_ALIGNED(16, static int16_t, block)[64];
 DECLARE_ALIGNED(8,  static int16_t, block1)[64];
 
-static void init_block(int16_t block[64], int test, int is_idct, AVLFG *prng, int vals) {
+static void init_block(int16_t block[64], int test, int is_idct, AVLFG *prng, int vals)
+{
     int i, j;
 
     memset(block, 0, 64 * sizeof(*block));
 
     switch (test) {
-        case 0:
+    case 0:
+        for (i = 0; i < 64; i++)
+            block[i] = (av_lfg_get(prng) % (2*vals)) -vals;
+        if (is_idct) {
+            ff_ref_fdct(block);
             for (i = 0; i < 64; i++)
-                block[i] = (av_lfg_get(prng) % (2 * vals)) - vals;
-            if (is_idct) {
-                ff_ref_fdct(block);
-                for (i = 0; i < 64; i++)
-                    block[i] >>= 3;
-            }
-            break;
-        case 1:
-            j = av_lfg_get(prng) % 10 + 1;
-            for (i = 0; i < j; i++) {
-                int idx = av_lfg_get(prng) % 64;
-                block[idx] = av_lfg_get(prng) % (2 * vals) - vals;
-            }
-            break;
-        case 2:
-            block[0] = av_lfg_get(prng) % (16 * vals) - (8 * vals);
-            block[63] = (block[0] & 1) ^ 1;
-            break;
+                block[i] >>= 3;
+        }
+        break;
+    case 1:
+        j = av_lfg_get(prng) % 10 + 1;
+        for (i = 0; i < j; i++) {
+            int idx = av_lfg_get(prng) % 64;
+            block[idx] = av_lfg_get(prng) % (2*vals) -vals;
+        }
+        break;
+    case 2:
+        block[ 0] = av_lfg_get(prng) % (16*vals) - (8*vals);
+        block[63] = (block[0] & 1) ^ 1;
+        break;
     }
 }
 
 static void permute(int16_t dst[64], const int16_t src[64],
-                    enum idct_permutation_type perm_type) {
+                    enum idct_permutation_type perm_type)
+{
     int i;
 
 #if ARCH_X86
@@ -159,26 +157,27 @@ static void permute(int16_t dst[64], const int16_t src[64],
 #endif
 
     switch (perm_type) {
-        case FF_IDCT_PERM_LIBMPEG2:
-            for (i = 0; i < 64; i++)
-                dst[(i & 0x38) | ((i & 6) >> 1) | ((i & 1) << 2)] = src[i];
-            break;
-        case FF_IDCT_PERM_PARTTRANS:
-            for (i = 0; i < 64; i++)
-                dst[(i & 0x24) | ((i & 3) << 3) | ((i >> 3) & 3)] = src[i];
-            break;
-        case FF_IDCT_PERM_TRANSPOSE:
-            for (i = 0; i < 64; i++)
-                dst[(i >> 3) | ((i << 3) & 0x38)] = src[i];
-            break;
-        default:
-            for (i = 0; i < 64; i++)
-                dst[i] = src[i];
-            break;
+    case FF_IDCT_PERM_LIBMPEG2:
+        for (i = 0; i < 64; i++)
+            dst[(i & 0x38) | ((i & 6) >> 1) | ((i & 1) << 2)] = src[i];
+        break;
+    case FF_IDCT_PERM_PARTTRANS:
+        for (i = 0; i < 64; i++)
+            dst[(i & 0x24) | ((i & 3) << 3) | ((i >> 3) & 3)] = src[i];
+        break;
+    case FF_IDCT_PERM_TRANSPOSE:
+        for (i = 0; i < 64; i++)
+            dst[(i>>3) | ((i<<3)&0x38)] = src[i];
+        break;
+    default:
+        for (i = 0; i < 64; i++)
+            dst[i] = src[i];
+        break;
     }
 }
 
-static int dct_error(const struct algo *dct, int test, int is_idct, int speed, const int bits) {
+static int dct_error(const struct algo *dct, int test, int is_idct, int speed, const int bits)
+{
     void (*ref)(int16_t *block) = is_idct ? ff_ref_idct : ff_ref_fdct;
     int it, i, scale;
     int err_inf, v;
@@ -188,7 +187,7 @@ static int dct_error(const struct algo *dct, int test, int is_idct, int speed, c
     int maxout = 0;
     int blockSumErrMax = 0, blockSumErr;
     AVLFG prng;
-    const int vals = 1 << bits;
+    const int vals=1<<bits;
     double omse, ome;
     int spec_err;
 
@@ -215,7 +214,7 @@ static int dct_error(const struct algo *dct, int test, int is_idct, int speed, c
         ref(block1);
         if (!strcmp(dct->name, "PR-SSE2"))
             for (i = 0; i < 64; i++)
-                block1[i] = av_clip(block1[i], 4 - 512, 1019 - 512);
+                block1[i] = av_clip(block1[i], 4-512, 1019-512);
 
         blockSumErr = 0;
         for (i = 0; i < 64; i++) {
@@ -236,7 +235,7 @@ static int dct_error(const struct algo *dct, int test, int is_idct, int speed, c
     }
     for (i = 0; i < 64; i++) {
         sysErrMax = FFMAX(sysErrMax, FFABS(sysErr[i]));
-        err2_max = FFMAX(err2_max, FFABS(err2_matrix[i]));
+        err2_max  = FFMAX(err2_max , FFABS(err2_matrix[i]));
     }
 
     for (i = 0; i < 64; i++) {
@@ -247,7 +246,7 @@ static int dct_error(const struct algo *dct, int test, int is_idct, int speed, c
     printf("\n");
 
     omse = (double) err2 / NB_ITS / 64;
-    ome = (double) err_sum / NB_ITS / 64;
+    ome  = (double) err_sum / NB_ITS / 64;
 
     spec_err = is_idct && (err_inf > 1 || omse > 0.02 || fabs(ome) > 0.0015);
     if (test < 2)
@@ -292,7 +291,8 @@ static int dct_error(const struct algo *dct, int test, int is_idct, int speed, c
 DECLARE_ALIGNED(8, static uint8_t, img_dest)[64];
 DECLARE_ALIGNED(8, static uint8_t, img_dest1)[64];
 
-static void idct248_ref(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
+static void idct248_ref(uint8_t *dest, ptrdiff_t linesize, int16_t *block)
+{
     static int init;
     static double c8[8][8];
     static double c4[4][4];
@@ -327,9 +327,9 @@ static void idct248_ref(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 8; j++) {
             block1[8 * (2 * i) + j] =
-                    (block[8 * (2 * i) + j] + block[8 * (2 * i + 1) + j]) * s;
+                (block[8 * (2 * i) + j] + block[8 * (2 * i + 1) + j]) * s;
             block1[8 * (2 * i + 1) + j] =
-                    (block[8 * (2 * i) + j] - block[8 * (2 * i + 1) + j]) * s;
+                (block[8 * (2 * i) + j] - block[8 * (2 * i + 1) + j]) * s;
         }
     }
 
@@ -364,7 +364,7 @@ static void idct248_ref(uint8_t *dest, ptrdiff_t linesize, int16_t *block) {
     for (i = 0; i < 8; i++) {
         for (j = 0; j < 8; j++) {
             v = block3[8 * i + j];
-            if (v < 0) v = 0;
+            if      (v < 0)   v = 0;
             else if (v > 255) v = 255;
             dest[i * linesize + j] = (int) rint(v);
         }
@@ -375,7 +375,8 @@ static void idct248_error(const char *name,
                           void (*idct248_put)(uint8_t *dest,
                                               ptrdiff_t line_size,
                                               int16_t *block),
-                          int speed) {
+                          int speed)
+{
     int it, i, it1, ti, ti1, err_max, v;
     AVLFG prng;
 
@@ -447,7 +448,8 @@ static void idct248_error(const char *name,
            (double) it1 * 1000.0 / (double) ti1);
 }
 
-static void help(void) {
+static void help(void)
+{
     printf("dct-test [-i] [<test-number>] [<bits>]\n"
            "test-number 0 -> test with random matrixes\n"
            "            1 -> test with random sparse matrixes\n"
@@ -459,18 +461,17 @@ static void help(void) {
 }
 
 #if !HAVE_GETOPT
-
 #include "compat/getopt.c"
-
 #endif
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int test_idct = 0, test_248_dct = 0;
     int c, i;
     int test = 1;
     int speed = 0;
     int err = 0;
-    int bits = 8;
+    int bits=8;
 
     ff_ref_dct_init();
 
@@ -479,25 +480,25 @@ int main(int argc, char **argv) {
         if (c == -1)
             break;
         switch (c) {
-            case 'i':
-                test_idct = 1;
-                break;
-            case '4':
-                test_248_dct = 1;
-                break;
-            case 't':
-                speed = 1;
-                break;
-            default:
-            case 'h':
-                help();
-                return 0;
+        case 'i':
+            test_idct = 1;
+            break;
+        case '4':
+            test_248_dct = 1;
+            break;
+        case 't':
+            speed = 1;
+            break;
+        default:
+        case 'h':
+            help();
+            return 0;
         }
     }
 
     if (optind < argc)
         test = atoi(argv[optind]);
-    if (optind + 1 < argc) bits = atoi(argv[optind + 1]);
+    if(optind+1 < argc) bits= atoi(argv[optind+1]);
 
     printf("ffmpeg DCT/IDCT test\n");
 

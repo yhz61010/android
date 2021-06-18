@@ -48,7 +48,8 @@ typedef struct AV1FSplitContext {
     int last_frame_idx;
 } AV1FSplitContext;
 
-static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out) {
+static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out)
+{
     AV1FSplitContext *s = ctx->priv_data;
     CodedBitstreamFragment *td = &s->temporal_unit;
     int i, ret;
@@ -106,7 +107,7 @@ static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out) {
                 frame = &obu->obu.frame.header;
                 cur_frame_type = obu->header.obu_type;
                 s->last_frame_idx = s->cur_frame_idx;
-                s->cur_frame_idx = i + 1;
+                s->cur_frame_idx  = i + 1;
                 s->cur_frame++;
 
                 // split here unless it's the last frame, in which case
@@ -158,7 +159,7 @@ static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out) {
         if (ret < 0)
             goto fail;
 
-        out->data = (uint8_t *) td->units[s->last_frame_idx].data;
+        out->data = (uint8_t *)td->units[s->last_frame_idx].data;
         out->size = size;
 
         // skip the frame in the buffer packet if it's split successfully, so it's not present
@@ -177,11 +178,11 @@ static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out) {
         return 0;
     }
 
-    passthrough:
+passthrough:
     av_packet_move_ref(out, s->buffer_pkt);
 
     ret = 0;
-    fail:
+fail:
     if (ret < 0) {
         av_packet_unref(out);
         av_packet_unref(s->buffer_pkt);
@@ -192,14 +193,15 @@ static int av1_frame_split_filter(AVBSFContext *ctx, AVPacket *out) {
 }
 
 static const CodedBitstreamUnitType decompose_unit_types[] = {
-        AV1_OBU_TEMPORAL_DELIMITER,
-        AV1_OBU_SEQUENCE_HEADER,
-        AV1_OBU_FRAME_HEADER,
-        AV1_OBU_TILE_GROUP,
-        AV1_OBU_FRAME,
+    AV1_OBU_TEMPORAL_DELIMITER,
+    AV1_OBU_SEQUENCE_HEADER,
+    AV1_OBU_FRAME_HEADER,
+    AV1_OBU_TILE_GROUP,
+    AV1_OBU_FRAME,
 };
 
-static int av1_frame_split_init(AVBSFContext *ctx) {
+static int av1_frame_split_init(AVBSFContext *ctx)
+{
     AV1FSplitContext *s = ctx->priv_data;
     CodedBitstreamFragment *td = &s->temporal_unit;
     int ret;
@@ -212,7 +214,7 @@ static int av1_frame_split_init(AVBSFContext *ctx) {
     if (ret < 0)
         return ret;
 
-    s->cbc->decompose_unit_types = decompose_unit_types;
+    s->cbc->decompose_unit_types    = decompose_unit_types;
     s->cbc->nb_decompose_unit_types = FF_ARRAY_ELEMS(decompose_unit_types);
 
     if (!ctx->par_in->extradata_size)
@@ -227,14 +229,16 @@ static int av1_frame_split_init(AVBSFContext *ctx) {
     return 0;
 }
 
-static void av1_frame_split_flush(AVBSFContext *ctx) {
+static void av1_frame_split_flush(AVBSFContext *ctx)
+{
     AV1FSplitContext *s = ctx->priv_data;
 
     av_packet_unref(s->buffer_pkt);
     ff_cbs_fragment_reset(&s->temporal_unit);
 }
 
-static void av1_frame_split_close(AVBSFContext *ctx) {
+static void av1_frame_split_close(AVBSFContext *ctx)
+{
     AV1FSplitContext *s = ctx->priv_data;
 
     av_packet_free(&s->buffer_pkt);
@@ -243,15 +247,15 @@ static void av1_frame_split_close(AVBSFContext *ctx) {
 }
 
 static const enum AVCodecID av1_frame_split_codec_ids[] = {
-        AV_CODEC_ID_AV1, AV_CODEC_ID_NONE,
+    AV_CODEC_ID_AV1, AV_CODEC_ID_NONE,
 };
 
 const AVBitStreamFilter ff_av1_frame_split_bsf = {
-        .name           = "av1_frame_split",
-        .priv_data_size = sizeof(AV1FSplitContext),
-        .init           = av1_frame_split_init,
-        .flush          = av1_frame_split_flush,
-        .close          = av1_frame_split_close,
-        .filter         = av1_frame_split_filter,
-        .codec_ids      = av1_frame_split_codec_ids,
+    .name           = "av1_frame_split",
+    .priv_data_size = sizeof(AV1FSplitContext),
+    .init           = av1_frame_split_init,
+    .flush          = av1_frame_split_flush,
+    .close          = av1_frame_split_close,
+    .filter         = av1_frame_split_filter,
+    .codec_ids      = av1_frame_split_codec_ids,
 };

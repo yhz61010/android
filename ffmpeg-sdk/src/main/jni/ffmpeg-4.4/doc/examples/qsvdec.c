@@ -48,11 +48,12 @@ typedef struct DecodeContext {
     AVBufferRef *hw_device_ref;
 } DecodeContext;
 
-static int get_format(AVCodecContext *avctx, const enum AVPixelFormat *pix_fmts) {
+static int get_format(AVCodecContext *avctx, const enum AVPixelFormat *pix_fmts)
+{
     while (*pix_fmts != AV_PIX_FMT_NONE) {
         if (*pix_fmts == AV_PIX_FMT_QSV) {
             DecodeContext *decode = avctx->opaque;
-            AVHWFramesContext *frames_ctx;
+            AVHWFramesContext  *frames_ctx;
             AVQSVFramesContext *frames_hwctx;
             int ret;
 
@@ -60,13 +61,13 @@ static int get_format(AVCodecContext *avctx, const enum AVPixelFormat *pix_fmts)
             avctx->hw_frames_ctx = av_hwframe_ctx_alloc(decode->hw_device_ref);
             if (!avctx->hw_frames_ctx)
                 return AV_PIX_FMT_NONE;
-            frames_ctx = (AVHWFramesContext *) avctx->hw_frames_ctx->data;
+            frames_ctx   = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
             frames_hwctx = frames_ctx->hwctx;
 
-            frames_ctx->format = AV_PIX_FMT_QSV;
-            frames_ctx->sw_format = avctx->sw_pix_fmt;
-            frames_ctx->width = FFALIGN(avctx->coded_width, 32);
-            frames_ctx->height = FFALIGN(avctx->coded_height, 32);
+            frames_ctx->format            = AV_PIX_FMT_QSV;
+            frames_ctx->sw_format         = avctx->sw_pix_fmt;
+            frames_ctx->width             = FFALIGN(avctx->coded_width,  32);
+            frames_ctx->height            = FFALIGN(avctx->coded_height, 32);
             frames_ctx->initial_pool_size = 32;
 
             frames_hwctx->frame_type = MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
@@ -88,7 +89,8 @@ static int get_format(AVCodecContext *avctx, const enum AVPixelFormat *pix_fmts)
 
 static int decode_packet(DecodeContext *decode, AVCodecContext *decoder_ctx,
                          AVFrame *frame, AVFrame *sw_frame,
-                         AVPacket *pkt, AVIOContext *output_ctx) {
+                         AVPacket *pkt, AVIOContext *output_ctx)
+{
     int ret = 0;
 
     ret = avcodec_send_packet(decoder_ctx, pkt);
@@ -121,7 +123,7 @@ static int decode_packet(DecodeContext *decode, AVCodecContext *decoder_ctx,
             for (j = 0; j < (sw_frame->height >> (i > 0)); j++)
                 avio_write(output_ctx, sw_frame->data[i] + j * sw_frame->linesize[i], sw_frame->width);
 
-        fail:
+fail:
         av_frame_unref(sw_frame);
         av_frame_unref(frame);
 
@@ -132,16 +134,17 @@ static int decode_packet(DecodeContext *decode, AVCodecContext *decoder_ctx,
     return 0;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     AVFormatContext *input_ctx = NULL;
     AVStream *video_st = NULL;
     AVCodecContext *decoder_ctx = NULL;
     const AVCodec *decoder;
 
-    AVPacket pkt = {0};
+    AVPacket pkt = { 0 };
     AVFrame *frame = NULL, *sw_frame = NULL;
 
-    DecodeContext decode = {NULL};
+    DecodeContext decode = { NULL };
 
     AVIOContext *output_ctx = NULL;
 
@@ -206,8 +209,8 @@ int main(int argc, char **argv) {
         decoder_ctx->extradata_size = video_st->codecpar->extradata_size;
     }
 
-    decoder_ctx->opaque = &decode;
-    decoder_ctx->get_format = get_format;
+    decoder_ctx->opaque      = &decode;
+    decoder_ctx->get_format  = get_format;
 
     ret = avcodec_open2(decoder_ctx, NULL, NULL);
     if (ret < 0) {
@@ -222,7 +225,7 @@ int main(int argc, char **argv) {
         goto finish;
     }
 
-    frame = av_frame_alloc();
+    frame    = av_frame_alloc();
     sw_frame = av_frame_alloc();
     if (!frame || !sw_frame) {
         ret = AVERROR(ENOMEM);
@@ -246,7 +249,7 @@ int main(int argc, char **argv) {
     pkt.size = 0;
     ret = decode_packet(&decode, decoder_ctx, frame, sw_frame, &pkt, output_ctx);
 
-    finish:
+finish:
     if (ret < 0) {
         char buf[1024];
         av_strerror(ret, buf, sizeof(buf));

@@ -31,7 +31,8 @@ typedef struct AV1FMergeContext {
     int idx;
 } AV1FMergeContext;
 
-static void av1_frame_merge_flush(AVBSFContext *bsf) {
+static void av1_frame_merge_flush(AVBSFContext *bsf)
+{
     AV1FMergeContext *ctx = bsf->priv_data;
 
     ff_cbs_fragment_reset(&ctx->frag[0]);
@@ -40,7 +41,8 @@ static void av1_frame_merge_flush(AVBSFContext *bsf) {
     av_packet_unref(ctx->pkt);
 }
 
-static int av1_frame_merge_filter(AVBSFContext *bsf, AVPacket *out) {
+static int av1_frame_merge_filter(AVBSFContext *bsf, AVPacket *out)
+{
     AV1FMergeContext *ctx = bsf->priv_data;
     CodedBitstreamFragment *frag = &ctx->frag[ctx->idx], *tu = &ctx->frag[!ctx->idx];
     AVPacket *in = ctx->in, *buffer_pkt = ctx->pkt;
@@ -80,7 +82,7 @@ static int av1_frame_merge_filter(AVBSFContext *bsf, AVPacket *out) {
     }
 
     if (tu->nb_units > 0 && frag->units[0].type == AV1_OBU_TEMPORAL_DELIMITER) {
-        eof:
+eof:
         err = ff_cbs_write_packet(ctx->output, buffer_pkt, tu);
         if (err < 0) {
             av_log(bsf, AV_LOG_ERROR, "Failed to write packet.\n");
@@ -109,30 +111,32 @@ static int av1_frame_merge_filter(AVBSFContext *bsf, AVPacket *out) {
 
     ff_cbs_fragment_reset(&ctx->frag[ctx->idx]);
 
-    fail:
+fail:
     if (err < 0 && err != AVERROR(EAGAIN))
         av1_frame_merge_flush(bsf);
 
     return err;
 }
 
-static int av1_frame_merge_init(AVBSFContext *bsf) {
+static int av1_frame_merge_init(AVBSFContext *bsf)
+{
     AV1FMergeContext *ctx = bsf->priv_data;
     int err;
 
-    ctx->in = av_packet_alloc();
+    ctx->in  = av_packet_alloc();
     ctx->pkt = av_packet_alloc();
     if (!ctx->in || !ctx->pkt)
         return AVERROR(ENOMEM);
 
-    err = ff_cbs_init(&ctx->input, AV_CODEC_ID_AV1, bsf);
+    err =  ff_cbs_init(&ctx->input, AV_CODEC_ID_AV1, bsf);
     if (err < 0)
         return err;
 
     return ff_cbs_init(&ctx->output, AV_CODEC_ID_AV1, bsf);
 }
 
-static void av1_frame_merge_close(AVBSFContext *bsf) {
+static void av1_frame_merge_close(AVBSFContext *bsf)
+{
     AV1FMergeContext *ctx = bsf->priv_data;
 
     ff_cbs_fragment_free(&ctx->frag[0]);
@@ -144,15 +148,15 @@ static void av1_frame_merge_close(AVBSFContext *bsf) {
 }
 
 static const enum AVCodecID av1_frame_merge_codec_ids[] = {
-        AV_CODEC_ID_AV1, AV_CODEC_ID_NONE,
+    AV_CODEC_ID_AV1, AV_CODEC_ID_NONE,
 };
 
 const AVBitStreamFilter ff_av1_frame_merge_bsf = {
-        .name           = "av1_frame_merge",
-        .priv_data_size = sizeof(AV1FMergeContext),
-        .init           = av1_frame_merge_init,
-        .flush          = av1_frame_merge_flush,
-        .close          = av1_frame_merge_close,
-        .filter         = av1_frame_merge_filter,
-        .codec_ids      = av1_frame_merge_codec_ids,
+    .name           = "av1_frame_merge",
+    .priv_data_size = sizeof(AV1FMergeContext),
+    .init           = av1_frame_merge_init,
+    .flush          = av1_frame_merge_flush,
+    .close          = av1_frame_merge_close,
+    .filter         = av1_frame_merge_filter,
+    .codec_ids      = av1_frame_merge_codec_ids,
 };

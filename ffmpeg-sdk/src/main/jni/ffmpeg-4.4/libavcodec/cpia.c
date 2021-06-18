@@ -48,12 +48,13 @@ typedef struct {
 
 
 static int cpia_decode_frame(AVCodecContext *avctx,
-                             void *data, int *got_frame, AVPacket *avpkt) {
-    CpiaContext *const cpia = avctx->priv_data;
-    int i, j, ret;
+                             void *data, int *got_frame, AVPacket* avpkt)
+{
+    CpiaContext* const cpia = avctx->priv_data;
+    int i,j,ret;
 
-    uint8_t *const header = avpkt->data;
-    uint8_t *src;
+    uint8_t* const header = avpkt->data;
+    uint8_t* src;
     int src_size;
     uint16_t linelength;
     uint8_t skip;
@@ -62,13 +63,13 @@ static int cpia_decode_frame(AVCodecContext *avctx,
     uint8_t *y, *u, *v, *y_end, *u_end, *v_end;
 
     // Check header
-    if (avpkt->size < FRAME_HEADER_SIZE + avctx->height * 3
-        || header[0] != MAGIC_0 || header[1] != MAGIC_1
-        || (header[17] != SUBSAMPLE_420 && header[17] != SUBSAMPLE_422)
-        || (header[18] != YUVORDER_YUYV && header[18] != YUVORDER_UYVY)
-        || (header[28] != NOT_COMPRESSED && header[28] != COMPRESSED)
-        || (header[29] != NO_DECIMATION && header[29] != DECIMATION_ENAB)
-            ) {
+    if ( avpkt->size < FRAME_HEADER_SIZE + avctx->height * 3
+      || header[0] != MAGIC_0 || header[1] != MAGIC_1
+      || (header[17] != SUBSAMPLE_420 && header[17] != SUBSAMPLE_422)
+      || (header[18] != YUVORDER_YUYV && header[18] != YUVORDER_UYVY)
+      || (header[28] != NOT_COMPRESSED && header[28] != COMPRESSED)
+      || (header[29] != NO_DECIMATION && header[29] != DECIMATION_ENAB)
+    ) {
         av_log(avctx, AV_LOG_ERROR, "Invalid header!\n");
         return AVERROR_INVALIDDATA;
     }
@@ -103,10 +104,10 @@ static int cpia_decode_frame(AVCodecContext *avctx,
         return ret;
 
 
-    for (i = 0;
-         i < frame->height;
-         i++, src += linelength, src_size -= linelength
-            ) {
+    for ( i = 0;
+          i < frame->height;
+          i++, src += linelength, src_size -= linelength
+    ) {
         // Read line length, two byte little endian
         linelength = AV_RL16(src);
         src += 2;
@@ -156,7 +157,7 @@ static int cpia_decode_frame(AVCodecContext *avctx,
             /* We are on an even line and 420 subsample is used.
              * On this line each pair of pixels is described by four bytes.
              */
-            for (j = 0; j < linelength - 4;) {
+            for (j = 0; j < linelength - 4; ) {
                 if (y + 1 > y_end || u > u_end || v > v_end) {
                     frame->decode_error_flags = FF_DECODE_ERROR_INVALID_BITSTREAM;
                     av_log(avctx, AV_LOG_WARNING, "Decoded data exceeded linesize!\n");
@@ -172,9 +173,9 @@ static int cpia_decode_frame(AVCodecContext *avctx,
                 } else {
                     // Set image data as specified and move forward 4 bytes
                     *(y++) = src[j];
-                    *(u++) = src[j + 1];
-                    *(y++) = src[j + 2];
-                    *(v++) = src[j + 3];
+                    *(u++) = src[j+1];
+                    *(y++) = src[j+2];
+                    *(v++) = src[j+3];
                     j += 4;
                 }
             }
@@ -188,7 +189,8 @@ static int cpia_decode_frame(AVCodecContext *avctx,
     return avpkt->size;
 }
 
-static av_cold int cpia_decode_init(AVCodecContext *avctx) {
+static av_cold int cpia_decode_init(AVCodecContext *avctx)
+{
     CpiaContext *s = avctx->priv_data;
 
     // output pixel format
@@ -209,7 +211,8 @@ static av_cold int cpia_decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int cpia_decode_end(AVCodecContext *avctx) {
+static av_cold int cpia_decode_end(AVCodecContext *avctx)
+{
     CpiaContext *s = avctx->priv_data;
 
     av_frame_free(&s->frame);
@@ -218,14 +221,14 @@ static av_cold int cpia_decode_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_cpia_decoder = {
-        .name           = "cpia",
-        .long_name      = NULL_IF_CONFIG_SMALL("CPiA video format"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_CPIA,
-        .priv_data_size = sizeof(CpiaContext),
-        .init           = cpia_decode_init,
-        .close          = cpia_decode_end,
-        .decode         = cpia_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "cpia",
+    .long_name      = NULL_IF_CONFIG_SMALL("CPiA video format"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_CPIA,
+    .priv_data_size = sizeof(CpiaContext),
+    .init           = cpia_decode_init,
+    .close          = cpia_decode_end,
+    .decode         = cpia_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

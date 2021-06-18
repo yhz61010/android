@@ -30,13 +30,13 @@ void ff_cfhdenc_horiz_filter_sse2(int16_t *input, int16_t *low, int16_t *high,
                                   ptrdiff_t in_stride, ptrdiff_t low_stride,
                                   ptrdiff_t high_stride,
                                   int width, int height);
-
 void ff_cfhdenc_vert_filter_sse2(int16_t *input, int16_t *low, int16_t *high,
                                  ptrdiff_t in_stride, ptrdiff_t low_stride,
                                  ptrdiff_t high_stride,
                                  int width, int height);
 
-av_cold void ff_cfhdencdsp_init_x86(CFHDEncDSPContext *c) {
+av_cold void ff_cfhdencdsp_init_x86(CFHDEncDSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #if ARCH_X86_64

@@ -36,12 +36,12 @@ enum {
     VP9_MAX_REF_FRAMES = 4,
 
     VP9_MAX_SEGMENTS = 8,
-    VP9_SEG_LVL_MAX = 4,
+    VP9_SEG_LVL_MAX  = 4,
 };
 
 // Frame types (section 7.2).
 enum {
-    VP9_KEY_FRAME = 0,
+    VP9_KEY_FRAME     = 0,
     VP9_NON_KEY_FRAME = 1,
 };
 
@@ -54,20 +54,20 @@ enum {
 
 // Color space values (section 7.2.2).
 enum {
-    VP9_CS_UNKNOWN = 0,
-    VP9_CS_BT_601 = 1,
-    VP9_CS_BT_709 = 2,
+    VP9_CS_UNKNOWN   = 0,
+    VP9_CS_BT_601    = 1,
+    VP9_CS_BT_709    = 2,
     VP9_CS_SMPTE_170 = 3,
     VP9_CS_SMPTE_240 = 4,
-    VP9_CS_BT_2020 = 5,
-    VP9_CS_RESERVED = 6,
-    VP9_CS_RGB = 7,
+    VP9_CS_BT_2020   = 5,
+    VP9_CS_RESERVED  = 6,
+    VP9_CS_RGB       = 7,
 };
 
 // Reference frame types (section 7.4.12).
 enum {
-    VP9_INTRA_FRAME = 0,
-    VP9_LAST_FRAME = 1,
+    VP9_INTRA_FRAME  = 0,
+    VP9_LAST_FRAME   = 1,
     VP9_GOLDEN_FRAME = 2,
     VP9_ALTREF_FRAME = 3,
 };
@@ -164,9 +164,9 @@ typedef struct VP9RawFrameHeader {
 typedef struct VP9RawFrame {
     VP9RawFrameHeader header;
 
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_size;
+    size_t       data_size;
 } VP9RawFrame;
 
 typedef struct VP9RawSuperframeIndex {

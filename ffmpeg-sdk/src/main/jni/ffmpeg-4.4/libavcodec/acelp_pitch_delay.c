@@ -30,38 +30,41 @@
 #include "audiodsp.h"
 
 void ff_acelp_update_past_gain(
-        int16_t *quant_energy,
-        int gain_corr_factor,
-        int log2_ma_pred_order,
-        int erasure) {
+    int16_t* quant_energy,
+    int gain_corr_factor,
+    int log2_ma_pred_order,
+    int erasure)
+{
     int i;
-    int avg_gain = quant_energy[(1 << log2_ma_pred_order) - 1]; // (5.10)
+    int avg_gain=quant_energy[(1 << log2_ma_pred_order) - 1]; // (5.10)
 
-    for (i = (1 << log2_ma_pred_order) - 1; i > 0; i--) {
-        avg_gain += quant_energy[i - 1];
-        quant_energy[i] = quant_energy[i - 1];
+    for(i=(1 << log2_ma_pred_order) - 1; i>0; i--)
+    {
+        avg_gain       += quant_energy[i-1];
+        quant_energy[i] = quant_energy[i-1];
     }
 
-    if (erasure)
+    if(erasure)
         quant_energy[0] = FFMAX(avg_gain >> log2_ma_pred_order, -10240) - 4096; // -10 and -4 in (5.10)
     else
         quant_energy[0] = (6165 * ((ff_log2_q15(gain_corr_factor) >> 2) - (13 << 13))) >> 13;
 }
 
 int16_t ff_acelp_decode_gain_code(
-        AudioDSPContext *adsp,
-        int gain_corr_factor,
-        const int16_t *fc_v,
-        int mr_energy,
-        const int16_t *quant_energy,
-        const int16_t *ma_prediction_coeff,
-        int subframe_size,
-        int ma_pred_order) {
+    AudioDSPContext *adsp,
+    int gain_corr_factor,
+    const int16_t* fc_v,
+    int mr_energy,
+    const int16_t* quant_energy,
+    const int16_t* ma_prediction_coeff,
+    int subframe_size,
+    int ma_pred_order)
+{
     int i;
 
     mr_energy <<= 10;
 
-    for (i = 0; i < ma_pred_order; i++)
+    for(i=0; i<ma_pred_order; i++)
         mr_energy += quant_energy[i] * ma_prediction_coeff[i];
 
 #ifdef G729_BITEXACT
@@ -74,7 +77,7 @@ int16_t ff_acelp_decode_gain_code(
                (mr_energy >> 15) - 25
            );
 #else
-    mr_energy = gain_corr_factor * ff_exp10((double) mr_energy / (20 << 23)) /
+    mr_energy = gain_corr_factor * ff_exp10((double)mr_energy / (20 << 23)) /
                 sqrt(adsp->scalarproduct_int16(fc_v, fc_v, subframe_size));
     return mr_energy >> 12;
 #endif
@@ -82,15 +85,16 @@ int16_t ff_acelp_decode_gain_code(
 
 float ff_amr_set_fixed_gain(float fixed_gain_factor, float fixed_mean_energy,
                             float *prediction_error, float energy_mean,
-                            const float *pred_table) {
+                            const float *pred_table)
+{
     // Equations 66-69:
     // ^g_c = ^gamma_gc * 100.05 (predicted dB + mean dB - dB of fixed vector)
     // Note 10^(0.05 * -10log(average x2)) = 1/sqrt((average x2)).
     float val = fixed_gain_factor *
-                ff_exp10(0.05 *
-                         (avpriv_scalarproduct_float_c(pred_table, prediction_error, 4) +
-                          energy_mean)) /
-                sqrtf(fixed_mean_energy ? fixed_mean_energy : 1.0);
+        ff_exp10(0.05 *
+              (avpriv_scalarproduct_float_c(pred_table, prediction_error, 4) +
+               energy_mean)) /
+        sqrtf(fixed_mean_energy ? fixed_mean_energy : 1.0);
 
     // update quantified prediction error energy history
     memmove(&prediction_error[0], &prediction_error[1],
@@ -102,7 +106,8 @@ float ff_amr_set_fixed_gain(float fixed_gain_factor, float fixed_mean_energy,
 
 void ff_decode_pitch_lag(int *lag_int, int *lag_frac, int pitch_index,
                          const int prev_lag_int, const int subframe,
-                         int third_as_first, int resolution) {
+                         int third_as_first, int resolution)
+{
     /* Note n * 10923 >> 15 is floor(x/3) for 0 <= n <= 32767 */
     if (subframe == 0 || (subframe == 2 && third_as_first)) {
 
@@ -139,6 +144,6 @@ void ff_decode_pitch_lag(int *lag_int, int *lag_frac, int pitch_index,
                                            PITCH_DELAY_MAX - 9);
         }
     }
-    *lag_int = pitch_index * 10923 >> 15;
+    *lag_int  = pitch_index * 10923 >> 15;
     *lag_frac = pitch_index - 3 * *lag_int - 1;
 }

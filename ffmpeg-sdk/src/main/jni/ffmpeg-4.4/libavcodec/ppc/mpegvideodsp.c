@@ -127,7 +127,8 @@ static void gmc1_altivec(uint8_t *dst /* align 8 */, uint8_t *src /* align1 */,
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_mpegvideodsp_init_ppc(MpegVideoDSPContext *c) {
+av_cold void ff_mpegvideodsp_init_ppc(MpegVideoDSPContext *c)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

@@ -41,7 +41,8 @@
 static int width, height;
 static AVBufferRef *hw_device_ctx = NULL;
 
-static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx) {
+static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
+{
     AVBufferRef *hw_frames_ref;
     AVHWFramesContext *frames_ctx = NULL;
     int err = 0;
@@ -50,15 +51,15 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx) {
         fprintf(stderr, "Failed to create VAAPI frame context.\n");
         return -1;
     }
-    frames_ctx = (AVHWFramesContext * )(hw_frames_ref->data);
-    frames_ctx->format = AV_PIX_FMT_VAAPI;
+    frames_ctx = (AVHWFramesContext *)(hw_frames_ref->data);
+    frames_ctx->format    = AV_PIX_FMT_VAAPI;
     frames_ctx->sw_format = AV_PIX_FMT_NV12;
-    frames_ctx->width = width;
-    frames_ctx->height = height;
+    frames_ctx->width     = width;
+    frames_ctx->height    = height;
     frames_ctx->initial_pool_size = 20;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
         fprintf(stderr, "Failed to initialize VAAPI frame context."
-                        "Error code: %s\n", av_err2str(err));
+                "Error code: %s\n",av_err2str(err));
         av_buffer_unref(&hw_frames_ref);
         return err;
     }
@@ -70,7 +71,8 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx) {
     return err;
 }
 
-static int encode_write(AVCodecContext *avctx, AVFrame *frame, FILE *fout) {
+static int encode_write(AVCodecContext *avctx, AVFrame *frame, FILE *fout)
+{
     int ret = 0;
     AVPacket *enc_pkt;
 
@@ -91,13 +93,14 @@ static int encode_write(AVCodecContext *avctx, AVFrame *frame, FILE *fout) {
         av_packet_unref(enc_pkt);
     }
 
-    end:
+end:
     av_packet_free(&enc_pkt);
     ret = ((ret == AVERROR(EAGAIN)) ? 0 : -1);
     return ret;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int size, err;
     FILE *fin = NULL, *fout = NULL;
     AVFrame *sw_frame = NULL, *hw_frame = NULL;
@@ -110,9 +113,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    width = atoi(argv[1]);
+    width  = atoi(argv[1]);
     height = atoi(argv[2]);
-    size = width * height;
+    size   = width * height;
 
     if (!(fin = fopen(argv[3], "r"))) {
         fprintf(stderr, "Fail to open input file : %s\n", strerror(errno));
@@ -142,12 +145,12 @@ int main(int argc, char *argv[]) {
         goto close;
     }
 
-    avctx->width = width;
-    avctx->height = height;
-    avctx->time_base = (AVRational) {1, 25};
-    avctx->framerate = (AVRational) {25, 1};
-    avctx->sample_aspect_ratio = (AVRational) {1, 1};
-    avctx->pix_fmt = AV_PIX_FMT_VAAPI;
+    avctx->width     = width;
+    avctx->height    = height;
+    avctx->time_base = (AVRational){1, 25};
+    avctx->framerate = (AVRational){25, 1};
+    avctx->sample_aspect_ratio = (AVRational){1, 1};
+    avctx->pix_fmt   = AV_PIX_FMT_VAAPI;
 
     /* set hw_frames_ctx for encoder's AVCodecContext */
     if ((err = set_hwframe_ctx(avctx, hw_device_ctx)) < 0) {
@@ -166,14 +169,14 @@ int main(int argc, char *argv[]) {
             goto close;
         }
         /* read data into software frame, and transfer them into hw frame */
-        sw_frame->width = width;
+        sw_frame->width  = width;
         sw_frame->height = height;
         sw_frame->format = AV_PIX_FMT_NV12;
         if ((err = av_frame_get_buffer(sw_frame, 0)) < 0)
             goto close;
-        if ((err = fread((uint8_t * )(sw_frame->data[0]), size, 1, fin)) <= 0)
+        if ((err = fread((uint8_t*)(sw_frame->data[0]), size, 1, fin)) <= 0)
             break;
-        if ((err = fread((uint8_t * )(sw_frame->data[1]), size / 2, 1, fin)) <= 0)
+        if ((err = fread((uint8_t*)(sw_frame->data[1]), size/2, 1, fin)) <= 0)
             break;
 
         if (!(hw_frame = av_frame_alloc())) {
@@ -190,7 +193,7 @@ int main(int argc, char *argv[]) {
         }
         if ((err = av_hwframe_transfer_data(hw_frame, sw_frame, 0)) < 0) {
             fprintf(stderr, "Error while transferring frame data to surface."
-                            "Error code: %s.\n", av_err2str(err));
+                    "Error code: %s.\n", av_err2str(err));
             goto close;
         }
 
@@ -207,7 +210,7 @@ int main(int argc, char *argv[]) {
     if (err == AVERROR_EOF)
         err = 0;
 
-    close:
+close:
     if (fin)
         fclose(fin);
     if (fout)

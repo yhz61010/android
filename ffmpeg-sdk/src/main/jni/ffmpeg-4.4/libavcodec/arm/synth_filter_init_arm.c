@@ -38,7 +38,8 @@ void ff_synth_filter_float_neon(FFTContext *imdct,
                                 float out[32], const float in[32],
                                 float scale);
 
-av_cold void ff_synth_filter_init_arm(SynthFilterContext *s) {
+av_cold void ff_synth_filter_init_arm(SynthFilterContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_vfp_vm(cpu_flags))

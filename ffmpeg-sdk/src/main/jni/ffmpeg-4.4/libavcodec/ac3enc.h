@@ -54,11 +54,9 @@ typedef float SampleType;
 typedef float CoefType;
 typedef float CoefSumType;
 #else
-
 #include "libavutil/fixed_dsp.h"
-
 #define AC3_NAME(x) ff_ac3_fixed_ ## x
-#define MAC_COEF(d, a, b) MAC64(d,a,b)
+#define MAC_COEF(d,a,b) MAC64(d,a,b)
 #define COEF_MIN -16777215
 #define COEF_MAX  16777215
 #define NEW_CPL_COORD_THRESHOLD 503317
@@ -127,27 +125,27 @@ typedef struct AC3EncOptions {
  */
 typedef struct AC3Block {
     CoefType **mdct_coef;                       ///< MDCT coefficients
-    int32_t **fixed_coef;                      ///< fixed-point MDCT coefficients
-    uint8_t **exp;                             ///< original exponents
-    uint8_t **grouped_exp;                     ///< grouped exponents
-    int16_t **psd;                             ///< psd per frequency bin
-    int16_t **band_psd;                        ///< psd per critical band
-    int16_t **mask;                            ///< masking curve
+    int32_t  **fixed_coef;                      ///< fixed-point MDCT coefficients
+    uint8_t  **exp;                             ///< original exponents
+    uint8_t  **grouped_exp;                     ///< grouped exponents
+    int16_t  **psd;                             ///< psd per frequency bin
+    int16_t  **band_psd;                        ///< psd per critical band
+    int16_t  **mask;                            ///< masking curve
     uint16_t **qmant;                           ///< quantized mantissas
-    uint8_t **cpl_coord_exp;                   ///< coupling coord exponents           (cplcoexp)
-    uint8_t **cpl_coord_mant;                  ///< coupling coord mantissas           (cplcomant)
-    uint8_t new_rematrixing_strategy;          ///< send new rematrixing flags in this block
-    int num_rematrixing_bands;             ///< number of rematrixing bands
-    uint8_t rematrixing_flags[4];              ///< rematrixing flags
-    int new_cpl_strategy;                  ///< send new coupling strategy
-    int cpl_in_use;                        ///< coupling in use for this block     (cplinu)
-    uint8_t channel_in_cpl[AC3_MAX_CHANNELS];  ///< channel in coupling                (chincpl)
-    int num_cpl_channels;                  ///< number of channels in coupling
-    uint8_t new_cpl_coords[AC3_MAX_CHANNELS];  ///< send new coupling coordinates      (cplcoe)
-    uint8_t cpl_master_exp[AC3_MAX_CHANNELS];  ///< coupling coord master exponents    (mstrcplco)
-    int new_snr_offsets;                   ///< send new SNR offsets
-    int new_cpl_leak;                      ///< send new coupling leak info
-    int end_freq[AC3_MAX_CHANNELS];        ///< end frequency bin                  (endmant)
+    uint8_t  **cpl_coord_exp;                   ///< coupling coord exponents           (cplcoexp)
+    uint8_t  **cpl_coord_mant;                  ///< coupling coord mantissas           (cplcomant)
+    uint8_t  new_rematrixing_strategy;          ///< send new rematrixing flags in this block
+    int      num_rematrixing_bands;             ///< number of rematrixing bands
+    uint8_t  rematrixing_flags[4];              ///< rematrixing flags
+    int      new_cpl_strategy;                  ///< send new coupling strategy
+    int      cpl_in_use;                        ///< coupling in use for this block     (cplinu)
+    uint8_t  channel_in_cpl[AC3_MAX_CHANNELS];  ///< channel in coupling                (chincpl)
+    int      num_cpl_channels;                  ///< number of channels in coupling
+    uint8_t  new_cpl_coords[AC3_MAX_CHANNELS];  ///< send new coupling coordinates      (cplcoe)
+    uint8_t  cpl_master_exp[AC3_MAX_CHANNELS];  ///< coupling coord master exponents    (mstrcplco)
+    int      new_snr_offsets;                   ///< send new SNR offsets
+    int      new_cpl_leak;                      ///< send new coupling leak info
+    int      end_freq[AC3_MAX_CHANNELS];        ///< end frequency bin                  (endmant)
 } AC3Block;
 
 /**
@@ -250,18 +248,17 @@ typedef struct AC3EncodeContext {
     uint8_t frame_exp_strategy[AC3_MAX_CHANNELS];           ///< frame exp strategy index
     int use_frame_exp_strategy;                             ///< indicates use of frame exp strategy
     uint8_t exp_ref_block[AC3_MAX_CHANNELS][AC3_MAX_BLOCKS]; ///< reference blocks for EXP_REUSE
-    uint8_t *ref_bap[AC3_MAX_CHANNELS][AC3_MAX_BLOCKS]; ///< bit allocation pointers (bap)
+    uint8_t *ref_bap     [AC3_MAX_CHANNELS][AC3_MAX_BLOCKS]; ///< bit allocation pointers (bap)
     int ref_bap_set;                                         ///< indicates if ref_bap pointers have been set
 
     int warned_alternate_bitstream;
 
     /* fixed vs. float function pointers */
     void (*mdct_end)(struct AC3EncodeContext *s);
-
-    int (*mdct_init)(struct AC3EncodeContext *s);
+    int  (*mdct_init)(struct AC3EncodeContext *s);
 
     /* fixed vs. float templated function pointers */
-    int (*allocate_sample_buffers)(struct AC3EncodeContext *s);
+    int  (*allocate_sample_buffers)(struct AC3EncodeContext *s);
 
     /* AC-3 vs. E-AC-3 function pointers */
     void (*output_frame_header)(struct AC3EncodeContext *s);
@@ -272,10 +269,10 @@ extern const uint64_t ff_ac3_channel_layouts[19];
 extern const AVOption ff_ac3_enc_options[];
 extern const AVCodecDefault ff_ac3_enc_defaults[];
 
-int ff_ac3_encode_init(AVCodecContext * avctx);
-int ff_ac3_float_encode_init(AVCodecContext * avctx);
+int ff_ac3_encode_init(AVCodecContext *avctx);
+int ff_ac3_float_encode_init(AVCodecContext *avctx);
 
-int ff_ac3_encode_close(AVCodecContext * avctx);
+int ff_ac3_encode_close(AVCodecContext *avctx);
 
 int ff_ac3_validate_metadata(AC3EncodeContext *s);
 
@@ -283,20 +280,14 @@ void ff_ac3_adjust_frame_size(AC3EncodeContext *s);
 
 void ff_ac3_compute_coupling_strategy(AC3EncodeContext *s);
 
-int ff_ac3_encode_frame_common_end(AVCodecContext * avctx, AVPacket * avpkt,
-const AVFrame *frame,
-int *got_packet_ptr
-);
+int ff_ac3_encode_frame_common_end(AVCodecContext *avctx, AVPacket *avpkt,
+                                   const AVFrame *frame, int *got_packet_ptr);
 
 /* prototypes for functions in ac3enc_template.c */
 
-int ff_ac3_fixed_encode_frame(AVCodecContext * avctx, AVPacket * avpkt,
-const AVFrame *frame,
-int *got_packet_ptr
-);
-int ff_ac3_float_encode_frame(AVCodecContext * avctx, AVPacket * avpkt,
-const AVFrame *frame,
-int *got_packet_ptr
-);
+int ff_ac3_fixed_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
+                              const AVFrame *frame, int *got_packet_ptr);
+int ff_ac3_float_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
+                              const AVFrame *frame, int *got_packet_ptr);
 
 #endif /* AVCODEC_AC3ENC_H */

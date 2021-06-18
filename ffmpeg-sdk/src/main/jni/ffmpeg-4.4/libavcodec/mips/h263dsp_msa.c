@@ -22,11 +22,12 @@
 #include "h263dsp_mips.h"
 
 static const uint8_t h263_loop_filter_strength_msa[32] = {
-        0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7,
-        7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12
+    0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7,
+    7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12
 };
 
-static void h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale) {
+static void h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
+{
     int32_t strength = h263_loop_filter_strength_msa[qscale];
     v16u8 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 temp0, temp1, temp2;
@@ -76,8 +77,8 @@ static void h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
     temp0 = __msa_clti_s_h(a_d0, 0);
     diff6 = (v8i16) __msa_bmz_v((v16u8) diff6, (v16u8) diff2, (v16u8) temp0);
     PCKEV_B2_SH(a_d0, diff6, a_d0, d0, diff6, d0);
-    in0 = (v16u8)((v16i8) in0 - (v16i8) diff6);
-    in1 = (v16u8)((v16i8) in1 + (v16i8) diff6);
+    in0 = (v16u8) ((v16i8) in0 - (v16i8) diff6);
+    in1 = (v16u8) ((v16i8) in1 + (v16i8) diff6);
     in3 = __msa_xori_b(in3, 128);
     in3 = (v16u8) __msa_adds_s_b((v16i8) in3, (v16i8) d0);
     in3 = __msa_xori_b(in3, 128);
@@ -88,7 +89,8 @@ static void h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
     ST_W8(in0, in3, 0, 1, 2, 3, 0, 1, 2, 3, src, stride);
 }
 
-static void h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale) {
+static void h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
+{
     int32_t strength = h263_loop_filter_strength_msa[qscale];
     uint64_t res0, res1, res2, res3;
     v16u8 in0, in1, in2, in3;
@@ -135,8 +137,8 @@ static void h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
     temp0 = __msa_clti_s_h(a_d0, 0);
     diff6 = (v8i16) __msa_bmz_v((v16u8) diff6, (v16u8) diff2, (v16u8) temp0);
     PCKEV_B2_SH(a_d0, diff6, a_d0, d0, diff6, d0);
-    in0 = (v16u8)((v16i8) in0 - (v16i8) diff6);
-    in1 = (v16u8)((v16i8) in1 + (v16i8) diff6);
+    in0 = (v16u8) ((v16i8) in0 - (v16i8) diff6);
+    in1 = (v16u8) ((v16i8) in1 + (v16i8) diff6);
     in3 = __msa_xori_b(in3, 128);
     in3 = (v16u8) __msa_adds_s_b((v16i8) in3, (v16i8) d0);
     in3 = __msa_xori_b(in3, 128);
@@ -148,10 +150,12 @@ static void h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t qscale)
     SD4(res0, res1, res2, res3, src, stride);
 }
 
-void ff_h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t q_scale) {
+void ff_h263_h_loop_filter_msa(uint8_t *src, int32_t stride, int32_t q_scale)
+{
     h263_h_loop_filter_msa(src, stride, q_scale);
 }
 
-void ff_h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t q_scale) {
+void ff_h263_v_loop_filter_msa(uint8_t *src, int32_t stride, int32_t q_scale)
+{
     h263_v_loop_filter_msa(src, stride, q_scale);
 }

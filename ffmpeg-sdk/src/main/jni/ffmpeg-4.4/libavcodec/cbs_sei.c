@@ -22,23 +22,26 @@
 #include "cbs_h265.h"
 #include "cbs_sei.h"
 
-static void cbs_free_user_data_registered(void *opaque, uint8_t *data) {
-    SEIRawUserDataRegistered *udr = (SEIRawUserDataRegistered *) data;
+static void cbs_free_user_data_registered(void *opaque, uint8_t *data)
+{
+    SEIRawUserDataRegistered *udr = (SEIRawUserDataRegistered*)data;
     av_buffer_unref(&udr->data_ref);
     av_free(udr);
 }
 
-static void cbs_free_user_data_unregistered(void *opaque, uint8_t *data) {
-    SEIRawUserDataUnregistered *udu = (SEIRawUserDataUnregistered *) data;
+static void cbs_free_user_data_unregistered(void *opaque, uint8_t *data)
+{
+    SEIRawUserDataUnregistered *udu = (SEIRawUserDataUnregistered*)data;
     av_buffer_unref(&udu->data_ref);
     av_free(udu);
 }
 
 int ff_cbs_sei_alloc_message_payload(SEIRawMessage *message,
-                                     const SEIMessageTypeDescriptor *desc) {
-    void (*free_func)(void *, uint8_t *);
+                                     const SEIMessageTypeDescriptor *desc)
+{
+    void (*free_func)(void*, uint8_t*);
 
-    av_assert0(message->payload == NULL &&
+    av_assert0(message->payload     == NULL &&
                message->payload_ref == NULL);
     message->payload_type = desc->type;
 
@@ -54,8 +57,8 @@ int ff_cbs_sei_alloc_message_payload(SEIRawMessage *message,
         if (!message->payload)
             return AVERROR(ENOMEM);
         message->payload_ref =
-                av_buffer_create(message->payload, desc->size,
-                                 free_func, NULL, 0);
+            av_buffer_create(message->payload, desc->size,
+                             free_func, NULL, 0);
     } else {
         message->payload_ref = av_buffer_alloc(desc->size);
     }
@@ -68,7 +71,8 @@ int ff_cbs_sei_alloc_message_payload(SEIRawMessage *message,
     return 0;
 }
 
-int ff_cbs_sei_list_add(SEIRawMessageList *list) {
+int ff_cbs_sei_list_add(SEIRawMessageList *list)
+{
     void *ptr;
     int old_count = list->nb_messages_allocated;
 
@@ -92,7 +96,8 @@ int ff_cbs_sei_list_add(SEIRawMessageList *list) {
     return 0;
 }
 
-void ff_cbs_sei_free_message_list(SEIRawMessageList *list) {
+void ff_cbs_sei_free_message_list(SEIRawMessageList *list)
+{
     for (int i = 0; i < list->nb_messages; i++) {
         SEIRawMessage *message = &list->messages[i];
         av_buffer_unref(&message->payload_ref);
@@ -104,30 +109,31 @@ void ff_cbs_sei_free_message_list(SEIRawMessageList *list) {
 static int cbs_sei_get_unit(CodedBitstreamContext *ctx,
                             CodedBitstreamFragment *au,
                             int prefix,
-                            CodedBitstreamUnit **sei_unit) {
+                            CodedBitstreamUnit **sei_unit)
+{
     CodedBitstreamUnit *unit;
     int sei_type, highest_vcl_type, err, i, position;
 
     switch (ctx->codec->codec_id) {
-        case AV_CODEC_ID_H264:
-            // (We can ignore auxiliary slices because we only have prefix
-            // SEI in H.264 and an auxiliary picture must always follow a
-            // primary picture.)
-            highest_vcl_type = H264_NAL_IDR_SLICE;
-            if (prefix)
-                sei_type = H264_NAL_SEI;
-            else
-                return AVERROR(EINVAL);
-            break;
-        case AV_CODEC_ID_H265:
-            highest_vcl_type = HEVC_NAL_RSV_VCL31;
-            if (prefix)
-                sei_type = HEVC_NAL_SEI_PREFIX;
-            else
-                sei_type = HEVC_NAL_SEI_SUFFIX;
-            break;
-        default:
+    case AV_CODEC_ID_H264:
+        // (We can ignore auxiliary slices because we only have prefix
+        // SEI in H.264 and an auxiliary picture must always follow a
+        // primary picture.)
+        highest_vcl_type = H264_NAL_IDR_SLICE;
+        if (prefix)
+            sei_type = H264_NAL_SEI;
+        else
             return AVERROR(EINVAL);
+        break;
+    case AV_CODEC_ID_H265:
+        highest_vcl_type = HEVC_NAL_RSV_VCL31;
+        if (prefix)
+            sei_type = HEVC_NAL_SEI_PREFIX;
+        else
+            sei_type = HEVC_NAL_SEI_SUFFIX;
+        break;
+    default:
+        return AVERROR(EINVAL);
     }
 
     // Find an existing SEI NAL unit of the right type.
@@ -178,29 +184,31 @@ static int cbs_sei_get_unit(CodedBitstreamContext *ctx,
         return err;
 
     switch (ctx->codec->codec_id) {
-        case AV_CODEC_ID_H264: {
+    case AV_CODEC_ID_H264:
+        {
             H264RawSEI sei = {
-                    .nal_unit_header = {
-                            .nal_ref_idc   = 0,
-                            .nal_unit_type = sei_type,
-                    },
+                .nal_unit_header = {
+                    .nal_ref_idc   = 0,
+                    .nal_unit_type = sei_type,
+                },
             };
             memcpy(unit->content, &sei, sizeof(sei));
         }
-            break;
-        case AV_CODEC_ID_H265: {
+        break;
+    case AV_CODEC_ID_H265:
+        {
             H265RawSEI sei = {
-                    .nal_unit_header = {
-                            .nal_unit_type         = sei_type,
-                            .nuh_layer_id          = 0,
-                            .nuh_temporal_id_plus1 = 1,
-                    },
+                .nal_unit_header = {
+                    .nal_unit_type         = sei_type,
+                    .nuh_layer_id          = 0,
+                    .nuh_temporal_id_plus1 = 1,
+                },
             };
             memcpy(unit->content, &sei, sizeof(sei));
         }
-            break;
-        default:
-            av_assert0(0);
+        break;
+    default:
+        av_assert0(0);
     }
 
     *sei_unit = unit;
@@ -209,25 +217,28 @@ static int cbs_sei_get_unit(CodedBitstreamContext *ctx,
 
 static int cbs_sei_get_message_list(CodedBitstreamContext *ctx,
                                     CodedBitstreamUnit *unit,
-                                    SEIRawMessageList **list) {
+                                    SEIRawMessageList **list)
+{
     switch (ctx->codec->codec_id) {
-        case AV_CODEC_ID_H264: {
+    case AV_CODEC_ID_H264:
+        {
             H264RawSEI *sei = unit->content;
             if (unit->type != H264_NAL_SEI)
                 return AVERROR(EINVAL);
             *list = &sei->message_list;
         }
-            break;
-        case AV_CODEC_ID_H265: {
+        break;
+    case AV_CODEC_ID_H265:
+        {
             H265RawSEI *sei = unit->content;
             if (unit->type != HEVC_NAL_SEI_PREFIX &&
                 unit->type != HEVC_NAL_SEI_SUFFIX)
                 return AVERROR(EINVAL);
             *list = &sei->message_list;
         }
-            break;
-        default:
-            return AVERROR(EINVAL);
+        break;
+    default:
+        return AVERROR(EINVAL);
     }
 
     return 0;
@@ -236,9 +247,10 @@ static int cbs_sei_get_message_list(CodedBitstreamContext *ctx,
 int ff_cbs_sei_add_message(CodedBitstreamContext *ctx,
                            CodedBitstreamFragment *au,
                            int prefix,
-                           uint32_t payload_type,
-                           void *payload_data,
-                           AVBufferRef *payload_buf) {
+                           uint32_t     payload_type,
+                           void        *payload_data,
+                           AVBufferRef *payload_buf)
+{
     const SEIMessageTypeDescriptor *desc;
     CodedBitstreamUnit *unit;
     SEIRawMessageList *list;
@@ -276,8 +288,8 @@ int ff_cbs_sei_add_message(CodedBitstreamContext *ctx,
     message = &list->messages[list->nb_messages - 1];
 
     message->payload_type = payload_type;
-    message->payload = payload_data;
-    message->payload_ref = payload_ref;
+    message->payload      = payload_data;
+    message->payload_ref  = payload_ref;
 
     return 0;
 }
@@ -285,7 +297,8 @@ int ff_cbs_sei_add_message(CodedBitstreamContext *ctx,
 int ff_cbs_sei_find_message(CodedBitstreamContext *ctx,
                             CodedBitstreamFragment *au,
                             uint32_t payload_type,
-                            SEIRawMessage **iter) {
+                            SEIRawMessage **iter)
+{
     int err, i, j, found;
 
     found = 0;
@@ -315,7 +328,8 @@ int ff_cbs_sei_find_message(CodedBitstreamContext *ctx,
 }
 
 static void cbs_sei_delete_message(SEIRawMessageList *list,
-                                   int position) {
+                                   int position)
+{
     SEIRawMessage *message;
 
     av_assert0(0 <= position && position < list->nb_messages);
@@ -335,7 +349,8 @@ static void cbs_sei_delete_message(SEIRawMessageList *list,
 
 void ff_cbs_sei_delete_message_type(CodedBitstreamContext *ctx,
                                     CodedBitstreamFragment *au,
-                                    uint32_t payload_type) {
+                                    uint32_t payload_type)
+{
     int err, i, j;
 
     for (i = 0; i < au->nb_units; i++) {

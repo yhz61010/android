@@ -80,15 +80,16 @@ typedef intptr_t atomic_intmax_t;
 typedef intptr_t atomic_uintmax_t;
 
 void avpriv_atomic_lock(void);
-
 void avpriv_atomic_unlock(void);
 
-static inline void atomic_thread_fence(int order) {
+static inline void atomic_thread_fence(int order)
+{
     avpriv_atomic_lock();
     avpriv_atomic_unlock();
 }
 
-static inline void atomic_store(intptr_t *object, intptr_t desired) {
+static inline void atomic_store(intptr_t *object, intptr_t desired)
+{
     avpriv_atomic_lock();
     *object = desired;
     avpriv_atomic_unlock();
@@ -97,7 +98,8 @@ static inline void atomic_store(intptr_t *object, intptr_t desired) {
 #define atomic_store_explicit(object, desired, order) \
     atomic_store(object, desired)
 
-static inline intptr_t atomic_load(intptr_t *object) {
+static inline intptr_t atomic_load(intptr_t *object)
+{
     intptr_t ret;
     avpriv_atomic_lock();
     ret = *object;
@@ -108,10 +110,11 @@ static inline intptr_t atomic_load(intptr_t *object) {
 #define atomic_load_explicit(object, order) \
     atomic_load(object)
 
-static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired) {
+static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired)
+{
     intptr_t ret;
     avpriv_atomic_lock();
-    ret = *object;
+    ret     = *object;
     *object = desired;
     avpriv_atomic_unlock();
     return ret;
@@ -121,11 +124,12 @@ static inline intptr_t atomic_exchange(intptr_t *object, intptr_t desired) {
     atomic_exchange(object, desired)
 
 static inline int atomic_compare_exchange_strong(intptr_t *object, intptr_t *expected,
-                                                 intptr_t desired) {
+                                                 intptr_t desired)
+{
     int ret;
     avpriv_atomic_lock();
     if (*object == *expected) {
-        ret = 1;
+        ret     = 1;
         *object = desired;
     } else {
         ret = 0;
@@ -156,13 +160,9 @@ static inline intptr_t atomic_fetch_ ## opname(intptr_t *object, intptr_t operan
 }
 
 FETCH_MODIFY(add, +)
-
 FETCH_MODIFY(sub, -)
-
-FETCH_MODIFY(or, |)
-
+FETCH_MODIFY(or,  |)
 FETCH_MODIFY(xor, ^)
-
 FETCH_MODIFY(and, &)
 
 #undef FETCH_MODIFY

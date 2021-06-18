@@ -38,16 +38,17 @@
 #include "eac3enc.h"
 
 
-static int allocate_sample_buffers(AC3EncodeContext *s) {
+static int allocate_sample_buffers(AC3EncodeContext *s)
+{
     int ch;
 
     if (!FF_ALLOC_TYPED_ARRAY(s->windowed_samples, AC3_WINDOW_SIZE) ||
-        !FF_ALLOCZ_TYPED_ARRAY(s->planar_samples, s->channels))
+        !FF_ALLOCZ_TYPED_ARRAY(s->planar_samples,  s->channels))
         return AVERROR(ENOMEM);
 
     for (ch = 0; ch < s->channels; ch++) {
         if (!(s->planar_samples[ch] = av_mallocz((AC3_FRAME_SIZE + AC3_BLOCK_SIZE) *
-                                                 sizeof(**s->planar_samples))))
+                                                  sizeof(**s->planar_samples))))
             return AVERROR(ENOMEM);
     }
     return 0;
@@ -58,7 +59,8 @@ static int allocate_sample_buffers(AC3EncodeContext *s) {
  * Copy input samples.
  * Channels are reordered from FFmpeg's default order to AC-3 order.
  */
-static void copy_input_samples(AC3EncodeContext *s, SampleType **samples) {
+static void copy_input_samples(AC3EncodeContext *s, SampleType **samples)
+{
     int ch;
 
     /* copy and remap input samples */
@@ -80,7 +82,8 @@ static void copy_input_samples(AC3EncodeContext *s, SampleType **samples) {
  * This applies the KBD window and normalizes the input to reduce precision
  * loss due to fixed-point calculations.
  */
-static void apply_mdct(AC3EncodeContext *s) {
+static void apply_mdct(AC3EncodeContext *s)
+{
     int blk, ch;
 
     for (ch = 0; ch < s->channels; ch++) {
@@ -94,7 +97,7 @@ static void apply_mdct(AC3EncodeContext *s) {
                                          &input_samples[AC3_BLOCK_SIZE],
                                          s->mdct_window, AC3_BLOCK_SIZE);
 
-            s->mdct.mdct_calc(&s->mdct, block->mdct_coef[ch + 1],
+            s->mdct.mdct_calc(&s->mdct, block->mdct_coef[ch+1],
                               s->windowed_samples);
         }
     }
@@ -104,27 +107,28 @@ static void apply_mdct(AC3EncodeContext *s) {
 /*
  * Calculate coupling channel and coupling coordinates.
  */
-static void apply_channel_coupling(AC3EncodeContext *s) {
-    LOCAL_ALIGNED_16(CoefType, cpl_coords,[AC3_MAX_BLOCKS], [AC3_MAX_CHANNELS][16]);
+static void apply_channel_coupling(AC3EncodeContext *s)
+{
+    LOCAL_ALIGNED_16(CoefType, cpl_coords,      [AC3_MAX_BLOCKS], [AC3_MAX_CHANNELS][16]);
 #if AC3ENC_FLOAT
     LOCAL_ALIGNED_16(int32_t, fixed_cpl_coords, [AC3_MAX_BLOCKS], [AC3_MAX_CHANNELS][16]);
 #else
-    int32_t(*fixed_cpl_coords)[AC3_MAX_CHANNELS][16] = cpl_coords;
+    int32_t (*fixed_cpl_coords)[AC3_MAX_CHANNELS][16] = cpl_coords;
 #endif
     int av_uninit(blk), ch, bnd, i, j;
     CoefSumType energy[AC3_MAX_BLOCKS][AC3_MAX_CHANNELS][16] = {{{0}}};
     int cpl_start, num_cpl_coefs;
 
-    memset(cpl_coords, 0, AC3_MAX_BLOCKS * sizeof(*cpl_coords));
+    memset(cpl_coords,       0, AC3_MAX_BLOCKS * sizeof(*cpl_coords));
 #if AC3ENC_FLOAT
     memset(fixed_cpl_coords, 0, AC3_MAX_BLOCKS * sizeof(*cpl_coords));
 #endif
 
     /* align start to 16-byte boundary. align length to multiple of 32.
         note: coupling start bin % 4 will always be 1 */
-    cpl_start = s->start_freq[CPL_CH] - 1;
+    cpl_start     = s->start_freq[CPL_CH] - 1;
     num_cpl_coefs = FFALIGN(s->num_cpl_subbands * 12 + 1, 32);
-    cpl_start = FFMIN(256, cpl_start + num_cpl_coefs) - num_cpl_coefs;
+    cpl_start     = FFMIN(256, cpl_start + num_cpl_coefs) - num_cpl_coefs;
 
     /* calculate coupling channel from fbw channels */
     for (blk = 0; blk < s->num_blocks; blk++) {
@@ -157,7 +161,7 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
                 if (!block->cpl_in_use || (ch > CPL_CH && !block->channel_in_cpl[ch]))
                     continue;
                 for (j = 0; j < band_size; j++) {
-                    CoefType v = block->mdct_coef[ch][i + j];
+                    CoefType v = block->mdct_coef[ch][i+j];
                     MAC_COEF(energy[blk][ch][bnd], v, v);
                 }
             }
@@ -168,7 +172,7 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
 
     /* calculate coupling coordinates for all blocks for all channels */
     for (blk = 0; blk < s->num_blocks; blk++) {
-        AC3Block *block = &s->blocks[blk];
+        AC3Block *block  = &s->blocks[blk];
         if (!block->cpl_in_use)
             continue;
         for (ch = 1; ch <= s->fbw_channels; ch++) {
@@ -183,8 +187,8 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
 
     /* determine which blocks to send new coupling coordinates for */
     for (blk = 0; blk < s->num_blocks; blk++) {
-        AC3Block *block = &s->blocks[blk];
-        AC3Block *block0 = blk ? &s->blocks[blk - 1] : NULL;
+        AC3Block *block  = &s->blocks[blk];
+        AC3Block *block0 = blk ? &s->blocks[blk-1] : NULL;
 
         memset(block->new_cpl_coords, 0, sizeof(block->new_cpl_coords));
 
@@ -206,8 +210,8 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
                     } else {
                         CoefSumType coord_diff = 0;
                         for (bnd = 0; bnd < s->num_cpl_bands; bnd++) {
-                            coord_diff += FFABS(cpl_coords[blk - 1][ch][bnd] -
-                                                cpl_coords[blk][ch][bnd]);
+                            coord_diff += FFABS(cpl_coords[blk-1][ch][bnd] -
+                                                cpl_coords[blk  ][ch][bnd]);
                         }
                         coord_diff /= s->num_cpl_bands;
                         if (coord_diff > NEW_CPL_COORD_THRESHOLD)
@@ -224,7 +228,7 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
         blk = 0;
         while (blk < s->num_blocks) {
             int av_uninit(blk1);
-            AC3Block *block = &s->blocks[blk];
+            AC3Block *block  = &s->blocks[blk];
 
             if (!block->cpl_in_use) {
                 blk++;
@@ -237,7 +241,7 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
                     continue;
                 energy_cpl = energy[blk][CPL_CH][bnd];
                 energy_ch = energy[blk][ch][bnd];
-                blk1 = blk + 1;
+                blk1 = blk+1;
                 while (blk1 < s->num_blocks && !s->blocks[blk1].new_cpl_coords[ch]) {
                     if (s->blocks[blk1].cpl_in_use) {
                         energy_cpl += energy[blk1][CPL_CH][bnd];
@@ -291,7 +295,7 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
 
             /* quantize mantissas */
             for (bnd = 0; bnd < s->num_cpl_bands; bnd++) {
-                int cpl_exp = block->cpl_coord_exp[ch][bnd];
+                int cpl_exp  = block->cpl_coord_exp[ch][bnd];
                 int cpl_mant = (fixed_cpl_coords[blk][ch][bnd] << (5 + cpl_exp + master_exp * 3)) >> 24;
                 if (cpl_exp == 15)
                     cpl_mant >>= 1;
@@ -311,7 +315,8 @@ static void apply_channel_coupling(AC3EncodeContext *s) {
 /*
  * Determine rematrixing flags for each block and band.
  */
-static void compute_rematrixing_strategy(AC3EncodeContext *s) {
+static void compute_rematrixing_strategy(AC3EncodeContext *s)
+{
     int nb_coefs;
     int blk, bnd;
     AC3Block *block, *block0 = NULL;
@@ -340,7 +345,7 @@ static void compute_rematrixing_strategy(AC3EncodeContext *s) {
         for (bnd = 0; bnd < block->num_rematrixing_bands; bnd++) {
             /* calculate sum of squared coeffs for one band in one block */
             int start = ff_ac3_rematrix_band_tab[bnd];
-            int end = FFMIN(nb_coefs, ff_ac3_rematrix_band_tab[bnd + 1]);
+            int end   = FFMIN(nb_coefs, ff_ac3_rematrix_band_tab[bnd+1]);
             CoefSumType sum[4];
             sum_square_butterfly(s, sum, block->mdct_coef[1] + start,
                                  block->mdct_coef[2] + start, end - start);
@@ -363,7 +368,8 @@ static void compute_rematrixing_strategy(AC3EncodeContext *s) {
 
 
 int AC3_NAME(encode_frame)(AVCodecContext *avctx, AVPacket *avpkt,
-                           const AVFrame *frame, int *got_packet_ptr) {
+                           const AVFrame *frame, int *got_packet_ptr)
+{
     AC3EncodeContext *s = avctx->priv_data;
     int ret;
 
@@ -376,7 +382,7 @@ int AC3_NAME(encode_frame)(AVCodecContext *avctx, AVPacket *avpkt,
     if (s->bit_alloc.sr_code == 1 || (AC3ENC_FLOAT && s->eac3))
         ff_ac3_adjust_frame_size(s);
 
-    copy_input_samples(s, (SampleType **) frame->extended_data);
+    copy_input_samples(s, (SampleType **)frame->extended_data);
 
     apply_mdct(s);
 

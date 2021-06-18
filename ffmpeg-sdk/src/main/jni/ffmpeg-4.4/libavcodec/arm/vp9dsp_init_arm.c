@@ -71,23 +71,15 @@ static void op##_##filter##sz##_hv_neon(uint8_t *dst, ptrdiff_t dst_stride,     
     decl_filter_funcs(avg, hv, sz)
 
 declare_copy_avg(64);
-
 declare_copy_avg(32);
-
 declare_copy_avg(16);
-
 declare_copy_avg(8);
-
 declare_copy_avg(4);
 
 decl_mc_funcs(64);
-
 decl_mc_funcs(32);
-
 decl_mc_funcs(16);
-
 decl_mc_funcs(8);
-
 decl_mc_funcs(4);
 
 #define define_8tap_2d_funcs(sz)        \
@@ -99,17 +91,14 @@ decl_mc_funcs(4);
     define_8tap_2d_fn(avg, smooth,  sz)
 
 define_8tap_2d_funcs(64)
-
 define_8tap_2d_funcs(32)
-
 define_8tap_2d_funcs(16)
-
 define_8tap_2d_funcs(8)
-
 define_8tap_2d_funcs(4)
 
 
-static av_cold void vp9dsp_mc_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_mc_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -165,17 +154,14 @@ void ff_vp9_##type_a##_##type_b##_##sz##x##sz##_add_neon(uint8_t *_dst,    \
     define_itxfm(iadst, iadst, sz)
 
 define_itxfm_funcs(4);
-
 define_itxfm_funcs(8);
-
 define_itxfm_funcs(16);
-
 define_itxfm(idct, idct, 32);
-
 define_itxfm(iwht, iwht, 4);
 
 
-static av_cold void vp9dsp_itxfm_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_itxfm_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -207,11 +193,8 @@ void ff_vp9_loop_filter_##dir##_##wd##_##size##_neon(uint8_t *dst, ptrdiff_t str
     define_loop_filter(v, wd, size)
 
 define_loop_filters(4, 8);
-
 define_loop_filters(8, 8);
-
 define_loop_filters(16, 8);
-
 define_loop_filters(16, 16);
 
 define_loop_filters(44, 16);
@@ -230,12 +213,11 @@ static void loop_filter_##dir##_##wd1##wd2##_16_neon(uint8_t *dst,              
     lf_mix_fn(v, wd1, wd2, sizeof(uint8_t))
 
 lf_mix_fns(4, 8)
-
 lf_mix_fns(8, 4)
-
 lf_mix_fns(8, 8)
 
-static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp) {
+static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {
@@ -260,7 +242,8 @@ static av_cold void vp9dsp_loopfilter_init_arm(VP9DSPContext *dsp) {
     }
 }
 
-av_cold void ff_vp9dsp_init_arm(VP9DSPContext *dsp, int bpp) {
+av_cold void ff_vp9dsp_init_arm(VP9DSPContext *dsp, int bpp)
+{
     if (bpp == 10) {
         ff_vp9dsp_init_10bpp_arm(dsp);
         return;

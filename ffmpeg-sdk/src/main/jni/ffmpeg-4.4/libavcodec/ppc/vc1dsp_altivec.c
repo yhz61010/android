@@ -351,7 +351,8 @@ static void vc1_inv_trans_8x4_altivec(uint8_t *dest, ptrdiff_t stride,
 
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_vc1dsp_init_ppc(VC1DSPContext *dsp) {
+av_cold void ff_vc1dsp_init_ppc(VC1DSPContext *dsp)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

@@ -79,13 +79,13 @@ typedef struct CodedBitstreamUnit {
      * The number of bytes in the bitstream (including any padding bits
      * in the final byte).
      */
-    size_t data_size;
+    size_t   data_size;
     /**
      * The number of bits which should be ignored in the final byte.
      *
      * This supports non-byte-aligned bitstreams.
      */
-    size_t data_bit_padding;
+    size_t   data_bit_padding;
     /**
      * A reference to the buffer containing data.
      *
@@ -128,7 +128,7 @@ typedef struct CodedBitstreamFragment {
      * The number of bytes in the bitstream (including any padding bits
      * in the final byte).
      */
-    size_t data_size;
+    size_t   data_size;
     /**
      * The number of bits which should be ignored in the final byte.
      */
@@ -146,14 +146,14 @@ typedef struct CodedBitstreamFragment {
      * This may be zero if the fragment only exists in bitstream form
      * and has not been decomposed.
      */
-    int nb_units;
+    int              nb_units;
 
     /**
      * Number of allocated units.
      *
      * Must always be >= nb_units; designed for internal use by cbs.
      */
-    int nb_units_allocated;
+     int             nb_units_allocated;
 
     /**
      * Pointer to an array of units of length nb_units_allocated.
@@ -218,7 +218,7 @@ typedef struct CodedBitstreamContext {
      * For internal use of cbs only.
      */
     uint8_t *write_buffer;
-    size_t write_buffer_size;
+    size_t   write_buffer_size;
 } CodedBitstreamContext;
 
 
@@ -363,9 +363,7 @@ void ff_cbs_fragment_free(CodedBitstreamFragment *frag);
  */
 int ff_cbs_alloc_unit_content(CodedBitstreamUnit *unit,
                               size_t size,
-                              void (*free)(void *opaque, uint8_t *content)
-
-);
+                              void (*free)(void *opaque, uint8_t *content));
 
 /**
  * Allocate a new internal content buffer matching the type of the unit.

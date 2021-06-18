@@ -24,7 +24,9 @@
 #include "libavutil/error.h"
 
 
-static int setup_side_data_entry(AVPacket *avpkt) {
+
+static int setup_side_data_entry(AVPacket* avpkt)
+{
     const uint8_t *data_name = NULL;
     int ret = 0, bytes;
     uint8_t *extra_data = NULL;
@@ -36,7 +38,7 @@ static int setup_side_data_entry(AVPacket *avpkt) {
     /* Allocate a memory bloc */
     bytes = strlen(data_name);
 
-    if (!(extra_data = av_malloc(bytes))) {
+    if(!(extra_data = av_malloc(bytes))){
         ret = AVERROR(ENOMEM);
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         exit(1);
@@ -46,8 +48,8 @@ static int setup_side_data_entry(AVPacket *avpkt) {
 
     /* create side data for AVPacket */
     ret = av_packet_add_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA,
-                                  extra_data, bytes);
-    if (ret < 0) {
+                                        extra_data, bytes);
+    if(ret < 0){
         fprintf(stderr,
                 "Error occurred in av_packet_add_side_data: %s\n",
                 av_err2str(ret));
@@ -56,14 +58,15 @@ static int setup_side_data_entry(AVPacket *avpkt) {
     return ret;
 }
 
-static int initializations(AVPacket *avpkt) {
-    const static uint8_t *data = "selftest for av_packet_clone(...)";
+static int initializations(AVPacket* avpkt)
+{
+    const static uint8_t* data = "selftest for av_packet_clone(...)";
     int ret = 0;
 
     /* set values for avpkt */
     avpkt->pts = 17;
     avpkt->dts = 2;
-    avpkt->data = (uint8_t *) data;
+    avpkt->data = (uint8_t*)data;
     avpkt->size = strlen(data);
     avpkt->flags = AV_PKT_FLAG_DISCARD;
     avpkt->duration = 100;
@@ -74,14 +77,15 @@ static int initializations(AVPacket *avpkt) {
     return ret;
 }
 
-int main(void) {
+int main(void)
+{
     AVPacket *avpkt = NULL;
     AVPacket *avpkt_clone = NULL;
     int ret = 0;
 
     /* test av_packet_alloc */
     avpkt = av_packet_alloc();
-    if (!avpkt) {
+    if(!avpkt) {
         av_log(NULL, AV_LOG_ERROR, "av_packet_alloc failed to allcoate AVPacket\n");
         return 1;
     }
@@ -94,30 +98,30 @@ int main(void) {
     /* test av_packet_clone*/
     avpkt_clone = av_packet_clone(avpkt);
 
-    if (!avpkt_clone) {
-        av_log(NULL, AV_LOG_ERROR, "av_packet_clone failed to clone AVPacket\n");
+    if(!avpkt_clone) {
+        av_log(NULL, AV_LOG_ERROR,"av_packet_clone failed to clone AVPacket\n");
         return 1;
     }
     /*test av_grow_packet*/
-    if (av_grow_packet(avpkt_clone, 20) < 0) {
+    if(av_grow_packet(avpkt_clone, 20) < 0){
         av_log(NULL, AV_LOG_ERROR, "av_grow_packet failed\n");
         return 1;
     }
-    if (av_grow_packet(avpkt_clone, INT_MAX) == 0) {
-        printf("av_grow_packet failed to return error "
-               "when \"grow_by\" parameter is too large.\n");
+    if(av_grow_packet(avpkt_clone, INT_MAX) == 0){
+        printf( "av_grow_packet failed to return error "
+                "when \"grow_by\" parameter is too large.\n" );
         ret = 1;
     }
     /* test size error check in av_new_packet*/
-    if (av_new_packet(avpkt_clone, INT_MAX) == 0) {
-        printf("av_new_packet failed to return error "
-               "when \"size\" parameter is too large.\n");
+    if(av_new_packet(avpkt_clone, INT_MAX) == 0){
+        printf( "av_new_packet failed to return error "
+                "when \"size\" parameter is too large.\n" );
         ret = 1;
     }
     /*test size error check in av_packet_from_data*/
-    if (av_packet_from_data(avpkt_clone, avpkt_clone->data, INT_MAX) == 0) {
+    if(av_packet_from_data(avpkt_clone, avpkt_clone->data, INT_MAX) == 0){
         printf("av_packet_from_data failed to return error "
-               "when \"size\" parameter is too large.\n");
+                "when \"size\" parameter is too large.\n" );
         ret = 1;
     }
     /*clean up*/

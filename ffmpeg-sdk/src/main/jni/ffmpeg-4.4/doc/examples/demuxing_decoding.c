@@ -46,7 +46,7 @@ static FILE *video_dst_file = NULL;
 static FILE *audio_dst_file = NULL;
 
 static uint8_t *video_dst_data[4] = {NULL};
-static int video_dst_linesize[4];
+static int      video_dst_linesize[4];
 static int video_dst_bufsize;
 
 static int video_stream_idx = -1, audio_stream_idx = -1;
@@ -55,16 +55,17 @@ static AVPacket *pkt = NULL;
 static int video_frame_count = 0;
 static int audio_frame_count = 0;
 
-static int output_video_frame(AVFrame *frame) {
+static int output_video_frame(AVFrame *frame)
+{
     if (frame->width != width || frame->height != height ||
         frame->format != pix_fmt) {
         /* To handle this change, one could call av_image_alloc again and
          * decode the following frames into another rawvideo file. */
         fprintf(stderr, "Error: Width, height and pixel format have to be "
-                        "constant in a rawvideo file, but the width, height or "
-                        "pixel format of the input video changed:\n"
-                        "old: width = %d, height = %d, format = %s\n"
-                        "new: width = %d, height = %d, format = %s\n",
+                "constant in a rawvideo file, but the width, height or "
+                "pixel format of the input video changed:\n"
+                "old: width = %d, height = %d, format = %s\n"
+                "new: width = %d, height = %d, format = %s\n",
                 width, height, av_get_pix_fmt_name(pix_fmt),
                 frame->width, frame->height,
                 av_get_pix_fmt_name(frame->format));
@@ -77,7 +78,7 @@ static int output_video_frame(AVFrame *frame) {
     /* copy decoded frame to destination buffer:
      * this is required since rawvideo expects non aligned data */
     av_image_copy(video_dst_data, video_dst_linesize,
-                  (const uint8_t **) (frame->data), frame->linesize,
+                  (const uint8_t **)(frame->data), frame->linesize,
                   pix_fmt, width, height);
 
     /* write to rawvideo file */
@@ -85,7 +86,8 @@ static int output_video_frame(AVFrame *frame) {
     return 0;
 }
 
-static int output_audio_frame(AVFrame *frame) {
+static int output_audio_frame(AVFrame *frame)
+{
     size_t unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample(frame->format);
     printf("audio_frame n:%d nb_samples:%d pts:%s\n",
            audio_frame_count++, frame->nb_samples,
@@ -104,7 +106,8 @@ static int output_audio_frame(AVFrame *frame) {
     return 0;
 }
 
-static int decode_packet(AVCodecContext *dec, const AVPacket *pkt) {
+static int decode_packet(AVCodecContext *dec, const AVPacket *pkt)
+{
     int ret = 0;
 
     // submit the packet to the decoder
@@ -142,7 +145,8 @@ static int decode_packet(AVCodecContext *dec, const AVPacket *pkt) {
 }
 
 static int open_codec_context(int *stream_idx,
-                              AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type) {
+                              AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type)
+{
     int ret, stream_index;
     AVStream *st;
     AVCodec *dec = NULL;
@@ -193,17 +197,17 @@ static int open_codec_context(int *stream_idx,
 }
 
 static int get_format_from_sample_fmt(const char **fmt,
-                                      enum AVSampleFormat sample_fmt) {
+                                      enum AVSampleFormat sample_fmt)
+{
     int i;
     struct sample_fmt_entry {
-        enum AVSampleFormat sample_fmt;
-        const char *fmt_be, *fmt_le;
+        enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le;
     } sample_fmt_entries[] = {
-            {AV_SAMPLE_FMT_U8,  "u8",    "u8"},
-            {AV_SAMPLE_FMT_S16, "s16be", "s16le"},
-            {AV_SAMPLE_FMT_S32, "s32be", "s32le"},
-            {AV_SAMPLE_FMT_FLT, "f32be", "f32le"},
-            {AV_SAMPLE_FMT_DBL, "f64be", "f64le"},
+        { AV_SAMPLE_FMT_U8,  "u8",    "u8"    },
+        { AV_SAMPLE_FMT_S16, "s16be", "s16le" },
+        { AV_SAMPLE_FMT_S32, "s32be", "s32le" },
+        { AV_SAMPLE_FMT_FLT, "f32be", "f32le" },
+        { AV_SAMPLE_FMT_DBL, "f64be", "f64le" },
     };
     *fmt = NULL;
 
@@ -221,15 +225,16 @@ static int get_format_from_sample_fmt(const char **fmt,
     return -1;
 }
 
-int main(int argc, char **argv) {
+int main (int argc, char **argv)
+{
     int ret = 0;
 
     if (argc != 4) {
         fprintf(stderr, "usage: %s  input_file video_output_file audio_output_file\n"
-                        "API example program to show how to read frames from an input file.\n"
-                        "This program reads frames from a file, decodes them, and writes decoded\n"
-                        "video frames to a rawvideo file named video_output_file, and decoded\n"
-                        "audio frames to a rawaudio file named audio_output_file.\n",
+                "API example program to show how to read frames from an input file.\n"
+                "This program reads frames from a file, decodes them, and writes decoded\n"
+                "video frames to a rawvideo file named video_output_file, and decoded\n"
+                "audio frames to a rawaudio file named audio_output_file.\n",
                 argv[0]);
         exit(1);
     }
@@ -361,7 +366,7 @@ int main(int argc, char **argv) {
                audio_dst_filename);
     }
 
-    end:
+end:
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&fmt_ctx);

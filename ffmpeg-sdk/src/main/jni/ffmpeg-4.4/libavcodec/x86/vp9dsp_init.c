@@ -214,7 +214,8 @@ ipred_func(32, tm, avx2);
 
 #endif /* HAVE_X86ASM */
 
-av_cold void ff_vp9dsp_init_x86(VP9DSPContext *dsp, int bpp, int bitexact) {
+av_cold void ff_vp9dsp_init_x86(VP9DSPContext *dsp, int bpp, int bitexact)
+{
 #if HAVE_X86ASM
     int cpu_flags;
 

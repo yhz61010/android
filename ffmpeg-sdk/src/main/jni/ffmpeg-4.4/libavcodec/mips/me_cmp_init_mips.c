@@ -21,7 +21,8 @@
 #include "libavutil/mips/cpu.h"
 #include "me_cmp_mips.h"
 
-av_cold void ff_me_cmp_init_mips(MECmpContext *c, AVCodecContext *avctx) {
+av_cold void ff_me_cmp_init_mips(MECmpContext *c, AVCodecContext *avctx)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_msa(cpu_flags)) {

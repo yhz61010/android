@@ -21,10 +21,11 @@
 #include "libavutil/mips/cpu.h"
 #include "h263dsp_mips.h"
 
-av_cold void ff_h263dsp_init_mips(H263DSPContext *c) {
+av_cold void ff_h263dsp_init_mips(H263DSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
-    if (have_msa(cpu_flags)) {
+    if (have_msa(cpu_flags)){
         c->h263_h_loop_filter = ff_h263_h_loop_filter_msa;
         c->h263_v_loop_filter = ff_h263_v_loop_filter_msa;
     }

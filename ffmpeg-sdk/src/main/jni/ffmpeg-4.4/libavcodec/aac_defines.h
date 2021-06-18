@@ -85,12 +85,12 @@ typedef int                 AAC_SIGNE;
 #define AAC_RENAME(x)       x
 #define AAC_RENAME_32(x)    x
 #define AAC_RENAME2(x)      ff_ ## x
-typedef float INTFLOAT;
-typedef float UINTFLOAT;
-typedef float INT64FLOAT;
-typedef float SHORTFLOAT;
-typedef float AAC_FLOAT;
-typedef unsigned AAC_SIGNE;
+typedef float               INTFLOAT;
+typedef float               UINTFLOAT;
+typedef float               INT64FLOAT;
+typedef float               SHORTFLOAT;
+typedef float               AAC_FLOAT;
+typedef unsigned            AAC_SIGNE;
 #define FIXR(x)             ((float)(x))
 #define FIXR10(x)           ((float)(x))
 #define Q23(x)              ((float)(x))

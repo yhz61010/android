@@ -40,17 +40,17 @@
 #define AUDIO_REFILL_THRESH 4096
 
 static int get_format_from_sample_fmt(const char **fmt,
-                                      enum AVSampleFormat sample_fmt) {
+                                      enum AVSampleFormat sample_fmt)
+{
     int i;
     struct sample_fmt_entry {
-        enum AVSampleFormat sample_fmt;
-        const char *fmt_be, *fmt_le;
+        enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le;
     } sample_fmt_entries[] = {
-            {AV_SAMPLE_FMT_U8,  "u8",    "u8"},
-            {AV_SAMPLE_FMT_S16, "s16be", "s16le"},
-            {AV_SAMPLE_FMT_S32, "s32be", "s32le"},
-            {AV_SAMPLE_FMT_FLT, "f32be", "f32le"},
-            {AV_SAMPLE_FMT_DBL, "f64be", "f64le"},
+        { AV_SAMPLE_FMT_U8,  "u8",    "u8"    },
+        { AV_SAMPLE_FMT_S16, "s16be", "s16le" },
+        { AV_SAMPLE_FMT_S32, "s32be", "s32le" },
+        { AV_SAMPLE_FMT_FLT, "f32be", "f32le" },
+        { AV_SAMPLE_FMT_DBL, "f64be", "f64le" },
     };
     *fmt = NULL;
 
@@ -69,7 +69,8 @@ static int get_format_from_sample_fmt(const char **fmt,
 }
 
 static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
-                   FILE *outfile) {
+                   FILE *outfile)
+{
     int i, ch;
     int ret, data_size;
 
@@ -97,20 +98,21 @@ static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame,
         }
         for (i = 0; i < frame->nb_samples; i++)
             for (ch = 0; ch < dec_ctx->channels; ch++)
-                fwrite(frame->data[ch] + data_size * i, 1, data_size, outfile);
+                fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     const char *outfilename, *filename;
     const AVCodec *codec;
-    AVCodecContext *c = NULL;
+    AVCodecContext *c= NULL;
     AVCodecParserContext *parser = NULL;
     int len, ret;
     FILE *f, *outfile;
     uint8_t inbuf[AUDIO_INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
     uint8_t *data;
-    size_t data_size;
+    size_t   data_size;
     AVPacket *pkt;
     AVFrame *decoded_frame = NULL;
     enum AVSampleFormat sfmt;
@@ -121,7 +123,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage: %s <input file> <output file>\n", argv[0]);
         exit(0);
     }
-    filename = argv[1];
+    filename    = argv[1];
     outfilename = argv[2];
 
     pkt = av_packet_alloc();
@@ -163,7 +165,7 @@ int main(int argc, char **argv) {
     }
 
     /* decode until eof */
-    data = inbuf;
+    data      = inbuf;
     data_size = fread(inbuf, 1, AUDIO_INBUF_SIZE, f);
 
     while (data_size > 0) {
@@ -181,7 +183,7 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Error while parsing\n");
             exit(1);
         }
-        data += ret;
+        data      += ret;
         data_size -= ret;
 
         if (pkt->size)
@@ -221,7 +223,7 @@ int main(int argc, char **argv) {
            "ffplay -f %s -ac %d -ar %d %s\n",
            fmt, n_channels, c->sample_rate,
            outfilename);
-    end:
+end:
     fclose(outfile);
     fclose(f);
 

@@ -21,14 +21,13 @@
  */
 
 #include <stdlib.h>
-
 #define CONFIG_HARDCODED_TABLES 0
-
 #include "libavutil/tablegen.h"
 #include "cbrt_tablegen.h"
 #include "tableprint.h"
 
-int main(void) {
+int main(void)
+{
     AAC_RENAME(ff_cbrt_tableinit)();
 
     write_fileheader();

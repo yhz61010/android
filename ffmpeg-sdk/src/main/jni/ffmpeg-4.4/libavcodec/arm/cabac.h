@@ -20,7 +20,6 @@
 #define AVCODEC_ARM_CABAC_H
 
 #include "config.h"
-
 #if HAVE_ARMV6T2_INLINE
 
 #include "libavutil/attributes.h"

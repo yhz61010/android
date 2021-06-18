@@ -36,13 +36,9 @@
 #include "libavutil/fixed_dsp.h"
 #include "libavutil/mem_internal.h"
 #include "avcodec.h"
-
 #if !USE_FIXED
-
 #include "mdct15.h"
-
 #endif
-
 #include "fft.h"
 #include "mpeg4audio.h"
 #include "sbr.h"
@@ -73,8 +69,8 @@ enum ExtensionPayloadID {
     EXT_FILL_DATA,
     EXT_DATA_ELEMENT,
     EXT_DYNAMIC_RANGE = 0xb,
-    EXT_SBR_DATA = 0xd,
-    EXT_SBR_DATA_CRC = 0xe,
+    EXT_SBR_DATA      = 0xd,
+    EXT_SBR_DATA_CRC  = 0xe,
 };
 
 enum WindowSequence {
@@ -85,24 +81,24 @@ enum WindowSequence {
 };
 
 enum BandType {
-    ZERO_BT = 0,     ///< Scalefactors and spectral data are all zero.
-    FIRST_PAIR_BT = 5,     ///< This and later band types encode two values (rather than four) with one code word.
-    ESC_BT = 11,    ///< Spectral data are coded with an escape sequence.
-    RESERVED_BT = 12,    ///< Band types following are encoded differently from others.
-    NOISE_BT = 13,    ///< Spectral data are scaled white noise not coded in the bitstream.
-    INTENSITY_BT2 = 14,    ///< Scalefactor data are intensity stereo positions (out of phase).
-    INTENSITY_BT = 15,    ///< Scalefactor data are intensity stereo positions (in phase).
+    ZERO_BT        = 0,     ///< Scalefactors and spectral data are all zero.
+    FIRST_PAIR_BT  = 5,     ///< This and later band types encode two values (rather than four) with one code word.
+    ESC_BT         = 11,    ///< Spectral data are coded with an escape sequence.
+    RESERVED_BT    = 12,    ///< Band types following are encoded differently from others.
+    NOISE_BT       = 13,    ///< Spectral data are scaled white noise not coded in the bitstream.
+    INTENSITY_BT2  = 14,    ///< Scalefactor data are intensity stereo positions (out of phase).
+    INTENSITY_BT   = 15,    ///< Scalefactor data are intensity stereo positions (in phase).
 };
 
 #define IS_CODEBOOK_UNSIGNED(x) (((x) - 1) & 10)
 
 enum ChannelPosition {
-    AAC_CHANNEL_OFF = 0,
+    AAC_CHANNEL_OFF   = 0,
     AAC_CHANNEL_FRONT = 1,
-    AAC_CHANNEL_SIDE = 2,
-    AAC_CHANNEL_BACK = 3,
-    AAC_CHANNEL_LFE = 4,
-    AAC_CHANNEL_CC = 5,
+    AAC_CHANNEL_SIDE  = 2,
+    AAC_CHANNEL_BACK  = 3,
+    AAC_CHANNEL_LFE   = 4,
+    AAC_CHANNEL_CC    = 5,
 };
 
 /**
@@ -127,7 +123,7 @@ enum OCStatus {
 
 typedef struct OutputConfiguration {
     MPEG4AudioConfig m4ac;
-    uint8_t layout_map[MAX_ELEM_ID * 4][3];
+    uint8_t layout_map[MAX_ELEM_ID*4][3];
     int layout_map_tags;
     int channels;
     uint64_t channel_layout;
@@ -261,7 +257,7 @@ typedef struct SingleChannelElement {
     int sf_idx[128];                                ///< scalefactor indices (used by encoder)
     uint8_t zeroes[128];                            ///< band is not coded (used by encoder)
     uint8_t can_pns[128];                           ///< band is allowed to PNS (informative)
-    float is_ener[128];                            ///< Intensity stereo pos (used by encoder)
+    float  is_ener[128];                            ///< Intensity stereo pos (used by encoder)
     float pns_ener[128];                            ///< Noise energy values (used by encoder)
     DECLARE_ALIGNED(32, INTFLOAT, pcoeffs)[1024];   ///< coefficients for IMDCT, pristine
     DECLARE_ALIGNED(32, INTFLOAT, coeffs)[1024];    ///< coefficients for IMDCT, maybe processed
@@ -281,7 +277,7 @@ typedef struct ChannelElement {
     int present;
     // CPE specific
     int common_window;        ///< Set if channels share a common 'IndividualChannelStream' in bitstream.
-    int ms_mode;          ///< Signals mid/side stereo flags coding mode (used by encoder)
+    int     ms_mode;          ///< Signals mid/side stereo flags coding mode (used by encoder)
     uint8_t is_mode;          ///< Set if any bands have been encoded using intensity stereo (used by encoder)
     uint8_t ms_mask[128];     ///< Set if mid/side stereo is used for each scalefactor window band
     uint8_t is_mask[128];     ///< Set if intensity stereo is used (used by encoder)
@@ -296,10 +292,7 @@ typedef struct ChannelElement {
  * main AAC context
  */
 struct AACContext {
-    AVClass        *
-
-    class;
-
+    AVClass        *class;
     AVCodecContext *avctx;
     AVFrame *frame;
 
@@ -310,8 +303,8 @@ struct AACContext {
      * @name Channel element related data
      * @{
      */
-    ChannelElement *che[4][MAX_ELEM_ID];
-    ChannelElement *tag_che_map[4][MAX_ELEM_ID];
+    ChannelElement          *che[4][MAX_ELEM_ID];
+    ChannelElement  *tag_che_map[4][MAX_ELEM_ID];
     int tags_mapped;
     int warned_remapping_once;
     /** @} */
@@ -369,19 +362,13 @@ struct AACContext {
 
     /* aacdec functions pointers */
     void (*imdct_and_windowing)(AACContext *ac, SingleChannelElement *sce);
-
     void (*apply_ltp)(AACContext *ac, SingleChannelElement *sce);
-
     void (*apply_tns)(INTFLOAT coef[1024], TemporalNoiseShaping *tns,
                       IndividualChannelStream *ics, int decode);
-
     void (*windowing_and_mdct_ltp)(AACContext *ac, INTFLOAT *out,
                                    INTFLOAT *in, IndividualChannelStream *ics);
-
     void (*update_ltp)(AACContext *ac, SingleChannelElement *sce);
-
     void (*vector_pow43)(int *coefs, int len);
-
     void (*subband_scale)(int *dst, int *src, int scale, int offset, int len, void *log_context);
 
 };

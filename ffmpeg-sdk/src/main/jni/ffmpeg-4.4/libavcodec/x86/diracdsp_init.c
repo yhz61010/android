@@ -23,27 +23,19 @@
 #include "fpel.h"
 
 void ff_add_rect_clamped_mmx(uint8_t *, const uint16_t *, int, const int16_t *, int, int, int);
-
 void ff_add_rect_clamped_sse2(uint8_t *, const uint16_t *, int, const int16_t *, int, int, int);
 
 void ff_add_dirac_obmc8_mmx(uint16_t *dst, const uint8_t *src, int stride, const uint8_t *obmc_weight, int yblen);
-
 void ff_add_dirac_obmc16_mmx(uint16_t *dst, const uint8_t *src, int stride, const uint8_t *obmc_weight, int yblen);
-
 void ff_add_dirac_obmc32_mmx(uint16_t *dst, const uint8_t *src, int stride, const uint8_t *obmc_weight, int yblen);
 
 void ff_add_dirac_obmc16_sse2(uint16_t *dst, const uint8_t *src, int stride, const uint8_t *obmc_weight, int yblen);
-
 void ff_add_dirac_obmc32_sse2(uint16_t *dst, const uint8_t *src, int stride, const uint8_t *obmc_weight, int yblen);
 
 void ff_put_rect_clamped_mmx(uint8_t *dst, int dst_stride, const int16_t *src, int src_stride, int width, int height);
-
 void ff_put_rect_clamped_sse2(uint8_t *dst, int dst_stride, const int16_t *src, int src_stride, int width, int height);
-
 void ff_put_signed_rect_clamped_mmx(uint8_t *dst, int dst_stride, const int16_t *src, int src_stride, int width, int height);
-
 void ff_put_signed_rect_clamped_sse2(uint8_t *dst, int dst_stride, const int16_t *src, int src_stride, int width, int height);
-
 void ff_put_signed_rect_clamped_10_sse4(uint8_t *dst, int dst_stride, const uint8_t *src, int src_stride, int width, int height);
 
 void ff_dequant_subband_32_sse4(uint8_t *src, uint8_t *dst, ptrdiff_t stride, const int qf, const int qs, int tot_v, int tot_h);
@@ -109,7 +101,8 @@ HPEL_FILTER(16, sse2)
 
 #endif // HAVE_X86ASM
 
-void ff_diracdsp_init_x86(DiracDSPContext *c) {
+void ff_diracdsp_init_x86(DiracDSPContext* c)
+{
 #if HAVE_X86ASM
     int mm_flags = av_get_cpu_flags();
 

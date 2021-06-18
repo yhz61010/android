@@ -42,7 +42,8 @@ typedef struct CyuvDecodeContext {
     int width, height;
 } CyuvDecodeContext;
 
-static av_cold int cyuv_decode_init(AVCodecContext *avctx) {
+static av_cold int cyuv_decode_init(AVCodecContext *avctx)
+{
     CyuvDecodeContext *s = avctx->priv_data;
 
     s->avctx = avctx;
@@ -57,10 +58,11 @@ static av_cold int cyuv_decode_init(AVCodecContext *avctx) {
 
 static int cyuv_decode_frame(AVCodecContext *avctx,
                              void *data, int *got_frame,
-                             AVPacket *avpkt) {
+                             AVPacket *avpkt)
+{
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
-    CyuvDecodeContext *s = avctx->priv_data;
+    CyuvDecodeContext *s=avctx->priv_data;
     AVFrame *frame = data;
 
     unsigned char *y_plane;
@@ -71,15 +73,15 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
     int v_ptr;
 
     /* prediction error tables (make it clear that they are signed values) */
-    const signed char *y_table = (const signed char *) buf + 0;
-    const signed char *u_table = (const signed char *) buf + 16;
-    const signed char *v_table = (const signed char *) buf + 32;
+    const signed char *y_table = (const signed char*)buf +  0;
+    const signed char *u_table = (const signed char*)buf + 16;
+    const signed char *v_table = (const signed char*)buf + 32;
 
     unsigned char y_pred, u_pred, v_pred;
     int stream_ptr;
     unsigned char cur_byte;
     int pixel_groups;
-    int rawsize = s->height * FFALIGN(s->width, 2) * 2;
+    int rawsize = s->height * FFALIGN(s->width,2) * 2;
     int ret;
 
     if (avctx->codec_id == AV_CODEC_ID_AURA) {
@@ -92,7 +94,7 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
      *    (3 * 16) + height * (width * 3 / 4) */
     if (buf_size == 48 + s->height * (s->width * 3 / 4)) {
         avctx->pix_fmt = AV_PIX_FMT_YUV411P;
-    } else if (buf_size == rawsize) {
+    } else if(buf_size == rawsize ) {
         avctx->pix_fmt = AV_PIX_FMT_UYVY422;
     } else {
         av_log(avctx, AV_LOG_ERROR, "got a buffer with %d bytes when %d were expected\n",
@@ -111,28 +113,50 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
     v_plane = frame->data[2];
 
     if (buf_size == rawsize) {
-        int linesize = FFALIGN(s->width, 2) * 2;
+        int linesize = FFALIGN(s->width,2) * 2;
         y_plane += frame->linesize[0] * s->height;
         for (stream_ptr = 0; stream_ptr < rawsize; stream_ptr += linesize) {
             y_plane -= frame->linesize[0];
-            memcpy(y_plane, buf + stream_ptr, linesize);
+            memcpy(y_plane, buf+stream_ptr, linesize);
         }
     } else {
 
-        /* iterate through each line in the height */
-        for (y_ptr = 0, u_ptr = 0, v_ptr = 0;
-             y_ptr < (s->height * frame->linesize[0]);
-             y_ptr += frame->linesize[0] - s->width,
-             u_ptr += frame->linesize[1] - s->width / 4,
-             v_ptr += frame->linesize[2] - s->width / 4) {
+    /* iterate through each line in the height */
+    for (y_ptr = 0, u_ptr = 0, v_ptr = 0;
+         y_ptr < (s->height * frame->linesize[0]);
+         y_ptr += frame->linesize[0] - s->width,
+         u_ptr += frame->linesize[1] - s->width / 4,
+         v_ptr += frame->linesize[2] - s->width / 4) {
 
-            /* reset predictors */
-            cur_byte = buf[stream_ptr++];
-            u_plane[u_ptr++] = u_pred = cur_byte & 0xF0;
-            y_plane[y_ptr++] = y_pred = (cur_byte & 0x0F) << 4;
+        /* reset predictors */
+        cur_byte = buf[stream_ptr++];
+        u_plane[u_ptr++] = u_pred = cur_byte & 0xF0;
+        y_plane[y_ptr++] = y_pred = (cur_byte & 0x0F) << 4;
+
+        cur_byte = buf[stream_ptr++];
+        v_plane[v_ptr++] = v_pred = cur_byte & 0xF0;
+        y_pred += y_table[cur_byte & 0x0F];
+        y_plane[y_ptr++] = y_pred;
+
+        cur_byte = buf[stream_ptr++];
+        y_pred += y_table[cur_byte & 0x0F];
+        y_plane[y_ptr++] = y_pred;
+        y_pred += y_table[(cur_byte & 0xF0) >> 4];
+        y_plane[y_ptr++] = y_pred;
+
+        /* iterate through the remaining pixel groups (4 pixels/group) */
+        pixel_groups = s->width / 4 - 1;
+        while (pixel_groups--) {
 
             cur_byte = buf[stream_ptr++];
-            v_plane[v_ptr++] = v_pred = cur_byte & 0xF0;
+            u_pred += u_table[(cur_byte & 0xF0) >> 4];
+            u_plane[u_ptr++] = u_pred;
+            y_pred += y_table[cur_byte & 0x0F];
+            y_plane[y_ptr++] = y_pred;
+
+            cur_byte = buf[stream_ptr++];
+            v_pred += v_table[(cur_byte & 0xF0) >> 4];
+            v_plane[v_ptr++] = v_pred;
             y_pred += y_table[cur_byte & 0x0F];
             y_plane[y_ptr++] = y_pred;
 
@@ -142,30 +166,8 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
             y_pred += y_table[(cur_byte & 0xF0) >> 4];
             y_plane[y_ptr++] = y_pred;
 
-            /* iterate through the remaining pixel groups (4 pixels/group) */
-            pixel_groups = s->width / 4 - 1;
-            while (pixel_groups--) {
-
-                cur_byte = buf[stream_ptr++];
-                u_pred += u_table[(cur_byte & 0xF0) >> 4];
-                u_plane[u_ptr++] = u_pred;
-                y_pred += y_table[cur_byte & 0x0F];
-                y_plane[y_ptr++] = y_pred;
-
-                cur_byte = buf[stream_ptr++];
-                v_pred += v_table[(cur_byte & 0xF0) >> 4];
-                v_plane[v_ptr++] = v_pred;
-                y_pred += y_table[cur_byte & 0x0F];
-                y_plane[y_ptr++] = y_pred;
-
-                cur_byte = buf[stream_ptr++];
-                y_pred += y_table[cur_byte & 0x0F];
-                y_plane[y_ptr++] = y_pred;
-                y_pred += y_table[(cur_byte & 0xF0) >> 4];
-                y_plane[y_ptr++] = y_pred;
-
-            }
         }
+    }
     }
 
     *got_frame = 1;

@@ -274,10 +274,8 @@ typedef struct AVCodec {
     void (*init_static_data)(struct AVCodec *codec);
 
     int (*init)(struct AVCodecContext *);
-
     int (*encode_sub)(struct AVCodecContext *, uint8_t *buf, int buf_size,
                       const struct AVSubtitle *sub);
-
     /**
      * Encode data to an AVPacket.
      *
@@ -290,7 +288,6 @@ typedef struct AVCodec {
      */
     int (*encode2)(struct AVCodecContext *avctx, struct AVPacket *avpkt,
                    const struct AVFrame *frame, int *got_packet_ptr);
-
     /**
      * Decode picture or subtitle data.
      *
@@ -305,9 +302,7 @@ typedef struct AVCodec {
      */
     int (*decode)(struct AVCodecContext *avctx, void *outdata,
                   int *got_frame_ptr, struct AVPacket *avpkt);
-
     int (*close)(struct AVCodecContext *);
-
     /**
      * Encode API with decoupled frame/packet dataflow. This function is called
      * to get one output packet. It should call ff_encode_get_frame() to obtain
@@ -321,13 +316,11 @@ typedef struct AVCodec {
      * input data.
      */
     int (*receive_frame)(struct AVCodecContext *avctx, struct AVFrame *frame);
-
     /**
      * Flush buffers.
      * Will be called when seeking
      */
     void (*flush)(struct AVCodecContext *);
-
     /**
      * Internal codec capabilities.
      * See FF_CODEC_CAP_* in internal.h
@@ -397,7 +390,6 @@ AVCodec *avcodec_find_encoder(enum AVCodecID id);
  * @return An encoder if one was found, NULL otherwise.
  */
 AVCodec *avcodec_find_encoder_by_name(const char *name);
-
 /**
  * @return a non-zero number if codec is an encoder, zero otherwise
  */
@@ -436,7 +428,7 @@ enum {
      * This format can be selected without any additional configuration -
      * no device or frames context is required.
      */
-    AV_CODEC_HW_CONFIG_METHOD_INTERNAL = 0x04,
+    AV_CODEC_HW_CONFIG_METHOD_INTERNAL      = 0x04,
     /**
      * The codec supports this format by some ad-hoc method.
      *
@@ -445,7 +437,7 @@ enum {
      * this sort of configuration are deprecated and others should be
      * used in preference.)
      */
-    AV_CODEC_HW_CONFIG_METHOD_AD_HOC = 0x08,
+    AV_CODEC_HW_CONFIG_METHOD_AD_HOC        = 0x08,
 };
 
 typedef struct AVCodecHWConfig {

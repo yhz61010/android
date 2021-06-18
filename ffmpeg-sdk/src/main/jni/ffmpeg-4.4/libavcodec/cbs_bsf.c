@@ -19,8 +19,9 @@
 #include "bsf_internal.h"
 #include "cbs_bsf.h"
 
-static int cbs_bsf_update_side_data(AVBSFContext *bsf, AVPacket *pkt) {
-    CBSBSFContext *ctx = bsf->priv_data;
+static int cbs_bsf_update_side_data(AVBSFContext *bsf, AVPacket *pkt)
+{
+    CBSBSFContext           *ctx = bsf->priv_data;
     CodedBitstreamFragment *frag = &ctx->fragment;
     uint8_t *side_data;
     buffer_size_t side_data_size;
@@ -59,8 +60,9 @@ static int cbs_bsf_update_side_data(AVBSFContext *bsf, AVPacket *pkt) {
     return 0;
 }
 
-int ff_cbs_bsf_generic_filter(AVBSFContext *bsf, AVPacket *pkt) {
-    CBSBSFContext *ctx = bsf->priv_data;
+int ff_cbs_bsf_generic_filter(AVBSFContext *bsf, AVPacket *pkt)
+{
+    CBSBSFContext           *ctx = bsf->priv_data;
     CodedBitstreamFragment *frag = &ctx->fragment;
     int err;
 
@@ -98,7 +100,7 @@ int ff_cbs_bsf_generic_filter(AVBSFContext *bsf, AVPacket *pkt) {
     }
 
     err = 0;
-    fail:
+fail:
     ff_cbs_fragment_reset(frag);
 
     if (err < 0)
@@ -107,8 +109,9 @@ int ff_cbs_bsf_generic_filter(AVBSFContext *bsf, AVPacket *pkt) {
     return err;
 }
 
-int ff_cbs_bsf_generic_init(AVBSFContext *bsf, const CBSBSFType *type) {
-    CBSBSFContext *ctx = bsf->priv_data;
+int ff_cbs_bsf_generic_init(AVBSFContext *bsf, const CBSBSFType *type)
+{
+    CBSBSFContext           *ctx = bsf->priv_data;
     CodedBitstreamFragment *frag = &ctx->fragment;
     int err;
 
@@ -141,12 +144,13 @@ int ff_cbs_bsf_generic_init(AVBSFContext *bsf, const CBSBSFType *type) {
     }
 
     err = 0;
-    fail:
+fail:
     ff_cbs_fragment_reset(frag);
     return err;
 }
 
-void ff_cbs_bsf_generic_close(AVBSFContext *bsf) {
+void ff_cbs_bsf_generic_close(AVBSFContext *bsf)
+{
     CBSBSFContext *ctx = bsf->priv_data;
 
     ff_cbs_fragment_free(&ctx->fragment);

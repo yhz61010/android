@@ -22,15 +22,16 @@
 #include "h264chroma_mips.h"
 
 static const uint8_t chroma_mask_arr[16 * 5] = {
-        0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
-        0, 2, 2, 4, 4, 6, 6, 8, 16, 18, 18, 20, 20, 22, 22, 24,
-        0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-        0, 1, 1, 2, 16, 17, 17, 18, 4, 5, 5, 6, 6, 7, 7, 8,
-        0, 1, 1, 2, 16, 17, 17, 18, 16, 17, 17, 18, 18, 19, 19, 20
+    0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
+    0, 2, 2, 4, 4, 6, 6, 8, 16, 18, 18, 20, 20, 22, 22, 24,
+    0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
+    0, 1, 1, 2, 16, 17, 17, 18, 4, 5, 5, 6, 6, 7, 7, 8,
+    0, 1, 1, 2, 16, 17, 17, 18, 16, 17, 17, 18, 18, 19, 19, 20
 };
 
 static void avc_chroma_hz_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     uint16_t out0, out1;
     v16i8 src0, src1;
     v8u16 res_r;
@@ -60,7 +61,8 @@ static void avc_chroma_hz_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3;
     v8u16 res_r;
     v8i16 res;
@@ -88,7 +90,8 @@ static void avc_chroma_hz_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hz_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_hz_2x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -97,7 +100,8 @@ static void avc_chroma_hz_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16i8 src0, src1;
     v8u16 res_r;
     v4i32 res;
@@ -121,7 +125,8 @@ static void avc_chroma_hz_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, out;
     v8u16 res0_r, res1_r;
     v16i8 mask;
@@ -143,7 +148,8 @@ static void avc_chroma_hz_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, out0, out1;
     v16i8 mask;
     v8u16 res0, res1, res2, res3;
@@ -167,7 +173,8 @@ static void avc_chroma_hz_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hz_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_hz_4x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -178,7 +185,8 @@ static void avc_chroma_hz_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, out0, out1;
     v8u16 res0, res1, res2, res3;
     v16i8 mask;
@@ -200,7 +208,8 @@ static void avc_chroma_hz_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_hz_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 out0, out1, out2, out3;
     v8u16 res0, res1, res2, res3, res4, res5, res6, res7;
@@ -233,7 +242,8 @@ static void avc_chroma_hz_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hz_nonmult_msa(uint8_t *src, uint8_t *dst,
                                       int32_t stride, uint32_t coeff0,
-                                      uint32_t coeff1, int32_t height) {
+                                      uint32_t coeff1, int32_t height)
+{
     uint32_t row;
     v16u8 src0, src1, src2, src3, out0, out1;
     v8u16 res0, res1, res2, res3;
@@ -281,7 +291,8 @@ static void avc_chroma_hz_nonmult_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (4 == height) {
         avc_chroma_hz_8x4_msa(src, dst, stride, coeff0, coeff1);
     } else if (8 == height) {
@@ -292,7 +303,8 @@ static void avc_chroma_hz_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     uint16_t out0, out1;
     v16i8 src0, src1, src2;
     v16u8 tmp0, tmp1;
@@ -323,7 +335,8 @@ static void avc_chroma_vt_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
     v8i16 res;
@@ -351,7 +364,8 @@ static void avc_chroma_vt_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_vt_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_vt_2x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -360,7 +374,8 @@ static void avc_chroma_vt_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2;
     v16u8 tmp0, tmp1;
     v4i32 res;
@@ -383,7 +398,8 @@ static void avc_chroma_vt_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
     v16u8 out;
@@ -406,7 +422,8 @@ static void avc_chroma_vt_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, out0, out1;
     v8u16 res0, res1, res2, res3;
@@ -434,7 +451,8 @@ static void avc_chroma_vt_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_vt_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_vt_4x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -445,7 +463,8 @@ static void avc_chroma_vt_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4, out0, out1;
     v8u16 res0, res1, res2, res3;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -465,7 +484,8 @@ static void avc_chroma_vt_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avc_chroma_vt_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                                  uint32_t coeff0, uint32_t coeff1) {
+                                  uint32_t coeff0, uint32_t coeff1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 out0, out1, out2, out3;
     v8u16 res0, res1, res2, res3, res4, res5, res6, res7;
@@ -497,7 +517,8 @@ static void avc_chroma_vt_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_vt_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coeff0, uint32_t coeff1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (4 == height) {
         avc_chroma_vt_8x4_msa(src, dst, stride, coeff0, coeff1);
     } else if (8 == height) {
@@ -507,7 +528,8 @@ static void avc_chroma_vt_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     uint16_t out0, out1;
     v16u8 src0, src1, src2;
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
@@ -541,7 +563,8 @@ static void avc_chroma_hv_2x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
@@ -575,7 +598,8 @@ static void avc_chroma_hv_2x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 static void avc_chroma_hv_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coef_hor0, uint32_t coef_hor1,
                                  uint32_t coef_ver0, uint32_t coef_ver1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_hv_2x2_msa(src, dst, stride, coef_hor0, coef_hor1, coef_ver0,
                               coef_ver1);
@@ -587,7 +611,8 @@ static void avc_chroma_hv_2w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2;
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
     v16i8 mask;
@@ -614,7 +639,8 @@ static void avc_chroma_hv_4x2_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2, src3, src4;
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3;
@@ -646,7 +672,8 @@ static void avc_chroma_hv_4x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, res0, res1;
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3, res_hz4, res_hz5, res_hz6, res_hz7;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3, res_vt4, res_vt5, res_vt6, res_vt7;
@@ -686,7 +713,8 @@ static void avc_chroma_hv_4x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 static void avc_chroma_hv_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coef_hor0, uint32_t coef_hor1,
                                  uint32_t coef_ver0, uint32_t coef_ver1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (2 == height) {
         avc_chroma_hv_4x2_msa(src, dst, stride, coef_hor0, coef_hor1, coef_ver0,
                               coef_ver1);
@@ -701,7 +729,8 @@ static void avc_chroma_hv_4w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2, src3, src4, out0, out1;
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3, res_hz4;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3;
@@ -743,7 +772,8 @@ static void avc_chroma_hv_8x4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hv_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                   uint32_t coef_hor0, uint32_t coef_hor1,
-                                  uint32_t coef_ver0, uint32_t coef_ver1) {
+                                  uint32_t coef_ver0, uint32_t coef_ver1)
+{
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 out0, out1, out2, out3;
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3, res_hz4;
@@ -799,7 +829,8 @@ static void avc_chroma_hv_8x8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 static void avc_chroma_hv_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
                                  uint32_t coef_hor0, uint32_t coef_hor1,
                                  uint32_t coef_ver0, uint32_t coef_ver1,
-                                 int32_t height) {
+                                 int32_t height)
+{
     if (4 == height) {
         avc_chroma_hv_8x4_msa(src, dst, stride, coef_hor0, coef_hor1, coef_ver0,
                               coef_ver1);
@@ -811,10 +842,11 @@ static void avc_chroma_hv_8w_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 
 static void avc_chroma_hz_and_aver_dst_2x2_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint16_t out0, out1;
     v16i8 src0, src1;
-    v16u8 dst_data = {0};
+    v16u8 dst_data = { 0 };
     v8u16 res_r;
     v16u8 res;
     v16i8 mask;
@@ -852,10 +884,11 @@ static void avc_chroma_hz_and_aver_dst_2x2_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint16_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3;
-    v16u8 dst0, dst_data = {0};
+    v16u8 dst0, dst_data = { 0 };
     v8u16 res_r;
     v16i8 mask;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -891,7 +924,8 @@ static void avc_chroma_hz_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_2w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (2 == height) {
         avc_chroma_hz_and_aver_dst_2x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -901,10 +935,11 @@ static void avc_chroma_hz_and_aver_dst_2w_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_4x2_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t load0, load1;
     v16i8 src0, src1;
-    v16u8 dst_data = {0};
+    v16u8 dst_data = { 0 };
     v8u16 res_r;
     v16i8 res, mask;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -933,10 +968,11 @@ static void avc_chroma_hz_and_aver_dst_4x2_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_4x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3;
-    v16u8 out, dst_data = {0};
+    v16u8 out, dst_data = { 0 };
     v16i8 mask;
     v8u16 res0_r, res1_r;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -961,10 +997,11 @@ static void avc_chroma_hz_and_aver_dst_4x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_4x8_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, out0, out1;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v16i8 mask;
     v8u16 res0, res1, res2, res3;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -992,7 +1029,8 @@ static void avc_chroma_hz_and_aver_dst_4x8_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_4w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (2 == height) {
         avc_chroma_hz_and_aver_dst_4x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -1004,10 +1042,11 @@ static void avc_chroma_hz_and_aver_dst_4w_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_8x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, out0, out1;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v8u16 res0, res1, res2, res3;
     v16i8 mask;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -1033,11 +1072,12 @@ static void avc_chroma_hz_and_aver_dst_8x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_8x8_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16u8 out0, out1, out2, out3;
-    v16u8 dst0 = {0}, dst1 = {0}, dst2 = {0}, dst3 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 }, dst2 = { 0 }, dst3 = { 0 };
     v8u16 res0, res1, res2, res3, res4, res5, res6, res7;
     v16i8 mask;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -1076,7 +1116,8 @@ static void avc_chroma_hz_and_aver_dst_8x8_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_hz_and_aver_dst_8w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (4 == height) {
         avc_chroma_hz_and_aver_dst_8x4_msa(src, dst, stride, coeff0, coeff1);
     } else if (8 == height) {
@@ -1086,10 +1127,11 @@ static void avc_chroma_hz_and_aver_dst_8w_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_2x2_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint16_t out0, out1;
     v16i8 src0, src1, src2, tmp0, tmp1, res;
-    v16u8 dst_data = {0};
+    v16u8 dst_data = { 0 };
     v8i16 out;
     v8u16 res_r;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -1122,7 +1164,8 @@ static void avc_chroma_vt_and_aver_dst_2x2_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint16_t tp0, tp1, tp2, tp3;
     v16i8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
@@ -1131,7 +1174,7 @@ static void avc_chroma_vt_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
     v16i8 coeff_vec1 = __msa_fill_b(coeff1);
     v16u8 coeff_vec = (v16u8) __msa_ilvr_b(coeff_vec0, coeff_vec1);
-    v16u8 dst_data = {0};
+    v16u8 dst_data = { 0 };
 
     LD_SB5(src, stride, src0, src1, src2, src3, src4);
 
@@ -1163,7 +1206,8 @@ static void avc_chroma_vt_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_2w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (2 == height) {
         avc_chroma_vt_and_aver_dst_2x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -1173,10 +1217,11 @@ static void avc_chroma_vt_and_aver_dst_2w_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_4x2_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t load0, load1;
     v16u8 src0, src1, src2, tmp0, tmp1;
-    v16u8 dst_data = {0};
+    v16u8 dst_data = { 0 };
     v8u16 res_r;
     v16u8 res;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -1204,11 +1249,12 @@ static void avc_chroma_vt_and_aver_dst_4x2_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_4x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
-    v16u8 dst0 = {0};
+    v16u8 dst0 = { 0 };
     v8u16 res0_r, res1_r;
     v16u8 out;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
@@ -1233,11 +1279,12 @@ static void avc_chroma_vt_and_aver_dst_4x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_4x8_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, out0, out1;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v8u16 res0, res1, res2, res3;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
     v16i8 coeff_vec1 = __msa_fill_b(coeff1);
@@ -1268,7 +1315,8 @@ static void avc_chroma_vt_and_aver_dst_4x8_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_4w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (2 == height) {
         avc_chroma_vt_and_aver_dst_4x2_msa(src, dst, stride, coeff0, coeff1);
     } else if (4 == height) {
@@ -1280,12 +1328,13 @@ static void avc_chroma_vt_and_aver_dst_4w_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_8x4_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4;
     v16u8 out0, out1;
     v8u16 res0, res1, res2, res3;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
     v16i8 coeff_vec1 = __msa_fill_b(coeff1);
     v16u8 coeff_vec = (v16u8) __msa_ilvr_b(coeff_vec0, coeff_vec1);
@@ -1308,11 +1357,12 @@ static void avc_chroma_vt_and_aver_dst_8x4_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_8x8_msa(uint8_t *src, uint8_t *dst,
                                                int32_t stride, uint32_t coeff0,
-                                               uint32_t coeff1) {
+                                               uint32_t coeff1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 out0, out1, out2, out3;
-    v16u8 dst0 = {0}, dst1 = {0}, dst2 = {0}, dst3 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 }, dst2 = { 0 }, dst3 = { 0 };
     v8u16 res0, res1, res2, res3, res4, res5, res6, res7;
     v16i8 coeff_vec0 = __msa_fill_b(coeff0);
     v16i8 coeff_vec1 = __msa_fill_b(coeff1);
@@ -1350,7 +1400,8 @@ static void avc_chroma_vt_and_aver_dst_8x8_msa(uint8_t *src, uint8_t *dst,
 
 static void avc_chroma_vt_and_aver_dst_8w_msa(uint8_t *src, uint8_t *dst,
                                               int32_t stride, uint32_t coeff0,
-                                              uint32_t coeff1, int32_t height) {
+                                              uint32_t coeff1, int32_t height)
+{
     if (4 == height) {
         avc_chroma_vt_and_aver_dst_8x4_msa(src, dst, stride, coeff0, coeff1);
     } else if (8 == height) {
@@ -1363,9 +1414,10 @@ static void avc_chroma_hv_and_aver_dst_2x2_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint16_t out0, out1;
-    v16u8 dst0 = {0};
+    v16u8 dst0 = { 0 };
     v16u8 src0, src1, src2;
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
     v16i8 res, mask;
@@ -1404,11 +1456,12 @@ static void avc_chroma_hv_and_aver_dst_2x4_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint16_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4;
     v16u8 tmp0, tmp1, tmp2, tmp3;
-    v16u8 dst0 = {0};
+    v16u8 dst0 = { 0 };
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
     v16i8 res, mask;
     v16i8 coeff_hz_vec0 = __msa_fill_b(coef_hor0);
@@ -1449,7 +1502,8 @@ static void avc_chroma_hv_and_aver_dst_2w_msa(uint8_t *src, uint8_t *dst,
                                               uint32_t coef_hor1,
                                               uint32_t coef_ver0,
                                               uint32_t coef_ver1,
-                                              int32_t height) {
+                                              int32_t height)
+{
     if (2 == height) {
         avc_chroma_hv_and_aver_dst_2x2_msa(src, dst, stride, coef_hor0,
                                            coef_hor1, coef_ver0, coef_ver1);
@@ -1464,10 +1518,11 @@ static void avc_chroma_hv_and_aver_dst_4x2_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint32_t tp0, tp1;
     v16u8 src0, src1, src2;
-    v16u8 dst0, dst_data = {0};
+    v16u8 dst0, dst_data = { 0 };
     v8u16 res_hz0, res_hz1, res_vt0, res_vt1;
     v16i8 mask;
     v16i8 coeff_hz_vec0 = __msa_fill_b(coef_hor0);
@@ -1499,10 +1554,11 @@ static void avc_chroma_hv_and_aver_dst_4x4_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4;
-    v16u8 out, dst_data = {0};
+    v16u8 out, dst_data = { 0 };
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3;
     v16i8 mask;
@@ -1537,10 +1593,11 @@ static void avc_chroma_hv_and_aver_dst_4x8_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint32_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8, res0, res1;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3, res_hz4, res_hz5, res_hz6, res_hz7;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3, res_vt4, res_vt5, res_vt6, res_vt7;
     v16i8 mask;
@@ -1586,7 +1643,8 @@ static void avc_chroma_hv_and_aver_dst_4w_msa(uint8_t *src, uint8_t *dst,
                                               uint32_t coef_hor1,
                                               uint32_t coef_ver0,
                                               uint32_t coef_ver1,
-                                              int32_t height) {
+                                              int32_t height)
+{
     if (2 == height) {
         avc_chroma_hv_and_aver_dst_4x2_msa(src, dst, stride, coef_hor0,
                                            coef_hor1, coef_ver0, coef_ver1);
@@ -1604,13 +1662,14 @@ static void avc_chroma_hv_and_aver_dst_8x4_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, out0, out1;
     v8u16 res_hz0, res_hz1, res_hz2;
     v8u16 res_hz3, res_hz4;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3;
-    v16u8 dst0 = {0}, dst1 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 };
     v16i8 mask;
     v16i8 coeff_hz_vec0 = __msa_fill_b(coef_hor0);
     v16i8 coeff_hz_vec1 = __msa_fill_b(coef_hor1);
@@ -1651,11 +1710,12 @@ static void avc_chroma_hv_and_aver_dst_8x8_msa(uint8_t *src, uint8_t *dst,
                                                uint32_t coef_hor0,
                                                uint32_t coef_hor1,
                                                uint32_t coef_ver0,
-                                               uint32_t coef_ver1) {
+                                               uint32_t coef_ver1)
+{
     uint64_t tp0, tp1, tp2, tp3;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 out0, out1, out2, out3;
-    v16u8 dst0 = {0}, dst1 = {0}, dst2 = {0}, dst3 = {0};
+    v16u8 dst0 = { 0 }, dst1 = { 0 }, dst2 = { 0 }, dst3 = { 0 };
     v8u16 res_hz0, res_hz1, res_hz2, res_hz3, res_hz4;
     v8u16 res_hz5, res_hz6, res_hz7, res_hz8;
     v8u16 res_vt0, res_vt1, res_vt2, res_vt3;
@@ -1720,7 +1780,8 @@ static void avc_chroma_hv_and_aver_dst_8w_msa(uint8_t *src, uint8_t *dst,
                                               uint32_t coef_hor1,
                                               uint32_t coef_ver0,
                                               uint32_t coef_ver1,
-                                              int32_t height) {
+                                              int32_t height)
+{
     if (4 == height) {
         avc_chroma_hv_and_aver_dst_8x4_msa(src, dst, stride, coef_hor0,
                                            coef_hor1, coef_ver0, coef_ver1);
@@ -1731,7 +1792,8 @@ static void avc_chroma_hv_and_aver_dst_8w_msa(uint8_t *src, uint8_t *dst,
 }
 
 static void copy_width4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                            int32_t height) {
+                            int32_t height)
+{
     uint32_t tp0, tp1, tp2, tp3, tp4, tp5, tp6, tp7;
 
     if (8 == height) {
@@ -1753,7 +1815,8 @@ static void copy_width4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void copy_width8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                            int32_t height) {
+                            int32_t height)
+{
     uint64_t src0, src1, src2, src3, src4, src5, src6, src7;
 
     if (8 == height) {
@@ -1770,9 +1833,10 @@ static void copy_width8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avg_width4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                           int32_t height) {
+                           int32_t height)
+{
     uint32_t tp0, tp1, tp2, tp3;
-    v16u8 src0 = {0}, src1 = {0}, dst0 = {0}, dst1 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 }, dst0 = { 0 }, dst1 = { 0 };
 
     if (8 == height) {
         LW4(src, stride, tp0, tp1, tp2, tp3);
@@ -1804,10 +1868,11 @@ static void avg_width4_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 static void avg_width8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
-                           int32_t height) {
+                           int32_t height)
+{
     uint64_t tp0, tp1, tp2, tp3, tp4, tp5, tp6, tp7;
-    v16u8 src0 = {0}, src1 = {0}, src2 = {0}, src3 = {0};
-    v16u8 dst0 = {0}, dst1 = {0}, dst2 = {0}, dst3 = {0};
+    v16u8 src0 = { 0 }, src1 = { 0 }, src2 = { 0 }, src3 = { 0 };
+    v16u8 dst0 = { 0 }, dst1 = { 0 }, dst2 = { 0 }, dst3 = { 0 };
 
     if (8 == height) {
         LD4(src, stride, tp0, tp1, tp2, tp3);
@@ -1839,7 +1904,8 @@ static void avg_width8_msa(uint8_t *src, uint8_t *dst, int32_t stride,
 }
 
 void ff_put_h264_chroma_mc8_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     if (x && y) {
@@ -1854,7 +1920,8 @@ void ff_put_h264_chroma_mc8_msa(uint8_t *dst, uint8_t *src,
 }
 
 void ff_put_h264_chroma_mc4_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     if (x && y) {
@@ -1869,7 +1936,8 @@ void ff_put_h264_chroma_mc4_msa(uint8_t *dst, uint8_t *src,
 }
 
 void ff_put_h264_chroma_mc2_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     int32_t cnt;
 
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
@@ -1891,7 +1959,8 @@ void ff_put_h264_chroma_mc2_msa(uint8_t *dst, uint8_t *src,
 }
 
 void ff_avg_h264_chroma_mc8_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
 
@@ -1908,7 +1977,8 @@ void ff_avg_h264_chroma_mc8_msa(uint8_t *dst, uint8_t *src,
 }
 
 void ff_avg_h264_chroma_mc4_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);
 
     if (x && y) {
@@ -1924,7 +1994,8 @@ void ff_avg_h264_chroma_mc4_msa(uint8_t *dst, uint8_t *src,
 }
 
 void ff_avg_h264_chroma_mc2_msa(uint8_t *dst, uint8_t *src,
-                                ptrdiff_t stride, int height, int x, int y) {
+                                ptrdiff_t stride, int height, int x, int y)
+{
     int32_t cnt;
 
     av_assert2(x < 8 && y < 8 && x >= 0 && y >= 0);

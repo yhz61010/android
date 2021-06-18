@@ -61,7 +61,6 @@ int avpriv_codec2_mode_frame_size(void *logctx, int mode);
 
 //Mimics (codec2_bits_per_frame()+7)/8
 int avpriv_codec2_mode_block_align(void *logctx, int mode);
-
 #endif
 
 #define CODEC2_EXTRADATA_SIZE 4

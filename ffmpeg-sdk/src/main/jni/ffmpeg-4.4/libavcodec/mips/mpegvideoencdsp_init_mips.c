@@ -23,7 +23,8 @@
 #include "h263dsp_mips.h"
 
 av_cold void ff_mpegvideoencdsp_init_mips(MpegvideoEncDSPContext *c,
-                                          AVCodecContext *avctx) {
+                                          AVCodecContext *avctx)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_msa(cpu_flags)) {

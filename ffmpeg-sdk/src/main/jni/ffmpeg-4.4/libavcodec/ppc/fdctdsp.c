@@ -462,7 +462,8 @@ void ff_fdct_altivec(int16_t *block)
 #endif /* HAVE_ALTIVEC */
 
 av_cold void ff_fdctdsp_init_ppc(FDCTDSPContext *c, AVCodecContext *avctx,
-                                 unsigned high_bit_depth) {
+                                 unsigned high_bit_depth)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

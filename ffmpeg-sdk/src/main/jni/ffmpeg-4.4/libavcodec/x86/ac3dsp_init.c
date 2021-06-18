@@ -26,25 +26,21 @@
 #include "libavcodec/ac3.h"
 #include "libavcodec/ac3dsp.h"
 
-void ff_ac3_exponent_min_mmx(uint8_t *exp, int num_reuse_blocks, int nb_coefs);
-
+void ff_ac3_exponent_min_mmx   (uint8_t *exp, int num_reuse_blocks, int nb_coefs);
 void ff_ac3_exponent_min_mmxext(uint8_t *exp, int num_reuse_blocks, int nb_coefs);
-
-void ff_ac3_exponent_min_sse2(uint8_t *exp, int num_reuse_blocks, int nb_coefs);
+void ff_ac3_exponent_min_sse2  (uint8_t *exp, int num_reuse_blocks, int nb_coefs);
 
 void ff_float_to_fixed24_3dnow(int32_t *dst, const float *src, unsigned int len);
-
-void ff_float_to_fixed24_sse(int32_t *dst, const float *src, unsigned int len);
-
-void ff_float_to_fixed24_sse2(int32_t *dst, const float *src, unsigned int len);
+void ff_float_to_fixed24_sse  (int32_t *dst, const float *src, unsigned int len);
+void ff_float_to_fixed24_sse2 (int32_t *dst, const float *src, unsigned int len);
 
 int ff_ac3_compute_mantissa_size_sse2(uint16_t mant_cnt[6][16]);
 
-void ff_ac3_extract_exponents_sse2(uint8_t *exp, int32_t *coef, int nb_coefs);
-
+void ff_ac3_extract_exponents_sse2 (uint8_t *exp, int32_t *coef, int nb_coefs);
 void ff_ac3_extract_exponents_ssse3(uint8_t *exp, int32_t *coef, int nb_coefs);
 
-av_cold void ff_ac3dsp_init_x86(AC3DSPContext *c, int bit_exact) {
+av_cold void ff_ac3dsp_init_x86(AC3DSPContext *c, int bit_exact)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (EXTERNAL_MMX(cpu_flags)) {
@@ -87,12 +83,11 @@ void ff_ac3_downmix_ ## ch ## _to_2_ ## opt(float **samples,            \
     DOWNMIX_FUNC_OPT(6, opt)
 
 DOWNMIX_FUNCS(sse)
-
 DOWNMIX_FUNCS(avx)
-
 DOWNMIX_FUNCS(fma3)
 
-void ff_ac3dsp_set_downmix_x86(AC3DSPContext *c) {
+void ff_ac3dsp_set_downmix_x86(AC3DSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #define SET_DOWNMIX(ch, suf, SUF)                                       \
@@ -111,9 +106,9 @@ void ff_ac3dsp_set_downmix_x86(AC3DSPContext *c) {
     SET_DOWNMIX(5, suf, SUF)                        \
     SET_DOWNMIX(6, suf, SUF)
 
-    SET_DOWNMIX_ALL(sse, SSE)
+    SET_DOWNMIX_ALL(sse,  SSE)
     if (!(cpu_flags & AV_CPU_FLAG_AVXSLOW)) {
-        SET_DOWNMIX_ALL(avx, AVX)
+        SET_DOWNMIX_ALL(avx,  AVX)
         SET_DOWNMIX_ALL(fma3, FMA3)
     }
 }

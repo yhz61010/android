@@ -28,7 +28,8 @@ typedef struct {
     int tff;
 } AVRnContext;
 
-static av_cold int init(AVCodecContext *avctx) {
+static av_cold int init(AVCodecContext *avctx)
+{
     AVRnContext *a = avctx->priv_data;
     int ret;
 
@@ -37,10 +38,10 @@ static av_cold int init(AVCodecContext *avctx) {
 
     avctx->pix_fmt = AV_PIX_FMT_UYVY422;
 
-    if (avctx->extradata_size >= 9 && avctx->extradata[4] + 28 < avctx->extradata_size) {
+    if(avctx->extradata_size >= 9 && avctx->extradata[4]+28 < avctx->extradata_size) {
         int ndx = avctx->extradata[4] + 4;
         a->interlace = !memcmp(avctx->extradata + ndx, "1:1(", 4);
-        if (a->interlace) {
+        if(a->interlace) {
             a->tff = avctx->extradata[ndx + 24] == 1;
         }
     }
@@ -49,52 +50,53 @@ static av_cold int init(AVCodecContext *avctx) {
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data,
-                        int *got_frame, AVPacket *avpkt) {
+                        int *got_frame, AVPacket *avpkt)
+{
     AVRnContext *a = avctx->priv_data;
     AVFrame *p = data;
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
+    int buf_size       = avpkt->size;
     int y, ret, true_height;
 
-    true_height = buf_size / (2 * avctx->width);
+    true_height    = buf_size / (2*avctx->width);
 
-    if (buf_size < 2 * avctx->width * avctx->height) {
+    if(buf_size < 2*avctx->width * avctx->height) {
         av_log(avctx, AV_LOG_ERROR, "packet too small\n");
         return AVERROR_INVALIDDATA;
     }
 
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
         return ret;
-    p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->pict_type= AV_PICTURE_TYPE_I;
+    p->key_frame= 1;
 
-    if (a->interlace) {
-        buf += (true_height - avctx->height) * avctx->width;
-        for (y = 0; y < avctx->height - 1; y += 2) {
-            memcpy(p->data[0] + (y + a->tff) * p->linesize[0], buf, 2 * avctx->width);
-            memcpy(p->data[0] + (y + !a->tff) * p->linesize[0], buf + avctx->width * true_height + 4, 2 * avctx->width);
-            buf += 2 * avctx->width;
+    if(a->interlace) {
+        buf += (true_height - avctx->height)*avctx->width;
+        for(y = 0; y < avctx->height-1; y+=2) {
+            memcpy(p->data[0] + (y+ a->tff)*p->linesize[0], buf                             , 2*avctx->width);
+            memcpy(p->data[0] + (y+!a->tff)*p->linesize[0], buf + avctx->width*true_height+4, 2*avctx->width);
+            buf += 2*avctx->width;
         }
     } else {
-        buf += (true_height - avctx->height) * avctx->width * 2;
-        for (y = 0; y < avctx->height; y++) {
-            memcpy(p->data[0] + y * p->linesize[0], buf, 2 * avctx->width);
-            buf += 2 * avctx->width;
+        buf += (true_height - avctx->height)*avctx->width*2;
+        for(y = 0; y < avctx->height; y++) {
+            memcpy(p->data[0] + y*p->linesize[0], buf, 2*avctx->width);
+            buf += 2*avctx->width;
         }
     }
 
-    *got_frame = 1;
+    *got_frame      = 1;
     return buf_size;
 }
 
 AVCodec ff_avrn_decoder = {
-        .name           = "avrn",
-        .long_name      = NULL_IF_CONFIG_SMALL("Avid AVI Codec"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_AVRN,
-        .priv_data_size = sizeof(AVRnContext),
-        .init           = init,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
+    .name           = "avrn",
+    .long_name      = NULL_IF_CONFIG_SMALL("Avid AVI Codec"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_AVRN,
+    .priv_data_size = sizeof(AVRnContext),
+    .init           = init,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
 };

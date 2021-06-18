@@ -24,7 +24,6 @@
 #include "config.h"
 
 #include "libavutil/cpu.h"
-
 #if   ARCH_AARCH64
 #   include "libavutil/aarch64/cpu.h"
 #elif ARCH_ARM
@@ -34,7 +33,8 @@
 #include "libavcodec/mpegvideo.h"
 
 static void inline ff_dct_unquantize_h263_neon(int qscale, int qadd, int nCoeffs,
-                                               int16_t *block) {
+                                               int16_t *block)
+{
     int16x8_t q0s16, q2s16, q3s16, q8s16, q10s16, q11s16, q13s16;
     int16x8_t q14s16, q15s16, qzs16;
     int16x4_t d0s16, d2s16, d3s16, dzs16;
@@ -83,15 +83,17 @@ static void inline ff_dct_unquantize_h263_neon(int qscale, int qadd, int nCoeffs
 }
 
 static void dct_unquantize_h263_inter_neon(MpegEncContext *s, int16_t *block,
-                                           int n, int qscale) {
+                                           int n, int qscale)
+{
     int nCoeffs = s->inter_scantable.raster_end[s->block_last_index[n]];
-    int qadd = (qscale - 1) | 1;
+    int qadd    = (qscale - 1) | 1;
 
     ff_dct_unquantize_h263_neon(qscale, qadd, nCoeffs + 1, block);
 }
 
 static void dct_unquantize_h263_intra_neon(MpegEncContext *s, int16_t *block,
-                                           int n, int qscale) {
+                                           int n, int qscale)
+{
     int qadd;
     int nCoeffs, blk0;
 
@@ -121,7 +123,8 @@ static void dct_unquantize_h263_intra_neon(MpegEncContext *s, int16_t *block,
 }
 
 
-av_cold void ff_mpv_common_init_neon(MpegEncContext *s) {
+av_cold void ff_mpv_common_init_neon(MpegEncContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {

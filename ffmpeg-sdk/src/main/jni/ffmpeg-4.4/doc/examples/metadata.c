@@ -31,7 +31,8 @@
 #include <libavformat/avformat.h>
 #include <libavutil/dict.h>
 
-int main(int argc, char **argv) {
+int main (int argc, char **argv)
+{
     AVFormatContext *fmt_ctx = NULL;
     AVDictionaryEntry *tag = NULL;
     int ret;

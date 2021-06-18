@@ -31,17 +31,17 @@
 #include <libswresample/swresample.h>
 
 static int get_format_from_sample_fmt(const char **fmt,
-                                      enum AVSampleFormat sample_fmt) {
+                                      enum AVSampleFormat sample_fmt)
+{
     int i;
     struct sample_fmt_entry {
-        enum AVSampleFormat sample_fmt;
-        const char *fmt_be, *fmt_le;
+        enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le;
     } sample_fmt_entries[] = {
-            {AV_SAMPLE_FMT_U8,  "u8",    "u8"},
-            {AV_SAMPLE_FMT_S16, "s16be", "s16le"},
-            {AV_SAMPLE_FMT_S32, "s32be", "s32le"},
-            {AV_SAMPLE_FMT_FLT, "f32be", "f32le"},
-            {AV_SAMPLE_FMT_DBL, "f64be", "f64le"},
+        { AV_SAMPLE_FMT_U8,  "u8",    "u8"    },
+        { AV_SAMPLE_FMT_S16, "s16be", "s16le" },
+        { AV_SAMPLE_FMT_S32, "s32be", "s32le" },
+        { AV_SAMPLE_FMT_FLT, "f32be", "f32le" },
+        { AV_SAMPLE_FMT_DBL, "f64be", "f64le" },
     };
     *fmt = NULL;
 
@@ -62,7 +62,8 @@ static int get_format_from_sample_fmt(const char **fmt,
 /**
  * Fill dst buffer with nb_samples, generated starting from t.
  */
-static void fill_samples(double *dst, int nb_samples, int nb_channels, int sample_rate, double *t) {
+static void fill_samples(double *dst, int nb_samples, int nb_channels, int sample_rate, double *t)
+{
     int i, j;
     double tincr = 1.0 / sample_rate, *dstp = dst;
     const double c = 2 * M_PI * 440.0;
@@ -77,7 +78,8 @@ static void fill_samples(double *dst, int nb_samples, int nb_channels, int sampl
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int64_t src_ch_layout = AV_CH_LAYOUT_STEREO, dst_ch_layout = AV_CH_LAYOUT_SURROUND;
     int src_rate = 48000, dst_rate = 44100;
     uint8_t **src_data = NULL, **dst_data = NULL;
@@ -95,10 +97,10 @@ int main(int argc, char **argv) {
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s output_file\n"
-                        "API example program to show how to resample an audio stream with libswresample.\n"
-                        "This program generates a series of audio frames, resamples them to a specified "
-                        "output format and rate and saves them to an output file named output_file.\n",
-                argv[0]);
+                "API example program to show how to resample an audio stream with libswresample.\n"
+                "This program generates a series of audio frames, resamples them to a specified "
+                "output format and rate and saves them to an output file named output_file.\n",
+            argv[0]);
         exit(1);
     }
     dst_filename = argv[1];
@@ -118,12 +120,12 @@ int main(int argc, char **argv) {
     }
 
     /* set options */
-    av_opt_set_int(swr_ctx, "in_channel_layout", src_ch_layout, 0);
-    av_opt_set_int(swr_ctx, "in_sample_rate", src_rate, 0);
+    av_opt_set_int(swr_ctx, "in_channel_layout",    src_ch_layout, 0);
+    av_opt_set_int(swr_ctx, "in_sample_rate",       src_rate, 0);
     av_opt_set_sample_fmt(swr_ctx, "in_sample_fmt", src_sample_fmt, 0);
 
-    av_opt_set_int(swr_ctx, "out_channel_layout", dst_ch_layout, 0);
-    av_opt_set_int(swr_ctx, "out_sample_rate", dst_rate, 0);
+    av_opt_set_int(swr_ctx, "out_channel_layout",    dst_ch_layout, 0);
+    av_opt_set_int(swr_ctx, "out_sample_rate",       dst_rate, 0);
     av_opt_set_sample_fmt(swr_ctx, "out_sample_fmt", dst_sample_fmt, 0);
 
     /* initialize the resampling context */
@@ -146,7 +148,7 @@ int main(int argc, char **argv) {
      * ensuring that the output buffer will contain at least all the
      * converted input samples */
     max_dst_nb_samples = dst_nb_samples =
-            av_rescale_rnd(src_nb_samples, dst_rate, src_rate, AV_ROUND_UP);
+        av_rescale_rnd(src_nb_samples, dst_rate, src_rate, AV_ROUND_UP);
 
     /* buffer is going to be directly written to a rawaudio file, no alignment */
     dst_nb_channels = av_get_channel_layout_nb_channels(dst_ch_layout);
@@ -160,7 +162,7 @@ int main(int argc, char **argv) {
     t = 0;
     do {
         /* generate synthetic audio */
-        fill_samples((double *) src_data[0], src_nb_samples, src_nb_channels, src_rate, &t);
+        fill_samples((double *)src_data[0], src_nb_samples, src_nb_channels, src_rate, &t);
 
         /* compute destination number of samples */
         dst_nb_samples = av_rescale_rnd(swr_get_delay(swr_ctx, src_rate) +
@@ -175,7 +177,7 @@ int main(int argc, char **argv) {
         }
 
         /* convert to destination format */
-        ret = swr_convert(swr_ctx, dst_data, dst_nb_samples, (const uint8_t **) src_data, src_nb_samples);
+        ret = swr_convert(swr_ctx, dst_data, dst_nb_samples, (const uint8_t **)src_data, src_nb_samples);
         if (ret < 0) {
             fprintf(stderr, "Error while converting\n");
             goto end;
@@ -193,12 +195,10 @@ int main(int argc, char **argv) {
     if ((ret = get_format_from_sample_fmt(&fmt, dst_sample_fmt)) < 0)
         goto end;
     fprintf(stderr, "Resampling succeeded. Play the output file with the command:\n"
-                    "ffplay -f %s -channel_layout %"
-    PRId64
-    " -channels %d -ar %d %s\n",
+            "ffplay -f %s -channel_layout %"PRId64" -channels %d -ar %d %s\n",
             fmt, dst_ch_layout, dst_nb_channels, dst_rate, dst_filename);
 
-    end:
+end:
     fclose(dst_file);
 
     if (src_data)

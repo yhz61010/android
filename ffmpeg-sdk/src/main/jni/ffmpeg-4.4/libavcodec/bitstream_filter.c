@@ -28,10 +28,8 @@
 #if FF_API_OLD_BSF
 FF_DISABLE_DEPRECATION_WARNINGS
 
-const AVBitStreamFilter
-*
-
-av_bitstream_filter_next(const AVBitStreamFilter *f) {
+const AVBitStreamFilter *av_bitstream_filter_next(const AVBitStreamFilter *f)
+{
     const AVBitStreamFilter *filter = NULL;
     void *opaque = NULL;
 
@@ -41,7 +39,8 @@ av_bitstream_filter_next(const AVBitStreamFilter *f) {
     return av_bsf_iterate(&opaque);
 }
 
-void av_register_bitstream_filter(AVBitStreamFilter *bsf) {
+void av_register_bitstream_filter(AVBitStreamFilter *bsf)
+{
 }
 
 typedef struct BSFCompatContext {
@@ -49,9 +48,10 @@ typedef struct BSFCompatContext {
     int extradata_updated;
 } BSFCompatContext;
 
-AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) {
-    AVBitStreamFilterContext * ctx = NULL;
-    BSFCompatContext *priv = NULL;
+AVBitStreamFilterContext *av_bitstream_filter_init(const char *name)
+{
+    AVBitStreamFilterContext *ctx = NULL;
+    BSFCompatContext         *priv = NULL;
     const AVBitStreamFilter *bsf;
 
     bsf = av_bsf_get_by_name(name);
@@ -67,12 +67,12 @@ AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) {
         goto fail;
 
 
-    ctx->filter = bsf;
+    ctx->filter    = bsf;
     ctx->priv_data = priv;
 
     return ctx;
 
-    fail:
+fail:
     if (priv)
         av_bsf_free(&priv->ctx);
     av_freep(&priv);
@@ -80,7 +80,8 @@ AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) {
     return NULL;
 }
 
-void av_bitstream_filter_close(AVBitStreamFilterContext *bsfc) {
+void av_bitstream_filter_close(AVBitStreamFilterContext *bsfc)
+{
     BSFCompatContext *priv;
 
     if (!bsfc)
@@ -96,9 +97,10 @@ void av_bitstream_filter_close(AVBitStreamFilterContext *bsfc) {
 int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
                                AVCodecContext *avctx, const char *args,
                                uint8_t **poutbuf, int *poutbuf_size,
-                               const uint8_t *buf, int buf_size, int keyframe) {
+                               const uint8_t *buf, int buf_size, int keyframe)
+{
     BSFCompatContext *priv = bsfc->priv_data;
-    AVPacket pkt = {0};
+    AVPacket pkt = { 0 };
     int ret;
 
     if (!priv->ctx) {
@@ -114,7 +116,7 @@ int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
 
         if (bsfc->args && bsfc->filter->priv_class) {
             const AVOption *opt = av_opt_next(priv->ctx->priv_data, NULL);
-            const char *shorthand[2] = {NULL};
+            const char * shorthand[2] = {NULL};
 
             if (opt)
                 shorthand[0] = opt->name;
@@ -129,14 +131,14 @@ int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
             return ret;
     }
 
-    pkt.data = (uint8_t *) buf;
+    pkt.data = (uint8_t *)buf;
     pkt.size = buf_size;
 
     ret = av_bsf_send_packet(priv->ctx, &pkt);
     if (ret < 0)
         return ret;
 
-    *poutbuf = NULL;
+    *poutbuf      = NULL;
     *poutbuf_size = 0;
 
     ret = av_bsf_receive_packet(priv->ctx, &pkt);
@@ -179,6 +181,5 @@ int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
 
     return 1;
 }
-
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif

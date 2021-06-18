@@ -22,7 +22,7 @@
 #include "libavutil/mips/generic_macros_msa.h"
 #include "vp9dsp_mips.h"
 
-#define VP9_LPF_FILTER4_4W(p1_in, p0_in, q0_in, q1_in, mask_in, hev_in, \
+#define VP9_LPF_FILTER4_4W(p1_in, p0_in, q0_in, q1_in, mask_in, hev_in,  \
                            p1_out, p0_out, q0_out, q1_out)               \
 {                                                                        \
     v16i8 p1_m, p0_m, q0_m, q1_m, q0_sub_p0, filt, filt1, filt2;         \
@@ -86,7 +86,7 @@
     flat_out = flat_out & (mask);                                      \
 }
 
-#define VP9_FLAT5(p7_in, p6_in, p5_in, p4_in, p0_in, q0_in, q4_in, \
+#define VP9_FLAT5(p7_in, p6_in, p5_in, p4_in, p0_in, q0_in, q4_in,  \
                   q5_in, q6_in, q7_in, flat_in, flat2_out)          \
 {                                                                   \
     v16u8 tmp, zero_in = { 0 };                                     \
@@ -116,9 +116,9 @@
     flat2_out = flat2_out & flat_in;                                \
 }
 
-#define VP9_FILTER8(p3_in, p2_in, p1_in, p0_in, \
-                    q0_in, q1_in, q2_in, q3_in, \
-                    p2_filt8_out, p1_filt8_out, p0_filt8_out, \
+#define VP9_FILTER8(p3_in, p2_in, p1_in, p0_in,                \
+                    q0_in, q1_in, q2_in, q3_in,                \
+                    p2_filt8_out, p1_filt8_out, p0_filt8_out,  \
                     q0_filt8_out, q1_filt8_out, q2_filt8_out)  \
 {                                                              \
     v8u16 tmp0, tmp1, tmp2;                                    \
@@ -155,9 +155,9 @@
     q1_filt8_out = (v8i16) __msa_srari_h((v8i16) tmp1, 3);     \
 }
 
-#define LPF_MASK_HEV(p3_in, p2_in, p1_in, p0_in, \
-                     q0_in, q1_in, q2_in, q3_in, \
-                     limit_in, b_limit_in, thresh_in, \
+#define LPF_MASK_HEV(p3_in, p2_in, p1_in, p0_in,                   \
+                     q0_in, q1_in, q2_in, q3_in,                   \
+                     limit_in, b_limit_in, thresh_in,              \
                      hev_out, mask_out, flat_out)                  \
 {                                                                  \
     v16u8 p3_asub_p2_m, p2_asub_p1_m, p1_asub_p0_m, q1_asub_q0_m;  \
@@ -196,7 +196,8 @@
 void ff_loop_filter_v_4_8_msa(uint8_t *src, ptrdiff_t pitch,
                               int32_t b_limit_ptr,
                               int32_t limit_ptr,
-                              int32_t thresh_ptr) {
+                              int32_t thresh_ptr)
+{
     uint64_t p1_d, p0_d, q0_d, q1_d;
     v16u8 mask, hev, flat, thresh, b_limit, limit;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0, p1_out, p0_out, q0_out, q1_out;
@@ -224,7 +225,8 @@ void ff_loop_filter_v_4_8_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_44_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     v16u8 mask, hev, flat, thresh0, b_limit0, limit0, thresh1, b_limit1, limit1;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
 
@@ -253,7 +255,8 @@ void ff_loop_filter_v_44_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_8_8_msa(uint8_t *src, ptrdiff_t pitch,
                               int32_t b_limit_ptr,
                               int32_t limit_ptr,
-                              int32_t thresh_ptr) {
+                              int32_t thresh_ptr)
+{
     uint64_t p2_d, p1_d, p0_d, q0_d, q1_d, q2_d;
     v16u8 mask, hev, flat, thresh, b_limit, limit;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -261,7 +264,7 @@ void ff_loop_filter_v_8_8_msa(uint8_t *src, ptrdiff_t pitch,
     v8i16 p2_filter8, p1_filter8, p0_filter8;
     v8i16 q0_filter8, q1_filter8, q2_filter8;
     v8u16 p3_r, p2_r, p1_r, p0_r, q3_r, q2_r, q1_r, q0_r;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     /* load vector elements */
     LD_UB8((src - 4 * pitch), pitch, p3, p2, p1, p0, q0, q1, q2, q3);
@@ -326,7 +329,8 @@ void ff_loop_filter_v_8_8_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_88_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, tmp, thresh, b_limit, limit;
@@ -336,7 +340,7 @@ void ff_loop_filter_v_88_16_msa(uint8_t *src, ptrdiff_t pitch,
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
 
     /* load vector elements */
     LD_UB8(src - (4 * pitch), pitch, p3, p2, p1, p0, q0, q1, q2, q3);
@@ -404,14 +408,15 @@ void ff_loop_filter_v_88_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_84_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, tmp, thresh, b_limit, limit;
     v8u16 p3_r, p2_r, p1_r, p0_r, q0_r, q1_r, q2_r, q3_r;
     v8i16 p2_filt8_r, p1_filt8_r, p0_filt8_r;
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
 
     /* load vector elements */
     LD_UB8(src - (4 * pitch), pitch, p3, p2, p1, p0, q0, q1, q2, q3);
@@ -474,14 +479,15 @@ void ff_loop_filter_v_84_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_48_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, tmp, thresh, b_limit, limit;
     v8u16 p3_l, p2_l, p1_l, p0_l, q0_l, q1_l, q2_l, q3_l;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
 
     /* load vector elements */
     LD_UB8(src - (4 * pitch), pitch, p3, p2, p1, p0, q0, q1, q2, q3);
@@ -546,7 +552,8 @@ static int32_t vp9_hz_lpf_t4_and_t8_16w(uint8_t *src, ptrdiff_t pitch,
                                         uint8_t *filter48,
                                         int32_t b_limit_ptr,
                                         int32_t limit_ptr,
-                                        int32_t thresh_ptr) {
+                                        int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, thresh, b_limit, limit;
@@ -556,7 +563,7 @@ static int32_t vp9_hz_lpf_t4_and_t8_16w(uint8_t *src, ptrdiff_t pitch,
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
 
     /* load vector elements */
     LD_UB8(src - (4 * pitch), pitch, p3, p2, p1, p0, q0, q1, q2, q3);
@@ -616,9 +623,10 @@ static int32_t vp9_hz_lpf_t4_and_t8_16w(uint8_t *src, ptrdiff_t pitch,
     }
 }
 
-static void vp9_hz_lpf_t16_16w(uint8_t *src, ptrdiff_t pitch, uint8_t *filter48) {
+static void vp9_hz_lpf_t16_16w(uint8_t *src, ptrdiff_t pitch, uint8_t *filter48)
+{
     v16u8 flat, flat2, filter8;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
     v8u16 p7_r_in, p6_r_in, p5_r_in, p4_r_in;
     v8u16 p3_r_in, p2_r_in, p1_r_in, p0_r_in;
@@ -950,10 +958,9 @@ static void vp9_hz_lpf_t16_16w(uint8_t *src, ptrdiff_t pitch, uint8_t *filter48)
 void ff_loop_filter_v_16_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
-    uint8_t
-    filter48[16 * 8]
-    ALLOC_ALIGNED(ALIGNMENT);
+                                int32_t thresh_ptr)
+{
+    uint8_t filter48[16 * 8] ALLOC_ALIGNED(ALIGNMENT);
     uint8_t early_exit = 0;
 
     early_exit = vp9_hz_lpf_t4_and_t8_16w(src, pitch, &filter48[0],
@@ -967,7 +974,8 @@ void ff_loop_filter_v_16_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_v_16_8_msa(uint8_t *src, ptrdiff_t pitch,
                                int32_t b_limit_ptr,
                                int32_t limit_ptr,
-                               int32_t thresh_ptr) {
+                               int32_t thresh_ptr)
+{
     uint64_t p2_d, p1_d, p0_d, q0_d, q1_d, q2_d;
     uint64_t dword0, dword1;
     v16u8 flat2, mask, hev, flat, thresh, b_limit, limit;
@@ -978,7 +986,7 @@ void ff_loop_filter_v_16_8_msa(uint8_t *src, ptrdiff_t pitch,
     v8i16 q0_filter8, q1_filter8, q2_filter8;
     v8u16 p7_r, p6_r, p5_r, p4_r, q7_r, q6_r, q5_r, q4_r;
     v8u16 p3_r, p2_r, p1_r, p0_r, q3_r, q2_r, q1_r, q0_r;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8u16 tmp0, tmp1, tmp2;
 
     /* load vector elements */
@@ -1190,7 +1198,8 @@ void ff_loop_filter_v_16_8_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_4_8_msa(uint8_t *src, ptrdiff_t pitch,
                               int32_t b_limit_ptr,
                               int32_t limit_ptr,
-                              int32_t thresh_ptr) {
+                              int32_t thresh_ptr)
+{
     v16u8 mask, hev, flat, limit, thresh, b_limit;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v8i16 vec0, vec1, vec2, vec3;
@@ -1216,7 +1225,8 @@ void ff_loop_filter_h_4_8_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_44_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     v16u8 mask, hev, flat;
     v16u8 thresh0, b_limit0, limit0, thresh1, b_limit1, limit1;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -1261,14 +1271,15 @@ void ff_loop_filter_h_44_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_8_8_msa(uint8_t *src, ptrdiff_t pitch,
                               int32_t b_limit_ptr,
                               int32_t limit_ptr,
-                              int32_t thresh_ptr) {
+                              int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p1_out, p0_out, q0_out, q1_out;
     v16u8 flat, mask, hev, thresh, b_limit, limit;
     v8u16 p3_r, p2_r, p1_r, p0_r, q0_r, q1_r, q2_r, q3_r;
     v8i16 p2_filt8_r, p1_filt8_r, p0_filt8_r;
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3, vec4;
 
     /* load vector elements */
@@ -1338,7 +1349,8 @@ void ff_loop_filter_h_8_8_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_88_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     uint8_t *temp_src;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p1_out, p0_out, q0_out, q1_out;
@@ -1350,7 +1362,7 @@ void ff_loop_filter_h_88_16_msa(uint8_t *src, ptrdiff_t pitch,
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
 
     temp_src = src - 4;
@@ -1450,7 +1462,8 @@ void ff_loop_filter_h_88_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_84_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     uint8_t *temp_src;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p1_out, p0_out, q0_out, q1_out;
@@ -1459,7 +1472,7 @@ void ff_loop_filter_h_84_16_msa(uint8_t *src, ptrdiff_t pitch,
     v8u16 p3_r, p2_r, p1_r, p0_r, q0_r, q1_r, q2_r, q3_r;
     v8i16 p2_filt8_r, p1_filt8_r, p0_filt8_r;
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
 
     temp_src = src - 4;
@@ -1552,7 +1565,8 @@ void ff_loop_filter_h_84_16_msa(uint8_t *src, ptrdiff_t pitch,
 void ff_loop_filter_h_48_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     uint8_t *temp_src;
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p1_out, p0_out, q0_out, q1_out;
@@ -1561,7 +1575,7 @@ void ff_loop_filter_h_48_16_msa(uint8_t *src, ptrdiff_t pitch,
     v8u16 p3_l, p2_l, p1_l, p0_l, q0_l, q1_l, q2_l, q3_l;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16u8 zero = {0};
+    v16u8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
 
     temp_src = src - 4;
@@ -1654,11 +1668,12 @@ void ff_loop_filter_h_48_16_msa(uint8_t *src, ptrdiff_t pitch,
 }
 
 static void vp9_transpose_16x8_to_8x16(uint8_t *input, int32_t in_pitch,
-                                       uint8_t *output, int32_t out_pitch) {
+                                       uint8_t *output, int32_t out_pitch)
+{
     v16u8 p7_org, p6_org, p5_org, p4_org, p3_org, p2_org, p1_org, p0_org;
     v16i8 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     LD_UB8(input, in_pitch,
            p7_org, p6_org, p5_org, p4_org, p3_org, p2_org, p1_org, p0_org);
@@ -1680,7 +1695,8 @@ static void vp9_transpose_16x8_to_8x16(uint8_t *input, int32_t in_pitch,
 }
 
 static void vp9_transpose_8x16_to_16x8(uint8_t *input, int32_t in_pitch,
-                                       uint8_t *output, int32_t out_pitch) {
+                                       uint8_t *output, int32_t out_pitch)
+{
     v16u8 p7_o, p6_o, p5_o, p4_o, p3_o, p2_o, p1_o, p0_o;
     v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
 
@@ -1692,7 +1708,8 @@ static void vp9_transpose_8x16_to_16x8(uint8_t *input, int32_t in_pitch,
 }
 
 static void vp9_transpose_16x16(uint8_t *input, int32_t in_pitch,
-                                uint8_t *output, int32_t out_pitch) {
+                                uint8_t *output, int32_t out_pitch)
+{
     v16u8 row0, row1, row2, row3, row4, row5, row6, row7;
     v16u8 row8, row9, row10, row11, row12, row13, row14, row15;
     v8i16 tmp0, tmp1, tmp4, tmp5, tmp6, tmp7;
@@ -1754,14 +1771,15 @@ static int32_t vp9_vt_lpf_t4_and_t8_8w(uint8_t *src, uint8_t *filter48,
                                        uint8_t *src_org, int32_t pitch_org,
                                        int32_t b_limit_ptr,
                                        int32_t limit_ptr,
-                                       int32_t thresh_ptr) {
+                                       int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, thresh, b_limit, limit;
     v8u16 p3_r, p2_r, p1_r, p0_r, q0_r, q1_r, q2_r, q3_r;
     v8i16 p2_filt8_r, p1_filt8_r, p0_filt8_r;
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3;
 
     /* load vector elements */
@@ -1822,8 +1840,9 @@ static int32_t vp9_vt_lpf_t4_and_t8_8w(uint8_t *src, uint8_t *filter48,
 }
 
 static int32_t vp9_vt_lpf_t16_8w(uint8_t *src, uint8_t *src_org, ptrdiff_t pitch,
-                                 uint8_t *filter48) {
-    v16i8 zero = {0};
+                                 uint8_t *filter48)
+{
+    v16i8 zero = { 0 };
     v16u8 filter8, flat, flat2;
     v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
     v8u16 p7_r_in, p6_r_in, p5_r_in, p4_r_in;
@@ -2047,11 +2066,10 @@ static int32_t vp9_vt_lpf_t16_8w(uint8_t *src, uint8_t *src_org, ptrdiff_t pitch
 void ff_loop_filter_h_16_8_msa(uint8_t *src, ptrdiff_t pitch,
                                int32_t b_limit_ptr,
                                int32_t limit_ptr,
-                               int32_t thresh_ptr) {
+                               int32_t thresh_ptr)
+{
     uint8_t early_exit = 0;
-    uint8_t
-    transposed_input[16 * 24]
-    ALLOC_ALIGNED(ALIGNMENT);
+    uint8_t transposed_input[16 * 24] ALLOC_ALIGNED(ALIGNMENT);
     uint8_t *filter48 = &transposed_input[16 * 16];
 
     vp9_transpose_16x8_to_8x16(src - 8, pitch, transposed_input, 16);
@@ -2074,7 +2092,8 @@ static int32_t vp9_vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
                                         uint8_t *src_org, ptrdiff_t pitch,
                                         int32_t b_limit_ptr,
                                         int32_t limit_ptr,
-                                        int32_t thresh_ptr) {
+                                        int32_t thresh_ptr)
+{
     v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
     v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
     v16u8 flat, mask, hev, thresh, b_limit, limit;
@@ -2084,7 +2103,7 @@ static int32_t vp9_vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
     v8i16 q0_filt8_r, q1_filt8_r, q2_filt8_r;
     v8i16 p2_filt8_l, p1_filt8_l, p0_filt8_l;
     v8i16 q0_filt8_l, q1_filt8_l, q2_filt8_l;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8i16 vec0, vec1, vec2, vec3, vec4, vec5;
 
     /* load vector elements */
@@ -2154,9 +2173,10 @@ static int32_t vp9_vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
 }
 
 static int32_t vp9_vt_lpf_t16_16w(uint8_t *src, uint8_t *src_org, ptrdiff_t pitch,
-                                  uint8_t *filter48) {
+                                  uint8_t *filter48)
+{
     v16u8 flat, flat2, filter8;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
     v8u16 p7_r_in, p6_r_in, p5_r_in, p4_r_in;
     v8u16 p3_r_in, p2_r_in, p1_r_in, p0_r_in;
@@ -2334,7 +2354,7 @@ static int32_t vp9_vt_lpf_t16_16w(uint8_t *src, uint8_t *src_org, ptrdiff_t pitc
         tmp0_l += q5_l_in;
         tmp0_l -= p7_l_in;
         tmp1_l += tmp0_l;
-        l_out = __msa_srari_h((v8i16)(tmp1_l), 4);
+        l_out = __msa_srari_h((v8i16) (tmp1_l), 4);
         r_out = (v8i16) __msa_pckev_b((v16i8) l_out, (v16i8) r_out);
         filter8 = __msa_bmnz_v(filter8, (v16u8) r_out, flat2);
         ST_UB(filter8, src);
@@ -2482,11 +2502,10 @@ static int32_t vp9_vt_lpf_t16_16w(uint8_t *src, uint8_t *src_org, ptrdiff_t pitc
 void ff_loop_filter_h_16_16_msa(uint8_t *src, ptrdiff_t pitch,
                                 int32_t b_limit_ptr,
                                 int32_t limit_ptr,
-                                int32_t thresh_ptr) {
+                                int32_t thresh_ptr)
+{
     uint8_t early_exit = 0;
-    uint8_t
-    transposed_input[16 * 24]
-    ALLOC_ALIGNED(ALIGNMENT);
+    uint8_t transposed_input[16 * 24] ALLOC_ALIGNED(ALIGNMENT);
     uint8_t *filter48 = &transposed_input[16 * 16];
 
     vp9_transpose_16x16((src - 8), pitch, &transposed_input[0], 16);

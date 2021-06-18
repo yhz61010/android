@@ -37,33 +37,37 @@
             sce->band_type[sfb] = sce->band_alt[sfb];\
         }
 
-static inline float flt16_round(float pf) {
+static inline float flt16_round(float pf)
+{
     union av_intfloat32 tmp;
     tmp.f = pf;
     tmp.i = (tmp.i + 0x00008000U) & 0xFFFF0000U;
     return tmp.f;
 }
 
-static inline float flt16_even(float pf) {
+static inline float flt16_even(float pf)
+{
     union av_intfloat32 tmp;
     tmp.f = pf;
     tmp.i = (tmp.i + 0x00007FFFU + (tmp.i & 0x00010000U >> 16)) & 0xFFFF0000U;
     return tmp.f;
 }
 
-static inline float flt16_trunc(float pf) {
+static inline float flt16_trunc(float pf)
+{
     union av_intfloat32 pun;
     pun.f = pf;
     pun.i &= 0xFFFF0000U;
     return pun.f;
 }
 
-static inline void predict(PredictorState *ps, float *coef, float *rcoef, int set) {
+static inline void predict(PredictorState *ps, float *coef, float *rcoef, int set)
+{
     float k2;
-    const float a = 0.953125; // 61.0 / 64
+    const float a     = 0.953125; // 61.0 / 64
     const float alpha = 0.90625;  // 29.0 / 32
-    const float k1 = ps->k1;
-    const float r0 = ps->r0, r1 = ps->r1;
+    const float   k1 = ps->k1;
+    const float   r0 = ps->r0,     r1 = ps->r1;
     const float cor0 = ps->cor0, cor1 = ps->cor1;
     const float var0 = ps->var0, var1 = ps->var1;
     const float e0 = *coef - ps->x_est;
@@ -76,40 +80,44 @@ static inline void predict(PredictorState *ps, float *coef, float *rcoef, int se
     ps->var1 = flt16_trunc(alpha * var1 + 0.5f * (r1 * r1 + e1 * e1));
     ps->cor0 = flt16_trunc(alpha * cor0 + r0 * e0);
     ps->var0 = flt16_trunc(alpha * var0 + 0.5f * (r0 * r0 + e0 * e0));
-    ps->r1 = flt16_trunc(a * (r0 - k1 * e0));
-    ps->r0 = flt16_trunc(a * e0);
+    ps->r1   = flt16_trunc(a * (r0 - k1 * e0));
+    ps->r0   = flt16_trunc(a * e0);
 
     /* Prediction for next frame */
-    ps->k1 = ps->var0 > 1 ? ps->cor0 * flt16_even(a / ps->var0) : 0;
-    k2 = ps->var1 > 1 ? ps->cor1 * flt16_even(a / ps->var1) : 0;
-    *rcoef = ps->x_est = flt16_round(ps->k1 * ps->r0 + k2 * ps->r1);
+    ps->k1   = ps->var0 > 1 ? ps->cor0 * flt16_even(a / ps->var0) : 0;
+    k2       = ps->var1 > 1 ? ps->cor1 * flt16_even(a / ps->var1) : 0;
+    *rcoef   = ps->x_est = flt16_round(ps->k1*ps->r0 + k2*ps->r1);
 }
 
-static inline void reset_predict_state(PredictorState *ps) {
-    ps->r0 = 0.0f;
-    ps->r1 = 0.0f;
-    ps->k1 = 0.0f;
-    ps->cor0 = 0.0f;
-    ps->cor1 = 0.0f;
-    ps->var0 = 1.0f;
-    ps->var1 = 1.0f;
+static inline void reset_predict_state(PredictorState *ps)
+{
+    ps->r0    = 0.0f;
+    ps->r1    = 0.0f;
+    ps->k1    = 0.0f;
+    ps->cor0  = 0.0f;
+    ps->cor1  = 0.0f;
+    ps->var0  = 1.0f;
+    ps->var1  = 1.0f;
     ps->x_est = 0.0f;
 }
 
-static inline void reset_all_predictors(PredictorState *ps) {
+static inline void reset_all_predictors(PredictorState *ps)
+{
     int i;
     for (i = 0; i < MAX_PREDICTORS; i++)
         reset_predict_state(&ps[i]);
 }
 
-static inline void reset_predictor_group(SingleChannelElement *sce, int group_num) {
+static inline void reset_predictor_group(SingleChannelElement *sce, int group_num)
+{
     int i;
     PredictorState *ps = sce->predictor_state;
     for (i = group_num - 1; i < MAX_PREDICTORS; i += 30)
         reset_predict_state(&ps[i]);
 }
 
-void ff_aac_apply_main_pred(AACEncContext *s, SingleChannelElement *sce) {
+void ff_aac_apply_main_pred(AACEncContext *s, SingleChannelElement *sce)
+{
     int sfb, k;
     const int pmax = FFMIN(sce->ics.max_sfb, ff_aac_pred_sfb_max[s->samplerate_index]);
 
@@ -129,7 +137,8 @@ void ff_aac_apply_main_pred(AACEncContext *s, SingleChannelElement *sce) {
 }
 
 /* If inc = 0 you can check if this returns 0 to see if you can reset freely */
-static inline int update_counters(IndividualChannelStream *ics, int inc) {
+static inline int update_counters(IndividualChannelStream *ics, int inc)
+{
     int i;
     for (i = 1; i < 31; i++) {
         ics->predictor_reset_count[i] += inc;
@@ -139,13 +148,14 @@ static inline int update_counters(IndividualChannelStream *ics, int inc) {
     return 0;
 }
 
-void ff_aac_adjust_common_pred(AACEncContext *s, ChannelElement *cpe) {
+void ff_aac_adjust_common_pred(AACEncContext *s, ChannelElement *cpe)
+{
     int start, w, w2, g, i, count = 0;
     SingleChannelElement *sce0 = &cpe->ch[0];
     SingleChannelElement *sce1 = &cpe->ch[1];
     const int pmax0 = FFMIN(sce0->ics.max_sfb, ff_aac_pred_sfb_max[s->samplerate_index]);
     const int pmax1 = FFMIN(sce1->ics.max_sfb, ff_aac_pred_sfb_max[s->samplerate_index]);
-    const int pmax = FFMIN(pmax0, pmax1);
+    const int pmax  = FFMIN(pmax0, pmax1);
 
     if (!cpe->common_window ||
         sce0->ics.window_sequence[0] == EIGHT_SHORT_SEQUENCE ||
@@ -155,7 +165,7 @@ void ff_aac_adjust_common_pred(AACEncContext *s, ChannelElement *cpe) {
     for (w = 0; w < sce0->ics.num_windows; w += sce0->ics.group_len[w]) {
         start = 0;
         for (g = 0; g < sce0->ics.num_swb; g++) {
-            int sfb = w * 16 + g;
+            int sfb = w*16+g;
             int sum = sce0->ics.prediction_used[sfb] + sce1->ics.prediction_used[sfb];
             float ener0 = 0.0f, ener1 = 0.0f, ener01 = 0.0f;
             struct AACISError ph_err1, ph_err2, *erf;
@@ -167,11 +177,11 @@ void ff_aac_adjust_common_pred(AACEncContext *s, ChannelElement *cpe) {
             }
             for (w2 = 0; w2 < sce0->ics.group_len[w]; w2++) {
                 for (i = 0; i < sce0->ics.swb_sizes[g]; i++) {
-                    float coef0 = sce0->pcoeffs[start + (w + w2) * 128 + i];
-                    float coef1 = sce1->pcoeffs[start + (w + w2) * 128 + i];
-                    ener0 += coef0 * coef0;
-                    ener1 += coef1 * coef1;
-                    ener01 += (coef0 + coef1) * (coef0 + coef1);
+                    float coef0 = sce0->pcoeffs[start+(w+w2)*128+i];
+                    float coef1 = sce1->pcoeffs[start+(w+w2)*128+i];
+                    ener0  += coef0*coef0;
+                    ener1  += coef1*coef1;
+                    ener01 += (coef0 + coef1)*(coef0 + coef1);
                 }
             }
             ph_err1 = ff_aac_is_encoding_err(s, cpe, start, w, g,
@@ -194,7 +204,8 @@ void ff_aac_adjust_common_pred(AACEncContext *s, ChannelElement *cpe) {
     sce1->ics.predictor_present = sce0->ics.predictor_present = !!count;
 }
 
-static void update_pred_resets(SingleChannelElement *sce) {
+static void update_pred_resets(SingleChannelElement *sce)
+{
     int i, max_group_id_c, max_frame = 0;
     float avg_frame = 0.0f;
     IndividualChannelStream *ics = &sce->ics;
@@ -209,7 +220,7 @@ static void update_pred_resets(SingleChannelElement *sce) {
             max_group_id_c = i;
             max_frame = ics->predictor_reset_count[i];
         }
-        avg_frame = (ics->predictor_reset_count[i] + avg_frame) / 2;
+        avg_frame = (ics->predictor_reset_count[i] + avg_frame)/2;
     }
 
     if (max_frame > PRED_RESET_MIN) {
@@ -219,12 +230,13 @@ static void update_pred_resets(SingleChannelElement *sce) {
     }
 }
 
-void ff_aac_search_for_pred(AACEncContext *s, SingleChannelElement *sce) {
+void ff_aac_search_for_pred(AACEncContext *s, SingleChannelElement *sce)
+{
     int sfb, i, count = 0, cost_coeffs = 0, cost_pred = 0;
     const int pmax = FFMIN(sce->ics.max_sfb, ff_aac_pred_sfb_max[s->samplerate_index]);
-    float *O34 = &s->scoefs[128 * 0], *P34 = &s->scoefs[128 * 1];
-    float *SENT = &s->scoefs[128 * 2], *S34 = &s->scoefs[128 * 3];
-    float *QERR = &s->scoefs[128 * 4];
+    float *O34  = &s->scoefs[128*0], *P34 = &s->scoefs[128*1];
+    float *SENT = &s->scoefs[128*2], *S34 = &s->scoefs[128*3];
+    float *QERR = &s->scoefs[128*4];
 
     if (sce->ics.window_sequence[0] == EIGHT_SHORT_SEQUENCE) {
         sce->ics.predictor_present = 0;
@@ -234,7 +246,7 @@ void ff_aac_search_for_pred(AACEncContext *s, SingleChannelElement *sce) {
     if (!sce->ics.predictor_initialized) {
         reset_all_predictors(sce->predictor_state);
         sce->ics.predictor_initialized = 1;
-        memcpy(sce->prcoeffs, sce->coeffs, 1024 * sizeof(float));
+        memcpy(sce->prcoeffs, sce->coeffs, 1024*sizeof(float));
         for (i = 1; i < 31; i++)
             sce->ics.predictor_reset_count[i] = i;
     }
@@ -288,14 +300,14 @@ void ff_aac_search_for_pred(AACEncContext *s, SingleChannelElement *sce) {
                                               P34, num_coeffs, sce->sf_idx[sfb],
                                               cb_p, s->lambda / band->threshold, INFINITY, NULL, NULL, 0);
         for (i = 0; i < num_coeffs; i++)
-            dist_spec_err += (O34[i] - P34[i]) * (O34[i] - P34[i]);
+            dist_spec_err += (O34[i] - P34[i])*(O34[i] - P34[i]);
         dist_spec_err *= s->lambda / band->threshold;
         dist2 += dist_spec_err;
 
         if (dist2 <= dist1 && cb_p <= cb_n) {
             cost_pred += cost2;
             sce->ics.prediction_used[sfb] = 1;
-            sce->band_alt[sfb] = cb_n;
+            sce->band_alt[sfb]  = cb_n;
             sce->band_type[sfb] = cb_p;
             count++;
         } else {
@@ -317,7 +329,8 @@ void ff_aac_search_for_pred(AACEncContext *s, SingleChannelElement *sce) {
 /**
  * Encoder predictors data.
  */
-void ff_aac_encode_main_pred(AACEncContext *s, SingleChannelElement *sce) {
+void ff_aac_encode_main_pred(AACEncContext *s, SingleChannelElement *sce)
+{
     int sfb;
     IndividualChannelStream *ics = &sce->ics;
     const int pmax = FFMIN(ics->max_sfb, ff_aac_pred_sfb_max[s->samplerate_index]);

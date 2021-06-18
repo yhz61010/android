@@ -23,35 +23,35 @@
 #include "vp8dsp_mips.h"
 
 static const uint8_t mc_filt_mask_arr[16 * 3] = {
-        /* 8 width cases */
-        0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-        /* 4 width cases */
-        0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
-        /* 4 width cases */
-        8, 9, 9, 10, 10, 11, 11, 12, 24, 25, 25, 26, 26, 27, 27, 28
+    /* 8 width cases */
+    0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
+    /* 4 width cases */
+    0, 1, 1, 2, 2, 3, 3, 4, 16, 17, 17, 18, 18, 19, 19, 20,
+    /* 4 width cases */
+    8, 9, 9, 10, 10, 11, 11, 12, 24, 25, 25, 26, 26, 27, 27, 28
 };
 
 static const int8_t subpel_filters_msa[7][8] = {
-        {-6, 123, 12,  -1,  0,   0, 0, 0},
-        {2,  -11, 108, 36,  -8,  1, 0, 0},     /* New 1/4 pel 6 tap filter */
-        {-9, 93,  50,  -6,  0,   0, 0, 0},
-        {3,  -16, 77,  77,  -16, 3, 0, 0},     /* New 1/2 pel 6 tap filter */
-        {-6, 50,  93,  -9,  0,   0, 0, 0},
-        {1,  -8,  36,  108, -11, 2, 0, 0},     /* New 1/4 pel 6 tap filter */
-        {-1, 12,  123, -6,  0,   0, 0, 0},
+    {-6, 123, 12, -1, 0, 0, 0, 0},
+    {2, -11, 108, 36, -8, 1, 0, 0},     /* New 1/4 pel 6 tap filter */
+    {-9, 93, 50, -6, 0, 0, 0, 0},
+    {3, -16, 77, 77, -16, 3, 0, 0},     /* New 1/2 pel 6 tap filter */
+    {-6, 50, 93, -9, 0, 0, 0, 0},
+    {1, -8, 36, 108, -11, 2, 0, 0},     /* New 1/4 pel 6 tap filter */
+    {-1, 12, 123, -6, 0, 0, 0, 0},
 };
 
 static const int8_t bilinear_filters_msa[7][2] = {
-        {112, 16},
-        {96,  32},
-        {80,  48},
-        {64,  64},
-        {48,  80},
-        {32,  96},
-        {16,  112}
+    {112, 16},
+    {96, 32},
+    {80, 48},
+    {64, 64},
+    {48, 80},
+    {32, 96},
+    {16, 112}
 };
 
-#define HORIZ_6TAP_FILT(src0, src1, mask0, mask1, mask2, \
+#define HORIZ_6TAP_FILT(src0, src1, mask0, mask1, mask2,                 \
                         filt_h0, filt_h1, filt_h2)                       \
 ( {                                                                      \
     v16i8 vec0_m, vec1_m, vec2_m;                                        \
@@ -68,9 +68,9 @@ static const int8_t bilinear_filters_msa[7][2] = {
     hz_out_m;                                                            \
 } )
 
-#define HORIZ_6TAP_4WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, mask2, \
-                                   filt0, filt1, filt2, \
+#define HORIZ_6TAP_4WID_4VECS_FILT(src0, src1, src2, src3,             \
+                                   mask0, mask1, mask2,                \
+                                   filt0, filt1, filt2,                \
                                    out0, out1)                         \
 {                                                                      \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m, vec4_m, vec5_m;              \
@@ -83,9 +83,9 @@ static const int8_t bilinear_filters_msa[7][2] = {
     DPADD_SB2_SH(vec4_m, vec5_m, filt2, filt2, out0, out1);            \
 }
 
-#define HORIZ_6TAP_8WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, mask2, \
-                                   filt0, filt1, filt2, \
+#define HORIZ_6TAP_8WID_4VECS_FILT(src0, src1, src2, src3,                    \
+                                   mask0, mask1, mask2,                       \
+                                   filt0, filt1, filt2,                       \
                                    out0, out1, out2, out3)                    \
 {                                                                             \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m, vec4_m, vec5_m, vec6_m, vec7_m;     \
@@ -128,8 +128,8 @@ static const int8_t bilinear_filters_msa[7][2] = {
     hz_out_m;                                                          \
 } )
 
-#define HORIZ_4TAP_4WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, filt0, filt1, \
+#define HORIZ_4TAP_4WID_4VECS_FILT(src0, src1, src2, src3,             \
+                                   mask0, mask1, filt0, filt1,         \
                                    out0, out1)                         \
 {                                                                      \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m;                              \
@@ -140,8 +140,8 @@ static const int8_t bilinear_filters_msa[7][2] = {
     DPADD_SB2_SH(vec2_m, vec3_m, filt1, filt1, out0, out1);            \
 }
 
-#define HORIZ_4TAP_8WID_4VECS_FILT(src0, src1, src2, src3, \
-                                   mask0, mask1, filt0, filt1, \
+#define HORIZ_4TAP_8WID_4VECS_FILT(src0, src1, src2, src3,                    \
+                                   mask0, mask1, filt0, filt1,                \
                                    out0, out1, out2, out3)                    \
 {                                                                             \
     v16i8 vec0_m, vec1_m, vec2_m, vec3_m;                                     \
@@ -158,7 +158,8 @@ static const int8_t bilinear_filters_msa[7][2] = {
 
 static void common_hz_6t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2;
     v16u8 mask0, mask1, mask2, out;
     v8i16 filt, out0, out1;
@@ -185,7 +186,8 @@ static void common_hz_6t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_6t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2;
     v16u8 mask0, mask1, mask2, out;
     v8i16 filt, out0, out1, out2, out3;
@@ -219,7 +221,8 @@ static void common_hz_6t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_epel4_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     const int8_t *filter = subpel_filters_msa[mx - 1];
 
     if (4 == height) {
@@ -231,7 +234,8 @@ void ff_put_vp8_epel4_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[mx - 1];
     v16i8 src0, src1, src2, src3, filt0, filt1, filt2;
@@ -278,7 +282,8 @@ void ff_put_vp8_epel8_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                               uint8_t *src, ptrdiff_t src_stride,
-                              int height, int mx, int my) {
+                              int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[mx - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, filt0, filt1, filt2;
@@ -326,7 +331,8 @@ void ff_put_vp8_epel16_h6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
@@ -372,7 +378,8 @@ void ff_put_vp8_epel4_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src3, src4, src7, src8, src9, src10;
@@ -421,7 +428,8 @@ void ff_put_vp8_epel8_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                               uint8_t *src, ptrdiff_t src_stride,
-                              int height, int mx, int my) {
+                              int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
@@ -494,7 +502,8 @@ void ff_put_vp8_epel16_v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -568,7 +577,8 @@ void ff_put_vp8_epel4_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -653,8 +663,9 @@ void ff_put_vp8_epel8_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 
 void ff_put_vp8_epel16_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                                uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                               uint8_t *src, ptrdiff_t src_stride,
+                               int height, int mx, int my)
+{
     int32_t multiple8_cnt;
 
     for (multiple8_cnt = 2; multiple8_cnt--;) {
@@ -668,7 +679,8 @@ void ff_put_vp8_epel16_h6v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void common_hz_4t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v8i16 filt, out0, out1;
     v16u8 out;
@@ -694,7 +706,8 @@ static void common_hz_4t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
     v16u8 out;
     v8i16 filt, out0, out1, out2, out3;
@@ -728,7 +741,8 @@ static void common_hz_4t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_4t_4x16_msa(uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  const int8_t *filter) {
+                                  const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
     v16i8 filt0, filt1, mask0, mask1;
     v16u8 out;
@@ -777,7 +791,8 @@ static void common_hz_4t_4x16_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_epel4_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     const int8_t *filter = subpel_filters_msa[mx - 1];
 
     if (4 == height) {
@@ -791,7 +806,8 @@ void ff_put_vp8_epel4_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[mx - 1];
     v16i8 src0, src1, src2, src3, filt0, filt1, mask0, mask1;
@@ -825,7 +841,8 @@ void ff_put_vp8_epel8_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                               uint8_t *src, ptrdiff_t src_stride,
-                              int height, int mx, int my) {
+                              int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[mx - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -873,7 +890,8 @@ void ff_put_vp8_epel16_h4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src3, src4, src5;
@@ -919,7 +937,8 @@ void ff_put_vp8_epel4_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                              uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                             int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src7, src8, src9, src10;
@@ -964,7 +983,8 @@ void ff_put_vp8_epel8_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                               uint8_t *src, ptrdiff_t src_stride,
-                              int height, int mx, int my) {
+                              int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = subpel_filters_msa[my - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6;
@@ -1022,7 +1042,8 @@ void ff_put_vp8_epel16_v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1080,7 +1101,8 @@ void ff_put_vp8_epel4_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1146,7 +1168,8 @@ void ff_put_vp8_epel8_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     int32_t multiple8_cnt;
 
     for (multiple8_cnt = 2; multiple8_cnt--;) {
@@ -1160,7 +1183,8 @@ void ff_put_vp8_epel16_h4v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1225,7 +1249,8 @@ void ff_put_vp8_epel4_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1296,8 +1321,9 @@ void ff_put_vp8_epel8_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 }
 
 void ff_put_vp8_epel16_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                                uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                               uint8_t *src, ptrdiff_t src_stride,
+                               int height, int mx, int my)
+{
     int32_t multiple8_cnt;
 
     for (multiple8_cnt = 2; multiple8_cnt--;) {
@@ -1311,7 +1337,8 @@ void ff_put_vp8_epel16_h6v4_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel4_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1374,7 +1401,8 @@ void ff_put_vp8_epel4_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel8_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                uint8_t *src, ptrdiff_t src_stride,
-                               int height, int mx, int my) {
+                               int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = subpel_filters_msa[mx - 1];
     const int8_t *filter_vert = subpel_filters_msa[my - 1];
@@ -1448,7 +1476,8 @@ void ff_put_vp8_epel8_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_epel16_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     int32_t multiple8_cnt;
 
     for (multiple8_cnt = 2; multiple8_cnt--;) {
@@ -1462,7 +1491,8 @@ void ff_put_vp8_epel16_h4v6_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void common_hz_2t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, mask;
     v16u8 filt0, vec0, vec1, res0, res1;
     v8u16 vec2, vec3, filt;
@@ -1484,7 +1514,8 @@ static void common_hz_2t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_2t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16u8 vec0, vec1, vec2, vec3, filt0;
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, mask;
     v16i8 res0, res1, res2, res3;
@@ -1512,7 +1543,8 @@ static void common_hz_2t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear4_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     const int8_t *filter = bilinear_filters_msa[mx - 1];
 
     if (4 == height) {
@@ -1524,7 +1556,8 @@ void ff_put_vp8_bilinear4_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void common_hz_2t_8x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16u8 filt0;
     v16i8 src0, src1, src2, src3, mask;
     v8u16 vec0, vec1, vec2, vec3, filt;
@@ -1547,7 +1580,8 @@ static void common_hz_2t_8x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_hz_2t_8x8mult_msa(uint8_t *src, int32_t src_stride,
                                      uint8_t *dst, int32_t dst_stride,
-                                     const int8_t *filter, int32_t height) {
+                                     const int8_t *filter, int32_t height)
+{
     v16u8 filt0;
     v16i8 src0, src1, src2, src3, mask, out0, out1;
     v8u16 vec0, vec1, vec2, vec3, filt;
@@ -1609,7 +1643,8 @@ static void common_hz_2t_8x8mult_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear8_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     const int8_t *filter = bilinear_filters_msa[mx - 1];
 
     if (4 == height) {
@@ -1622,7 +1657,8 @@ void ff_put_vp8_bilinear8_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_bilinear16_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                  uint8_t *src, ptrdiff_t src_stride,
-                                 int height, int mx, int my) {
+                                 int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = bilinear_filters_msa[mx - 1];
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, mask;
@@ -1688,7 +1724,8 @@ void ff_put_vp8_bilinear16_h_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void common_vt_2t_4x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4;
     v16i8 src10_r, src32_r, src21_r, src43_r, src2110, src4332;
     v16u8 filt0;
@@ -1713,7 +1750,8 @@ static void common_vt_2t_4x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_2t_4x8_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16i8 src10_r, src32_r, src54_r, src76_r, src21_r, src43_r;
     v16i8 src65_r, src87_r, src2110, src4332, src6554, src8776;
@@ -1746,7 +1784,8 @@ static void common_vt_2t_4x8_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear4_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     const int8_t *filter = bilinear_filters_msa[my - 1];
 
     if (4 == height) {
@@ -1758,7 +1797,8 @@ void ff_put_vp8_bilinear4_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void common_vt_2t_8x4_msa(uint8_t *src, int32_t src_stride,
                                  uint8_t *dst, int32_t dst_stride,
-                                 const int8_t *filter) {
+                                 const int8_t *filter)
+{
     v16u8 src0, src1, src2, src3, src4, vec0, vec1, vec2, vec3, filt0;
     v16i8 out0, out1;
     v8u16 tmp0, tmp1, tmp2, tmp3;
@@ -1781,7 +1821,8 @@ static void common_vt_2t_8x4_msa(uint8_t *src, int32_t src_stride,
 
 static void common_vt_2t_8x8mult_msa(uint8_t *src, int32_t src_stride,
                                      uint8_t *dst, int32_t dst_stride,
-                                     const int8_t *filter, int32_t height) {
+                                     const int8_t *filter, int32_t height)
+{
     uint32_t loop_cnt;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7, src8;
     v16u8 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, filt0;
@@ -1825,7 +1866,8 @@ static void common_vt_2t_8x8mult_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear8_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                 uint8_t *src, ptrdiff_t src_stride,
-                                int height, int mx, int my) {
+                                int height, int mx, int my)
+{
     const int8_t *filter = bilinear_filters_msa[my - 1];
 
     if (4 == height) {
@@ -1838,7 +1880,8 @@ void ff_put_vp8_bilinear8_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_bilinear16_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                  uint8_t *src, ptrdiff_t src_stride,
-                                 int height, int mx, int my) {
+                                 int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter = bilinear_filters_msa[my - 1];
     v16u8 src0, src1, src2, src3, src4;
@@ -1892,7 +1935,8 @@ void ff_put_vp8_bilinear16_v_msa(uint8_t *dst, ptrdiff_t dst_stride,
 static void common_hv_2ht_2vt_4x4_msa(uint8_t *src, int32_t src_stride,
                                       uint8_t *dst, int32_t dst_stride,
                                       const int8_t *filter_horiz,
-                                      const int8_t *filter_vert) {
+                                      const int8_t *filter_vert)
+{
     v16i8 src0, src1, src2, src3, src4, mask;
     v16u8 filt_vt, filt_hz, vec0, vec1, res0, res1;
     v8u16 hz_out0, hz_out1, hz_out2, hz_out3, hz_out4, filt, tmp0, tmp1;
@@ -1925,7 +1969,8 @@ static void common_hv_2ht_2vt_4x4_msa(uint8_t *src, int32_t src_stride,
 static void common_hv_2ht_2vt_4x8_msa(uint8_t *src, int32_t src_stride,
                                       uint8_t *dst, int32_t dst_stride,
                                       const int8_t *filter_horiz,
-                                      const int8_t *filter_vert) {
+                                      const int8_t *filter_vert)
+{
     v16i8 src0, src1, src2, src3, src4, src5, src6, src7, src8, mask;
     v16i8 res0, res1, res2, res3;
     v16u8 filt_hz, filt_vt, vec0, vec1, vec2, vec3;
@@ -1970,7 +2015,8 @@ static void common_hv_2ht_2vt_4x8_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear4_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                  uint8_t *src, ptrdiff_t src_stride,
-                                 int height, int mx, int my) {
+                                 int height, int mx, int my)
+{
     const int8_t *filter_horiz = bilinear_filters_msa[mx - 1];
     const int8_t *filter_vert = bilinear_filters_msa[my - 1];
 
@@ -1986,7 +2032,8 @@ void ff_put_vp8_bilinear4_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
 static void common_hv_2ht_2vt_8x4_msa(uint8_t *src, int32_t src_stride,
                                       uint8_t *dst, int32_t dst_stride,
                                       const int8_t *filter_horiz,
-                                      const int8_t *filter_vert) {
+                                      const int8_t *filter_vert)
+{
     v16i8 src0, src1, src2, src3, src4, mask, out0, out1;
     v16u8 filt_hz, filt_vt, vec0, vec1, vec2, vec3;
     v8u16 hz_out0, hz_out1, tmp0, tmp1, tmp2, tmp3;
@@ -2030,7 +2077,8 @@ static void common_hv_2ht_2vt_8x8mult_msa(uint8_t *src, int32_t src_stride,
                                           uint8_t *dst, int32_t dst_stride,
                                           const int8_t *filter_horiz,
                                           const int8_t *filter_vert,
-                                          int32_t height) {
+                                          int32_t height)
+{
     uint32_t loop_cnt;
     v16i8 src0, src1, src2, src3, src4, mask, out0, out1;
     v16u8 filt_hz, filt_vt, vec0;
@@ -2107,7 +2155,8 @@ static void common_hv_2ht_2vt_8x8mult_msa(uint8_t *src, int32_t src_stride,
 
 void ff_put_vp8_bilinear8_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                  uint8_t *src, ptrdiff_t src_stride,
-                                 int height, int mx, int my) {
+                                 int height, int mx, int my)
+{
     const int8_t *filter_horiz = bilinear_filters_msa[mx - 1];
     const int8_t *filter_vert = bilinear_filters_msa[my - 1];
 
@@ -2122,7 +2171,8 @@ void ff_put_vp8_bilinear8_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_bilinear16_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
                                   uint8_t *src, ptrdiff_t src_stride,
-                                  int height, int mx, int my) {
+                                  int height, int mx, int my)
+{
     uint32_t loop_cnt;
     const int8_t *filter_horiz = bilinear_filters_msa[mx - 1];
     const int8_t *filter_vert = bilinear_filters_msa[my - 1];
@@ -2192,7 +2242,8 @@ void ff_put_vp8_bilinear16_hv_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 void ff_put_vp8_pixels8_msa(uint8_t *dst, ptrdiff_t dst_stride,
                             uint8_t *src, ptrdiff_t src_stride,
-                            int height, int mx, int my) {
+                            int height, int mx, int my)
+{
     int32_t cnt;
     uint64_t out0, out1, out2, out3, out4, out5, out6, out7;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -2234,7 +2285,8 @@ void ff_put_vp8_pixels8_msa(uint8_t *dst, ptrdiff_t dst_stride,
 
 static void copy_16multx8mult_msa(uint8_t *src, int32_t src_stride,
                                   uint8_t *dst, int32_t dst_stride,
-                                  int32_t height, int32_t width) {
+                                  int32_t height, int32_t width)
+{
     int32_t cnt, loop_cnt;
     uint8_t *src_tmp, *dst_tmp;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -2259,8 +2311,9 @@ static void copy_16multx8mult_msa(uint8_t *src, int32_t src_stride,
 }
 
 void ff_put_vp8_pixels16_msa(uint8_t *dst, ptrdiff_t dst_stride,
-                             uint8_t *src, ptrdiff_t src_stride,
-                             int height, int mx, int my) {
+                            uint8_t *src, ptrdiff_t src_stride,
+                            int height, int mx, int my)
+{
     int32_t cnt;
     v16u8 src0, src1, src2, src3;
 

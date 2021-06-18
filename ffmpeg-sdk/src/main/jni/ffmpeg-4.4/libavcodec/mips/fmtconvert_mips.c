@@ -133,7 +133,8 @@ static void int32_to_float_fmul_scalar_mips(float *dst, const int *src,
 }
 #endif /* HAVE_INLINE_ASM */
 
-av_cold void ff_fmt_convert_init_mips(FmtConvertContext *c) {
+av_cold void ff_fmt_convert_init_mips(FmtConvertContext *c)
+{
 #if HAVE_INLINE_ASM
     c->int32_to_float_fmul_scalar = int32_to_float_fmul_scalar_mips;
 #endif

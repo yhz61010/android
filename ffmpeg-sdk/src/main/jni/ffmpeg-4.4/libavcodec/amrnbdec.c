@@ -98,65 +98,67 @@
 #define AMR_AGC_ALPHA      0.9
 
 typedef struct AMRContext {
-    AMRNBFrame frame; ///< decoded AMR parameters (lsf coefficients, codebook indexes, etc)
-    uint8_t bad_frame_indicator; ///< bad frame ? 1 : 0
-    enum Mode cur_frame_mode;
+    AMRNBFrame                        frame; ///< decoded AMR parameters (lsf coefficients, codebook indexes, etc)
+    uint8_t             bad_frame_indicator; ///< bad frame ? 1 : 0
+    enum Mode                cur_frame_mode;
 
-    int16_t prev_lsf_r[LP_FILTER_ORDER]; ///< residual LSF vector from previous subframe
-    double lsp[4][LP_FILTER_ORDER]; ///< lsp vectors from current frame
-    double prev_lsp_sub4[LP_FILTER_ORDER]; ///< lsp vector for the 4th subframe of the previous frame
+    int16_t     prev_lsf_r[LP_FILTER_ORDER]; ///< residual LSF vector from previous subframe
+    double          lsp[4][LP_FILTER_ORDER]; ///< lsp vectors from current frame
+    double   prev_lsp_sub4[LP_FILTER_ORDER]; ///< lsp vector for the 4th subframe of the previous frame
 
-    float lsf_q[4][LP_FILTER_ORDER]; ///< Interpolated LSF vector for fixed gain smoothing
-    float lsf_avg[LP_FILTER_ORDER]; ///< vector of averaged lsf vector
+    float         lsf_q[4][LP_FILTER_ORDER]; ///< Interpolated LSF vector for fixed gain smoothing
+    float          lsf_avg[LP_FILTER_ORDER]; ///< vector of averaged lsf vector
 
-    float lpc[4][LP_FILTER_ORDER]; ///< lpc coefficient vectors for 4 subframes
+    float           lpc[4][LP_FILTER_ORDER]; ///< lpc coefficient vectors for 4 subframes
 
-    uint8_t pitch_lag_int; ///< integer part of pitch lag from current subframe
+    uint8_t                   pitch_lag_int; ///< integer part of pitch lag from current subframe
 
     float excitation_buf[PITCH_DELAY_MAX + LP_FILTER_ORDER + 1 + AMR_SUBFRAME_SIZE]; ///< current excitation and all necessary excitation history
-    float *excitation; ///< pointer to the current excitation vector in excitation_buf
+    float                       *excitation; ///< pointer to the current excitation vector in excitation_buf
 
-    float pitch_vector[AMR_SUBFRAME_SIZE]; ///< adaptive code book (pitch) vector
-    float fixed_vector[AMR_SUBFRAME_SIZE]; ///< algebraic codebook (fixed) vector (must be kept zero between frames)
+    float   pitch_vector[AMR_SUBFRAME_SIZE]; ///< adaptive code book (pitch) vector
+    float   fixed_vector[AMR_SUBFRAME_SIZE]; ///< algebraic codebook (fixed) vector (must be kept zero between frames)
 
-    float prediction_error[4]; ///< quantified prediction errors {20log10(^gamma_gc)} for previous four subframes
-    float pitch_gain[5]; ///< quantified pitch gains for the current and previous four subframes
-    float fixed_gain[5]; ///< quantified fixed gains for the current and previous four subframes
+    float               prediction_error[4]; ///< quantified prediction errors {20log10(^gamma_gc)} for previous four subframes
+    float                     pitch_gain[5]; ///< quantified pitch gains for the current and previous four subframes
+    float                     fixed_gain[5]; ///< quantified fixed gains for the current and previous four subframes
 
-    float beta; ///< previous pitch_gain, bounded by [0.0,SHARP_MAX]
-    uint8_t diff_count; ///< the number of subframes for which diff has been above 0.65
-    uint8_t hang_count; ///< the number of subframes since a hangover period started
+    float                              beta; ///< previous pitch_gain, bounded by [0.0,SHARP_MAX]
+    uint8_t                      diff_count; ///< the number of subframes for which diff has been above 0.65
+    uint8_t                      hang_count; ///< the number of subframes since a hangover period started
 
-    float prev_sparse_fixed_gain; ///< previous fixed gain; used by anti-sparseness processing to determine "onset"
-    uint8_t prev_ir_filter_nr; ///< previous impulse response filter "impNr": 0 - strong, 1 - medium, 2 - none
-    uint8_t ir_filter_onset; ///< flag for impulse response filter strength
+    float            prev_sparse_fixed_gain; ///< previous fixed gain; used by anti-sparseness processing to determine "onset"
+    uint8_t               prev_ir_filter_nr; ///< previous impulse response filter "impNr": 0 - strong, 1 - medium, 2 - none
+    uint8_t                 ir_filter_onset; ///< flag for impulse response filter strength
 
-    float postfilter_mem[10]; ///< previous intermediate values in the formant filter
-    float tilt_mem; ///< previous input to tilt compensation filter
-    float postfilter_agc; ///< previous factor used for adaptive gain control
-    float high_pass_mem[2]; ///< previous intermediate values in the high-pass filter
+    float                postfilter_mem[10]; ///< previous intermediate values in the formant filter
+    float                          tilt_mem; ///< previous input to tilt compensation filter
+    float                    postfilter_agc; ///< previous factor used for adaptive gain control
+    float                  high_pass_mem[2]; ///< previous intermediate values in the high-pass filter
 
     float samples_in[LP_FILTER_ORDER + AMR_SUBFRAME_SIZE]; ///< floating point samples
 
-    ACELPFContext acelpf_ctx; ///< context for filters for ACELP-based codecs
-    ACELPVContext acelpv_ctx; ///< context for vector operations for ACELP-based codecs
-    CELPFContext celpf_ctx; ///< context for filters for CELP-based codecs
-    CELPMContext celpm_ctx; ///< context for fixed point math operations
+    ACELPFContext                     acelpf_ctx; ///< context for filters for ACELP-based codecs
+    ACELPVContext                     acelpv_ctx; ///< context for vector operations for ACELP-based codecs
+    CELPFContext                       celpf_ctx; ///< context for filters for CELP-based codecs
+    CELPMContext                       celpm_ctx; ///< context for fixed point math operations
 
 } AMRContext;
 
 /** Double version of ff_weighted_vector_sumf() */
 static void weighted_vector_sumd(double *out, const double *in_a,
                                  const double *in_b, double weight_coeff_a,
-                                 double weight_coeff_b, int length) {
+                                 double weight_coeff_b, int length)
+{
     int i;
 
     for (i = 0; i < length; i++)
         out[i] = weight_coeff_a * in_a[i]
-                 + weight_coeff_b * in_b[i];
+               + weight_coeff_b * in_b[i];
 }
 
-static av_cold int amrnb_decode_init(AVCodecContext *avctx) {
+static av_cold int amrnb_decode_init(AVCodecContext *avctx)
+{
     AMRContext *p = avctx->priv_data;
     int i;
 
@@ -165,18 +167,18 @@ static av_cold int amrnb_decode_init(AVCodecContext *avctx) {
         return AVERROR_PATCHWELCOME;
     }
 
-    avctx->channels = 1;
+    avctx->channels       = 1;
     avctx->channel_layout = AV_CH_LAYOUT_MONO;
     if (!avctx->sample_rate)
         avctx->sample_rate = 8000;
-    avctx->sample_fmt = AV_SAMPLE_FMT_FLT;
+    avctx->sample_fmt     = AV_SAMPLE_FMT_FLT;
 
     // p->excitation always points to the same position in p->excitation_buf
     p->excitation = &p->excitation_buf[PITCH_DELAY_MAX + LP_FILTER_ORDER + 1];
 
     for (i = 0; i < LP_FILTER_ORDER; i++) {
-        p->prev_lsp_sub4[i] = lsp_sub4_init[i] * 1000 / (float) (1 << 15);
-        p->lsf_avg[i] = p->lsf_q[3][i] = lsp_avg_init[i] / (float) (1 << 15);
+        p->prev_lsp_sub4[i] =    lsp_sub4_init[i] * 1000 / (float)(1 << 15);
+        p->lsf_avg[i] = p->lsf_q[3][i] = lsp_avg_init[i] / (float)(1 << 15);
     }
 
     for (i = 0; i < 4; i++)
@@ -203,7 +205,8 @@ static av_cold int amrnb_decode_init(AVCodecContext *avctx) {
  * @return the frame mode
  */
 static enum Mode unpack_bitstream(AMRContext *p, const uint8_t *buf,
-                                  int buf_size) {
+                                  int buf_size)
+{
     enum Mode mode;
 
     // Decode the first octet.
@@ -215,7 +218,7 @@ static enum Mode unpack_bitstream(AMRContext *p, const uint8_t *buf,
     }
 
     if (mode < MODE_DTX)
-        ff_amr_bit_reorder((uint16_t * ) & p->frame, sizeof(AMRNBFrame), buf + 1,
+        ff_amr_bit_reorder((uint16_t *) &p->frame, sizeof(AMRNBFrame), buf + 1,
                            amr_unpacking_bitmaps_per_mode[mode]);
 
     return mode;
@@ -233,13 +236,14 @@ static enum Mode unpack_bitstream(AMRContext *p, const uint8_t *buf,
  * @param[in,out] lsf_q     LSFs in [0,1] for each subframe
  * @param[in]     lsf_new   New LSFs in [0,1] for subframe 4
  */
-static void interpolate_lsf(ACELPVContext *ctx, float lsf_q[4][LP_FILTER_ORDER], float *lsf_new) {
+static void interpolate_lsf(ACELPVContext *ctx, float lsf_q[4][LP_FILTER_ORDER], float *lsf_new)
+{
     int i;
 
     for (i = 0; i < 4; i++)
         ctx->weighted_vector_sumf(lsf_q[i], lsf_q[3], lsf_new,
-                                  0.25 * (3 - i), 0.25 * (i + 1),
-                                  LP_FILTER_ORDER);
+                                0.25 * (3 - i), 0.25 * (i + 1),
+                                LP_FILTER_ORDER);
 }
 
 /**
@@ -257,7 +261,8 @@ static void lsf2lsp_for_mode12k2(AMRContext *p, double lsp[LP_FILTER_ORDER],
                                  const float lsf_no_r[LP_FILTER_ORDER],
                                  const int16_t *lsf_quantizer[5],
                                  const int quantizer_offset,
-                                 const int sign, const int update) {
+                                 const int sign, const int update)
+{
     int16_t lsf_r[LP_FILTER_ORDER]; // residual LSF vector
     float lsf_q[LP_FILTER_ORDER]; // quantified LSF vector
     int i;
@@ -290,7 +295,8 @@ static void lsf2lsp_for_mode12k2(AMRContext *p, double lsp[LP_FILTER_ORDER],
  *
  * @param p                 pointer to the AMRContext
  */
-static void lsf2lsp_5(AMRContext *p) {
+static void lsf2lsp_5(AMRContext *p)
+{
     const uint16_t *lsf_param = p->frame.lsf;
     float lsf_no_r[LP_FILTER_ORDER]; // LSFs without the residual vector
     const int16_t *lsf_quantizer[5];
@@ -310,7 +316,7 @@ static void lsf2lsp_5(AMRContext *p) {
 
     // interpolate LSP vectors at subframes 1 and 3
     weighted_vector_sumd(p->lsp[0], p->prev_lsp_sub4, p->lsp[1], 0.5, 0.5, LP_FILTER_ORDER);
-    weighted_vector_sumd(p->lsp[2], p->lsp[1], p->lsp[3], 0.5, 0.5, LP_FILTER_ORDER);
+    weighted_vector_sumd(p->lsp[2], p->lsp[1]       , p->lsp[3], 0.5, 0.5, LP_FILTER_ORDER);
 }
 
 /**
@@ -318,7 +324,8 @@ static void lsf2lsp_5(AMRContext *p) {
  *
  * @param p                 pointer to the AMRContext
  */
-static void lsf2lsp_3(AMRContext *p) {
+static void lsf2lsp_3(AMRContext *p)
+{
     const uint16_t *lsf_param = p->frame.lsf;
     int16_t lsf_r[LP_FILTER_ORDER]; // residual LSF vector
     float lsf_q[LP_FILTER_ORDER]; // quantified LSF vector
@@ -348,9 +355,9 @@ static void lsf2lsp_3(AMRContext *p) {
 
     // interpolate LSP vectors at subframes 1, 2 and 3
     for (i = 1; i <= 3; i++)
-        for (j = 0; j < LP_FILTER_ORDER; j++)
-            p->lsp[i - 1][j] = p->prev_lsp_sub4[j] +
-                               (p->lsp[3][j] - p->prev_lsp_sub4[j]) * 0.25 * i;
+        for(j = 0; j < LP_FILTER_ORDER; j++)
+            p->lsp[i-1][j] = p->prev_lsp_sub4[j] +
+                (p->lsp[3][j] - p->prev_lsp_sub4[j]) * 0.25 * i;
 }
 
 /// @}
@@ -363,17 +370,18 @@ static void lsf2lsp_3(AMRContext *p) {
  * Like ff_decode_pitch_lag(), but with 1/6 resolution
  */
 static void decode_pitch_lag_1_6(int *lag_int, int *lag_frac, int pitch_index,
-                                 const int prev_lag_int, const int subframe) {
+                                 const int prev_lag_int, const int subframe)
+{
     if (subframe == 0 || subframe == 2) {
         if (pitch_index < 463) {
-            *lag_int = (pitch_index + 107) * 10923 >> 16;
+            *lag_int  = (pitch_index + 107) * 10923 >> 16;
             *lag_frac = pitch_index - *lag_int * 6 + 105;
         } else {
-            *lag_int = pitch_index - 368;
+            *lag_int  = pitch_index - 368;
             *lag_frac = 0;
         }
     } else {
-        *lag_int = ((pitch_index + 5) * 10923 >> 16) - 1;
+        *lag_int  = ((pitch_index + 5) * 10923 >> 16) - 1;
         *lag_frac = pitch_index - *lag_int * 6 - 3;
         *lag_int += av_clip(prev_lag_int - 5, PITCH_LAG_MIN_MODE_12k2,
                             PITCH_DELAY_MAX - 9);
@@ -382,7 +390,8 @@ static void decode_pitch_lag_1_6(int *lag_int, int *lag_frac, int pitch_index,
 
 static void decode_pitch_vector(AMRContext *p,
                                 const AMRNBSubframe *amr_subframe,
-                                const int subframe) {
+                                const int subframe)
+{
     int pitch_lag_int, pitch_lag_frac;
     enum Mode mode = p->cur_frame_mode;
 
@@ -406,10 +415,10 @@ static void decode_pitch_vector(AMRContext *p,
     /* Calculate the pitch vector by interpolating the past excitation at the
        pitch lag using a b60 hamming windowed sinc function.   */
     p->acelpf_ctx.acelp_interpolatef(p->excitation,
-                                     p->excitation + 1 - pitch_lag_int,
-                                     ff_b60_sinc, 6,
-                                     pitch_lag_frac + 6 - 6 * (pitch_lag_frac > 0),
-                                     10, AMR_SUBFRAME_SIZE);
+                          p->excitation + 1 - pitch_lag_int,
+                          ff_b60_sinc, 6,
+                          pitch_lag_frac + 6 - 6*(pitch_lag_frac > 0),
+                          10, AMR_SUBFRAME_SIZE);
 
     memcpy(p->pitch_vector, p->excitation, AMR_SUBFRAME_SIZE * sizeof(float));
 }
@@ -424,11 +433,12 @@ static void decode_pitch_vector(AMRContext *p,
  * Decode a 10-bit algebraic codebook index from a 10.2 kbit/s frame.
  */
 static void decode_10bit_pulse(int code, int pulse_position[8],
-                               int i1, int i2, int i3) {
+                               int i1, int i2, int i3)
+{
     // coded using 7+3 bits with the 3 LSBs being, individually, the LSB of 1 of
     // the 3 pulses and the upper 7 bits being coded in base 5
     const uint8_t *positions = base_five_table[code >> 3];
-    pulse_position[i1] = (positions[2] << 1) + (code & 1);
+    pulse_position[i1] = (positions[2] << 1) + ( code       & 1);
     pulse_position[i2] = (positions[1] << 1) + ((code >> 1) & 1);
     pulse_position[i3] = (positions[0] << 1) + ((code >> 2) & 1);
 }
@@ -441,7 +451,8 @@ static void decode_10bit_pulse(int code, int pulse_position[8],
  * @param fixed_sparse         pointer to the algebraic codebook vector
  */
 static void decode_8_pulses_31bits(const int16_t *fixed_index,
-                                   AMRFixed *fixed_sparse) {
+                                   AMRFixed *fixed_sparse)
+{
     int pulse_position[8];
     int i, temp;
 
@@ -455,17 +466,17 @@ static void decode_8_pulses_31bits(const int16_t *fixed_index,
     pulse_position[7] = temp / 5;
     if (pulse_position[7] & 1)
         pulse_position[3] = 4 - pulse_position[3];
-    pulse_position[3] = (pulse_position[3] << 1) + (fixed_index[6] & 1);
+    pulse_position[3] = (pulse_position[3] << 1) + ( fixed_index[6]       & 1);
     pulse_position[7] = (pulse_position[7] << 1) + ((fixed_index[6] >> 1) & 1);
 
     fixed_sparse->n = 8;
     for (i = 0; i < 4; i++) {
-        const int pos1 = (pulse_position[i] << 2) + i;
-        const int pos2 = (pulse_position[i + 4] << 2) + i;
+        const int pos1   = (pulse_position[i]     << 2) + i;
+        const int pos2   = (pulse_position[i + 4] << 2) + i;
         const float sign = fixed_index[i] ? -1.0 : 1.0;
-        fixed_sparse->x[i] = pos1;
+        fixed_sparse->x[i    ] = pos1;
         fixed_sparse->x[i + 4] = pos2;
-        fixed_sparse->y[i] = sign;
+        fixed_sparse->y[i    ] = sign;
         fixed_sparse->y[i + 4] = pos2 < pos1 ? -sign : sign;
     }
 }
@@ -486,8 +497,9 @@ static void decode_8_pulses_31bits(const int16_t *fixed_index,
  * @param subframe     current subframe number
  */
 static void decode_fixed_sparse(AMRFixed *fixed_sparse, const uint16_t *pulses,
-                                const enum Mode mode, const int subframe) {
-    av_assert1(MODE_4k75 <= (signed) mode && mode <= MODE_12k2);
+                                const enum Mode mode, const int subframe)
+{
+    av_assert1(MODE_4k75 <= (signed)mode && mode <= MODE_12k2);
 
     if (mode == MODE_12k2) {
         ff_decode_10_pulses_35bits(pulses, fixed_sparse, gray_decode, 5, 3);
@@ -499,28 +511,28 @@ static void decode_fixed_sparse(AMRFixed *fixed_sparse, const uint16_t *pulses,
         const int fixed_index = pulses[0];
 
         if (mode <= MODE_5k15) {
-            pulse_subset = ((fixed_index >> 3) & 8) + (subframe << 1);
-            pulse_position[0] = (fixed_index & 7) * 5 + track_position[pulse_subset];
+            pulse_subset      = ((fixed_index >> 3) & 8)     + (subframe << 1);
+            pulse_position[0] = ( fixed_index       & 7) * 5 + track_position[pulse_subset];
             pulse_position[1] = ((fixed_index >> 3) & 7) * 5 + track_position[pulse_subset + 1];
             fixed_sparse->n = 2;
         } else if (mode == MODE_5k9) {
-            pulse_subset = ((fixed_index & 1) << 1) + 1;
+            pulse_subset      = ((fixed_index & 1) << 1) + 1;
             pulse_position[0] = ((fixed_index >> 1) & 7) * 5 + pulse_subset;
-            pulse_subset = (fixed_index >> 4) & 3;
+            pulse_subset      = (fixed_index  >> 4) & 3;
             pulse_position[1] = ((fixed_index >> 6) & 7) * 5 + pulse_subset + (pulse_subset == 3 ? 1 : 0);
             fixed_sparse->n = pulse_position[0] == pulse_position[1] ? 1 : 2;
         } else if (mode == MODE_6k7) {
-            pulse_position[0] = (fixed_index & 7) * 5;
-            pulse_subset = (fixed_index >> 2) & 2;
+            pulse_position[0] = (fixed_index        & 7) * 5;
+            pulse_subset      = (fixed_index  >> 2) & 2;
             pulse_position[1] = ((fixed_index >> 4) & 7) * 5 + pulse_subset + 1;
-            pulse_subset = (fixed_index >> 6) & 2;
+            pulse_subset      = (fixed_index  >> 6) & 2;
             pulse_position[2] = ((fixed_index >> 8) & 7) * 5 + pulse_subset + 2;
             fixed_sparse->n = 3;
         } else { // mode <= MODE_7k95
-            pulse_position[0] = gray_decode[fixed_index & 7];
-            pulse_position[1] = gray_decode[(fixed_index >> 3) & 7] + 1;
-            pulse_position[2] = gray_decode[(fixed_index >> 6) & 7] + 2;
-            pulse_subset = (fixed_index >> 9) & 1;
+            pulse_position[0] = gray_decode[ fixed_index        & 7];
+            pulse_position[1] = gray_decode[(fixed_index >> 3)  & 7] + 1;
+            pulse_position[2] = gray_decode[(fixed_index >> 6)  & 7] + 2;
+            pulse_subset      = (fixed_index >> 9) & 1;
             pulse_position[3] = gray_decode[(fixed_index >> 10) & 7] + pulse_subset + 3;
             fixed_sparse->n = 4;
         }
@@ -538,15 +550,16 @@ static void decode_fixed_sparse(AMRFixed *fixed_sparse, const uint16_t *pulses,
  * @param fixed_sparse sparse representation of the fixed vector
  */
 static void pitch_sharpening(AMRContext *p, int subframe, enum Mode mode,
-                             AMRFixed *fixed_sparse) {
+                             AMRFixed *fixed_sparse)
+{
     // The spec suggests the current pitch gain is always used, but in other
     // modes the pitch and codebook gains are jointly quantized (sec 5.8.2)
     // so the codebook gain cannot depend on the quantized pitch gain.
     if (mode == MODE_12k2)
         p->beta = FFMIN(p->pitch_gain[4], 1.0);
 
-    fixed_sparse->pitch_lag = p->pitch_lag_int;
-    fixed_sparse->pitch_fac = p->beta;
+    fixed_sparse->pitch_lag  = p->pitch_lag_int;
+    fixed_sparse->pitch_fac  = p->beta;
 
     // Save pitch sharpening factor for the next subframe
     // MODE_4k75 only updates on the 2nd and 4th subframes - this follows from
@@ -572,8 +585,9 @@ static void pitch_sharpening(AMRContext *p, int subframe, enum Mode mode,
  *
  * @return fixed gain smoothed
  */
-static float fixed_gain_smooth(AMRContext *p, const float *lsf,
-                               const float *lsf_avg, const enum Mode mode) {
+static float fixed_gain_smooth(AMRContext *p , const float *lsf,
+                               const float *lsf_avg, const enum Mode mode)
+{
     float diff = 0.0;
     int i;
 
@@ -615,26 +629,27 @@ static float fixed_gain_smooth(AMRContext *p, const float *lsf,
  */
 static void decode_gains(AMRContext *p, const AMRNBSubframe *amr_subframe,
                          const enum Mode mode, const int subframe,
-                         float *fixed_gain_factor) {
+                         float *fixed_gain_factor)
+{
     if (mode == MODE_12k2 || mode == MODE_7k95) {
-        p->pitch_gain[4] = qua_gain_pit[amr_subframe->p_gain]
-                           * (1.0 / 16384.0);
+        p->pitch_gain[4]   = qua_gain_pit [amr_subframe->p_gain    ]
+            * (1.0 / 16384.0);
         *fixed_gain_factor = qua_gain_code[amr_subframe->fixed_gain]
-                             * (1.0 / 2048.0);
+            * (1.0 /  2048.0);
     } else {
         const uint16_t *gains;
 
         if (mode >= MODE_6k7) {
             gains = gains_high[amr_subframe->p_gain];
         } else if (mode >= MODE_5k15) {
-            gains = gains_low[amr_subframe->p_gain];
+            gains = gains_low [amr_subframe->p_gain];
         } else {
             // gain index is only coded in subframes 0,2 for MODE_4k75
             gains = gains_MODE_4k75[(p->frame.subframe[subframe & 2].p_gain << 1) + (subframe & 1)];
         }
 
-        p->pitch_gain[4] = gains[0] * (1.0 / 16384.0);
-        *fixed_gain_factor = gains[1] * (1.0 / 4096.0);
+        p->pitch_gain[4]   = gains[0] * (1.0 / 16384.0);
+        *fixed_gain_factor = gains[1] * (1.0 /  4096.0);
     }
 }
 
@@ -655,10 +670,11 @@ static void decode_gains(AMRContext *p, const AMRNBSubframe *amr_subframe,
  *  out[n] = sum(i,0,len-1){ in[i] * filter[(len + n - i)%len] }
  */
 static void apply_ir_filter(float *out, const AMRFixed *in,
-                            const float *filter) {
+                            const float *filter)
+{
     float filter1[AMR_SUBFRAME_SIZE],     ///< filters at pitch lag*1 and *2
-    filter2[AMR_SUBFRAME_SIZE];
-    int lag = in->pitch_lag;
+          filter2[AMR_SUBFRAME_SIZE];
+    int   lag = in->pitch_lag;
     float fac = in->pitch_fac;
     int i;
 
@@ -673,7 +689,7 @@ static void apply_ir_filter(float *out, const AMRFixed *in,
 
     memset(out, 0, sizeof(float) * AMR_SUBFRAME_SIZE);
     for (i = 0; i < in->n; i++) {
-        int x = in->x[i];
+        int   x = in->x[i];
         float y = in->y[i];
         const float *filterp;
 
@@ -702,7 +718,8 @@ static void apply_ir_filter(float *out, const AMRFixed *in,
  */
 static const float *anti_sparseness(AMRContext *p, AMRFixed *fixed_sparse,
                                     const float *fixed_vector,
-                                    float fixed_gain, float *out) {
+                                    float fixed_gain, float *out)
+{
     int ir_filter_nr;
 
     if (p->pitch_gain[4] < 0.6) {
@@ -739,17 +756,17 @@ static const float *anti_sparseness(AMRContext *p, AMRFixed *fixed_sparse,
         ir_filter_nr = 2;
 
     if (p->cur_frame_mode != MODE_7k4 && p->cur_frame_mode < MODE_10k2
-        && ir_filter_nr < 2) {
+         && ir_filter_nr < 2) {
         apply_ir_filter(out, fixed_sparse,
                         (p->cur_frame_mode == MODE_7k95 ?
-                         ir_filters_lookup_MODE_7k95 :
-                         ir_filters_lookup)[ir_filter_nr]);
+                             ir_filters_lookup_MODE_7k95 :
+                             ir_filters_lookup)[ir_filter_nr]);
         fixed_vector = out;
     }
 
     // update ir filter strength history
-    p->prev_ir_filter_nr = ir_filter_nr;
-    p->prev_sparse_fixed_gain = fixed_gain;
+    p->prev_ir_filter_nr       = ir_filter_nr;
+    p->prev_sparse_fixed_gain  = fixed_gain;
 
     return fixed_vector;
 }
@@ -772,7 +789,8 @@ static const float *anti_sparseness(AMRContext *p, AMRFixed *fixed_sparse,
  */
 static int synthesis(AMRContext *p, float *lpc,
                      float fixed_gain, const float *fixed_vector,
-                     float *samples, uint8_t overflow) {
+                     float *samples, uint8_t overflow)
+{
     int i;
     float excitation[AMR_SUBFRAME_SIZE];
 
@@ -783,17 +801,17 @@ static int synthesis(AMRContext *p, float *lpc,
             p->pitch_vector[i] *= 0.25;
 
     p->acelpv_ctx.weighted_vector_sumf(excitation, p->pitch_vector, fixed_vector,
-                                       p->pitch_gain[4], fixed_gain, AMR_SUBFRAME_SIZE);
+                            p->pitch_gain[4], fixed_gain, AMR_SUBFRAME_SIZE);
 
     // emphasize pitch vector contribution
     if (p->pitch_gain[4] > 0.5 && !overflow) {
         float energy = p->celpm_ctx.dot_productf(excitation, excitation,
-                                                 AMR_SUBFRAME_SIZE);
+                                                    AMR_SUBFRAME_SIZE);
         float pitch_factor =
-                p->pitch_gain[4] *
-                (p->cur_frame_mode == MODE_12k2 ?
-                 0.25 * FFMIN(p->pitch_gain[4], 1.0) :
-                 0.5 * FFMIN(p->pitch_gain[4], SHARP_MAX));
+            p->pitch_gain[4] *
+            (p->cur_frame_mode == MODE_12k2 ?
+                0.25 * FFMIN(p->pitch_gain[4], 1.0) :
+                0.5  * FFMIN(p->pitch_gain[4], SHARP_MAX));
 
         for (i = 0; i < AMR_SUBFRAME_SIZE; i++)
             excitation[i] += pitch_factor * p->pitch_vector[i];
@@ -803,8 +821,8 @@ static int synthesis(AMRContext *p, float *lpc,
     }
 
     p->celpf_ctx.celp_lp_synthesis_filterf(samples, lpc, excitation,
-                                           AMR_SUBFRAME_SIZE,
-                                           LP_FILTER_ORDER);
+                                 AMR_SUBFRAME_SIZE,
+                                 LP_FILTER_ORDER);
 
     // detect overflow
     for (i = 0; i < AMR_SUBFRAME_SIZE; i++)
@@ -826,7 +844,8 @@ static int synthesis(AMRContext *p, float *lpc,
  *
  * @param p             pointer to the AMRContext
  */
-static void update_state(AMRContext *p) {
+static void update_state(AMRContext *p)
+{
     memcpy(p->prev_lsp_sub4, p->lsp[3], LP_FILTER_ORDER * sizeof(p->lsp[3][0]));
 
     memmove(&p->excitation_buf[0], &p->excitation_buf[AMR_SUBFRAME_SIZE],
@@ -852,20 +871,21 @@ static void update_state(AMRContext *p) {
  * @param lpc_n LP_FILTER_ORDER coefficients of the numerator
  * @param lpc_d LP_FILTER_ORDER coefficients of the denominator
  */
-static float tilt_factor(AMRContext *p, float *lpc_n, float *lpc_d) {
+static float tilt_factor(AMRContext *p, float *lpc_n, float *lpc_d)
+{
     float rh0, rh1; // autocorrelation at lag 0 and 1
 
     // LP_FILTER_ORDER prior zeros are needed for ff_celp_lp_synthesis_filterf
-    float impulse_buffer[LP_FILTER_ORDER + AMR_TILT_RESPONSE] = {0};
+    float impulse_buffer[LP_FILTER_ORDER + AMR_TILT_RESPONSE] = { 0 };
     float *hf = impulse_buffer + LP_FILTER_ORDER; // start of impulse response
 
     hf[0] = 1.0;
     memcpy(hf + 1, lpc_n, sizeof(float) * LP_FILTER_ORDER);
     p->celpf_ctx.celp_lp_synthesis_filterf(hf, lpc_d, hf,
-                                           AMR_TILT_RESPONSE,
-                                           LP_FILTER_ORDER);
+                                 AMR_TILT_RESPONSE,
+                                 LP_FILTER_ORDER);
 
-    rh0 = p->celpm_ctx.dot_productf(hf, hf, AMR_TILT_RESPONSE);
+    rh0 = p->celpm_ctx.dot_productf(hf, hf,     AMR_TILT_RESPONSE);
     rh1 = p->celpm_ctx.dot_productf(hf, hf + 1, AMR_TILT_RESPONSE - 1);
 
     // The spec only specifies this check for 12.2 and 10.2 kbit/s
@@ -881,12 +901,13 @@ static float tilt_factor(AMRContext *p, float *lpc_n, float *lpc_d) {
  * @param lpc           interpolated LP coefficients for this subframe
  * @param buf_out       output of the filter
  */
-static void postfilter(AMRContext *p, float *lpc, float *buf_out) {
+static void postfilter(AMRContext *p, float *lpc, float *buf_out)
+{
     int i;
-    float *samples = p->samples_in + LP_FILTER_ORDER; // Start of input
+    float *samples          = p->samples_in + LP_FILTER_ORDER; // Start of input
 
-    float speech_gain = p->celpm_ctx.dot_productf(samples, samples,
-                                                  AMR_SUBFRAME_SIZE);
+    float speech_gain       = p->celpm_ctx.dot_productf(samples, samples,
+                                                           AMR_SUBFRAME_SIZE);
 
     float pole_out[AMR_SUBFRAME_SIZE + LP_FILTER_ORDER];  // Output of pole filter
     const float *gamma_n, *gamma_d;                       // Formant filter factor table
@@ -901,19 +922,19 @@ static void postfilter(AMRContext *p, float *lpc, float *buf_out) {
     }
 
     for (i = 0; i < LP_FILTER_ORDER; i++) {
-        lpc_n[i] = lpc[i] * gamma_n[i];
-        lpc_d[i] = lpc[i] * gamma_d[i];
+         lpc_n[i] = lpc[i] * gamma_n[i];
+         lpc_d[i] = lpc[i] * gamma_d[i];
     }
 
     memcpy(pole_out, p->postfilter_mem, sizeof(float) * LP_FILTER_ORDER);
     p->celpf_ctx.celp_lp_synthesis_filterf(pole_out + LP_FILTER_ORDER, lpc_d, samples,
-                                           AMR_SUBFRAME_SIZE, LP_FILTER_ORDER);
+                                 AMR_SUBFRAME_SIZE, LP_FILTER_ORDER);
     memcpy(p->postfilter_mem, pole_out + AMR_SUBFRAME_SIZE,
            sizeof(float) * LP_FILTER_ORDER);
 
     p->celpf_ctx.celp_lp_zero_synthesis_filterf(buf_out, lpc_n,
-                                                pole_out + LP_FILTER_ORDER,
-                                                AMR_SUBFRAME_SIZE, LP_FILTER_ORDER);
+                                      pole_out + LP_FILTER_ORDER,
+                                      AMR_SUBFRAME_SIZE, LP_FILTER_ORDER);
 
     ff_tilt_compensation(&p->tilt_mem, tilt_factor(p, lpc_n, lpc_d), buf_out,
                          AMR_SUBFRAME_SIZE);
@@ -925,12 +946,13 @@ static void postfilter(AMRContext *p, float *lpc, float *buf_out) {
 /// @}
 
 static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
-                              int *got_frame_ptr, AVPacket *avpkt) {
+                              int *got_frame_ptr, AVPacket *avpkt)
+{
 
     AMRContext *p = avctx->priv_data;        // pointer to private data
-    AVFrame *frame = data;
+    AVFrame *frame     = data;
     const uint8_t *buf = avpkt->data;
-    int buf_size = avpkt->size;
+    int buf_size       = avpkt->size;
     float *buf_out;                          // pointer to the output data buffer
     int i, subframe, ret;
     float fixed_gain_factor;
@@ -943,7 +965,7 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
     frame->nb_samples = AMR_BLOCK_SIZE;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
-    buf_out = (float *) frame->data[0];
+    buf_out = (float *)frame->data[0];
 
     p->cur_frame_mode = unpack_bitstream(p, buf, buf_size);
     if (p->cur_frame_mode == NO_DATA) {
@@ -989,13 +1011,13 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
                             AMR_SUBFRAME_SIZE);
 
         p->fixed_gain[4] =
-                ff_amr_set_fixed_gain(fixed_gain_factor,
-                                      p->celpm_ctx.dot_productf(p->fixed_vector,
-                                                                p->fixed_vector,
-                                                                AMR_SUBFRAME_SIZE) /
-                                      AMR_SUBFRAME_SIZE,
-                                      p->prediction_error,
-                                      energy_mean[p->cur_frame_mode], energy_pred_fac);
+            ff_amr_set_fixed_gain(fixed_gain_factor,
+                       p->celpm_ctx.dot_productf(p->fixed_vector,
+                                                               p->fixed_vector,
+                                                               AMR_SUBFRAME_SIZE) /
+                                  AMR_SUBFRAME_SIZE,
+                       p->prediction_error,
+                       energy_mean[p->cur_frame_mode], energy_pred_fac);
 
         // The excitation feedback is calculated without any processing such
         // as fixed gain smoothing. This isn't mentioned in the specification.
@@ -1037,10 +1059,10 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
     }
 
     p->acelpf_ctx.acelp_apply_order_2_transfer_function(buf_out,
-                                                        buf_out, highpass_zeros,
-                                                        highpass_poles,
-                                                        highpass_gain * AMR_SAMPLE_SCALE,
-                                                        p->high_pass_mem, AMR_BLOCK_SIZE);
+                                             buf_out, highpass_zeros,
+                                             highpass_poles,
+                                             highpass_gain * AMR_SAMPLE_SCALE,
+                                             p->high_pass_mem, AMR_BLOCK_SIZE);
 
     /* Update averaged lsf vector (used for fixed gain smoothing).
      *
@@ -1049,7 +1071,7 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
      * The specification has an incorrect formula: the reference decoder uses
      * qbar(n-1) rather than qbar(n) in section 6.1(4) equation 71. */
     p->acelpv_ctx.weighted_vector_sumf(p->lsf_avg, p->lsf_avg, p->lsf_q[3],
-                                       0.84, 0.16, LP_FILTER_ORDER);
+                            0.84, 0.16, LP_FILTER_ORDER);
 
     *got_frame_ptr = 1;
 
@@ -1059,14 +1081,14 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
 
 
 AVCodec ff_amrnb_decoder = {
-        .name           = "amrnb",
-        .long_name      = NULL_IF_CONFIG_SMALL("AMR-NB (Adaptive Multi-Rate NarrowBand)"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_AMR_NB,
-        .priv_data_size = sizeof(AMRContext),
-        .init           = amrnb_decode_init,
-        .decode         = amrnb_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
-        .sample_fmts    = (const enum AVSampleFormat[]) {AV_SAMPLE_FMT_FLT,
-                                                         AV_SAMPLE_FMT_NONE},
+    .name           = "amrnb",
+    .long_name      = NULL_IF_CONFIG_SMALL("AMR-NB (Adaptive Multi-Rate NarrowBand)"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_AMR_NB,
+    .priv_data_size = sizeof(AMRContext),
+    .init           = amrnb_decode_init,
+    .decode         = amrnb_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
+                                                     AV_SAMPLE_FMT_NONE },
 };

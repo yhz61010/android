@@ -39,16 +39,17 @@ typedef struct CLLCContext {
     BswapDSPContext bdsp;
 
     uint8_t *swapped_buf;
-    int swapped_buf_size;
+    int      swapped_buf_size;
 } CLLCContext;
 
-static int read_code_table(CLLCContext *ctx, GetBitContext *gb, VLC *vlc) {
+static int read_code_table(CLLCContext *ctx, GetBitContext *gb, VLC *vlc)
+{
     uint8_t symbols[256];
     uint8_t bits[256];
     int num_lens, num_codes, num_codes_sum;
     int i, j, count;
 
-    count = 0;
+    count         = 0;
     num_codes_sum = 0;
 
     num_lens = get_bits(gb, 5);
@@ -59,7 +60,7 @@ static int read_code_table(CLLCContext *ctx, GetBitContext *gb, VLC *vlc) {
     }
 
     for (i = 0; i < num_lens; i++) {
-        num_codes = get_bits(gb, 9);
+        num_codes      = get_bits(gb, 9);
         num_codes_sum += num_codes;
 
         if (num_codes_sum > 256) {
@@ -70,7 +71,7 @@ static int read_code_table(CLLCContext *ctx, GetBitContext *gb, VLC *vlc) {
 
         for (j = 0; j < num_codes; j++) {
             symbols[count] = get_bits(gb, 8);
-            bits[count] = i + 1;
+            bits[count]    = i + 1;
 
             count++;
         }
@@ -85,7 +86,8 @@ static int read_code_table(CLLCContext *ctx, GetBitContext *gb, VLC *vlc) {
  * ARGB read/restore reads in ARGB quads.
  */
 static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
-                          VLC *vlc, uint8_t *outbuf) {
+                          VLC *vlc, uint8_t *outbuf)
+{
     uint8_t *dst;
     int pred[4];
     int code;
@@ -93,7 +95,7 @@ static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
 
     OPEN_READER(bits, gb);
 
-    dst = outbuf;
+    dst     = outbuf;
     pred[0] = top_left[0];
     pred[1] = top_left[1];
     pred[2] = top_left[2];
@@ -105,7 +107,7 @@ static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
         GET_VLC(code, bits, gb, vlc[0].table, VLC_BITS, VLC_DEPTH);
 
         pred[0] += code;
-        dst[0] = pred[0];
+        dst[0]   = pred[0];
 
         /* Skip the components if they are  entirely transparent */
         if (dst[0]) {
@@ -114,21 +116,21 @@ static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
             GET_VLC(code, bits, gb, vlc[1].table, VLC_BITS, VLC_DEPTH);
 
             pred[1] += code;
-            dst[1] = pred[1];
+            dst[1]   = pred[1];
 
             /* Green */
             UPDATE_CACHE(bits, gb);
             GET_VLC(code, bits, gb, vlc[2].table, VLC_BITS, VLC_DEPTH);
 
             pred[2] += code;
-            dst[2] = pred[2];
+            dst[2]   = pred[2];
 
             /* Blue */
             UPDATE_CACHE(bits, gb);
             GET_VLC(code, bits, gb, vlc[3].table, VLC_BITS, VLC_DEPTH);
 
             pred[3] += code;
-            dst[3] = pred[3];
+            dst[3]   = pred[3];
         } else {
             dst[1] = 0;
             dst[2] = 0;
@@ -140,7 +142,7 @@ static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
 
     CLOSE_READER(bits, gb);
 
-    top_left[0] = outbuf[0];
+    top_left[0]  = outbuf[0];
 
     /* Only stash components if they are not transparent */
     if (top_left[0]) {
@@ -153,14 +155,15 @@ static int read_argb_line(CLLCContext *ctx, GetBitContext *gb, int *top_left,
 }
 
 static int read_rgb24_component_line(CLLCContext *ctx, GetBitContext *gb,
-                                     int *top_left, VLC *vlc, uint8_t *outbuf) {
+                                     int *top_left, VLC *vlc, uint8_t *outbuf)
+{
     uint8_t *dst;
     int pred, code;
     int i;
 
     OPEN_READER(bits, gb);
 
-    dst = outbuf;
+    dst  = outbuf;
     pred = *top_left;
 
     /* Simultaneously read and restore the line */
@@ -168,9 +171,9 @@ static int read_rgb24_component_line(CLLCContext *ctx, GetBitContext *gb,
         UPDATE_CACHE(bits, gb);
         GET_VLC(code, bits, gb, vlc->table, VLC_BITS, VLC_DEPTH);
 
-        pred += code;
+        pred  += code;
         dst[0] = pred;
-        dst += 3;
+        dst   += 3;
     }
 
     CLOSE_READER(bits, gb);
@@ -183,7 +186,8 @@ static int read_rgb24_component_line(CLLCContext *ctx, GetBitContext *gb,
 
 static int read_yuv_component_line(CLLCContext *ctx, GetBitContext *gb,
                                    int *top_left, VLC *vlc, uint8_t *outbuf,
-                                   int is_chroma) {
+                                   int is_chroma)
+{
     int pred, code;
     int i;
 
@@ -196,7 +200,7 @@ static int read_yuv_component_line(CLLCContext *ctx, GetBitContext *gb,
         UPDATE_CACHE(bits, gb);
         GET_VLC(code, bits, gb, vlc->table, VLC_BITS, VLC_DEPTH);
 
-        pred += code;
+        pred     += code;
         outbuf[i] = pred;
     }
 
@@ -208,8 +212,9 @@ static int read_yuv_component_line(CLLCContext *ctx, GetBitContext *gb,
     return 0;
 }
 
-static int decode_argb_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic) {
-    AVCodecContext * avctx = ctx->avctx;
+static int decode_argb_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic)
+{
+    AVCodecContext *avctx = ctx->avctx;
     uint8_t *dst;
     int pred[4];
     int ret;
@@ -251,8 +256,9 @@ static int decode_argb_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic) 
     return 0;
 }
 
-static int decode_rgb24_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic) {
-    AVCodecContext * avctx = ctx->avctx;
+static int decode_rgb24_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic)
+{
+    AVCodecContext *avctx = ctx->avctx;
     uint8_t *dst;
     int pred[3];
     int ret;
@@ -294,8 +300,9 @@ static int decode_rgb24_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic)
     return 0;
 }
 
-static int decode_yuv_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic) {
-    AVCodecContext * avctx = ctx->avctx;
+static int decode_yuv_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic)
+{
+    AVCodecContext *avctx = ctx->avctx;
     uint8_t block;
     uint8_t *dst[3];
     int pred[3];
@@ -349,10 +356,11 @@ static int decode_yuv_frame(CLLCContext *ctx, GetBitContext *gb, AVFrame *pic) {
 }
 
 static int cllc_decode_frame(AVCodecContext *avctx, void *data,
-                             int *got_picture_ptr, AVPacket *avpkt) {
+                             int *got_picture_ptr, AVPacket *avpkt)
+{
     CLLCContext *ctx = avctx->priv_data;
     AVFrame *pic = data;
-    ThreadFrame frame = {.f = data};
+    ThreadFrame frame = { .f = data };
     uint8_t *src = avpkt->data;
     uint32_t info_tag, info_offset;
     int data_size;
@@ -365,21 +373,19 @@ static int cllc_decode_frame(AVCodecContext *avctx, void *data,
     }
 
     info_offset = 0;
-    info_tag = AV_RL32(src);
+    info_tag    = AV_RL32(src);
     if (info_tag == MKTAG('I', 'N', 'F', 'O')) {
         info_offset = AV_RL32(src + 4);
         if (info_offset > UINT32_MAX - 8 || info_offset + 8 > avpkt->size) {
             av_log(avctx, AV_LOG_ERROR,
-                   "Invalid INFO header offset: 0x%08"
-            PRIX32
-            " is too large.\n",
-                    info_offset);
+                   "Invalid INFO header offset: 0x%08"PRIX32" is too large.\n",
+                   info_offset);
             return AVERROR_INVALIDDATA;
         }
         ff_canopus_parse_info_tag(avctx, src + 8, info_offset);
 
         info_offset += 8;
-        src += info_offset;
+        src         += info_offset;
     }
 
     data_size = (avpkt->size - info_offset) & ~1;
@@ -393,10 +399,8 @@ static int cllc_decode_frame(AVCodecContext *avctx, void *data,
     }
 
     /* bswap16 the buffer since CLLC's bitreader works in 16-bit words */
-    ctx->bdsp.bswap16_buf((uint16_t * )
-    ctx->swapped_buf, (uint16_t * )
-    src,
-            data_size / 2);
+    ctx->bdsp.bswap16_buf((uint16_t *) ctx->swapped_buf, (uint16_t *) src,
+                          data_size / 2);
 
     if ((ret = init_get_bits8(&gb, ctx->swapped_buf, data_size)) < 0)
         return ret;
@@ -412,50 +416,50 @@ static int cllc_decode_frame(AVCodecContext *avctx, void *data,
     coding_type = (AV_RL32(src) >> 8) & 0xFF;
     av_log(avctx, AV_LOG_DEBUG, "Frame coding type: %d\n", coding_type);
 
-    if (get_bits_left(&gb) < avctx->height * avctx->width)
+    if(get_bits_left(&gb) < avctx->height * avctx->width)
         return AVERROR_INVALIDDATA;
 
     switch (coding_type) {
-        case 0:
-            avctx->pix_fmt = AV_PIX_FMT_YUV422P;
-            avctx->bits_per_raw_sample = 8;
+    case 0:
+        avctx->pix_fmt             = AV_PIX_FMT_YUV422P;
+        avctx->bits_per_raw_sample = 8;
 
-            if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
-                return ret;
+        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
+            return ret;
 
-            ret = decode_yuv_frame(ctx, &gb, pic);
-            if (ret < 0)
-                return ret;
+        ret = decode_yuv_frame(ctx, &gb, pic);
+        if (ret < 0)
+            return ret;
 
-            break;
-        case 1:
-        case 2:
-            avctx->pix_fmt = AV_PIX_FMT_RGB24;
-            avctx->bits_per_raw_sample = 8;
+        break;
+    case 1:
+    case 2:
+        avctx->pix_fmt             = AV_PIX_FMT_RGB24;
+        avctx->bits_per_raw_sample = 8;
 
-            if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
-                return ret;
+        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
+            return ret;
 
-            ret = decode_rgb24_frame(ctx, &gb, pic);
-            if (ret < 0)
-                return ret;
+        ret = decode_rgb24_frame(ctx, &gb, pic);
+        if (ret < 0)
+            return ret;
 
-            break;
-        case 3:
-            avctx->pix_fmt = AV_PIX_FMT_ARGB;
-            avctx->bits_per_raw_sample = 8;
+        break;
+    case 3:
+        avctx->pix_fmt             = AV_PIX_FMT_ARGB;
+        avctx->bits_per_raw_sample = 8;
 
-            if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
-                return ret;
+        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
+            return ret;
 
-            ret = decode_argb_frame(ctx, &gb, pic);
-            if (ret < 0)
-                return ret;
+        ret = decode_argb_frame(ctx, &gb, pic);
+        if (ret < 0)
+            return ret;
 
-            break;
-        default:
-            av_log(avctx, AV_LOG_ERROR, "Unknown coding type: %d.\n", coding_type);
-            return AVERROR_INVALIDDATA;
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "Unknown coding type: %d.\n", coding_type);
+        return AVERROR_INVALIDDATA;
     }
 
     pic->key_frame = 1;
@@ -466,7 +470,8 @@ static int cllc_decode_frame(AVCodecContext *avctx, void *data,
     return avpkt->size;
 }
 
-static av_cold int cllc_decode_close(AVCodecContext *avctx) {
+static av_cold int cllc_decode_close(AVCodecContext *avctx)
+{
     CLLCContext *ctx = avctx->priv_data;
 
     av_freep(&ctx->swapped_buf);
@@ -474,12 +479,13 @@ static av_cold int cllc_decode_close(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int cllc_decode_init(AVCodecContext *avctx) {
+static av_cold int cllc_decode_init(AVCodecContext *avctx)
+{
     CLLCContext *ctx = avctx->priv_data;
 
     /* Initialize various context values */
-    ctx->avctx = avctx;
-    ctx->swapped_buf = NULL;
+    ctx->avctx            = avctx;
+    ctx->swapped_buf      = NULL;
     ctx->swapped_buf_size = 0;
 
     ff_bswapdsp_init(&ctx->bdsp);
@@ -488,14 +494,14 @@ static av_cold int cllc_decode_init(AVCodecContext *avctx) {
 }
 
 AVCodec ff_cllc_decoder = {
-        .name           = "cllc",
-        .long_name      = NULL_IF_CONFIG_SMALL("Canopus Lossless Codec"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_CLLC,
-        .priv_data_size = sizeof(CLLCContext),
-        .init           = cllc_decode_init,
-        .decode         = cllc_decode_frame,
-        .close          = cllc_decode_close,
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "cllc",
+    .long_name      = NULL_IF_CONFIG_SMALL("Canopus Lossless Codec"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_CLLC,
+    .priv_data_size = sizeof(CLLCContext),
+    .init           = cllc_decode_init,
+    .decode         = cllc_decode_frame,
+    .close          = cllc_decode_close,
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

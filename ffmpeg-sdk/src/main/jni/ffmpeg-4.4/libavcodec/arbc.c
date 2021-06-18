@@ -38,9 +38,10 @@ typedef struct ARBCContext {
     AVFrame *prev_frame;
 } ARBCContext;
 
-static int fill_tile4(AVCodecContext *avctx, int color, AVFrame *frame) {
+static int fill_tile4(AVCodecContext *avctx, int color, AVFrame *frame)
+{
     ARBCContext *s = avctx->priv_data;
-    GetByteContext * gb = &s->gb;
+    GetByteContext *gb = &s->gb;
     int nb_tiles = bytestream2_get_le16(gb);
     int h = avctx->height - 1;
     int pixels_overwritten = 0;
@@ -63,7 +64,7 @@ static int fill_tile4(AVCodecContext *avctx, int color, AVFrame *frame) {
                         continue;
                     }
                     AV_WB24(&frame->data[0][frame->linesize[0] * (h - j) + 3 * k], color);
-                    pixels_overwritten++;
+                    pixels_overwritten ++;
                 }
                 mask = mask << 1;
             }
@@ -73,9 +74,10 @@ static int fill_tile4(AVCodecContext *avctx, int color, AVFrame *frame) {
 }
 
 static int fill_tileX(AVCodecContext *avctx, int tile_width, int tile_height,
-                      int color, AVFrame *frame) {
+                       int color, AVFrame *frame)
+{
     ARBCContext *s = avctx->priv_data;
-    GetByteContext * gb = &s->gb;
+    GetByteContext *gb = &s->gb;
     const int step_h = tile_height / 4;
     const int step_w = tile_width / 4;
     int nb_tiles = bytestream2_get_le16(gb);
@@ -115,7 +117,8 @@ static int fill_tileX(AVCodecContext *avctx, int tile_width, int tile_height,
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data,
-                        int *got_frame, AVPacket *avpkt) {
+                        int *got_frame, AVPacket *avpkt)
+{
     ARBCContext *s = avctx->priv_data;
     AVFrame *frame = data;
     int ret, nb_segments;
@@ -180,7 +183,8 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     return avpkt->size;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
+static av_cold int decode_init(AVCodecContext *avctx)
+{
     ARBCContext *s = avctx->priv_data;
 
     avctx->pix_fmt = AV_PIX_FMT_RGB24;
@@ -192,13 +196,15 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static void decode_flush(AVCodecContext *avctx) {
+static void decode_flush(AVCodecContext *avctx)
+{
     ARBCContext *s = avctx->priv_data;
 
     av_frame_unref(s->prev_frame);
 }
 
-static av_cold int decode_close(AVCodecContext *avctx) {
+static av_cold int decode_close(AVCodecContext *avctx)
+{
     ARBCContext *s = avctx->priv_data;
 
     av_frame_free(&s->prev_frame);
@@ -207,15 +213,15 @@ static av_cold int decode_close(AVCodecContext *avctx) {
 }
 
 AVCodec ff_arbc_decoder = {
-        .name           = "arbc",
-        .long_name      = NULL_IF_CONFIG_SMALL("Gryphon's Anim Compressor"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_ARBC,
-        .priv_data_size = sizeof(ARBCContext),
-        .init           = decode_init,
-        .decode         = decode_frame,
-        .flush          = decode_flush,
-        .close          = decode_close,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
+    .name           = "arbc",
+    .long_name      = NULL_IF_CONFIG_SMALL("Gryphon's Anim Compressor"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_ARBC,
+    .priv_data_size = sizeof(ARBCContext),
+    .init           = decode_init,
+    .decode         = decode_frame,
+    .flush          = decode_flush,
+    .close          = decode_close,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

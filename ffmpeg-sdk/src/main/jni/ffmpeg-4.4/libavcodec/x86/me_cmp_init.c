@@ -31,79 +31,53 @@
 #include "libavcodec/mpegvideo.h"
 
 int ff_sum_abs_dctelem_mmx(int16_t *block);
-
 int ff_sum_abs_dctelem_mmxext(int16_t *block);
-
 int ff_sum_abs_dctelem_sse2(int16_t *block);
-
 int ff_sum_abs_dctelem_ssse3(int16_t *block);
-
 int ff_sse8_mmx(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                 ptrdiff_t stride, int h);
-
 int ff_sse16_mmx(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                  ptrdiff_t stride, int h);
-
 int ff_sse16_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                   ptrdiff_t stride, int h);
-
 int ff_hf_noise8_mmx(uint8_t *pix1, ptrdiff_t stride, int h);
-
 int ff_hf_noise16_mmx(uint8_t *pix1, ptrdiff_t stride, int h);
-
 int ff_sad8_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                    ptrdiff_t stride, int h);
-
 int ff_sad16_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                     ptrdiff_t stride, int h);
-
 int ff_sad16_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                   ptrdiff_t stride, int h);
-
 int ff_sad8_x2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                       ptrdiff_t stride, int h);
-
 int ff_sad16_x2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                        ptrdiff_t stride, int h);
-
 int ff_sad16_x2_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                      ptrdiff_t stride, int h);
-
 int ff_sad8_y2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                       ptrdiff_t stride, int h);
-
 int ff_sad16_y2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                        ptrdiff_t stride, int h);
-
 int ff_sad16_y2_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                      ptrdiff_t stride, int h);
-
 int ff_sad8_approx_xy2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                               ptrdiff_t stride, int h);
-
 int ff_sad16_approx_xy2_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                                ptrdiff_t stride, int h);
-
 int ff_sad16_approx_xy2_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                              ptrdiff_t stride, int h);
-
 int ff_vsad_intra8_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                           ptrdiff_t stride, int h);
-
 int ff_vsad_intra16_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                            ptrdiff_t stride, int h);
-
 int ff_vsad_intra16_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                          ptrdiff_t stride, int h);
-
 int ff_vsad8_approx_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
-                           ptrdiff_t stride, int h);
-
+                    ptrdiff_t stride, int h);
 int ff_vsad16_approx_mmxext(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
-                            ptrdiff_t stride, int h);
-
+                     ptrdiff_t stride, int h);
 int ff_vsad16_approx_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
-                          ptrdiff_t stride, int h);
+                   ptrdiff_t stride, int h);
 
 #define hadamard_func(cpu)                                                    \
     int ff_hadamard8_diff_ ## cpu(MpegEncContext *s, uint8_t *src1,           \
@@ -112,11 +86,8 @@ int ff_vsad16_approx_sse2(MpegEncContext *v, uint8_t *pix1, uint8_t *pix2,
                                     uint8_t *src2, ptrdiff_t stride, int h);
 
 hadamard_func(mmx)
-
 hadamard_func(mmxext)
-
 hadamard_func(sse2)
-
 hadamard_func(ssse3)
 
 #if HAVE_X86ASM
@@ -583,7 +554,8 @@ PIX_SAD(mmx)
 
 #endif /* HAVE_INLINE_ASM */
 
-av_cold void ff_me_cmp_init_x86(MECmpContext *c, AVCodecContext *avctx) {
+av_cold void ff_me_cmp_init_x86(MECmpContext *c, AVCodecContext *avctx)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #if HAVE_INLINE_ASM
@@ -612,9 +584,9 @@ av_cold void ff_me_cmp_init_x86(MECmpContext *c, AVCodecContext *avctx) {
     if (EXTERNAL_MMX(cpu_flags)) {
         c->hadamard8_diff[0] = ff_hadamard8_diff16_mmx;
         c->hadamard8_diff[1] = ff_hadamard8_diff_mmx;
-        c->sum_abs_dctelem = ff_sum_abs_dctelem_mmx;
-        c->sse[0] = ff_sse16_mmx;
-        c->sse[1] = ff_sse8_mmx;
+        c->sum_abs_dctelem   = ff_sum_abs_dctelem_mmx;
+        c->sse[0]            = ff_sse16_mmx;
+        c->sse[1]            = ff_sse8_mmx;
 #if HAVE_X86ASM
         c->nsse[0]           = nsse16_mmx;
         c->nsse[1]           = nsse8_mmx;
@@ -624,7 +596,7 @@ av_cold void ff_me_cmp_init_x86(MECmpContext *c, AVCodecContext *avctx) {
     if (EXTERNAL_MMXEXT(cpu_flags)) {
         c->hadamard8_diff[0] = ff_hadamard8_diff16_mmxext;
         c->hadamard8_diff[1] = ff_hadamard8_diff_mmxext;
-        c->sum_abs_dctelem = ff_sum_abs_dctelem_mmxext;
+        c->sum_abs_dctelem   = ff_sum_abs_dctelem_mmxext;
 
         c->sad[0] = ff_sad16_mmxext;
         c->sad[1] = ff_sad8_mmxext;
@@ -650,28 +622,28 @@ av_cold void ff_me_cmp_init_x86(MECmpContext *c, AVCodecContext *avctx) {
 
     if (EXTERNAL_SSE2(cpu_flags)) {
         c->sse[0] = ff_sse16_sse2;
-        c->sum_abs_dctelem = ff_sum_abs_dctelem_sse2;
+        c->sum_abs_dctelem   = ff_sum_abs_dctelem_sse2;
 
 #if HAVE_ALIGNED_STACK
         c->hadamard8_diff[0] = ff_hadamard8_diff16_sse2;
         c->hadamard8_diff[1] = ff_hadamard8_diff_sse2;
 #endif
         if (!(cpu_flags & AV_CPU_FLAG_SSE2SLOW) && avctx->codec_id != AV_CODEC_ID_SNOW) {
-            c->sad[0] = ff_sad16_sse2;
+            c->sad[0]        = ff_sad16_sse2;
             c->pix_abs[0][0] = ff_sad16_sse2;
             c->pix_abs[0][1] = ff_sad16_x2_sse2;
             c->pix_abs[0][2] = ff_sad16_y2_sse2;
 
-            c->vsad[4] = ff_vsad_intra16_sse2;
+            c->vsad[4]       = ff_vsad_intra16_sse2;
             if (!(avctx->flags & AV_CODEC_FLAG_BITEXACT)) {
                 c->pix_abs[0][3] = ff_sad16_approx_xy2_sse2;
-                c->vsad[0] = ff_vsad16_approx_sse2;
+                c->vsad[0]       = ff_vsad16_approx_sse2;
             }
         }
     }
 
     if (EXTERNAL_SSSE3(cpu_flags)) {
-        c->sum_abs_dctelem = ff_sum_abs_dctelem_ssse3;
+        c->sum_abs_dctelem   = ff_sum_abs_dctelem_ssse3;
 #if HAVE_ALIGNED_STACK
         c->hadamard8_diff[0] = ff_hadamard8_diff16_ssse3;
         c->hadamard8_diff[1] = ff_hadamard8_diff_ssse3;

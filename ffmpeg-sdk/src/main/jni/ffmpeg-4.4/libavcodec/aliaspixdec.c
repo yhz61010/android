@@ -28,7 +28,8 @@
 #define ALIAS_HEADER_SIZE 10
 
 static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
-                        AVPacket *avpkt) {
+                        AVPacket *avpkt)
+{
     AVFrame *f = data;
     GetByteContext gb;
     int width, height, ret, bits_pixel, pixel;
@@ -43,7 +44,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         return AVERROR_INVALIDDATA;
     }
 
-    width = bytestream2_get_be16u(&gb);
+    width  = bytestream2_get_be16u(&gb);
     height = bytestream2_get_be16u(&gb);
     bytestream2_skipu(&gb, 4); // obsolete X, Y offset
     bits_pixel = bytestream2_get_be16u(&gb);
@@ -61,7 +62,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if (ret < 0)
         return ret;
 
-    if (bytestream2_get_bytes_left(&gb) < width * height / 255)
+    if (bytestream2_get_bytes_left(&gb) < width*height / 255)
         return AVERROR_INVALIDDATA;
 
     ret = ff_get_buffer(avctx, f, 0);
@@ -121,10 +122,10 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
 }
 
 AVCodec ff_alias_pix_decoder = {
-        .name         = "alias_pix",
-        .long_name    = NULL_IF_CONFIG_SMALL("Alias/Wavefront PIX image"),
-        .type         = AVMEDIA_TYPE_VIDEO,
-        .id           = AV_CODEC_ID_ALIAS_PIX,
-        .decode       = decode_frame,
-        .capabilities = AV_CODEC_CAP_DR1,
+    .name         = "alias_pix",
+    .long_name    = NULL_IF_CONFIG_SMALL("Alias/Wavefront PIX image"),
+    .type         = AVMEDIA_TYPE_VIDEO,
+    .id           = AV_CODEC_ID_ALIAS_PIX,
+    .decode       = decode_frame,
+    .capabilities = AV_CODEC_CAP_DR1,
 };

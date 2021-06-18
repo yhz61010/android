@@ -54,8 +54,8 @@ typedef struct EightSvxContext {
     int data_idx;
 } EightSvxContext;
 
-static const int8_t fibonacci[16] = {-34, -21, -13, -8, -5, -3, -2, -1, 0, 1, 2, 3, 5, 8, 13, 21};
-static const int8_t exponential[16] = {-128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32, 64};
+static const int8_t fibonacci[16]   = { -34,  -21, -13,  -8, -5, -3, -2, -1, 0, 1, 2, 3, 5, 8,  13, 21 };
+static const int8_t exponential[16] = { -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32, 64 };
 
 #define MAX_FRAME_SIZE 2048
 
@@ -67,7 +67,8 @@ static const int8_t exponential[16] = {-128, -64, -32, -16, -8, -4, -2, -1, 0, 1
  * @param table delta sequence table
  */
 static void delta_decode(uint8_t *dst, const uint8_t *src, int src_size,
-                         uint8_t *state, const int8_t *table) {
+                         uint8_t *state, const int8_t *table)
+{
     uint8_t val = *state;
 
     while (src_size--) {
@@ -83,9 +84,10 @@ static void delta_decode(uint8_t *dst, const uint8_t *src, int src_size,
 
 /** decode a frame */
 static int eightsvx_decode_frame(AVCodecContext *avctx, void *data,
-                                 int *got_frame_ptr, AVPacket *avpkt) {
+                                 int *got_frame_ptr, AVPacket *avpkt)
+{
     EightSvxContext *esc = avctx->priv_data;
-    AVFrame *frame = data;
+    AVFrame *frame       = data;
     int buf_size;
     int ch, ret;
     int hdr_size = 2;
@@ -104,9 +106,9 @@ static int eightsvx_decode_frame(AVCodecContext *avctx, void *data,
 
         esc->fib_acc[0] = avpkt->data[1] + 128;
         if (avctx->channels == 2)
-            esc->fib_acc[1] = avpkt->data[2 + chan_size + 1] + 128;
+            esc->fib_acc[1] = avpkt->data[2+chan_size+1] + 128;
 
-        esc->data_idx = 0;
+        esc->data_idx  = 0;
         esc->data_size = chan_size;
         if (!(esc->data[0] = av_malloc(chan_size)))
             return AVERROR(ENOMEM);
@@ -118,7 +120,7 @@ static int eightsvx_decode_frame(AVCodecContext *avctx, void *data,
         }
         memcpy(esc->data[0], &avpkt->data[hdr_size], chan_size);
         if (avctx->channels == 2)
-            memcpy(esc->data[1], &avpkt->data[2 * hdr_size + chan_size], chan_size);
+            memcpy(esc->data[1], &avpkt->data[2*hdr_size+chan_size], chan_size);
     }
     if (!esc->data[0]) {
         av_log(avctx, AV_LOG_ERROR, "unexpected empty packet\n");
@@ -146,10 +148,11 @@ static int eightsvx_decode_frame(AVCodecContext *avctx, void *data,
 
     *got_frame_ptr = 1;
 
-    return ((avctx->frame_number == 0) * hdr_size + buf_size) * avctx->channels;
+    return ((avctx->frame_number == 0)*hdr_size + buf_size)*avctx->channels;
 }
 
-static av_cold int eightsvx_decode_init(AVCodecContext *avctx) {
+static av_cold int eightsvx_decode_init(AVCodecContext *avctx)
+{
     EightSvxContext *esc = avctx->priv_data;
 
     if (avctx->channels < 1 || avctx->channels > 2) {
@@ -158,21 +161,18 @@ static av_cold int eightsvx_decode_init(AVCodecContext *avctx) {
     }
 
     switch (avctx->codec->id) {
-        case AV_CODEC_ID_8SVX_FIB:
-            esc->table = fibonacci;
-            break;
-        case AV_CODEC_ID_8SVX_EXP:
-            esc->table = exponential;
-            break;
-        default:
-            av_assert1(0);
+    case AV_CODEC_ID_8SVX_FIB: esc->table = fibonacci;    break;
+    case AV_CODEC_ID_8SVX_EXP: esc->table = exponential;  break;
+    default:
+        av_assert1(0);
     }
     avctx->sample_fmt = AV_SAMPLE_FMT_U8P;
 
     return 0;
 }
 
-static av_cold int eightsvx_decode_close(AVCodecContext *avctx) {
+static av_cold int eightsvx_decode_close(AVCodecContext *avctx)
+{
     EightSvxContext *esc = avctx->priv_data;
 
     av_freep(&esc->data[0]);

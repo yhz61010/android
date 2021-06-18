@@ -70,9 +70,7 @@
 #define AC3_FRAME_BUFFER_SIZE 32768
 
 typedef struct AC3DecodeContext {
-    AVClass        *
-
-    class;                  ///< class for AVOptions
+    AVClass        *class;                  ///< class for AVOptions
     AVCodecContext *avctx;                  ///< parent context
     GetBitContext gbc;                      ///< bitstream reader
 
@@ -124,7 +122,7 @@ typedef struct AC3DecodeContext {
     int fast_gain_syntax;                   ///< fast gain codes enabled                (frmfgaincode)
     int dba_syntax;                         ///< delta bit allocation syntax enabled    (dbaflde)
     int skip_syntax;                        ///< skip field syntax enabled              (skipflde)
-    ///@}
+ ///@}
 
 ///@name Standard coupling
     int cpl_in_use[AC3_MAX_BLOCKS];         ///< coupling in use                        (cplinu)
@@ -148,7 +146,7 @@ typedef struct AC3DecodeContext {
     int spx_src_start_freq;                     ///< spx start frequency bin
     int spx_dst_end_freq;                       ///< spx end frequency bin
     int spx_dst_start_freq;                     ///< spx starting frequency bin for copying (copystartmant)
-    ///< the copy region ends at the start of the spx region.
+                                                ///< the copy region ends at the start of the spx region.
     int num_spx_bands;                          ///< number of spx bands                    (nspxbnds)
     uint8_t spx_band_struct[SPX_MAX_BANDS];
     uint8_t spx_band_sizes[SPX_MAX_BANDS];      ///< number of bins in each spx band

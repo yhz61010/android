@@ -34,16 +34,17 @@ static void aptx_qmf_polyphase_analysis(FilterSignal signal[NB_FILTERS],
                                         int shift,
                                         int32_t samples[NB_FILTERS],
                                         int32_t *low_subband_output,
-                                        int32_t *high_subband_output) {
+                                        int32_t *high_subband_output)
+{
     int32_t subbands[NB_FILTERS];
     int i;
 
     for (i = 0; i < NB_FILTERS; i++) {
-        aptx_qmf_filter_signal_push(&signal[i], samples[NB_FILTERS - 1 - i]);
+        aptx_qmf_filter_signal_push(&signal[i], samples[NB_FILTERS-1-i]);
         subbands[i] = aptx_qmf_convolution(&signal[i], coeffs[i], shift);
     }
 
-    *low_subband_output = av_clip_intp2(subbands[0] + subbands[1], 23);
+    *low_subband_output  = av_clip_intp2(subbands[0] + subbands[1], 23);
     *high_subband_output = av_clip_intp2(subbands[0] - subbands[1], 23);
 }
 
@@ -55,7 +56,8 @@ static void aptx_qmf_polyphase_analysis(FilterSignal signal[NB_FILTERS],
  */
 static void aptx_qmf_tree_analysis(QMFAnalysis *qmf,
                                    int32_t samples[4],
-                                   int32_t subband_samples[4]) {
+                                   int32_t subband_samples[4])
+{
     int32_t intermediate_samples[4];
     int i;
 
@@ -63,46 +65,39 @@ static void aptx_qmf_tree_analysis(QMFAnalysis *qmf,
     for (i = 0; i < 2; i++)
         aptx_qmf_polyphase_analysis(qmf->outer_filter_signal,
                                     aptx_qmf_outer_coeffs, 23,
-                                    &samples[2 * i],
-                                    &intermediate_samples[0 + i],
-                                    &intermediate_samples[2 + i]);
+                                    &samples[2*i],
+                                    &intermediate_samples[0+i],
+                                    &intermediate_samples[2+i]);
 
     /* Split 2 intermediate subband samples into 4 final subbands downsampled to 1 sample */
     for (i = 0; i < 2; i++)
         aptx_qmf_polyphase_analysis(qmf->inner_filter_signal[i],
                                     aptx_qmf_inner_coeffs, 23,
-                                    &intermediate_samples[2 * i],
-                                    &subband_samples[2 * i + 0],
-                                    &subband_samples[2 * i + 1]);
+                                    &intermediate_samples[2*i],
+                                    &subband_samples[2*i+0],
+                                    &subband_samples[2*i+1]);
 }
 
 av_always_inline
-static int32_t
-aptx_bin_search(int32_t
-value,
-int32_t factor,
-const int32_t *intervals, int32_t
-nb_intervals)
+static int32_t aptx_bin_search(int32_t value, int32_t factor,
+                               const int32_t *intervals, int32_t nb_intervals)
 {
-int32_t idx = 0;
-int i;
+    int32_t idx = 0;
+    int i;
 
-for (
-i = nb_intervals >> 1;
-i > 0; i >>= 1)
-if (MUL64(factor, intervals[idx + i]) <= ((int64_t)value << 24))
-idx +=
-i;
+    for (i = nb_intervals >> 1; i > 0; i >>= 1)
+        if (MUL64(factor, intervals[idx + i]) <= ((int64_t)value << 24))
+            idx += i;
 
-return
-idx;
+    return idx;
 }
 
 static void aptx_quantize_difference(Quantize *quantize,
                                      int32_t sample_difference,
                                      int32_t dither,
                                      int32_t quantization_factor,
-                                     ConstTables *tables) {
+                                     ConstTables *tables)
+{
     const int32_t *intervals = tables->quantize_intervals;
     int32_t quantized_sample, dithered_sample, parity_change;
     int32_t d, mean, interval, inv, sample_difference_abs;
@@ -122,10 +117,8 @@ static void aptx_quantize_difference(Quantize *quantize,
     mean = (intervals[1] + intervals[0]) / 2;
     interval = (intervals[1] - intervals[0]) * (-(sample_difference < 0) | 1);
 
-    dithered_sample = rshift64_clip24(MUL64(dither, interval) + ((int64_t)
-    av_clip_intp2(mean + d, 23) << 32), 32);
-    error = ((int64_t)
-    sample_difference_abs << 20) -MUL64(dithered_sample, quantization_factor);
+    dithered_sample = rshift64_clip24(MUL64(dither, interval) + ((int64_t)av_clip_intp2(mean + d, 23) << 32), 32);
+    error = ((int64_t)sample_difference_abs << 20) - MUL64(dithered_sample, quantization_factor);
     quantize->error = FFABS(rshift64(error, 23));
 
     parity_change = quantized_sample;
@@ -135,11 +128,12 @@ static void aptx_quantize_difference(Quantize *quantize,
         parity_change--;
 
     inv = -(sample_difference < 0);
-    quantize->quantized_sample = quantized_sample ^ inv;
-    quantize->quantized_sample_parity_change = parity_change ^ inv;
+    quantize->quantized_sample               = quantized_sample ^ inv;
+    quantize->quantized_sample_parity_change = parity_change    ^ inv;
 }
 
-static void aptx_encode_channel(Channel *channel, int32_t samples[4], int hd) {
+static void aptx_encode_channel(Channel *channel, int32_t samples[4], int hd)
+{
     int32_t subband_samples[4];
     int subband;
     aptx_qmf_tree_analysis(&channel->qmf, samples, subband_samples);
@@ -153,13 +147,14 @@ static void aptx_encode_channel(Channel *channel, int32_t samples[4], int hd) {
     }
 }
 
-static void aptx_insert_sync(Channel channels[NB_CHANNELS], int32_t *idx) {
+static void aptx_insert_sync(Channel channels[NB_CHANNELS], int32_t *idx)
+{
     if (aptx_check_parity(channels, idx)) {
         int i;
         Channel *c;
-        static const int map[] = {1, 2, 0, 3};
-        Quantize *min = &channels[NB_CHANNELS - 1].quantize[map[0]];
-        for (c = &channels[NB_CHANNELS - 1]; c >= channels; c--)
+        static const int map[] = { 1, 2, 0, 3 };
+        Quantize *min = &channels[NB_CHANNELS-1].quantize[map[0]];
+        for (c = &channels[NB_CHANNELS-1]; c >= channels; c--)
             for (i = 0; i < NB_SUBBANDS; i++)
                 if (c->quantize[map[i]].error < min->error)
                     min = &c->quantize[map[i]];
@@ -170,25 +165,28 @@ static void aptx_insert_sync(Channel channels[NB_CHANNELS], int32_t *idx) {
     }
 }
 
-static uint16_t aptx_pack_codeword(Channel *channel) {
+static uint16_t aptx_pack_codeword(Channel *channel)
+{
     int32_t parity = aptx_quantized_parity(channel);
     return (((channel->quantize[3].quantized_sample & 0x06) | parity) << 13)
-           | (((channel->quantize[2].quantized_sample & 0x03)) << 11)
-           | (((channel->quantize[1].quantized_sample & 0x0F)) << 7)
-           | (((channel->quantize[0].quantized_sample & 0x7F)) << 0);
+         | (((channel->quantize[2].quantized_sample & 0x03)         ) << 11)
+         | (((channel->quantize[1].quantized_sample & 0x0F)         ) <<  7)
+         | (((channel->quantize[0].quantized_sample & 0x7F)         ) <<  0);
 }
 
-static uint32_t aptxhd_pack_codeword(Channel *channel) {
+static uint32_t aptxhd_pack_codeword(Channel *channel)
+{
     int32_t parity = aptx_quantized_parity(channel);
     return (((channel->quantize[3].quantized_sample & 0x01E) | parity) << 19)
-           | (((channel->quantize[2].quantized_sample & 0x00F)) << 15)
-           | (((channel->quantize[1].quantized_sample & 0x03F)) << 9)
-           | (((channel->quantize[0].quantized_sample & 0x1FF)) << 0);
+         | (((channel->quantize[2].quantized_sample & 0x00F)         ) << 15)
+         | (((channel->quantize[1].quantized_sample & 0x03F)         ) <<  9)
+         | (((channel->quantize[0].quantized_sample & 0x1FF)         ) <<  0);
 }
 
 static void aptx_encode_samples(AptXContext *ctx,
                                 int32_t samples[NB_CHANNELS][4],
-                                uint8_t *output) {
+                                uint8_t *output)
+{
     int channel;
     for (channel = 0; channel < NB_CHANNELS; channel++)
         aptx_encode_channel(&ctx->channels[channel], samples[channel], ctx->hd);
@@ -198,23 +196,24 @@ static void aptx_encode_samples(AptXContext *ctx,
     for (channel = 0; channel < NB_CHANNELS; channel++) {
         ff_aptx_invert_quantize_and_prediction(&ctx->channels[channel], ctx->hd);
         if (ctx->hd)
-            AV_WB24(output + 3 * channel,
+            AV_WB24(output + 3*channel,
                     aptxhd_pack_codeword(&ctx->channels[channel]));
         else
-            AV_WB16(output + 2 * channel,
+            AV_WB16(output + 2*channel,
                     aptx_pack_codeword(&ctx->channels[channel]));
     }
 }
 
 static int aptx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
-                             const AVFrame *frame, int *got_packet_ptr) {
+                             const AVFrame *frame, int *got_packet_ptr)
+{
     AptXContext *s = avctx->priv_data;
     int pos, ipos, channel, sample, output_size, ret;
 
     if ((ret = ff_af_queue_add(&s->afq, frame)) < 0)
         return ret;
 
-    output_size = s->block_size * frame->nb_samples / 4;
+    output_size = s->block_size * frame->nb_samples/4;
     if ((ret = ff_alloc_packet2(avctx, avpkt, output_size, 0)) < 0)
         return ret;
 
@@ -223,8 +222,7 @@ static int aptx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
         for (channel = 0; channel < NB_CHANNELS; channel++)
             for (sample = 0; sample < 4; sample++)
-                samples[channel][sample] = (int32_t)
-        AV_RN32A(&frame->data[channel][4 * (ipos + sample)]) >> 8;
+                samples[channel][sample] = (int32_t)AV_RN32A(&frame->data[channel][4*(ipos+sample)]) >> 8;
 
         aptx_encode_samples(s, samples, avpkt->data + pos);
     }
@@ -234,7 +232,8 @@ static int aptx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
-static av_cold int aptx_close(AVCodecContext *avctx) {
+static av_cold int aptx_close(AVCodecContext *avctx)
+{
     AptXContext *s = avctx->priv_data;
     ff_af_queue_close(&s->afq);
     return 0;

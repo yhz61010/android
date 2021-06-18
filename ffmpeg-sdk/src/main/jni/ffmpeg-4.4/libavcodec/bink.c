@@ -26,7 +26,6 @@
 #include "libavutil/mem_internal.h"
 
 #define BITSTREAM_READER_LE
-
 #include "avcodec.h"
 #include "binkdata.h"
 #include "binkdsp.h"
@@ -60,11 +59,11 @@ enum OldSources {
 };
 
 static const int binkb_bundle_sizes[BINKB_NB_SRC] = {
-        4, 8, 8, 5, 5, 11, 11, 4, 4, 7
+    4, 8, 8, 5, 5, 11, 11, 4, 4, 7
 };
 
 static const int binkb_bundle_signed[BINKB_NB_SRC] = {
-        0, 0, 0, 1, 1, 0, 1, 0, 0, 0
+    0, 0, 0, 1, 1, 0, 1, 0, 0, 0
 };
 
 static int32_t binkb_intra_quant[16][64];
@@ -91,7 +90,7 @@ enum Sources {
  * data needed to decode 4-bit Huffman-coded value
  */
 typedef struct Tree {
-    int vlc_num;  ///< tree number (in bink_trees[])
+    int     vlc_num;  ///< tree number (in bink_trees[])
     uint8_t syms[16]; ///< leaf value to symbol mapping
 } Tree;
 
@@ -102,8 +101,8 @@ typedef struct Tree {
  * data structure used for decoding single Bink data type
  */
 typedef struct Bundle {
-    int len;       ///< length of number of entries to decode (in bits)
-    Tree tree;      ///< Huffman tree-related data
+    int     len;       ///< length of number of entries to decode (in bits)
+    Tree    tree;      ///< Huffman tree-related data
     uint8_t *data;     ///< buffer for decoded symbols
     uint8_t *data_end; ///< buffer end
     uint8_t *cur_dec;  ///< pointer to the not yet decoded part of the buffer
@@ -118,15 +117,15 @@ typedef struct BinkContext {
     BlockDSPContext bdsp;
     op_pixels_func put_pixels_tab;
     BinkDSPContext binkdsp;
-    AVFrame *last;
-    int version;              ///< internal Bink file version
-    int has_alpha;
-    int swap_planes;
-    unsigned frame_num;
+    AVFrame        *last;
+    int            version;              ///< internal Bink file version
+    int            has_alpha;
+    int            swap_planes;
+    unsigned       frame_num;
 
-    Bundle bundle[BINKB_NB_SRC]; ///< bundles for decoding all data types
-    Tree col_high[16];         ///< trees for decoding high nibble in "colours" data type
-    int col_lastval;          ///< value of last decoded high nibble in "colours" data type
+    Bundle         bundle[BINKB_NB_SRC]; ///< bundles for decoding all data types
+    Tree           col_high[16];         ///< trees for decoding high nibble in "colours" data type
+    int            col_lastval;          ///< value of last decoded high nibble in "colours" data type
 } BinkContext;
 
 /**
@@ -152,14 +151,15 @@ enum BlockTypes {
  * @param width plane width
  * @param bw    plane width in 8x8 blocks
  */
-static void init_lengths(BinkContext *c, int width, int bw) {
+static void init_lengths(BinkContext *c, int width, int bw)
+{
     width = FFALIGN(width, 8);
 
     c->bundle[BINK_SRC_BLOCK_TYPES].len = av_log2((width >> 3) + 511) + 1;
 
     c->bundle[BINK_SRC_SUB_BLOCK_TYPES].len = av_log2((width >> 4) + 511) + 1;
 
-    c->bundle[BINK_SRC_COLORS].len = av_log2(bw * 64 + 511) + 1;
+    c->bundle[BINK_SRC_COLORS].len = av_log2(bw*64 + 511) + 1;
 
     c->bundle[BINK_SRC_INTRA_DC].len =
     c->bundle[BINK_SRC_INTER_DC].len =
@@ -168,7 +168,7 @@ static void init_lengths(BinkContext *c, int width, int bw) {
 
     c->bundle[BINK_SRC_PATTERN].len = av_log2((bw << 3) + 511) + 1;
 
-    c->bundle[BINK_SRC_RUN].len = av_log2(bw * 48 + 511) + 1;
+    c->bundle[BINK_SRC_RUN].len = av_log2(bw*48 + 511) + 1;
 }
 
 /**
@@ -176,12 +176,13 @@ static void init_lengths(BinkContext *c, int width, int bw) {
  *
  * @param c decoder context
  */
-static av_cold int init_bundles(BinkContext *c) {
+static av_cold int init_bundles(BinkContext *c)
+{
     int bw, bh, blocks;
     uint8_t *tmp;
     int i;
 
-    bw = (c->avctx->width + 7) >> 3;
+    bw = (c->avctx->width  + 7) >> 3;
     bh = (c->avctx->height + 7) >> 3;
     blocks = bw * bh;
 
@@ -189,8 +190,8 @@ static av_cold int init_bundles(BinkContext *c) {
     if (!tmp)
         return AVERROR(ENOMEM);
     for (i = 0; i < BINKB_NB_SRC; i++) {
-        c->bundle[i].data = tmp;
-        tmp += blocks * 64;
+        c->bundle[i].data     = tmp;
+        tmp                  += blocks * 64;
         c->bundle[i].data_end = tmp;
     }
 
@@ -202,7 +203,8 @@ static av_cold int init_bundles(BinkContext *c) {
  *
  * @param c decoder context
  */
-static av_cold void free_bundles(BinkContext *c) {
+static av_cold void free_bundles(BinkContext *c)
+{
     av_freep(&c->bundle[0].data);
 }
 
@@ -214,7 +216,8 @@ static av_cold void free_bundles(BinkContext *c) {
  * @param src  pointer to the head of the first list (the second lists starts at src+size)
  * @param size input lists size
  */
-static void merge(GetBitContext *gb, uint8_t *dst, uint8_t *src, int size) {
+static void merge(GetBitContext *gb, uint8_t *dst, uint8_t *src, int size)
+{
     uint8_t *src2 = src + size;
     int size2 = size;
 
@@ -240,8 +243,9 @@ static void merge(GetBitContext *gb, uint8_t *dst, uint8_t *src, int size) {
  * @param gb   context for reading bits
  * @param tree pointer for storing tree data
  */
-static int read_tree(GetBitContext *gb, Tree *tree) {
-    uint8_t tmp1[16] = {0}, tmp2[16], *in = tmp1, *out = tmp2;
+static int read_tree(GetBitContext *gb, Tree *tree)
+{
+    uint8_t tmp1[16] = { 0 }, tmp2[16], *in = tmp1, *out = tmp2;
     int i, t, len;
 
     if (get_bits_left(gb) < 4)
@@ -270,7 +274,7 @@ static int read_tree(GetBitContext *gb, Tree *tree) {
             int size = 1 << i;
             for (t = 0; t < 16; t += size << 1)
                 merge(gb, out + t, in + t, size);
-            FFSWAP(uint8_t * , in, out);
+            FFSWAP(uint8_t*, in, out);
         }
         memcpy(tree->syms, in, 16);
     }
@@ -284,7 +288,8 @@ static int read_tree(GetBitContext *gb, Tree *tree) {
  * @param c           decoder context
  * @param bundle_num  number of the bundle to initialize
  */
-static int read_bundle(GetBitContext *gb, BinkContext *c, int bundle_num) {
+static int read_bundle(GetBitContext *gb, BinkContext *c, int bundle_num)
+{
     int i;
 
     if (bundle_num == BINK_SRC_COLORS) {
@@ -322,8 +327,8 @@ static int read_bundle(GetBitContext *gb, BinkContext *c, int bundle_num) {
         return 0; \
     } \
 
-
-static int read_runs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
+static int read_runs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b)
+{
     int t, v;
     const uint8_t *dec_end;
 
@@ -346,7 +351,8 @@ static int read_runs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
     return 0;
 }
 
-static int read_motion_values(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
+static int read_motion_values(AVCodecContext *avctx, GetBitContext *gb, Bundle *b)
+{
     int t, sign, v;
     const uint8_t *dec_end;
 
@@ -379,10 +385,11 @@ static int read_motion_values(AVCodecContext *avctx, GetBitContext *gb, Bundle *
     return 0;
 }
 
-static const uint8_t bink_rlelens[4] = {4, 8, 12, 32};
+static const uint8_t bink_rlelens[4] = { 4, 8, 12, 32 };
 
-static int read_block_types(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
-    BinkContext *const c = avctx->priv_data;
+static int read_block_types(AVCodecContext *avctx, GetBitContext *gb, Bundle *b)
+{
+    BinkContext * const c = avctx->priv_data;
     int t, v;
     int last = 0;
     const uint8_t *dec_end;
@@ -425,7 +432,8 @@ static int read_block_types(AVCodecContext *avctx, GetBitContext *gb, Bundle *b)
     return 0;
 }
 
-static int read_patterns(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
+static int read_patterns(AVCodecContext *avctx, GetBitContext *gb, Bundle *b)
+{
     int t, v;
     const uint8_t *dec_end;
 
@@ -438,7 +446,7 @@ static int read_patterns(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
     while (b->cur_dec < dec_end) {
         if (get_bits_left(gb) < 2)
             return AVERROR_INVALIDDATA;
-        v = GET_HUFF(gb, b->tree);
+        v  = GET_HUFF(gb, b->tree);
         v |= GET_HUFF(gb, b->tree) << 4;
         *b->cur_dec++ = v;
     }
@@ -446,7 +454,8 @@ static int read_patterns(AVCodecContext *avctx, GetBitContext *gb, Bundle *b) {
     return 0;
 }
 
-static int read_colors(GetBitContext *gb, Bundle *b, BinkContext *c) {
+static int read_colors(GetBitContext *gb, Bundle *b, BinkContext *c)
+{
     int t, sign, v;
     const uint8_t *dec_end;
 
@@ -491,10 +500,11 @@ static int read_colors(GetBitContext *gb, Bundle *b, BinkContext *c) {
 #define DC_START_BITS 11
 
 static int read_dcs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b,
-                    int start_bits, int has_sign) {
+                    int start_bits, int has_sign)
+{
     int i, j, len, len2, bsize, sign, v, v2;
-    int16_t *dst = (int16_t *) b->cur_dec;
-    int16_t *dst_end = (int16_t *) b->data_end;
+    int16_t *dst     = (int16_t*)b->cur_dec;
+    int16_t *dst_end = (int16_t*)b->data_end;
 
     CHECK_READ_VAL(gb, b, len);
     if (get_bits_left(gb) < start_bits - has_sign)
@@ -533,7 +543,7 @@ static int read_dcs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b,
         }
     }
 
-    b->cur_dec = (uint8_t *) dst;
+    b->cur_dec = (uint8_t*)dst;
     return 0;
 }
 
@@ -543,31 +553,35 @@ static int read_dcs(AVCodecContext *avctx, GetBitContext *gb, Bundle *b,
  * @param c      decoder context
  * @param bundle bundle number
  */
-static inline int get_value(BinkContext *c, int bundle) {
+static inline int get_value(BinkContext *c, int bundle)
+{
     int ret;
 
     if (bundle < BINK_SRC_X_OFF || bundle == BINK_SRC_RUN)
         return *c->bundle[bundle].cur_ptr++;
     if (bundle == BINK_SRC_X_OFF || bundle == BINK_SRC_Y_OFF)
-        return (int8_t) * c->bundle[bundle].cur_ptr++;
-    ret = *(int16_t *) c->bundle[bundle].cur_ptr;
+        return (int8_t)*c->bundle[bundle].cur_ptr++;
+    ret = *(int16_t*)c->bundle[bundle].cur_ptr;
     c->bundle[bundle].cur_ptr += 2;
     return ret;
 }
 
-static av_cold void binkb_init_bundle(BinkContext *c, int bundle_num) {
+static av_cold void binkb_init_bundle(BinkContext *c, int bundle_num)
+{
     c->bundle[bundle_num].cur_dec =
     c->bundle[bundle_num].cur_ptr = c->bundle[bundle_num].data;
     c->bundle[bundle_num].len = 13;
 }
 
-static av_cold void binkb_init_bundles(BinkContext *c) {
+static av_cold void binkb_init_bundles(BinkContext *c)
+{
     int i;
     for (i = 0; i < BINKB_NB_SRC; i++)
         binkb_init_bundle(c, i);
 }
 
-static int binkb_read_bundle(BinkContext *c, GetBitContext *gb, int bundle_num) {
+static int binkb_read_bundle(BinkContext *c, GetBitContext *gb, int bundle_num)
+{
     const int bits = binkb_bundle_sizes[bundle_num];
     const int mask = 1 << (bits - 1);
     const int issigned = binkb_bundle_signed[bundle_num];
@@ -586,7 +600,7 @@ static int binkb_read_bundle(BinkContext *c, GetBitContext *gb, int bundle_num) 
                 *b->cur_dec++ = get_bits(gb, bits) - mask;
         }
     } else {
-        int16_t *dst = (int16_t *) b->cur_dec;
+        int16_t *dst = (int16_t*)b->cur_dec;
 
         if (!issigned) {
             for (i = 0; i < len; i++)
@@ -595,20 +609,21 @@ static int binkb_read_bundle(BinkContext *c, GetBitContext *gb, int bundle_num) 
             for (i = 0; i < len; i++)
                 *dst++ = get_bits(gb, bits) - mask;
         }
-        b->cur_dec = (uint8_t *) dst;
+        b->cur_dec = (uint8_t*)dst;
     }
     return 0;
 }
 
-static inline int binkb_get_value(BinkContext *c, int bundle_num) {
+static inline int binkb_get_value(BinkContext *c, int bundle_num)
+{
     int16_t ret;
     const int bits = binkb_bundle_sizes[bundle_num];
 
     if (bits <= 8) {
         int val = *c->bundle[bundle_num].cur_ptr++;
-        return binkb_bundle_signed[bundle_num] ? (int8_t) val : val;
+        return binkb_bundle_signed[bundle_num] ? (int8_t)val : val;
     }
-    ret = *(int16_t *) c->bundle[bundle_num].cur_ptr;
+    ret = *(int16_t*)c->bundle[bundle_num].cur_ptr;
     c->bundle[bundle_num].cur_ptr += 2;
     return ret;
 }
@@ -624,7 +639,8 @@ static inline int binkb_get_value(BinkContext *c, int bundle_num) {
  */
 static int read_dct_coeffs(BinkContext *c, GetBitContext *gb, int32_t block[64],
                            const uint8_t *scan, int *coef_count_,
-                           int coef_idx[64], int q) {
+                           int coef_idx[64], int q)
+{
     int coef_list[128];
     int mode_list[128];
     int i, t, bits, ccoef, mode, sign;
@@ -635,18 +651,12 @@ static int read_dct_coeffs(BinkContext *c, GetBitContext *gb, int32_t block[64],
     if (get_bits_left(gb) < 4)
         return AVERROR_INVALIDDATA;
 
-    coef_list[list_end] = 4;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 24;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 44;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 1;
-    mode_list[list_end++] = 3;
-    coef_list[list_end] = 2;
-    mode_list[list_end++] = 3;
-    coef_list[list_end] = 3;
-    mode_list[list_end++] = 3;
+    coef_list[list_end] = 4;  mode_list[list_end++] = 0;
+    coef_list[list_end] = 24; mode_list[list_end++] = 0;
+    coef_list[list_end] = 44; mode_list[list_end++] = 0;
+    coef_list[list_end] = 1;  mode_list[list_end++] = 3;
+    coef_list[list_end] = 2;  mode_list[list_end++] = 3;
+    coef_list[list_end] = 3;  mode_list[list_end++] = 3;
 
     for (bits = get_bits(gb, 4) - 1; bits >= 0; bits--) {
         list_pos = list_start;
@@ -656,54 +666,54 @@ static int read_dct_coeffs(BinkContext *c, GetBitContext *gb, int32_t block[64],
                 continue;
             }
             ccoef = coef_list[list_pos];
-            mode = mode_list[list_pos];
+            mode  = mode_list[list_pos];
             switch (mode) {
-                case 0:
-                    coef_list[list_pos] = ccoef + 4;
-                    mode_list[list_pos] = 1;
-                case 2:
-                    if (mode == 2) {
-                        coef_list[list_pos] = 0;
-                        mode_list[list_pos++] = 0;
-                    }
-                    for (i = 0; i < 4; i++, ccoef++) {
-                        if (get_bits1(gb)) {
-                            coef_list[--list_start] = ccoef;
-                            mode_list[list_start] = 3;
-                        } else {
-                            if (!bits) {
-                                t = 1 - (get_bits1(gb) << 1);
-                            } else {
-                                t = get_bits(gb, bits) | 1 << bits;
-                                sign = -get_bits1(gb);
-                                t = (t ^ sign) - sign;
-                            }
-                            block[scan[ccoef]] = t;
-                            coef_idx[coef_count++] = ccoef;
-                        }
-                    }
-                    break;
-                case 1:
-                    mode_list[list_pos] = 2;
-                    for (i = 0; i < 3; i++) {
-                        ccoef += 4;
-                        coef_list[list_end] = ccoef;
-                        mode_list[list_end++] = 2;
-                    }
-                    break;
-                case 3:
-                    if (!bits) {
-                        t = 1 - (get_bits1(gb) << 1);
-                    } else {
-                        t = get_bits(gb, bits) | 1 << bits;
-                        sign = -get_bits1(gb);
-                        t = (t ^ sign) - sign;
-                    }
-                    block[scan[ccoef]] = t;
-                    coef_idx[coef_count++] = ccoef;
-                    coef_list[list_pos] = 0;
+            case 0:
+                coef_list[list_pos] = ccoef + 4;
+                mode_list[list_pos] = 1;
+            case 2:
+                if (mode == 2) {
+                    coef_list[list_pos]   = 0;
                     mode_list[list_pos++] = 0;
-                    break;
+                }
+                for (i = 0; i < 4; i++, ccoef++) {
+                    if (get_bits1(gb)) {
+                        coef_list[--list_start] = ccoef;
+                        mode_list[  list_start] = 3;
+                    } else {
+                        if (!bits) {
+                            t = 1 - (get_bits1(gb) << 1);
+                        } else {
+                            t = get_bits(gb, bits) | 1 << bits;
+                            sign = -get_bits1(gb);
+                            t = (t ^ sign) - sign;
+                        }
+                        block[scan[ccoef]] = t;
+                        coef_idx[coef_count++] = ccoef;
+                    }
+                }
+                break;
+            case 1:
+                mode_list[list_pos] = 2;
+                for (i = 0; i < 3; i++) {
+                    ccoef += 4;
+                    coef_list[list_end]   = ccoef;
+                    mode_list[list_end++] = 2;
+                }
+                break;
+            case 3:
+                if (!bits) {
+                    t = 1 - (get_bits1(gb) << 1);
+                } else {
+                    t = get_bits(gb, bits) | 1 << bits;
+                    sign = -get_bits1(gb);
+                    t = (t ^ sign) - sign;
+                }
+                block[scan[ccoef]] = t;
+                coef_idx[coef_count++] = ccoef;
+                coef_list[list_pos]   = 0;
+                mode_list[list_pos++] = 0;
+                break;
             }
         }
     }
@@ -725,12 +735,13 @@ static int read_dct_coeffs(BinkContext *c, GetBitContext *gb, int32_t block[64],
 
 static void unquantize_dct_coeffs(int32_t block[64], const uint32_t quant[64],
                                   int coef_count, int coef_idx[64],
-                                  const uint8_t *scan) {
+                                  const uint8_t *scan)
+{
     int i;
-    block[0] = (int) (block[0] * quant[0]) >> 11;
+    block[0] = (int)(block[0] * quant[0]) >> 11;
     for (i = 0; i < coef_count; i++) {
         int idx = coef_idx[i];
-        block[scan[idx]] = (int) (block[scan[idx]] * quant[idx]) >> 11;
+        block[scan[idx]] = (int)(block[scan[idx]] * quant[idx]) >> 11;
     }
 }
 
@@ -742,7 +753,8 @@ static void unquantize_dct_coeffs(int32_t block[64], const uint32_t quant[64],
  * @param masks_count number of masks to decode
  * @return 0 on success, negative value in other cases
  */
-static int read_residue(GetBitContext *gb, int16_t block[64], int masks_count) {
+static int read_residue(GetBitContext *gb, int16_t block[64], int masks_count)
+{
     int coef_list[128];
     int mode_list[128];
     int i, sign, mask, ccoef, mode;
@@ -750,14 +762,10 @@ static int read_residue(GetBitContext *gb, int16_t block[64], int masks_count) {
     int nz_coeff[64];
     int nz_coeff_count = 0;
 
-    coef_list[list_end] = 4;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 24;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 44;
-    mode_list[list_end++] = 0;
-    coef_list[list_end] = 0;
-    mode_list[list_end++] = 2;
+    coef_list[list_end] =  4; mode_list[list_end++] = 0;
+    coef_list[list_end] = 24; mode_list[list_end++] = 0;
+    coef_list[list_end] = 44; mode_list[list_end++] = 0;
+    coef_list[list_end] =  0; mode_list[list_end++] = 2;
 
     for (mask = 1 << get_bits(gb, 3); mask; mask >>= 1) {
         for (i = 0; i < nz_coeff_count; i++) {
@@ -778,48 +786,48 @@ static int read_residue(GetBitContext *gb, int16_t block[64], int masks_count) {
                 continue;
             }
             ccoef = coef_list[list_pos];
-            mode = mode_list[list_pos];
+            mode  = mode_list[list_pos];
             switch (mode) {
-                case 0:
-                    coef_list[list_pos] = ccoef + 4;
-                    mode_list[list_pos] = 1;
-                case 2:
-                    if (mode == 2) {
-                        coef_list[list_pos] = 0;
-                        mode_list[list_pos++] = 0;
-                    }
-                    for (i = 0; i < 4; i++, ccoef++) {
-                        if (get_bits1(gb)) {
-                            coef_list[--list_start] = ccoef;
-                            mode_list[list_start] = 3;
-                        } else {
-                            nz_coeff[nz_coeff_count++] = bink_scan[ccoef];
-                            sign = -get_bits1(gb);
-                            block[bink_scan[ccoef]] = (mask ^ sign) - sign;
-                            masks_count--;
-                            if (masks_count < 0)
-                                return 0;
-                        }
-                    }
-                    break;
-                case 1:
-                    mode_list[list_pos] = 2;
-                    for (i = 0; i < 3; i++) {
-                        ccoef += 4;
-                        coef_list[list_end] = ccoef;
-                        mode_list[list_end++] = 2;
-                    }
-                    break;
-                case 3:
-                    nz_coeff[nz_coeff_count++] = bink_scan[ccoef];
-                    sign = -get_bits1(gb);
-                    block[bink_scan[ccoef]] = (mask ^ sign) - sign;
-                    coef_list[list_pos] = 0;
+            case 0:
+                coef_list[list_pos] = ccoef + 4;
+                mode_list[list_pos] = 1;
+            case 2:
+                if (mode == 2) {
+                    coef_list[list_pos]   = 0;
                     mode_list[list_pos++] = 0;
-                    masks_count--;
-                    if (masks_count < 0)
-                        return 0;
-                    break;
+                }
+                for (i = 0; i < 4; i++, ccoef++) {
+                    if (get_bits1(gb)) {
+                        coef_list[--list_start] = ccoef;
+                        mode_list[  list_start] = 3;
+                    } else {
+                        nz_coeff[nz_coeff_count++] = bink_scan[ccoef];
+                        sign = -get_bits1(gb);
+                        block[bink_scan[ccoef]] = (mask ^ sign) - sign;
+                        masks_count--;
+                        if (masks_count < 0)
+                            return 0;
+                    }
+                }
+                break;
+            case 1:
+                mode_list[list_pos] = 2;
+                for (i = 0; i < 3; i++) {
+                    ccoef += 4;
+                    coef_list[list_end]   = ccoef;
+                    mode_list[list_end++] = 2;
+                }
+                break;
+            case 3:
+                nz_coeff[nz_coeff_count++] = bink_scan[ccoef];
+                sign = -get_bits1(gb);
+                block[bink_scan[ccoef]] = (mask ^ sign) - sign;
+                coef_list[list_pos]   = 0;
+                mode_list[list_pos++] = 0;
+                masks_count--;
+                if (masks_count < 0)
+                    return 0;
+                break;
             }
         }
     }
@@ -830,36 +838,38 @@ static int read_residue(GetBitContext *gb, int16_t block[64], int masks_count) {
 /**
  * Copy 8x8 block from source to destination, where src and dst may be overlapped
  */
-static inline void put_pixels8x8_overlapped(uint8_t *dst, uint8_t *src, int stride) {
+static inline void put_pixels8x8_overlapped(uint8_t *dst, uint8_t *src, int stride)
+{
     uint8_t tmp[64];
     int i;
     for (i = 0; i < 8; i++)
-        memcpy(tmp + i * 8, src + i * stride, 8);
+        memcpy(tmp + i*8, src + i*stride, 8);
     for (i = 0; i < 8; i++)
-        memcpy(dst + i * stride, tmp + i * 8, 8);
+        memcpy(dst + i*stride, tmp + i*8, 8);
 }
 
 static int binkb_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
-                              int plane_idx, int is_key, int is_chroma) {
+                              int plane_idx, int is_key, int is_chroma)
+{
     int blk, ret;
     int i, j, bx, by;
     uint8_t *dst, *ref, *ref_start, *ref_end;
     int v, col[2];
     const uint8_t *scan;
     int xoff, yoff;
-    LOCAL_ALIGNED_32(int16_t, block,[64]);
-    LOCAL_ALIGNED_16(int32_t, dctblock,[64]);
+    LOCAL_ALIGNED_32(int16_t, block, [64]);
+    LOCAL_ALIGNED_16(int32_t, dctblock, [64]);
     int coordmap[64];
     int ybias = is_key ? -15 : 0;
     int qp, quant_idx, coef_count, coef_idx[64];
 
     const int stride = frame->linesize[plane_idx];
-    int bw = is_chroma ? (c->avctx->width + 15) >> 4 : (c->avctx->width + 7) >> 3;
+    int bw = is_chroma ? (c->avctx->width  + 15) >> 4 : (c->avctx->width  + 7) >> 3;
     int bh = is_chroma ? (c->avctx->height + 15) >> 4 : (c->avctx->height + 7) >> 3;
 
     binkb_init_bundles(c);
     ref_start = frame->data[plane_idx];
-    ref_end = frame->data[plane_idx] + (bh * frame->linesize[plane_idx] + bw) * 8;
+    ref_end   = frame->data[plane_idx] + (bh * frame->linesize[plane_idx] + bw) * 8;
 
     for (i = 0; i < 64; i++)
         coordmap[i] = (i & 7) + (i >> 3) * stride;
@@ -870,115 +880,115 @@ static int binkb_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
                 return ret;
         }
 
-        dst = frame->data[plane_idx] + 8 * by * stride;
+        dst  = frame->data[plane_idx]  + 8*by*stride;
         for (bx = 0; bx < bw; bx++, dst += 8) {
             blk = binkb_get_value(c, BINKB_SRC_BLOCK_TYPES);
             switch (blk) {
-                case 0:
-                    break;
-                case 1:
-                    scan = bink_patterns[get_bits(gb, 4)];
-                    i = 0;
-                    do {
-                        int mode, run;
+            case 0:
+                break;
+            case 1:
+                scan = bink_patterns[get_bits(gb, 4)];
+                i = 0;
+                do {
+                    int mode, run;
 
-                        mode = get_bits1(gb);
-                        run = get_bits(gb, binkb_runbits[i]) + 1;
+                    mode = get_bits1(gb);
+                    run = get_bits(gb, binkb_runbits[i]) + 1;
 
-                        i += run;
-                        if (i > 64) {
-                            av_log(c->avctx, AV_LOG_ERROR, "Run went out of bounds\n");
-                            return AVERROR_INVALIDDATA;
-                        }
-                        if (mode) {
-                            v = binkb_get_value(c, BINKB_SRC_COLORS);
-                            for (j = 0; j < run; j++)
-                                dst[coordmap[*scan++]] = v;
-                        } else {
-                            for (j = 0; j < run; j++)
-                                dst[coordmap[*scan++]] = binkb_get_value(c, BINKB_SRC_COLORS);
-                        }
-                    } while (i < 63);
-                    if (i == 63)
-                        dst[coordmap[*scan++]] = binkb_get_value(c, BINKB_SRC_COLORS);
-                    break;
-                case 2:
-                    memset(dctblock, 0, sizeof(*dctblock) * 64);
-                    dctblock[0] = binkb_get_value(c, BINKB_SRC_INTRA_DC);
-                    qp = binkb_get_value(c, BINKB_SRC_INTRA_Q);
-                    if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, qp)) < 0)
-                        return quant_idx;
-                    unquantize_dct_coeffs(dctblock, binkb_intra_quant[quant_idx], coef_count, coef_idx, bink_scan);
-                    c->binkdsp.idct_put(dst, stride, dctblock);
-                    break;
-                case 3:
-                    xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
-                    yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
-                    ref = dst + xoff + yoff * stride;
-                    if (ref < ref_start || ref + 8 * stride > ref_end) {
-                        av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
-                    } else if (ref + 8 * stride < dst || ref >= dst + 8 * stride) {
-                        c->put_pixels_tab(dst, ref, stride, 8);
+                    i += run;
+                    if (i > 64) {
+                        av_log(c->avctx, AV_LOG_ERROR, "Run went out of bounds\n");
+                        return AVERROR_INVALIDDATA;
+                    }
+                    if (mode) {
+                        v = binkb_get_value(c, BINKB_SRC_COLORS);
+                        for (j = 0; j < run; j++)
+                            dst[coordmap[*scan++]] = v;
                     } else {
-                        put_pixels8x8_overlapped(dst, ref, stride);
+                        for (j = 0; j < run; j++)
+                            dst[coordmap[*scan++]] = binkb_get_value(c, BINKB_SRC_COLORS);
                     }
-                    c->bdsp.clear_block(block);
-                    v = binkb_get_value(c, BINKB_SRC_INTER_COEFS);
-                    read_residue(gb, block, v);
-                    c->binkdsp.add_pixels8(dst, block, stride);
-                    break;
-                case 4:
-                    xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
-                    yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
-                    ref = dst + xoff + yoff * stride;
-                    if (ref < ref_start || ref + 8 * stride > ref_end) {
-                        av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
-                    } else if (ref + 8 * stride < dst || ref >= dst + 8 * stride) {
-                        c->put_pixels_tab(dst, ref, stride, 8);
-                    } else {
-                        put_pixels8x8_overlapped(dst, ref, stride);
-                    }
-                    memset(dctblock, 0, sizeof(*dctblock) * 64);
-                    dctblock[0] = binkb_get_value(c, BINKB_SRC_INTER_DC);
-                    qp = binkb_get_value(c, BINKB_SRC_INTER_Q);
-                    if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, qp)) < 0)
-                        return quant_idx;
-                    unquantize_dct_coeffs(dctblock, binkb_inter_quant[quant_idx], coef_count, coef_idx, bink_scan);
-                    c->binkdsp.idct_add(dst, stride, dctblock);
-                    break;
-                case 5:
-                    v = binkb_get_value(c, BINKB_SRC_COLORS);
-                    c->bdsp.fill_block_tab[1](dst, v, stride, 8);
-                    break;
-                case 6:
-                    for (i = 0; i < 2; i++)
-                        col[i] = binkb_get_value(c, BINKB_SRC_COLORS);
-                    for (i = 0; i < 8; i++) {
-                        v = binkb_get_value(c, BINKB_SRC_PATTERN);
-                        for (j = 0; j < 8; j++, v >>= 1)
-                            dst[i * stride + j] = col[v & 1];
-                    }
-                    break;
-                case 7:
-                    xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
-                    yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
-                    ref = dst + xoff + yoff * stride;
-                    if (ref < ref_start || ref + 8 * stride > ref_end) {
-                        av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
-                    } else if (ref + 8 * stride < dst || ref >= dst + 8 * stride) {
-                        c->put_pixels_tab(dst, ref, stride, 8);
-                    } else {
-                        put_pixels8x8_overlapped(dst, ref, stride);
-                    }
-                    break;
-                case 8:
-                    for (i = 0; i < 8; i++)
-                        memcpy(dst + i * stride, c->bundle[BINKB_SRC_COLORS].cur_ptr + i * 8, 8);
-                    c->bundle[BINKB_SRC_COLORS].cur_ptr += 64;
-                    break;
-                default:
-                    av_log(c->avctx, AV_LOG_ERROR, "Unknown block type %d\n", blk);
-                    return AVERROR_INVALIDDATA;
+                } while (i < 63);
+                if (i == 63)
+                    dst[coordmap[*scan++]] = binkb_get_value(c, BINKB_SRC_COLORS);
+                break;
+            case 2:
+                memset(dctblock, 0, sizeof(*dctblock) * 64);
+                dctblock[0] = binkb_get_value(c, BINKB_SRC_INTRA_DC);
+                qp = binkb_get_value(c, BINKB_SRC_INTRA_Q);
+                if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, qp)) < 0)
+                    return quant_idx;
+                unquantize_dct_coeffs(dctblock, binkb_intra_quant[quant_idx], coef_count, coef_idx, bink_scan);
+                c->binkdsp.idct_put(dst, stride, dctblock);
+                break;
+            case 3:
+                xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
+                yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
+                ref = dst + xoff + yoff * stride;
+                if (ref < ref_start || ref + 8*stride > ref_end) {
+                    av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
+                } else if (ref + 8*stride < dst || ref >= dst + 8*stride) {
+                    c->put_pixels_tab(dst, ref, stride, 8);
+                } else {
+                    put_pixels8x8_overlapped(dst, ref, stride);
+                }
+                c->bdsp.clear_block(block);
+                v = binkb_get_value(c, BINKB_SRC_INTER_COEFS);
+                read_residue(gb, block, v);
+                c->binkdsp.add_pixels8(dst, block, stride);
+                break;
+            case 4:
+                xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
+                yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
+                ref = dst + xoff + yoff * stride;
+                if (ref < ref_start || ref + 8 * stride > ref_end) {
+                    av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
+                } else if (ref + 8*stride < dst || ref >= dst + 8*stride) {
+                    c->put_pixels_tab(dst, ref, stride, 8);
+                } else {
+                    put_pixels8x8_overlapped(dst, ref, stride);
+                }
+                memset(dctblock, 0, sizeof(*dctblock) * 64);
+                dctblock[0] = binkb_get_value(c, BINKB_SRC_INTER_DC);
+                qp = binkb_get_value(c, BINKB_SRC_INTER_Q);
+                if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, qp)) < 0)
+                    return quant_idx;
+                unquantize_dct_coeffs(dctblock, binkb_inter_quant[quant_idx], coef_count, coef_idx, bink_scan);
+                c->binkdsp.idct_add(dst, stride, dctblock);
+                break;
+            case 5:
+                v = binkb_get_value(c, BINKB_SRC_COLORS);
+                c->bdsp.fill_block_tab[1](dst, v, stride, 8);
+                break;
+            case 6:
+                for (i = 0; i < 2; i++)
+                    col[i] = binkb_get_value(c, BINKB_SRC_COLORS);
+                for (i = 0; i < 8; i++) {
+                    v = binkb_get_value(c, BINKB_SRC_PATTERN);
+                    for (j = 0; j < 8; j++, v >>= 1)
+                        dst[i*stride + j] = col[v & 1];
+                }
+                break;
+            case 7:
+                xoff = binkb_get_value(c, BINKB_SRC_X_OFF);
+                yoff = binkb_get_value(c, BINKB_SRC_Y_OFF) + ybias;
+                ref = dst + xoff + yoff * stride;
+                if (ref < ref_start || ref + 8 * stride > ref_end) {
+                    av_log(c->avctx, AV_LOG_WARNING, "Reference block is out of bounds\n");
+                } else if (ref + 8*stride < dst || ref >= dst + 8*stride) {
+                    c->put_pixels_tab(dst, ref, stride, 8);
+                } else {
+                    put_pixels8x8_overlapped(dst, ref, stride);
+                }
+                break;
+            case 8:
+                for (i = 0; i < 8; i++)
+                    memcpy(dst + i*stride, c->bundle[BINKB_SRC_COLORS].cur_ptr + i*8, 8);
+                c->bundle[BINKB_SRC_COLORS].cur_ptr += 64;
+                break;
+            default:
+                av_log(c->avctx, AV_LOG_ERROR, "Unknown block type %d\n", blk);
+                return AVERROR_INVALIDDATA;
             }
         }
     }
@@ -991,9 +1001,10 @@ static int binkb_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
 static int bink_put_pixels(BinkContext *c,
                            uint8_t *dst, uint8_t *prev, int stride,
                            uint8_t *ref_start,
-                           uint8_t *ref_end) {
-    int xoff = get_value(c, BINK_SRC_X_OFF);
-    int yoff = get_value(c, BINK_SRC_Y_OFF);
+                           uint8_t *ref_end)
+{
+    int xoff     = get_value(c, BINK_SRC_X_OFF);
+    int yoff     = get_value(c, BINK_SRC_Y_OFF);
     uint8_t *ref = prev + xoff + yoff * stride;
     if (ref < ref_start || ref > ref_end) {
         av_log(c->avctx, AV_LOG_ERROR, "Copy out of bounds @%d, %d\n",
@@ -1006,19 +1017,20 @@ static int bink_put_pixels(BinkContext *c,
 }
 
 static int bink_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
-                             int plane_idx, int is_chroma) {
+                             int plane_idx, int is_chroma)
+{
     int blk, ret;
     int i, j, bx, by;
     uint8_t *dst, *prev, *ref_start, *ref_end;
     int v, col[2];
     const uint8_t *scan;
-    LOCAL_ALIGNED_32(int16_t, block,[64]);
-    LOCAL_ALIGNED_16(uint8_t, ublock,[64]);
-    LOCAL_ALIGNED_16(int32_t, dctblock,[64]);
+    LOCAL_ALIGNED_32(int16_t, block, [64]);
+    LOCAL_ALIGNED_16(uint8_t, ublock, [64]);
+    LOCAL_ALIGNED_16(int32_t, dctblock, [64]);
     int coordmap[64], quant_idx, coef_count, coef_idx[64];
 
     const int stride = frame->linesize[plane_idx];
-    int bw = is_chroma ? (c->avctx->width + 15) >> 4 : (c->avctx->width + 7) >> 3;
+    int bw = is_chroma ? (c->avctx->width  + 15) >> 4 : (c->avctx->width  + 7) >> 3;
     int bh = is_chroma ? (c->avctx->height + 15) >> 4 : (c->avctx->height + 7) >> 3;
     int width = c->avctx->width >> is_chroma;
     int height = c->avctx->height >> is_chroma;
@@ -1042,8 +1054,8 @@ static int bink_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
 
     ref_start = c->last->data[plane_idx] ? c->last->data[plane_idx]
                                          : frame->data[plane_idx];
-    ref_end = ref_start
-              + (bw - 1 + c->last->linesize[plane_idx] * (bh - 1)) * 8;
+    ref_end   = ref_start
+                + (bw - 1 + c->last->linesize[plane_idx] * (bh - 1)) * 8;
 
     for (i = 0; i < 64; i++)
         coordmap[i] = (i & 7) + (i >> 3) * stride;
@@ -1068,93 +1080,28 @@ static int bink_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
         if ((ret = read_runs(c->avctx, gb, &c->bundle[BINK_SRC_RUN])) < 0)
             return ret;
 
-        dst = frame->data[plane_idx] + 8 * by * stride;
+        dst  = frame->data[plane_idx]  + 8*by*stride;
         prev = (c->last->data[plane_idx] ? c->last->data[plane_idx]
-                                         : frame->data[plane_idx]) + 8 * by * stride;
+                                         : frame->data[plane_idx]) + 8*by*stride;
         for (bx = 0; bx < bw; bx++, dst += 8, prev += 8) {
             blk = get_value(c, BINK_SRC_BLOCK_TYPES);
             // 16x16 block type on odd line means part of the already decoded block, so skip it
             if ((by & 1) && blk == SCALED_BLOCK) {
                 bx++;
-                dst += 8;
+                dst  += 8;
                 prev += 8;
                 continue;
             }
             switch (blk) {
-                case SKIP_BLOCK:
-                    c->put_pixels_tab(dst, prev, stride, 8);
-                    break;
-                case SCALED_BLOCK:
-                    blk = get_value(c, BINK_SRC_SUB_BLOCK_TYPES);
-                    switch (blk) {
-                        case RUN_BLOCK:
-                            if (get_bits_left(gb) < 4)
-                                return AVERROR_INVALIDDATA;
-                            scan = bink_patterns[get_bits(gb, 4)];
-                            i = 0;
-                            do {
-                                int run = get_value(c, BINK_SRC_RUN) + 1;
-
-                                i += run;
-                                if (i > 64) {
-                                    av_log(c->avctx, AV_LOG_ERROR, "Run went out of bounds\n");
-                                    return AVERROR_INVALIDDATA;
-                                }
-                                if (get_bits1(gb)) {
-                                    v = get_value(c, BINK_SRC_COLORS);
-                                    for (j = 0; j < run; j++)
-                                        ublock[*scan++] = v;
-                                } else {
-                                    for (j = 0; j < run; j++)
-                                        ublock[*scan++] = get_value(c, BINK_SRC_COLORS);
-                                }
-                            } while (i < 63);
-                            if (i == 63)
-                                ublock[*scan++] = get_value(c, BINK_SRC_COLORS);
-                            break;
-                        case INTRA_BLOCK:
-                            memset(dctblock, 0, sizeof(*dctblock) * 64);
-                            dctblock[0] = get_value(c, BINK_SRC_INTRA_DC);
-                            if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, -1)) < 0)
-                                return quant_idx;
-                            unquantize_dct_coeffs(dctblock, bink_intra_quant[quant_idx], coef_count, coef_idx, bink_scan);
-                            c->binkdsp.idct_put(ublock, 8, dctblock);
-                            break;
-                        case FILL_BLOCK:
-                            v = get_value(c, BINK_SRC_COLORS);
-                            c->bdsp.fill_block_tab[0](dst, v, stride, 16);
-                            break;
-                        case PATTERN_BLOCK:
-                            for (i = 0; i < 2; i++)
-                                col[i] = get_value(c, BINK_SRC_COLORS);
-                            for (j = 0; j < 8; j++) {
-                                v = get_value(c, BINK_SRC_PATTERN);
-                                for (i = 0; i < 8; i++, v >>= 1)
-                                    ublock[i + j * 8] = col[v & 1];
-                            }
-                            break;
-                        case RAW_BLOCK:
-                            for (j = 0; j < 8; j++)
-                                for (i = 0; i < 8; i++)
-                                    ublock[i + j * 8] = get_value(c, BINK_SRC_COLORS);
-                            break;
-                        default:
-                            av_log(c->avctx, AV_LOG_ERROR, "Incorrect 16x16 block type %d\n", blk);
-                            return AVERROR_INVALIDDATA;
-                    }
-                    if (blk != FILL_BLOCK)
-                        c->binkdsp.scale_block(ublock, dst, stride);
-                    bx++;
-                    dst += 8;
-                    prev += 8;
-                    break;
-                case MOTION_BLOCK:
-                    ret = bink_put_pixels(c, dst, prev, stride,
-                                          ref_start, ref_end);
-                    if (ret < 0)
-                        return ret;
-                    break;
+            case SKIP_BLOCK:
+                c->put_pixels_tab(dst, prev, stride, 8);
+                break;
+            case SCALED_BLOCK:
+                blk = get_value(c, BINK_SRC_SUB_BLOCK_TYPES);
+                switch (blk) {
                 case RUN_BLOCK:
+                    if (get_bits_left(gb) < 4)
+                        return AVERROR_INVALIDDATA;
                     scan = bink_patterns[get_bits(gb, 4)];
                     i = 0;
                     do {
@@ -1168,24 +1115,14 @@ static int bink_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
                         if (get_bits1(gb)) {
                             v = get_value(c, BINK_SRC_COLORS);
                             for (j = 0; j < run; j++)
-                                dst[coordmap[*scan++]] = v;
+                                ublock[*scan++] = v;
                         } else {
                             for (j = 0; j < run; j++)
-                                dst[coordmap[*scan++]] = get_value(c, BINK_SRC_COLORS);
+                                ublock[*scan++] = get_value(c, BINK_SRC_COLORS);
                         }
                     } while (i < 63);
                     if (i == 63)
-                        dst[coordmap[*scan++]] = get_value(c, BINK_SRC_COLORS);
-                    break;
-                case RESIDUE_BLOCK:
-                    ret = bink_put_pixels(c, dst, prev, stride,
-                                          ref_start, ref_end);
-                    if (ret < 0)
-                        return ret;
-                    c->bdsp.clear_block(block);
-                    v = get_bits(gb, 7);
-                    read_residue(gb, block, v);
-                    c->binkdsp.add_pixels8(dst, block, stride);
+                        ublock[*scan++] = get_value(c, BINK_SRC_COLORS);
                     break;
                 case INTRA_BLOCK:
                     memset(dctblock, 0, sizeof(*dctblock) * 64);
@@ -1193,54 +1130,130 @@ static int bink_decode_plane(BinkContext *c, AVFrame *frame, GetBitContext *gb,
                     if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, -1)) < 0)
                         return quant_idx;
                     unquantize_dct_coeffs(dctblock, bink_intra_quant[quant_idx], coef_count, coef_idx, bink_scan);
-                    c->binkdsp.idct_put(dst, stride, dctblock);
+                    c->binkdsp.idct_put(ublock, 8, dctblock);
                     break;
                 case FILL_BLOCK:
                     v = get_value(c, BINK_SRC_COLORS);
-                    c->bdsp.fill_block_tab[1](dst, v, stride, 8);
-                    break;
-                case INTER_BLOCK:
-                    ret = bink_put_pixels(c, dst, prev, stride,
-                                          ref_start, ref_end);
-                    if (ret < 0)
-                        return ret;
-                    memset(dctblock, 0, sizeof(*dctblock) * 64);
-                    dctblock[0] = get_value(c, BINK_SRC_INTER_DC);
-                    if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, -1)) < 0)
-                        return quant_idx;
-                    unquantize_dct_coeffs(dctblock, bink_inter_quant[quant_idx], coef_count, coef_idx, bink_scan);
-                    c->binkdsp.idct_add(dst, stride, dctblock);
+                    c->bdsp.fill_block_tab[0](dst, v, stride, 16);
                     break;
                 case PATTERN_BLOCK:
                     for (i = 0; i < 2; i++)
                         col[i] = get_value(c, BINK_SRC_COLORS);
-                    for (i = 0; i < 8; i++) {
+                    for (j = 0; j < 8; j++) {
                         v = get_value(c, BINK_SRC_PATTERN);
-                        for (j = 0; j < 8; j++, v >>= 1)
-                            dst[i * stride + j] = col[v & 1];
+                        for (i = 0; i < 8; i++, v >>= 1)
+                            ublock[i + j*8] = col[v & 1];
                     }
                     break;
                 case RAW_BLOCK:
-                    for (i = 0; i < 8; i++)
-                        memcpy(dst + i * stride, c->bundle[BINK_SRC_COLORS].cur_ptr + i * 8, 8);
-                    c->bundle[BINK_SRC_COLORS].cur_ptr += 64;
+                    for (j = 0; j < 8; j++)
+                        for (i = 0; i < 8; i++)
+                            ublock[i + j*8] = get_value(c, BINK_SRC_COLORS);
                     break;
                 default:
-                    av_log(c->avctx, AV_LOG_ERROR, "Unknown block type %d\n", blk);
+                    av_log(c->avctx, AV_LOG_ERROR, "Incorrect 16x16 block type %d\n", blk);
                     return AVERROR_INVALIDDATA;
+                }
+                if (blk != FILL_BLOCK)
+                c->binkdsp.scale_block(ublock, dst, stride);
+                bx++;
+                dst  += 8;
+                prev += 8;
+                break;
+            case MOTION_BLOCK:
+                ret = bink_put_pixels(c, dst, prev, stride,
+                                      ref_start, ref_end);
+                if (ret < 0)
+                    return ret;
+                break;
+            case RUN_BLOCK:
+                scan = bink_patterns[get_bits(gb, 4)];
+                i = 0;
+                do {
+                    int run = get_value(c, BINK_SRC_RUN) + 1;
+
+                    i += run;
+                    if (i > 64) {
+                        av_log(c->avctx, AV_LOG_ERROR, "Run went out of bounds\n");
+                        return AVERROR_INVALIDDATA;
+                    }
+                    if (get_bits1(gb)) {
+                        v = get_value(c, BINK_SRC_COLORS);
+                        for (j = 0; j < run; j++)
+                            dst[coordmap[*scan++]] = v;
+                    } else {
+                        for (j = 0; j < run; j++)
+                            dst[coordmap[*scan++]] = get_value(c, BINK_SRC_COLORS);
+                    }
+                } while (i < 63);
+                if (i == 63)
+                    dst[coordmap[*scan++]] = get_value(c, BINK_SRC_COLORS);
+                break;
+            case RESIDUE_BLOCK:
+                ret = bink_put_pixels(c, dst, prev, stride,
+                                      ref_start, ref_end);
+                if (ret < 0)
+                    return ret;
+                c->bdsp.clear_block(block);
+                v = get_bits(gb, 7);
+                read_residue(gb, block, v);
+                c->binkdsp.add_pixels8(dst, block, stride);
+                break;
+            case INTRA_BLOCK:
+                memset(dctblock, 0, sizeof(*dctblock) * 64);
+                dctblock[0] = get_value(c, BINK_SRC_INTRA_DC);
+                if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, -1)) < 0)
+                    return quant_idx;
+                unquantize_dct_coeffs(dctblock, bink_intra_quant[quant_idx], coef_count, coef_idx, bink_scan);
+                c->binkdsp.idct_put(dst, stride, dctblock);
+                break;
+            case FILL_BLOCK:
+                v = get_value(c, BINK_SRC_COLORS);
+                c->bdsp.fill_block_tab[1](dst, v, stride, 8);
+                break;
+            case INTER_BLOCK:
+                ret = bink_put_pixels(c, dst, prev, stride,
+                                      ref_start, ref_end);
+                if (ret < 0)
+                    return ret;
+                memset(dctblock, 0, sizeof(*dctblock) * 64);
+                dctblock[0] = get_value(c, BINK_SRC_INTER_DC);
+                if ((quant_idx = read_dct_coeffs(c, gb, dctblock, bink_scan, &coef_count, coef_idx, -1)) < 0)
+                    return quant_idx;
+                unquantize_dct_coeffs(dctblock, bink_inter_quant[quant_idx], coef_count, coef_idx, bink_scan);
+                c->binkdsp.idct_add(dst, stride, dctblock);
+                break;
+            case PATTERN_BLOCK:
+                for (i = 0; i < 2; i++)
+                    col[i] = get_value(c, BINK_SRC_COLORS);
+                for (i = 0; i < 8; i++) {
+                    v = get_value(c, BINK_SRC_PATTERN);
+                    for (j = 0; j < 8; j++, v >>= 1)
+                        dst[i*stride + j] = col[v & 1];
+                }
+                break;
+            case RAW_BLOCK:
+                for (i = 0; i < 8; i++)
+                    memcpy(dst + i*stride, c->bundle[BINK_SRC_COLORS].cur_ptr + i*8, 8);
+                c->bundle[BINK_SRC_COLORS].cur_ptr += 64;
+                break;
+            default:
+                av_log(c->avctx, AV_LOG_ERROR, "Unknown block type %d\n", blk);
+                return AVERROR_INVALIDDATA;
             }
         }
     }
 
-    end:
+end:
     if (get_bits_count(gb) & 0x1F) //next plane data starts at 32-bit boundary
         skip_bits_long(gb, 32 - (get_bits_count(gb) & 0x1F));
 
     return 0;
 }
 
-static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPacket *pkt) {
-    BinkContext *const c = avctx->priv_data;
+static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPacket *pkt)
+{
+    BinkContext * const c = avctx->priv_data;
     AVFrame *frame = data;
     GetBitContext gb;
     int plane, plane_idx, ret;
@@ -1299,17 +1312,18 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPac
 /**
  * Calculate quantization tables for version b
  */
-static av_cold void binkb_calc_quant(void) {
+static av_cold void binkb_calc_quant(void)
+{
     uint8_t inv_bink_scan[64];
-    static const int s[64] = {
-            1073741824, 1489322693, 1402911301, 1262586814, 1073741824, 843633538, 581104888, 296244703,
-            1489322693, 2065749918, 1945893874, 1751258219, 1489322693, 1170153332, 806015634, 410903207,
-            1402911301, 1945893874, 1832991949, 1649649171, 1402911301, 1102260336, 759250125, 387062357,
-            1262586814, 1751258219, 1649649171, 1484645031, 1262586814, 992008094, 683307060, 348346918,
-            1073741824, 1489322693, 1402911301, 1262586814, 1073741824, 843633538, 581104888, 296244703,
-            843633538, 1170153332, 1102260336, 992008094, 843633538, 662838617, 456571181, 232757969,
-            581104888, 806015634, 759250125, 683307060, 581104888, 456571181, 314491699, 160326478,
-            296244703, 410903207, 387062357, 348346918, 296244703, 232757969, 160326478, 81733730,
+    static const int s[64]={
+        1073741824,1489322693,1402911301,1262586814,1073741824, 843633538, 581104888, 296244703,
+        1489322693,2065749918,1945893874,1751258219,1489322693,1170153332, 806015634, 410903207,
+        1402911301,1945893874,1832991949,1649649171,1402911301,1102260336, 759250125, 387062357,
+        1262586814,1751258219,1649649171,1484645031,1262586814, 992008094, 683307060, 348346918,
+        1073741824,1489322693,1402911301,1262586814,1073741824, 843633538, 581104888, 296244703,
+         843633538,1170153332,1102260336, 992008094, 843633538, 662838617, 456571181, 232757969,
+         581104888, 806015634, 759250125, 683307060, 581104888, 456571181, 314491699, 160326478,
+         296244703, 410903207, 387062357, 348346918, 296244703, 232757969, 160326478,  81733730,
     };
     int i, j;
 #define C (1LL<<30)
@@ -1319,18 +1333,17 @@ static av_cold void binkb_calc_quant(void) {
     for (j = 0; j < 16; j++) {
         for (i = 0; i < 64; i++) {
             int k = inv_bink_scan[i];
-            binkb_intra_quant[j][k] = binkb_intra_seed[i] * (int64_t)
-            s[i] *
-            binkb_num[j] / (binkb_den[j] * (C >> 12));
-            binkb_inter_quant[j][k] = binkb_inter_seed[i] * (int64_t)
-            s[i] *
-            binkb_num[j] / (binkb_den[j] * (C >> 12));
+            binkb_intra_quant[j][k] = binkb_intra_seed[i] * (int64_t)s[i] *
+                                        binkb_num[j]/(binkb_den[j] * (C>>12));
+            binkb_inter_quant[j][k] = binkb_inter_seed[i] * (int64_t)s[i] *
+                                        binkb_num[j]/(binkb_den[j] * (C>>12));
         }
     }
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
-    BinkContext *const c = avctx->priv_data;
+static av_cold int decode_init(AVCodecContext *avctx)
+{
+    BinkContext * const c = avctx->priv_data;
     static VLC_TYPE table[16 * 128][2];
     static int binkb_initialised = 0;
     HpelDSPContext hdsp;
@@ -1348,7 +1361,7 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     if (!bink_trees[15].table) {
         for (i = 0; i < 16; i++) {
             const int maxbits = bink_tree_lens[i][15];
-            bink_trees[i].table = table + i * 128;
+            bink_trees[i].table = table + i*128;
             bink_trees[i].table_allocated = 1 << maxbits;
             init_vlc(&bink_trees[i], maxbits, 16,
                      bink_tree_lens[i], 1, 1,
@@ -1385,8 +1398,9 @@ static av_cold int decode_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static av_cold int decode_end(AVCodecContext *avctx) {
-    BinkContext *const c = avctx->priv_data;
+static av_cold int decode_end(AVCodecContext *avctx)
+{
+    BinkContext * const c = avctx->priv_data;
 
     av_frame_free(&c->last);
 
@@ -1394,22 +1408,23 @@ static av_cold int decode_end(AVCodecContext *avctx) {
     return 0;
 }
 
-static void flush(AVCodecContext *avctx) {
-    BinkContext *const c = avctx->priv_data;
+static void flush(AVCodecContext *avctx)
+{
+    BinkContext * const c = avctx->priv_data;
 
     c->frame_num = 0;
 }
 
 AVCodec ff_bink_decoder = {
-        .name           = "binkvideo",
-        .long_name      = NULL_IF_CONFIG_SMALL("Bink video"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_BINKVIDEO,
-        .priv_data_size = sizeof(BinkContext),
-        .init           = decode_init,
-        .close          = decode_end,
-        .decode         = decode_frame,
-        .flush          = flush,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
+    .name           = "binkvideo",
+    .long_name      = NULL_IF_CONFIG_SMALL("Bink video"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_BINKVIDEO,
+    .priv_data_size = sizeof(BinkContext),
+    .init           = decode_init,
+    .close          = decode_end,
+    .decode         = decode_frame,
+    .flush          = flush,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

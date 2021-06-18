@@ -26,11 +26,11 @@
 
 void ff_mpadsp_apply_window_fixed_neon(int32_t *synth_buf, int32_t *window,
                                        int *dither, int16_t *samples, ptrdiff_t incr);
-
 void ff_mpadsp_apply_window_float_neon(float *synth_buf, float *window,
                                        int *dither, float *samples, ptrdiff_t incr);
 
-av_cold void ff_mpadsp_init_aarch64(MPADSPContext *s) {
+av_cold void ff_mpadsp_init_aarch64(MPADSPContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags)) {

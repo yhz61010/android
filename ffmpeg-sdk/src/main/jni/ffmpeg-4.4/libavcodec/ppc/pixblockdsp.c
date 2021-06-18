@@ -264,7 +264,8 @@ static void diff_pixels_vsx(int16_t *restrict block, const uint8_t *s1,
 
 av_cold void ff_pixblockdsp_init_ppc(PixblockDSPContext *c,
                                      AVCodecContext *avctx,
-                                     unsigned high_bit_depth) {
+                                     unsigned high_bit_depth)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

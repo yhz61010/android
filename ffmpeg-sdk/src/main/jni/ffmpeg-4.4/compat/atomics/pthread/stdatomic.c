@@ -28,10 +28,12 @@
 
 static pthread_mutex_t atomic_lock = PTHREAD_MUTEX_INITIALIZER;
 
-void avpriv_atomic_lock(void) {
+void avpriv_atomic_lock(void)
+{
     pthread_mutex_lock(&atomic_lock);
 }
 
-void avpriv_atomic_unlock(void) {
+void avpriv_atomic_unlock(void)
+{
     pthread_mutex_unlock(&atomic_lock);
 }

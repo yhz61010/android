@@ -61,101 +61,100 @@
 #define MV_STRIDE                        4
 
 enum cavs_mb {
-    I_8X8 = 0,
-    P_SKIP,
-    P_16X16,
-    P_16X8,
-    P_8X16,
-    P_8X8,
-    B_SKIP,
-    B_DIRECT,
-    B_FWD_16X16,
-    B_BWD_16X16,
-    B_SYM_16X16,
-    B_8X8 = 29
+  I_8X8 = 0,
+  P_SKIP,
+  P_16X16,
+  P_16X8,
+  P_8X16,
+  P_8X8,
+  B_SKIP,
+  B_DIRECT,
+  B_FWD_16X16,
+  B_BWD_16X16,
+  B_SYM_16X16,
+  B_8X8 = 29
 };
 
 enum cavs_sub_mb {
-    B_SUB_DIRECT,
-    B_SUB_FWD,
-    B_SUB_BWD,
-    B_SUB_SYM
+  B_SUB_DIRECT,
+  B_SUB_FWD,
+  B_SUB_BWD,
+  B_SUB_SYM
 };
 
 enum cavs_intra_luma {
-    INTRA_L_VERT,
-    INTRA_L_HORIZ,
-    INTRA_L_LP,
-    INTRA_L_DOWN_LEFT,
-    INTRA_L_DOWN_RIGHT,
-    INTRA_L_LP_LEFT,
-    INTRA_L_LP_TOP,
-    INTRA_L_DC_128
+  INTRA_L_VERT,
+  INTRA_L_HORIZ,
+  INTRA_L_LP,
+  INTRA_L_DOWN_LEFT,
+  INTRA_L_DOWN_RIGHT,
+  INTRA_L_LP_LEFT,
+  INTRA_L_LP_TOP,
+  INTRA_L_DC_128
 };
 
 enum cavs_intra_chroma {
-    INTRA_C_LP,
-    INTRA_C_HORIZ,
-    INTRA_C_VERT,
-    INTRA_C_PLANE,
-    INTRA_C_LP_LEFT,
-    INTRA_C_LP_TOP,
-    INTRA_C_DC_128,
+  INTRA_C_LP,
+  INTRA_C_HORIZ,
+  INTRA_C_VERT,
+  INTRA_C_PLANE,
+  INTRA_C_LP_LEFT,
+  INTRA_C_LP_TOP,
+  INTRA_C_DC_128,
 };
 
 enum cavs_mv_pred {
-    MV_PRED_MEDIAN,
-    MV_PRED_LEFT,
-    MV_PRED_TOP,
-    MV_PRED_TOPRIGHT,
-    MV_PRED_PSKIP,
-    MV_PRED_BSKIP
+  MV_PRED_MEDIAN,
+  MV_PRED_LEFT,
+  MV_PRED_TOP,
+  MV_PRED_TOPRIGHT,
+  MV_PRED_PSKIP,
+  MV_PRED_BSKIP
 };
 
 enum cavs_block {
-    BLK_16X16,
-    BLK_16X8,
-    BLK_8X16,
-    BLK_8X8
+  BLK_16X16,
+  BLK_16X8,
+  BLK_8X16,
+  BLK_8X8
 };
 
 enum cavs_mv_loc {
-    MV_FWD_D3 = 0,
-    MV_FWD_B2,
-    MV_FWD_B3,
-    MV_FWD_C2,
-    MV_FWD_A1,
-    MV_FWD_X0,
-    MV_FWD_X1,
-    MV_FWD_A3 = 8,
-    MV_FWD_X2,
-    MV_FWD_X3,
-    MV_BWD_D3 = MV_BWD_OFFS,
-    MV_BWD_B2,
-    MV_BWD_B3,
-    MV_BWD_C2,
-    MV_BWD_A1,
-    MV_BWD_X0,
-    MV_BWD_X1,
-    MV_BWD_A3 = MV_BWD_OFFS + 8,
-    MV_BWD_X2,
-    MV_BWD_X3
+  MV_FWD_D3 = 0,
+  MV_FWD_B2,
+  MV_FWD_B3,
+  MV_FWD_C2,
+  MV_FWD_A1,
+  MV_FWD_X0,
+  MV_FWD_X1,
+  MV_FWD_A3 = 8,
+  MV_FWD_X2,
+  MV_FWD_X3,
+  MV_BWD_D3 = MV_BWD_OFFS,
+  MV_BWD_B2,
+  MV_BWD_B3,
+  MV_BWD_C2,
+  MV_BWD_A1,
+  MV_BWD_X0,
+  MV_BWD_X1,
+  MV_BWD_A3 = MV_BWD_OFFS+8,
+  MV_BWD_X2,
+  MV_BWD_X3
 };
 
 DECLARE_ALIGNED(8, typedef, struct) {
-int16_t x;
-int16_t y;
-int16_t dist;
-int16_t ref;
-}
-cavs_vector;
+    int16_t x;
+    int16_t y;
+    int16_t dist;
+    int16_t ref;
+} cavs_vector;
 
 struct dec_2dvlc {
-    int8_t rltab[59][3];
-    int8_t level_add[27];
-    int8_t golomb_order;
-    int inc_limit;
-    int8_t max_run;
+  int8_t rltab[59][3];
+  int8_t level_add[27];
+  int8_t golomb_order;
+  int inc_limit;
+  int8_t max_run;
 };
 
 typedef struct AVSFrame {
@@ -169,7 +168,7 @@ typedef struct AVSContext {
     H264ChromaContext h264chroma;
     IDCTDSPContext idsp;
     VideoDSPContext vdsp;
-    CAVSDSPContext cdsp;
+    CAVSDSPContext  cdsp;
     GetBitContext gb;
     AVSFrame cur;     ///< currently decoded frame
     AVSFrame DPB[2];  ///< reference frames
@@ -205,7 +204,7 @@ typedef struct AVSContext {
        D is the macroblock to the top-left (0)
 
        the same is repeated for backward motion vectors */
-    cavs_vector mv[2 * 4 * 3];
+    cavs_vector mv[2*4*3];
     cavs_vector *top_mv[2];
     cavs_vector *col_mv;
 
@@ -213,7 +212,7 @@ typedef struct AVSContext {
        0:    --  B2  B3
        3:    A1  X0  X1
        6:    A3  X2  X3   */
-    int pred_mode_Y[3 * 3];
+    int pred_mode_Y[3*3];
     int *top_pred_Y;
     ptrdiff_t l_stride, c_stride;
     int luma_scan[4];
@@ -231,9 +230,7 @@ typedef struct AVSContext {
     uint8_t topleft_border_y, topleft_border_u, topleft_border_v;
 
     void (*intra_pred_l[8])(uint8_t *d, uint8_t *top, uint8_t *left, ptrdiff_t stride);
-
     void (*intra_pred_c[7])(uint8_t *d, uint8_t *top, uint8_t *left, ptrdiff_t stride);
-
     uint8_t *col_type_base;
 
     /* scaling factors for MV prediction */
@@ -247,51 +244,38 @@ typedef struct AVSContext {
     int16_t *block;
 } AVSContext;
 
-extern const uint8_t ff_cavs_chroma_qp[64];
-extern const uint8_t ff_cavs_partition_flags[30];
+extern const uint8_t     ff_cavs_chroma_qp[64];
+extern const uint8_t     ff_cavs_partition_flags[30];
 extern const cavs_vector ff_cavs_intra_mv;
 extern const cavs_vector ff_cavs_dir_mv;
 
-static inline void set_mvs(cavs_vector * mv,
-enum cavs_block size
-) {
-switch(size) {
-case BLK_16X16:
-mv[MV_STRIDE  ] = mv[0];
-mv[MV_STRIDE+1] = mv[0];
-case BLK_16X8:
-mv[1] = mv[0];
-break;
-case BLK_8X16:
-mv[MV_STRIDE] = mv[0];
-break;
-}
+static inline void set_mvs(cavs_vector *mv, enum cavs_block size) {
+    switch(size) {
+    case BLK_16X16:
+        mv[MV_STRIDE  ] = mv[0];
+        mv[MV_STRIDE+1] = mv[0];
+    case BLK_16X8:
+        mv[1] = mv[0];
+        break;
+    case BLK_8X16:
+        mv[MV_STRIDE] = mv[0];
+        break;
+    }
 }
 
 void ff_cavs_filter(AVSContext *h, enum cavs_mb mb_type);
-
 void ff_cavs_load_intra_pred_luma(AVSContext *h, uint8_t *top, uint8_t **left,
                                   int block);
-
 void ff_cavs_load_intra_pred_chroma(AVSContext *h);
-
 void ff_cavs_modify_mb_i(AVSContext *h, int *pred_mode_uv);
-
 void ff_cavs_inter(AVSContext *h, enum cavs_mb mb_type);
-
 void ff_cavs_mv(AVSContext *h, enum cavs_mv_loc nP, enum cavs_mv_loc nC,
                 enum cavs_mv_pred mode, enum cavs_block size, int ref);
-
 void ff_cavs_init_mb(AVSContext *h);
-
-int ff_cavs_next_mb(AVSContext *h);
-
+int  ff_cavs_next_mb(AVSContext *h);
 int ff_cavs_init_pic(AVSContext *h);
-
 int ff_cavs_init_top_lines(AVSContext *h);
-
 int ff_cavs_init(AVCodecContext *avctx);
-
-int ff_cavs_end(AVCodecContext *avctx);
+int ff_cavs_end (AVCodecContext *avctx);
 
 #endif /* AVCODEC_CAVS_H */

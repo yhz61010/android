@@ -21,10 +21,8 @@
  */
 
 #include <stdlib.h>
-
 #define BUILD_TABLES
 #define CONFIG_HARDCODED_TABLES 0
-
 #include "aac_defines.h"
 
 #if USE_FIXED
@@ -38,14 +36,12 @@ typedef int32_t INT32FLOAT;
 typedef float INT32FLOAT;
 #define ARRAY_RENAME(x) write_float_ ## x
 #define ARRAY_URENAME(x) write_float_ ## x
-
 #include "aacps_tablegen.h"
-
 #endif /* USE_FIXED */
-
 #include "tableprint.h"
 
-void ARRAY_RENAME(3d_array)(const void *p, int b, int c, int d) {
+void ARRAY_RENAME(3d_array) (const void *p, int b, int c, int d)
+{
     int i;
     const INT32FLOAT *f = p;
     for (i = 0; i < b; i++) {
@@ -56,7 +52,8 @@ void ARRAY_RENAME(3d_array)(const void *p, int b, int c, int d) {
     }
 }
 
-void ARRAY_RENAME(4d_array)(const void *p, int a, int b, int c, int d) {
+void ARRAY_RENAME(4d_array) (const void *p, int a, int b, int c, int d)
+{
     int i;
     const INT32FLOAT *f = p;
     for (i = 0; i < a; i++) {
@@ -67,16 +64,17 @@ void ARRAY_RENAME(4d_array)(const void *p, int a, int b, int c, int d) {
     }
 }
 
-int main(void) {
+int main(void)
+{
     ps_tableinit();
 
     write_fileheader();
 
     printf("static const %s pd_re_smooth[8*8*8] = {\n", TYPE_NAME);
-    ARRAY_RENAME(array)(pd_re_smooth, 8 * 8 * 8);
+    ARRAY_RENAME(array)(pd_re_smooth, 8*8*8);
     printf("};\n");
     printf("static const %s pd_im_smooth[8*8*8] = {\n", TYPE_NAME);
-    ARRAY_RENAME(array)(pd_im_smooth, 8 * 8 * 8);
+    ARRAY_RENAME(array)(pd_im_smooth, 8*8*8);
     printf("};\n");
 
     printf("static const %s HA[46][8][4] = {\n", TYPE_NAME);

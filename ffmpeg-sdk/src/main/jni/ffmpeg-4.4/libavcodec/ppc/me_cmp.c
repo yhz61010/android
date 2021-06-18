@@ -723,7 +723,8 @@ static int hadamard8_diff16_altivec(MpegEncContext *s, uint8_t *dst,
 }
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_me_cmp_init_ppc(MECmpContext *c, AVCodecContext *avctx) {
+av_cold void ff_me_cmp_init_ppc(MECmpContext *c, AVCodecContext *avctx)
+{
 #if HAVE_ALTIVEC
     if (!PPC_ALTIVEC(av_get_cpu_flags()))
         return;

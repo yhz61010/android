@@ -25,15 +25,16 @@
 #include "get_bits.h"
 #include "parser.h"
 
-static int avs3_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size) {
-    int pic_found = pc->frame_start_found;
+static int avs3_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size)
+{
+    int pic_found  = pc->frame_start_found;
     uint32_t state = pc->state;
     int cur = 0;
 
     if (!pic_found) {
         for (; cur < buf_size; ++cur) {
             state = (state << 8) | buf[cur];
-            if (AVS3_ISPIC(buf[cur])) {
+            if (AVS3_ISPIC(buf[cur])){
                 cur++;
                 pic_found = 1;
                 break;
@@ -61,7 +62,8 @@ static int avs3_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_siz
 }
 
 static void parse_avs3_nal_units(AVCodecParserContext *s, const uint8_t *buf,
-                                 int buf_size, AVCodecContext *avctx) {
+                           int buf_size, AVCodecContext *avctx)
+{
     if (buf_size < 5) {
         return;
     }
@@ -117,7 +119,7 @@ static void parse_avs3_nal_units(AVCodecParserContext *s, const uint8_t *buf,
             avctx->framerate.num = avctx->time_base.den = ff_avs3_frame_rate_tab[ratecode].num;
             avctx->framerate.den = avctx->time_base.num = ff_avs3_frame_rate_tab[ratecode].den;
 
-            s->width = s->coded_width = avctx->width;
+            s->width  = s->coded_width = avctx->width;
             s->height = s->coded_height = avctx->height;
 
             av_log(avctx, AV_LOG_DEBUG,
@@ -127,7 +129,7 @@ static void parse_avs3_nal_units(AVCodecParserContext *s, const uint8_t *buf,
         } else if (buf[3] == AVS3_INTRA_PIC_START_CODE) {
             s->key_frame = 1;
             s->pict_type = AV_PICTURE_TYPE_I;
-        } else if (buf[3] == AVS3_INTER_PIC_START_CODE) {
+        } else if (buf[3] == AVS3_INTER_PIC_START_CODE){
             s->key_frame = 0;
             if (buf_size > 9) {
                 int pic_code_type = buf[8] & 0x3;
@@ -144,11 +146,12 @@ static void parse_avs3_nal_units(AVCodecParserContext *s, const uint8_t *buf,
 
 static int avs3_parse(AVCodecParserContext *s, AVCodecContext *avctx,
                       const uint8_t **poutbuf, int *poutbuf_size,
-                      const uint8_t *buf, int buf_size) {
+                      const uint8_t *buf, int buf_size)
+{
     ParseContext *pc = s->priv_data;
     int next;
 
-    if (s->flags & PARSER_FLAG_COMPLETE_FRAMES) {
+    if (s->flags & PARSER_FLAG_COMPLETE_FRAMES)  {
         next = buf_size;
     } else {
         next = avs3_find_frame_end(pc, buf, buf_size);
@@ -168,9 +171,9 @@ static int avs3_parse(AVCodecParserContext *s, AVCodecContext *avctx,
 }
 
 AVCodecParser ff_avs3_parser = {
-        .codec_ids      = {AV_CODEC_ID_AVS3},
-        .priv_data_size = sizeof(ParseContext),
-        .parser_parse   = avs3_parse,
-        .parser_close   = ff_parse_close,
-        .split          = ff_mpeg4video_split,
+    .codec_ids      = { AV_CODEC_ID_AVS3 },
+    .priv_data_size = sizeof(ParseContext),
+    .parser_parse   = avs3_parse,
+    .parser_close   = ff_parse_close,
+    .split          = ff_mpeg4video_split,
 };

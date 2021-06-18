@@ -33,18 +33,18 @@ typedef struct SEIRawFillerPayload {
 } SEIRawFillerPayload;
 
 typedef struct SEIRawUserDataRegistered {
-    uint8_t itu_t_t35_country_code;
-    uint8_t itu_t_t35_country_code_extension_byte;
-    uint8_t *data;
+    uint8_t      itu_t_t35_country_code;
+    uint8_t      itu_t_t35_country_code_extension_byte;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_length;
+    size_t       data_length;
 } SEIRawUserDataRegistered;
 
 typedef struct SEIRawUserDataUnregistered {
-    uint8_t uuid_iso_iec_11578[16];
-    uint8_t *data;
+    uint8_t      uuid_iso_iec_11578[16];
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_length;
+    size_t       data_length;
 } SEIRawUserDataUnregistered;
 
 typedef struct SEIRawMasteringDisplayColourVolume {
@@ -66,19 +66,19 @@ typedef struct SEIRawAlternativeTransferCharacteristics {
 } SEIRawAlternativeTransferCharacteristics;
 
 typedef struct SEIRawMessage {
-    uint32_t payload_type;
-    uint32_t payload_size;
-    void *payload;
+    uint32_t     payload_type;
+    uint32_t     payload_size;
+    void        *payload;
     AVBufferRef *payload_ref;
-    uint8_t *extension_data;
+    uint8_t     *extension_data;
     AVBufferRef *extension_data_ref;
-    size_t extension_bit_length;
+    size_t       extension_bit_length;
 } SEIRawMessage;
 
 typedef struct SEIRawMessageList {
     SEIRawMessage *messages;
-    int nb_messages;
-    int nb_messages_allocated;
+    int         nb_messages;
+    int         nb_messages_allocated;
 } SEIRawMessageList;
 
 
@@ -94,7 +94,7 @@ typedef struct SEIMessageState {
     // all extended fields must be written.  May be updated by the writer
     // to indicate that extended fields have been written, so the extension
     // end bits must be written too.
-    uint8_t extension_present;
+    uint8_t  extension_present;
 } SEIMessageState;
 
 struct GetBitContext;
@@ -112,15 +112,15 @@ typedef int (*SEIMessageWriteFunction)(CodedBitstreamContext *ctx,
 
 typedef struct SEIMessageTypeDescriptor {
     // Payload type for the message.  (-1 in this field ends a list.)
-    int type;
+    int     type;
     // Valid in a prefix SEI NAL unit (always for H.264).
     uint8_t prefix;
     // Valid in a suffix SEI NAL unit (never for H.264).
     uint8_t suffix;
     // Size of the decomposed structure.
-    size_t size;
+    size_t  size;
     // Read bitstream into SEI message.
-    SEIMessageReadFunction read;
+    SEIMessageReadFunction  read;
     // Write bitstream from SEI message.
     SEIMessageWriteFunction write;
 } SEIMessageTypeDescriptor;
@@ -174,8 +174,8 @@ void ff_cbs_sei_free_message_list(SEIRawMessageList *list);
 int ff_cbs_sei_add_message(CodedBitstreamContext *ctx,
                            CodedBitstreamFragment *au,
                            int prefix,
-                           uint32_t payload_type,
-                           void *payload_data,
+                           uint32_t     payload_type,
+                           void        *payload_data,
                            AVBufferRef *payload_buf);
 
 /**

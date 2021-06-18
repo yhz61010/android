@@ -42,41 +42,29 @@
 
 #include "libavformat/options_table.h"
 
-static void print_usage(void) {
+static void print_usage(void)
+{
     fprintf(stderr, "Usage: enum_options type\n"
-                    "type: format codec\n");
+            "type: format codec\n");
     exit(1);
 }
 
-static void print_option(const AVOption *opts, const AVOption *o, int per_stream) {
+static void print_option(const AVOption *opts, const AVOption *o, int per_stream)
+{
     if (!(o->flags & (AV_OPT_FLAG_DECODING_PARAM | AV_OPT_FLAG_ENCODING_PARAM)))
         return;
 
     printf("@item -%s%s @var{", o->name, per_stream ? "[:stream_specifier]" : "");
     switch (o->type) {
-        case AV_OPT_TYPE_BINARY:
-            printf("hexadecimal string");
-            break;
-        case AV_OPT_TYPE_STRING:
-            printf("string");
-            break;
-        case AV_OPT_TYPE_INT:
-        case AV_OPT_TYPE_INT64:
-            printf("integer");
-            break;
-        case AV_OPT_TYPE_FLOAT:
-        case AV_OPT_TYPE_DOUBLE:
-            printf("float");
-            break;
-        case AV_OPT_TYPE_RATIONAL:
-            printf("rational number");
-            break;
-        case AV_OPT_TYPE_FLAGS:
-            printf("flags");
-            break;
-        default:
-            printf("value");
-            break;
+    case AV_OPT_TYPE_BINARY:   printf("hexadecimal string"); break;
+    case AV_OPT_TYPE_STRING:   printf("string");             break;
+    case AV_OPT_TYPE_INT:
+    case AV_OPT_TYPE_INT64:    printf("integer");            break;
+    case AV_OPT_TYPE_FLOAT:
+    case AV_OPT_TYPE_DOUBLE:   printf("float");              break;
+    case AV_OPT_TYPE_RATIONAL: printf("rational number");    break;
+    case AV_OPT_TYPE_FLAGS:    printf("flags");              break;
+    default:                   printf("value");              break;
     }
     printf("} (@emph{");
 
@@ -86,8 +74,8 @@ static void print_option(const AVOption *opts, const AVOption *o, int per_stream
             printf("/");
     }
     if (o->flags & AV_OPT_FLAG_ENCODING_PARAM) printf("output");
-    if (o->flags & AV_OPT_FLAG_AUDIO_PARAM) printf(",audio");
-    if (o->flags & AV_OPT_FLAG_VIDEO_PARAM) printf(",video");
+    if (o->flags & AV_OPT_FLAG_AUDIO_PARAM)    printf(",audio");
+    if (o->flags & AV_OPT_FLAG_VIDEO_PARAM)    printf(",video");
     if (o->flags & AV_OPT_FLAG_SUBTITLE_PARAM) printf(",subtitles");
 
     printf("})\n");
@@ -106,7 +94,8 @@ static void print_option(const AVOption *opts, const AVOption *o, int per_stream
     }
 }
 
-static void show_opts(const AVOption *opts, int per_stream) {
+static void show_opts(const AVOption *opts, int per_stream)
+{
     const AVOption *o;
 
     printf("@table @option\n");
@@ -117,17 +106,20 @@ static void show_opts(const AVOption *opts, int per_stream) {
     printf("@end table\n");
 }
 
-static void show_format_opts(void) {
+static void show_format_opts(void)
+{
     printf("@section Format AVOptions\n");
     show_opts(avformat_options, 0);
 }
 
-static void show_codec_opts(void) {
+static void show_codec_opts(void)
+{
     printf("@section Codec AVOptions\n");
     show_opts(avcodec_options, 1);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     if (argc < 2)
         print_usage();
 

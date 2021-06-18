@@ -150,7 +150,8 @@ static void gmc_mmx(uint8_t *dst, uint8_t *src,
 
 #endif /* HAVE_INLINE_ASM */
 
-av_cold void ff_mpegvideodsp_init_x86(MpegVideoDSPContext *c) {
+av_cold void ff_mpegvideodsp_init_x86(MpegVideoDSPContext *c)
+{
 #if HAVE_INLINE_ASM
     int cpu_flags = av_get_cpu_flags();
 

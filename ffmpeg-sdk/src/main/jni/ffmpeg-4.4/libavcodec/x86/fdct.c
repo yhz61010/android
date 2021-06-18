@@ -293,44 +293,44 @@ TABLE_SSE2
 static av_always_inline void fdct_col_##cpu(const int16_t *in, int16_t *out, int offset)\
 {\
     __asm__ volatile (\
-#mov"      16(%0),  %%"#mm"0 \n\t" \
-#mov"      96(%0),  %%"#mm"1 \n\t" \
-#mov"    %%"#mm"0,  %%"#mm"2 \n\t" \
-#mov"      32(%0),  %%"#mm"3 \n\t" \
+        #mov"      16(%0),  %%"#mm"0 \n\t" \
+        #mov"      96(%0),  %%"#mm"1 \n\t" \
+        #mov"    %%"#mm"0,  %%"#mm"2 \n\t" \
+        #mov"      32(%0),  %%"#mm"3 \n\t" \
         "paddsw  %%"#mm"1,  %%"#mm"0 \n\t" \
-#mov"      80(%0),  %%"#mm"4 \n\t" \
+        #mov"      80(%0),  %%"#mm"4 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"0 \n\t" \
-#mov"        (%0),  %%"#mm"5 \n\t" \
+        #mov"        (%0),  %%"#mm"5 \n\t" \
         "paddsw  %%"#mm"3,  %%"#mm"4 \n\t" \
         "paddsw   112(%0),  %%"#mm"5 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"4 \n\t" \
-#mov"    %%"#mm"0,  %%"#mm"6 \n\t" \
+        #mov"    %%"#mm"0,  %%"#mm"6 \n\t" \
         "psubsw  %%"#mm"1,  %%"#mm"2 \n\t" \
-#mov"      16(%1),  %%"#mm"1 \n\t" \
+        #mov"      16(%1),  %%"#mm"1 \n\t" \
         "psubsw  %%"#mm"4,  %%"#mm"0 \n\t" \
-#mov"      48(%0),  %%"#mm"7 \n\t" \
+        #mov"      48(%0),  %%"#mm"7 \n\t" \
         "pmulhw  %%"#mm"0,  %%"#mm"1 \n\t" \
         "paddsw    64(%0),  %%"#mm"7 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"5 \n\t" \
         "paddsw  %%"#mm"4,  %%"#mm"6 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"7 \n\t" \
-#mov"    %%"#mm"5,  %%"#mm"4 \n\t" \
+        #mov"    %%"#mm"5,  %%"#mm"4 \n\t" \
         "psubsw  %%"#mm"7,  %%"#mm"5 \n\t" \
         "paddsw  %%"#mm"5,  %%"#mm"1 \n\t" \
         "paddsw  %%"#mm"7,  %%"#mm"4 \n\t" \
         "por         (%2),  %%"#mm"1 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)"+1, %%"#mm"2 \n\t" \
         "pmulhw    16(%1),  %%"#mm"5 \n\t" \
-#mov"    %%"#mm"4,  %%"#mm"7 \n\t" \
+        #mov"    %%"#mm"4,  %%"#mm"7 \n\t" \
         "psubsw    80(%0),  %%"#mm"3 \n\t" \
         "psubsw  %%"#mm"6,  %%"#mm"4 \n\t" \
-#mov"    %%"#mm"1,    32(%3) \n\t" \
+        #mov"    %%"#mm"1,    32(%3) \n\t" \
         "paddsw  %%"#mm"6,  %%"#mm"7 \n\t" \
-#mov"      48(%0),  %%"#mm"1 \n\t" \
+        #mov"      48(%0),  %%"#mm"1 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)"+1, %%"#mm"3 \n\t" \
         "psubsw    64(%0),  %%"#mm"1 \n\t" \
-#mov"    %%"#mm"2,  %%"#mm"6 \n\t" \
-#mov"    %%"#mm"4,    64(%3) \n\t" \
+        #mov"    %%"#mm"2,  %%"#mm"6 \n\t" \
+        #mov"    %%"#mm"4,    64(%3) \n\t" \
         "paddsw  %%"#mm"3,  %%"#mm"2 \n\t" \
         "pmulhw      (%4),  %%"#mm"2 \n\t" \
         "psubsw  %%"#mm"3,  %%"#mm"6 \n\t" \
@@ -339,20 +339,20 @@ static av_always_inline void fdct_col_##cpu(const int16_t *in, int16_t *out, int
         "por         (%2),  %%"#mm"5 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"1 \n\t" \
         "por         (%2),  %%"#mm"2 \n\t" \
-#mov"    %%"#mm"1,  %%"#mm"4 \n\t" \
-#mov"        (%0),  %%"#mm"3 \n\t" \
+        #mov"    %%"#mm"1,  %%"#mm"4 \n\t" \
+        #mov"        (%0),  %%"#mm"3 \n\t" \
         "paddsw  %%"#mm"6,  %%"#mm"1 \n\t" \
         "psubsw   112(%0),  %%"#mm"3 \n\t" \
         "psubsw  %%"#mm"6,  %%"#mm"4 \n\t" \
-#mov"        (%1),  %%"#mm"0 \n\t" \
+        #mov"        (%1),  %%"#mm"0 \n\t" \
         "psllw  $"S(SHIFT_FRW_COL)", %%"#mm"3 \n\t" \
-#mov"      32(%1),  %%"#mm"6 \n\t" \
+        #mov"      32(%1),  %%"#mm"6 \n\t" \
         "pmulhw  %%"#mm"1,  %%"#mm"0 \n\t" \
-#mov"    %%"#mm"7,      (%3) \n\t" \
+        #mov"    %%"#mm"7,      (%3) \n\t" \
         "pmulhw  %%"#mm"4,  %%"#mm"6 \n\t" \
-#mov"    %%"#mm"5,    96(%3) \n\t" \
-#mov"    %%"#mm"3,  %%"#mm"7 \n\t" \
-#mov"      32(%1),  %%"#mm"5 \n\t" \
+        #mov"    %%"#mm"5,    96(%3) \n\t" \
+        #mov"    %%"#mm"3,  %%"#mm"7 \n\t" \
+        #mov"      32(%1),  %%"#mm"5 \n\t" \
         "psubsw  %%"#mm"2,  %%"#mm"7 \n\t" \
         "paddsw  %%"#mm"2,  %%"#mm"3 \n\t" \
         "pmulhw  %%"#mm"7,  %%"#mm"5 \n\t" \
@@ -362,12 +362,12 @@ static av_always_inline void fdct_col_##cpu(const int16_t *in, int16_t *out, int
         "por         (%2),  %%"#mm"0 \n\t" \
         "paddsw  %%"#mm"7,  %%"#mm"5 \n\t" \
         "psubsw  %%"#mm"6,  %%"#mm"7 \n\t" \
-#mov"    %%"#mm"0,    16(%3) \n\t" \
+        #mov"    %%"#mm"0,    16(%3) \n\t" \
         "paddsw  %%"#mm"4,  %%"#mm"5 \n\t" \
-#mov"    %%"#mm"7,    48(%3) \n\t" \
+        #mov"    %%"#mm"7,    48(%3) \n\t" \
         "psubsw  %%"#mm"1,  %%"#mm"3 \n\t" \
-#mov"    %%"#mm"5,    80(%3) \n\t" \
-#mov"    %%"#mm"3,   112(%3) \n\t" \
+        #mov"    %%"#mm"5,    80(%3) \n\t" \
+        #mov"    %%"#mm"3,   112(%3) \n\t" \
         : \
         : "r" (in  + offset), "r" (fdct_tg_all_16), "r" (fdct_one_corr), \
           "r" (out + offset), "r" (ocos_4_16)); \

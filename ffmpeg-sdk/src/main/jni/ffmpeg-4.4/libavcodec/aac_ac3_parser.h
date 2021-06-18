@@ -28,12 +28,12 @@
 #include "parser.h"
 
 typedef enum {
-    AAC_AC3_PARSE_ERROR_SYNC = -0x1030c0a,
-    AAC_AC3_PARSE_ERROR_BSID = -0x2030c0a,
+    AAC_AC3_PARSE_ERROR_SYNC        = -0x1030c0a,
+    AAC_AC3_PARSE_ERROR_BSID        = -0x2030c0a,
     AAC_AC3_PARSE_ERROR_SAMPLE_RATE = -0x3030c0a,
-    AAC_AC3_PARSE_ERROR_FRAME_SIZE = -0x4030c0a,
-    AAC_AC3_PARSE_ERROR_FRAME_TYPE = -0x5030c0a,
-    AAC_AC3_PARSE_ERROR_CRC = -0x6030c0a,
+    AAC_AC3_PARSE_ERROR_FRAME_SIZE  = -0x4030c0a,
+    AAC_AC3_PARSE_ERROR_FRAME_TYPE  = -0x5030c0a,
+    AAC_AC3_PARSE_ERROR_CRC         = -0x6030c0a,
     AAC_AC3_PARSE_ERROR_CHANNEL_CFG = -0x7030c0a,
 } AACAC3ParseError;
 
@@ -41,9 +41,8 @@ typedef struct AACAC3ParseContext {
     ParseContext pc;
     int frame_size;
     int header_size;
-
     int (*sync)(uint64_t state, struct AACAC3ParseContext *hdr_info,
-                int *need_next_header, int *new_frame_start);
+            int *need_next_header, int *new_frame_start);
 
     int channels;
     int sample_rate;

@@ -51,7 +51,6 @@
  */
 #ifndef AVCODEC_MIPS_AMRWBDEC_MIPS_H
 #define AVCODEC_MIPS_AMRWBDEC_MIPS_H
-
 #include "config.h"
 
 #if HAVE_MIPSFPU && HAVE_INLINE_ASM

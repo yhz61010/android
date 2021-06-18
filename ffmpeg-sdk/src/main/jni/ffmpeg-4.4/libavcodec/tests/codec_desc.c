@@ -18,7 +18,8 @@
 
 #include "libavcodec/avcodec.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     const AVCodecDescriptor *old_desc = NULL, *desc;
 
     while (desc = avcodec_descriptor_next(old_desc)) {

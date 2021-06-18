@@ -69,8 +69,8 @@ typedef struct AVDCT {
     int bits_per_sample;
 
     void (*get_pixels_unaligned)(int16_t *block /* align 16 */,
-                                 const uint8_t *pixels,
-                                 ptrdiff_t line_size);
+                       const uint8_t *pixels,
+                       ptrdiff_t line_size);
 } AVDCT;
 
 /**
@@ -81,7 +81,6 @@ typedef struct AVDCT {
  * To free it use av_free()
  */
 AVDCT *avcodec_dct_alloc(void);
-
 int avcodec_dct_init(AVDCT *);
 
 const AVClass *avcodec_dct_get_class(void);

@@ -37,7 +37,7 @@
 #include <libavutil/opt.h>
 
 static const char *filter_descr = "aresample=8000,aformat=sample_fmts=s16:channel_layouts=mono";
-static const char *player = "ffplay -f s16le -ar 8000 -ac 1 -";
+static const char *player       = "ffplay -f s16le -ar 8000 -ac 1 -";
 
 static AVFormatContext *fmt_ctx;
 static AVCodecContext *dec_ctx;
@@ -46,7 +46,8 @@ AVFilterContext *buffersrc_ctx;
 AVFilterGraph *filter_graph;
 static int audio_stream_index = -1;
 
-static int open_input_file(const char *filename) {
+static int open_input_file(const char *filename)
+{
     int ret;
     AVCodec *dec;
 
@@ -83,16 +84,17 @@ static int open_input_file(const char *filename) {
     return 0;
 }
 
-static int init_filters(const char *filters_descr) {
+static int init_filters(const char *filters_descr)
+{
     char args[512];
     int ret = 0;
-    const AVFilter *abuffersrc = avfilter_get_by_name("abuffer");
+    const AVFilter *abuffersrc  = avfilter_get_by_name("abuffer");
     const AVFilter *abuffersink = avfilter_get_by_name("abuffersink");
     AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs = avfilter_inout_alloc();
-    static const enum AVSampleFormat out_sample_fmts[] = {AV_SAMPLE_FMT_S16, -1};
-    static const int64_t out_channel_layouts[] = {AV_CH_LAYOUT_MONO, -1};
-    static const int out_sample_rates[] = {8000, -1};
+    AVFilterInOut *inputs  = avfilter_inout_alloc();
+    static const enum AVSampleFormat out_sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
+    static const int64_t out_channel_layouts[] = { AV_CH_LAYOUT_MONO, -1 };
+    static const int out_sample_rates[] = { 8000, -1 };
     const AVFilterLink *outlink;
     AVRational time_base = fmt_ctx->streams[audio_stream_index]->time_base;
 
@@ -106,10 +108,9 @@ static int init_filters(const char *filters_descr) {
     if (!dec_ctx->channel_layout)
         dec_ctx->channel_layout = av_get_default_channel_layout(dec_ctx->channels);
     snprintf(args, sizeof(args),
-             "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"
-    PRIx64,
-            time_base.num, time_base.den, dec_ctx->sample_rate,
-            av_get_sample_fmt_name(dec_ctx->sample_fmt), dec_ctx->channel_layout);
+            "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"PRIx64,
+             time_base.num, time_base.den, dec_ctx->sample_rate,
+             av_get_sample_fmt_name(dec_ctx->sample_fmt), dec_ctx->channel_layout);
     ret = avfilter_graph_create_filter(&buffersrc_ctx, abuffersrc, "in",
                                        args, NULL, filter_graph);
     if (ret < 0) {
@@ -157,10 +158,10 @@ static int init_filters(const char *filters_descr) {
      * filter input label is not specified, it is set to "in" by
      * default.
      */
-    outputs->name = av_strdup("in");
+    outputs->name       = av_strdup("in");
     outputs->filter_ctx = buffersrc_ctx;
-    outputs->pad_idx = 0;
-    outputs->next = NULL;
+    outputs->pad_idx    = 0;
+    outputs->next       = NULL;
 
     /*
      * The buffer sink input must be connected to the output pad of
@@ -168,10 +169,10 @@ static int init_filters(const char *filters_descr) {
      * filter output label is not specified, it is set to "out" by
      * default.
      */
-    inputs->name = av_strdup("out");
+    inputs->name       = av_strdup("out");
     inputs->filter_ctx = buffersink_ctx;
-    inputs->pad_idx = 0;
-    inputs->next = NULL;
+    inputs->pad_idx    = 0;
+    inputs->next       = NULL;
 
     if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
                                         &inputs, &outputs, NULL)) < 0)
@@ -185,31 +186,33 @@ static int init_filters(const char *filters_descr) {
     outlink = buffersink_ctx->inputs[0];
     av_get_channel_layout_string(args, sizeof(args), -1, outlink->channel_layout);
     av_log(NULL, AV_LOG_INFO, "Output: srate:%dHz fmt:%s chlayout:%s\n",
-           (int) outlink->sample_rate,
-           (char *) av_x_if_null(av_get_sample_fmt_name(outlink->format), "?"),
+           (int)outlink->sample_rate,
+           (char *)av_x_if_null(av_get_sample_fmt_name(outlink->format), "?"),
            args);
 
-    end:
+end:
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
 
     return ret;
 }
 
-static void print_frame(const AVFrame *frame) {
+static void print_frame(const AVFrame *frame)
+{
     const int n = frame->nb_samples * av_get_channel_layout_nb_channels(frame->channel_layout);
-    const uint16_t *p = (uint16_t *) frame->data[0];
+    const uint16_t *p     = (uint16_t*)frame->data[0];
     const uint16_t *p_end = p + n;
 
     while (p < p_end) {
-        fputc(*p & 0xff, stdout);
-        fputc(*p >> 8 & 0xff, stdout);
+        fputc(*p    & 0xff, stdout);
+        fputc(*p>>8 & 0xff, stdout);
         p++;
     }
     fflush(stdout);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int ret;
     AVPacket packet;
     AVFrame *frame = av_frame_alloc();
@@ -273,7 +276,7 @@ int main(int argc, char **argv) {
         }
         av_packet_unref(&packet);
     }
-    end:
+end:
     avfilter_graph_free(&filter_graph);
     avcodec_free_context(&dec_ctx);
     avformat_close_input(&fmt_ctx);

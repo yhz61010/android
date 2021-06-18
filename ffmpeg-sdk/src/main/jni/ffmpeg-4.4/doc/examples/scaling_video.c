@@ -31,7 +31,8 @@
 #include <libswscale/swscale.h>
 
 static void fill_yuv_image(uint8_t *data[4], int linesize[4],
-                           int width, int height, int frame_index) {
+                           int width, int height, int frame_index)
+{
     int x, y;
 
     /* Y */
@@ -48,7 +49,8 @@ static void fill_yuv_image(uint8_t *data[4], int linesize[4],
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     uint8_t *src_data[4], *dst_data[4];
     int src_linesize[4], dst_linesize[4];
     int src_w = 320, src_h = 240, dst_w, dst_h;
@@ -62,14 +64,14 @@ int main(int argc, char **argv) {
 
     if (argc != 3) {
         fprintf(stderr, "Usage: %s output_file output_size\n"
-                        "API example program to show how to scale an image with libswscale.\n"
-                        "This program generates a series of pictures, rescales them to the given "
-                        "output_size and saves them to an output file named output_file\n."
-                        "\n", argv[0]);
+                "API example program to show how to scale an image with libswscale.\n"
+                "This program generates a series of pictures, rescales them to the given "
+                "output_size and saves them to an output file named output_file\n."
+                "\n", argv[0]);
         exit(1);
     }
     dst_filename = argv[1];
-    dst_size = argv[2];
+    dst_size     = argv[2];
 
     if (av_parse_video_size(&dst_w, &dst_h, dst_size) < 0) {
         fprintf(stderr,
@@ -118,7 +120,7 @@ int main(int argc, char **argv) {
         fill_yuv_image(src_data, src_linesize, src_w, src_h, i);
 
         /* convert to destination format */
-        sws_scale(sws_ctx, (const uint8_t *const *) src_data,
+        sws_scale(sws_ctx, (const uint8_t * const*)src_data,
                   src_linesize, 0, src_h, dst_data, dst_linesize);
 
         /* write scaled image to file */
@@ -126,10 +128,10 @@ int main(int argc, char **argv) {
     }
 
     fprintf(stderr, "Scaling succeeded. Play the output file with the command:\n"
-                    "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
-            av_get_pix_fmt_name(dst_pix_fmt), dst_w, dst_h, dst_filename);
+           "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
+           av_get_pix_fmt_name(dst_pix_fmt), dst_w, dst_h, dst_filename);
 
-    end:
+end:
     fclose(dst_file);
     av_freep(&src_data[0]);
     av_freep(&dst_data[0]);

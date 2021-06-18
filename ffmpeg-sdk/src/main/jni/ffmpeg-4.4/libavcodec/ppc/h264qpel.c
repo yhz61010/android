@@ -280,7 +280,8 @@ H264_MC(put_, 16, altivec)
 H264_MC(avg_, 16, altivec)
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_h264qpel_init_ppc(H264QpelContext *c, int bit_depth) {
+av_cold void ff_h264qpel_init_ppc(H264QpelContext *c, int bit_depth)
+{
 #if HAVE_ALTIVEC
     const int high_bit_depth = bit_depth > 8;
 

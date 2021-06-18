@@ -23,7 +23,8 @@
 #include "libavutil/attributes.h"
 #include "libavcodec/mips/hevcpred_mips.h"
 
-void ff_hevc_pred_init_mips(HEVCPredContext *c, const int bit_depth) {
+void ff_hevc_pred_init_mips(HEVCPredContext *c, const int bit_depth)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_msa(cpu_flags)) {

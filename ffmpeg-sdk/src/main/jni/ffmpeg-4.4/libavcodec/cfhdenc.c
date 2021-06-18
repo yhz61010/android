@@ -40,284 +40,67 @@
 
 /* Derived from existing tables from decoder */
 static const unsigned codebook[256][2] = {
-        {1,  0x00000000},
-        {2,  0x00000002},
-        {3,  0x00000007},
-        {5,  0x00000019},
-        {6,  0x00000030},
-        {6,  0x00000036},
-        {7,  0x00000063},
-        {7,  0x0000006B},
-        {7,  0x0000006F},
-        {8,  0x000000D4},
-        {8,  0x000000DC},
-        {9,  0x00000189},
-        {9,  0x000001A0},
-        {9,  0x000001AB},
-        {10, 0x00000310},
-        {10, 0x00000316},
-        {10, 0x00000354},
-        {10, 0x00000375},
-        {10, 0x00000377},
-        {11, 0x00000623},
-        {11, 0x00000684},
-        {11, 0x000006AB},
-        {11, 0x000006EC},
-        {12, 0x00000C44},
-        {12, 0x00000C5C},
-        {12, 0x00000C5E},
-        {12, 0x00000D55},
-        {12, 0x00000DD1},
-        {12, 0x00000DD3},
-        {12, 0x00000DDB},
-        {13, 0x0000188B},
-        {13, 0x000018BB},
-        {13, 0x00001AA8},
-        {13, 0x00001BA0},
-        {13, 0x00001BA4},
-        {13, 0x00001BB5},
-        {14, 0x00003115},
-        {14, 0x00003175},
-        {14, 0x0000317D},
-        {14, 0x00003553},
-        {14, 0x00003768},
-        {15, 0x00006228},
-        {15, 0x000062E8},
-        {15, 0x000062F8},
-        {15, 0x00006AA4},
-        {15, 0x00006E85},
-        {15, 0x00006E87},
-        {15, 0x00006ED3},
-        {16, 0x0000C453},
-        {16, 0x0000C5D3},
-        {16, 0x0000C5F3},
-        {16, 0x0000DD08},
-        {16, 0x0000DD0C},
-        {16, 0x0000DDA4},
-        {17, 0x000188A4},
-        {17, 0x00018BA5},
-        {17, 0x00018BE5},
-        {17, 0x0001AA95},
-        {17, 0x0001AA97},
-        {17, 0x0001BA13},
-        {17, 0x0001BB4A},
-        {17, 0x0001BB4B},
-        {18, 0x00031748},
-        {18, 0x000317C8},
-        {18, 0x00035528},
-        {18, 0x0003552C},
-        {18, 0x00037424},
-        {18, 0x00037434},
-        {18, 0x00037436},
-        {19, 0x00062294},
-        {19, 0x00062E92},
-        {19, 0x00062F92},
-        {19, 0x0006AA52},
-        {19, 0x0006AA5A},
-        {19, 0x0006E84A},
-        {19, 0x0006E86A},
-        {19, 0x0006E86E},
-        {20, 0x000C452A},
-        {20, 0x000C5D27},
-        {20, 0x000C5F26},
-        {20, 0x000D54A6},
-        {20, 0x000D54B6},
-        {20, 0x000DD096},
-        {20, 0x000DD0D6},
-        {20, 0x000DD0DE},
-        {21, 0x00188A56},
-        {21, 0x0018BA4D},
-        {21, 0x0018BE4E},
-        {21, 0x0018BE4F},
-        {21, 0x001AA96E},
-        {21, 0x001BA12E},
-        {21, 0x001BA12F},
-        {21, 0x001BA1AF},
-        {21, 0x001BA1BF},
-        {22, 0x00317498},
-        {22, 0x0035529C},
-        {22, 0x0035529D},
-        {22, 0x003552DE},
-        {22, 0x003552DF},
-        {22, 0x0037435D},
-        {22, 0x0037437D},
-        {23, 0x0062295D},
-        {23, 0x0062E933},
-        {23, 0x006AA53D},
-        {23, 0x006AA53E},
-        {23, 0x006AA53F},
-        {23, 0x006E86B9},
-        {23, 0x006E86F8},
-        {24, 0x00C452B8},
-        {24, 0x00C5D265},
-        {24, 0x00D54A78},
-        {24, 0x00D54A79},
-        {24, 0x00DD0D70},
-        {24, 0x00DD0D71},
-        {24, 0x00DD0DF2},
-        {24, 0x00DD0DF3},
-        {26, 0x03114BA2},
-        {25, 0x0188A5B1},
-        {25, 0x0188A58B},
-        {25, 0x0188A595},
-        {25, 0x0188A5D6},
-        {25, 0x0188A5D7},
-        {25, 0x0188A5A8},
-        {25, 0x0188A5AE},
-        {25, 0x0188A5AF},
-        {25, 0x0188A5C4},
-        {25, 0x0188A5C5},
-        {25, 0x0188A587},
-        {25, 0x0188A584},
-        {25, 0x0188A585},
-        {25, 0x0188A5C6},
-        {25, 0x0188A5C7},
-        {25, 0x0188A5CC},
-        {25, 0x0188A5CD},
-        {25, 0x0188A581},
-        {25, 0x0188A582},
-        {25, 0x0188A583},
-        {25, 0x0188A5CE},
-        {25, 0x0188A5CF},
-        {25, 0x0188A5C2},
-        {25, 0x0188A5C3},
-        {25, 0x0188A5C1},
-        {25, 0x0188A5B4},
-        {25, 0x0188A5B5},
-        {25, 0x0188A5E6},
-        {25, 0x0188A5E7},
-        {25, 0x0188A5E4},
-        {25, 0x0188A5E5},
-        {25, 0x0188A5AB},
-        {25, 0x0188A5E0},
-        {25, 0x0188A5E1},
-        {25, 0x0188A5E2},
-        {25, 0x0188A5E3},
-        {25, 0x0188A5B6},
-        {25, 0x0188A5B7},
-        {25, 0x0188A5FD},
-        {25, 0x0188A57E},
-        {25, 0x0188A57F},
-        {25, 0x0188A5EC},
-        {25, 0x0188A5ED},
-        {25, 0x0188A5FE},
-        {25, 0x0188A5FF},
-        {25, 0x0188A57D},
-        {25, 0x0188A59C},
-        {25, 0x0188A59D},
-        {25, 0x0188A5E8},
-        {25, 0x0188A5E9},
-        {25, 0x0188A5EA},
-        {25, 0x0188A5EB},
-        {25, 0x0188A5EF},
-        {25, 0x0188A57A},
-        {25, 0x0188A57B},
-        {25, 0x0188A578},
-        {25, 0x0188A579},
-        {25, 0x0188A5BA},
-        {25, 0x0188A5BB},
-        {25, 0x0188A5B8},
-        {25, 0x0188A5B9},
-        {25, 0x0188A588},
-        {25, 0x0188A589},
-        {25, 0x018BA4C8},
-        {25, 0x018BA4C9},
-        {25, 0x0188A5FA},
-        {25, 0x0188A5FB},
-        {25, 0x0188A5BC},
-        {25, 0x0188A5BD},
-        {25, 0x0188A598},
-        {25, 0x0188A599},
-        {25, 0x0188A5F4},
-        {25, 0x0188A5F5},
-        {25, 0x0188A59B},
-        {25, 0x0188A5DE},
-        {25, 0x0188A5DF},
-        {25, 0x0188A596},
-        {25, 0x0188A597},
-        {25, 0x0188A5F8},
-        {25, 0x0188A5F9},
-        {25, 0x0188A5F1},
-        {25, 0x0188A58E},
-        {25, 0x0188A58F},
-        {25, 0x0188A5DC},
-        {25, 0x0188A5DD},
-        {25, 0x0188A5F2},
-        {25, 0x0188A5F3},
-        {25, 0x0188A58C},
-        {25, 0x0188A58D},
-        {25, 0x0188A5A4},
-        {25, 0x0188A5F0},
-        {25, 0x0188A5A5},
-        {25, 0x0188A5A6},
-        {25, 0x0188A5A7},
-        {25, 0x0188A59A},
-        {25, 0x0188A5A2},
-        {25, 0x0188A5A3},
-        {25, 0x0188A58A},
-        {25, 0x0188A5B0},
-        {25, 0x0188A5A0},
-        {25, 0x0188A5A1},
-        {25, 0x0188A5DA},
-        {25, 0x0188A5DB},
-        {25, 0x0188A59E},
-        {25, 0x0188A59F},
-        {25, 0x0188A5D8},
-        {25, 0x0188A5EE},
-        {25, 0x0188A5D9},
-        {25, 0x0188A5F6},
-        {25, 0x0188A5F7},
-        {25, 0x0188A57C},
-        {25, 0x0188A5C8},
-        {25, 0x0188A5C9},
-        {25, 0x0188A594},
-        {25, 0x0188A5FC},
-        {25, 0x0188A5CA},
-        {25, 0x0188A5CB},
-        {25, 0x0188A5B2},
-        {25, 0x0188A5AA},
-        {25, 0x0188A5B3},
-        {25, 0x0188A572},
-        {25, 0x0188A573},
-        {25, 0x0188A5C0},
-        {25, 0x0188A5BE},
-        {25, 0x0188A5BF},
-        {25, 0x0188A592},
-        {25, 0x0188A580},
-        {25, 0x0188A593},
-        {25, 0x0188A590},
-        {25, 0x0188A591},
-        {25, 0x0188A586},
-        {25, 0x0188A5A9},
-        {25, 0x0188A5D2},
-        {25, 0x0188A5D3},
-        {25, 0x0188A5D4},
-        {25, 0x0188A5D5},
-        {25, 0x0188A5AC},
-        {25, 0x0188A5AD},
-        {25, 0x0188A5D0},
+    { 1, 0x00000000 }, { 2, 0x00000002 }, { 3, 0x00000007 }, { 5, 0x00000019 }, { 6, 0x00000030 },
+    { 6, 0x00000036 }, { 7, 0x00000063 }, { 7, 0x0000006B }, { 7, 0x0000006F }, { 8, 0x000000D4 },
+    { 8, 0x000000DC }, { 9, 0x00000189 }, { 9, 0x000001A0 }, { 9, 0x000001AB }, {10, 0x00000310 },
+    {10, 0x00000316 }, {10, 0x00000354 }, {10, 0x00000375 }, {10, 0x00000377 }, {11, 0x00000623 },
+    {11, 0x00000684 }, {11, 0x000006AB }, {11, 0x000006EC }, {12, 0x00000C44 }, {12, 0x00000C5C },
+    {12, 0x00000C5E }, {12, 0x00000D55 }, {12, 0x00000DD1 }, {12, 0x00000DD3 }, {12, 0x00000DDB },
+    {13, 0x0000188B }, {13, 0x000018BB }, {13, 0x00001AA8 }, {13, 0x00001BA0 }, {13, 0x00001BA4 },
+    {13, 0x00001BB5 }, {14, 0x00003115 }, {14, 0x00003175 }, {14, 0x0000317D }, {14, 0x00003553 },
+    {14, 0x00003768 }, {15, 0x00006228 }, {15, 0x000062E8 }, {15, 0x000062F8 }, {15, 0x00006AA4 },
+    {15, 0x00006E85 }, {15, 0x00006E87 }, {15, 0x00006ED3 }, {16, 0x0000C453 }, {16, 0x0000C5D3 },
+    {16, 0x0000C5F3 }, {16, 0x0000DD08 }, {16, 0x0000DD0C }, {16, 0x0000DDA4 }, {17, 0x000188A4 },
+    {17, 0x00018BA5 }, {17, 0x00018BE5 }, {17, 0x0001AA95 }, {17, 0x0001AA97 }, {17, 0x0001BA13 },
+    {17, 0x0001BB4A }, {17, 0x0001BB4B }, {18, 0x00031748 }, {18, 0x000317C8 }, {18, 0x00035528 },
+    {18, 0x0003552C }, {18, 0x00037424 }, {18, 0x00037434 }, {18, 0x00037436 }, {19, 0x00062294 },
+    {19, 0x00062E92 }, {19, 0x00062F92 }, {19, 0x0006AA52 }, {19, 0x0006AA5A }, {19, 0x0006E84A },
+    {19, 0x0006E86A }, {19, 0x0006E86E }, {20, 0x000C452A }, {20, 0x000C5D27 }, {20, 0x000C5F26 },
+    {20, 0x000D54A6 }, {20, 0x000D54B6 }, {20, 0x000DD096 }, {20, 0x000DD0D6 }, {20, 0x000DD0DE },
+    {21, 0x00188A56 }, {21, 0x0018BA4D }, {21, 0x0018BE4E }, {21, 0x0018BE4F }, {21, 0x001AA96E },
+    {21, 0x001BA12E }, {21, 0x001BA12F }, {21, 0x001BA1AF }, {21, 0x001BA1BF }, {22, 0x00317498 },
+    {22, 0x0035529C }, {22, 0x0035529D }, {22, 0x003552DE }, {22, 0x003552DF }, {22, 0x0037435D },
+    {22, 0x0037437D }, {23, 0x0062295D }, {23, 0x0062E933 }, {23, 0x006AA53D }, {23, 0x006AA53E },
+    {23, 0x006AA53F }, {23, 0x006E86B9 }, {23, 0x006E86F8 }, {24, 0x00C452B8 }, {24, 0x00C5D265 },
+    {24, 0x00D54A78 }, {24, 0x00D54A79 }, {24, 0x00DD0D70 }, {24, 0x00DD0D71 }, {24, 0x00DD0DF2 },
+    {24, 0x00DD0DF3 }, {26, 0x03114BA2 }, {25, 0x0188A5B1 }, {25, 0x0188A58B }, {25, 0x0188A595 },
+    {25, 0x0188A5D6 }, {25, 0x0188A5D7 }, {25, 0x0188A5A8 }, {25, 0x0188A5AE }, {25, 0x0188A5AF },
+    {25, 0x0188A5C4 }, {25, 0x0188A5C5 }, {25, 0x0188A587 }, {25, 0x0188A584 }, {25, 0x0188A585 },
+    {25, 0x0188A5C6 }, {25, 0x0188A5C7 }, {25, 0x0188A5CC }, {25, 0x0188A5CD }, {25, 0x0188A581 },
+    {25, 0x0188A582 }, {25, 0x0188A583 }, {25, 0x0188A5CE }, {25, 0x0188A5CF }, {25, 0x0188A5C2 },
+    {25, 0x0188A5C3 }, {25, 0x0188A5C1 }, {25, 0x0188A5B4 }, {25, 0x0188A5B5 }, {25, 0x0188A5E6 },
+    {25, 0x0188A5E7 }, {25, 0x0188A5E4 }, {25, 0x0188A5E5 }, {25, 0x0188A5AB }, {25, 0x0188A5E0 },
+    {25, 0x0188A5E1 }, {25, 0x0188A5E2 }, {25, 0x0188A5E3 }, {25, 0x0188A5B6 }, {25, 0x0188A5B7 },
+    {25, 0x0188A5FD }, {25, 0x0188A57E }, {25, 0x0188A57F }, {25, 0x0188A5EC }, {25, 0x0188A5ED },
+    {25, 0x0188A5FE }, {25, 0x0188A5FF }, {25, 0x0188A57D }, {25, 0x0188A59C }, {25, 0x0188A59D },
+    {25, 0x0188A5E8 }, {25, 0x0188A5E9 }, {25, 0x0188A5EA }, {25, 0x0188A5EB }, {25, 0x0188A5EF },
+    {25, 0x0188A57A }, {25, 0x0188A57B }, {25, 0x0188A578 }, {25, 0x0188A579 }, {25, 0x0188A5BA },
+    {25, 0x0188A5BB }, {25, 0x0188A5B8 }, {25, 0x0188A5B9 }, {25, 0x0188A588 }, {25, 0x0188A589 },
+    {25, 0x018BA4C8 }, {25, 0x018BA4C9 }, {25, 0x0188A5FA }, {25, 0x0188A5FB }, {25, 0x0188A5BC },
+    {25, 0x0188A5BD }, {25, 0x0188A598 }, {25, 0x0188A599 }, {25, 0x0188A5F4 }, {25, 0x0188A5F5 },
+    {25, 0x0188A59B }, {25, 0x0188A5DE }, {25, 0x0188A5DF }, {25, 0x0188A596 }, {25, 0x0188A597 },
+    {25, 0x0188A5F8 }, {25, 0x0188A5F9 }, {25, 0x0188A5F1 }, {25, 0x0188A58E }, {25, 0x0188A58F },
+    {25, 0x0188A5DC }, {25, 0x0188A5DD }, {25, 0x0188A5F2 }, {25, 0x0188A5F3 }, {25, 0x0188A58C },
+    {25, 0x0188A58D }, {25, 0x0188A5A4 }, {25, 0x0188A5F0 }, {25, 0x0188A5A5 }, {25, 0x0188A5A6 },
+    {25, 0x0188A5A7 }, {25, 0x0188A59A }, {25, 0x0188A5A2 }, {25, 0x0188A5A3 }, {25, 0x0188A58A },
+    {25, 0x0188A5B0 }, {25, 0x0188A5A0 }, {25, 0x0188A5A1 }, {25, 0x0188A5DA }, {25, 0x0188A5DB },
+    {25, 0x0188A59E }, {25, 0x0188A59F }, {25, 0x0188A5D8 }, {25, 0x0188A5EE }, {25, 0x0188A5D9 },
+    {25, 0x0188A5F6 }, {25, 0x0188A5F7 }, {25, 0x0188A57C }, {25, 0x0188A5C8 }, {25, 0x0188A5C9 },
+    {25, 0x0188A594 }, {25, 0x0188A5FC }, {25, 0x0188A5CA }, {25, 0x0188A5CB }, {25, 0x0188A5B2 },
+    {25, 0x0188A5AA }, {25, 0x0188A5B3 }, {25, 0x0188A572 }, {25, 0x0188A573 }, {25, 0x0188A5C0 },
+    {25, 0x0188A5BE }, {25, 0x0188A5BF }, {25, 0x0188A592 }, {25, 0x0188A580 }, {25, 0x0188A593 },
+    {25, 0x0188A590 }, {25, 0x0188A591 }, {25, 0x0188A586 }, {25, 0x0188A5A9 }, {25, 0x0188A5D2 },
+    {25, 0x0188A5D3 }, {25, 0x0188A5D4 }, {25, 0x0188A5D5 }, {25, 0x0188A5AC }, {25, 0x0188A5AD },
+    {25, 0x0188A5D0 },
 };
 
 /* Derived by extracting runcodes from existing tables from decoder */
 static const uint16_t runbook[18][3] = {
-        {1,  0x0000, 1},
-        {2,  0x0000, 2},
-        {3,  0x0000, 3},
-        {4,  0x0000, 4},
-        {5,  0x0000, 5},
-        {6,  0x0000, 6},
-        {7,  0x0000, 7},
-        {8,  0x0000, 8},
-        {9,  0x0000, 9},
-        {10, 0x0000, 10},
-        {11, 0x0000, 11},
-        {7,  0x0069, 12},
-        {8,  0x00D1, 20},
-        {9,  0x018A, 32},
-        {10, 0x0343, 60},
-        {11, 0x0685, 100},
-        {13, 0x18BF, 180},
-        {13, 0x1BA5, 320},
+    {1,  0x0000,   1}, {2,  0x0000,   2}, {3,  0x0000,   3}, {4,  0x0000,   4},
+    {5,  0x0000,   5}, {6,  0x0000,   6}, {7,  0x0000,   7}, {8,  0x0000,   8},
+    {9,  0x0000,   9}, {10, 0x0000,  10}, {11, 0x0000,  11},
+    {7,  0x0069,  12}, {8,  0x00D1,  20}, {9,  0x018A,  32},
+    {10, 0x0343,  60}, {11, 0x0685, 100}, {13, 0x18BF, 180}, {13, 0x1BA5, 320},
 };
 
 /*
@@ -325,96 +108,96 @@ static const uint16_t runbook[18][3] = {
  * and adding some more from scratch.
  */
 static const uint16_t quantization_per_subband[2][3][13][9] = {
-        {{
-                 {16, 16, 8, 4,  4,  2, 6,  6,  9,}, // film3+
-                 {16, 16, 8, 4,  4,  2, 6,  6,  9,}, // film3
-                 {16, 16, 8, 4,  4,  2, 7,  7,  10,}, // film2+
-                 {16, 16, 8, 4,  4,  2, 8,  8,  12,}, // film2
-                 {16, 16, 8, 4,  4,  2,  16, 16, 26,}, // film1++
-                 {24, 24, 12, 6,  6,  3,  24, 24, 36,}, // film1+
-                 {24, 24, 12, 6,  6,  3,  24, 24, 36,}, // film1
-                 {32, 32, 24, 8,  8,  6,  32,  32,  48,}, // high+
-                 {32, 32, 24, 8,  8,  6,  32,  32,  48,}, // high
-                 {48, 48, 32, 12, 12, 8,  64,  64,  96,}, // medium+
-                 {48, 48, 32, 12, 12, 8,  64,  64,  96,}, // medium
-                 {64, 64, 48, 16, 16, 12, 96,  96,  144,}, // low+
-                 {64, 64, 48, 16, 16, 12, 128, 128, 192,}, // low
-         },
-                {
-                        {16, 16, 8, 4,  4,  2, 6,  6,  9,}, // film3+
-                        {16, 16, 8, 4,  4,  2, 6,  6,  12,}, // film3
-                        {16, 16, 8, 4,  4,  2, 7,  7,  14,}, // film2+
-                        {16, 16, 8, 4,  4,  2, 8,  8,  16,}, // film2
-                        {16, 16, 8, 4,  4,  2,  16, 16, 26,}, // film1++
-                        {24, 24, 12, 6,  6,  3,  24, 24, 36,}, // film1+
-                        {24, 24, 12, 6,  6,  3,  24,  24,  48,}, // film1
-                        {32, 32, 24, 8,  8,  6,  32,  32,  48,}, // high+
-                        {48, 48, 32, 12, 12, 8,  32,  32,  64,}, // high
-                        {48, 48, 32, 12, 12, 8,  64,  64,  96,}, // medium+
-                        {48, 48, 32, 12, 12, 8,  64,  64,  128,}, // medium
-                        {64, 64, 48, 16, 16, 12, 96,  96,  160,}, // low+
-                        {64, 64, 48, 16, 16, 12, 128,  128,  192,}, // low
-                },
-                {
-                        {16, 16, 8, 4,  4,  2, 6,  6,  9,}, // film3+
-                        {16, 16, 8, 4,  4,  2, 6,  6,  12,}, // film3
-                        {16, 16, 8, 4,  4,  2, 7,  7,  14,}, // film2+
-                        {16, 16, 8, 4,  4,  2, 8,  8,  16,}, // film2
-                        {16, 16, 8,  4,  4,  2,  16, 16, 26,}, // film1++
-                        {24, 24, 12, 6,  6,  3,  24, 24, 36,}, // film1+
-                        {24, 24, 12, 6,  6,  3,  24,  24,  48,}, // film1
-                        {32, 32, 24, 8,  8,  6,  32,  32,  48,}, // high+
-                        {48, 48, 32, 12, 12, 8,  32,  32,  64,}, // high
-                        {48, 48, 32, 12, 12, 8,  64,  64,  96,}, // medium+
-                        {48, 48, 32, 12, 12, 8,  64,  64,  128,}, // medium
-                        {64, 64, 48, 16, 16, 12, 96,  96,  160,}, // low+
-                        {64, 64, 48, 16, 16, 12, 128,  128,  192,}, // low
-                }},
-        {{
-                 {16, 16, 8, 16, 16, 8, 24, 24, 36,}, // film3+
-                 {16, 16, 8, 16, 16, 8, 24, 24, 36,}, // film3
-                 {16, 16, 8, 16, 16, 8, 32, 32, 48,}, // film2+
-                 {16, 16, 8, 16, 16, 8, 32, 32, 48,}, // film2
-                 {16, 16, 8, 20, 20, 10, 80, 80, 128,}, // film1++
-                 {24, 24, 12, 24, 24, 12, 96, 96, 144,}, // film1+
-                 {24, 24, 12, 24, 24, 12, 96, 96, 144,}, // film1
-                 {32, 32, 24, 32, 32, 24, 128, 128, 192,}, // high+
-                 {32, 32, 24, 32, 32, 24, 128, 128, 192,}, // high
-                 {48, 48, 32, 48, 48, 32, 256, 256, 384,}, // medium+
-                 {48, 48, 32, 48, 48, 32, 256, 256, 384,}, // medium
-                 {56, 56, 40, 56, 56, 40, 512, 512, 768,}, // low+
-                 {64, 64, 48, 64, 64, 48, 512, 512, 768,}, // low
-         },
-                {
-                        {16, 16, 8, 16, 16, 8, 24, 24, 36,}, // film3+
-                        {16, 16, 8, 16, 16, 8, 48, 48, 72,}, // film3
-                        {16, 16, 8, 16, 16, 8, 48, 48, 72,}, // film2+
-                        {16, 16, 8, 16, 16, 8, 64, 64, 96,}, // film2
-                        {16, 16, 8, 20, 20, 10, 80, 80, 128,}, // film1++
-                        {24, 24, 12, 24, 24, 12, 96, 96, 144,}, // film1+
-                        {24, 24, 12, 24, 24, 12, 192, 192, 288,}, // film1
-                        {32, 32, 24, 32, 32, 24, 128, 128, 192,}, // high+
-                        {32, 32, 24, 32, 32, 24, 256, 256, 384,}, // high
-                        {48, 48, 32, 48, 48, 32, 256, 256, 384,}, // medium+
-                        {48, 48, 32, 48, 48, 32, 512, 512, 768,}, // medium
-                        {56, 56, 40, 56, 56, 40, 512, 512, 768,}, // low+
-                        {64, 64, 48, 64, 64, 48, 1024, 1024, 1536,}, // low
-                },
-                {
-                        {16, 16, 8, 16, 16, 8, 24, 24, 36,}, // film3+
-                        {16, 16, 8, 16, 16, 8, 48, 48, 72,}, // film3
-                        {16, 16, 8, 16, 16, 8, 48, 48, 72,}, // film2+
-                        {16, 16, 8, 16, 16, 8, 64, 64, 96,}, // film2
-                        {16, 16, 10, 20, 20, 10, 80, 80, 128,}, // film1++
-                        {24, 24, 12, 24, 24, 12, 96, 96, 144,}, // film1+
-                        {24, 24, 12, 24, 24, 12, 192, 192, 288,}, // film1
-                        {32, 32, 24, 32, 32, 24, 128, 128, 192,}, // high+
-                        {32, 32, 24, 32, 32, 24, 256, 256, 384,}, // high
-                        {48, 48, 32, 48, 48, 32, 256, 256, 384,}, // medium+
-                        {48, 48, 32, 48, 48, 32, 512, 512, 768,}, // medium
-                        {56, 56, 40, 56, 56, 40, 512, 512, 768,}, // low+
-                        {64, 64, 48, 64, 64, 48, 1024, 1024, 1536,}, // low
-                }},
+    {{
+        { 16, 16,  8,  4,  4,  2,   6,   6,   9, }, // film3+
+        { 16, 16,  8,  4,  4,  2,   6,   6,   9, }, // film3
+        { 16, 16,  8,  4,  4,  2,   7,   7,  10, }, // film2+
+        { 16, 16,  8,  4,  4,  2,   8,   8,  12, }, // film2
+        { 16, 16,  8,  4,  4,  2,  16,  16,  26, }, // film1++
+        { 24, 24, 12,  6,  6,  3,  24,  24,  36, }, // film1+
+        { 24, 24, 12,  6,  6,  3,  24,  24,  36, }, // film1
+        { 32, 32, 24,  8,  8,  6,  32,  32,  48, }, // high+
+        { 32, 32, 24,  8,  8,  6,  32,  32,  48, }, // high
+        { 48, 48, 32, 12, 12,  8,  64,  64,  96, }, // medium+
+        { 48, 48, 32, 12, 12,  8,  64,  64,  96, }, // medium
+        { 64, 64, 48, 16, 16, 12,  96,  96, 144, }, // low+
+        { 64, 64, 48, 16, 16, 12, 128, 128, 192, }, // low
+    },
+    {
+        { 16, 16,  8,  4,  4,  2,   6,   6,   9, }, // film3+
+        { 16, 16,  8,  4,  4,  2,   6,   6,  12, }, // film3
+        { 16, 16,  8,  4,  4,  2,   7,   7,  14, }, // film2+
+        { 16, 16,  8,  4,  4,  2,   8,   8,  16, }, // film2
+        { 16, 16,  8,  4,  4,  2,  16,  16,  26, }, // film1++
+        { 24, 24, 12,  6,  6,  3,  24,  24,  36, }, // film1+
+        { 24, 24, 12,  6,  6,  3,  24,  24,  48, }, // film1
+        { 32, 32, 24,  8,  8,  6,  32,  32,  48, }, // high+
+        { 48, 48, 32, 12, 12,  8,  32,  32,  64, }, // high
+        { 48, 48, 32, 12, 12,  8,  64,  64,  96, }, // medium+
+        { 48, 48, 32, 12, 12,  8,  64,  64, 128, }, // medium
+        { 64, 64, 48, 16, 16, 12,  96,  96, 160, }, // low+
+        { 64, 64, 48, 16, 16, 12, 128, 128, 192, }, // low
+    },
+    {
+        { 16, 16,  8,  4,  4,  2,   6,   6,   9, }, // film3+
+        { 16, 16,  8,  4,  4,  2,   6,   6,  12, }, // film3
+        { 16, 16,  8,  4,  4,  2,   7,   7,  14, }, // film2+
+        { 16, 16,  8,  4,  4,  2,   8,   8,  16, }, // film2
+        { 16, 16,  8,  4,  4,  2,  16,  16,  26, }, // film1++
+        { 24, 24, 12,  6,  6,  3,  24,  24,  36, }, // film1+
+        { 24, 24, 12,  6,  6,  3,  24,  24,  48, }, // film1
+        { 32, 32, 24,  8,  8,  6,  32,  32,  48, }, // high+
+        { 48, 48, 32, 12, 12,  8,  32,  32,  64, }, // high
+        { 48, 48, 32, 12, 12,  8,  64,  64,  96, }, // medium+
+        { 48, 48, 32, 12, 12,  8,  64,  64, 128, }, // medium
+        { 64, 64, 48, 16, 16, 12,  96,  96, 160, }, // low+
+        { 64, 64, 48, 16, 16, 12, 128, 128, 192, }, // low
+    }},
+    {{
+        { 16, 16,  8, 16, 16,  8,  24,  24,  36, }, // film3+
+        { 16, 16,  8, 16, 16,  8,  24,  24,  36, }, // film3
+        { 16, 16,  8, 16, 16,  8,  32,  32,  48, }, // film2+
+        { 16, 16,  8, 16, 16,  8,  32,  32,  48, }, // film2
+        { 16, 16,  8, 20, 20, 10,  80,  80, 128, }, // film1++
+        { 24, 24, 12, 24, 24, 12,  96,  96, 144, }, // film1+
+        { 24, 24, 12, 24, 24, 12,  96,  96, 144, }, // film1
+        { 32, 32, 24, 32, 32, 24, 128, 128, 192, }, // high+
+        { 32, 32, 24, 32, 32, 24, 128, 128, 192, }, // high
+        { 48, 48, 32, 48, 48, 32, 256, 256, 384, }, // medium+
+        { 48, 48, 32, 48, 48, 32, 256, 256, 384, }, // medium
+        { 56, 56, 40, 56, 56, 40, 512, 512, 768, }, // low+
+        { 64, 64, 48, 64, 64, 48, 512, 512, 768, }, // low
+    },
+    {
+        { 16, 16,  8, 16, 16,  8,  24,  24,  36, }, // film3+
+        { 16, 16,  8, 16, 16,  8,  48,  48,  72, }, // film3
+        { 16, 16,  8, 16, 16,  8,  48,  48,  72, }, // film2+
+        { 16, 16,  8, 16, 16,  8,  64,  64,  96, }, // film2
+        { 16, 16,  8, 20, 20, 10,  80,  80, 128, }, // film1++
+        { 24, 24, 12, 24, 24, 12,  96,  96, 144, }, // film1+
+        { 24, 24, 12, 24, 24, 12, 192, 192, 288, }, // film1
+        { 32, 32, 24, 32, 32, 24, 128, 128, 192, }, // high+
+        { 32, 32, 24, 32, 32, 24, 256, 256, 384, }, // high
+        { 48, 48, 32, 48, 48, 32, 256, 256, 384, }, // medium+
+        { 48, 48, 32, 48, 48, 32, 512, 512, 768, }, // medium
+        { 56, 56, 40, 56, 56, 40, 512, 512, 768, }, // low+
+        { 64, 64, 48, 64, 64, 48,1024,1024,1536, }, // low
+    },
+    {
+        { 16, 16,  8, 16, 16,  8,  24,  24,  36, }, // film3+
+        { 16, 16,  8, 16, 16,  8,  48,  48,  72, }, // film3
+        { 16, 16,  8, 16, 16,  8,  48,  48,  72, }, // film2+
+        { 16, 16,  8, 16, 16,  8,  64,  64,  96, }, // film2
+        { 16, 16, 10, 20, 20, 10,  80,  80, 128, }, // film1++
+        { 24, 24, 12, 24, 24, 12,  96,  96, 144, }, // film1+
+        { 24, 24, 12, 24, 24, 12, 192, 192, 288, }, // film1
+        { 32, 32, 24, 32, 32, 24, 128, 128, 192, }, // high+
+        { 32, 32, 24, 32, 32, 24, 256, 256, 384, }, // high
+        { 48, 48, 32, 48, 48, 32, 256, 256, 384, }, // medium+
+        { 48, 48, 32, 48, 48, 32, 512, 512, 768, }, // medium
+        { 56, 56, 40, 56, 56, 40, 512, 512, 768, }, // low+
+        { 64, 64, 48, 64, 64, 48,1024,1024,1536, }, // low
+    }},
 };
 
 typedef struct Codebook {
@@ -444,8 +227,8 @@ typedef struct PlaneEnc {
 typedef struct CFHDEncContext {
     const AVClass *class;
 
-    PutBitContext pb;
-    PutByteContext pby;
+    PutBitContext       pb;
+    PutByteContext      pby;
 
     int quality;
     int planes;
@@ -454,14 +237,15 @@ typedef struct CFHDEncContext {
     PlaneEnc plane[4];
 
     uint16_t lut[1024];
-    Runbook rb[321];
+    Runbook  rb[321];
     Codebook cb[513];
     int16_t *alpha;
 
     CFHDEncDSPContext dsp;
 } CFHDEncContext;
 
-static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
+static av_cold int cfhd_encode_init(AVCodecContext *avctx)
+{
     CFHDEncContext *s = avctx->priv_data;
     const int sign_mask = 256;
     const int twos_complement = -sign_mask;
@@ -483,9 +267,9 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
 
     for (int i = 0; i < s->planes; i++) {
         int w8, h8, w4, h4, w2, h2;
-        int width = i ? avctx->width >> s->chroma_h_shift : avctx->width;
+        int width  = i ? avctx->width >> s->chroma_h_shift : avctx->width;
         int height = i ? FFALIGN(avctx->height >> s->chroma_v_shift, 8) :
-                     FFALIGN(avctx->height >> s->chroma_v_shift, 8);
+                         FFALIGN(avctx->height >> s->chroma_v_shift, 8);
         ptrdiff_t stride = (FFALIGN(width / 8, 8) + 64) * 8;
 
         w8 = FFALIGN(width / 8, 8) + 64;
@@ -496,9 +280,9 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
         h2 = h4 * 2;
 
         s->plane[i].dwt_buf =
-                av_mallocz_array(height * stride, sizeof(*s->plane[i].dwt_buf));
+            av_mallocz_array(height * stride, sizeof(*s->plane[i].dwt_buf));
         s->plane[i].dwt_tmp =
-                av_malloc_array(height * stride, sizeof(*s->plane[i].dwt_tmp));
+            av_malloc_array(height * stride, sizeof(*s->plane[i].dwt_tmp));
         if (!s->plane[i].dwt_buf || !s->plane[i].dwt_tmp)
             return AVERROR(ENOMEM);
 
@@ -515,9 +299,9 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
 
         for (int j = 0; j < DWT_LEVELS; j++) {
             for (int k = 0; k < FF_ARRAY_ELEMS(s->plane[i].band[j]); k++) {
-                s->plane[i].band[j][k].width = (width / 8) << j;
+                s->plane[i].band[j][k].width  = (width / 8) << j;
                 s->plane[i].band[j][k].height = (height / 8) << j;
-                s->plane[i].band[j][k].a_width = w8 << j;
+                s->plane[i].band[j][k].a_width  = w8 << j;
                 s->plane[i].band[j][k].a_height = h8 << j;
             }
         }
@@ -534,7 +318,7 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
     }
 
     for (int i = 0; i < 512; i++) {
-        int value = (i & sign_mask) ? twos_complement + (i & mag_mask) : i;
+        int value = (i & sign_mask) ? twos_complement + (i & mag_mask): i;
         int mag = FFMIN(FFABS(value), 255);
 
         if (mag) {
@@ -553,7 +337,7 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
 
     for (int i = 1, j = 0; i < 320 && j < 17; j++) {
         int run = runbook[j][2];
-        int end = runbook[j + 1][2];
+        int end = runbook[j+1][2];
 
         while (i < end) {
             s->rb[i].run = run;
@@ -591,7 +375,8 @@ static av_cold int cfhd_encode_init(AVCodecContext *avctx) {
 }
 
 static void quantize_band(int16_t *input, int width, int a_width,
-                          int height, unsigned quantization) {
+                          int height, unsigned quantization)
+{
     const int16_t factor = (uint32_t)(1U << 15) / quantization;
 
     for (int i = 0; i < height; i++) {
@@ -601,7 +386,8 @@ static void quantize_band(int16_t *input, int width, int a_width,
     }
 }
 
-static int put_runcode(PutBitContext *pb, int count, const Runbook *const rb) {
+static int put_runcode(PutBitContext *pb, int count, const Runbook *const rb)
+{
     while (count > 0) {
         const int index = FFMIN(320, count);
 
@@ -612,7 +398,8 @@ static int put_runcode(PutBitContext *pb, int count, const Runbook *const rb) {
     return 0;
 }
 
-static void process_alpha(const int16_t *src, int width, int height, ptrdiff_t stride, int16_t *dst) {
+static void process_alpha(const int16_t *src, int width, int height, ptrdiff_t stride, int16_t *dst)
+{
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             int alpha = src[j];
@@ -633,11 +420,12 @@ static void process_alpha(const int16_t *src, int width, int height, ptrdiff_t s
 }
 
 static int cfhd_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
-                             const AVFrame *frame, int *got_packet) {
+                             const AVFrame *frame, int *got_packet)
+{
     CFHDEncContext *s = avctx->priv_data;
     CFHDEncDSPContext *dsp = &s->dsp;
     PutByteContext *pby = &s->pby;
-    PutBitContext * pb = &s->pb;
+    PutBitContext *pb = &s->pb;
     const Codebook *const cb = s->cb;
     const Runbook *const rb = s->rb;
     const uint16_t *lut = s->lut;
@@ -649,7 +437,7 @@ static int cfhd_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         int a_width = s->plane[plane].band[2][0].a_width;
         int height = s->plane[plane].band[2][0].height;
         int act_plane = plane == 1 ? 2 : plane == 2 ? 1 : plane;
-        int16_t *input = (int16_t *) frame->data[act_plane];
+        int16_t *input = (int16_t *)frame->data[act_plane];
         int16_t *low = s->plane[plane].l_h[6];
         int16_t *high = s->plane[plane].l_h[7];
         ptrdiff_t in_stride = frame->linesize[act_plane] / 2;
@@ -1010,7 +798,8 @@ static int cfhd_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     return 0;
 }
 
-static av_cold int cfhd_encode_close(AVCodecContext *avctx) {
+static av_cold int cfhd_encode_close(AVCodecContext *avctx)
+{
     CFHDEncContext *s = avctx->priv_data;
 
     for (int i = 0; i < s->planes; i++) {
@@ -1032,46 +821,46 @@ static av_cold int cfhd_encode_close(AVCodecContext *avctx) {
 #define OFFSET(x) offsetof(CFHDEncContext, x)
 #define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-        {"quality", "set quality", OFFSET(quality), AV_OPT_TYPE_INT,   {.i64= 0}, 0, 12, VE, "q"},
-        {"film3+",  NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 0}, 0, 0,  VE, "q"},
-        {"film3",   NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 1}, 0, 0,  VE, "q"},
-        {"film2+",  NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 2}, 0, 0,  VE, "q"},
-        {"film2",   NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 3}, 0, 0,  VE, "q"},
-        {"film1.5", NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 4}, 0, 0,  VE, "q"},
-        {"film1+",  NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 5}, 0, 0,  VE, "q"},
-        {"film1",   NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 6}, 0, 0,  VE, "q"},
-        {"high+",   NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 7}, 0, 0,  VE, "q"},
-        {"high",    NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 8}, 0, 0,  VE, "q"},
-        {"medium+", NULL, 0,                        AV_OPT_TYPE_CONST, {.i64= 9}, 0, 0,  VE, "q"},
-        {"medium",  NULL, 0,                        AV_OPT_TYPE_CONST, {.i64=10}, 0, 0,  VE, "q"},
-        {"low+",    NULL, 0,                        AV_OPT_TYPE_CONST, {.i64=11}, 0, 0,  VE, "q"},
-        {"low",     NULL, 0,                        AV_OPT_TYPE_CONST, {.i64=12}, 0, 0,  VE, "q"},
-        {NULL},
+    { "quality", "set quality", OFFSET(quality), AV_OPT_TYPE_INT,   {.i64= 0}, 0, 12, VE, "q" },
+    { "film3+",   NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 0}, 0,  0, VE, "q" },
+    { "film3",    NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 1}, 0,  0, VE, "q" },
+    { "film2+",   NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 2}, 0,  0, VE, "q" },
+    { "film2",    NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 3}, 0,  0, VE, "q" },
+    { "film1.5",  NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 4}, 0,  0, VE, "q" },
+    { "film1+",   NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 5}, 0,  0, VE, "q" },
+    { "film1",    NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 6}, 0,  0, VE, "q" },
+    { "high+",    NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 7}, 0,  0, VE, "q" },
+    { "high",     NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 8}, 0,  0, VE, "q" },
+    { "medium+",  NULL,         0,               AV_OPT_TYPE_CONST, {.i64= 9}, 0,  0, VE, "q" },
+    { "medium",   NULL,         0,               AV_OPT_TYPE_CONST, {.i64=10}, 0,  0, VE, "q" },
+    { "low+",     NULL,         0,               AV_OPT_TYPE_CONST, {.i64=11}, 0,  0, VE, "q" },
+    { "low",      NULL,         0,               AV_OPT_TYPE_CONST, {.i64=12}, 0,  0, VE, "q" },
+    { NULL},
 };
 
 static const AVClass cfhd_class = {
-        .class_name = "cfhd",
-        .item_name  = av_default_item_name,
-        .option     = options,
-        .version    = LIBAVUTIL_VERSION_INT,
+    .class_name = "cfhd",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_cfhd_encoder = {
-        .name             = "cfhd",
-        .long_name        = NULL_IF_CONFIG_SMALL("GoPro CineForm HD"),
-        .type             = AVMEDIA_TYPE_VIDEO,
-        .id               = AV_CODEC_ID_CFHD,
-        .priv_data_size   = sizeof(CFHDEncContext),
-        .priv_class       = &cfhd_class,
-        .init             = cfhd_encode_init,
-        .close            = cfhd_encode_close,
-        .encode2          = cfhd_encode_frame,
-        .capabilities     = AV_CODEC_CAP_FRAME_THREADS,
-        .pix_fmts         = (const enum AVPixelFormat[]) {
-                AV_PIX_FMT_YUV422P10,
-                AV_PIX_FMT_GBRP12,
-                AV_PIX_FMT_GBRAP12,
-                AV_PIX_FMT_NONE
-        },
-        .caps_internal    = FF_CODEC_CAP_INIT_CLEANUP,
+    .name             = "cfhd",
+    .long_name        = NULL_IF_CONFIG_SMALL("GoPro CineForm HD"),
+    .type             = AVMEDIA_TYPE_VIDEO,
+    .id               = AV_CODEC_ID_CFHD,
+    .priv_data_size   = sizeof(CFHDEncContext),
+    .priv_class       = &cfhd_class,
+    .init             = cfhd_encode_init,
+    .close            = cfhd_encode_close,
+    .encode2          = cfhd_encode_frame,
+    .capabilities     = AV_CODEC_CAP_FRAME_THREADS,
+    .pix_fmts         = (const enum AVPixelFormat[]) {
+                          AV_PIX_FMT_YUV422P10,
+                          AV_PIX_FMT_GBRP12,
+                          AV_PIX_FMT_GBRAP12,
+                          AV_PIX_FMT_NONE
+                        },
+    .caps_internal    = FF_CODEC_CAP_INIT_CLEANUP,
 };

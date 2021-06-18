@@ -24,7 +24,8 @@
 #include "libavcodec/audiodsp.h"
 #include "audiodsp_arm.h"
 
-av_cold void ff_audiodsp_init_arm(AudioDSPContext *c) {
+av_cold void ff_audiodsp_init_arm(AudioDSPContext *c)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags))

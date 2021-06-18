@@ -30,17 +30,15 @@ void ff_cfhd_horiz_filter_sse2(int16_t *output, ptrdiff_t out_stride,
                                const int16_t *low, ptrdiff_t low_stride,
                                const int16_t *high, ptrdiff_t high_stride,
                                int width, int height);
-
 void ff_cfhd_vert_filter_sse2(int16_t *output, ptrdiff_t out_stride,
                               const int16_t *low, ptrdiff_t low_stride,
                               const int16_t *high, ptrdiff_t high_stride,
                               int width, int height);
-
 void ff_cfhd_horiz_filter_clip10_sse2(int16_t *output, const int16_t *low, const int16_t *high, int width, int bpc);
-
 void ff_cfhd_horiz_filter_clip12_sse2(int16_t *output, const int16_t *low, const int16_t *high, int width, int bpc);
 
-av_cold void ff_cfhddsp_init_x86(CFHDDSPContext *c, int depth, int bayer) {
+av_cold void ff_cfhddsp_init_x86(CFHDDSPContext *c, int depth, int bayer)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (EXTERNAL_SSE2(cpu_flags)) {

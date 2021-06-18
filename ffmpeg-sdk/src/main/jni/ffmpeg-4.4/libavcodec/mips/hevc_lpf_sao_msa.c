@@ -23,7 +23,8 @@
 
 static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
                                          int32_t beta, int32_t *tc,
-                                         uint8_t *p_is_pcm, uint8_t *q_is_pcm) {
+                                         uint8_t *p_is_pcm, uint8_t *q_is_pcm)
+{
     uint8_t *p3 = src - (stride << 2);
     uint8_t *p2 = src - ((stride << 1) + stride);
     uint8_t *p1 = src - (stride << 1);
@@ -46,7 +47,7 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
     v8i16 temp2;
     v8i16 tc_pos, tc_neg;
     v8i16 diff0, diff1, delta0, delta1, delta2, abs_delta0;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8u16 p3_src, p2_src, p1_src, p0_src, q0_src, q1_src, q2_src, q3_src;
 
     dp00 = abs(p2[0] - (p1[0] << 1) + p0[0]);
@@ -112,8 +113,8 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
         flag0 = abs(p3[0] - p0[0]) + abs(q3[0] - q0[0]) < beta30 &&
                 abs(p0[0] - q0[0]) < tc250;
         flag0 = flag0 && (abs(p3[3] - p0[3]) + abs(q3[3] - q0[3]) < beta30 &&
-                          abs(p0[3] - q0[3]) < tc250 && (d00 << 1) < beta20 &&
-                          (d30 << 1) < beta20);
+                abs(p0[3] - q0[3]) < tc250 && (d00 << 1) < beta20 &&
+                (d30 << 1) < beta20);
 
         tc_pos = (v8i16) __msa_ilvev_d(cmp1, cmp0);
         ILVR_B4_UH(zero, q0_src, zero, q1_src, zero, q2_src, zero, q3_src,
@@ -121,8 +122,8 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
         flag1 = abs(p3[4] - p0[4]) + abs(q3[4] - q0[4]) < beta30 &&
                 abs(p0[4] - q0[4]) < tc254;
         flag1 = flag1 && (abs(p3[7] - p0[7]) + abs(q3[7] - q0[7]) < beta30 &&
-                          abs(p0[7] - q0[7]) < tc254 && (d04 << 1) < beta20 &&
-                          (d34 << 1) < beta20);
+                abs(p0[7] - q0[7]) < tc254 && (d04 << 1) < beta20 &&
+                (d34 << 1) < beta20);
 
         cmp0 = (v2i64) __msa_fill_w(flag0);
         cmp1 = (v2i64) __msa_fill_w(flag1);
@@ -138,21 +139,21 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
             temp0 = (p1_src + p0_src + q0_src);
             temp1 = ((p3_src + p2_src) << 1) + p2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p2_src);
+            temp2 = (v8i16) (temp1 - p2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst0 = (v16u8)(temp2 + (v8i16) p2_src);
+            dst0 = (v16u8) (temp2 + (v8i16) p2_src);
 
             temp1 = temp0 + p2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - p1_src);
+            temp2 = (v8i16) (temp1 - p1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst1 = (v16u8)(temp2 + (v8i16) p1_src);
+            dst1 = (v16u8) (temp2 + (v8i16) p1_src);
 
             temp1 = (temp0 << 1) + p2_src + q1_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p0_src);
+            temp2 = (v8i16) (temp1 - p0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst2 = (v16u8)(temp2 + (v8i16) p0_src);
+            dst2 = (v16u8) (temp2 + (v8i16) p0_src);
 
             dst0 = __msa_bmz_v(dst0, (v16u8) p2_src, (v16u8) p_is_pcm_vec);
             dst1 = __msa_bmz_v(dst1, (v16u8) p1_src, (v16u8) p_is_pcm_vec);
@@ -163,21 +164,21 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
 
             temp1 = ((q3_src + q2_src) << 1) + q2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q2_src);
+            temp2 = (v8i16) (temp1 - q2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst5 = (v16u8)(temp2 + (v8i16) q2_src);
+            dst5 = (v16u8) (temp2 + (v8i16) q2_src);
 
             temp1 = temp0 + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - q1_src);
+            temp2 = (v8i16) (temp1 - q1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst4 = (v16u8)(temp2 + (v8i16) q1_src);
+            dst4 = (v16u8) (temp2 + (v8i16) q1_src);
 
             temp1 = (temp0 << 1) + p1_src + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q0_src);
+            temp2 = (v8i16) (temp1 - q0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst3 = (v16u8)(temp2 + (v8i16) q0_src);
+            dst3 = (v16u8) (temp2 + (v8i16) q0_src);
 
             dst3 = __msa_bmz_v(dst3, (v16u8) q0_src, (v16u8) q_is_pcm_vec);
             dst4 = __msa_bmz_v(dst4, (v16u8) q1_src, (v16u8) q_is_pcm_vec);
@@ -206,25 +207,25 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
             /* weak filter */
             tc_neg = -tc_pos;
 
-            diff0 = (v8i16)(q0_src - p0_src);
-            diff1 = (v8i16)(q1_src - p1_src);
+            diff0 = (v8i16) (q0_src - p0_src);
+            diff1 = (v8i16) (q1_src - p1_src);
             diff0 = (diff0 << 3) + diff0;
             diff1 = (diff1 << 1) + diff1;
             delta0 = diff0 - diff1;
             delta0 = __msa_srari_h(delta0, 4);
 
-            temp1 = (v8u16)((tc_pos << 3) + (tc_pos << 1));
+            temp1 = (v8u16) ((tc_pos << 3) + (tc_pos << 1));
             abs_delta0 = __msa_add_a_h(delta0, (v8i16) zero);
             abs_delta0 = (v8u16) abs_delta0 < temp1;
 
             CLIP_SH(delta0, tc_neg, tc_pos);
 
-            temp2 = (v8i16)(delta0 + p0_src);
+            temp2 = (v8i16) (delta0 + p0_src);
             CLIP_SH_0_255(temp2);
             temp0 = (v8u16) __msa_bmz_v((v16u8) temp2, (v16u8) p0_src,
                                         (v16u8) p_is_pcm_vec);
 
-            temp2 = (v8i16)(q0_src - delta0);
+            temp2 = (v8i16) (q0_src - delta0);
             CLIP_SH_0_255(temp2);
             temp2 = (v8i16) __msa_bmz_v((v16u8) temp2, (v16u8) q0_src,
                                         (v16u8) q_is_pcm_vec);
@@ -296,21 +297,21 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
             temp0 = (p1_src + p0_src + q0_src);
             temp1 = ((p3_src + p2_src) << 1) + p2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p2_src);
+            temp2 = (v8i16) (temp1 - p2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst0 = (v16u8)(temp2 + (v8i16) p2_src);
+            dst0 = (v16u8) (temp2 + (v8i16) p2_src);
 
             temp1 = temp0 + p2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - p1_src);
+            temp2 = (v8i16) (temp1 - p1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst1 = (v16u8)(temp2 + (v8i16) p1_src);
+            dst1 = (v16u8) (temp2 + (v8i16) p1_src);
 
             temp1 = (temp0 << 1) + p2_src + q1_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p0_src);
+            temp2 = (v8i16) (temp1 - p0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst2 = (v16u8)(temp2 + (v8i16) p0_src);
+            dst2 = (v16u8) (temp2 + (v8i16) p0_src);
 
             dst0 = __msa_bmz_v(dst0, (v16u8) p2_src, (v16u8) p_is_pcm_vec);
             dst1 = __msa_bmz_v(dst1, (v16u8) p1_src, (v16u8) p_is_pcm_vec);
@@ -321,21 +322,21 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
 
             temp1 = ((q3_src + q2_src) << 1) + q2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q2_src);
+            temp2 = (v8i16) (temp1 - q2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst5 = (v16u8)(temp2 + (v8i16) q2_src);
+            dst5 = (v16u8) (temp2 + (v8i16) q2_src);
 
             temp1 = temp0 + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - q1_src);
+            temp2 = (v8i16) (temp1 - q1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst4 = (v16u8)(temp2 + (v8i16) q1_src);
+            dst4 = (v16u8) (temp2 + (v8i16) q1_src);
 
             temp1 = (temp0 << 1) + p1_src + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q0_src);
+            temp2 = (v8i16) (temp1 - q0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst3 = (v16u8)(temp2 + (v8i16) q0_src);
+            dst3 = (v16u8) (temp2 + (v8i16) q0_src);
 
             dst3 = __msa_bmz_v(dst3, (v16u8) q0_src, (v16u8) q_is_pcm_vec);
             dst4 = __msa_bmz_v(dst4, (v16u8) q1_src, (v16u8) q_is_pcm_vec);
@@ -350,25 +351,25 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
             tc_pos >>= 1;
             tc_neg = -tc_pos;
 
-            diff0 = (v8i16)(q0_src - p0_src);
-            diff1 = (v8i16)(q1_src - p1_src);
+            diff0 = (v8i16) (q0_src - p0_src);
+            diff1 = (v8i16) (q1_src - p1_src);
             diff0 = (diff0 << 3) + diff0;
             diff1 = (diff1 << 1) + diff1;
             delta0 = diff0 - diff1;
             delta0 = __msa_srari_h(delta0, 4);
 
-            temp1 = (v8u16)((tc_pos << 3) + (tc_pos << 1));
+            temp1 = (v8u16) ((tc_pos << 3) + (tc_pos << 1));
             abs_delta0 = __msa_add_a_h(delta0, (v8i16) zero);
             abs_delta0 = (v8u16) abs_delta0 < temp1;
 
             CLIP_SH(delta0, tc_neg, tc_pos);
 
-            temp2 = (v8i16)(delta0 + p0_src);
+            temp2 = (v8i16) (delta0 + p0_src);
             CLIP_SH_0_255(temp2);
             temp0 = (v8u16) __msa_bmz_v((v16u8) temp2, (v16u8) p0_src,
                                         (v16u8) p_is_pcm_vec);
 
-            temp2 = (v8i16)(q0_src - delta0);
+            temp2 = (v8i16) (q0_src - delta0);
             CLIP_SH_0_255(temp2);
             temp2 = (v8i16) __msa_bmz_v((v16u8) temp2, (v16u8) q0_src,
                                         (v16u8) q_is_pcm_vec);
@@ -448,7 +449,8 @@ static void hevc_loopfilter_luma_hor_msa(uint8_t *src, int32_t stride,
 
 static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
                                          int32_t beta, int32_t *tc,
-                                         uint8_t *p_is_pcm, uint8_t *q_is_pcm) {
+                                         uint8_t *p_is_pcm, uint8_t *q_is_pcm)
+{
     uint8_t *p3 = src;
     uint8_t *p2 = src + 3 * stride;
     uint8_t *p1 = src + (stride << 2);
@@ -468,7 +470,7 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
     v8i16 temp2;
     v8i16 tc_pos, tc_neg;
     v8i16 diff0, diff1, delta0, delta1, delta2, abs_delta0;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8u16 p3_src, p2_src, p1_src, p0_src, q0_src, q1_src, q2_src, q3_src;
 
     dp00 = abs(p3[-3] - (p3[-2] << 1) + p3[-1]);
@@ -531,8 +533,8 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
         flag0 = abs(p3[-4] - p3[-1]) + abs(p3[3] - p3[0]) < beta30 &&
                 abs(p3[-1] - p3[0]) < tc250;
         flag0 = flag0 && (abs(p2[-4] - p2[-1]) + abs(p2[3] - p2[0]) < beta30 &&
-                          abs(p2[-1] - p2[0]) < tc250 && (d00 << 1) < beta20 &&
-                          (d30 << 1) < beta20);
+                abs(p2[-1] - p2[0]) < tc250 && (d00 << 1) < beta20 &&
+                (d30 << 1) < beta20);
         cmp0 = __msa_fill_d(flag0);
         ILVR_B4_UH(zero, p3_src, zero, p2_src, zero, p1_src, zero, p0_src,
                    p3_src, p2_src, p1_src, p0_src);
@@ -540,8 +542,8 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
         flag1 = abs(p1[-4] - p1[-1]) + abs(p1[3] - p1[0]) < beta30 &&
                 abs(p1[-1] - p1[0]) < tc254;
         flag1 = flag1 && (abs(p0[-4] - p0[-1]) + abs(p0[3] - p0[0]) < beta30 &&
-                          abs(p0[-1] - p0[0]) < tc254 && (d04 << 1) < beta20 &&
-                          (d34 << 1) < beta20);
+                abs(p0[-1] - p0[0]) < tc254 && (d04 << 1) < beta20 &&
+                (d34 << 1) < beta20);
         ILVR_B4_UH(zero, q0_src, zero, q1_src, zero, q2_src, zero, q3_src,
                    q0_src, q1_src, q2_src, q3_src);
 
@@ -558,21 +560,21 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
 
             temp1 = ((p3_src + p2_src) << 1) + p2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p2_src);
+            temp2 = (v8i16) (temp1 - p2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst0 = (v16u8)(temp2 + (v8i16) p2_src);
+            dst0 = (v16u8) (temp2 + (v8i16) p2_src);
 
             temp1 = temp0 + p2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - p1_src);
+            temp2 = (v8i16) (temp1 - p1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst1 = (v16u8)(temp2 + (v8i16) p1_src);
+            dst1 = (v16u8) (temp2 + (v8i16) p1_src);
 
             temp1 = (temp0 << 1) + p2_src + q1_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p0_src);
+            temp2 = (v8i16) (temp1 - p0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst2 = (v16u8)(temp2 + (v8i16) p0_src);
+            dst2 = (v16u8) (temp2 + (v8i16) p0_src);
 
             dst0 = __msa_bmz_v(dst0, (v16u8) p2_src, (v16u8) p_is_pcm_vec);
             dst1 = __msa_bmz_v(dst1, (v16u8) p1_src, (v16u8) p_is_pcm_vec);
@@ -582,21 +584,21 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
             temp0 = (q1_src + p0_src + q0_src);
             temp1 = ((q3_src + q2_src) << 1) + q2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q2_src);
+            temp2 = (v8i16) (temp1 - q2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst5 = (v16u8)(temp2 + (v8i16) q2_src);
+            dst5 = (v16u8) (temp2 + (v8i16) q2_src);
 
             temp1 = temp0 + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - q1_src);
+            temp2 = (v8i16) (temp1 - q1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst4 = (v16u8)(temp2 + (v8i16) q1_src);
+            dst4 = (v16u8) (temp2 + (v8i16) q1_src);
 
             temp1 = (temp0 << 1) + p1_src + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q0_src);
+            temp2 = (v8i16) (temp1 - q0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst3 = (v16u8)(temp2 + (v8i16) q0_src);
+            dst3 = (v16u8) (temp2 + (v8i16) q0_src);
 
             dst3 = __msa_bmz_v(dst3, (v16u8) q0_src, (v16u8) q_is_pcm_vec);
             dst4 = __msa_bmz_v(dst4, (v16u8) q1_src, (v16u8) q_is_pcm_vec);
@@ -607,24 +609,24 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
             tc_pos >>= 1;
             tc_neg = -tc_pos;
 
-            diff0 = (v8i16)(q0_src - p0_src);
-            diff1 = (v8i16)(q1_src - p1_src);
+            diff0 = (v8i16) (q0_src - p0_src);
+            diff1 = (v8i16) (q1_src - p1_src);
             diff0 = (diff0 << 3) + diff0;
             diff1 = (diff1 << 1) + diff1;
             delta0 = diff0 - diff1;
             delta0 = __msa_srari_h(delta0, 4);
 
-            temp1 = (v8u16)((tc_pos << 3) + (tc_pos << 1));
+            temp1 = (v8u16) ((tc_pos << 3) + (tc_pos << 1));
             abs_delta0 = __msa_add_a_h(delta0, (v8i16) zero);
             abs_delta0 = (v8u16) abs_delta0 < temp1;
 
             CLIP_SH(delta0, tc_neg, tc_pos);
-            temp2 = (v8i16)(delta0 + p0_src);
+            temp2 = (v8i16) (delta0 + p0_src);
             CLIP_SH_0_255(temp2);
             temp0 = (v8u16) __msa_bmz_v((v16u8) temp2, (v16u8) p0_src,
                                         (v16u8) p_is_pcm_vec);
 
-            temp2 = (v8i16)(q0_src - delta0);
+            temp2 = (v8i16) (q0_src - delta0);
             CLIP_SH_0_255(temp2);
             temp2 = (v8i16) __msa_bmz_v((v16u8) temp2, (v16u8) q0_src,
                                         (v16u8) q_is_pcm_vec);
@@ -723,21 +725,21 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
 
             temp1 = ((p3_src + p2_src) << 1) + p2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p2_src);
+            temp2 = (v8i16) (temp1 - p2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst0 = (v16u8)(temp2 + (v8i16) p2_src);
+            dst0 = (v16u8) (temp2 + (v8i16) p2_src);
 
             temp1 = temp0 + p2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - p1_src);
+            temp2 = (v8i16) (temp1 - p1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst1 = (v16u8)(temp2 + (v8i16) p1_src);
+            dst1 = (v16u8) (temp2 + (v8i16) p1_src);
 
             temp1 = (temp0 << 1) + p2_src + q1_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - p0_src);
+            temp2 = (v8i16) (temp1 - p0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst2 = (v16u8)(temp2 + (v8i16) p0_src);
+            dst2 = (v16u8) (temp2 + (v8i16) p0_src);
 
             dst0 = __msa_bmz_v(dst0, (v16u8) p2_src, (v16u8) p_is_pcm_vec);
             dst1 = __msa_bmz_v(dst1, (v16u8) p1_src, (v16u8) p_is_pcm_vec);
@@ -747,21 +749,21 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
             temp0 = (q1_src + p0_src + q0_src);
             temp1 = ((q3_src + q2_src) << 1) + q2_src + temp0;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q2_src);
+            temp2 = (v8i16) (temp1 - q2_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst5 = (v16u8)(temp2 + (v8i16) q2_src);
+            dst5 = (v16u8) (temp2 + (v8i16) q2_src);
 
             temp1 = temp0 + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 2);
-            temp2 = (v8i16)(temp1 - q1_src);
+            temp2 = (v8i16) (temp1 - q1_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst4 = (v16u8)(temp2 + (v8i16) q1_src);
+            dst4 = (v16u8) (temp2 + (v8i16) q1_src);
 
             temp1 = (temp0 << 1) + p1_src + q2_src;
             temp1 = (v8u16) __msa_srari_h((v8i16) temp1, 3);
-            temp2 = (v8i16)(temp1 - q0_src);
+            temp2 = (v8i16) (temp1 - q0_src);
             CLIP_SH(temp2, tc_neg, tc_pos);
-            dst3 = (v16u8)(temp2 + (v8i16) q0_src);
+            dst3 = (v16u8) (temp2 + (v8i16) q0_src);
 
             dst3 = __msa_bmz_v(dst3, (v16u8) q0_src, (v16u8) q_is_pcm_vec);
             dst4 = __msa_bmz_v(dst4, (v16u8) q1_src, (v16u8) q_is_pcm_vec);
@@ -772,25 +774,25 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
             tc_pos >>= 1;
             tc_neg = -tc_pos;
 
-            diff0 = (v8i16)(q0_src - p0_src);
-            diff1 = (v8i16)(q1_src - p1_src);
+            diff0 = (v8i16) (q0_src - p0_src);
+            diff1 = (v8i16) (q1_src - p1_src);
             diff0 = (diff0 << 3) + diff0;
             diff1 = (diff1 << 1) + diff1;
             delta0 = diff0 - diff1;
             delta0 = __msa_srari_h(delta0, 4);
 
-            temp1 = (v8u16)((tc_pos << 3) + (tc_pos << 1));
+            temp1 = (v8u16) ((tc_pos << 3) + (tc_pos << 1));
             abs_delta0 = __msa_add_a_h(delta0, (v8i16) zero);
             abs_delta0 = (v8u16) abs_delta0 < temp1;
 
             CLIP_SH(delta0, tc_neg, tc_pos);
 
-            temp2 = (v8i16)(delta0 + p0_src);
+            temp2 = (v8i16) (delta0 + p0_src);
             CLIP_SH_0_255(temp2);
             temp0 = (v8u16) __msa_bmz_v((v16u8) temp2, (v16u8) p0_src,
                                         (v16u8) p_is_pcm_vec);
 
-            temp2 = (v8i16)(q0_src - delta0);
+            temp2 = (v8i16) (q0_src - delta0);
             CLIP_SH_0_255(temp2);
             temp2 = (v8i16) __msa_bmz_v((v16u8) temp2, (v16u8) q0_src,
                                         (v16u8) q_is_pcm_vec);
@@ -913,7 +915,8 @@ static void hevc_loopfilter_luma_ver_msa(uint8_t *src, int32_t stride,
 
 static void hevc_loopfilter_chroma_hor_msa(uint8_t *src, int32_t stride,
                                            int32_t *tc, uint8_t *p_is_pcm,
-                                           uint8_t *q_is_pcm) {
+                                           uint8_t *q_is_pcm)
+{
     uint8_t *p1_ptr = src - (stride << 1);
     uint8_t *p0_ptr = src - stride;
     uint8_t *q0_ptr = src;
@@ -921,7 +924,7 @@ static void hevc_loopfilter_chroma_hor_msa(uint8_t *src, int32_t stride,
     v2i64 cmp0, cmp1, p_is_pcm_vec, q_is_pcm_vec;
     v8u16 p1, p0, q0, q1;
     v8i16 tc_pos, tc_neg;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8i16 temp0, temp1, delta;
 
     if (!(tc[0] <= 0) || !(tc[1] <= 0)) {
@@ -947,19 +950,19 @@ static void hevc_loopfilter_chroma_hor_msa(uint8_t *src, int32_t stride,
 
         ILVR_B4_UH(zero, p1, zero, p0, zero, q0, zero, q1, p1, p0, q0, q1);
 
-        temp0 = (v8i16)(q0 - p0);
-        temp1 = (v8i16)(p1 - q1);
+        temp0 = (v8i16) (q0 - p0);
+        temp1 = (v8i16) (p1 - q1);
         temp0 <<= 2;
         temp0 += temp1;
         delta = __msa_srari_h((v8i16) temp0, 3);
         CLIP_SH(delta, tc_neg, tc_pos);
 
-        temp0 = (v8i16)((v8i16) p0 + delta);
+        temp0 = (v8i16) ((v8i16) p0 + delta);
         CLIP_SH_0_255(temp0);
         temp0 = (v8i16) __msa_bmz_v((v16u8) temp0, (v16u8) p0,
                                     (v16u8) p_is_pcm_vec);
 
-        temp1 = (v8i16)((v8i16) q0 - delta);
+        temp1 = (v8i16) ((v8i16) q0 - delta);
         CLIP_SH_0_255(temp1);
         temp1 = (v8i16) __msa_bmz_v((v16u8) temp1, (v16u8) q0,
                                     (v16u8) q_is_pcm_vec);
@@ -975,12 +978,13 @@ static void hevc_loopfilter_chroma_hor_msa(uint8_t *src, int32_t stride,
 
 static void hevc_loopfilter_chroma_ver_msa(uint8_t *src, int32_t stride,
                                            int32_t *tc, uint8_t *p_is_pcm,
-                                           uint8_t *q_is_pcm) {
+                                           uint8_t *q_is_pcm)
+{
     v2i64 cmp0, cmp1, p_is_pcm_vec, q_is_pcm_vec;
     v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
     v8u16 p1, p0, q0, q1;
     v8i16 tc_pos, tc_neg;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v8i16 temp0, temp1, delta;
 
     if (!(tc[0] <= 0) || !(tc[1] <= 0)) {
@@ -1005,19 +1009,19 @@ static void hevc_loopfilter_chroma_ver_msa(uint8_t *src, int32_t stride,
                            p1, p0, q0, q1);
         ILVR_B4_UH(zero, p1, zero, p0, zero, q0, zero, q1, p1, p0, q0, q1);
 
-        temp0 = (v8i16)(q0 - p0);
-        temp1 = (v8i16)(p1 - q1);
+        temp0 = (v8i16) (q0 - p0);
+        temp1 = (v8i16) (p1 - q1);
         temp0 <<= 2;
         temp0 += temp1;
         delta = __msa_srari_h((v8i16) temp0, 3);
         CLIP_SH(delta, tc_neg, tc_pos);
 
-        temp0 = (v8i16)((v8i16) p0 + delta);
+        temp0 = (v8i16) ((v8i16) p0 + delta);
         CLIP_SH_0_255(temp0);
         temp0 = (v8i16) __msa_bmz_v((v16u8) temp0, (v16u8) p0,
                                     (v16u8) p_is_pcm_vec);
 
-        temp1 = (v8i16)((v8i16) q0 - delta);
+        temp1 = (v8i16) ((v8i16) q0 - delta);
         CLIP_SH_0_255(temp1);
         temp1 = (v8i16) __msa_bmz_v((v16u8) temp1, (v16u8) q0,
                                     (v16u8) q_is_pcm_vec);
@@ -1037,12 +1041,13 @@ static void hevc_sao_band_filter_4width_msa(uint8_t *dst, int32_t dst_stride,
                                             uint8_t *src, int32_t src_stride,
                                             int32_t sao_left_class,
                                             int16_t *sao_offset_val,
-                                            int32_t height) {
+                                            int32_t height)
+{
     v16u8 src0, src1, src2, src3;
     v16i8 src0_r, src1_r;
     v16i8 offset, offset_val, mask;
     v16i8 dst0, offset0, offset1;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     offset_val = LD_SB(sao_offset_val + 1);
     offset_val = (v16i8) __msa_pckev_d((v2i64) offset_val, (v2i64) offset_val);
@@ -1098,12 +1103,13 @@ static void hevc_sao_band_filter_8width_msa(uint8_t *dst, int32_t dst_stride,
                                             uint8_t *src, int32_t src_stride,
                                             int32_t sao_left_class,
                                             int16_t *sao_offset_val,
-                                            int32_t height) {
+                                            int32_t height)
+{
     v16u8 src0, src1, src2, src3;
     v16i8 src0_r, src1_r, mask0, mask1;
     v16i8 offset_mask0, offset_mask1, offset_val;
     v16i8 offset0, offset1, dst0, dst1;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     offset_val = LD_SB(sao_offset_val + 1);
     offset_val = (v16i8) __msa_pckev_d((v2i64) offset_val, (v2i64) offset_val);
@@ -1170,14 +1176,15 @@ static void hevc_sao_band_filter_16multiple_msa(uint8_t *dst,
                                                 int32_t src_stride,
                                                 int32_t sao_left_class,
                                                 int16_t *sao_offset_val,
-                                                int32_t width, int32_t height) {
+                                                int32_t width, int32_t height)
+{
     int32_t w_cnt;
     v16u8 src0, src1, src2, src3;
     v16i8 out0, out1, out2, out3;
     v16i8 mask0, mask1, mask2, mask3;
     v16i8 tmp0, tmp1, tmp2, tmp3, offset_val;
     v16i8 offset0, offset1;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     offset_val = LD_SB(sao_offset_val + 1);
     offset_val = (v16i8) __msa_pckev_d((v2i64) offset_val, (v2i64) offset_val);
@@ -1250,14 +1257,15 @@ static void hevc_sao_edge_filter_0degree_4width_msa(uint8_t *dst,
                                                     uint8_t *src,
                                                     int32_t src_stride,
                                                     int16_t *sao_offset_val,
-                                                    int32_t height) {
+                                                    int32_t height)
+{
     uint32_t dst_val0, dst_val1;
     v16u8 cmp_minus10, diff_minus10, diff_minus11, src_minus10, src_minus11;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16i8 sao_offset = LD_SB(sao_offset_val);
     v16i8 src_plus10, offset, src0, dst0;
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
     src -= 1;
@@ -1341,14 +1349,15 @@ static void hevc_sao_edge_filter_0degree_8width_msa(uint8_t *dst,
                                                     uint8_t *src,
                                                     int32_t src_stride,
                                                     int16_t *sao_offset_val,
-                                                    int32_t height) {
+                                                    int32_t height)
+{
     uint64_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16u8 cmp_minus10, diff_minus10, diff_minus11;
     v16u8 src0, src1, dst0, src_minus10, src_minus11, src_plus10, src_plus11;
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
     src -= 1;
@@ -1408,7 +1417,7 @@ static void hevc_sao_edge_filter_0degree_8width_msa(uint8_t *dst,
     cmp_minus10 = (src_minus10 < (v16u8) src0);
     diff_minus10 = __msa_bmnz_v(diff_minus10, const1, cmp_minus10);
 
-    cmp_minus10 = (src0 == src_plus10);
+    cmp_minus10 = (src0 ==  src_plus10);
     diff_minus11 = __msa_nor_v(cmp_minus10, cmp_minus10);
     cmp_minus10 = (src_plus10 < src0);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus10);
@@ -1435,10 +1444,11 @@ static void hevc_sao_edge_filter_0degree_16multiple_msa(uint8_t *dst,
                                                         int32_t src_stride,
                                                         int16_t *sao_offset_val,
                                                         int32_t width,
-                                                        int32_t height) {
+                                                        int32_t height)
+{
     uint8_t *dst_ptr, *src_minus1;
     int32_t v_cnt;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 sao_offset;
     v16u8 cmp_minus10, cmp_plus10, diff_minus10, diff_plus10, cmp_minus11;
@@ -1549,9 +1559,10 @@ static void hevc_sao_edge_filter_90degree_4width_msa(uint8_t *dst,
                                                      uint8_t *src,
                                                      int32_t src_stride,
                                                      int16_t *sao_offset_val,
-                                                     int32_t height) {
+                                                     int32_t height)
+{
     uint32_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 dst0;
     v16i8 sao_offset = LD_SB(sao_offset_val);
@@ -1585,8 +1596,8 @@ static void hevc_sao_edge_filter_90degree_4width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1628,8 +1639,8 @@ static void hevc_sao_edge_filter_90degree_4width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1653,9 +1664,10 @@ static void hevc_sao_edge_filter_90degree_8width_msa(uint8_t *dst,
                                                      uint8_t *src,
                                                      int32_t src_stride,
                                                      int16_t *sao_offset_val,
-                                                     int32_t height) {
+                                                     int32_t height)
+{
     uint64_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
     v16i8 src_zero0, src_zero1, dst0;
@@ -1687,8 +1699,8 @@ static void hevc_sao_edge_filter_90degree_8width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1729,8 +1741,8 @@ static void hevc_sao_edge_filter_90degree_8width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1756,11 +1768,12 @@ static void hevc_sao_edge_filter_90degree_16multiple_msa(uint8_t *dst,
                                                          int16_t *
                                                          sao_offset_val,
                                                          int32_t width,
-                                                         int32_t height) {
+                                                         int32_t height)
+{
     uint8_t *src_orig = src;
     uint8_t *dst_orig = dst;
     int32_t h_cnt, v_cnt;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16u8 cmp_minus10, cmp_plus10, diff_minus10, diff_plus10, cmp_minus11;
     v16u8 cmp_plus11, diff_minus11, diff_plus11, cmp_minus12, cmp_plus12;
@@ -1855,17 +1868,18 @@ static void hevc_sao_edge_filter_45degree_4width_msa(uint8_t *dst,
                                                      uint8_t *src,
                                                      int32_t src_stride,
                                                      int16_t *sao_offset_val,
-                                                     int32_t height) {
+                                                     int32_t height)
+{
     uint8_t *src_orig;
     uint32_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
     v16u8 cmp_minus10, diff_minus10, src_minus10, cmp_minus11, diff_minus11;
     v16u8 src_minus11, src10, src11;
     v16i8 src_plus0, src_zero0, src_plus1, src_zero1, dst0;
     v8i16 offset_mask0, offset_mask1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
 
@@ -1896,8 +1910,8 @@ static void hevc_sao_edge_filter_45degree_4width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1942,8 +1956,8 @@ static void hevc_sao_edge_filter_45degree_4width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -1967,17 +1981,18 @@ static void hevc_sao_edge_filter_45degree_8width_msa(uint8_t *dst,
                                                      uint8_t *src,
                                                      int32_t src_stride,
                                                      int16_t *sao_offset_val,
-                                                     int32_t height) {
+                                                     int32_t height)
+{
     uint8_t *src_orig;
     uint64_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
     v16u8 cmp_minus10, diff_minus10, cmp_minus11, diff_minus11;
     v16u8 src_minus10, src10, src_minus11, src11;
     v16i8 src_zero0, src_plus10, src_zero1, src_plus11, dst0;
     v8i16 offset_mask0, offset_mask1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
     src_orig = src - 1;
@@ -2007,8 +2022,8 @@ static void hevc_sao_edge_filter_45degree_8width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2051,8 +2066,8 @@ static void hevc_sao_edge_filter_45degree_8width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2084,11 +2099,12 @@ static void hevc_sao_edge_filter_45degree_16multiple_msa(uint8_t *dst,
                                                          int16_t *
                                                          sao_offset_val,
                                                          int32_t width,
-                                                         int32_t height) {
+                                                         int32_t height)
+{
     uint8_t *src_orig = src;
     uint8_t *dst_orig = dst;
     int32_t v_cnt;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16u8 cmp_minus10, cmp_plus10, diff_minus10, diff_plus10, cmp_minus11;
     v16u8 cmp_plus11, diff_minus11, diff_plus11, cmp_minus12, cmp_plus12;
@@ -2201,17 +2217,18 @@ static void hevc_sao_edge_filter_135degree_4width_msa(uint8_t *dst,
                                                       uint8_t *src,
                                                       int32_t src_stride,
                                                       int16_t *sao_offset_val,
-                                                      int32_t height) {
+                                                      int32_t height)
+{
     uint8_t *src_orig;
     uint32_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
     v16i8 src_zero0, src_zero1, dst0;
     v16u8 cmp_minus10, diff_minus10, cmp_minus11, diff_minus11;
     v16u8 src_minus10, src10, src_minus11, src11;
     v8i16 offset_mask0, offset_mask1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
     src_orig = src - 1;
@@ -2241,8 +2258,8 @@ static void hevc_sao_edge_filter_135degree_4width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2288,8 +2305,8 @@ static void hevc_sao_edge_filter_135degree_4width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2315,17 +2332,18 @@ static void hevc_sao_edge_filter_135degree_8width_msa(uint8_t *dst,
                                                       uint8_t *src,
                                                       int32_t src_stride,
                                                       int16_t *sao_offset_val,
-                                                      int32_t height) {
+                                                      int32_t height)
+{
     uint8_t *src_orig;
     uint64_t dst_val0, dst_val1;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16i8 offset, sao_offset = LD_SB(sao_offset_val);
     v16u8 cmp_minus10, diff_minus10, cmp_minus11, diff_minus11;
     v16u8 src_minus10, src10, src_minus11, src11;
     v16i8 src_zero0, src_zero1, dst0;
     v8i16 offset_mask0, offset_mask1;
-    v16i8 zeros = {0};
+    v16i8 zeros = { 0 };
 
     sao_offset = __msa_pckev_b(sao_offset, sao_offset);
     src_orig = src - 1;
@@ -2354,8 +2372,8 @@ static void hevc_sao_edge_filter_135degree_8width_msa(uint8_t *dst,
         cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
         diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-        offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-        offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+        offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+        offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
         offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
         dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2399,8 +2417,8 @@ static void hevc_sao_edge_filter_135degree_8width_msa(uint8_t *dst,
     cmp_minus11 = (src_minus11 < (v16u8) src_zero1);
     diff_minus11 = __msa_bmnz_v(diff_minus11, const1, cmp_minus11);
 
-    offset_mask0 = (v8i16)(__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
-    offset_mask1 = (v8i16)(__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
+    offset_mask0 = (v8i16) (__msa_hadd_u_h(diff_minus10, diff_minus10) + 2);
+    offset_mask1 = (v8i16) (__msa_hadd_u_h(diff_minus11, diff_minus11) + 2);
 
     offset = __msa_pckev_b((v16i8) offset_mask1, (v16i8) offset_mask0);
     dst0 = __msa_pckev_b((v16i8) src_zero1, (v16i8) src_zero0);
@@ -2428,10 +2446,11 @@ static void hevc_sao_edge_filter_135degree_16multiple_msa(uint8_t *dst,
                                                           int16_t *
                                                           sao_offset_val,
                                                           int32_t width,
-                                                          int32_t height) {
+                                                          int32_t height)
+{
     uint8_t *src_orig, *dst_orig;
     int32_t v_cnt;
-    v16i8 edge_idx = {1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 edge_idx = { 1, 2, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     v16u8 const1 = (v16u8) __msa_ldi_b(1);
     v16u8 dst0, dst1, dst2, dst3;
     v16u8 cmp_minus10, cmp_minus11, cmp_minus12, cmp_minus13, cmp_plus10;
@@ -2545,35 +2564,40 @@ static void hevc_sao_edge_filter_135degree_16multiple_msa(uint8_t *dst,
 void ff_hevc_loop_filter_luma_h_8_msa(uint8_t *src,
                                       ptrdiff_t src_stride,
                                       int32_t beta, int32_t *tc,
-                                      uint8_t *no_p, uint8_t *no_q) {
+                                      uint8_t *no_p, uint8_t *no_q)
+{
     hevc_loopfilter_luma_hor_msa(src, src_stride, beta, tc, no_p, no_q);
 }
 
 void ff_hevc_loop_filter_luma_v_8_msa(uint8_t *src,
                                       ptrdiff_t src_stride,
                                       int32_t beta, int32_t *tc,
-                                      uint8_t *no_p, uint8_t *no_q) {
+                                      uint8_t *no_p, uint8_t *no_q)
+{
     hevc_loopfilter_luma_ver_msa(src, src_stride, beta, tc, no_p, no_q);
 }
 
 void ff_hevc_loop_filter_chroma_h_8_msa(uint8_t *src,
                                         ptrdiff_t src_stride,
                                         int32_t *tc, uint8_t *no_p,
-                                        uint8_t *no_q) {
+                                        uint8_t *no_q)
+{
     hevc_loopfilter_chroma_hor_msa(src, src_stride, tc, no_p, no_q);
 }
 
 void ff_hevc_loop_filter_chroma_v_8_msa(uint8_t *src,
                                         ptrdiff_t src_stride,
                                         int32_t *tc, uint8_t *no_p,
-                                        uint8_t *no_q) {
+                                        uint8_t *no_q)
+{
     hevc_loopfilter_chroma_ver_msa(src, src_stride, tc, no_p, no_q);
 }
 
 void ff_hevc_sao_band_filter_0_8_msa(uint8_t *dst, uint8_t *src,
                                      ptrdiff_t stride_dst, ptrdiff_t stride_src,
                                      int16_t *sao_offset_val, int sao_left_class,
-                                     int width, int height) {
+                                     int width, int height)
+{
     if (width >> 4) {
         hevc_sao_band_filter_16multiple_msa(dst, stride_dst, src, stride_src,
                                             sao_left_class, sao_offset_val,
@@ -2600,120 +2624,121 @@ void ff_hevc_sao_band_filter_0_8_msa(uint8_t *dst, uint8_t *src,
 void ff_hevc_sao_edge_filter_8_msa(uint8_t *dst, uint8_t *src,
                                    ptrdiff_t stride_dst,
                                    int16_t *sao_offset_val,
-                                   int eo, int width, int height) {
+                                   int eo, int width, int height)
+{
     ptrdiff_t stride_src = (2 * MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE) / sizeof(uint8_t);
 
     switch (eo) {
-        case 0:
-            if (width >> 4) {
-                hevc_sao_edge_filter_0degree_16multiple_msa(dst, stride_dst,
-                                                            src, stride_src,
-                                                            sao_offset_val,
-                                                            width - (width % 16),
-                                                            height);
-                dst += width - (width % 16);
-                src += width - (width % 16);
-                width %= 16;
-            }
-
-            if (width >> 3) {
-                hevc_sao_edge_filter_0degree_8width_msa(dst, stride_dst,
+    case 0:
+        if (width >> 4) {
+            hevc_sao_edge_filter_0degree_16multiple_msa(dst, stride_dst,
                                                         src, stride_src,
-                                                        sao_offset_val, height);
-                dst += 8;
-                src += 8;
-                width %= 8;
-            }
+                                                        sao_offset_val,
+                                                        width - (width % 16),
+                                                        height);
+            dst += width - (width % 16);
+            src += width - (width % 16);
+            width %= 16;
+        }
 
-            if (width) {
-                hevc_sao_edge_filter_0degree_4width_msa(dst, stride_dst,
-                                                        src, stride_src,
-                                                        sao_offset_val, height);
-            }
-            break;
+        if (width >> 3) {
+            hevc_sao_edge_filter_0degree_8width_msa(dst, stride_dst,
+                                                    src, stride_src,
+                                                    sao_offset_val, height);
+            dst += 8;
+            src += 8;
+            width %= 8;
+        }
 
-        case 1:
-            if (width >> 4) {
-                hevc_sao_edge_filter_90degree_16multiple_msa(dst, stride_dst,
-                                                             src, stride_src,
-                                                             sao_offset_val,
-                                                             width - (width % 16),
-                                                             height);
-                dst += width - (width % 16);
-                src += width - (width % 16);
-                width %= 16;
-            }
+        if (width) {
+            hevc_sao_edge_filter_0degree_4width_msa(dst, stride_dst,
+                                                    src, stride_src,
+                                                    sao_offset_val, height);
+        }
+        break;
 
-            if (width >> 3) {
-                hevc_sao_edge_filter_90degree_8width_msa(dst, stride_dst,
+    case 1:
+        if (width >> 4) {
+            hevc_sao_edge_filter_90degree_16multiple_msa(dst, stride_dst,
                                                          src, stride_src,
-                                                         sao_offset_val, height);
-                dst += 8;
-                src += 8;
-                width %= 8;
-            }
+                                                         sao_offset_val,
+                                                         width - (width % 16),
+                                                         height);
+            dst += width - (width % 16);
+            src += width - (width % 16);
+            width %= 16;
+        }
 
-            if (width) {
-                hevc_sao_edge_filter_90degree_4width_msa(dst, stride_dst,
+        if (width >> 3) {
+            hevc_sao_edge_filter_90degree_8width_msa(dst, stride_dst,
+                                                     src, stride_src,
+                                                     sao_offset_val, height);
+            dst += 8;
+            src += 8;
+            width %= 8;
+        }
+
+        if (width) {
+            hevc_sao_edge_filter_90degree_4width_msa(dst, stride_dst,
+                                                     src, stride_src,
+                                                     sao_offset_val, height);
+        }
+        break;
+
+    case 2:
+        if (width >> 4) {
+            hevc_sao_edge_filter_45degree_16multiple_msa(dst, stride_dst,
                                                          src, stride_src,
-                                                         sao_offset_val, height);
-            }
-            break;
+                                                         sao_offset_val,
+                                                         width - (width % 16),
+                                                         height);
+            dst += width - (width % 16);
+            src += width - (width % 16);
+            width %= 16;
+        }
 
-        case 2:
-            if (width >> 4) {
-                hevc_sao_edge_filter_45degree_16multiple_msa(dst, stride_dst,
-                                                             src, stride_src,
-                                                             sao_offset_val,
-                                                             width - (width % 16),
-                                                             height);
-                dst += width - (width % 16);
-                src += width - (width % 16);
-                width %= 16;
-            }
+        if (width >> 3) {
+            hevc_sao_edge_filter_45degree_8width_msa(dst, stride_dst,
+                                                     src, stride_src,
+                                                     sao_offset_val, height);
+            dst += 8;
+            src += 8;
+            width %= 8;
+        }
 
-            if (width >> 3) {
-                hevc_sao_edge_filter_45degree_8width_msa(dst, stride_dst,
-                                                         src, stride_src,
-                                                         sao_offset_val, height);
-                dst += 8;
-                src += 8;
-                width %= 8;
-            }
+        if (width) {
+            hevc_sao_edge_filter_45degree_4width_msa(dst, stride_dst,
+                                                     src, stride_src,
+                                                     sao_offset_val, height);
+        }
+        break;
 
-            if (width) {
-                hevc_sao_edge_filter_45degree_4width_msa(dst, stride_dst,
-                                                         src, stride_src,
-                                                         sao_offset_val, height);
-            }
-            break;
-
-        case 3:
-            if (width >> 4) {
-                hevc_sao_edge_filter_135degree_16multiple_msa(dst, stride_dst,
-                                                              src, stride_src,
-                                                              sao_offset_val,
-                                                              width - (width % 16),
-                                                              height);
-                dst += width - (width % 16);
-                src += width - (width % 16);
-                width %= 16;
-            }
-
-            if (width >> 3) {
-                hevc_sao_edge_filter_135degree_8width_msa(dst, stride_dst,
+    case 3:
+        if (width >> 4) {
+            hevc_sao_edge_filter_135degree_16multiple_msa(dst, stride_dst,
                                                           src, stride_src,
-                                                          sao_offset_val, height);
-                dst += 8;
-                src += 8;
-                width %= 8;
-            }
+                                                          sao_offset_val,
+                                                          width - (width % 16),
+                                                          height);
+            dst += width - (width % 16);
+            src += width - (width % 16);
+            width %= 16;
+        }
 
-            if (width) {
-                hevc_sao_edge_filter_135degree_4width_msa(dst, stride_dst,
-                                                          src, stride_src,
-                                                          sao_offset_val, height);
-            }
-            break;
+        if (width >> 3) {
+            hevc_sao_edge_filter_135degree_8width_msa(dst, stride_dst,
+                                                      src, stride_src,
+                                                      sao_offset_val, height);
+            dst += 8;
+            src += 8;
+            width %= 8;
+        }
+
+        if (width) {
+            hevc_sao_edge_filter_135degree_4width_msa(dst, stride_dst,
+                                                      src, stride_src,
+                                                      sao_offset_val, height);
+        }
+        break;
     }
 }

@@ -26,7 +26,8 @@
 #include "libavutil/internal.h"
 #include "libavutil/mem.h"
 
-static av_cold int ass_decode_init(AVCodecContext *avctx) {
+static av_cold int ass_decode_init(AVCodecContext *avctx)
+{
     avctx->subtitle_header = av_malloc(avctx->extradata_size + 1);
     if (!avctx->subtitle_header)
         return AVERROR(ENOMEM);
@@ -38,7 +39,8 @@ static av_cold int ass_decode_init(AVCodecContext *avctx) {
 }
 
 static int ass_decode_frame(AVCodecContext *avctx, void *data, int *got_sub_ptr,
-                            AVPacket *avpkt) {
+                            AVPacket *avpkt)
+{
     AVSubtitle *sub = data;
 
     if (avpkt->size <= 0)
@@ -52,7 +54,7 @@ static int ass_decode_frame(AVCodecContext *avctx, void *data, int *got_sub_ptr,
         return AVERROR(ENOMEM);
     sub->num_rects = 1;
     sub->rects[0]->type = SUBTITLE_ASS;
-    sub->rects[0]->ass = av_strdup(avpkt->data);
+    sub->rects[0]->ass  = av_strdup(avpkt->data);
     if (!sub->rects[0]->ass)
         return AVERROR(ENOMEM);
     *got_sub_ptr = 1;

@@ -42,17 +42,19 @@
 static uint8_t img1[WIDTH * HEIGHT];
 static uint8_t img2[WIDTH * HEIGHT];
 
-static void fill_random(uint8_t *tab, int size) {
+static void fill_random(uint8_t *tab, int size)
+{
     int i;
     AVLFG prng;
 
     av_lfg_init(&prng, 1);
-    for (i = 0; i < size; i++) {
+    for(i=0;i<size;i++) {
         tab[i] = av_lfg_get(&prng) % 256;
     }
 }
 
-static void help(void) {
+static void help(void)
+{
     printf("motion-test [-h]\n"
            "test motion implementations\n");
 }
@@ -62,20 +64,21 @@ static void help(void) {
 int dummy;
 
 static void test_motion(const char *name,
-                        me_cmp_func test_func, me_cmp_func ref_func) {
+                 me_cmp_func test_func, me_cmp_func ref_func)
+{
     int x, y, d1, d2, it;
     uint8_t *ptr;
     int64_t ti;
     printf("testing '%s'\n", name);
 
     /* test correctness */
-    for (it = 0; it < 20; it++) {
+    for(it=0;it<20;it++) {
 
         fill_random(img1, WIDTH * HEIGHT);
         fill_random(img2, WIDTH * HEIGHT);
 
-        for (y = 0; y < HEIGHT - 17; y++) {
-            for (x = 0; x < WIDTH - 17; x++) {
+        for(y=0;y<HEIGHT-17;y++) {
+            for(x=0;x<WIDTH-17;x++) {
                 ptr = img2 + y * WIDTH + x;
                 d1 = test_func(NULL, img1, ptr, WIDTH, 8);
                 d2 = ref_func(NULL, img1, ptr, WIDTH, 8);
@@ -90,9 +93,9 @@ static void test_motion(const char *name,
     /* speed test */
     ti = av_gettime_relative();
     d1 = 0;
-    for (it = 0; it < NB_ITS; it++) {
-        for (y = 0; y < HEIGHT - 17; y++) {
-            for (x = 0; x < WIDTH - 17; x++) {
+    for(it=0;it<NB_ITS;it++) {
+        for(y=0;y<HEIGHT-17;y++) {
+            for(x=0;x<WIDTH-17;x++) {
                 ptr = img2 + y * WIDTH + x;
                 d1 += test_func(NULL, img1, ptr, WIDTH, 8);
             }
@@ -103,16 +106,17 @@ static void test_motion(const char *name,
     ti = av_gettime_relative() - ti;
 
     printf("  %0.0f kop/s\n",
-           (double) NB_ITS * (WIDTH - 16) * (HEIGHT - 16) /
-           (double) (ti / 1000.0));
+           (double)NB_ITS * (WIDTH - 16) * (HEIGHT - 16) /
+           (double)(ti / 1000.0));
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     AVCodecContext *ctx;
     int c;
     MECmpContext cctx, mmxctx;
-    int flags[2] = {AV_CPU_FLAG_MMX, AV_CPU_FLAG_MMXEXT};
+    int flags[2] = { AV_CPU_FLAG_MMX, AV_CPU_FLAG_MMXEXT };
     int flags_size = HAVE_MMXEXT ? 2 : 1;
 
     if (argc > 1) {
@@ -136,9 +140,9 @@ int main(int argc, char **argv) {
         for (x = 0; x < 2; x++) {
             printf("%s for %dx%d pixels\n", c ? "mmx2" : "mmx",
                    x ? 8 : 16, x ? 8 : 16);
-            test_motion("mmx", mmxctx.pix_abs[x][0], cctx.pix_abs[x][0]);
-            test_motion("mmx_x2", mmxctx.pix_abs[x][1], cctx.pix_abs[x][1]);
-            test_motion("mmx_y2", mmxctx.pix_abs[x][2], cctx.pix_abs[x][2]);
+            test_motion("mmx",     mmxctx.pix_abs[x][0], cctx.pix_abs[x][0]);
+            test_motion("mmx_x2",  mmxctx.pix_abs[x][1], cctx.pix_abs[x][1]);
+            test_motion("mmx_y2",  mmxctx.pix_abs[x][2], cctx.pix_abs[x][2]);
             test_motion("mmx_xy2", mmxctx.pix_abs[x][3], cctx.pix_abs[x][3]);
         }
     }

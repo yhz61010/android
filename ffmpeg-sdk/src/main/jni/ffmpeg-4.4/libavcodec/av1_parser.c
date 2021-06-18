@@ -33,26 +33,27 @@ typedef struct AV1ParseContext {
 } AV1ParseContext;
 
 static const enum AVPixelFormat pix_fmts_8bit[2][2] = {
-        {AV_PIX_FMT_YUV444P, AV_PIX_FMT_NONE},
-        {AV_PIX_FMT_YUV422P, AV_PIX_FMT_YUV420P},
+    { AV_PIX_FMT_YUV444P, AV_PIX_FMT_NONE },
+    { AV_PIX_FMT_YUV422P, AV_PIX_FMT_YUV420P },
 };
 static const enum AVPixelFormat pix_fmts_10bit[2][2] = {
-        {AV_PIX_FMT_YUV444P10, AV_PIX_FMT_NONE},
-        {AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV420P10},
+    { AV_PIX_FMT_YUV444P10, AV_PIX_FMT_NONE },
+    { AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV420P10 },
 };
 static const enum AVPixelFormat pix_fmts_12bit[2][2] = {
-        {AV_PIX_FMT_YUV444P12, AV_PIX_FMT_NONE},
-        {AV_PIX_FMT_YUV422P12, AV_PIX_FMT_YUV420P12},
+    { AV_PIX_FMT_YUV444P12, AV_PIX_FMT_NONE },
+    { AV_PIX_FMT_YUV422P12, AV_PIX_FMT_YUV420P12 },
 };
 
 static const enum AVPixelFormat pix_fmts_rgb[3] = {
-        AV_PIX_FMT_GBRP, AV_PIX_FMT_GBRP10, AV_PIX_FMT_GBRP12,
+    AV_PIX_FMT_GBRP, AV_PIX_FMT_GBRP10, AV_PIX_FMT_GBRP12,
 };
 
 static int av1_parser_parse(AVCodecParserContext *ctx,
                             AVCodecContext *avctx,
                             const uint8_t **out_data, int *out_size,
-                            const uint8_t *data, int size) {
+                            const uint8_t *data, int size)
+{
     AV1ParseContext *s = ctx->priv_data;
     CodedBitstreamFragment *td = &s->temporal_unit;
     CodedBitstreamAV1Context *av1 = s->cbc->priv_data;
@@ -63,8 +64,8 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
     *out_data = data;
     *out_size = size;
 
-    ctx->key_frame = -1;
-    ctx->pict_type = AV_PICTURE_TYPE_NONE;
+    ctx->key_frame         = -1;
+    ctx->pict_type         = AV_PICTURE_TYPE_NONE;
     ctx->picture_structure = AV_PICTURE_STRUCTURE_UNKNOWN;
 
     s->cbc->log_ctx = avctx;
@@ -112,50 +113,50 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
         if (!frame->show_frame && !frame->show_existing_frame)
             continue;
 
-        ctx->width = frame->frame_width_minus_1 + 1;
+        ctx->width  = frame->frame_width_minus_1 + 1;
         ctx->height = frame->frame_height_minus_1 + 1;
 
         ctx->key_frame = frame->frame_type == AV1_FRAME_KEY && !frame->show_existing_frame;
 
         switch (frame->frame_type) {
-            case AV1_FRAME_KEY:
-            case AV1_FRAME_INTRA_ONLY:
-                ctx->pict_type = AV_PICTURE_TYPE_I;
-                break;
-            case AV1_FRAME_INTER:
-                ctx->pict_type = AV_PICTURE_TYPE_P;
-                break;
-            case AV1_FRAME_SWITCH:
-                ctx->pict_type = AV_PICTURE_TYPE_SP;
-                break;
+        case AV1_FRAME_KEY:
+        case AV1_FRAME_INTRA_ONLY:
+            ctx->pict_type = AV_PICTURE_TYPE_I;
+            break;
+        case AV1_FRAME_INTER:
+            ctx->pict_type = AV_PICTURE_TYPE_P;
+            break;
+        case AV1_FRAME_SWITCH:
+            ctx->pict_type = AV_PICTURE_TYPE_SP;
+            break;
         }
         ctx->picture_structure = AV_PICTURE_STRUCTURE_FRAME;
     }
 
     switch (av1->bit_depth) {
-        case 8:
-            ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY8
-                                             : pix_fmts_8bit[color->subsampling_x][color->subsampling_y];
-            break;
-        case 10:
-            ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY10
-                                             : pix_fmts_10bit[color->subsampling_x][color->subsampling_y];
-            break;
-        case 12:
-            ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY12
-                                             : pix_fmts_12bit[color->subsampling_x][color->subsampling_y];
-            break;
+    case 8:
+        ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY8
+                                         : pix_fmts_8bit [color->subsampling_x][color->subsampling_y];
+        break;
+    case 10:
+        ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY10
+                                         : pix_fmts_10bit[color->subsampling_x][color->subsampling_y];
+        break;
+    case 12:
+        ctx->format = color->mono_chrome ? AV_PIX_FMT_GRAY12
+                                         : pix_fmts_12bit[color->subsampling_x][color->subsampling_y];
+        break;
     }
     av_assert2(ctx->format != AV_PIX_FMT_NONE);
 
     if (!color->subsampling_x && !color->subsampling_y &&
-        color->matrix_coefficients == AVCOL_SPC_RGB &&
-        color->color_primaries == AVCOL_PRI_BT709 &&
-        color->transfer_characteristics == AVCOL_TRC_IEC61966_2_1)
+        color->matrix_coefficients       == AVCOL_SPC_RGB &&
+        color->color_primaries           == AVCOL_PRI_BT709 &&
+        color->transfer_characteristics  == AVCOL_TRC_IEC61966_2_1)
         ctx->format = pix_fmts_rgb[color->high_bitdepth + color->twelve_bit];
 
     avctx->profile = seq->seq_profile;
-    avctx->level = seq->seq_level_idx[0];
+    avctx->level   = seq->seq_level_idx[0];
 
     avctx->colorspace = (enum AVColorSpace) color->matrix_coefficients;
     avctx->color_primaries = (enum AVColorPrimaries) color->color_primaries;
@@ -163,10 +164,9 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
     avctx->color_range = color->color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
 
     if (avctx->framerate.num)
-        avctx->time_base = av_inv_q(av_mul_q(avctx->framerate, (AVRational)
-    { avctx->ticks_per_frame, 1 }));
+        avctx->time_base = av_inv_q(av_mul_q(avctx->framerate, (AVRational){avctx->ticks_per_frame, 1}));
 
-    end:
+end:
     ff_cbs_fragment_reset(td);
 
     s->cbc->log_ctx = NULL;
@@ -175,14 +175,15 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
 }
 
 static const CodedBitstreamUnitType decompose_unit_types[] = {
-        AV1_OBU_TEMPORAL_DELIMITER,
-        AV1_OBU_SEQUENCE_HEADER,
-        AV1_OBU_FRAME_HEADER,
-        AV1_OBU_TILE_GROUP,
-        AV1_OBU_FRAME,
+    AV1_OBU_TEMPORAL_DELIMITER,
+    AV1_OBU_SEQUENCE_HEADER,
+    AV1_OBU_FRAME_HEADER,
+    AV1_OBU_TILE_GROUP,
+    AV1_OBU_FRAME,
 };
 
-static av_cold int av1_parser_init(AVCodecParserContext *ctx) {
+static av_cold int av1_parser_init(AVCodecParserContext *ctx)
+{
     AV1ParseContext *s = ctx->priv_data;
     int ret;
 
@@ -190,13 +191,14 @@ static av_cold int av1_parser_init(AVCodecParserContext *ctx) {
     if (ret < 0)
         return ret;
 
-    s->cbc->decompose_unit_types = decompose_unit_types;
+    s->cbc->decompose_unit_types    = decompose_unit_types;
     s->cbc->nb_decompose_unit_types = FF_ARRAY_ELEMS(decompose_unit_types);
 
     return 0;
 }
 
-static void av1_parser_close(AVCodecParserContext *ctx) {
+static void av1_parser_close(AVCodecParserContext *ctx)
+{
     AV1ParseContext *s = ctx->priv_data;
 
     ff_cbs_fragment_free(&s->temporal_unit);
@@ -204,7 +206,8 @@ static void av1_parser_close(AVCodecParserContext *ctx) {
 }
 
 static int av1_parser_split(AVCodecContext *avctx,
-                            const uint8_t *buf, int buf_size) {
+                            const uint8_t *buf, int buf_size)
+{
     AV1OBU obu;
     const uint8_t *ptr = buf, *end = buf + buf_size;
 
@@ -217,7 +220,7 @@ static int av1_parser_split(AVCodecContext *avctx,
             obu.type == AV1_OBU_FRAME) {
             return ptr - buf;
         }
-        ptr += len;
+        ptr      += len;
         buf_size -= len;
     }
 
@@ -225,10 +228,10 @@ static int av1_parser_split(AVCodecContext *avctx,
 }
 
 AVCodecParser ff_av1_parser = {
-        .codec_ids      = {AV_CODEC_ID_AV1},
-        .priv_data_size = sizeof(AV1ParseContext),
-        .parser_init    = av1_parser_init,
-        .parser_close   = av1_parser_close,
-        .parser_parse   = av1_parser_parse,
-        .split          = av1_parser_split,
+    .codec_ids      = { AV_CODEC_ID_AV1 },
+    .priv_data_size = sizeof(AV1ParseContext),
+    .parser_init    = av1_parser_init,
+    .parser_close   = av1_parser_close,
+    .parser_parse   = av1_parser_parse,
+    .split          = av1_parser_split,
 };

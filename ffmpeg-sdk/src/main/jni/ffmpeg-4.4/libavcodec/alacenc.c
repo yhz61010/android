@@ -55,7 +55,7 @@ typedef struct RiceContext {
 
 typedef struct AlacLPCContext {
     int lpc_order;
-    int lpc_coeff[ALAC_MAX_LPC_ORDER + 1];
+    int lpc_coeff[ALAC_MAX_LPC_ORDER+1];
     int lpc_quant;
 } AlacLPCContext;
 
@@ -82,7 +82,8 @@ typedef struct AlacEncodeContext {
 
 
 static void init_sample_buffers(AlacEncodeContext *s, int channels,
-                                const uint8_t *samples[2]) {
+                                const uint8_t *samples[2])
+{
     int ch, i;
     int shift = av_get_bytes_per_sample(s->avctx->sample_fmt) * 8 -
                 s->avctx->bits_per_raw_sample;
@@ -103,11 +104,12 @@ static void init_sample_buffers(AlacEncodeContext *s, int channels,
 }
 
 static void encode_scalar(AlacEncodeContext *s, int x,
-                          int k, int write_sample_size) {
+                          int k, int write_sample_size)
+{
     int divisor, q, r;
 
     k = FFMIN(k, s->rc.k_modifier);
-    divisor = (1 << k) - 1;
+    divisor = (1<<k) - 1;
     q = x / divisor;
     r = x % divisor;
 
@@ -117,37 +119,39 @@ static void encode_scalar(AlacEncodeContext *s, int x,
         put_bits(&s->pbctx, write_sample_size, x);
     } else {
         if (q)
-            put_bits(&s->pbctx, q, (1 << q) - 1);
+            put_bits(&s->pbctx, q, (1<<q) - 1);
         put_bits(&s->pbctx, 1, 0);
 
         if (k != 1) {
             if (r > 0)
-                put_bits(&s->pbctx, k, r + 1);
+                put_bits(&s->pbctx, k, r+1);
             else
-                put_bits(&s->pbctx, k - 1, 0);
+                put_bits(&s->pbctx, k-1, 0);
         }
     }
 }
 
 static void write_element_header(AlacEncodeContext *s,
                                  enum AlacRawDataBlockType element,
-                                 int instance) {
+                                 int instance)
+{
     int encode_fs = 0;
 
     if (s->frame_size < DEFAULT_FRAME_SIZE)
         encode_fs = 1;
 
-    put_bits(&s->pbctx, 3, element);               // element type
-    put_bits(&s->pbctx, 4, instance);              // element instance
+    put_bits(&s->pbctx, 3,  element);               // element type
+    put_bits(&s->pbctx, 4,  instance);              // element instance
     put_bits(&s->pbctx, 12, 0);                     // unused header bits
-    put_bits(&s->pbctx, 1, encode_fs);             // Sample count is in the header
-    put_bits(&s->pbctx, 2, s->extra_bits >> 3);    // Extra bytes (for 24-bit)
-    put_bits(&s->pbctx, 1, s->verbatim);           // Audio block is verbatim
+    put_bits(&s->pbctx, 1,  encode_fs);             // Sample count is in the header
+    put_bits(&s->pbctx, 2,  s->extra_bits >> 3);    // Extra bytes (for 24-bit)
+    put_bits(&s->pbctx, 1,  s->verbatim);           // Audio block is verbatim
     if (encode_fs)
         put_bits32(&s->pbctx, s->frame_size);       // No. of samples in the frame
 }
 
-static void calc_predictor_params(AlacEncodeContext *s, int ch) {
+static void calc_predictor_params(AlacEncodeContext *s, int ch)
+{
     int32_t coefs[MAX_LPC_ORDER][MAX_LPC_ORDER];
     int shift[MAX_LPC_ORDER];
     int opt_order;
@@ -155,12 +159,12 @@ static void calc_predictor_params(AlacEncodeContext *s, int ch) {
     if (s->compression_level == 1) {
         s->lpc[ch].lpc_order = 6;
         s->lpc[ch].lpc_quant = 6;
-        s->lpc[ch].lpc_coeff[0] = 160;
+        s->lpc[ch].lpc_coeff[0] =  160;
         s->lpc[ch].lpc_coeff[1] = -190;
-        s->lpc[ch].lpc_coeff[2] = 170;
+        s->lpc[ch].lpc_coeff[2] =  170;
         s->lpc[ch].lpc_coeff[3] = -130;
-        s->lpc[ch].lpc_coeff[4] = 80;
-        s->lpc[ch].lpc_coeff[5] = -25;
+        s->lpc[ch].lpc_coeff[4] =   80;
+        s->lpc[ch].lpc_coeff[5] =  -25;
     } else {
         opt_order = ff_lpc_calc_coefs(&s->lpc_ctx, s->sample_buf[ch],
                                       s->frame_size,
@@ -172,12 +176,13 @@ static void calc_predictor_params(AlacEncodeContext *s, int ch) {
                                       ALAC_MAX_LPC_SHIFT, 1);
 
         s->lpc[ch].lpc_order = opt_order;
-        s->lpc[ch].lpc_quant = shift[opt_order - 1];
-        memcpy(s->lpc[ch].lpc_coeff, coefs[opt_order - 1], opt_order * sizeof(int));
+        s->lpc[ch].lpc_quant = shift[opt_order-1];
+        memcpy(s->lpc[ch].lpc_coeff, coefs[opt_order-1], opt_order*sizeof(int));
     }
 }
 
-static int estimate_stereo_mode(int32_t *left_ch, int32_t *right_ch, int n) {
+static int estimate_stereo_mode(int32_t *left_ch, int32_t *right_ch, int n)
+{
     int i, best;
     int32_t lt, rt;
     uint64_t sum[4];
@@ -186,7 +191,7 @@ static int estimate_stereo_mode(int32_t *left_ch, int32_t *right_ch, int n) {
     /* calculate sum of 2nd order residual for each channel */
     sum[0] = sum[1] = sum[2] = sum[3] = 0;
     for (i = 2; i < n; i++) {
-        lt = left_ch[i] - 2 * left_ch[i - 1] + left_ch[i - 2];
+        lt =  left_ch[i] - 2 *  left_ch[i - 1] +  left_ch[i - 2];
         rt = right_ch[i] - 2 * right_ch[i - 1] + right_ch[i - 2];
         sum[2] += FFABS((lt + rt) >> 1);
         sum[3] += FFABS(lt - rt);
@@ -209,7 +214,8 @@ static int estimate_stereo_mode(int32_t *left_ch, int32_t *right_ch, int n) {
     return best;
 }
 
-static void alac_stereo_decorrelation(AlacEncodeContext *s) {
+static void alac_stereo_decorrelation(AlacEncodeContext *s)
+{
     int32_t *left = s->sample_buf[0], *right = s->sample_buf[1];
     int i, mode, n = s->frame_size;
     int32_t tmp;
@@ -217,38 +223,39 @@ static void alac_stereo_decorrelation(AlacEncodeContext *s) {
     mode = estimate_stereo_mode(left, right, n);
 
     switch (mode) {
-        case ALAC_CHMODE_LEFT_RIGHT:
-            s->interlacing_leftweight = 0;
-            s->interlacing_shift = 0;
-            break;
-        case ALAC_CHMODE_LEFT_SIDE:
-            for (i = 0; i < n; i++)
-                right[i] = left[i] - right[i];
-            s->interlacing_leftweight = 1;
-            s->interlacing_shift = 0;
-            break;
-        case ALAC_CHMODE_RIGHT_SIDE:
-            for (i = 0; i < n; i++) {
-                tmp = right[i];
-                right[i] = left[i] - right[i];
-                left[i] = tmp + (right[i] >> 31);
-            }
-            s->interlacing_leftweight = 1;
-            s->interlacing_shift = 31;
-            break;
-        default:
-            for (i = 0; i < n; i++) {
-                tmp = left[i];
-                left[i] = (tmp + right[i]) >> 1;
-                right[i] = tmp - right[i];
-            }
-            s->interlacing_leftweight = 1;
-            s->interlacing_shift = 1;
-            break;
+    case ALAC_CHMODE_LEFT_RIGHT:
+        s->interlacing_leftweight = 0;
+        s->interlacing_shift      = 0;
+        break;
+    case ALAC_CHMODE_LEFT_SIDE:
+        for (i = 0; i < n; i++)
+            right[i] = left[i] - right[i];
+        s->interlacing_leftweight = 1;
+        s->interlacing_shift      = 0;
+        break;
+    case ALAC_CHMODE_RIGHT_SIDE:
+        for (i = 0; i < n; i++) {
+            tmp = right[i];
+            right[i] = left[i] - right[i];
+            left[i]  = tmp + (right[i] >> 31);
+        }
+        s->interlacing_leftweight = 1;
+        s->interlacing_shift      = 31;
+        break;
+    default:
+        for (i = 0; i < n; i++) {
+            tmp = left[i];
+            left[i]  = (tmp + right[i]) >> 1;
+            right[i] =  tmp - right[i];
+        }
+        s->interlacing_leftweight = 1;
+        s->interlacing_shift      = 1;
+        break;
     }
 }
 
-static void alac_linear_predictor(AlacEncodeContext *s, int ch) {
+static void alac_linear_predictor(AlacEncodeContext *s, int ch)
+{
     int i;
     AlacLPCContext lpc = s->lpc[ch];
     int32_t *residual = s->predictor_buf[ch];
@@ -257,7 +264,7 @@ static void alac_linear_predictor(AlacEncodeContext *s, int ch) {
         residual[0] = s->sample_buf[ch][0];
 
         for (i = 1; i < s->frame_size; i++) {
-            residual[i] = s->sample_buf[ch][i] -
+            residual[i] = s->sample_buf[ch][i    ] -
                           s->sample_buf[ch][i - 1];
         }
 
@@ -267,25 +274,25 @@ static void alac_linear_predictor(AlacEncodeContext *s, int ch) {
     // generalised linear predictor
 
     if (lpc.lpc_order > 0) {
-        int32_t *samples = s->sample_buf[ch];
+        int32_t *samples  = s->sample_buf[ch];
 
         // generate warm-up samples
         residual[0] = samples[0];
         for (i = 1; i <= lpc.lpc_order; i++)
-            residual[i] = sign_extend(samples[i] - samples[i - 1], s->write_sample_size);
+            residual[i] = sign_extend(samples[i] - samples[i-1], s->write_sample_size);
 
         // perform lpc on remaining samples
         for (i = lpc.lpc_order + 1; i < s->frame_size; i++) {
             int sum = 1 << (lpc.lpc_quant - 1), res_val, j;
 
             for (j = 0; j < lpc.lpc_order; j++) {
-                sum += (samples[lpc.lpc_order - j] - samples[0]) *
+                sum += (samples[lpc.lpc_order-j] - samples[0]) *
                        lpc.lpc_coeff[j];
             }
 
             sum >>= lpc.lpc_quant;
             sum += samples[0];
-            residual[i] = sign_extend(samples[lpc.lpc_order + 1] - sum,
+            residual[i] = sign_extend(samples[lpc.lpc_order+1] - sum,
                                       s->write_sample_size);
             res_val = residual[i];
 
@@ -294,7 +301,7 @@ static void alac_linear_predictor(AlacEncodeContext *s, int ch) {
                 int neg = (res_val < 0);
 
                 while (index >= 0 && (neg ? (res_val < 0) : (res_val > 0))) {
-                    int val = samples[0] - samples[lpc.lpc_order - index];
+                    int val  = samples[0] - samples[lpc.lpc_order - index];
                     int sign = (val ? FFSIGN(val) : 0);
 
                     if (neg)
@@ -311,7 +318,8 @@ static void alac_linear_predictor(AlacEncodeContext *s, int ch) {
     }
 }
 
-static void alac_entropy_coder(AlacEncodeContext *s, int ch) {
+static void alac_entropy_coder(AlacEncodeContext *s, int ch)
+{
     unsigned int history = s->rc.initial_history;
     int sign_modifier = 0, i, k;
     int32_t *samples = s->predictor_buf[ch];
@@ -321,7 +329,7 @@ static void alac_entropy_coder(AlacEncodeContext *s, int ch) {
 
         k = av_log2((history >> 9) + 3);
 
-        x = -2 * (*samples) - 1;
+        x  = -2 * (*samples) -1;
         x ^= x >> 31;
 
         samples++;
@@ -356,11 +364,12 @@ static void alac_entropy_coder(AlacEncodeContext *s, int ch) {
 
 static void write_element(AlacEncodeContext *s,
                           enum AlacRawDataBlockType element, int instance,
-                          const uint8_t *samples0, const uint8_t *samples1) {
-    const uint8_t *samples[2] = {samples0, samples1};
+                          const uint8_t *samples0, const uint8_t *samples1)
+{
+    const uint8_t *samples[2] = { samples0, samples1 };
     int i, j, channels;
     int prediction_type = 0;
-    PutBitContext * pb = &s->pbctx;
+    PutBitContext *pb = &s->pbctx;
 
     channels = element == TYPE_CPE ? 2 : 1;
 
@@ -369,15 +378,15 @@ static void write_element(AlacEncodeContext *s,
         /* samples are channel-interleaved in verbatim mode */
         if (s->avctx->sample_fmt == AV_SAMPLE_FMT_S32P) {
             int shift = 32 - s->avctx->bits_per_raw_sample;
-            const int32_t *samples_s32[2] = {(const int32_t *) samples0,
-                                             (const int32_t *) samples1};
+            const int32_t *samples_s32[2] = { (const int32_t *)samples0,
+                                              (const int32_t *)samples1 };
             for (i = 0; i < s->frame_size; i++)
                 for (j = 0; j < channels; j++)
                     put_sbits(pb, s->avctx->bits_per_raw_sample,
                               samples_s32[j][i] >> shift);
         } else {
-            const int16_t *samples_s16[2] = {(const int16_t *) samples0,
-                                             (const int16_t *) samples1};
+            const int16_t *samples_s16[2] = { (const int16_t *)samples0,
+                                              (const int16_t *)samples1 };
             for (i = 0; i < s->frame_size; i++)
                 for (j = 0; j < channels; j++)
                     put_sbits(pb, s->avctx->bits_per_raw_sample,
@@ -395,7 +404,7 @@ static void write_element(AlacEncodeContext *s,
             uint32_t mask = (1 << s->extra_bits) - 1;
             for (j = 0; j < channels; j++) {
                 int32_t *extra = s->predictor_buf[j];
-                int32_t *smp = s->sample_buf[j];
+                int32_t *smp   = s->sample_buf[j];
                 for (i = 0; i < s->frame_size; i++) {
                     extra[i] = smp[i] & mask;
                     smp[i] >>= s->extra_bits;
@@ -449,8 +458,9 @@ static void write_element(AlacEncodeContext *s,
 }
 
 static int write_frame(AlacEncodeContext *s, AVPacket *avpkt,
-                       uint8_t *const *samples) {
-    PutBitContext * pb = &s->pbctx;
+                       uint8_t * const *samples)
+{
+    PutBitContext *pb = &s->pbctx;
     const enum AlacRawDataBlockType *ch_elements = ff_alac_channel_elements[s->avctx->channels - 1];
     const uint8_t *ch_map = ff_alac_channel_layout_offsets[s->avctx->channels - 1];
     int ch, element, sce, cpe;
@@ -478,18 +488,21 @@ static int write_frame(AlacEncodeContext *s, AVPacket *avpkt,
     return put_bits_count(pb) >> 3;
 }
 
-static av_always_inline int get_max_frame_size(int frame_size, int ch, int bps) {
+static av_always_inline int get_max_frame_size(int frame_size, int ch, int bps)
+{
     int header_bits = 23 + 32 * (frame_size < DEFAULT_FRAME_SIZE);
     return FFALIGN(header_bits + bps * ch * frame_size + 3, 8) / 8;
 }
 
-static av_cold int alac_encode_close(AVCodecContext *avctx) {
+static av_cold int alac_encode_close(AVCodecContext *avctx)
+{
     AlacEncodeContext *s = avctx->priv_data;
     ff_lpc_end(&s->lpc_ctx);
     return 0;
 }
 
-static av_cold int alac_encode_init(AVCodecContext *avctx) {
+static av_cold int alac_encode_init(AVCodecContext *avctx)
+{
     AlacEncodeContext *s = avctx->priv_data;
     int ret;
     uint8_t *alac_extradata;
@@ -502,7 +515,7 @@ static av_cold int alac_encode_init(AVCodecContext *avctx) {
         avctx->bits_per_raw_sample = 24;
     } else {
         avctx->bits_per_raw_sample = 16;
-        s->extra_bits = 0;
+        s->extra_bits              = 0;
     }
 
     // Set default compression level
@@ -512,10 +525,10 @@ static av_cold int alac_encode_init(AVCodecContext *avctx) {
         s->compression_level = av_clip(avctx->compression_level, 0, 2);
 
     // Initialize default Rice parameters
-    s->rc.history_mult = 40;
+    s->rc.history_mult    = 40;
     s->rc.initial_history = 10;
-    s->rc.k_modifier = 14;
-    s->rc.rice_modifier = 4;
+    s->rc.k_modifier      = 14;
+    s->rc.rice_modifier   = 4;
 
     s->max_coded_frame_size = get_max_frame_size(avctx->frame_size,
                                                  avctx->channels,
@@ -527,28 +540,28 @@ static av_cold int alac_encode_init(AVCodecContext *avctx) {
     avctx->extradata_size = ALAC_EXTRADATA_SIZE;
 
     alac_extradata = avctx->extradata;
-    AV_WB32(alac_extradata, ALAC_EXTRADATA_SIZE);
-    AV_WB32(alac_extradata + 4, MKBETAG('a', 'l', 'a', 'c'));
-    AV_WB32(alac_extradata + 12, avctx->frame_size);
-    AV_WB8(alac_extradata + 17, avctx->bits_per_raw_sample);
-    AV_WB8(alac_extradata + 21, avctx->channels);
-    AV_WB32(alac_extradata + 24, s->max_coded_frame_size);
-    AV_WB32(alac_extradata + 28,
+    AV_WB32(alac_extradata,    ALAC_EXTRADATA_SIZE);
+    AV_WB32(alac_extradata+4,  MKBETAG('a','l','a','c'));
+    AV_WB32(alac_extradata+12, avctx->frame_size);
+    AV_WB8 (alac_extradata+17, avctx->bits_per_raw_sample);
+    AV_WB8 (alac_extradata+21, avctx->channels);
+    AV_WB32(alac_extradata+24, s->max_coded_frame_size);
+    AV_WB32(alac_extradata+28,
             avctx->sample_rate * avctx->channels * avctx->bits_per_raw_sample); // average bitrate
-    AV_WB32(alac_extradata + 32, avctx->sample_rate);
+    AV_WB32(alac_extradata+32, avctx->sample_rate);
 
     // Set relevant extradata fields
     if (s->compression_level > 0) {
-        AV_WB8(alac_extradata + 18, s->rc.history_mult);
-        AV_WB8(alac_extradata + 19, s->rc.initial_history);
-        AV_WB8(alac_extradata + 20, s->rc.k_modifier);
+        AV_WB8(alac_extradata+18, s->rc.history_mult);
+        AV_WB8(alac_extradata+19, s->rc.initial_history);
+        AV_WB8(alac_extradata+20, s->rc.k_modifier);
     }
 
 #if FF_API_PRIVATE_OPT
-    FF_DISABLE_DEPRECATION_WARNINGS
+FF_DISABLE_DEPRECATION_WARNINGS
     if (avctx->min_prediction_order >= 0) {
         if (avctx->min_prediction_order < MIN_LPC_ORDER ||
-            avctx->min_prediction_order > ALAC_MAX_LPC_ORDER) {
+           avctx->min_prediction_order > ALAC_MAX_LPC_ORDER) {
             av_log(avctx, AV_LOG_ERROR, "invalid min prediction order: %d\n",
                    avctx->min_prediction_order);
             return AVERROR(EINVAL);
@@ -567,7 +580,7 @@ static av_cold int alac_encode_init(AVCodecContext *avctx) {
 
         s->max_prediction_order = avctx->max_prediction_order;
     }
-    FF_ENABLE_DEPRECATION_WARNINGS
+FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
     if (s->max_prediction_order < s->min_prediction_order) {
@@ -589,7 +602,8 @@ static av_cold int alac_encode_init(AVCodecContext *avctx) {
 }
 
 static int alac_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
-                             const AVFrame *frame, int *got_packet_ptr) {
+                             const AVFrame *frame, int *got_packet_ptr)
+{
     AlacEncodeContext *s = avctx->priv_data;
     int out_bytes, max_frame_size, ret;
 
@@ -606,10 +620,10 @@ static int alac_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
     /* use verbatim mode for compression_level 0 */
     if (s->compression_level) {
-        s->verbatim = 0;
+        s->verbatim   = 0;
         s->extra_bits = avctx->bits_per_raw_sample - 16;
     } else {
-        s->verbatim = 1;
+        s->verbatim   = 1;
         s->extra_bits = 0;
     }
 
@@ -630,32 +644,32 @@ static int alac_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 #define OFFSET(x) offsetof(AlacEncodeContext, x)
 #define AE AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-        {"min_prediction_order", NULL, OFFSET(min_prediction_order), AV_OPT_TYPE_INT, {.i64 = DEFAULT_MIN_PRED_ORDER}, MIN_LPC_ORDER, ALAC_MAX_LPC_ORDER, AE},
-        {"max_prediction_order", NULL, OFFSET(max_prediction_order), AV_OPT_TYPE_INT, {.i64 = DEFAULT_MAX_PRED_ORDER}, MIN_LPC_ORDER, ALAC_MAX_LPC_ORDER, AE},
+    { "min_prediction_order", NULL, OFFSET(min_prediction_order), AV_OPT_TYPE_INT, { .i64 = DEFAULT_MIN_PRED_ORDER }, MIN_LPC_ORDER, ALAC_MAX_LPC_ORDER, AE },
+    { "max_prediction_order", NULL, OFFSET(max_prediction_order), AV_OPT_TYPE_INT, { .i64 = DEFAULT_MAX_PRED_ORDER }, MIN_LPC_ORDER, ALAC_MAX_LPC_ORDER, AE },
 
-        {NULL},
+    { NULL },
 };
 
 static const AVClass alacenc_class = {
-        .class_name = "alacenc",
-        .item_name  = av_default_item_name,
-        .option     = options,
-        .version    = LIBAVUTIL_VERSION_INT,
+    .class_name = "alacenc",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_alac_encoder = {
-        .name           = "alac",
-        .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_ALAC,
-        .priv_data_size = sizeof(AlacEncodeContext),
-        .priv_class     = &alacenc_class,
-        .init           = alac_encode_init,
-        .encode2        = alac_encode_frame,
-        .close          = alac_encode_close,
-        .capabilities   = AV_CODEC_CAP_SMALL_LAST_FRAME,
-        .channel_layouts = ff_alac_channel_layouts,
-        .sample_fmts    = (const enum AVSampleFormat[]) {AV_SAMPLE_FMT_S32P,
-                                                         AV_SAMPLE_FMT_S16P,
-                                                         AV_SAMPLE_FMT_NONE},
+    .name           = "alac",
+    .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_ALAC,
+    .priv_data_size = sizeof(AlacEncodeContext),
+    .priv_class     = &alacenc_class,
+    .init           = alac_encode_init,
+    .encode2        = alac_encode_frame,
+    .close          = alac_encode_close,
+    .capabilities   = AV_CODEC_CAP_SMALL_LAST_FRAME,
+    .channel_layouts = ff_alac_channel_layouts,
+    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S32P,
+                                                     AV_SAMPLE_FMT_S16P,
+                                                     AV_SAMPLE_FMT_NONE },
 };

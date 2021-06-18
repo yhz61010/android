@@ -185,9 +185,7 @@ filters_8tap_2d_fn(op, 4, align, bpp, bytes, opt4, f_opt)
     init_8_16_32_ipred_funcs(type, enum, bpp, opt)
 
 void ff_vp9dsp_init_10bpp_x86(VP9DSPContext *dsp, int bitexact);
-
 void ff_vp9dsp_init_12bpp_x86(VP9DSPContext *dsp, int bitexact);
-
 void ff_vp9dsp_init_16bpp_x86(VP9DSPContext *dsp);
 
 #endif /* AVCODEC_X86_VP9DSP_INIT_H */

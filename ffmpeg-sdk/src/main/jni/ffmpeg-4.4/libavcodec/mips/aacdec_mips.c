@@ -430,7 +430,8 @@ static void update_ltp_mips(AACContext *ac, SingleChannelElement *sce)
 #endif /* HAVE_MIPSFPU */
 #endif /* HAVE_INLINE_ASM */
 
-void ff_aacdec_init_mips(AACContext *c) {
+void ff_aacdec_init_mips(AACContext *c)
+{
 #if HAVE_INLINE_ASM
 #if HAVE_MIPSFPU
     c->imdct_and_windowing         = imdct_and_windowing_mips;

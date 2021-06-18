@@ -43,7 +43,6 @@ DECL(avx)
 
 void ff_four_imdct36_float_sse(float *out, float *buf, float *in, float *win,
                                float *tmpbuf);
-
 void ff_four_imdct36_float_avx(float *out, float *buf, float *in, float *win,
                                float *tmpbuf);
 
@@ -241,23 +240,25 @@ DECL_IMDCT_BLOCKS(avx,avx)
 #endif
 #endif /* HAVE_X86ASM */
 
-av_cold void ff_mpadsp_init_x86_tabs(void) {
+av_cold void ff_mpadsp_init_x86_tabs(void)
+{
     int i, j;
     for (j = 0; j < 4; j++) {
-        for (i = 0; i < 40; i++) {
-            mdct_win_sse[0][j][4 * i] = ff_mdct_win_float[j][i];
-            mdct_win_sse[0][j][4 * i + 1] = ff_mdct_win_float[j + 4][i];
-            mdct_win_sse[0][j][4 * i + 2] = ff_mdct_win_float[j][i];
-            mdct_win_sse[0][j][4 * i + 3] = ff_mdct_win_float[j + 4][i];
-            mdct_win_sse[1][j][4 * i] = ff_mdct_win_float[0][i];
-            mdct_win_sse[1][j][4 * i + 1] = ff_mdct_win_float[4][i];
-            mdct_win_sse[1][j][4 * i + 2] = ff_mdct_win_float[j][i];
-            mdct_win_sse[1][j][4 * i + 3] = ff_mdct_win_float[j + 4][i];
+        for (i = 0; i < 40; i ++) {
+            mdct_win_sse[0][j][4*i    ] = ff_mdct_win_float[j    ][i];
+            mdct_win_sse[0][j][4*i + 1] = ff_mdct_win_float[j + 4][i];
+            mdct_win_sse[0][j][4*i + 2] = ff_mdct_win_float[j    ][i];
+            mdct_win_sse[0][j][4*i + 3] = ff_mdct_win_float[j + 4][i];
+            mdct_win_sse[1][j][4*i    ] = ff_mdct_win_float[0    ][i];
+            mdct_win_sse[1][j][4*i + 1] = ff_mdct_win_float[4    ][i];
+            mdct_win_sse[1][j][4*i + 2] = ff_mdct_win_float[j    ][i];
+            mdct_win_sse[1][j][4*i + 3] = ff_mdct_win_float[j + 4][i];
         }
     }
 }
 
-av_cold void ff_mpadsp_init_x86(MPADSPContext *s) {
+av_cold void ff_mpadsp_init_x86(MPADSPContext *s)
+{
     av_unused int cpu_flags = av_get_cpu_flags();
 
 #if HAVE_6REGS && HAVE_SSE_INLINE

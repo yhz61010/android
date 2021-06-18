@@ -33,16 +33,17 @@
  *                          carry the size from encoder to decoder
  * @returns negative AVERROR code on error or non negative.
  */
-static int rac_check_termination(RangeCoder *c, int version) {
+static int rac_check_termination(RangeCoder *c, int version)
+{
     if (version == 1) {
         RangeCoder tmp = *c;
-        get_rac(c, (uint8_t[]) {129});
+        get_rac(c, (uint8_t[]) { 129 });
 
         if (c->bytestream == tmp.bytestream && c->bytestream > c->bytestream_start)
             tmp.low -= *--tmp.bytestream;
         tmp.bytestream_end = tmp.bytestream;
 
-        if (get_rac(&tmp, (uint8_t[]) {129}))
+        if (get_rac(&tmp, (uint8_t[]) { 129 }))
             return AVERROR_INVALIDDATA;
     } else {
         if (c->bytestream_end != c->bytestream)
@@ -51,7 +52,8 @@ static int rac_check_termination(RangeCoder *c, int version) {
     return 0;
 }
 
-int main(void) {
+int main(void)
+{
     RangeCoder c;
     uint8_t b[9 * SIZE] = {0};
     uint8_t r[9 * SIZE];
@@ -61,7 +63,7 @@ int main(void) {
 
     av_lfg_init(&prng, 1);
     for (version = 0; version < 2; version++) {
-        for (p = 0; p < 1024; p++) {
+        for (p = 0; p< 1024; p++) {
             ff_init_range_encoder(&c, b, SIZE);
             ff_build_rac_states(&c, (1LL << 32) / 20, 128 + 64 + 32 + 16);
 

@@ -18,7 +18,7 @@
 
 #include "libavcodec/avcodec.h"
 
-int main(void) {
+int main(void){
     void *iter = NULL;
     const AVCodec *codec = NULL;
     int ret = 0;

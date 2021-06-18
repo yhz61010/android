@@ -28,8 +28,8 @@
 typedef struct {
     char *script_type;    /**< SSA script format version (eg. v4.00) */
     char *collisions;     /**< how subtitles are moved to prevent collisions */
-    int play_res_x;     /**< video width that ASS coords are referring to */
-    int play_res_y;     /**< video height that ASS coords are referring to */
+    int   play_res_x;     /**< video width that ASS coords are referring to */
+    int   play_res_y;     /**< video height that ASS coords are referring to */
     float timer;          /**< time multiplier to apply to SSA clock (in %) */
 } ASSScriptInfo;
 
@@ -39,45 +39,45 @@ typedef struct {
 typedef struct {
     char *name;           /**< name of the tyle (case sensitive) */
     char *font_name;      /**< font face (case sensitive) */
-    int font_size;      /**< font height */
-    int primary_color;  /**< color that a subtitle will normally appear in */
-    int secondary_color;
-    int outline_color;  /**< color for outline in ASS, called tertiary in SSA */
-    int back_color;     /**< color of the subtitle outline or shadow */
-    int bold;           /**< whether text is bold (1) or not (0) */
-    int italic;         /**< whether text is italic (1) or not (0) */
-    int underline;      /**< whether text is underlined (1) or not (0) */
-    int strikeout;
+    int   font_size;      /**< font height */
+    int   primary_color;  /**< color that a subtitle will normally appear in */
+    int   secondary_color;
+    int   outline_color;  /**< color for outline in ASS, called tertiary in SSA */
+    int   back_color;     /**< color of the subtitle outline or shadow */
+    int   bold;           /**< whether text is bold (1) or not (0) */
+    int   italic;         /**< whether text is italic (1) or not (0) */
+    int   underline;      /**< whether text is underlined (1) or not (0) */
+    int   strikeout;
     float scalex;
     float scaley;
     float spacing;
     float angle;
-    int border_style;
+    int   border_style;
     float outline;
     float shadow;
-    int alignment;      /**< position of the text (left, center, top...),
+    int   alignment;      /**< position of the text (left, center, top...),
                                defined after the layout of the numpad
                                (1-3 sub, 4-6 mid, 7-9 top) */
-    int margin_l;
-    int margin_r;
-    int margin_v;
-    int alpha_level;
-    int encoding;
+    int   margin_l;
+    int   margin_r;
+    int   margin_v;
+    int   alpha_level;
+    int   encoding;
 } ASSStyle;
 
 /**
  * fields extracted from the [Events] section
  */
 typedef struct {
-    int readorder;
-    int layer;    /**< higher numbered layers are drawn over lower numbered */
-    int start;    /**< start time of the dialog in centiseconds */
-    int end;      /**< end time of the dialog in centiseconds */
+    int   readorder;
+    int   layer;    /**< higher numbered layers are drawn over lower numbered */
+    int   start;    /**< start time of the dialog in centiseconds */
+    int   end;      /**< end time of the dialog in centiseconds */
     char *style;    /**< name of the ASSStyle to use with this dialog */
     char *name;
-    int margin_l;
-    int margin_r;
-    int margin_v;
+    int   margin_l;
+    int   margin_r;
+    int   margin_v;
     char *effect;
     char *text;     /**< actual text which will be displayed as a subtitle,
                          can include style override control codes (see
@@ -89,10 +89,10 @@ typedef struct {
  */
 typedef struct {
     ASSScriptInfo script_info;   /**< general information about the SSA script*/
-    ASSStyle *styles;        /**< array of split out styles */
-    int styles_count;  /**< number of ASSStyle in the styles array */
-    ASSDialog *dialogs;       /**< array of split out dialogs */
-    int dialogs_count; /**< number of ASSDialog in the dialogs array*/
+    ASSStyle     *styles;        /**< array of split out styles */
+    int           styles_count;  /**< number of ASSStyle in the styles array */
+    ASSDialog    *dialogs;       /**< array of split out dialogs */
+    int           dialogs_count; /**< number of ASSDialog in the dialogs array*/
 } ASS;
 
 /**
@@ -157,21 +157,13 @@ typedef struct {
      * @{
      */
     void (*text)(void *priv, const char *text, int len);
-
     void (*new_line)(void *priv, int forced);
-
     void (*style)(void *priv, char style, int close);
-
     void (*color)(void *priv, unsigned int /* color */, unsigned int color_id);
-
     void (*alpha)(void *priv, int alpha, int alpha_id);
-
     void (*font_name)(void *priv, const char *name);
-
     void (*font_size)(void *priv, int size);
-
     void (*alignment)(void *priv, int alignment);
-
     void (*cancel_overrides)(void *priv, const char *style);
     /** @} */
 
@@ -180,7 +172,6 @@ typedef struct {
      * @{
      */
     void (*move)(void *priv, int x1, int y1, int x2, int y2, int t1, int t2);
-
     void (*origin)(void *priv, int x, int y);
     /** @} */
 

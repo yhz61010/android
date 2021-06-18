@@ -23,10 +23,11 @@
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/rnd_avg.h"
 
-static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
+static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type)
+{
     v8i16 r0, r1, r2, r3, r4, r5, r6, r7, sign;
     v4i32 r0_r, r0_l, r1_r, r1_l, r2_r, r2_l, r3_r, r3_l,
-            r4_r, r4_l, r5_r, r5_l, r6_r, r6_l, r7_r, r7_l;
+          r4_r, r4_l, r5_r, r5_l, r6_r, r6_l, r7_r, r7_l;
     v4i32 A, B, C, D, Ad, Bd, Cd, Dd, E, F, G, H;
     v4i32 Ed, Gd, Add, Bdd, Fd, Hd;
     v16u8 sign_l;
@@ -187,13 +188,13 @@ static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
         H += c6;
     }
     CLIP_SW8_0_255(A, B, C, D, E, F, G, H);
-    sign_l = __msa_or_v((v16u8) r1_r, (v16u8) r2_r);
-    sign_l = __msa_or_v(sign_l, (v16u8) r3_r);
-    sign_l = __msa_or_v(sign_l, (v16u8) r0_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r1_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r2_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r3_l);
-    sign_t = __msa_ceqi_w((v4i32) sign_l, 0);
+    sign_l = __msa_or_v((v16u8)r1_r, (v16u8)r2_r);
+    sign_l = __msa_or_v(sign_l, (v16u8)r3_r);
+    sign_l = __msa_or_v(sign_l, (v16u8)r0_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r1_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r2_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r3_l);
+    sign_t = __msa_ceqi_w((v4i32)sign_l, 0);
     Add = ((r0_r * cnst46341w) + (8 << 16)) >> 20;
     if (type == 1) {
         Bdd = Add + cnst128w;
@@ -217,23 +218,23 @@ static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
         Hd = Add + c7;
         CLIP_SW8_0_255(Ad, Bd, Cd, Dd, Ed, Fd, Gd, Hd);
     }
-    Ad = (v4i32) __msa_and_v((v16u8) Ad, (v16u8) sign_t);
-    Bd = (v4i32) __msa_and_v((v16u8) Bd, (v16u8) sign_t);
-    Cd = (v4i32) __msa_and_v((v16u8) Cd, (v16u8) sign_t);
-    Dd = (v4i32) __msa_and_v((v16u8) Dd, (v16u8) sign_t);
-    Ed = (v4i32) __msa_and_v((v16u8) Ed, (v16u8) sign_t);
-    Fd = (v4i32) __msa_and_v((v16u8) Fd, (v16u8) sign_t);
-    Gd = (v4i32) __msa_and_v((v16u8) Gd, (v16u8) sign_t);
-    Hd = (v4i32) __msa_and_v((v16u8) Hd, (v16u8) sign_t);
+    Ad = (v4i32)__msa_and_v((v16u8)Ad, (v16u8)sign_t);
+    Bd = (v4i32)__msa_and_v((v16u8)Bd, (v16u8)sign_t);
+    Cd = (v4i32)__msa_and_v((v16u8)Cd, (v16u8)sign_t);
+    Dd = (v4i32)__msa_and_v((v16u8)Dd, (v16u8)sign_t);
+    Ed = (v4i32)__msa_and_v((v16u8)Ed, (v16u8)sign_t);
+    Fd = (v4i32)__msa_and_v((v16u8)Fd, (v16u8)sign_t);
+    Gd = (v4i32)__msa_and_v((v16u8)Gd, (v16u8)sign_t);
+    Hd = (v4i32)__msa_and_v((v16u8)Hd, (v16u8)sign_t);
     sign_t = __msa_ceqi_w(sign_t, 0);
-    A = (v4i32) __msa_and_v((v16u8) A, (v16u8) sign_t);
-    B = (v4i32) __msa_and_v((v16u8) B, (v16u8) sign_t);
-    C = (v4i32) __msa_and_v((v16u8) C, (v16u8) sign_t);
-    D = (v4i32) __msa_and_v((v16u8) D, (v16u8) sign_t);
-    E = (v4i32) __msa_and_v((v16u8) E, (v16u8) sign_t);
-    F = (v4i32) __msa_and_v((v16u8) F, (v16u8) sign_t);
-    G = (v4i32) __msa_and_v((v16u8) G, (v16u8) sign_t);
-    H = (v4i32) __msa_and_v((v16u8) H, (v16u8) sign_t);
+    A = (v4i32)__msa_and_v((v16u8)A, (v16u8)sign_t);
+    B = (v4i32)__msa_and_v((v16u8)B, (v16u8)sign_t);
+    C = (v4i32)__msa_and_v((v16u8)C, (v16u8)sign_t);
+    D = (v4i32)__msa_and_v((v16u8)D, (v16u8)sign_t);
+    E = (v4i32)__msa_and_v((v16u8)E, (v16u8)sign_t);
+    F = (v4i32)__msa_and_v((v16u8)F, (v16u8)sign_t);
+    G = (v4i32)__msa_and_v((v16u8)G, (v16u8)sign_t);
+    H = (v4i32)__msa_and_v((v16u8)H, (v16u8)sign_t);
     r0_r = Ad + A;
     r1_r = Bd + C;
     r2_r = Cd + D;
@@ -295,13 +296,13 @@ static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
         H += c6;
     }
     CLIP_SW8_0_255(A, B, C, D, E, F, G, H);
-    sign_l = __msa_or_v((v16u8) r5_r, (v16u8) r6_r);
-    sign_l = __msa_or_v(sign_l, (v16u8) r7_r);
-    sign_l = __msa_or_v(sign_l, (v16u8) r4_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r5_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r6_l);
-    sign_l = __msa_or_v(sign_l, (v16u8) r7_l);
-    sign_t = __msa_ceqi_w((v4i32) sign_l, 0);
+    sign_l = __msa_or_v((v16u8)r5_r, (v16u8)r6_r);
+    sign_l = __msa_or_v(sign_l, (v16u8)r7_r);
+    sign_l = __msa_or_v(sign_l, (v16u8)r4_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r5_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r6_l);
+    sign_l = __msa_or_v(sign_l, (v16u8)r7_l);
+    sign_t = __msa_ceqi_w((v4i32)sign_l, 0);
     Add = ((r4_r * cnst46341w) + (8 << 16)) >> 20;
     if (type == 1) {
         Bdd = Add + cnst128w;
@@ -325,23 +326,23 @@ static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
         Hd = Add + c7;
         CLIP_SW8_0_255(Ad, Bd, Cd, Dd, Ed, Fd, Gd, Hd);
     }
-    Ad = (v4i32) __msa_and_v((v16u8) Ad, (v16u8) sign_t);
-    Bd = (v4i32) __msa_and_v((v16u8) Bd, (v16u8) sign_t);
-    Cd = (v4i32) __msa_and_v((v16u8) Cd, (v16u8) sign_t);
-    Dd = (v4i32) __msa_and_v((v16u8) Dd, (v16u8) sign_t);
-    Ed = (v4i32) __msa_and_v((v16u8) Ed, (v16u8) sign_t);
-    Fd = (v4i32) __msa_and_v((v16u8) Fd, (v16u8) sign_t);
-    Gd = (v4i32) __msa_and_v((v16u8) Gd, (v16u8) sign_t);
-    Hd = (v4i32) __msa_and_v((v16u8) Hd, (v16u8) sign_t);
+    Ad = (v4i32)__msa_and_v((v16u8)Ad, (v16u8)sign_t);
+    Bd = (v4i32)__msa_and_v((v16u8)Bd, (v16u8)sign_t);
+    Cd = (v4i32)__msa_and_v((v16u8)Cd, (v16u8)sign_t);
+    Dd = (v4i32)__msa_and_v((v16u8)Dd, (v16u8)sign_t);
+    Ed = (v4i32)__msa_and_v((v16u8)Ed, (v16u8)sign_t);
+    Fd = (v4i32)__msa_and_v((v16u8)Fd, (v16u8)sign_t);
+    Gd = (v4i32)__msa_and_v((v16u8)Gd, (v16u8)sign_t);
+    Hd = (v4i32)__msa_and_v((v16u8)Hd, (v16u8)sign_t);
     sign_t = __msa_ceqi_w(sign_t, 0);
-    A = (v4i32) __msa_and_v((v16u8) A, (v16u8) sign_t);
-    B = (v4i32) __msa_and_v((v16u8) B, (v16u8) sign_t);
-    C = (v4i32) __msa_and_v((v16u8) C, (v16u8) sign_t);
-    D = (v4i32) __msa_and_v((v16u8) D, (v16u8) sign_t);
-    E = (v4i32) __msa_and_v((v16u8) E, (v16u8) sign_t);
-    F = (v4i32) __msa_and_v((v16u8) F, (v16u8) sign_t);
-    G = (v4i32) __msa_and_v((v16u8) G, (v16u8) sign_t);
-    H = (v4i32) __msa_and_v((v16u8) H, (v16u8) sign_t);
+    A = (v4i32)__msa_and_v((v16u8)A, (v16u8)sign_t);
+    B = (v4i32)__msa_and_v((v16u8)B, (v16u8)sign_t);
+    C = (v4i32)__msa_and_v((v16u8)C, (v16u8)sign_t);
+    D = (v4i32)__msa_and_v((v16u8)D, (v16u8)sign_t);
+    E = (v4i32)__msa_and_v((v16u8)E, (v16u8)sign_t);
+    F = (v4i32)__msa_and_v((v16u8)F, (v16u8)sign_t);
+    G = (v4i32)__msa_and_v((v16u8)G, (v16u8)sign_t);
+    H = (v4i32)__msa_and_v((v16u8)H, (v16u8)sign_t);
     r4_r = Ad + A;
     r5_r = Bd + C;
     r6_r = Cd + D;
@@ -366,17 +367,20 @@ static void idct_msa(uint8_t *dst, int stride, int16_t *input, int type) {
     ST_D1(d7, 0, dst + 7 * stride);
 }
 
-void ff_vp3_idct_put_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block) {
+void ff_vp3_idct_put_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block)
+{
     idct_msa(dest, line_size, block, 1);
     memset(block, 0, sizeof(*block) * 64);
 }
 
-void ff_vp3_idct_add_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block) {
+void ff_vp3_idct_add_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block)
+{
     idct_msa(dest, line_size, block, 2);
     memset(block, 0, sizeof(*block) * 64);
 }
 
-void ff_vp3_idct_dc_add_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block) {
+void ff_vp3_idct_dc_add_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block)
+{
     int i = (block[0] + 15) >> 5;
     v4i32 dc = {i, i, i, i};
     v16i8 d0, d1, d2, d3, d4, d5, d6, d7;
@@ -439,7 +443,8 @@ void ff_vp3_idct_dc_add_msa(uint8_t *dest, ptrdiff_t line_size, int16_t *block) 
 }
 
 void ff_vp3_v_loop_filter_msa(uint8_t *first_pixel, ptrdiff_t stride,
-                              int *bounding_values) {
+                              int *bounding_values)
+{
     int nstride = -stride;
     v4i32 e0, e1, f0, f1, g0, g1;
     v16i8 zero = {0};
@@ -447,7 +452,7 @@ void ff_vp3_v_loop_filter_msa(uint8_t *first_pixel, ptrdiff_t stride,
     v8i16 c0, c1, c2, c3;
     v8i16 r0;
     v8i16 cnst3h = {3, 3, 3, 3, 3, 3, 3, 3},
-            cnst4h = {4, 4, 4, 4, 4, 4, 4, 4};
+          cnst4h = {4, 4, 4, 4, 4, 4, 4, 4};
     v16i8 mask = {0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0};
     int16_t temp_16[8];
     int temp_32[8];
@@ -478,14 +483,15 @@ void ff_vp3_v_loop_filter_msa(uint8_t *first_pixel, ptrdiff_t stride,
 }
 
 void ff_vp3_h_loop_filter_msa(uint8_t *first_pixel, ptrdiff_t stride,
-                              int *bounding_values) {
+                              int *bounding_values)
+{
     v16i8 d0, d1, d2, d3, d4, d5, d6, d7;
     v8i16 c0, c1, c2, c3, c4, c5, c6, c7;
     v8i16 r0;
     v4i32 e0, e1, f0, f1, g0, g1;
     v16i8 zero = {0};
     v8i16 cnst3h = {3, 3, 3, 3, 3, 3, 3, 3},
-            cnst4h = {4, 4, 4, 4, 4, 4, 4, 4};
+          cnst4h = {4, 4, 4, 4, 4, 4, 4, 4};
     v16i8 mask = {0, 16, 4, 20, 8, 24, 12, 28, 0, 0, 0, 0, 0, 0, 0, 0};
     int16_t temp_16[8];
     int temp_32[8];
@@ -520,7 +526,8 @@ void ff_vp3_h_loop_filter_msa(uint8_t *first_pixel, ptrdiff_t stride,
 }
 
 void ff_put_no_rnd_pixels_l2_msa(uint8_t *dst, const uint8_t *src1,
-                                 const uint8_t *src2, ptrdiff_t stride, int h) {
+                                 const uint8_t *src2, ptrdiff_t stride, int h)
+{
     if (h == 8) {
         v16i8 d0, d1, d2, d3, d4, d5, d6, d7;
         v16i8 c0, c1, c2, c3;
@@ -535,42 +542,42 @@ void ff_put_no_rnd_pixels_l2_msa(uint8_t *dst, const uint8_t *src1,
         LD_SB8(src1, stride, d0, d1, d2, d3, d4, d5, d6, d7);
         VSHF_B2_SB(d0, d1, d2, d3, mask, mask, c0, c1);
         VSHF_B2_SB(d4, d5, d6, d7, mask, mask, c2, c3);
-        a0 = (v4i32) __msa_pckev_d((v2i64) c1, (v2i64) c0);
-        a2 = (v4i32) __msa_pckod_d((v2i64) c1, (v2i64) c0);
-        a1 = (v4i32) __msa_pckev_d((v2i64) c3, (v2i64) c2);
-        a3 = (v4i32) __msa_pckod_d((v2i64) c3, (v2i64) c2);
+        a0 = (v4i32) __msa_pckev_d((v2i64)c1, (v2i64)c0);
+        a2 = (v4i32) __msa_pckod_d((v2i64)c1, (v2i64)c0);
+        a1 = (v4i32) __msa_pckev_d((v2i64)c3, (v2i64)c2);
+        a3 = (v4i32) __msa_pckod_d((v2i64)c3, (v2i64)c2);
 
         LD_SB8(src2, stride, d0, d1, d2, d3, d4, d5, d6, d7);
         VSHF_B2_SB(d0, d1, d2, d3, mask, mask, c0, c1);
         VSHF_B2_SB(d4, d5, d6, d7, mask, mask, c2, c3);
-        b0 = (v4i32) __msa_pckev_d((v2i64) c1, (v2i64) c0);
-        b2 = (v4i32) __msa_pckod_d((v2i64) c1, (v2i64) c0);
-        b1 = (v4i32) __msa_pckev_d((v2i64) c3, (v2i64) c2);
-        b3 = (v4i32) __msa_pckod_d((v2i64) c3, (v2i64) c2);
+        b0 = (v4i32) __msa_pckev_d((v2i64)c1, (v2i64)c0);
+        b2 = (v4i32) __msa_pckod_d((v2i64)c1, (v2i64)c0);
+        b1 = (v4i32) __msa_pckev_d((v2i64)c3, (v2i64)c2);
+        b3 = (v4i32) __msa_pckod_d((v2i64)c3, (v2i64)c2);
 
-        e0 = (v4i32) __msa_xor_v((v16u8) a0, (v16u8) b0);
-        e0 = (v4i32) __msa_and_v((v16u8) e0, (v16u8) fmask);
-        t0 = ((v4u32) e0) >> 1;
-        e2 = (v4i32) __msa_and_v((v16u8) a0, (v16u8) b0);
-        t0 = t0 + (v4u32) e2;
+        e0 = (v4i32) __msa_xor_v((v16u8)a0, (v16u8)b0);
+        e0 = (v4i32) __msa_and_v((v16u8)e0, (v16u8)fmask);
+        t0 = ((v4u32)e0) >> 1;
+        e2 = (v4i32) __msa_and_v((v16u8)a0, (v16u8)b0);
+        t0 = t0 + (v4u32)e2;
 
-        e1 = (v4i32) __msa_xor_v((v16u8) a1, (v16u8) b1);
-        e1 = (v4i32) __msa_and_v((v16u8) e1, (v16u8) fmask);
-        t1 = ((v4u32) e1) >> 1;
-        e2 = (v4i32) __msa_and_v((v16u8) a1, (v16u8) b1);
-        t1 = t1 + (v4u32) e2;
+        e1 = (v4i32) __msa_xor_v((v16u8)a1, (v16u8)b1);
+        e1 = (v4i32) __msa_and_v((v16u8)e1, (v16u8)fmask);
+        t1 = ((v4u32)e1) >> 1;
+        e2 = (v4i32) __msa_and_v((v16u8)a1, (v16u8)b1);
+        t1 = t1 + (v4u32)e2;
 
-        f0 = (v4i32) __msa_xor_v((v16u8) a2, (v16u8) b2);
-        f0 = (v4i32) __msa_and_v((v16u8) f0, (v16u8) fmask);
-        t2 = ((v4u32) f0) >> 1;
-        f2 = (v4i32) __msa_and_v((v16u8) a2, (v16u8) b2);
-        t2 = t2 + (v4u32) f2;
+        f0 = (v4i32) __msa_xor_v((v16u8)a2, (v16u8)b2);
+        f0 = (v4i32) __msa_and_v((v16u8)f0, (v16u8)fmask);
+        t2 = ((v4u32)f0) >> 1;
+        f2 = (v4i32) __msa_and_v((v16u8)a2, (v16u8)b2);
+        t2 = t2 + (v4u32)f2;
 
-        f1 = (v4i32) __msa_xor_v((v16u8) a3, (v16u8) b3);
-        f1 = (v4i32) __msa_and_v((v16u8) f1, (v16u8) fmask);
-        t3 = ((v4u32) f1) >> 1;
-        f2 = (v4i32) __msa_and_v((v16u8) a3, (v16u8) b3);
-        t3 = t3 + (v4u32) f2;
+        f1 = (v4i32) __msa_xor_v((v16u8)a3, (v16u8)b3);
+        f1 = (v4i32) __msa_and_v((v16u8)f1, (v16u8)fmask);
+        t3 = ((v4u32)f1) >> 1;
+        f2 = (v4i32) __msa_and_v((v16u8)a3, (v16u8)b3);
+        t3 = t3 + (v4u32)f2;
 
         ST_W8(t0, t1, 0, 1, 2, 3, 0, 1, 2, 3, dst, stride);
         ST_W8(t2, t3, 0, 1, 2, 3, 0, 1, 2, 3, dst + 4, stride);

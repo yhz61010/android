@@ -27,18 +27,15 @@
 #include "libavcodec/vp3dsp.h"
 
 void ff_vp3_idct_put_mmx(uint8_t *dest, ptrdiff_t stride, int16_t *block);
-
 void ff_vp3_idct_add_mmx(uint8_t *dest, ptrdiff_t stride, int16_t *block);
 
 void ff_vp3_idct_put_sse2(uint8_t *dest, ptrdiff_t stride, int16_t *block);
-
 void ff_vp3_idct_add_sse2(uint8_t *dest, ptrdiff_t stride, int16_t *block);
 
 void ff_vp3_idct_dc_add_mmxext(uint8_t *dest, ptrdiff_t stride, int16_t *block);
 
 void ff_vp3_v_loop_filter_mmxext(uint8_t *src, ptrdiff_t stride,
                                  int *bounding_values);
-
 void ff_vp3_h_loop_filter_mmxext(uint8_t *src, ptrdiff_t stride,
                                  int *bounding_values);
 
@@ -46,7 +43,8 @@ void ff_put_vp_no_rnd_pixels8_l2_mmx(uint8_t *dst, const uint8_t *a,
                                      const uint8_t *b, ptrdiff_t stride,
                                      int h);
 
-av_cold void ff_vp3dsp_init_x86(VP3DSPContext *c, int flags) {
+av_cold void ff_vp3dsp_init_x86(VP3DSPContext *c, int flags)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (EXTERNAL_MMX(cpu_flags)) {
@@ -67,7 +65,7 @@ av_cold void ff_vp3dsp_init_x86(VP3DSPContext *c, int flags) {
     }
 
     if (EXTERNAL_SSE2(cpu_flags)) {
-        c->idct_put = ff_vp3_idct_put_sse2;
-        c->idct_add = ff_vp3_idct_add_sse2;
+        c->idct_put  = ff_vp3_idct_put_sse2;
+        c->idct_add  = ff_vp3_idct_add_sse2;
     }
 }

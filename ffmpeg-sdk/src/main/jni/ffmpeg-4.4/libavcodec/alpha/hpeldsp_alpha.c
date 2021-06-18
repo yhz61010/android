@@ -24,11 +24,13 @@
 #include "hpeldsp_alpha.h"
 #include "asm.h"
 
-static inline uint64_t avg2_no_rnd(uint64_t a, uint64_t b) {
+static inline uint64_t avg2_no_rnd(uint64_t a, uint64_t b)
+{
     return (a & b) + (((a ^ b) & BYTE_VEC(0xfe)) >> 1);
 }
 
-static inline uint64_t avg2(uint64_t a, uint64_t b) {
+static inline uint64_t avg2(uint64_t a, uint64_t b)
+{
     return (a | b) - (((a ^ b) & BYTE_VEC(0xfe)) >> 1);
 }
 
@@ -144,12 +146,10 @@ static void OPNAME ## _pixels16 ## SUFF ## _axp                             \
 #define AVG4 avg4
 #define AVG4_ROUNDER BYTE_VEC(0x02)
 #define STORE(l, b) stq(l, b)
-
 PIXOP(put, STORE);
 
 #undef STORE
 #define STORE(l, b) stq(AVG2(l, ldq(b)), b);
-
 PIXOP(avg, STORE);
 
 /* Not rounding primitives.  */
@@ -161,21 +161,21 @@ PIXOP(avg, STORE);
 #define AVG4 avg4_no_rnd
 #define AVG4_ROUNDER BYTE_VEC(0x01)
 #define STORE(l, b) stq(l, b)
-
 PIXOP(put_no_rnd, STORE);
 
 #undef STORE
 #define STORE(l, b) stq(AVG2(l, ldq(b)), b);
-
 PIXOP(avg_no_rnd, STORE);
 
 static void put_pixels16_axp_asm(uint8_t *block, const uint8_t *pixels,
-                                 ptrdiff_t line_size, int h) {
-    put_pixels_axp_asm(block, pixels, line_size, h);
+                                 ptrdiff_t line_size, int h)
+{
+    put_pixels_axp_asm(block,     pixels,     line_size, h);
     put_pixels_axp_asm(block + 8, pixels + 8, line_size, h);
 }
 
-av_cold void ff_hpeldsp_init_alpha(HpelDSPContext *c, int flags) {
+av_cold void ff_hpeldsp_init_alpha(HpelDSPContext *c, int flags)
+{
     c->put_pixels_tab[0][0] = put_pixels16_axp_asm;
     c->put_pixels_tab[0][1] = put_pixels16_x2_axp;
     c->put_pixels_tab[0][2] = put_pixels16_y2_axp;

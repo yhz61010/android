@@ -83,7 +83,7 @@ static const int32_t sinpi_4_9 = 15212;
     out1 = __msa_pckev_h((v8i16) s0_m, (v8i16) s1_m);              \
 }
 
-#define VP9_DOT_ADD_SUB_SRARI_PCK(in0, in1, in2, in3, in4, in5, in6, in7, \
+#define VP9_DOT_ADD_SUB_SRARI_PCK(in0, in1, in2, in3, in4, in5, in6, in7,  \
                                       dst0, dst1, dst2, dst3)              \
 {                                                                          \
     v4i32 tp0_m, tp1_m, tp2_m, tp3_m, tp4_m;                               \
@@ -113,7 +113,7 @@ static const int32_t sinpi_4_9 = 15212;
     dst_m;                                                \
 } )
 
-#define VP9_ADST8(in0, in1, in2, in3, in4, in5, in6, in7, \
+#define VP9_ADST8(in0, in1, in2, in3, in4, in5, in6, in7,                 \
                   out0, out1, out2, out3, out4, out5, out6, out7)         \
 {                                                                         \
     v8i16 cnst0_m, cnst1_m, cnst2_m, cnst3_m, cnst4_m;                    \
@@ -193,7 +193,7 @@ static const int32_t sinpi_4_9 = 15212;
     PCKEV_H2_SH(madd1_m, madd0_m, madd3_m, madd2_m, res0, res1);          \
 }
 
-#define VP9_MADD_BF(inp0, inp1, inp2, inp3, cst0, cst1, cst2, cst3, \
+#define VP9_MADD_BF(inp0, inp1, inp2, inp3, cst0, cst1, cst2, cst3,       \
                     out0, out1, out2, out3)                               \
 {                                                                         \
     v8i16 madd_s0_m, madd_s1_m, madd_s2_m, madd_s3_m;                     \
@@ -320,7 +320,7 @@ static const int32_t sinpi_4_9 = 15212;
     PCKEV_H2_SH(int2_m, int2_m, int3_m, int3_m, out2, out3);          \
 }
 
-#define TRANSPOSE4X8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, \
+#define TRANSPOSE4X8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,          \
                            out0, out1, out2, out3, out4, out5, out6, out7)  \
 {                                                                           \
     v8i16 tmp0_m, tmp1_m, tmp2_m, tmp3_m;                                   \
@@ -344,7 +344,8 @@ static const int32_t sinpi_4_9 = 15212;
 }
 
 static void vp9_idct4x4_1_add_msa(int16_t *input, uint8_t *dst,
-                                  int32_t dst_stride) {
+                                  int32_t dst_stride)
+{
     int16_t out;
     v8i16 vec;
 
@@ -358,9 +359,10 @@ static void vp9_idct4x4_1_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct4x4_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                          int32_t dst_stride) {
+                                          int32_t dst_stride)
+{
     v8i16 in0, in1, in2, in3;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 4x4 block */
     in0 = LD_SH(input);
@@ -379,9 +381,10 @@ static void vp9_idct4x4_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst4x4_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v8i16 in0, in1, in2, in3;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 4x4 block */
     in0 = LD_SH(input);
@@ -400,9 +403,10 @@ static void vp9_iadst4x4_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst_idct_4x4_add_msa(int16_t *input, uint8_t *dst,
-                                       int32_t dst_stride, int32_t eob) {
+                                       int32_t dst_stride, int32_t eob)
+{
     v8i16 in0, in1, in2, in3;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 4x4 block */
     in0 = LD_SH(input);
@@ -421,9 +425,10 @@ static void vp9_iadst_idct_4x4_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct_iadst_4x4_add_msa(int16_t *input, uint8_t *dst,
-                                       int32_t dst_stride, int32_t eob) {
+                                       int32_t dst_stride, int32_t eob)
+{
     v8i16 in0, in1, in2, in3;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 4x4 block */
     in0 = LD_SH(input);
@@ -452,7 +457,7 @@ static void vp9_idct_iadst_4x4_add_msa(int16_t *input, uint8_t *dst,
 } )
 
 /* multiply and add macro */
-#define VP9_MADD(inp0, inp1, inp2, inp3, cst0, cst1, cst2, cst3, \
+#define VP9_MADD(inp0, inp1, inp2, inp3, cst0, cst1, cst2, cst3,          \
                  out0, out1, out2, out3)                                  \
 {                                                                         \
     v8i16 madd_s0_m, madd_s1_m, madd_s2_m, madd_s3_m;                     \
@@ -471,7 +476,7 @@ static void vp9_idct_iadst_4x4_add_msa(int16_t *input, uint8_t *dst,
 }
 
 /* idct 8x8 macro */
-#define VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7, \
+#define VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7,                 \
                        out0, out1, out2, out3, out4, out5, out6, out7)         \
 {                                                                              \
     v8i16 tp0_m, tp1_m, tp2_m, tp3_m, tp4_m, tp5_m, tp6_m, tp7_m;              \
@@ -505,7 +510,7 @@ static void vp9_idct_iadst_4x4_add_msa(int16_t *input, uint8_t *dst,
                 out0, out1, out2, out3, out4, out5, out6, out7);               \
 }
 
-#define VP9_IADST8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7, \
+#define VP9_IADST8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7,              \
                         out0, out1, out2, out3, out4, out5, out6, out7)      \
 {                                                                            \
     v4i32 r0_m, r1_m, r2_m, r3_m, r4_m, r5_m, r6_m, r7_m;                    \
@@ -592,7 +597,8 @@ static void vp9_idct_iadst_4x4_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct8x8_1_add_msa(int16_t *input, uint8_t *dst,
-                                  int32_t dst_stride) {
+                                  int32_t dst_stride)
+{
     int16_t out;
     int32_t val;
     v8i16 vec;
@@ -609,11 +615,12 @@ static void vp9_idct8x8_1_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct8x8_12_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 s0, s1, s2, s3, s4, s5, s6, s7, k0, k1, k2, k3, m0, m1, m2, m3;
     v4i32 tmp0, tmp1, tmp2, tmp3;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 8x8 block */
     LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
@@ -672,9 +679,10 @@ static void vp9_idct8x8_12_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct8x8_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                          int32_t dst_stride) {
+                                          int32_t dst_stride)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 8x8 block */
     LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
@@ -698,14 +706,15 @@ static void vp9_idct8x8_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst8x8_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                           int32_t dst_stride) {
+                                           int32_t dst_stride)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v8i16 res0, res1, res2, res3, res4, res5, res6, res7;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
     v8i16 out0, out1, out2, out3, out4, out5, out6, out7;
     v8i16 cnst0, cnst1, cnst2, cnst3, cnst4;
     v8i16 temp0, temp1, temp2, temp3, s0, s1;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 8x8 block */
     LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
@@ -823,9 +832,10 @@ static void vp9_iadst8x8_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst_idct_8x8_add_msa(int16_t *input, uint8_t *dst,
-                                       int32_t dst_stride, int32_t eob) {
+                                       int32_t dst_stride, int32_t eob)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 8x8 block */
     LD_SH8(input, 8, in1, in6, in3, in4, in5, in2, in7, in0);
@@ -849,9 +859,10 @@ static void vp9_iadst_idct_8x8_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct_iadst_8x8_add_msa(int16_t *input, uint8_t *dst,
-                                       int32_t dst_stride, int32_t eob) {
+                                       int32_t dst_stride, int32_t eob)
+{
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load vector elements of 8x8 block */
     LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
@@ -875,10 +886,10 @@ static void vp9_idct_iadst_8x8_add_msa(int16_t *input, uint8_t *dst,
     VP9_ADDBLK_ST8x4_UB(dst, dst_stride, in4, in5, in6, in7);
 }
 
-#define VP9_IADST8x16_1D(r0, r1, r2, r3, r4, r5, r6, r7, r8, \
-                         r9, r10, r11, r12, r13, r14, r15, \
-                         out0, out1, out2, out3, out4, out5, \
-                         out6, out7, out8, out9, out10, out11, \
+#define VP9_IADST8x16_1D(r0, r1, r2, r3, r4, r5, r6, r7, r8,          \
+                         r9, r10, r11, r12, r13, r14, r15,            \
+                         out0, out1, out2, out3, out4, out5,          \
+                         out6, out7, out8, out9, out10, out11,        \
                          out12, out13, out14, out15)                  \
 {                                                                     \
     v8i16 g0_m, g1_m, g2_m, g3_m, g4_m, g5_m, g6_m, g7_m;             \
@@ -950,12 +961,13 @@ static void vp9_idct_iadst_8x8_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct16_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
-                                             int32_t dst_stride) {
+                                             int32_t dst_stride)
+{
     v8i16 loc0, loc1, loc2, loc3;
     v8i16 reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14;
     v8i16 reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15;
     v8i16 tmp5, tmp6, tmp7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load up 8x16 */
     LD_SH16(input, 16,
@@ -1052,12 +1064,13 @@ static void vp9_idct16_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
     VP9_ADDBLK_ST8x4_UB(dst, dst_stride, reg7, reg9, reg1, reg15);
 }
 
-static void vp9_idct16_1d_columns_msa(int16_t *input, int16_t *output) {
+static void vp9_idct16_1d_columns_msa(int16_t *input, int16_t *output)
+{
     v8i16 loc0, loc1, loc2, loc3;
     v8i16 reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14;
     v8i16 reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15;
     v8i16 tmp5, tmp6, tmp7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load up 8x16 */
     LD_SH16(input, 16,
@@ -1156,7 +1169,8 @@ static void vp9_idct16_1d_columns_msa(int16_t *input, int16_t *output) {
 }
 
 static void vp9_idct16x16_1_add_msa(int16_t *input, uint8_t *dst,
-                                    int32_t dst_stride) {
+                                    int32_t dst_stride)
+{
     uint8_t i;
     int16_t out;
     v8i16 vec, res0, res1, res2, res3, res4, res5, res6, res7;
@@ -1188,11 +1202,10 @@ static void vp9_idct16x16_1_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct16x16_10_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     int32_t i;
-    int16_t
-    out_arr[16 * 16]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t out_arr[16 * 16] ALLOC_ALIGNED(ALIGNMENT);
     int16_t *out = out_arr;
 
     /* transform rows */
@@ -1202,17 +1215,17 @@ static void vp9_idct16x16_10_colcol_addblk_msa(int16_t *input, uint8_t *dst,
     out += 4 * 16;
     for (i = 12; i--;) {
         __asm__ volatile (
-        "sw     $zero,   0(%[out])     \n\t"
-        "sw     $zero,   4(%[out])     \n\t"
-        "sw     $zero,   8(%[out])     \n\t"
-        "sw     $zero,  12(%[out])     \n\t"
-        "sw     $zero,  16(%[out])     \n\t"
-        "sw     $zero,  20(%[out])     \n\t"
-        "sw     $zero,  24(%[out])     \n\t"
-        "sw     $zero,  28(%[out])     \n\t"
+            "sw     $zero,   0(%[out])     \n\t"
+            "sw     $zero,   4(%[out])     \n\t"
+            "sw     $zero,   8(%[out])     \n\t"
+            "sw     $zero,  12(%[out])     \n\t"
+            "sw     $zero,  16(%[out])     \n\t"
+            "sw     $zero,  20(%[out])     \n\t"
+            "sw     $zero,  24(%[out])     \n\t"
+            "sw     $zero,  28(%[out])     \n\t"
 
-        :
-        : [out] "r"(out)
+            :
+            : [out] "r" (out)
         );
 
         out += 16;
@@ -1229,11 +1242,10 @@ static void vp9_idct16x16_10_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct16x16_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                            int32_t dst_stride) {
+                                            int32_t dst_stride)
+{
     int32_t i;
-    int16_t
-    out_arr[16 * 16]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t out_arr[16 * 16] ALLOC_ALIGNED(ALIGNMENT);
     int16_t *out = out_arr;
 
     /* transform rows */
@@ -1250,10 +1262,11 @@ static void vp9_idct16x16_colcol_addblk_msa(int16_t *input, uint8_t *dst,
     }
 }
 
-static void vp9_iadst16_1d_columns_msa(int16_t *input, int16_t *output) {
+static void vp9_iadst16_1d_columns_msa(int16_t *input, int16_t *output)
+{
     v8i16 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
     v8i16 l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* load input data */
     LD_SH16(input, 16,
@@ -1284,7 +1297,8 @@ static void vp9_iadst16_1d_columns_msa(int16_t *input, int16_t *output) {
 }
 
 static void vp9_iadst16_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
-                                              int32_t dst_stride) {
+                                              int32_t dst_stride)
+{
     v8i16 v0, v2, v4, v6, k0, k1, k2, k3;
     v8i16 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
     v8i16 out0, out1, out2, out3, out4, out5, out6, out7;
@@ -1295,7 +1309,7 @@ static void vp9_iadst16_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
     v8i16 res8, res9, res10, res11, res12, res13, res14, res15;
     v16u8 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7;
     v16u8 dst8, dst9, dst10, dst11, dst12, dst13, dst14, dst15;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
 
     r0 = LD_SH(input + 0 * 16);
     r3 = LD_SH(input + 3 * 16);
@@ -1449,10 +1463,9 @@ static void vp9_iadst16_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst16x16_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                             int32_t dst_stride) {
-    int16_t
-    out_arr[16 * 16]
-    ALLOC_ALIGNED(ALIGNMENT);
+                                             int32_t dst_stride)
+{
+    int16_t out_arr[16 * 16] ALLOC_ALIGNED(ALIGNMENT);
     int16_t *out = out_arr;
     int32_t i;
 
@@ -1471,7 +1484,8 @@ static void vp9_iadst16x16_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_iadst_idct_16x16_add_msa(int16_t *input, uint8_t *dst,
-                                         int32_t dst_stride, int32_t eob) {
+                                         int32_t dst_stride, int32_t eob)
+{
     int32_t i;
     int16_t out[16 * 16];
     int16_t *out_ptr = &out[0];
@@ -1491,7 +1505,8 @@ static void vp9_iadst_idct_16x16_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct_iadst_16x16_add_msa(int16_t *input, uint8_t *dst,
-                                         int32_t dst_stride, int32_t eob) {
+                                         int32_t dst_stride, int32_t eob)
+{
     int32_t i;
     int16_t out[16 * 16];
     int16_t *out_ptr = &out[0];
@@ -1513,7 +1528,8 @@ static void vp9_idct_iadst_16x16_add_msa(int16_t *input, uint8_t *dst,
 static void vp9_idct_butterfly_transpose_store(int16_t *tmp_buf,
                                                int16_t *tmp_eve_buf,
                                                int16_t *tmp_odd_buf,
-                                               int16_t *dst) {
+                                               int16_t *dst)
+{
     v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
     v8i16 m0, m1, m2, m3, m4, m5, m6, m7, n0, n1, n2, n3, n4, n5, n6, n7;
 
@@ -1612,11 +1628,12 @@ static void vp9_idct_butterfly_transpose_store(int16_t *tmp_buf,
 }
 
 static void vp9_idct8x32_column_even_process_store(int16_t *tmp_buf,
-                                                   int16_t *tmp_eve_buf) {
+                                                   int16_t *tmp_eve_buf)
+{
     v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
     v8i16 reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
     v8i16 stp0, stp1, stp2, stp3, stp4, stp5, stp6, stp7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* Even stage 1 */
     LD_SH8(tmp_buf, (4 * 32), reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7);
@@ -1695,10 +1712,11 @@ static void vp9_idct8x32_column_even_process_store(int16_t *tmp_buf,
 }
 
 static void vp9_idct8x32_column_odd_process_store(int16_t *tmp_buf,
-                                                  int16_t *tmp_odd_buf) {
+                                                  int16_t *tmp_odd_buf)
+{
     v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
     v8i16 reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     /* Odd stage 1 */
     reg0 = LD_SH(tmp_buf + 32);
@@ -1827,7 +1845,8 @@ static void vp9_idct8x32_column_odd_process_store(int16_t *tmp_buf,
 static void vp9_idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
                                                  int16_t *tmp_odd_buf,
                                                  uint8_t *dst,
-                                                 int32_t dst_stride) {
+                                                 int32_t dst_stride)
+{
     v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
     v8i16 m0, m1, m2, m3, m4, m5, m6, m7, n0, n1, n2, n3, n4, n5, n6, n7;
 
@@ -1912,13 +1931,10 @@ static void vp9_idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
 }
 
 static void vp9_idct8x32_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
-                                               int32_t dst_stride) {
-    int16_t
-    tmp_odd_buf[16 * 8]
-    ALLOC_ALIGNED(ALIGNMENT);
-    int16_t
-    tmp_eve_buf[16 * 8]
-    ALLOC_ALIGNED(ALIGNMENT);
+                                               int32_t dst_stride)
+{
+    int16_t tmp_odd_buf[16 * 8] ALLOC_ALIGNED(ALIGNMENT);
+    int16_t tmp_eve_buf[16 * 8] ALLOC_ALIGNED(ALIGNMENT);
 
     vp9_idct8x32_column_even_process_store(input, &tmp_eve_buf[0]);
     vp9_idct8x32_column_odd_process_store(input, &tmp_odd_buf[0]);
@@ -1927,13 +1943,10 @@ static void vp9_idct8x32_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct8x32_1d_columns_msa(int16_t *input, int16_t *output,
-                                        int16_t *tmp_buf) {
-    int16_t
-    tmp_odd_buf[16 * 8]
-    ALLOC_ALIGNED(ALIGNMENT);
-    int16_t
-    tmp_eve_buf[16 * 8]
-    ALLOC_ALIGNED(ALIGNMENT);
+                                        int16_t *tmp_buf)
+{
+    int16_t tmp_odd_buf[16 * 8] ALLOC_ALIGNED(ALIGNMENT);
+    int16_t tmp_eve_buf[16 * 8] ALLOC_ALIGNED(ALIGNMENT);
 
     vp9_idct8x32_column_even_process_store(input, &tmp_eve_buf[0]);
     vp9_idct8x32_column_odd_process_store(input, &tmp_odd_buf[0]);
@@ -1942,7 +1955,8 @@ static void vp9_idct8x32_1d_columns_msa(int16_t *input, int16_t *output,
 }
 
 static void vp9_idct32x32_1_add_msa(int16_t *input, uint8_t *dst,
-                                    int32_t dst_stride) {
+                                    int32_t dst_stride)
+{
     int32_t i;
     int16_t out;
     v16u8 dst0, dst1, dst2, dst3, tmp0, tmp1, tmp2, tmp3;
@@ -1979,37 +1993,34 @@ static void vp9_idct32x32_1_add_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct32x32_34_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                               int32_t dst_stride) {
+                                               int32_t dst_stride)
+{
     int32_t i;
-    int16_t
-    out_arr[32 * 32]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t out_arr[32 * 32] ALLOC_ALIGNED(ALIGNMENT);
     int16_t *out_ptr = out_arr;
-    int16_t
-    tmp_buf[8 * 32]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t tmp_buf[8 * 32] ALLOC_ALIGNED(ALIGNMENT);
 
     for (i = 32; i--;) {
         __asm__ volatile (
-        "sw     $zero,       (%[out_ptr])     \n\t"
-        "sw     $zero,      4(%[out_ptr])     \n\t"
-        "sw     $zero,      8(%[out_ptr])     \n\t"
-        "sw     $zero,     12(%[out_ptr])     \n\t"
-        "sw     $zero,     16(%[out_ptr])     \n\t"
-        "sw     $zero,     20(%[out_ptr])     \n\t"
-        "sw     $zero,     24(%[out_ptr])     \n\t"
-        "sw     $zero,     28(%[out_ptr])     \n\t"
-        "sw     $zero,     32(%[out_ptr])     \n\t"
-        "sw     $zero,     36(%[out_ptr])     \n\t"
-        "sw     $zero,     40(%[out_ptr])     \n\t"
-        "sw     $zero,     44(%[out_ptr])     \n\t"
-        "sw     $zero,     48(%[out_ptr])     \n\t"
-        "sw     $zero,     52(%[out_ptr])     \n\t"
-        "sw     $zero,     56(%[out_ptr])     \n\t"
-        "sw     $zero,     60(%[out_ptr])     \n\t"
+            "sw     $zero,       (%[out_ptr])     \n\t"
+            "sw     $zero,      4(%[out_ptr])     \n\t"
+            "sw     $zero,      8(%[out_ptr])     \n\t"
+            "sw     $zero,     12(%[out_ptr])     \n\t"
+            "sw     $zero,     16(%[out_ptr])     \n\t"
+            "sw     $zero,     20(%[out_ptr])     \n\t"
+            "sw     $zero,     24(%[out_ptr])     \n\t"
+            "sw     $zero,     28(%[out_ptr])     \n\t"
+            "sw     $zero,     32(%[out_ptr])     \n\t"
+            "sw     $zero,     36(%[out_ptr])     \n\t"
+            "sw     $zero,     40(%[out_ptr])     \n\t"
+            "sw     $zero,     44(%[out_ptr])     \n\t"
+            "sw     $zero,     48(%[out_ptr])     \n\t"
+            "sw     $zero,     52(%[out_ptr])     \n\t"
+            "sw     $zero,     56(%[out_ptr])     \n\t"
+            "sw     $zero,     60(%[out_ptr])     \n\t"
 
-        :
-        : [out_ptr] "r"(out_ptr)
+            :
+            : [out_ptr] "r" (out_ptr)
         );
 
         out_ptr += 32;
@@ -2029,15 +2040,12 @@ static void vp9_idct32x32_34_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 static void vp9_idct32x32_colcol_addblk_msa(int16_t *input, uint8_t *dst,
-                                            int32_t dst_stride) {
+                                            int32_t dst_stride)
+{
     int32_t i;
-    int16_t
-    out_arr[32 * 32]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t out_arr[32 * 32] ALLOC_ALIGNED(ALIGNMENT);
     int16_t *out_ptr = out_arr;
-    int16_t
-    tmp_buf[8 * 32]
-    ALLOC_ALIGNED(ALIGNMENT);
+    int16_t tmp_buf[8 * 32] ALLOC_ALIGNED(ALIGNMENT);
 
     /* transform rows */
     for (i = 0; i < 4; i++) {
@@ -2055,89 +2063,109 @@ static void vp9_idct32x32_colcol_addblk_msa(int16_t *input, uint8_t *dst,
 }
 
 void ff_idct_idct_4x4_add_msa(uint8_t *dst, ptrdiff_t stride,
-                              int16_t *block, int eob) {
+                              int16_t *block, int eob)
+{
     if (eob > 1) {
         vp9_idct4x4_colcol_addblk_msa(block, dst, stride);
-    } else {
+    }
+    else {
         vp9_idct4x4_1_add_msa(block, dst, stride);
     }
 }
 
 void ff_idct_idct_8x8_add_msa(uint8_t *dst, ptrdiff_t stride,
-                              int16_t *block, int eob) {
+                              int16_t *block, int eob)
+{
     if (eob == 1) {
         vp9_idct8x8_1_add_msa(block, dst, stride);
-    } else if (eob <= 12) {
+    }
+    else if (eob <= 12) {
         vp9_idct8x8_12_colcol_addblk_msa(block, dst, stride);
-    } else {
+    }
+    else {
         vp9_idct8x8_colcol_addblk_msa(block, dst, stride);
     }
 }
 
 void ff_idct_idct_16x16_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                int16_t *block, int eob) {
+                                int16_t *block, int eob)
+{
     if (eob == 1) {
         /* DC only DCT coefficient. */
         vp9_idct16x16_1_add_msa(block, dst, stride);
-    } else if (eob <= 10) {
+    }
+    else if (eob <= 10) {
         vp9_idct16x16_10_colcol_addblk_msa(block, dst, stride);
-    } else {
+    }
+    else {
         vp9_idct16x16_colcol_addblk_msa(block, dst, stride);
     }
 }
 
 void ff_idct_idct_32x32_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                int16_t *block, int eob) {
+                                int16_t *block, int eob)
+{
     if (eob == 1) {
         vp9_idct32x32_1_add_msa(block, dst, stride);
-    } else if (eob <= 34) {
+    }
+    else if (eob <= 34) {
         vp9_idct32x32_34_colcol_addblk_msa(block, dst, stride);
-    } else {
+    }
+    else {
         vp9_idct32x32_colcol_addblk_msa(block, dst, stride);
     }
 }
 
 void ff_iadst_iadst_4x4_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                int16_t *block, int eob) {
+                                int16_t *block, int eob)
+{
     vp9_iadst4x4_colcol_addblk_msa(block, dst, stride);
 }
 
 void ff_iadst_iadst_8x8_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                int16_t *block, int eob) {
+                                int16_t *block, int eob)
+{
     vp9_iadst8x8_colcol_addblk_msa(block, dst, stride);
 }
 
 void ff_iadst_iadst_16x16_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                  int16_t *block, int eob) {
+                                  int16_t *block, int eob)
+{
     vp9_iadst16x16_colcol_addblk_msa(block, dst, stride);
 }
 
 void ff_idct_iadst_4x4_add_msa(uint8_t *dst, ptrdiff_t stride,
-                               int16_t *block, int eob) {
+                               int16_t *block, int eob)
+{
     vp9_idct_iadst_4x4_add_msa(block, dst, stride, eob);
 }
 
 void ff_idct_iadst_8x8_add_msa(uint8_t *dst, ptrdiff_t stride,
-                               int16_t *block, int eob) {
+                               int16_t *block, int eob)
+{
     vp9_idct_iadst_8x8_add_msa(block, dst, stride, eob);
 }
 
 void ff_idct_iadst_16x16_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                 int16_t *block, int eob) {
+                                 int16_t *block, int eob)
+{
     vp9_idct_iadst_16x16_add_msa(block, dst, stride, eob);
 }
 
 void ff_iadst_idct_4x4_add_msa(uint8_t *dst, ptrdiff_t stride,
-                               int16_t *block, int eob) {
+                               int16_t *block, int eob)
+{
     vp9_iadst_idct_4x4_add_msa(block, dst, stride, eob);
 }
 
 void ff_iadst_idct_8x8_add_msa(uint8_t *dst, ptrdiff_t stride,
-                               int16_t *block, int eob) {
+                               int16_t *block, int eob)
+{
     vp9_iadst_idct_8x8_add_msa(block, dst, stride, eob);
 }
 
 void ff_iadst_idct_16x16_add_msa(uint8_t *dst, ptrdiff_t stride,
-                                 int16_t *block, int eob) {
+                                 int16_t *block, int eob)
+{
     vp9_iadst_idct_16x16_add_msa(block, dst, stride, eob);
 }

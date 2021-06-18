@@ -26,10 +26,8 @@
 #include "libavutil/x86/cpu.h"
 #include "libavcodec/lpc.h"
 
-DECLARE_ASM_CONST(16, double, pd_1)[2] = {
-1.0, 1.0 };
-DECLARE_ASM_CONST(16, double, pd_2)[2] = {
-2.0, 2.0 };
+DECLARE_ASM_CONST(16, double, pd_1)[2] = { 1.0, 1.0 };
+DECLARE_ASM_CONST(16, double, pd_2)[2] = { 2.0, 2.0 };
 
 #if HAVE_SSE2_INLINE
 
@@ -151,7 +149,8 @@ static void lpc_compute_autocorr_sse2(const double *data, int len, int lag,
 
 #endif /* HAVE_SSE2_INLINE */
 
-av_cold void ff_lpc_init_x86(LPCContext *c) {
+av_cold void ff_lpc_init_x86(LPCContext *c)
+{
 #if HAVE_SSE2_INLINE
     int cpu_flags = av_get_cpu_flags();
 

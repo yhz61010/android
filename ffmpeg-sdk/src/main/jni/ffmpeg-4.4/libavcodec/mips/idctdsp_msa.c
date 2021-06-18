@@ -22,7 +22,8 @@
 #include "idctdsp_mips.h"
 
 static void put_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
-                                   int32_t stride) {
+                                   int32_t stride)
+{
     uint64_t in0_d, in1_d, in2_d, in3_d, in4_d, in5_d, in6_d, in7_d;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
 
@@ -45,7 +46,8 @@ static void put_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
 }
 
 static void put_signed_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
-                                          int32_t stride) {
+                                          int32_t stride)
+{
     uint64_t in0_d, in1_d, in2_d, in3_d, in4_d, in5_d, in6_d, in7_d;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
 
@@ -78,13 +80,14 @@ static void put_signed_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
 }
 
 static void add_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
-                                   int32_t stride) {
+                                   int32_t stride)
+{
     uint64_t in0_d, in1_d, in2_d, in3_d, in4_d, in5_d, in6_d, in7_d;
     v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
     v16u8 pix_in0, pix_in1, pix_in2, pix_in3;
     v16u8 pix_in4, pix_in5, pix_in6, pix_in7;
     v8u16 pix0, pix1, pix2, pix3, pix4, pix5, pix6, pix7;
-    v8i16 zero = {0};
+    v8i16 zero = { 0 };
 
     LD_SH8(block, 8, in0, in1, in2, in3, in4, in5, in6, in7);
     LD_UB8(pixels, stride, pix_in0, pix_in1, pix_in2,
@@ -123,18 +126,21 @@ static void add_pixels_clamped_msa(const int16_t *block, uint8_t *pixels,
 
 void ff_put_pixels_clamped_msa(const int16_t *block,
                                uint8_t *av_restrict pixels,
-                               ptrdiff_t line_size) {
+                               ptrdiff_t line_size)
+{
     put_pixels_clamped_msa(block, pixels, line_size);
 }
 
 void ff_put_signed_pixels_clamped_msa(const int16_t *block,
                                       uint8_t *av_restrict pixels,
-                                      ptrdiff_t line_size) {
+                                      ptrdiff_t line_size)
+{
     put_signed_pixels_clamped_msa(block, pixels, line_size);
 }
 
 void ff_add_pixels_clamped_msa(const int16_t *block,
                                uint8_t *av_restrict pixels,
-                               ptrdiff_t line_size) {
+                               ptrdiff_t line_size)
+{
     add_pixels_clamped_msa(block, pixels, line_size);
 }

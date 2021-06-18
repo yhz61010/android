@@ -26,18 +26,18 @@
 #include "bytestream.h"
 #include "internal.h"
 
-enum BMVFlags {
+enum BMVFlags{
     BMV_NOP = 0,
     BMV_END,
     BMV_DELTA,
     BMV_INTRA,
 
-    BMV_SCROLL = 0x04,
+    BMV_SCROLL  = 0x04,
     BMV_PALETTE = 0x08,
     BMV_COMMAND = 0x10,
-    BMV_AUDIO = 0x20,
-    BMV_EXT = 0x40,
-    BMV_PRINT = 0x80
+    BMV_AUDIO   = 0x20,
+    BMV_EXT     = 0x40,
+    BMV_PRINT   = 0x80
 };
 
 #define SCREEN_WIDE 640
@@ -53,7 +53,8 @@ typedef struct BMVDecContext {
 
 #define NEXT_BYTE(v) (v) = forward ? (v) + 1 : (v) - 1;
 
-static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, int frame_off) {
+static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, int frame_off)
+{
     unsigned val, saved_val = 0;
     int tmplen = src_len;
     const uint8_t *src, *source_end = source + src_len;
@@ -100,13 +101,13 @@ static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, 
         }
         if (!(val & 0xC)) {
             for (;;) {
-                if (shift > 22)
+                if(shift>22)
                     return -1;
                 if (!read_two_nibbles) {
                     if (src < source || src >= source_end)
                         return AVERROR_INVALIDDATA;
                     shift += 2;
-                    val |= (unsigned) *src << shift;
+                    val |= (unsigned)*src << shift;
                     if (*src & 0xC)
                         break;
                 }
@@ -135,59 +136,59 @@ static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, 
         }
         advance_mode = val & 1;
         len = (val >> 1) - 1;
-        av_assert0(len > 0);
+        av_assert0(len>0);
         mode += 1 + advance_mode;
         if (mode >= 4)
             mode -= 3;
         if (len <= 0 || FFABS(dst_end - dst) < len)
             return AVERROR_INVALIDDATA;
         switch (mode) {
-            case 1:
-                if (forward) {
-                    if (dst - frame + SCREEN_WIDE < frame_off ||
+        case 1:
+            if (forward) {
+                if (dst - frame + SCREEN_WIDE < frame_off ||
                         dst - frame + SCREEN_WIDE + frame_off < 0 ||
                         frame_end - dst < frame_off + len ||
                         frame_end - dst < len)
-                        return AVERROR_INVALIDDATA;
-                    for (i = 0; i < len; i++)
-                        dst[i] = dst[frame_off + i];
-                    dst += len;
-                } else {
-                    dst -= len;
-                    if (dst - frame + SCREEN_WIDE < frame_off ||
+                    return AVERROR_INVALIDDATA;
+                for (i = 0; i < len; i++)
+                    dst[i] = dst[frame_off + i];
+                dst += len;
+            } else {
+                dst -= len;
+                if (dst - frame + SCREEN_WIDE < frame_off ||
                         dst - frame + SCREEN_WIDE + frame_off < 0 ||
                         frame_end - dst < frame_off + len ||
                         frame_end - dst < len)
-                        return AVERROR_INVALIDDATA;
-                    for (i = len - 1; i >= 0; i--)
-                        dst[i] = dst[frame_off + i];
-                }
-                break;
-            case 2:
-                if (forward) {
-                    if (source + src_len - src < len)
-                        return AVERROR_INVALIDDATA;
-                    memcpy(dst, src, len);
-                    dst += len;
-                    src += len;
-                } else {
-                    if (src - source < len)
-                        return AVERROR_INVALIDDATA;
-                    dst -= len;
-                    src -= len;
-                    memcpy(dst, src, len);
-                }
-                break;
-            case 3:
-                val = forward ? dst[-1] : dst[1];
-                if (forward) {
-                    memset(dst, val, len);
-                    dst += len;
-                } else {
-                    dst -= len;
-                    memset(dst, val, len);
-                }
-                break;
+                    return AVERROR_INVALIDDATA;
+                for (i = len - 1; i >= 0; i--)
+                    dst[i] = dst[frame_off + i];
+            }
+            break;
+        case 2:
+            if (forward) {
+                if (source + src_len - src < len)
+                    return AVERROR_INVALIDDATA;
+                memcpy(dst, src, len);
+                dst += len;
+                src += len;
+            } else {
+                if (src - source < len)
+                    return AVERROR_INVALIDDATA;
+                dst -= len;
+                src -= len;
+                memcpy(dst, src, len);
+            }
+            break;
+        case 3:
+            val = forward ? dst[-1] : dst[1];
+            if (forward) {
+                memset(dst, val, len);
+                dst += len;
+            } else {
+                dst -= len;
+                memset(dst, val, len);
+            }
+            break;
         }
         if (dst == dst_end)
             return 0;
@@ -195,8 +196,9 @@ static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, 
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
-                        AVPacket *pkt) {
-    BMVDecContext *const c = avctx->priv_data;
+                        AVPacket *pkt)
+{
+    BMVDecContext * const c = avctx->priv_data;
     AVFrame *frame = data;
     int type, scr_off;
     int i, ret;
@@ -233,7 +235,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
             av_log(avctx, AV_LOG_ERROR, "Screen offset data doesn't fit in frame\n");
             return AVERROR_INVALIDDATA;
         }
-        scr_off = (int16_t) bytestream_get_le16(&c->stream);
+        scr_off = (int16_t)bytestream_get_le16(&c->stream);
     } else if ((type & BMV_INTRA) == BMV_INTRA) {
         scr_off = -640;
     } else {
@@ -266,8 +268,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     return pkt->size;
 }
 
-static av_cold int decode_init(AVCodecContext *avctx) {
-    BMVDecContext *const c = avctx->priv_data;
+static av_cold int decode_init(AVCodecContext *avctx)
+{
+    BMVDecContext * const c = avctx->priv_data;
 
     c->avctx = avctx;
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
@@ -283,13 +286,13 @@ static av_cold int decode_init(AVCodecContext *avctx) {
 }
 
 AVCodec ff_bmv_video_decoder = {
-        .name           = "bmv_video",
-        .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV video"),
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .id             = AV_CODEC_ID_BMV_VIDEO,
-        .priv_data_size = sizeof(BMVDecContext),
-        .init           = decode_init,
-        .decode         = decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1,
-        .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .name           = "bmv_video",
+    .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV video"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_BMV_VIDEO,
+    .priv_data_size = sizeof(BMVDecContext),
+    .init           = decode_init,
+    .decode         = decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

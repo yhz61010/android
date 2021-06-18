@@ -64,10 +64,10 @@ typedef struct AV1RawTimingInfo {
 } AV1RawTimingInfo;
 
 typedef struct AV1RawDecoderModelInfo {
-    uint8_t buffer_delay_length_minus_1;
+    uint8_t  buffer_delay_length_minus_1;
     uint32_t num_units_in_decoding_tick;
-    uint8_t buffer_removal_time_length_minus_1;
-    uint8_t frame_presentation_time_length_minus_1;
+    uint8_t  buffer_removal_time_length_minus_1;
+    uint8_t  frame_presentation_time_length_minus_1;
 } AV1RawDecoderModelInfo;
 
 typedef struct AV1RawSequenceHeader {
@@ -80,21 +80,21 @@ typedef struct AV1RawSequenceHeader {
     uint8_t initial_display_delay_present_flag;
     uint8_t operating_points_cnt_minus_1;
 
-    AV1RawTimingInfo timing_info;
+    AV1RawTimingInfo       timing_info;
     AV1RawDecoderModelInfo decoder_model_info;
 
     uint16_t operating_point_idc[AV1_MAX_OPERATING_POINTS];
-    uint8_t seq_level_idx[AV1_MAX_OPERATING_POINTS];
-    uint8_t seq_tier[AV1_MAX_OPERATING_POINTS];
-    uint8_t decoder_model_present_for_this_op[AV1_MAX_OPERATING_POINTS];
+    uint8_t  seq_level_idx[AV1_MAX_OPERATING_POINTS];
+    uint8_t  seq_tier[AV1_MAX_OPERATING_POINTS];
+    uint8_t  decoder_model_present_for_this_op[AV1_MAX_OPERATING_POINTS];
     uint32_t decoder_buffer_delay[AV1_MAX_OPERATING_POINTS];
     uint32_t encoder_buffer_delay[AV1_MAX_OPERATING_POINTS];
-    uint8_t low_delay_mode_flag[AV1_MAX_OPERATING_POINTS];
-    uint8_t initial_display_delay_present_for_this_op[AV1_MAX_OPERATING_POINTS];
-    uint8_t initial_display_delay_minus_1[AV1_MAX_OPERATING_POINTS];
+    uint8_t  low_delay_mode_flag[AV1_MAX_OPERATING_POINTS];
+    uint8_t  initial_display_delay_present_for_this_op[AV1_MAX_OPERATING_POINTS];
+    uint8_t  initial_display_delay_minus_1[AV1_MAX_OPERATING_POINTS];
 
-    uint8_t frame_width_bits_minus_1;
-    uint8_t frame_height_bits_minus_1;
+    uint8_t  frame_width_bits_minus_1;
+    uint8_t  frame_height_bits_minus_1;
     uint16_t max_frame_width_minus_1;
     uint16_t max_frame_height_minus_1;
 
@@ -131,40 +131,40 @@ typedef struct AV1RawSequenceHeader {
 } AV1RawSequenceHeader;
 
 typedef struct AV1RawFilmGrainParams {
-    uint8_t apply_grain;
+    uint8_t  apply_grain;
     uint16_t grain_seed;
-    uint8_t update_grain;
-    uint8_t film_grain_params_ref_idx;
-    uint8_t num_y_points;
-    uint8_t point_y_value[14];
-    uint8_t point_y_scaling[14];
-    uint8_t chroma_scaling_from_luma;
-    uint8_t num_cb_points;
-    uint8_t point_cb_value[10];
-    uint8_t point_cb_scaling[10];
-    uint8_t num_cr_points;
-    uint8_t point_cr_value[10];
-    uint8_t point_cr_scaling[10];
-    uint8_t grain_scaling_minus_8;
-    uint8_t ar_coeff_lag;
-    uint8_t ar_coeffs_y_plus_128[24];
-    uint8_t ar_coeffs_cb_plus_128[25];
-    uint8_t ar_coeffs_cr_plus_128[25];
-    uint8_t ar_coeff_shift_minus_6;
-    uint8_t grain_scale_shift;
-    uint8_t cb_mult;
-    uint8_t cb_luma_mult;
+    uint8_t  update_grain;
+    uint8_t  film_grain_params_ref_idx;
+    uint8_t  num_y_points;
+    uint8_t  point_y_value[14];
+    uint8_t  point_y_scaling[14];
+    uint8_t  chroma_scaling_from_luma;
+    uint8_t  num_cb_points;
+    uint8_t  point_cb_value[10];
+    uint8_t  point_cb_scaling[10];
+    uint8_t  num_cr_points;
+    uint8_t  point_cr_value[10];
+    uint8_t  point_cr_scaling[10];
+    uint8_t  grain_scaling_minus_8;
+    uint8_t  ar_coeff_lag;
+    uint8_t  ar_coeffs_y_plus_128[24];
+    uint8_t  ar_coeffs_cb_plus_128[25];
+    uint8_t  ar_coeffs_cr_plus_128[25];
+    uint8_t  ar_coeff_shift_minus_6;
+    uint8_t  grain_scale_shift;
+    uint8_t  cb_mult;
+    uint8_t  cb_luma_mult;
     uint16_t cb_offset;
-    uint8_t cr_mult;
-    uint8_t cr_luma_mult;
+    uint8_t  cr_mult;
+    uint8_t  cr_luma_mult;
     uint16_t cr_offset;
-    uint8_t overlap_flag;
-    uint8_t clip_to_restricted_range;
+    uint8_t  overlap_flag;
+    uint8_t  clip_to_restricted_range;
 } AV1RawFilmGrainParams;
 
 typedef struct AV1RawFrameHeader {
-    uint8_t show_existing_frame;
-    uint8_t frame_to_show_map_idx;
+    uint8_t  show_existing_frame;
+    uint8_t  frame_to_show_map_idx;
     uint32_t frame_presentation_time;
     uint32_t display_frame_id;
 
@@ -178,18 +178,18 @@ typedef struct AV1RawFrameHeader {
     uint8_t force_integer_mv;
 
     uint32_t current_frame_id;
-    uint8_t frame_size_override_flag;
-    uint8_t order_hint;
+    uint8_t  frame_size_override_flag;
+    uint8_t  order_hint;
 
-    uint8_t buffer_removal_time_present_flag;
+    uint8_t  buffer_removal_time_present_flag;
     uint32_t buffer_removal_time[AV1_MAX_OPERATING_POINTS];
 
-    uint8_t primary_ref_frame;
+    uint8_t  primary_ref_frame;
     uint16_t frame_width_minus_1;
     uint16_t frame_height_minus_1;
-    uint8_t use_superres;
-    uint8_t coded_denom;
-    uint8_t render_and_frame_size_different;
+    uint8_t  use_superres;
+    uint8_t  coded_denom;
+    uint8_t  render_and_frame_size_different;
     uint16_t render_width_minus_1;
     uint16_t render_height_minus_1;
 
@@ -201,7 +201,7 @@ typedef struct AV1RawFrameHeader {
     uint8_t frame_refs_short_signaling;
     uint8_t last_frame_idx;
     uint8_t golden_frame_idx;
-    int8_t ref_frame_idx[AV1_REFS_PER_FRAME];
+    int8_t  ref_frame_idx[AV1_REFS_PER_FRAME];
     uint32_t delta_frame_id_minus1[AV1_REFS_PER_FRAME];
 
     uint8_t allow_high_precision_mv;
@@ -226,12 +226,12 @@ typedef struct AV1RawFrameHeader {
     uint16_t tile_rows;
 
     uint8_t base_q_idx;
-    int8_t delta_q_y_dc;
+    int8_t  delta_q_y_dc;
     uint8_t diff_uv_delta;
-    int8_t delta_q_u_dc;
-    int8_t delta_q_u_ac;
-    int8_t delta_q_v_dc;
-    int8_t delta_q_v_ac;
+    int8_t  delta_q_u_dc;
+    int8_t  delta_q_u_ac;
+    int8_t  delta_q_v_dc;
+    int8_t  delta_q_v_ac;
     uint8_t using_qmatrix;
     uint8_t qm_y;
     uint8_t qm_u;
@@ -255,9 +255,9 @@ typedef struct AV1RawFrameHeader {
     uint8_t loop_filter_delta_enabled;
     uint8_t loop_filter_delta_update;
     uint8_t update_ref_delta[AV1_TOTAL_REFS_PER_FRAME];
-    int8_t loop_filter_ref_deltas[AV1_TOTAL_REFS_PER_FRAME];
+    int8_t  loop_filter_ref_deltas[AV1_TOTAL_REFS_PER_FRAME];
     uint8_t update_mode_delta[2];
-    int8_t loop_filter_mode_deltas[2];
+    int8_t  loop_filter_mode_deltas[2];
 
     uint8_t cdef_damping_minus_3;
     uint8_t cdef_bits;
@@ -287,13 +287,13 @@ typedef struct AV1RawFrameHeader {
 } AV1RawFrameHeader;
 
 typedef struct AV1RawTileData {
-    uint8_t *data;
+    uint8_t     *data;
     AVBufferRef *data_ref;
-    size_t data_size;
+    size_t       data_size;
 } AV1RawTileData;
 
 typedef struct AV1RawTileGroup {
-    uint8_t tile_start_and_end_present_flag;
+    uint8_t  tile_start_and_end_present_flag;
     uint16_t tg_start;
     uint16_t tg_end;
 
@@ -302,7 +302,7 @@ typedef struct AV1RawTileGroup {
 
 typedef struct AV1RawFrame {
     AV1RawFrameHeader header;
-    AV1RawTileGroup tile_group;
+    AV1RawTileGroup   tile_group;
 } AV1RawFrame;
 
 typedef struct AV1RawTileList {
@@ -349,42 +349,42 @@ typedef struct AV1RawMetadataITUTT35 {
     uint8_t itu_t_t35_country_code;
     uint8_t itu_t_t35_country_code_extension_byte;
 
-    uint8_t *payload;
+    uint8_t     *payload;
     AVBufferRef *payload_ref;
-    size_t payload_size;
+    size_t       payload_size;
 } AV1RawMetadataITUTT35;
 
 typedef struct AV1RawMetadataTimecode {
-    uint8_t counting_type;
-    uint8_t full_timestamp_flag;
-    uint8_t discontinuity_flag;
-    uint8_t cnt_dropped_flag;
+    uint8_t  counting_type;
+    uint8_t  full_timestamp_flag;
+    uint8_t  discontinuity_flag;
+    uint8_t  cnt_dropped_flag;
     uint16_t n_frames;
-    uint8_t seconds_value;
-    uint8_t minutes_value;
-    uint8_t hours_value;
-    uint8_t seconds_flag;
-    uint8_t minutes_flag;
-    uint8_t hours_flag;
-    uint8_t time_offset_length;
+    uint8_t  seconds_value;
+    uint8_t  minutes_value;
+    uint8_t  hours_value;
+    uint8_t  seconds_flag;
+    uint8_t  minutes_flag;
+    uint8_t  hours_flag;
+    uint8_t  time_offset_length;
     uint32_t time_offset_value;
 } AV1RawMetadataTimecode;
 
 typedef struct AV1RawMetadata {
     uint64_t metadata_type;
     union {
-        AV1RawMetadataHDRCLL hdr_cll;
-        AV1RawMetadataHDRMDCV hdr_mdcv;
+        AV1RawMetadataHDRCLL      hdr_cll;
+        AV1RawMetadataHDRMDCV     hdr_mdcv;
         AV1RawMetadataScalability scalability;
-        AV1RawMetadataITUTT35 itut_t35;
-        AV1RawMetadataTimecode timecode;
+        AV1RawMetadataITUTT35     itut_t35;
+        AV1RawMetadataTimecode    timecode;
     } metadata;
 } AV1RawMetadata;
 
 typedef struct AV1RawPadding {
-    uint8_t *payload;
+    uint8_t     *payload;
     AVBufferRef *payload_ref;
-    size_t payload_size;
+    size_t       payload_size;
 } AV1RawPadding;
 
 
@@ -395,12 +395,12 @@ typedef struct AV1RawOBU {
 
     union {
         AV1RawSequenceHeader sequence_header;
-        AV1RawFrameHeader frame_header;
-        AV1RawFrame frame;
-        AV1RawTileGroup tile_group;
-        AV1RawTileList tile_list;
-        AV1RawMetadata metadata;
-        AV1RawPadding padding;
+        AV1RawFrameHeader    frame_header;
+        AV1RawFrame          frame;
+        AV1RawTileGroup      tile_group;
+        AV1RawTileList       tile_list;
+        AV1RawMetadata       metadata;
+        AV1RawPadding        padding;
     } obu;
 } AV1RawOBU;
 
@@ -418,24 +418,22 @@ typedef struct AV1ReferenceFrameState {
     int bit_depth;      // RefBitDepth
     int order_hint;     // RefOrderHint
 
-    int8_t loop_filter_ref_deltas[AV1_TOTAL_REFS_PER_FRAME];
-    int8_t loop_filter_mode_deltas[2];
+    int8_t  loop_filter_ref_deltas[AV1_TOTAL_REFS_PER_FRAME];
+    int8_t  loop_filter_mode_deltas[2];
     uint8_t feature_enabled[AV1_MAX_SEGMENTS][AV1_SEG_LVL_MAX];
     int16_t feature_value[AV1_MAX_SEGMENTS][AV1_SEG_LVL_MAX];
 } AV1ReferenceFrameState;
 
 typedef struct CodedBitstreamAV1Context {
-    const AVClass *
-
-    class;
+    const AVClass *class;
 
     AV1RawSequenceHeader *sequence_header;
-    AVBufferRef *sequence_header_ref;
+    AVBufferRef          *sequence_header_ref;
 
-    int seen_frame_header;
+    int     seen_frame_header;
     AVBufferRef *frame_header_ref;
-    uint8_t *frame_header;
-    size_t frame_header_size;
+    uint8_t     *frame_header;
+    size_t       frame_header_size;
 
     int temporal_id;
     int spatial_id;

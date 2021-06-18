@@ -28,7 +28,8 @@
 #include "canopus.h"
 
 int ff_canopus_parse_info_tag(AVCodecContext *avctx,
-                              const uint8_t *src, size_t size) {
+                              const uint8_t *src, size_t size)
+{
     GetByteContext gbc;
     int par_x, par_y, field_order;
 
@@ -53,15 +54,9 @@ int ff_canopus_parse_info_tag(AVCodecContext *avctx,
     bytestream2_skip(&gbc, 8); // 'FIEL' and 4 bytes 0
     field_order = bytestream2_get_le32(&gbc);
     switch (field_order) {
-        case 0:
-            avctx->field_order = AV_FIELD_TT;
-            break;
-        case 1:
-            avctx->field_order = AV_FIELD_BB;
-            break;
-        case 2:
-            avctx->field_order = AV_FIELD_PROGRESSIVE;
-            break;
+    case 0: avctx->field_order = AV_FIELD_TT; break;
+    case 1: avctx->field_order = AV_FIELD_BB; break;
+    case 2: avctx->field_order = AV_FIELD_PROGRESSIVE; break;
     }
 
     return 0;

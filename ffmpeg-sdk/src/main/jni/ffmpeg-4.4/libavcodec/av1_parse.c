@@ -26,7 +26,8 @@
 #include "av1_parse.h"
 #include "bytestream.h"
 
-int ff_av1_extract_obu(AV1OBU *obu, const uint8_t *buf, int length, void *logctx) {
+int ff_av1_extract_obu(AV1OBU *obu, const uint8_t *buf, int length, void *logctx)
+{
     int64_t obu_size;
     int start_pos, type, temporal_id, spatial_id;
     int len;
@@ -36,12 +37,12 @@ int ff_av1_extract_obu(AV1OBU *obu, const uint8_t *buf, int length, void *logctx
     if (len < 0)
         return len;
 
-    obu->type = type;
+    obu->type        = type;
     obu->temporal_id = temporal_id;
-    obu->spatial_id = spatial_id;
+    obu->spatial_id  = spatial_id;
 
-    obu->data = buf + start_pos;
-    obu->size = obu_size;
+    obu->data     = buf + start_pos;
+    obu->size     = obu_size;
     obu->raw_data = buf;
     obu->raw_size = len;
 
@@ -52,7 +53,8 @@ int ff_av1_extract_obu(AV1OBU *obu, const uint8_t *buf, int length, void *logctx
     return len;
 }
 
-int ff_av1_packet_split(AV1Packet *pkt, const uint8_t *buf, int length, void *logctx) {
+int ff_av1_packet_split(AV1Packet *pkt, const uint8_t *buf, int length, void *logctx)
+{
     GetByteContext bc;
     int ret, consumed;
 
@@ -101,7 +103,8 @@ int ff_av1_packet_split(AV1Packet *pkt, const uint8_t *buf, int length, void *lo
     return 0;
 }
 
-void ff_av1_packet_uninit(AV1Packet *pkt) {
+void ff_av1_packet_uninit(AV1Packet *pkt)
+{
     av_freep(&pkt->obus);
     pkt->obus_allocated = pkt->obus_allocated_size = 0;
 }

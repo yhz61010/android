@@ -37,7 +37,8 @@ typedef struct BMPParseContext {
 
 static int bmp_parse(AVCodecParserContext *s, AVCodecContext *avctx,
                      const uint8_t **poutbuf, int *poutbuf_size,
-                     const uint8_t *buf, int buf_size) {
+                     const uint8_t *buf, int buf_size)
+{
     BMPParseContext *bpc = s->priv_data;
     uint64_t state = bpc->pc.state64;
     int next = END_NOT_FOUND;
@@ -46,8 +47,8 @@ static int bmp_parse(AVCodecParserContext *s, AVCodecContext *avctx,
     *poutbuf_size = 0;
     *poutbuf = NULL;
 
-    restart:
-    if (bpc->pc.frame_start_found <= 2 + 4 + 4) {
+restart:
+    if (bpc->pc.frame_start_found <= 2+4+4) {
         for (; i < buf_size; i++) {
             state = (state << 8) | buf[i];
             if (bpc->pc.frame_start_found == 0) {
@@ -56,7 +57,7 @@ static int bmp_parse(AVCodecParserContext *s, AVCodecContext *avctx,
                     if (bpc->fsize > 17)
                         bpc->pc.frame_start_found = 1;
                 }
-            } else if (bpc->pc.frame_start_found == 2 + 4 + 4) {
+            } else if (bpc->pc.frame_start_found == 2+4+4) {
 //                 unsigned hsize = av_bswap32(state>>32);
                 unsigned ihsize = av_bswap32(state);
                 if (ihsize < 12 || ihsize > 200) {
@@ -90,7 +91,7 @@ static int bmp_parse(AVCodecParserContext *s, AVCodecContext *avctx,
         }
     }
 
-    flush:
+flush:
     if (ff_combine_frame(&bpc->pc, next, &buf, &buf_size) < 0)
         return buf_size;
 
@@ -99,14 +100,14 @@ static int bmp_parse(AVCodecParserContext *s, AVCodecContext *avctx,
     else
         bpc->pc.frame_start_found = 0;
 
-    *poutbuf = buf;
+    *poutbuf      = buf;
     *poutbuf_size = buf_size;
     return next;
 }
 
 AVCodecParser ff_bmp_parser = {
-        .codec_ids      = {AV_CODEC_ID_BMP},
-        .priv_data_size = sizeof(BMPParseContext),
-        .parser_parse   = bmp_parse,
-        .parser_close   = ff_parse_close,
+    .codec_ids      = { AV_CODEC_ID_BMP },
+    .priv_data_size = sizeof(BMPParseContext),
+    .parser_parse   = bmp_parse,
+    .parser_close   = ff_parse_close,
 };

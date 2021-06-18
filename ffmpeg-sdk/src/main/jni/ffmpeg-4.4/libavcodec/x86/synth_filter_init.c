@@ -51,7 +51,8 @@ SYNTH_FILTER_FUNC(avx)
 SYNTH_FILTER_FUNC(fma3)
 #endif /* HAVE_X86ASM */
 
-av_cold void ff_synth_filter_init_x86(SynthFilterContext *s) {
+av_cold void ff_synth_filter_init_x86(SynthFilterContext *s)
+{
 #if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 

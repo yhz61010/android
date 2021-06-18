@@ -26,20 +26,22 @@
 #include "internal.h"
 
 static const int bmv_aud_mults[16] = {
-        16512, 8256, 4128, 2064, 1032, 516, 258, 192, 129, 88, 64, 56, 48, 40, 36, 32
+    16512, 8256, 4128, 2064, 1032, 516, 258, 192, 129, 88, 64, 56, 48, 40, 36, 32
 };
 
-static av_cold int bmv_aud_decode_init(AVCodecContext *avctx) {
-    avctx->channels = 2;
+static av_cold int bmv_aud_decode_init(AVCodecContext *avctx)
+{
+    avctx->channels       = 2;
     avctx->channel_layout = AV_CH_LAYOUT_STEREO;
-    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
+    avctx->sample_fmt     = AV_SAMPLE_FMT_S16;
 
     return 0;
 }
 
 static int bmv_aud_decode_frame(AVCodecContext *avctx, void *data,
-                                int *got_frame_ptr, AVPacket *avpkt) {
-    AVFrame *frame = data;
+                                int *got_frame_ptr, AVPacket *avpkt)
+{
+    AVFrame *frame     = data;
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
     int blocks = 0, total_blocks, i;
@@ -58,7 +60,7 @@ static int bmv_aud_decode_frame(AVCodecContext *avctx, void *data,
     frame->nb_samples = total_blocks * 32;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
-    output_samples = (int16_t *) frame->data[0];
+    output_samples = (int16_t *)frame->data[0];
 
     for (blocks = 0; blocks < total_blocks; blocks++) {
         uint8_t code = *buf++;
@@ -66,8 +68,8 @@ static int bmv_aud_decode_frame(AVCodecContext *avctx, void *data,
         scale[0] = bmv_aud_mults[code & 0xF];
         scale[1] = bmv_aud_mults[code >> 4];
         for (i = 0; i < 32; i++) {
-            *output_samples++ = av_clip_int16((scale[0] * (int8_t) * buf++) >> 5);
-            *output_samples++ = av_clip_int16((scale[1] * (int8_t) * buf++) >> 5);
+            *output_samples++ = av_clip_int16((scale[0] * (int8_t)*buf++) >> 5);
+            *output_samples++ = av_clip_int16((scale[1] * (int8_t)*buf++) >> 5);
         }
     }
 
@@ -77,11 +79,11 @@ static int bmv_aud_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_bmv_audio_decoder = {
-        .name           = "bmv_audio",
-        .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV audio"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_BMV_AUDIO,
-        .init           = bmv_aud_decode_init,
-        .decode         = bmv_aud_decode_frame,
-        .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+    .name           = "bmv_audio",
+    .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV audio"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_BMV_AUDIO,
+    .init           = bmv_aud_decode_init,
+    .decode         = bmv_aud_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
 };

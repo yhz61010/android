@@ -28,7 +28,8 @@
 #include "internal.h"
 #include "profiles.h"
 
-static uint32_t inverse_recenter(int r, uint32_t v) {
+static uint32_t inverse_recenter(int r, uint32_t v)
+{
     if (v > 2 * r)
         return v;
     else if (v & 1)
@@ -38,7 +39,8 @@ static uint32_t inverse_recenter(int r, uint32_t v) {
 }
 
 static uint32_t decode_unsigned_subexp_with_ref(uint32_t sub_exp,
-                                                int mx, int r) {
+                                                int mx, int r)
+{
     if ((r << 1) <= mx) {
         return inverse_recenter(r, sub_exp);
     } else {
@@ -47,12 +49,14 @@ static uint32_t decode_unsigned_subexp_with_ref(uint32_t sub_exp,
 }
 
 static int32_t decode_signed_subexp_with_ref(uint32_t sub_exp, int low,
-                                             int high, int r) {
+                                             int high, int r)
+{
     int32_t x = decode_unsigned_subexp_with_ref(sub_exp, high - low, r - low);
     return x + low;
 }
 
-static void read_global_param(AV1DecContext *s, int type, int ref, int idx) {
+static void read_global_param(AV1DecContext *s, int type, int ref, int idx)
+{
     uint8_t primary_frame, prev_frame;
     uint32_t abs_bits, prec_bits, round, prec_diff, sub, mx;
     int32_t r, prev_gm_param;
@@ -74,9 +78,9 @@ static void read_global_param(AV1DecContext *s, int type, int ref, int idx) {
     if (idx < 2) {
         if (type == AV1_WARP_MODEL_TRANSLATION) {
             abs_bits = AV1_GM_ABS_TRANS_ONLY_BITS -
-                       !s->raw_frame_header->allow_high_precision_mv;
+                !s->raw_frame_header->allow_high_precision_mv;
             prec_bits = AV1_GM_TRANS_ONLY_PREC_BITS -
-                        !s->raw_frame_header->allow_high_precision_mv;
+                !s->raw_frame_header->allow_high_precision_mv;
         } else {
             abs_bits = AV1_GM_ABS_TRANS_BITS;
             prec_bits = AV1_GM_TRANS_PREC_BITS;
@@ -89,15 +93,16 @@ static void read_global_param(AV1DecContext *s, int type, int ref, int idx) {
     r = (prev_gm_param >> prec_diff) - sub;
 
     s->cur_frame.gm_params[ref][idx] =
-            (decode_signed_subexp_with_ref(s->raw_frame_header->gm_params[ref][idx],
-                                           -mx, mx + 1, r) << prec_diff) + round;
+        (decode_signed_subexp_with_ref(s->raw_frame_header->gm_params[ref][idx],
+                                       -mx, mx + 1, r) << prec_diff) + round;
 }
 
 /**
 * update gm type/params, since cbs already implemented part of this funcation,
 * so we don't need to full implement spec.
 */
-static void global_motion_params(AV1DecContext *s) {
+static void global_motion_params(AV1DecContext *s)
+{
     const AV1RawFrameHeader *header = s->raw_frame_header;
     int type, ref;
 
@@ -143,17 +148,19 @@ static void global_motion_params(AV1DecContext *s) {
 }
 
 static int get_relative_dist(const AV1RawSequenceHeader *seq,
-                             unsigned int a, unsigned int b) {
+                             unsigned int a, unsigned int b)
+{
     unsigned int diff = a - b;
     unsigned int m = 1 << seq->order_hint_bits_minus_1;
     return (diff & (m - 1)) - (diff & m);
 }
 
-static void skip_mode_params(AV1DecContext *s) {
+static void skip_mode_params(AV1DecContext *s)
+{
     const AV1RawFrameHeader *header = s->raw_frame_header;
     const AV1RawSequenceHeader *seq = s->raw_seq;
 
-    int forward_idx, backward_idx;
+    int forward_idx,  backward_idx;
     int forward_hint, backward_hint;
     int second_forward_idx, second_forward_hint;
     int ref_hint, dist, i;
@@ -161,7 +168,7 @@ static void skip_mode_params(AV1DecContext *s) {
     if (!header->skip_mode_present)
         return;
 
-    forward_idx = -1;
+    forward_idx  = -1;
     backward_idx = -1;
     for (i = 0; i < AV1_REFS_PER_FRAME; i++) {
         ref_hint = s->ref[header->ref_frame_idx[i]].raw_frame_header->order_hint;
@@ -169,13 +176,13 @@ static void skip_mode_params(AV1DecContext *s) {
         if (dist < 0) {
             if (forward_idx < 0 ||
                 get_relative_dist(seq, ref_hint, forward_hint) > 0) {
-                forward_idx = i;
+                forward_idx  = i;
                 forward_hint = ref_hint;
             }
         } else if (dist > 0) {
             if (backward_idx < 0 ||
                 get_relative_dist(seq, ref_hint, backward_hint) < 0) {
-                backward_idx = i;
+                backward_idx  = i;
                 backward_hint = ref_hint;
             }
         }
@@ -185,9 +192,9 @@ static void skip_mode_params(AV1DecContext *s) {
         return;
     } else if (backward_idx >= 0) {
         s->cur_frame.skip_mode_frame_idx[0] =
-                AV1_REF_FRAME_LAST + FFMIN(forward_idx, backward_idx);
+            AV1_REF_FRAME_LAST + FFMIN(forward_idx, backward_idx);
         s->cur_frame.skip_mode_frame_idx[1] =
-                AV1_REF_FRAME_LAST + FFMAX(forward_idx, backward_idx);
+            AV1_REF_FRAME_LAST + FFMAX(forward_idx, backward_idx);
         return;
     }
 
@@ -197,7 +204,7 @@ static void skip_mode_params(AV1DecContext *s) {
         if (get_relative_dist(seq, ref_hint, forward_hint) < 0) {
             if (second_forward_idx < 0 ||
                 get_relative_dist(seq, ref_hint, second_forward_hint) > 0) {
-                second_forward_idx = i;
+                second_forward_idx  = i;
                 second_forward_hint = ref_hint;
             }
         }
@@ -207,12 +214,13 @@ static void skip_mode_params(AV1DecContext *s) {
         return;
 
     s->cur_frame.skip_mode_frame_idx[0] =
-            AV1_REF_FRAME_LAST + FFMIN(forward_idx, second_forward_idx);
+        AV1_REF_FRAME_LAST + FFMIN(forward_idx, second_forward_idx);
     s->cur_frame.skip_mode_frame_idx[1] =
-            AV1_REF_FRAME_LAST + FFMAX(forward_idx, second_forward_idx);
+        AV1_REF_FRAME_LAST + FFMAX(forward_idx, second_forward_idx);
 }
 
-static void coded_lossless_param(AV1DecContext *s) {
+static void coded_lossless_param(AV1DecContext *s)
+{
     const AV1RawFrameHeader *header = s->raw_frame_header;
     int i;
 
@@ -241,7 +249,8 @@ static void coded_lossless_param(AV1DecContext *s) {
     }
 }
 
-static void load_grain_params(AV1DecContext *s) {
+static void load_grain_params(AV1DecContext *s)
+{
     const AV1RawFrameHeader *header = s->raw_frame_header;
     const AV1RawFilmGrainParams *film_grain = &header->film_grain, *src;
     AV1RawFilmGrainParams *dst = &s->cur_frame.film_grain;
@@ -260,9 +269,11 @@ static void load_grain_params(AV1DecContext *s) {
     dst->grain_seed = film_grain->grain_seed;
 }
 
-static int init_tile_data(AV1DecContext *s) {
+static int init_tile_data(AV1DecContext *s)
+
+{
     int cur_tile_num =
-            s->raw_frame_header->tile_cols * s->raw_frame_header->tile_rows;
+        s->raw_frame_header->tile_cols * s->raw_frame_header->tile_rows;
     if (s->tile_num < cur_tile_num) {
         int ret = av_reallocp_array(&s->tile_group_info, cur_tile_num,
                                     sizeof(TileGroupInfo));
@@ -276,7 +287,8 @@ static int init_tile_data(AV1DecContext *s) {
     return 0;
 }
 
-static int get_tiles_info(AVCodecContext *avctx, const AV1RawTileGroup *tile_group) {
+static int get_tiles_info(AVCodecContext *avctx, const AV1RawTileGroup *tile_group)
+{
     AV1DecContext *s = avctx->priv_data;
     GetByteContext gb;
     uint16_t tile_num, tile_row, tile_col;
@@ -320,7 +332,8 @@ static int get_tiles_info(AVCodecContext *avctx, const AV1RawTileGroup *tile_gro
 
 }
 
-static int get_pixel_format(AVCodecContext *avctx) {
+static int get_pixel_format(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
     const AV1RawSequenceHeader *seq = s->raw_seq;
     uint8_t bit_depth;
@@ -394,46 +407,46 @@ static int get_pixel_format(AVCodecContext *avctx) {
     s->pix_fmt = pix_fmt;
 
     switch (s->pix_fmt) {
-        case AV_PIX_FMT_YUV420P:
+    case AV_PIX_FMT_YUV420P:
 #if CONFIG_AV1_DXVA2_HWACCEL
-            *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
+        *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
 #endif
 #if CONFIG_AV1_D3D11VA_HWACCEL
-            *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
-            *fmtp++ = AV_PIX_FMT_D3D11;
+        *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
+        *fmtp++ = AV_PIX_FMT_D3D11;
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
+        *fmtp++ = AV_PIX_FMT_CUDA;
 #endif
 #if CONFIG_AV1_VAAPI_HWACCEL
-            *fmtp++ = AV_PIX_FMT_VAAPI;
+        *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
-            break;
-        case AV_PIX_FMT_YUV420P10:
+        break;
+    case AV_PIX_FMT_YUV420P10:
 #if CONFIG_AV1_DXVA2_HWACCEL
-            *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
+        *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
 #endif
 #if CONFIG_AV1_D3D11VA_HWACCEL
-            *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
-            *fmtp++ = AV_PIX_FMT_D3D11;
+        *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
+        *fmtp++ = AV_PIX_FMT_D3D11;
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
+        *fmtp++ = AV_PIX_FMT_CUDA;
 #endif
 #if CONFIG_AV1_VAAPI_HWACCEL
-            *fmtp++ = AV_PIX_FMT_VAAPI;
+        *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
-            break;
-        case AV_PIX_FMT_GRAY8:
+        break;
+    case AV_PIX_FMT_GRAY8:
 #if CONFIG_AV1_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
+        *fmtp++ = AV_PIX_FMT_CUDA;
 #endif
-            break;
-        case AV_PIX_FMT_GRAY10:
+        break;
+    case AV_PIX_FMT_GRAY10:
 #if CONFIG_AV1_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
+        *fmtp++ = AV_PIX_FMT_CUDA;
 #endif
-            break;
+        break;
     }
 
     *fmtp++ = s->pix_fmt;
@@ -450,7 +463,7 @@ static int get_pixel_format(AVCodecContext *avctx) {
      */
     if (!avctx->hwaccel) {
         av_log(avctx, AV_LOG_ERROR, "Your platform doesn't suppport"
-                                    " hardware accelerated AV1 decoding.\n");
+               " hardware accelerated AV1 decoding.\n");
         return AVERROR(ENOSYS);
     }
 
@@ -459,7 +472,8 @@ static int get_pixel_format(AVCodecContext *avctx) {
     return 0;
 }
 
-static void av1_frame_unref(AVCodecContext *avctx, AV1Frame *f) {
+static void av1_frame_unref(AVCodecContext *avctx, AV1Frame *f)
+{
     ff_thread_release_buffer(avctx, &f->tf);
     av_buffer_unref(&f->hwaccel_priv_buf);
     f->hwaccel_picture_private = NULL;
@@ -472,7 +486,8 @@ static void av1_frame_unref(AVCodecContext *avctx, AV1Frame *f) {
     f->coded_lossless = 0;
 }
 
-static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *src) {
+static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *src)
+{
     int ret;
 
     ret = ff_thread_ref_frame(&dst->tf, &src->tf);
@@ -510,12 +525,13 @@ static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *s
 
     return 0;
 
-    fail:
+fail:
     av1_frame_unref(avctx, dst);
     return AVERROR(ENOMEM);
 }
 
-static av_cold int av1_decode_free(AVCodecContext *avctx) {
+static av_cold int av1_decode_free(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->ref); i++) {
@@ -536,7 +552,8 @@ static av_cold int av1_decode_free(AVCodecContext *avctx) {
 }
 
 static int set_context_with_sequence(AVCodecContext *avctx,
-                                     const AV1RawSequenceHeader *seq) {
+                                     const AV1RawSequenceHeader *seq)
+{
     int width = seq->max_frame_width_minus_1 + 1;
     int height = seq->max_frame_height_minus_1 + 1;
 
@@ -544,18 +561,18 @@ static int set_context_with_sequence(AVCodecContext *avctx,
     avctx->level = seq->seq_level_idx[0];
 
     avctx->color_range =
-            seq->color_config.color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
+        seq->color_config.color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
     avctx->color_primaries = seq->color_config.color_primaries;
     avctx->colorspace = seq->color_config.color_primaries;
     avctx->color_trc = seq->color_config.transfer_characteristics;
 
     switch (seq->color_config.chroma_sample_position) {
-        case AV1_CSP_VERTICAL:
-            avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
-            break;
-        case AV1_CSP_COLOCATED:
-            avctx->chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
-            break;
+    case AV1_CSP_VERTICAL:
+        avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
+        break;
+    case AV1_CSP_COLOCATED:
+        avctx->chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
+        break;
     }
 
     if (avctx->width != width || avctx->height != height) {
@@ -563,8 +580,7 @@ static int set_context_with_sequence(AVCodecContext *avctx,
         if (ret < 0)
             return ret;
     }
-    avctx->sample_aspect_ratio = (AVRational)
-    { 1, 1 };
+    avctx->sample_aspect_ratio = (AVRational) { 1, 1 };
 
     if (seq->timing_info.num_units_in_display_tick &&
         seq->timing_info.time_scale) {
@@ -580,7 +596,8 @@ static int set_context_with_sequence(AVCodecContext *avctx,
 }
 
 static int update_context_with_frame_header(AVCodecContext *avctx,
-                                            const AV1RawFrameHeader *header) {
+                                            const AV1RawFrameHeader *header)
+{
     AVRational aspect_ratio;
     int width = header->frame_width_minus_1 + 1;
     int height = header->frame_height_minus_1 + 1;
@@ -595,11 +612,9 @@ static int update_context_with_frame_header(AVCodecContext *avctx,
     }
 
     av_reduce(&aspect_ratio.num, &aspect_ratio.den,
-              (int64_t)
-    height *r_width,
-    (int64_t)
-    width *r_height,
-    INT_MAX);
+              (int64_t)height * r_width,
+              (int64_t)width * r_height,
+              INT_MAX);
 
     if (av_cmp_q(avctx->sample_aspect_ratio, aspect_ratio)) {
         ret = ff_set_sar(avctx, aspect_ratio);
@@ -610,7 +625,8 @@ static int update_context_with_frame_header(AVCodecContext *avctx,
     return 0;
 }
 
-static av_cold int av1_decode_init(AVCodecContext *avctx) {
+static av_cold int av1_decode_init(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
     AV1RawSequenceHeader *seq;
     int ret;
@@ -649,7 +665,7 @@ static av_cold int av1_decode_init(AVCodecContext *avctx) {
             return ret;
         }
 
-        seq = ((CodedBitstreamAV1Context *) (s->cbc->priv_data))->sequence_header;
+        seq = ((CodedBitstreamAV1Context *)(s->cbc->priv_data))->sequence_header;
         if (!seq) {
             av_log(avctx, AV_LOG_WARNING, "No sequence header available.\n");
             goto end;
@@ -668,9 +684,10 @@ static av_cold int av1_decode_init(AVCodecContext *avctx) {
     return ret;
 }
 
-static int av1_frame_alloc(AVCodecContext *avctx, AV1Frame *f) {
+static int av1_frame_alloc(AVCodecContext *avctx, AV1Frame *f)
+{
     AV1DecContext *s = avctx->priv_data;
-    AV1RawFrameHeader *header = s->raw_frame_header;
+    AV1RawFrameHeader *header= s->raw_frame_header;
     AVFrame *frame;
     int ret;
 
@@ -693,23 +710,23 @@ static int av1_frame_alloc(AVCodecContext *avctx, AV1Frame *f) {
     frame->key_frame = header->frame_type == AV1_FRAME_KEY;
 
     switch (header->frame_type) {
-        case AV1_FRAME_KEY:
-        case AV1_FRAME_INTRA_ONLY:
-            frame->pict_type = AV_PICTURE_TYPE_I;
-            break;
-        case AV1_FRAME_INTER:
-            frame->pict_type = AV_PICTURE_TYPE_P;
-            break;
-        case AV1_FRAME_SWITCH:
-            frame->pict_type = AV_PICTURE_TYPE_SP;
-            break;
+    case AV1_FRAME_KEY:
+    case AV1_FRAME_INTRA_ONLY:
+        frame->pict_type = AV_PICTURE_TYPE_I;
+        break;
+    case AV1_FRAME_INTER:
+        frame->pict_type = AV_PICTURE_TYPE_P;
+        break;
+    case AV1_FRAME_SWITCH:
+        frame->pict_type = AV_PICTURE_TYPE_SP;
+        break;
     }
 
     if (avctx->hwaccel) {
         const AVHWAccel *hwaccel = avctx->hwaccel;
         if (hwaccel->frame_priv_data_size) {
             f->hwaccel_priv_buf =
-                    av_buffer_allocz(hwaccel->frame_priv_data_size);
+                av_buffer_allocz(hwaccel->frame_priv_data_size);
             if (!f->hwaccel_priv_buf) {
                 ret = AVERROR(ENOMEM);
                 goto fail;
@@ -719,12 +736,13 @@ static int av1_frame_alloc(AVCodecContext *avctx, AV1Frame *f) {
     }
     return 0;
 
-    fail:
+fail:
     av1_frame_unref(avctx, f);
     return ret;
 }
 
-static int export_film_grain(AVCodecContext *avctx, AVFrame *frame) {
+static int export_film_grain(AVCodecContext *avctx, AVFrame *frame)
+{
     AV1DecContext *s = avctx->priv_data;
     const AV1RawFilmGrainParams *film_grain = &s->cur_frame.film_grain;
     AVFilmGrainParams *fgp;
@@ -784,7 +802,8 @@ static int export_film_grain(AVCodecContext *avctx, AVFrame *frame) {
 }
 
 static int set_output_frame(AVCodecContext *avctx, AVFrame *frame,
-                            const AVPacket *pkt, int *got_frame) {
+                            const AVPacket *pkt, int *got_frame)
+{
     AV1DecContext *s = avctx->priv_data;
     const AVFrame *srcframe = s->cur_frame.tf.f;
     int ret;
@@ -815,7 +834,8 @@ static int set_output_frame(AVCodecContext *avctx, AVFrame *frame,
     return 0;
 }
 
-static int update_reference_list(AVCodecContext *avctx) {
+static int update_reference_list(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
     const AV1RawFrameHeader *header = s->raw_frame_header;
     int ret;
@@ -834,7 +854,8 @@ static int update_reference_list(AVCodecContext *avctx) {
     return 0;
 }
 
-static int get_current_frame(AVCodecContext *avctx) {
+static int get_current_frame(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
     int ret;
 
@@ -863,7 +884,8 @@ static int get_current_frame(AVCodecContext *avctx) {
 }
 
 static int av1_decode_frame(AVCodecContext *avctx, void *frame,
-                            int *got_frame, AVPacket *pkt) {
+                            int *got_frame, AVPacket *pkt)
+{
     AV1DecContext *s = avctx->priv_data;
     AV1RawTileGroup *raw_tile_group = NULL;
     int ret;
@@ -888,153 +910,151 @@ static int av1_decode_frame(AVCodecContext *avctx, void *frame,
         av_log(avctx, AV_LOG_DEBUG, "Obu idx:%d, obu type:%d.\n", i, unit->type);
 
         switch (unit->type) {
-            case AV1_OBU_SEQUENCE_HEADER:
-                av_buffer_unref(&s->seq_ref);
-                s->seq_ref = av_buffer_ref(unit->content_ref);
-                if (!s->seq_ref) {
-                    ret = AVERROR(ENOMEM);
-                    goto end;
-                }
+        case AV1_OBU_SEQUENCE_HEADER:
+            av_buffer_unref(&s->seq_ref);
+            s->seq_ref = av_buffer_ref(unit->content_ref);
+            if (!s->seq_ref) {
+                ret = AVERROR(ENOMEM);
+                goto end;
+            }
 
-                s->raw_seq = &obu->obu.sequence_header;
+            s->raw_seq = &obu->obu.sequence_header;
 
-                ret = set_context_with_sequence(avctx, s->raw_seq);
+            ret = set_context_with_sequence(avctx, s->raw_seq);
+            if (ret < 0) {
+                av_log(avctx, AV_LOG_ERROR, "Failed to set context.\n");
+                s->raw_seq = NULL;
+                goto end;
+            }
+
+            s->operating_point_idc = s->raw_seq->operating_point_idc[s->operating_point];
+
+            if (s->pix_fmt == AV_PIX_FMT_NONE) {
+                ret = get_pixel_format(avctx);
                 if (ret < 0) {
-                    av_log(avctx, AV_LOG_ERROR, "Failed to set context.\n");
+                    av_log(avctx, AV_LOG_ERROR,
+                           "Failed to get pixel format.\n");
                     s->raw_seq = NULL;
                     goto end;
                 }
+            }
 
-                s->operating_point_idc = s->raw_seq->operating_point_idc[s->operating_point];
-
-                if (s->pix_fmt == AV_PIX_FMT_NONE) {
-                    ret = get_pixel_format(avctx);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR,
-                               "Failed to get pixel format.\n");
-                        s->raw_seq = NULL;
-                        goto end;
-                    }
-                }
-
-                if (avctx->hwaccel && avctx->hwaccel->decode_params) {
-                    ret = avctx->hwaccel->decode_params(avctx, unit->type, unit->data,
-                                                        unit->data_size);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR, "HW accel decode params fail.\n");
-                        s->raw_seq = NULL;
-                        goto end;
-                    }
-                }
-                break;
-            case AV1_OBU_REDUNDANT_FRAME_HEADER:
-                if (s->raw_frame_header)
-                    break;
-                // fall-through
-            case AV1_OBU_FRAME:
-            case AV1_OBU_FRAME_HEADER:
-                if (!s->raw_seq) {
-                    av_log(avctx, AV_LOG_ERROR, "Missing Sequence Header.\n");
-                    ret = AVERROR_INVALIDDATA;
-                    goto end;
-                }
-
-                av_buffer_unref(&s->header_ref);
-                s->header_ref = av_buffer_ref(unit->content_ref);
-                if (!s->header_ref) {
-                    ret = AVERROR(ENOMEM);
-                    goto end;
-                }
-
-                if (unit->type == AV1_OBU_FRAME)
-                    s->raw_frame_header = &obu->obu.frame.header;
-                else
-                    s->raw_frame_header = &obu->obu.frame_header;
-
-                if (s->raw_frame_header->show_existing_frame) {
-                    if (s->cur_frame.tf.f->buf[0])
-                        av1_frame_unref(avctx, &s->cur_frame);
-
-                    ret = av1_frame_ref(avctx, &s->cur_frame,
-                                        &s->ref[s->raw_frame_header->frame_to_show_map_idx]);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR, "Failed to get reference frame.\n");
-                        goto end;
-                    }
-
-                    ret = update_reference_list(avctx);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR, "Failed to update reference list.\n");
-                        goto end;
-                    }
-
-                    ret = set_output_frame(avctx, frame, pkt, got_frame);
-                    if (ret < 0)
-                        av_log(avctx, AV_LOG_ERROR, "Set output frame error.\n");
-
-                    s->raw_frame_header = NULL;
-
-                    goto end;
-                }
-
-                ret = get_current_frame(avctx);
+            if (avctx->hwaccel && avctx->hwaccel->decode_params) {
+                ret = avctx->hwaccel->decode_params(avctx, unit->type, unit->data,
+                                                    unit->data_size);
                 if (ret < 0) {
-                    av_log(avctx, AV_LOG_ERROR, "Get current frame error\n");
+                    av_log(avctx, AV_LOG_ERROR, "HW accel decode params fail.\n");
+                    s->raw_seq = NULL;
+                    goto end;
+                }
+            }
+            break;
+        case AV1_OBU_REDUNDANT_FRAME_HEADER:
+            if (s->raw_frame_header)
+                break;
+        // fall-through
+        case AV1_OBU_FRAME:
+        case AV1_OBU_FRAME_HEADER:
+            if (!s->raw_seq) {
+                av_log(avctx, AV_LOG_ERROR, "Missing Sequence Header.\n");
+                ret = AVERROR_INVALIDDATA;
+                goto end;
+            }
+
+            av_buffer_unref(&s->header_ref);
+            s->header_ref = av_buffer_ref(unit->content_ref);
+            if (!s->header_ref) {
+                ret = AVERROR(ENOMEM);
+                goto end;
+            }
+
+            if (unit->type == AV1_OBU_FRAME)
+                s->raw_frame_header = &obu->obu.frame.header;
+            else
+                s->raw_frame_header = &obu->obu.frame_header;
+
+            if (s->raw_frame_header->show_existing_frame) {
+                if (s->cur_frame.tf.f->buf[0])
+                    av1_frame_unref(avctx, &s->cur_frame);
+
+                ret = av1_frame_ref(avctx, &s->cur_frame,
+                                    &s->ref[s->raw_frame_header->frame_to_show_map_idx]);
+                if (ret < 0) {
+                    av_log(avctx, AV_LOG_ERROR, "Failed to get reference frame.\n");
                     goto end;
                 }
 
-                s->cur_frame.spatial_id = header->spatial_id;
-                s->cur_frame.temporal_id = header->temporal_id;
-
-                if (avctx->hwaccel) {
-                    ret = avctx->hwaccel->start_frame(avctx, unit->data,
-                                                      unit->data_size);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR, "HW accel start frame fail.\n");
-                        goto end;
-                    }
-                }
-                if (unit->type != AV1_OBU_FRAME)
-                    break;
-                // fall-through
-            case AV1_OBU_TILE_GROUP:
-                if (!s->raw_frame_header) {
-                    av_log(avctx, AV_LOG_ERROR, "Missing Frame Header.\n");
-                    ret = AVERROR_INVALIDDATA;
+                ret = update_reference_list(avctx);
+                if (ret < 0) {
+                    av_log(avctx, AV_LOG_ERROR, "Failed to update reference list.\n");
                     goto end;
                 }
 
-                if (unit->type == AV1_OBU_FRAME)
-                    raw_tile_group = &obu->obu.frame.tile_group;
-                else
-                    raw_tile_group = &obu->obu.tile_group;
-
-                ret = get_tiles_info(avctx, raw_tile_group);
+                ret = set_output_frame(avctx, frame, pkt, got_frame);
                 if (ret < 0)
-                    goto end;
+                    av_log(avctx, AV_LOG_ERROR, "Set output frame error.\n");
 
-                if (avctx->hwaccel) {
-                    ret = avctx->hwaccel->decode_slice(avctx,
-                                                       raw_tile_group->tile_data.data,
-                                                       raw_tile_group->tile_data.data_size);
-                    if (ret < 0) {
-                        av_log(avctx, AV_LOG_ERROR,
-                               "HW accel decode slice fail.\n");
-                        goto end;
-                    }
+                s->raw_frame_header = NULL;
+
+                goto end;
+            }
+
+            ret = get_current_frame(avctx);
+            if (ret < 0) {
+                av_log(avctx, AV_LOG_ERROR, "Get current frame error\n");
+                goto end;
+            }
+
+            s->cur_frame.spatial_id  = header->spatial_id;
+            s->cur_frame.temporal_id = header->temporal_id;
+
+            if (avctx->hwaccel) {
+                ret = avctx->hwaccel->start_frame(avctx, unit->data,
+                                                  unit->data_size);
+                if (ret < 0) {
+                    av_log(avctx, AV_LOG_ERROR, "HW accel start frame fail.\n");
+                    goto end;
                 }
+            }
+            if (unit->type != AV1_OBU_FRAME)
                 break;
-            case AV1_OBU_TILE_LIST:
-            case AV1_OBU_TEMPORAL_DELIMITER:
-            case AV1_OBU_PADDING:
-            case AV1_OBU_METADATA:
-                break;
-            default:
-                av_log(avctx, AV_LOG_DEBUG,
-                       "Unknown obu type: %d (%"
-                SIZE_SPECIFIER
-                " bits).\n",
-                        unit->type, unit->data_size);
+        // fall-through
+        case AV1_OBU_TILE_GROUP:
+            if (!s->raw_frame_header) {
+                av_log(avctx, AV_LOG_ERROR, "Missing Frame Header.\n");
+                ret = AVERROR_INVALIDDATA;
+                goto end;
+            }
+
+            if (unit->type == AV1_OBU_FRAME)
+                raw_tile_group = &obu->obu.frame.tile_group;
+            else
+                raw_tile_group = &obu->obu.tile_group;
+
+            ret = get_tiles_info(avctx, raw_tile_group);
+            if (ret < 0)
+                goto end;
+
+            if (avctx->hwaccel) {
+                ret = avctx->hwaccel->decode_slice(avctx,
+                                                   raw_tile_group->tile_data.data,
+                                                   raw_tile_group->tile_data.data_size);
+                if (ret < 0) {
+                    av_log(avctx, AV_LOG_ERROR,
+                           "HW accel decode slice fail.\n");
+                    goto end;
+                }
+            }
+            break;
+        case AV1_OBU_TILE_LIST:
+        case AV1_OBU_TEMPORAL_DELIMITER:
+        case AV1_OBU_PADDING:
+        case AV1_OBU_METADATA:
+            break;
+        default:
+            av_log(avctx, AV_LOG_DEBUG,
+                   "Unknown obu type: %d (%"SIZE_SPECIFIER" bits).\n",
+                   unit->type, unit->data_size);
         }
 
         if (raw_tile_group && (s->tile_num == raw_tile_group->tg_end + 1)) {
@@ -1064,14 +1084,15 @@ static int av1_decode_frame(AVCodecContext *avctx, void *frame,
         }
     }
 
-    end:
+end:
     ff_cbs_fragment_reset(&s->current_obu);
     if (ret < 0)
         s->raw_frame_header = NULL;
     return ret;
 }
 
-static void av1_decode_flush(AVCodecContext *avctx) {
+static void av1_decode_flush(AVCodecContext *avctx)
+{
     AV1DecContext *s = avctx->priv_data;
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->ref); i++)
@@ -1088,50 +1109,50 @@ static void av1_decode_flush(AVCodecContext *avctx) {
 #define OFFSET(x) offsetof(AV1DecContext, x)
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption av1_options[] = {
-        {"operating_point", "Select an operating point of the scalable bitstream",
-                OFFSET(operating_point), AV_OPT_TYPE_INT, {.i64 = 0}, 0, AV1_MAX_OPERATING_POINTS - 1, VD},
-        {NULL}
+    { "operating_point",  "Select an operating point of the scalable bitstream",
+                          OFFSET(operating_point), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, AV1_MAX_OPERATING_POINTS - 1, VD },
+    { NULL }
 };
 
 static const AVClass av1_class = {
-        .class_name = "AV1 decoder",
-        .item_name  = av_default_item_name,
-        .option     = av1_options,
-        .version    = LIBAVUTIL_VERSION_INT,
+    .class_name = "AV1 decoder",
+    .item_name  = av_default_item_name,
+    .option     = av1_options,
+    .version    = LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_av1_decoder = {
-        .name                  = "av1",
-        .long_name             = NULL_IF_CONFIG_SMALL("Alliance for Open Media AV1"),
-        .type                  = AVMEDIA_TYPE_VIDEO,
-        .id                    = AV_CODEC_ID_AV1,
-        .priv_data_size        = sizeof(AV1DecContext),
-        .init                  = av1_decode_init,
-        .close                 = av1_decode_free,
-        .decode                = av1_decode_frame,
-        .capabilities          = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_AVOID_PROBING,
-        .caps_internal         = FF_CODEC_CAP_INIT_THREADSAFE |
-                                 FF_CODEC_CAP_INIT_CLEANUP |
-                                 FF_CODEC_CAP_SETS_PKT_DTS,
-        .flush                 = av1_decode_flush,
-        .profiles              = NULL_IF_CONFIG_SMALL(ff_av1_profiles),
-        .priv_class            = &av1_class,
-        .hw_configs            = (const AVCodecHWConfigInternal *const[]) {
+    .name                  = "av1",
+    .long_name             = NULL_IF_CONFIG_SMALL("Alliance for Open Media AV1"),
+    .type                  = AVMEDIA_TYPE_VIDEO,
+    .id                    = AV_CODEC_ID_AV1,
+    .priv_data_size        = sizeof(AV1DecContext),
+    .init                  = av1_decode_init,
+    .close                 = av1_decode_free,
+    .decode                = av1_decode_frame,
+    .capabilities          = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_AVOID_PROBING,
+    .caps_internal         = FF_CODEC_CAP_INIT_THREADSAFE |
+                             FF_CODEC_CAP_INIT_CLEANUP |
+                             FF_CODEC_CAP_SETS_PKT_DTS,
+    .flush                 = av1_decode_flush,
+    .profiles              = NULL_IF_CONFIG_SMALL(ff_av1_profiles),
+    .priv_class            = &av1_class,
+    .hw_configs            = (const AVCodecHWConfigInternal *const []) {
 #if CONFIG_AV1_DXVA2_HWACCEL
-                HWACCEL_DXVA2(av1),
+        HWACCEL_DXVA2(av1),
 #endif
 #if CONFIG_AV1_D3D11VA_HWACCEL
-                HWACCEL_D3D11VA(av1),
+        HWACCEL_D3D11VA(av1),
 #endif
 #if CONFIG_AV1_D3D11VA2_HWACCEL
-                HWACCEL_D3D11VA2(av1),
+        HWACCEL_D3D11VA2(av1),
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
-                HWACCEL_NVDEC(av1),
+        HWACCEL_NVDEC(av1),
 #endif
 #if CONFIG_AV1_VAAPI_HWACCEL
-                HWACCEL_VAAPI(av1),
+        HWACCEL_VAAPI(av1),
 #endif
-                NULL
-        },
+        NULL
+    },
 };

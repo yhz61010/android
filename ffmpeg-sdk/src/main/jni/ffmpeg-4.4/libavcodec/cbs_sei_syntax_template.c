@@ -17,8 +17,9 @@
  */
 
 static int FUNC(filler_payload)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawFillerPayload *current, SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawFillerPayload *current, SEIMessageState *state)
+{
     int err, i;
 
     HEADER("Filler Payload");
@@ -34,8 +35,9 @@ static int FUNC(filler_payload)
 }
 
 static int FUNC(user_data_registered)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawUserDataRegistered *current, SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawUserDataRegistered *current, SEIMessageState *state)
+{
     int err, i, j;
 
     HEADER("User Data Registered ITU-T T.35");
@@ -65,8 +67,9 @@ static int FUNC(user_data_registered)
 }
 
 static int FUNC(user_data_unregistered)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawUserDataUnregistered *current, SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawUserDataUnregistered *current, SEIMessageState *state)
+{
     int err, i;
 
     HEADER("User Data Unregistered");
@@ -92,8 +95,9 @@ static int FUNC(user_data_unregistered)
 }
 
 static int FUNC(mastering_display_colour_volume)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawMasteringDisplayColourVolume *current, SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawMasteringDisplayColourVolume *current, SEIMessageState *state)
+{
     int err, c;
 
     HEADER("Mastering Display Colour Volume");
@@ -113,8 +117,9 @@ static int FUNC(mastering_display_colour_volume)
 }
 
 static int FUNC(content_light_level_info)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawContentLightLevelInfo *current, SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawContentLightLevelInfo *current, SEIMessageState *state)
+{
     int err;
 
     HEADER("Content Light Level Information");
@@ -126,9 +131,10 @@ static int FUNC(content_light_level_info)
 }
 
 static int FUNC(alternative_transfer_characteristics)
-        (CodedBitstreamContext *ctx, RWContext *rw,
-         SEIRawAlternativeTransferCharacteristics *current,
-         SEIMessageState *state) {
+    (CodedBitstreamContext *ctx, RWContext *rw,
+     SEIRawAlternativeTransferCharacteristics *current,
+     SEIMessageState *state)
+{
     int err;
 
     HEADER("Alternative Transfer Characteristics");
@@ -139,16 +145,17 @@ static int FUNC(alternative_transfer_characteristics)
 }
 
 static int FUNC(message)(CodedBitstreamContext *ctx, RWContext *rw,
-                         SEIRawMessage *current) {
+                         SEIRawMessage *current)
+{
     const SEIMessageTypeDescriptor *desc;
     int err, i;
 
     desc = ff_cbs_sei_find_type(ctx, current->payload_type);
     if (desc) {
         SEIMessageState state = {
-                .payload_type      = current->payload_type,
-                .payload_size      = current->payload_size,
-                .extension_present = current->extension_bit_length > 0,
+            .payload_type      = current->payload_type,
+            .payload_size      = current->payload_size,
+            .extension_present = current->extension_bit_length > 0,
         };
         int start_position, current_position, bits_written;
 
@@ -221,7 +228,8 @@ static int FUNC(message)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(message_list)(CodedBitstreamContext *ctx, RWContext *rw,
-                              SEIRawMessageList *current, int prefix) {
+                              SEIRawMessageList *current, int prefix)
+{
     SEIRawMessage *message;
     int err, k;
 

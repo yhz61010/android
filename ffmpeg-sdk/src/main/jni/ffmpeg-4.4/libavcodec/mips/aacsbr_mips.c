@@ -609,7 +609,8 @@ static void sbr_hf_inverse_filter_mips(SBRDSPContext *dsp,
 #endif /* HAVE_MIPSFPU */
 #endif /* HAVE_INLINE_ASM */
 
-void ff_aacsbr_func_ptr_init_mips(AACSBRContext *c) {
+void ff_aacsbr_func_ptr_init_mips(AACSBRContext *c)
+{
 #if HAVE_INLINE_ASM
 #if HAVE_MIPSFPU
     c->sbr_lf_gen            = sbr_lf_gen_mips;

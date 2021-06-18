@@ -34,7 +34,8 @@
 #include "internal.h"
 #include "mpeg12data.h"
 
-static inline void asv1_put_level(PutBitContext *pb, int level) {
+static inline void asv1_put_level(PutBitContext *pb, int level)
+{
     unsigned int index = level + 3;
 
     if (index <= 6) {
@@ -45,7 +46,8 @@ static inline void asv1_put_level(PutBitContext *pb, int level) {
     }
 }
 
-static inline void asv2_put_level(ASV1Context *a, PutBitContext *pb, int level) {
+static inline void asv2_put_level(ASV1Context *a, PutBitContext *pb, int level)
+{
     unsigned int index = level + 31;
 
     if (index <= 62) {
@@ -60,7 +62,8 @@ static inline void asv2_put_level(ASV1Context *a, PutBitContext *pb, int level) 
     }
 }
 
-static inline void asv1_encode_block(ASV1Context *a, int16_t block[64]) {
+static inline void asv1_encode_block(ASV1Context *a, int16_t block[64])
+{
     int i;
     int nc_count = 0;
 
@@ -69,7 +72,7 @@ static inline void asv1_encode_block(ASV1Context *a, int16_t block[64]) {
 
     for (i = 0; i < 10; i++) {
         const int index = ff_asv_scantab[4 * i];
-        int ccp = 0;
+        int ccp         = 0;
 
         if ((block[index + 0] = (block[index + 0] *
                                  a->q_intra_matrix[index + 0] + (1 << 15)) >> 16))
@@ -105,7 +108,8 @@ static inline void asv1_encode_block(ASV1Context *a, int16_t block[64]) {
     put_bits(&a->pb, 5, 0xF); /* End of block */
 }
 
-static inline void asv2_encode_block(ASV1Context *a, int16_t block[64]) {
+static inline void asv2_encode_block(ASV1Context *a, int16_t block[64])
+{
     int i;
     int count = 0;
 
@@ -123,7 +127,7 @@ static inline void asv2_encode_block(ASV1Context *a, int16_t block[64]) {
 
     for (i = 0; i <= count; i++) {
         const int index = ff_asv_scantab[4 * i];
-        int ccp = 0;
+        int ccp         = 0;
 
         if ((block[index + 0] = (block[index + 0] *
                                  a->q_intra_matrix[index + 0] + (1 << 15)) >> 16))
@@ -159,7 +163,8 @@ static inline void asv2_encode_block(ASV1Context *a, int16_t block[64]) {
 
 #define MAX_MB_SIZE (30 * 16 * 16 * 3 / 2 / 8)
 
-static inline int encode_mb(ASV1Context *a, int16_t block[6][64]) {
+static inline int encode_mb(ASV1Context *a, int16_t block[6][64])
+{
     int i;
 
     av_assert0(a->pb.buf_end - a->pb.buf - (put_bits_count(&a->pb) >> 3) >= MAX_MB_SIZE);
@@ -176,18 +181,19 @@ static inline int encode_mb(ASV1Context *a, int16_t block[6][64]) {
 }
 
 static inline void dct_get(ASV1Context *a, const AVFrame *frame,
-                           int mb_x, int mb_y) {
-    int16_t(*block)[64] = a->block;
+                           int mb_x, int mb_y)
+{
+    int16_t (*block)[64] = a->block;
     int linesize = frame->linesize[0];
     int i;
 
-    uint8_t *ptr_y = frame->data[0] + (mb_y * 16 * linesize) + mb_x * 16;
-    uint8_t *ptr_cb = frame->data[1] + (mb_y * 8 * frame->linesize[1]) + mb_x * 8;
-    uint8_t *ptr_cr = frame->data[2] + (mb_y * 8 * frame->linesize[2]) + mb_x * 8;
+    uint8_t *ptr_y  = frame->data[0] + (mb_y * 16 * linesize)           + mb_x * 16;
+    uint8_t *ptr_cb = frame->data[1] + (mb_y *  8 * frame->linesize[1]) + mb_x *  8;
+    uint8_t *ptr_cr = frame->data[2] + (mb_y *  8 * frame->linesize[2]) + mb_x *  8;
 
-    a->pdsp.get_pixels(block[0], ptr_y, linesize);
-    a->pdsp.get_pixels(block[1], ptr_y + 8, linesize);
-    a->pdsp.get_pixels(block[2], ptr_y + 8 * linesize, linesize);
+    a->pdsp.get_pixels(block[0], ptr_y,                    linesize);
+    a->pdsp.get_pixels(block[1], ptr_y + 8,                linesize);
+    a->pdsp.get_pixels(block[2], ptr_y + 8 * linesize,     linesize);
     a->pdsp.get_pixels(block[3], ptr_y + 8 * linesize + 8, linesize);
     for (i = 0; i < 4; i++)
         a->fdsp.fdct(block[i]);
@@ -201,7 +207,8 @@ static inline void dct_get(ASV1Context *a, const AVFrame *frame,
 }
 
 static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
-                        const AVFrame *pict, int *got_packet) {
+                        const AVFrame *pict, int *got_packet)
+{
     ASV1Context *const a = avctx->priv_data;
     int size, ret;
     int mb_x, mb_y;
@@ -213,7 +220,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         if (!clone)
             return AVERROR(ENOMEM);
         clone->format = pict->format;
-        clone->width = FFALIGN(pict->width, 16);
+        clone->width  = FFALIGN(pict->width, 16);
         clone->height = FFALIGN(pict->height, 16);
         ret = av_frame_get_buffer(clone, 0);
         if (ret < 0) {
@@ -227,20 +234,20 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             return ret;
         }
 
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i<3; i++) {
             int x, y;
-            int w = AV_CEIL_RSHIFT(pict->width, !!i);
-            int h = AV_CEIL_RSHIFT(pict->height, !!i);
+            int w  = AV_CEIL_RSHIFT(pict->width, !!i);
+            int h  = AV_CEIL_RSHIFT(pict->height, !!i);
             int w2 = AV_CEIL_RSHIFT(clone->width, !!i);
             int h2 = AV_CEIL_RSHIFT(clone->height, !!i);
-            for (y = 0; y < h; y++)
-                for (x = w; x < w2; x++)
-                    clone->data[i][x + y * clone->linesize[i]] =
-                            clone->data[i][w - 1 + y * clone->linesize[i]];
-            for (y = h; y < h2; y++)
-                for (x = 0; x < w2; x++)
-                    clone->data[i][x + y * clone->linesize[i]] =
-                            clone->data[i][x + (h - 1) * clone->linesize[i]];
+            for (y=0; y<h; y++)
+                for (x=w; x<w2; x++)
+                    clone->data[i][x + y*clone->linesize[i]] =
+                        clone->data[i][w - 1 + y*clone->linesize[i]];
+            for (y=h; y<h2; y++)
+                for (x=0; x<w2; x++)
+                    clone->data[i][x + y*clone->linesize[i]] =
+                        clone->data[i][x + (h-1)*clone->linesize[i]];
         }
         ret = encode_frame(avctx, pkt, clone, got_packet);
 
@@ -249,7 +256,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     }
 
     if ((ret = ff_alloc_packet2(avctx, pkt, a->mb_height * a->mb_width * MAX_MB_SIZE +
-                                            AV_INPUT_BUFFER_MIN_SIZE, 0)) < 0)
+                                AV_INPUT_BUFFER_MIN_SIZE, 0)) < 0)
         return ret;
 
     init_put_bits(&a->pb, pkt->data, pkt->size);
@@ -286,20 +293,19 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     size = (put_bits_count(&a->pb) + 31) / 32;
 
     if (avctx->codec_id == AV_CODEC_ID_ASV1) {
-        a->bbdsp.bswap_buf((uint32_t * )
-        pkt->data,
-                (uint32_t * )
-        pkt->data, size);
+        a->bbdsp.bswap_buf((uint32_t *) pkt->data,
+                           (uint32_t *) pkt->data, size);
     }
 
-    pkt->size = size * 4;
+    pkt->size   = size * 4;
     pkt->flags |= AV_PKT_FLAG_KEY;
     *got_packet = 1;
 
     return 0;
 }
 
-static av_cold int encode_init(AVCodecContext *avctx) {
+static av_cold int encode_init(AVCodecContext *avctx)
+{
     ASV1Context *const a = avctx->priv_data;
     int i;
     const int scale = avctx->codec_id == AV_CODEC_ID_ASV1 ? 1 : 2;
@@ -314,20 +320,17 @@ static av_cold int encode_init(AVCodecContext *avctx) {
     a->inv_qscale = (32 * scale * FF_QUALITY_SCALE +
                      avctx->global_quality / 2) / avctx->global_quality;
 
-    avctx->extradata = av_mallocz(8);
+    avctx->extradata                   = av_mallocz(8);
     if (!avctx->extradata)
         return AVERROR(ENOMEM);
-    avctx->extradata_size = 8;
-    ((uint32_t * )
-    avctx->extradata)[0] = av_le2ne32(a->inv_qscale);
-    ((uint32_t * )
-    avctx->extradata)[1] = av_le2ne32(AV_RL32("ASUS"));
+    avctx->extradata_size              = 8;
+    ((uint32_t *) avctx->extradata)[0] = av_le2ne32(a->inv_qscale);
+    ((uint32_t *) avctx->extradata)[1] = av_le2ne32(AV_RL32("ASUS"));
 
     for (i = 0; i < 64; i++) {
         if (a->fdsp.fdct == ff_fdct_ifast) {
             int q = 32LL * scale * ff_mpeg1_default_intra_matrix[i] * ff_aanscales[i];
-            a->q_intra_matrix[i] = (((int64_t)
-            a->inv_qscale << 30) +q / 2) / q;
+            a->q_intra_matrix[i] = (((int64_t)a->inv_qscale << 30) + q / 2) / q;
         } else {
             int q = 32 * scale * ff_mpeg1_default_intra_matrix[i];
             a->q_intra_matrix[i] = ((a->inv_qscale << 16) + q / 2) / q;

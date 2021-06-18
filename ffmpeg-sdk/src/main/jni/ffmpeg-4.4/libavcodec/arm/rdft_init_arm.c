@@ -24,9 +24,10 @@
 
 void ff_rdft_calc_neon(struct RDFTContext *s, FFTSample *z);
 
-av_cold void ff_rdft_init_arm(RDFTContext *s) {
+av_cold void ff_rdft_init_arm(RDFTContext *s)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_neon(cpu_flags))
-        s->rdft_calc = ff_rdft_calc_neon;
+        s->rdft_calc    = ff_rdft_calc_neon;
 }

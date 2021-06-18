@@ -35,7 +35,8 @@
  */
 
 static void adx_encode(ADXContext *c, uint8_t *adx, const int16_t *wav,
-                       ADXChannelState *prev, int channels) {
+                       ADXChannelState *prev, int channels)
+{
     PutBitContext pb;
     int scale;
     int i, j;
@@ -96,7 +97,8 @@ static void adx_encode(ADXContext *c, uint8_t *adx, const int16_t *wav,
 
 #define HEADER_SIZE 36
 
-static int adx_encode_header(AVCodecContext *avctx, uint8_t *buf, int bufsize) {
+static int adx_encode_header(AVCodecContext *avctx, uint8_t *buf, int bufsize)
+{
     ADXContext *c = avctx->priv_data;
 
     bytestream_put_be16(&buf, 0x8000);              /* header signature */
@@ -118,7 +120,8 @@ static int adx_encode_header(AVCodecContext *avctx, uint8_t *buf, int bufsize) {
     return HEADER_SIZE;
 }
 
-static av_cold int adx_encode_init(AVCodecContext *avctx) {
+static av_cold int adx_encode_init(AVCodecContext *avctx)
+{
     ADXContext *c = avctx->priv_data;
 
     if (avctx->channels > 2) {
@@ -135,9 +138,10 @@ static av_cold int adx_encode_init(AVCodecContext *avctx) {
 }
 
 static int adx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
-                            const AVFrame *frame, int *got_packet_ptr) {
-    ADXContext *c = avctx->priv_data;
-    const int16_t *samples = frame ? (const int16_t *) frame->data[0] : NULL;
+                            const AVFrame *frame, int *got_packet_ptr)
+{
+    ADXContext *c          = avctx->priv_data;
+    const int16_t *samples = frame ? (const int16_t *)frame->data[0] : NULL;
     uint8_t *dst;
     int ch, out_size, ret;
 
@@ -168,7 +172,7 @@ static int adx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
             av_log(avctx, AV_LOG_ERROR, "output buffer is too small\n");
             return AVERROR(EINVAL);
         }
-        dst += hdrsize;
+        dst      += hdrsize;
         c->header_parsed = 1;
     }
 
@@ -184,14 +188,14 @@ static int adx_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 }
 
 AVCodec ff_adpcm_adx_encoder = {
-        .name           = "adpcm_adx",
-        .long_name      = NULL_IF_CONFIG_SMALL("SEGA CRI ADX ADPCM"),
-        .type           = AVMEDIA_TYPE_AUDIO,
-        .id             = AV_CODEC_ID_ADPCM_ADX,
-        .priv_data_size = sizeof(ADXContext),
-        .init           = adx_encode_init,
-        .encode2        = adx_encode_frame,
-        .capabilities   = AV_CODEC_CAP_DELAY,
-        .sample_fmts    = (const enum AVSampleFormat[]) {AV_SAMPLE_FMT_S16,
-                                                         AV_SAMPLE_FMT_NONE},
+    .name           = "adpcm_adx",
+    .long_name      = NULL_IF_CONFIG_SMALL("SEGA CRI ADX ADPCM"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_ADPCM_ADX,
+    .priv_data_size = sizeof(ADXContext),
+    .init           = adx_encode_init,
+    .encode2        = adx_encode_frame,
+    .capabilities   = AV_CODEC_CAP_DELAY,
+    .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16,
+                                                      AV_SAMPLE_FMT_NONE },
 };

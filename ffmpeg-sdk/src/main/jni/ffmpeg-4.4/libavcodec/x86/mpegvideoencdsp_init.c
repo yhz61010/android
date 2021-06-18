@@ -24,15 +24,10 @@
 #include "libavcodec/mpegvideoencdsp.h"
 
 int ff_pix_sum16_mmx(uint8_t *pix, int line_size);
-
 int ff_pix_sum16_mmxext(uint8_t *pix, int line_size);
-
 int ff_pix_sum16_sse2(uint8_t *pix, int line_size);
-
 int ff_pix_sum16_xop(uint8_t *pix, int line_size);
-
 int ff_pix_norm1_mmx(uint8_t *pix, int line_size);
-
 int ff_pix_norm1_sse2(uint8_t *pix, int line_size);
 
 #if HAVE_INLINE_ASM
@@ -220,7 +215,8 @@ static void draw_edges_mmx(uint8_t *buf, int wrap, int width, int height,
 #endif /* HAVE_INLINE_ASM */
 
 av_cold void ff_mpegvideoencdsp_init_x86(MpegvideoEncDSPContext *c,
-                                         AVCodecContext *avctx) {
+                                         AVCodecContext *avctx)
+{
     int cpu_flags = av_get_cpu_flags();
 
 #if ARCH_X86_32
@@ -235,12 +231,12 @@ av_cold void ff_mpegvideoencdsp_init_x86(MpegvideoEncDSPContext *c,
 #endif
 
     if (EXTERNAL_SSE2(cpu_flags)) {
-        c->pix_sum = ff_pix_sum16_sse2;
-        c->pix_norm1 = ff_pix_norm1_sse2;
+        c->pix_sum     = ff_pix_sum16_sse2;
+        c->pix_norm1   = ff_pix_norm1_sse2;
     }
 
     if (EXTERNAL_XOP(cpu_flags)) {
-        c->pix_sum = ff_pix_sum16_xop;
+        c->pix_sum     = ff_pix_sum16_xop;
     }
 
 #if HAVE_INLINE_ASM

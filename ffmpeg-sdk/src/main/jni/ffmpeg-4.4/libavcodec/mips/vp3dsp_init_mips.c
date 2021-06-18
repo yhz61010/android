@@ -26,23 +26,24 @@
 #include "libavcodec/vp3dsp.h"
 #include "vp3dsp_mips.h"
 
-av_cold void ff_vp3dsp_init_mips(VP3DSPContext *c, int flags) {
+av_cold void ff_vp3dsp_init_mips(VP3DSPContext *c, int flags)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
         c->put_no_rnd_pixels_l2 = ff_put_no_rnd_pixels_l2_mmi;
 
-        c->idct_add = ff_vp3_idct_add_mmi;
-        c->idct_put = ff_vp3_idct_put_mmi;
-        c->idct_dc_add = ff_vp3_idct_dc_add_mmi;
+        c->idct_add      = ff_vp3_idct_add_mmi;
+        c->idct_put      = ff_vp3_idct_put_mmi;
+        c->idct_dc_add   = ff_vp3_idct_dc_add_mmi;
     }
 
     if (have_msa(cpu_flags)) {
         c->put_no_rnd_pixels_l2 = ff_put_no_rnd_pixels_l2_msa;
 
-        c->idct_add = ff_vp3_idct_add_msa;
-        c->idct_put = ff_vp3_idct_put_msa;
-        c->idct_dc_add = ff_vp3_idct_dc_add_msa;
+        c->idct_add      = ff_vp3_idct_add_msa;
+        c->idct_put      = ff_vp3_idct_put_msa;
+        c->idct_dc_add   = ff_vp3_idct_dc_add_msa;
         c->v_loop_filter = ff_vp3_v_loop_filter_msa;
         c->h_loop_filter = ff_vp3_h_loop_filter_msa;
     }

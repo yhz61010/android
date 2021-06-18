@@ -88,9 +88,7 @@ exit:
 #define dlclose FreeLibrary
 #define dlsym GetProcAddress
 #else
-
 #include <dlfcn.h>
-
 #endif
 
 #endif /* COMPAT_W32DLFCN_H */

@@ -23,7 +23,8 @@
 
 static void h263_dct_unquantize_msa(int16_t *block, int16_t qmul,
                                     int16_t qadd, int8_t n_coeffs,
-                                    uint8_t loop_start) {
+                                    uint8_t loop_start)
+{
     int16_t *block_dup = block;
     int32_t level, cnt;
     v8i16 block_vec, qmul_vec, qadd_vec, sub;
@@ -62,7 +63,8 @@ static void h263_dct_unquantize_msa(int16_t *block, int16_t qmul,
 
 static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
                                               int32_t qscale,
-                                              const int16_t *quant_matrix) {
+                                              const int16_t *quant_matrix)
+{
     int32_t cnt, sum_res = -1;
     v8i16 block_vec, block_neg, qscale_vec, mask;
     v8i16 block_org0, block_org1, block_org2, block_org3;
@@ -92,7 +94,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         mul_vec *= quant_m_r;
         block_r = mul_vec >> 4;
         mul = (v8i16) __msa_pckev_h((v8i16) block_l, (v8i16) block_r);
-        block_neg = -mul;
+        block_neg = - mul;
         sum = (v8i16) __msa_bmnz_v((v16u8) mul, (v16u8) block_neg,
                                    (v16u8) mask);
         sum = (v8i16) __msa_bmnz_v((v16u8) sum, (v16u8) block_org0,
@@ -104,7 +106,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         sum_res += HADD_SW_S32(sad);
         mask = __msa_clti_s_h(block_org1, 0);
         zero_mask = __msa_ceqi_h(block_org1, 0);
-        block_neg = -block_org1;
+        block_neg = - block_org1;
         block_vec = (v8i16) __msa_bmnz_v((v16u8) block_org1, (v16u8) block_neg,
                                          (v16u8) mask);
         block_vec <<= 1;
@@ -119,7 +121,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         mul_vec *= quant_m_r;
         block_r = mul_vec >> 4;
         mul = __msa_pckev_h((v8i16) block_l, (v8i16) block_r);
-        block_neg = -mul;
+        block_neg = - mul;
         sum = (v8i16) __msa_bmnz_v((v16u8) mul, (v16u8) block_neg,
                                    (v16u8) mask);
         sum = (v8i16) __msa_bmnz_v((v16u8) sum, (v16u8) block_org1,
@@ -132,7 +134,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         sum_res += HADD_SW_S32(sad);
         mask = __msa_clti_s_h(block_org2, 0);
         zero_mask = __msa_ceqi_h(block_org2, 0);
-        block_neg = -block_org2;
+        block_neg = - block_org2;
         block_vec = (v8i16) __msa_bmnz_v((v16u8) block_org2, (v16u8) block_neg,
                                          (v16u8) mask);
         block_vec <<= 1;
@@ -147,7 +149,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         mul_vec *= quant_m_r;
         block_r = mul_vec >> 4;
         mul = __msa_pckev_h((v8i16) block_l, (v8i16) block_r);
-        block_neg = -mul;
+        block_neg = - mul;
         sum = (v8i16) __msa_bmnz_v((v16u8) mul, (v16u8) block_neg,
                                    (v16u8) mask);
         sum = (v8i16) __msa_bmnz_v((v16u8) sum, (v16u8) block_org2,
@@ -160,7 +162,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         sum_res += HADD_SW_S32(sad);
         mask = __msa_clti_s_h(block_org3, 0);
         zero_mask = __msa_ceqi_h(block_org3, 0);
-        block_neg = -block_org3;
+        block_neg = - block_org3;
         block_vec = (v8i16) __msa_bmnz_v((v16u8) block_org3, (v16u8) block_neg,
                                          (v16u8) mask);
         block_vec <<= 1;
@@ -175,7 +177,7 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
         mul_vec *= quant_m_r;
         block_r = mul_vec >> 4;
         mul = __msa_pckev_h((v8i16) block_l, (v8i16) block_r);
-        block_neg = -mul;
+        block_neg = - mul;
         sum = (v8i16) __msa_bmnz_v((v16u8) mul, (v16u8) block_neg,
                                    (v16u8) mask);
         sum = (v8i16) __msa_bmnz_v((v16u8) sum, (v16u8) block_org3,
@@ -193,7 +195,8 @@ static int32_t mpeg2_dct_unquantize_inter_msa(int16_t *block,
 
 void ff_dct_unquantize_h263_intra_msa(MpegEncContext *s,
                                       int16_t *block, int32_t index,
-                                      int32_t qscale) {
+                                      int32_t qscale)
+{
     int32_t qmul, qadd;
     int32_t nCoeffs;
 
@@ -217,7 +220,8 @@ void ff_dct_unquantize_h263_intra_msa(MpegEncContext *s,
 
 void ff_dct_unquantize_h263_inter_msa(MpegEncContext *s,
                                       int16_t *block, int32_t index,
-                                      int32_t qscale) {
+                                      int32_t qscale)
+{
     int32_t qmul, qadd;
     int32_t nCoeffs;
 
@@ -233,7 +237,8 @@ void ff_dct_unquantize_h263_inter_msa(MpegEncContext *s,
 
 void ff_dct_unquantize_mpeg2_inter_msa(MpegEncContext *s,
                                        int16_t *block, int32_t index,
-                                       int32_t qscale) {
+                                       int32_t qscale)
+{
     const uint16_t *quant_matrix;
     int32_t sum = -1;
 

@@ -17,19 +17,20 @@
  */
 
 static int FUNC(sequence_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                                 MPEG2RawSequenceHeader *current) {
+                                 MPEG2RawSequenceHeader *current)
+{
     CodedBitstreamMPEG2Context *mpeg2 = ctx->priv_data;
     int err, i;
 
     HEADER("Sequence Header");
 
-    ui(8, sequence_header_code);
+    ui(8,  sequence_header_code);
 
     uir(12, horizontal_size_value);
     uir(12, vertical_size_value);
 
     mpeg2->horizontal_size = current->horizontal_size_value;
-    mpeg2->vertical_size = current->vertical_size_value;
+    mpeg2->vertical_size   = current->vertical_size_value;
 
     uir(4, aspect_ratio_information);
     uir(4, frame_rate_code);
@@ -38,7 +39,7 @@ static int FUNC(sequence_header)(CodedBitstreamContext *ctx, RWContext *rw,
     marker_bit();
 
     ui(10, vbv_buffer_size_value);
-    ui(1, constrained_parameters_flag);
+    ui(1,  constrained_parameters_flag);
 
     ui(1, load_intra_quantiser_matrix);
     if (current->load_intra_quantiser_matrix) {
@@ -56,7 +57,8 @@ static int FUNC(sequence_header)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(user_data)(CodedBitstreamContext *ctx, RWContext *rw,
-                           MPEG2RawUserData *current) {
+                           MPEG2RawUserData *current)
+{
     size_t k;
     int err;
 
@@ -83,36 +85,38 @@ static int FUNC(user_data)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(sequence_extension)(CodedBitstreamContext *ctx, RWContext *rw,
-                                    MPEG2RawSequenceExtension *current) {
+                                    MPEG2RawSequenceExtension *current)
+{
     CodedBitstreamMPEG2Context *mpeg2 = ctx->priv_data;
     int err;
 
     HEADER("Sequence Extension");
 
-    ui(8, profile_and_level_indication);
-    ui(1, progressive_sequence);
-    ui(2, chroma_format);
-    ui(2, horizontal_size_extension);
-    ui(2, vertical_size_extension);
+    ui(8,  profile_and_level_indication);
+    ui(1,  progressive_sequence);
+    ui(2,  chroma_format);
+    ui(2,  horizontal_size_extension);
+    ui(2,  vertical_size_extension);
 
     mpeg2->horizontal_size = (mpeg2->horizontal_size & 0xfff) |
-                             current->horizontal_size_extension << 12;
+        current->horizontal_size_extension << 12;
     mpeg2->vertical_size = (mpeg2->vertical_size & 0xfff) |
-                           current->vertical_size_extension << 12;
+        current->vertical_size_extension << 12;
     mpeg2->progressive_sequence = current->progressive_sequence;
 
     ui(12, bit_rate_extension);
     marker_bit();
-    ui(8, vbv_buffer_size_extension);
-    ui(1, low_delay);
-    ui(2, frame_rate_extension_n);
-    ui(5, frame_rate_extension_d);
+    ui(8,  vbv_buffer_size_extension);
+    ui(1,  low_delay);
+    ui(2,  frame_rate_extension_n);
+    ui(5,  frame_rate_extension_d);
 
     return 0;
 }
 
 static int FUNC(sequence_display_extension)(CodedBitstreamContext *ctx, RWContext *rw,
-                                            MPEG2RawSequenceDisplayExtension *current) {
+                                            MPEG2RawSequenceDisplayExtension *current)
+{
     int err;
 
     HEADER("Sequence Display Extension");
@@ -141,9 +145,9 @@ static int FUNC(sequence_display_extension)(CodedBitstreamContext *ctx, RWContex
         uir(8, matrix_coefficients);
 #endif
     } else {
-        infer(colour_primaries, 2);
+        infer(colour_primaries,         2);
         infer(transfer_characteristics, 2);
-        infer(matrix_coefficients, 2);
+        infer(matrix_coefficients,      2);
     }
 
     ui(14, display_horizontal_size);
@@ -154,23 +158,25 @@ static int FUNC(sequence_display_extension)(CodedBitstreamContext *ctx, RWContex
 }
 
 static int FUNC(group_of_pictures_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                                          MPEG2RawGroupOfPicturesHeader *current) {
+                                          MPEG2RawGroupOfPicturesHeader *current)
+{
     int err;
 
     HEADER("Group of Pictures Header");
 
-    ui(8, group_start_code);
+    ui(8,  group_start_code);
 
     ui(25, time_code);
-    ui(1, closed_gop);
-    ui(1, broken_link);
+    ui(1,  closed_gop);
+    ui(1,  broken_link);
 
     return 0;
 }
 
 static int FUNC(extra_information)(CodedBitstreamContext *ctx, RWContext *rw,
                                    MPEG2RawExtraInformation *current,
-                                   const char *element_name, const char *marker_name) {
+                                   const char *element_name, const char *marker_name)
+{
     int err;
     size_t k;
 #ifdef READ
@@ -202,12 +208,13 @@ static int FUNC(extra_information)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(picture_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                                MPEG2RawPictureHeader *current) {
+                                MPEG2RawPictureHeader *current)
+{
     int err;
 
     HEADER("Picture Header");
 
-    ui(8, picture_start_code);
+    ui(8,  picture_start_code);
 
     ui(10, temporal_reference);
     uir(3, picture_coding_type);
@@ -231,7 +238,8 @@ static int FUNC(picture_header)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(picture_coding_extension)(CodedBitstreamContext *ctx, RWContext *rw,
-                                          MPEG2RawPictureCodingExtension *current) {
+                                          MPEG2RawPictureCodingExtension *current)
+{
     CodedBitstreamMPEG2Context *mpeg2 = ctx->priv_data;
     int err;
 
@@ -288,7 +296,8 @@ static int FUNC(picture_coding_extension)(CodedBitstreamContext *ctx, RWContext 
 }
 
 static int FUNC(quant_matrix_extension)(CodedBitstreamContext *ctx, RWContext *rw,
-                                        MPEG2RawQuantMatrixExtension *current) {
+                                        MPEG2RawQuantMatrixExtension *current)
+{
     int err, i;
 
     HEADER("Quant Matrix Extension");
@@ -321,7 +330,8 @@ static int FUNC(quant_matrix_extension)(CodedBitstreamContext *ctx, RWContext *r
 }
 
 static int FUNC(picture_display_extension)(CodedBitstreamContext *ctx, RWContext *rw,
-                                           MPEG2RawPictureDisplayExtension *current) {
+                                           MPEG2RawPictureDisplayExtension *current)
+{
     CodedBitstreamMPEG2Context *mpeg2 = ctx->priv_data;
     int err, i;
 
@@ -330,7 +340,7 @@ static int FUNC(picture_display_extension)(CodedBitstreamContext *ctx, RWContext
     for (i = 0; i < mpeg2->number_of_frame_centre_offsets; i++) {
         sis(16, frame_centre_horizontal_offset[i], 1, i);
         marker_bit();
-        sis(16, frame_centre_vertical_offset[i], 1, i);
+        sis(16, frame_centre_vertical_offset[i],   1, i);
         marker_bit();
     }
 
@@ -338,7 +348,8 @@ static int FUNC(picture_display_extension)(CodedBitstreamContext *ctx, RWContext
 }
 
 static int FUNC(extension_data)(CodedBitstreamContext *ctx, RWContext *rw,
-                                MPEG2RawExtensionData *current) {
+                                MPEG2RawExtensionData *current)
+{
     int err;
 
     HEADER("Extension Data");
@@ -347,30 +358,31 @@ static int FUNC(extension_data)(CodedBitstreamContext *ctx, RWContext *rw,
     ui(4, extension_start_code_identifier);
 
     switch (current->extension_start_code_identifier) {
-        case MPEG2_EXTENSION_SEQUENCE:
-            return FUNC(sequence_extension)
-                    (ctx, rw, &current->data.sequence);
-        case MPEG2_EXTENSION_SEQUENCE_DISPLAY:
-            return FUNC(sequence_display_extension)
-                    (ctx, rw, &current->data.sequence_display);
-        case MPEG2_EXTENSION_QUANT_MATRIX:
-            return FUNC(quant_matrix_extension)
-                    (ctx, rw, &current->data.quant_matrix);
-        case MPEG2_EXTENSION_PICTURE_DISPLAY:
-            return FUNC(picture_display_extension)
-                    (ctx, rw, &current->data.picture_display);
-        case MPEG2_EXTENSION_PICTURE_CODING:
-            return FUNC(picture_coding_extension)
-                    (ctx, rw, &current->data.picture_coding);
-        default:
-            av_log(ctx->log_ctx, AV_LOG_ERROR, "Extension ID %d not supported.\n",
-                   current->extension_start_code_identifier);
-            return AVERROR_PATCHWELCOME;
+    case MPEG2_EXTENSION_SEQUENCE:
+        return FUNC(sequence_extension)
+            (ctx, rw, &current->data.sequence);
+    case MPEG2_EXTENSION_SEQUENCE_DISPLAY:
+        return FUNC(sequence_display_extension)
+            (ctx, rw, &current->data.sequence_display);
+    case MPEG2_EXTENSION_QUANT_MATRIX:
+        return FUNC(quant_matrix_extension)
+            (ctx, rw, &current->data.quant_matrix);
+    case MPEG2_EXTENSION_PICTURE_DISPLAY:
+        return FUNC(picture_display_extension)
+            (ctx, rw, &current->data.picture_display);
+    case MPEG2_EXTENSION_PICTURE_CODING:
+        return FUNC(picture_coding_extension)
+            (ctx, rw, &current->data.picture_coding);
+    default:
+        av_log(ctx->log_ctx, AV_LOG_ERROR, "Extension ID %d not supported.\n",
+               current->extension_start_code_identifier);
+        return AVERROR_PATCHWELCOME;
     }
 }
 
 static int FUNC(slice_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                              MPEG2RawSliceHeader *current) {
+                              MPEG2RawSliceHeader *current)
+{
     CodedBitstreamMPEG2Context *mpeg2 = ctx->priv_data;
     int err;
 
@@ -401,7 +413,8 @@ static int FUNC(slice_header)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(sequence_end)(CodedBitstreamContext *ctx, RWContext *rw,
-                              MPEG2RawSequenceEnd *current) {
+                              MPEG2RawSequenceEnd *current)
+{
     int err;
 
     HEADER("Sequence End");

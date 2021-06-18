@@ -44,14 +44,15 @@ typedef struct CRIParser {
 
 static int cri_parse(AVCodecParserContext *s, AVCodecContext *avctx,
                      const uint8_t **poutbuf, int *poutbuf_size,
-                     const uint8_t *buf, int buf_size) {
+                     const uint8_t *buf, int buf_size)
+{
     CRIParser *bpc = s->priv_data;
     uint64_t state = bpc->pc.state64;
     int next = END_NOT_FOUND, i = 0;
 
     s->pict_type = AV_PICTURE_TYPE_I;
     s->key_frame = 1;
-    s->duration = 1;
+    s->duration  = 1;
 
     *poutbuf_size = 0;
     *poutbuf = NULL;
@@ -90,15 +91,15 @@ static int cri_parse(AVCodecParserContext *s, AVCodecContext *avctx,
         return buf_size;
     }
 
-    *poutbuf = buf;
+    *poutbuf      = buf;
     *poutbuf_size = buf_size;
 
     return next;
 }
 
 AVCodecParser ff_cri_parser = {
-        .codec_ids      = {AV_CODEC_ID_CRI},
-        .priv_data_size = sizeof(CRIParser),
-        .parser_parse   = cri_parse,
-        .parser_close   = ff_parse_close,
+    .codec_ids      = { AV_CODEC_ID_CRI },
+    .priv_data_size = sizeof(CRIParser),
+    .parser_parse   = cri_parse,
+    .parser_close   = ff_parse_close,
 };

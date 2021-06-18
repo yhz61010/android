@@ -888,7 +888,8 @@ static void sbr_hf_apply_noise_3_mips(float (*Y)[2], const float *s_m,
 #endif /* HAVE_MIPSFPU */
 #endif /* HAVE_INLINE_ASM */
 
-void ff_sbrdsp_init_mips(SBRDSPContext *s) {
+void ff_sbrdsp_init_mips(SBRDSPContext *s)
+{
 #if HAVE_INLINE_ASM
 #if HAVE_MIPSFPU
     s->qmf_pre_shuffle = sbr_qmf_pre_shuffle_mips;

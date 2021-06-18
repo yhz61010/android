@@ -38,7 +38,8 @@ static int optind = 1;
 static int optopt;
 static char *optarg;
 
-static int getopt(int argc, char *argv[], char *opts) {
+static int getopt(int argc, char *argv[], char *opts)
+{
     static int sp = 1;
     int c;
     char *cp;
@@ -62,9 +63,9 @@ static int getopt(int argc, char *argv[], char *opts) {
         return '?';
     }
     if (*++cp == ':') {
-        if (argv[optind][sp + 1] != '\0')
-            optarg = &argv[optind++][sp + 1];
-        else if (++optind >= argc) {
+        if (argv[optind][sp+1] != '\0')
+            optarg = &argv[optind++][sp+1];
+        else if(++optind >= argc) {
             fprintf(stderr, ": option requires an argument -- %c\n", c);
             sp = 1;
             return '?';

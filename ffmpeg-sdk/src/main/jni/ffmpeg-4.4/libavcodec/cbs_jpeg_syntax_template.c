@@ -17,22 +17,23 @@
  */
 
 static int FUNC(frame_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                              JPEGRawFrameHeader *current) {
+                              JPEGRawFrameHeader *current)
+{
     int err, i;
 
     HEADER("Frame Header");
 
     u(16, Lf, 8, 8 + 3 * JPEG_MAX_COMPONENTS);
 
-    u(8, P, 2, 16);
-    u(16, Y, 0, JPEG_MAX_HEIGHT);
-    u(16, X, 1, JPEG_MAX_WIDTH);
-    u(8, Nf, 1, JPEG_MAX_COMPONENTS);
+    u(8,  P,  2, 16);
+    u(16, Y,  0, JPEG_MAX_HEIGHT);
+    u(16, X,  1, JPEG_MAX_WIDTH);
+    u(8,  Nf, 1, JPEG_MAX_COMPONENTS);
 
     for (i = 0; i < current->Nf; i++) {
-        us(8, C[i], i, 0, JPEG_MAX_COMPONENTS);
-        us(4, H[i], i, 1, 4);
-        us(4, V[i], i, 1, 4);
+        us(8, C[i],  i, 0, JPEG_MAX_COMPONENTS);
+        us(4, H[i],  i, 1, 4);
+        us(4, V[i],  i, 1, 4);
         us(8, Tq[i], i, 0, 3);
     }
 
@@ -40,7 +41,8 @@ static int FUNC(frame_header)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(quantisation_table)(CodedBitstreamContext *ctx, RWContext *rw,
-                                    JPEGRawQuantisationTable *current) {
+                                     JPEGRawQuantisationTable *current)
+{
     int err, i;
 
     u(4, Pq, 0, 1);
@@ -51,14 +53,15 @@ static int FUNC(quantisation_table)(CodedBitstreamContext *ctx, RWContext *rw,
             us(16, Q[i], i, 1, 255);
     } else {
         for (i = 0; i < 64; i++)
-            us(8, Q[i], i, 1, 255);
+            us(8,  Q[i], i, 1, 255);
     }
 
     return 0;
 }
 
 static int FUNC(dqt)(CodedBitstreamContext *ctx, RWContext *rw,
-                     JPEGRawQuantisationTableSpecification *current) {
+                     JPEGRawQuantisationTableSpecification *current)
+{
     int err, i, n;
 
     HEADER("Quantisation Tables");
@@ -73,7 +76,8 @@ static int FUNC(dqt)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(huffman_table)(CodedBitstreamContext *ctx, RWContext *rw,
-                               JPEGRawHuffmanTable *current) {
+                               JPEGRawHuffmanTable *current)
+{
     int err, i, j, ij;
 
     u(4, Tc, 0, 1);
@@ -96,7 +100,8 @@ static int FUNC(huffman_table)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(dht)(CodedBitstreamContext *ctx, RWContext *rw,
-                     JPEGRawHuffmanTableSpecification *current) {
+                     JPEGRawHuffmanTableSpecification *current)
+{
     int err, i, j, n;
 
     HEADER("Huffman Tables");
@@ -119,7 +124,8 @@ static int FUNC(dht)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(scan_header)(CodedBitstreamContext *ctx, RWContext *rw,
-                             JPEGRawScanHeader *current) {
+                             JPEGRawScanHeader *current)
+{
     int err, j;
 
     HEADER("Scan");
@@ -142,7 +148,8 @@ static int FUNC(scan_header)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(application_data)(CodedBitstreamContext *ctx, RWContext *rw,
-                                  JPEGRawApplicationData *current) {
+                                  JPEGRawApplicationData *current)
+{
     int err, i;
 
     HEADER("Application Data");
@@ -165,7 +172,8 @@ static int FUNC(application_data)(CodedBitstreamContext *ctx, RWContext *rw,
 }
 
 static int FUNC(comment)(CodedBitstreamContext *ctx, RWContext *rw,
-                         JPEGRawComment *current) {
+                         JPEGRawComment *current)
+{
     int err, i;
 
     HEADER("Comment");

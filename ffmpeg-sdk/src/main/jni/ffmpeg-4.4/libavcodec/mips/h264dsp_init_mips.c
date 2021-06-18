@@ -23,7 +23,8 @@
 #include "h264dsp_mips.h"
 
 av_cold void ff_h264dsp_init_mips(H264DSPContext *c, const int bit_depth,
-                                  const int chroma_format_idc) {
+                                  const int chroma_format_idc)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_mmi(cpu_flags)) {
@@ -46,10 +47,10 @@ av_cold void ff_h264dsp_init_mips(H264DSPContext *c, const int bit_depth,
 
             if (chroma_format_idc <= 1)
                 c->h264_chroma_dc_dequant_idct =
-                        ff_h264_chroma_dc_dequant_idct_8_mmi;
+                    ff_h264_chroma_dc_dequant_idct_8_mmi;
             else
                 c->h264_chroma_dc_dequant_idct =
-                        ff_h264_chroma422_dc_dequant_idct_8_mmi;
+                    ff_h264_chroma422_dc_dequant_idct_8_mmi;
 
             c->weight_h264_pixels_tab[0] = ff_h264_weight_pixels16_8_mmi;
             c->weight_h264_pixels_tab[1] = ff_h264_weight_pixels8_8_mmi;
@@ -59,14 +60,14 @@ av_cold void ff_h264dsp_init_mips(H264DSPContext *c, const int bit_depth,
             c->biweight_h264_pixels_tab[1] = ff_h264_biweight_pixels8_8_mmi;
             c->biweight_h264_pixels_tab[2] = ff_h264_biweight_pixels4_8_mmi;
 
-            c->h264_v_loop_filter_chroma = ff_deblock_v_chroma_8_mmi;
+            c->h264_v_loop_filter_chroma       = ff_deblock_v_chroma_8_mmi;
             c->h264_v_loop_filter_chroma_intra = ff_deblock_v_chroma_intra_8_mmi;
 
             if (chroma_format_idc <= 1) {
                 c->h264_h_loop_filter_chroma =
-                        ff_deblock_h_chroma_8_mmi;
+                    ff_deblock_h_chroma_8_mmi;
                 c->h264_h_loop_filter_chroma_intra =
-                        ff_deblock_h_chroma_intra_8_mmi;
+                    ff_deblock_h_chroma_intra_8_mmi;
             }
 
             c->h264_v_loop_filter_luma = ff_deblock_v_luma_8_mmi;
@@ -81,29 +82,29 @@ av_cold void ff_h264dsp_init_mips(H264DSPContext *c, const int bit_depth,
             c->h264_v_loop_filter_luma = ff_h264_v_lpf_luma_inter_msa;
             c->h264_h_loop_filter_luma = ff_h264_h_lpf_luma_inter_msa;
             c->h264_h_loop_filter_luma_mbaff =
-                    ff_h264_h_loop_filter_luma_mbaff_msa;
+                ff_h264_h_loop_filter_luma_mbaff_msa;
             c->h264_v_loop_filter_luma_intra = ff_h264_v_lpf_luma_intra_msa;
             c->h264_h_loop_filter_luma_intra = ff_h264_h_lpf_luma_intra_msa;
             c->h264_h_loop_filter_luma_mbaff_intra =
-                    ff_h264_h_loop_filter_luma_mbaff_intra_msa;
+                ff_h264_h_loop_filter_luma_mbaff_intra_msa;
             c->h264_v_loop_filter_chroma = ff_h264_v_lpf_chroma_inter_msa;
 
             if (chroma_format_idc <= 1)
                 c->h264_h_loop_filter_chroma = ff_h264_h_lpf_chroma_inter_msa;
             else
                 c->h264_h_loop_filter_chroma =
-                        ff_h264_h_loop_filter_chroma422_msa;
+                    ff_h264_h_loop_filter_chroma422_msa;
 
             if (chroma_format_idc > 1)
                 c->h264_h_loop_filter_chroma_mbaff =
-                        ff_h264_h_loop_filter_chroma422_mbaff_msa;
+                    ff_h264_h_loop_filter_chroma422_mbaff_msa;
 
             c->h264_v_loop_filter_chroma_intra =
-                    ff_h264_v_lpf_chroma_intra_msa;
+                ff_h264_v_lpf_chroma_intra_msa;
 
             if (chroma_format_idc <= 1)
                 c->h264_h_loop_filter_chroma_intra =
-                        ff_h264_h_lpf_chroma_intra_msa;
+                    ff_h264_h_lpf_chroma_intra_msa;
 
             /* Weighted MC */
             c->weight_h264_pixels_tab[0] = ff_weight_h264_pixels16_8_msa;

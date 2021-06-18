@@ -45,13 +45,14 @@ static const int sinpi8sqrt2 = 35468;
     BUTTERFLY_4(a1_m, b1_m, c1_m, d1_m, out0, out1, out2, out3);     \
 }
 
-void ff_vp8_idct_add_msa(uint8_t *dst, int16_t input[16], ptrdiff_t stride) {
+void ff_vp8_idct_add_msa(uint8_t *dst, int16_t input[16], ptrdiff_t stride)
+{
     v8i16 input0, input1;
     v4i32 in0, in1, in2, in3, hz0, hz1, hz2, hz3, vt0, vt1, vt2, vt3;
     v4i32 res0, res1, res2, res3;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16i8 pred0, pred1, pred2, pred3, dest0, dest1;
-    v16i8 mask = {0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 mask = { 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* load short vector elements of 4x4 block */
     LD_SH2(input, 8, input0, input1);
@@ -78,12 +79,13 @@ void ff_vp8_idct_add_msa(uint8_t *dst, int16_t input[16], ptrdiff_t stride) {
     memset(input, 0, 4 * 4 * sizeof(*input));
 }
 
-void ff_vp8_idct_dc_add_msa(uint8_t *dst, int16_t in_dc[16], ptrdiff_t stride) {
+void ff_vp8_idct_dc_add_msa(uint8_t *dst, int16_t in_dc[16], ptrdiff_t stride)
+{
     v8i16 vec;
     v8i16 res0, res1, res2, res3;
-    v16i8 zero = {0};
+    v16i8 zero = { 0 };
     v16i8 pred0, pred1, pred2, pred3, dest0, dest1;
-    v16i8 mask = {0, 2, 4, 6, 16, 18, 20, 22, 0, 0, 0, 0, 0, 0, 0, 0};
+    v16i8 mask = { 0, 2, 4, 6, 16, 18, 20, 22, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     vec = __msa_fill_h(in_dc[0]);
     vec = __msa_srari_h(vec, 3);
@@ -99,7 +101,8 @@ void ff_vp8_idct_dc_add_msa(uint8_t *dst, int16_t in_dc[16], ptrdiff_t stride) {
     in_dc[0] = 0;
 }
 
-void ff_vp8_luma_dc_wht_msa(int16_t block[4][4][16], int16_t input[16]) {
+void ff_vp8_luma_dc_wht_msa(int16_t block[4][4][16], int16_t input[16])
+{
     int16_t *mb_dq_coeff = &block[0][0][0];
     v8i16 input0, input1;
     v4i32 in0, in1, in2, in3, a1, b1, c1, d1;
@@ -138,7 +141,8 @@ void ff_vp8_luma_dc_wht_msa(int16_t block[4][4][16], int16_t input[16]) {
 }
 
 void ff_vp8_idct_dc_add4y_msa(uint8_t *dst, int16_t block[4][16],
-                              ptrdiff_t stride) {
+                              ptrdiff_t stride)
+{
     ff_vp8_idct_dc_add_msa(dst, &block[0][0], stride);
     ff_vp8_idct_dc_add_msa(dst + 4, &block[1][0], stride);
     ff_vp8_idct_dc_add_msa(dst + 8, &block[2][0], stride);
@@ -146,7 +150,8 @@ void ff_vp8_idct_dc_add4y_msa(uint8_t *dst, int16_t block[4][16],
 }
 
 void ff_vp8_idct_dc_add4uv_msa(uint8_t *dst, int16_t block[4][16],
-                               ptrdiff_t stride) {
+                               ptrdiff_t stride)
+{
     ff_vp8_idct_dc_add_msa(dst, &block[0][0], stride);
     ff_vp8_idct_dc_add_msa(dst + 4, &block[1][0], stride);
     ff_vp8_idct_dc_add_msa(dst + stride * 4, &block[2][0], stride);

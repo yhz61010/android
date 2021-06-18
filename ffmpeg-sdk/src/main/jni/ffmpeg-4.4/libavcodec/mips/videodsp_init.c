@@ -24,26 +24,26 @@
 #include "libavutil/mips/asmdefs.h"
 #include "libavcodec/videodsp.h"
 
-static void prefetch_mips(uint8_t *mem, ptrdiff_t stride, int h) {
+static void prefetch_mips(uint8_t *mem, ptrdiff_t stride, int h)
+{
     register const uint8_t *p = mem;
 
     __asm__ volatile (
-    "1:                                     \n\t"
-    "pref          4,  0(%[p])              \n\t"
-    "pref          4,  32(%[p])             \n\t"
-    PTR_ADDIU
-    "  %[h],  %[h],     -1         \n\t"
-    PTR_ADDU
-    "  %[p],  %[p],     %[stride]  \n\t"
+        "1:                                     \n\t"
+        "pref          4,  0(%[p])              \n\t"
+        "pref          4,  32(%[p])             \n\t"
+        PTR_ADDIU"  %[h],  %[h],     -1         \n\t"
+        PTR_ADDU "  %[p],  %[p],     %[stride]  \n\t"
 
-    "bnez       %[h],  1b                   \n\t"
+        "bnez       %[h],  1b                   \n\t"
 
-    : [p] "+r"(p), [h] "+r"(h)
-    : [stride] "r"(stride)
+        : [p] "+r" (p), [h] "+r" (h)
+        : [stride] "r" (stride)
     );
 }
 
-av_cold void ff_videodsp_init_mips(VideoDSPContext *ctx, int bpc) {
+av_cold void ff_videodsp_init_mips(VideoDSPContext *ctx, int bpc)
+{
     int cpu_flags = av_get_cpu_flags();
 
     if (have_msa(cpu_flags))

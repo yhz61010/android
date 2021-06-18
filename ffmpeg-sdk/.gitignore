@@ -80,6 +80,9 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
-/src/main/jni/
 /.cxx/
-/src/main/obj/local/armeabi-v7a/
+/src/main/obj/
+/src/main/jni/prebuilt/
+/src/main/libs/
+/src/main/jni/ffmpeg/
+/src/main/jni/ffmpeg-official/

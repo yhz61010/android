@@ -13,20 +13,24 @@
 ### How to compile ffmpeg and generate so file for Android - Only with `adpcm_ima_qt` decoder
 1. Get ffmpeg source
 ```shell
-$ cd /home/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni
-$ git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
+% wget -c https://www.ffmpeg.org/releases/ffmpeg-4.4.tar.bz2
+```
+Unzip it into the following folder:
+```shell
+/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
 ```
 2. Compile and get static library
 ```shell
-./libadpcm_ima_qt_jni
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+% ./build_ffmpeg_all.sh
 ```
 3. Generate so file with jni file
-In Android Studio, just build project, you will get so files. Or execute the following command under `./LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni` folder:
+In Android Studio, just build project, you will get so files. Or execute the following command under `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni` folder:
 ```shell
 $ ndk-build
 ```
 or execute command with full parameters:
 ```shell
-$ ndk-build NDK_PROJECT_PATH=/home/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni APP_PLATFORM=android-21 NDK_APPLICATION_MK=/home/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni/Application.mk APP_BUILD_SCRIPT=/home/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni/Android.mk
+$ ndk-build NDK_PROJECT_PATH=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni APP_PLATFORM=android-21 NDK_APPLICATION_MK=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Application.mk APP_BUILD_SCRIPT=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Android.mk
 ```
-Then you will get each generate `so` file in `./AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni/libs` folder.
+Then you will get each generate `so` file in `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/libs` folder.

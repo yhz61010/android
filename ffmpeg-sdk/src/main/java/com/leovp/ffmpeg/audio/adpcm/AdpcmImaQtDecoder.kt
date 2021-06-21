@@ -7,7 +7,7 @@ package com.leovp.ffmpeg.audio.adpcm
 class AdpcmImaQtDecoder private constructor() {
     companion object {
         init {
-            System.loadLibrary("adpcm-ima-qt")
+            System.loadLibrary("adpcm-ima-qt-decoder")
             System.loadLibrary("avcodec")
             System.loadLibrary("avutil")
         }

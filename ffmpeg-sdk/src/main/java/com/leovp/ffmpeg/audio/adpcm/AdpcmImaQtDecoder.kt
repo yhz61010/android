@@ -1,7 +1,5 @@
 package com.leovp.ffmpeg.audio.adpcm
 
-import com.leovp.ffmpeg.base.DecodedAudioResult
-
 /**
  * Author: Michael Leo
  * Date: 2021/6/11 09:57
@@ -28,7 +26,7 @@ class AdpcmImaQtDecoder private constructor() {
      *
      * @param adpcmBytes The length of this parameter is 34 bytes * channels
      */
-    external fun decode(adpcmBytes: ByteArray): DecodedAudioResult
+    external fun decode(adpcmBytes: ByteArray): ByteArray
     external fun getVersion(): String
 
     /**

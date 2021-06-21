@@ -4,8 +4,7 @@
 
 extern "C"
 {
-#include "libavutil/imgutils.h"
-#include "libavformat/avformat.h"
+#include <libavcodec/avcodec.h>
 }
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_jni", __VA_ARGS__))
@@ -57,69 +56,57 @@ JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
     LOGE("ADPCM released!");
 }
 
-JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
-    size_t adpcmLen = env->GetArrayLength(adpcmByteArray);
-    auto *temp = (jbyte *) env->GetByteArrayElements(adpcmByteArray, nullptr);
+JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
+    int adpcmLen = env->GetArrayLength(adpcmByteArray);
+    if (adpcmLen != ctx->channels * 34) {
+        LOGE("ADPCM bytes must be %d", ctx->channels * 34);
+        return nullptr;
+    }
     auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
-    memcpy(adpcm_unit8_t_array, temp, adpcmLen);
-    env->ReleaseByteArrayElements(adpcmByteArray, temp, 0);
+    env->GetByteArrayRegion(adpcmByteArray, 0, adpcmLen, reinterpret_cast<jbyte *>(adpcm_unit8_t_array));
+    // or you can do it like this:
+//    auto *temp = (jbyte *) env->GetByteArrayElements(adpcmByteArray, nullptr);
+//    auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
+//    memcpy(adpcm_unit8_t_array, temp, adpcmLen);
+//    env->ReleaseByteArrayElements(adpcmByteArray, temp, 0);
+
     pkt->data = adpcm_unit8_t_array;
     pkt->size = adpcmLen;
-
-    size_t ret = avcodec_send_packet(ctx, pkt);
-    if (ret < 0) {
-        av_packet_free(&pkt);
+    int ret;
+    if ((ret = avcodec_send_packet(ctx, pkt)) < 0) {
+        LOGE("avcodec_send_packet() error. code=%d", ret);
+        return nullptr;
+    }
+    if ((ret = avcodec_receive_frame(ctx, frame)) < 0) {
+        LOGE("avcodec_receive_frame() error. code=%d", ret);
         return nullptr;
     }
 
-    ret = avcodec_receive_frame(ctx, frame);
-    if (ret < 0) {
-        av_frame_free(&frame);
-        return nullptr;
+    int each_channel_length = frame->linesize[0];
+    uint8_t *left_channel_data = frame->data[0];
+
+    int pcmSize = each_channel_length * ctx->channels;
+
+    if (ctx->channels > 1) { // For stereo
+        auto *pcm_all_channel_data = new uint8_t[pcmSize];
+        uint8_t *right_channel_data = frame->data[1];
+        int subI = 0;
+        for (int k = 0; k < pcmSize; k += 4) {
+            pcm_all_channel_data[k] = left_channel_data[subI];            // Left channel lower 8 bits
+            pcm_all_channel_data[k + 1] = left_channel_data[subI + 1];    // Left channel higher 8 bits
+            pcm_all_channel_data[k + 2] = right_channel_data[subI];       // Right channel lower 8 bits
+            pcm_all_channel_data[k + 3] = right_channel_data[subI + 1];   // Right channel higher 8 bits
+            subI += 2;
+        }
+
+        jbyteArray pcm_byte_array = env->NewByteArray(pcmSize);
+        env->SetByteArrayRegion(pcm_byte_array, 0, pcmSize, reinterpret_cast<const jbyte *>(pcm_all_channel_data));
+        return pcm_byte_array;
+    } else { // For mono
+        jbyteArray pcm_byte_array = env->NewByteArray(pcmSize);
+        env->SetByteArrayRegion(pcm_byte_array, 0, pcmSize, reinterpret_cast<const jbyte *>(left_channel_data));
+        return pcm_byte_array;
     }
-
-    int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
-    if (data_size < 0) {
-        /* This should not occur, checking just for paranoia */
-        LOGE("Failed to calculate data size\n");
-        return nullptr;
-    }
-
-//    LOGE("sample_rate=%d\n", frame->sample_rate);
-//    LOGE("channels=%d\n", frame->channels);
-//    LOGE("nb_samples=%d\n", frame->nb_samples);
-//    LOGE("format=%d\n", frame->format);
-//    int t_data_size = av_samples_get_buffer_size(reinterpret_cast<int *>(frame->linesize), frame->channels, frame->nb_samples, (AVSampleFormat) frame->format, 0);
-//
-//    LOGE("t_data_size=%d\n", t_data_size);
-//    LOGE("linesize=%d\n", frame->linesize[0]);
-
-    uint8_t left_pcm_len = frame->linesize[0];
-    uint8_t *left_channel_data = frame->extended_data[0];
-    jbyteArray left_pcm_byte_array = env->NewByteArray(left_pcm_len);
-    env->SetByteArrayRegion(left_pcm_byte_array, 0, left_pcm_len, reinterpret_cast<const jbyte *>(left_channel_data));
-
-    uint8_t right_pcm_len = frame->linesize[1];
-    uint8_t *right_channel_data = frame->extended_data[1];
-    jbyteArray right_pcm_byte_array = env->NewByteArray(right_pcm_len);
-    env->SetByteArrayRegion(right_pcm_byte_array, 0, right_pcm_len, reinterpret_cast<const jbyte *>(right_channel_data));
-
-    // Get the class we wish to return an instance of
-    jclass resultClass = env->FindClass(ADPCM_PACKAGE_BASE"base/DecodedAudioResult");
-    // Get the method id of an empty constructor in clazz
-    jmethodID constructor = env->GetMethodID(resultClass, "<init>", "([B[B)V");
-    // Create an instance of clazz
-    jobject resultObj = env->NewObject(resultClass, constructor, left_pcm_byte_array, right_pcm_byte_array);
-
-    // Get Field references
-//    jfieldID leftChannelField = env->GetFieldID(resultClass, "leftChannelData", "[B");
-//    jfieldID rightChannelField = env->GetFieldID(resultClass, "rightChannelData", "[B");
-
-    // Set fields for object
-//    env->SetObjectField(resultObj, leftChannelField, left_pcm_byte_array);
-//    env->SetObjectField(resultObj, rightChannelField, right_pcm_byte_array);
-
-    return resultObj;
 }
 
 JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
@@ -129,11 +116,11 @@ JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"init",       "(II)I",                                               (void *) init},
-        {"release",    "()V",                                                 (void *) release},
-        {"chunkSize",  "()I",                                                 (void *) chunkSize},
-        {"decode",     "([B)L" ADPCM_PACKAGE_BASE "base/DecodedAudioResult;", (void *) decode},
-        {"getVersion", "()Ljava/lang/String;",                                (void *) getVersion},
+        {"init",       "(II)I",                (void *) init},
+        {"release",    "()V",                  (void *) release},
+        {"chunkSize",  "()I",                  (void *) chunkSize},
+        {"decode",     "([B)[B",               (void *) decode},
+        {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

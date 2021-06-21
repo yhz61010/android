@@ -14,7 +14,6 @@ import com.leovp.audio.adpcm.ADPCMCodec
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtDecoder
-import com.leovp.ffmpeg.base.DecodedAudioResult
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlin.concurrent.thread
@@ -53,10 +52,10 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     fun onPlayRawAdpcmClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val decoderInfo = AudioDecoderInfo(44100, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        val decoderInfo = AudioDecoderInfo(44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
         val player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
-        val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, 2)
+        val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
 
 //        val adpcmIMAQtPcmFile = FileUtil.createFile(this, "adpcm_ima_qt_44100_2channels_s16le.pcm")
         thread {
@@ -70,11 +69,11 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 //                val pcmBytes: ByteArray = adpcmQT.decode(chunk)?.first ?: fail("Decode ADPCM error!")
 
                 val st = SystemClock.elapsedRealtimeNanos()
-                val pcmResultBean: DecodedAudioResult = adpcmQT.decode(chunk)
+                val pcmBytes = adpcmQT.decode(chunk)
 //                os.write(pcmChunkBytes)
-                if (LogContext.enableLog) LogContext.log.i("PCM[${pcmResultBean.leftChannelData.size}][${pcmResultBean.rightChannelData.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
+                if (LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
 
-                player.play(pcmResultBean.leftChannelData)
+                player.play(pcmBytes)
             }
 //            os.flush()
 //            os.close()

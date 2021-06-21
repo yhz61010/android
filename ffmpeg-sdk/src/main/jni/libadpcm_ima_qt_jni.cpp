@@ -14,6 +14,8 @@ extern "C"
 #define ADPCM_PACKAGE_BASE "com/leovp/ffmpeg/"
 
 AVCodecContext *ctx = nullptr;
+AVFrame *frame = nullptr;
+AVPacket *pkt = nullptr;
 
 JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
     LOGE("ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
@@ -30,6 +32,8 @@ JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint chan
         return ret;
     }
 
+    frame = av_frame_alloc();
+    pkt = av_packet_alloc();
     return ret;
 }
 
@@ -38,11 +42,19 @@ JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
 }
 
 JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+    if (pkt != nullptr) {
+        av_packet_free(&pkt);
+        pkt = nullptr;
+    }
+    if (frame != nullptr) {
+        av_frame_free(&frame);
+        frame = nullptr;
+    }
     if (ctx != nullptr) {
         avcodec_free_context(&ctx);
         ctx = nullptr;
-        LOGE("ADPCM released!");
     }
+    LOGE("ADPCM released!");
 }
 
 JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
@@ -51,7 +63,6 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteA
     auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
     memcpy(adpcm_unit8_t_array, temp, adpcmLen);
     env->ReleaseByteArrayElements(adpcmByteArray, temp, 0);
-    AVPacket *pkt = av_packet_alloc();
     pkt->data = adpcm_unit8_t_array;
     pkt->size = adpcmLen;
 
@@ -61,13 +72,11 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteA
         return nullptr;
     }
 
-    AVFrame *frame = av_frame_alloc();
     ret = avcodec_receive_frame(ctx, frame);
     if (ret < 0) {
         av_frame_free(&frame);
         return nullptr;
     }
-    av_packet_free(&pkt);
 
     int data_size = av_get_bytes_per_sample(ctx->sample_fmt);
     if (data_size < 0) {

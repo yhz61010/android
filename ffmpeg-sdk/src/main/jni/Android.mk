@@ -40,8 +40,8 @@ include $(PREBUILT_SHARED_LIBRARY)
 # ==================================
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := adpcm-ima-qt
-LOCAL_SRC_FILES := libadpcm_ima_qt_jni.cpp
+LOCAL_MODULE := adpcm-ima-qt-decoder
+LOCAL_SRC_FILES := adpcm_ima_qt_decoder_jni.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include

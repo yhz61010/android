@@ -51,6 +51,7 @@ pushd ffmpeg-4.4
     --disable-avfilter \
     --disable-avdevice \
     --enable-decoder=adpcm_ima_qt \
+    --enable-encoder=adpcm_ima_qt \
     --disable-static \
     --enable-shared \
     --enable-small \

@@ -7,7 +7,7 @@ extern "C"
 #include <libavcodec/avcodec.h>
 }
 
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_jni", __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "adpcm_decoder_jni", __VA_ARGS__))
 
 //#define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
 #define ADPCM_PACKAGE_BASE "com/leovp/ffmpeg/"
@@ -17,7 +17,7 @@ AVFrame *frame = nullptr;
 AVPacket *pkt = nullptr;
 
 JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
-    LOGE("ADPCM init. sampleRate: %d, channels: %d\n", sampleRate, channels);
+    LOGE("ADPCM decoder init. sampleRate: %d, channels: %d\n", sampleRate, channels);
 
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
     ctx = avcodec_alloc_context3(codec);
@@ -41,19 +41,19 @@ JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
 }
 
 JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
-    if (pkt != nullptr) {
-        av_packet_free(&pkt);
-        pkt = nullptr;
+    if (ctx != nullptr) {
+        avcodec_free_context(&ctx);
+        ctx = nullptr;
     }
     if (frame != nullptr) {
         av_frame_free(&frame);
         frame = nullptr;
     }
-    if (ctx != nullptr) {
-        avcodec_free_context(&ctx);
-        ctx = nullptr;
+    if (pkt != nullptr) {
+        av_packet_free(&pkt);
+        pkt = nullptr;
     }
-    LOGE("ADPCM released!");
+    LOGE("ADPCM decoder released!");
 }
 
 JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {

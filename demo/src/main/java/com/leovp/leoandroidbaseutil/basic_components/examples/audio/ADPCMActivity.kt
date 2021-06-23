@@ -20,7 +20,7 @@ import kotlin.concurrent.thread
 
 class ADPCMActivity : BaseDemonstrationActivity() {
     companion object {
-        private const val OUTPUT_IMA_FILE_NAME = "adpcm_ima_22050_2ch_s16le.ima"
+        private const val OUTPUT_IMA_FILE_NAME = "adpcm_ima_44100_2ch_s16le.ima"
     }
 
     private val adpcm = ADPCMCodec()
@@ -39,8 +39,6 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
-//        val inputStream = resources.openRawResource(R.raw.adpcm_22050_2ch_s16le_128kbps)
-//        val musicBytes = inputStream.readBytes()
         val musicBytes = FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).readBytes()
         val shortPcmArray = adpcm.decode(musicBytes)
         val player = AudioPlayer(

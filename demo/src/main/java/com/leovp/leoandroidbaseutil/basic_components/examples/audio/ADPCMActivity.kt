@@ -31,7 +31,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     }
 
     fun onEncodeToADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val inputStream = resources.openRawResource(R.raw.raw_22050_2ch_s16le)
+        val inputStream = resources.openRawResource(R.raw.raw_pcm_44100_2ch_s16le)
         val pcmData = inputStream.readBytes()
         val adpcmArray = adpcm.encode(pcmData.toShortArrayLE())
         FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).writeBytes(adpcmArray)
@@ -45,7 +45,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         val shortPcmArray = adpcm.decode(musicBytes)
         val player = AudioPlayer(
             this,
-            AudioDecoderInfo(22050, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT),
+            AudioDecoderInfo(44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT),
             AudioType.PCM
         )
         thread { player.play(shortPcmArray.toByteArrayLE()) }

@@ -60,7 +60,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 //        val adpcmIMAQtPcmFile = FileUtil.createFile(this, "adpcm_ima_qt_44100_2channels_s16le.pcm")
         thread {
 //            val os = BufferedOutputStream(FileOutputStream(adpcmIMAQtPcmFile))
-            val inputStream = resources.openRawResource(R.raw.adpcm_ima_qt_44100_2channels_s16le)
+            val inputStream = resources.openRawResource(R.raw.raw_adpcm_ima_qt_44100_2ch_s16le)
             val musicBytes = inputStream.readBytes()
             val chunkSize: Int = adpcmQT.chunkSize()
             for (i in musicBytes.indices step chunkSize) {

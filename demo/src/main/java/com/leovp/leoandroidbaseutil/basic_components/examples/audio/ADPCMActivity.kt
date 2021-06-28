@@ -42,8 +42,8 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 
         val adpcmImaQtEncoder = AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000)
         adpcmImaQtEncoder.encodedCallback = object : EncodeAudioCallback {
-            override fun onEncodedUpdate(encodeAudio: ByteArray) {
-                os.write(encodeAudio)
+            override fun onEncodedUpdate(encodedAudio: ByteArray) {
+                os.write(encodedAudio)
             }
         }
         adpcmImaQtEncoder.encode(pcmData)

@@ -46,7 +46,7 @@ LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include
 # The following libraries will be generated in src/main/lib folder
-#LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample
+#LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample libswscale
 LOCAL_SHARED_LIBRARIES := libavcodec libavutil
 LOCAL_DISABLE_FORMAT_STRING_CHECKS := true
 LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
@@ -54,15 +54,15 @@ include $(BUILD_SHARED_LIBRARY)
 
 # ==================================
 
-#include $(CLEAR_VARS)
-#LOCAL_MODULE := adpcm-ima-qt-encoder
-#LOCAL_SRC_FILES := adpcm_ima_qt_encoder_jni.cpp
-#LOCAL_CFLAGS    :=
-#LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
-#LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include
-## The following libraries will be generated in src/main/lib folder
-##LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample
-#LOCAL_SHARED_LIBRARIES := libavcodec libavutil
-#LOCAL_DISABLE_FORMAT_STRING_CHECKS := true
-#LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
-#include $(BUILD_SHARED_LIBRARY)
+include $(CLEAR_VARS)
+LOCAL_MODULE := adpcm-ima-qt-encoder
+LOCAL_SRC_FILES := adpcm_ima_qt_encoder_jni.cpp
+LOCAL_CFLAGS    :=
+LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
+LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include
+# The following libraries will be generated in src/main/lib folder
+#LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample libswscale
+LOCAL_SHARED_LIBRARIES := libavcodec libavutil
+LOCAL_DISABLE_FORMAT_STRING_CHECKS := true
+LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
+include $(BUILD_SHARED_LIBRARY)

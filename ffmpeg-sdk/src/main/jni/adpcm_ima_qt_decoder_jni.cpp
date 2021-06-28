@@ -107,6 +107,32 @@ JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmBy
         env->SetByteArrayRegion(pcm_byte_array, 0, pcmSize, reinterpret_cast<const jbyte *>(left_channel_data));
         return pcm_byte_array;
     }
+
+
+//    uint8_t left_pcm_len = frame->linesize[0];
+//    uint8_t *left_channel_data = frame->extended_data[0];
+//    jbyteArray left_pcm_byte_array = env->NewByteArray(left_pcm_len);
+//    env->SetByteArrayRegion(left_pcm_byte_array, 0, left_pcm_len, reinterpret_cast<const jbyte *>(left_channel_data));
+//
+//    uint8_t right_pcm_len = frame->linesize[1];
+//    uint8_t *right_channel_data = frame->extended_data[1];
+//    jbyteArray right_pcm_byte_array = env->NewByteArray(right_pcm_len);
+//    env->SetByteArrayRegion(right_pcm_byte_array, 0, right_pcm_len, reinterpret_cast<const jbyte *>(right_channel_data));
+//
+//    // Get the class we wish to return an instance of
+//    jclass resultClass = env->FindClass(ADPCM_PACKAGE_BASE"base/DecodedAudioResult");
+//    // Get the method id of an empty constructor in clazz
+//    jmethodID constructor = env->GetMethodID(resultClass, "<init>", "([B[B)V");
+//    // Create an instance of clazz
+//    jobject resultObj = env->NewObject(resultClass, constructor, left_pcm_byte_array, right_pcm_byte_array);
+//
+//    // Get Field references
+////    jfieldID leftChannelField = env->GetFieldID(resultClass, "leftChannelData", "[B");
+////    jfieldID rightChannelField = env->GetFieldID(resultClass, "rightChannelData", "[B");
+//
+//    // Set fields for object
+////    env->SetObjectField(resultObj, leftChannelField, left_pcm_byte_array);
+////    env->SetObjectField(resultObj, rightChannelField, right_pcm_byte_array);
 }
 
 JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {

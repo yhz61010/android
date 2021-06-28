@@ -5,5 +5,5 @@ package com.leovp.ffmpeg.audio.base
  * Date: 2021/6/28 16:21
  */
 interface EncodeAudioCallback {
-    fun onEncodedUpdate(encodeAudio: ByteArray)
+    fun onEncodedUpdate(encodedAudio: ByteArray)
 }

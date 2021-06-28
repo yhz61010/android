@@ -1,12 +1,6 @@
 package com.leovp.ffmpeg.audio.adpcm
 
-import com.leovp.androidbase.exts.android.app
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
-import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
 
 /**
  * Author: Michael Leo
@@ -33,6 +27,7 @@ class AdpcmImaQtEncoder private constructor() {
     external fun encode(pcmBytes: ByteArray)
     external fun getVersion(): String
 
+    @Suppress("unused")
     fun encodedAudioCallback(encodeAudio: ByteArray) {
         encodedCallback?.onEncodedUpdate(encodeAudio)
     }

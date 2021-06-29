@@ -10,7 +10,6 @@ JNIEnv *gEnv;
 jobject gObj;
 
 JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels, jint bitRate) {
-    LOGE("init encoder=%p", pEncoder);
     if (nullptr == pEncoder) {
         pEncoder = new AdpcmImaQtEncoder();
         pEncoder->init(sampleRate, channels, bitRate);
@@ -32,6 +31,7 @@ JNIEXPORT void JNICALL encode(JNIEnv *env, jobject obj, jbyteArray pcmByteArray)
     auto *pcm_unit8_t_array = new uint8_t[pcmLen];
     env->GetByteArrayRegion(pcmByteArray, 0, pcmLen, reinterpret_cast<jbyte *>(pcm_unit8_t_array));
     pEncoder->encode(pcm_unit8_t_array, pcmLen, encodedAudioCallback);
+    delete[] pcm_unit8_t_array;
 }
 
 JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {

@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 class ADPCMActivity : BaseDemonstrationActivity() {
     companion object {
         private const val OUTPUT_IMA_FILE_NAME = "raw_adpcm_ima_qt.raw"
-        private const val AUDIO_SAMPLE_RATE = 41000
+        private const val AUDIO_SAMPLE_RATE = 44100
         private const val AUDIO_CHANNELS = 2
     }
 
@@ -36,19 +36,23 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     fun onEncodeToADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val inputStream = resources.openRawResource(R.raw.raw_pcm_44100_2ch_s16le)
         val pcmData = inputStream.readBytes()
+        inputStream.close()
 
         val outFile = FileUtil.createFile(app, OUTPUT_IMA_FILE_NAME).absolutePath
         val os = BufferedOutputStream(FileOutputStream(outFile))
 
-        val adpcmImaQtEncoder = AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000)
-        adpcmImaQtEncoder.encodedCallback = object : EncodeAudioCallback {
-            override fun onEncodedUpdate(encodedAudio: ByteArray) {
-                os.write(encodedAudio)
+        thread {
+            val adpcmImaQtEncoder = AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000)
+            adpcmImaQtEncoder.encodedCallback = object : EncodeAudioCallback {
+                override fun onEncodedUpdate(encodedAudio: ByteArray) {
+                    os.write(encodedAudio)
+                }
             }
+            adpcmImaQtEncoder.encode(pcmData)
+            adpcmImaQtEncoder.release()
+            os.close()
+            toast("Encode done!")
         }
-        adpcmImaQtEncoder.encode(pcmData)
-        adpcmImaQtEncoder.release()
-        toast("Encode done!")
     }
 
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -61,8 +65,8 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 //            val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
             val inFile = FileUtil.createFile(app, OUTPUT_IMA_FILE_NAME).absolutePath
             val inputStream = FileInputStream(inFile)
-
             val musicBytes = inputStream.readBytes()
+            inputStream.close()
             val chunkSize: Int = adpcmQT.chunkSize()
             for (i in musicBytes.indices step chunkSize) {
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
@@ -72,6 +76,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 player.play(pcmBytes)
             }
             adpcmQT.release()
+            player.release()
         }
     }
 }

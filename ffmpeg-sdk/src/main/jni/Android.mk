@@ -41,10 +41,11 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := adpcm-ima-qt-decoder
-LOCAL_SRC_FILES := adpcm_ima_qt_decoder.cpp native_adpcm_ima_qt_decoder.cpp
+LOCAL_SRC_FILES := $(LOCAL_PATH)/adpcm_ima_qt_decoder/adpcm_ima_qt_decoder.cpp \
+$(LOCAL_PATH)/adpcm_ima_qt_decoder/native_adpcm_ima_qt_decoder.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
-LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_C_INCLUDES) $(MY_PREBUILT)/include $(LOCAL_PATH)/adpcm_ima_qt_decoder
 # The following libraries will be generated in src/main/lib folder
 #LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample libswscale
 LOCAL_SHARED_LIBRARIES := libavcodec libavutil

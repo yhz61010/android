@@ -42,6 +42,7 @@ JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmBy
 
     jbyteArray pcm_byte_array = env->NewByteArray(pcmLength);
     env->SetByteArrayRegion(pcm_byte_array, 0, pcmLength, reinterpret_cast<const jbyte *>(pcmBytes));
+    delete pcmBytes;
     return pcm_byte_array;
 }
 

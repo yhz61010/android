@@ -1,7 +1,7 @@
 #ifndef LEO_FFMPEG4ANDROID_LOGGER_H
 #define LEO_FFMPEG4ANDROID_LOGGER_H
 
-#define LOG_TAG    "adpcm_jni"
+#define LOG_TAG    "leo_ffmpeg_jni"
 
 #ifdef ANDROID
 

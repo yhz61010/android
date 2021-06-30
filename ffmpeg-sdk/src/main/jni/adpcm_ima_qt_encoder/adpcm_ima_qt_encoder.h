@@ -23,20 +23,17 @@ typedef void(*pCallbackFunc)(uint8_t *encodedAudioData, int decodedAudioLength);
 
 class AdpcmImaQtEncoder {
 private:
+    AVCodecContext *ctx = nullptr;
     AVFrame *frame = nullptr;
     AVPacket *pkt = nullptr;
 
-    static void encode_n(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback);
+    static void do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback);
 
 public:
-    AVCodecContext *c = nullptr;
-
-    int init(int sampleRate, int channels, int bitRate);
-
-    void release();
+    AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate);
+    ~AdpcmImaQtEncoder();
 
     void encode(const uint8_t *pcmByteArray, int pcmLen, pCallbackFunc callback);
-
 };
 
 #endif //LEOANDROIDBASEUTIL_ADPCM_IMA_QT_ENCODER_H

@@ -48,11 +48,8 @@ AdpcmImaQtEncoder::AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate) 
         LOGE("Could not allocate audio data buffers");
         exit(-5);
     }
-    ret = av_frame_make_writable(frame);
-    if (ret < 0) {
-        LOGE("av_frame_make_writable error. code=%d", ret);
-        exit(-6);
-    }
+
+    LOGE("frame_size=%d linesize[0]=%d nb_samples=%d", ctx->frame_size, frame->linesize[0], frame->nb_samples);
 }
 
 AdpcmImaQtEncoder::~AdpcmImaQtEncoder() {
@@ -72,8 +69,6 @@ AdpcmImaQtEncoder::~AdpcmImaQtEncoder() {
 }
 
 void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCallbackFunc callback) {
-    LOGE("channels=%d c->frame_size=%d frame->linesize[0]=%d frame->nb_samples=%d", ctx->channels, ctx->frame_size, frame->linesize[0], frame->nb_samples);
-
     bool isStereo = ctx->channels == 2;
     uint8_t *outs[ctx->channels];
     const int BUF_SIZE = frame->linesize[0] * ctx->channels;
@@ -81,8 +76,18 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
     if (isStereo)
         outs[1] = new uint8_t[BUF_SIZE];
 
+//    LOGE("pcmLen=%d BUF_SIZE=%d channels=%d c->frame_size=%d frame->linesize[0]=%d frame->nb_samples=%d", pcmLen, BUF_SIZE, ctx->channels, ctx->frame_size, frame->linesize[0],
+//         frame->nb_samples);
+
     const int loopStep = 2 * ctx->channels;
+    int ret;
     for (int loop = 0; loop < pcmLen / BUF_SIZE; loop++) {
+        ret = av_frame_make_writable(frame);
+        if (ret < 0) {
+            LOGE("av_frame_make_writable error. code=%d", ret);
+            return;
+        }
+
         for (int idx = 0; idx < BUF_SIZE / loopStep; idx++) {
             outs[0][idx * 2 + 0] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 0];
             outs[0][idx * 2 + 1] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 1];
@@ -98,7 +103,6 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
             frame->data[1] = outs[1];
 
 //        LOGE("Encoder: in loop frame->linesize[0]=%d", frame->linesize[0]);
-
         do_encode(ctx, frame, pkt, callback);
     }
 
@@ -106,8 +110,8 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
     if (isStereo)
         delete outs[1];
 
-    /* flush the encoder */
-    do_encode(ctx, nullptr, pkt, callback);
+//    /* flush the encoder */
+//    do_encode(ctx, nullptr, pkt, callback);
 }
 
 void AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback) {
@@ -124,7 +128,7 @@ void AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacke
      * number of them */
     while (ret >= 0) {
         ret = avcodec_receive_packet(pCtx, pPkt);
-//        LOGE("avcodec_receive_packet ret=%d", ret);
+//        LOGE("avcodec_receive_packet AVERROR(EAGAIN)=%d AVERROR_EOF=%d ret=%d", AVERROR(EAGAIN), AVERROR_EOF, ret);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             return;
         else if (ret < 0) {

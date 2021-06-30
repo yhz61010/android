@@ -1,8 +1,11 @@
 #include "adpcm_ima_qt_decoder.h"
 #include "logger.h"
 
-int AdpcmImaQtDecoder::init(int sampleRate, int channels) {
+AdpcmImaQtDecoder::AdpcmImaQtDecoder(int sampleRate, int channels) {
     LOGE("ADPCM decoder init. sampleRate: %d, channels: %d", sampleRate, channels);
+
+    this->sampleRate = sampleRate;
+    this->channels = channels;
 
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
     ctx = avcodec_alloc_context3(codec);
@@ -12,20 +15,15 @@ int AdpcmImaQtDecoder::init(int sampleRate, int channels) {
 
     int ret = avcodec_open2(ctx, codec, nullptr);
     if (ret < 0) {
-        LOGE("avcodec_open2 error. code=%d\n", ret);
-        return ret;
+        LOGE("Decoder: avcodec_open2 error. code=%d", ret);
+        exit(0);
     }
 
     frame = av_frame_alloc();
     pkt = av_packet_alloc();
-    return ret;
 }
 
-int AdpcmImaQtDecoder::chunkSize() const {
-    return 34 * ctx->channels;
-}
-
-void AdpcmImaQtDecoder::release() {
+AdpcmImaQtDecoder::~AdpcmImaQtDecoder() {
     if (ctx != nullptr) {
         avcodec_free_context(&ctx);
         ctx = nullptr;
@@ -46,11 +44,11 @@ uint8_t *AdpcmImaQtDecoder::decode(uint8_t *adpcmByteArray, int adpcmLength, int
     pkt->size = adpcmLength;
     int ret;
     if ((ret = avcodec_send_packet(ctx, pkt)) < 0) {
-        LOGE("avcodec_send_packet() error. code=%d", ret);
+        LOGE("Decoder: avcodec_send_packet() error. code=%d", ret);
         return nullptr;
     }
     if ((ret = avcodec_receive_frame(ctx, frame)) < 0) {
-        LOGE("avcodec_receive_frame() error. code=%d", ret);
+        LOGE("Decoder: avcodec_receive_frame() error. code=%d", ret);
         return nullptr;
     }
 
@@ -75,4 +73,16 @@ uint8_t *AdpcmImaQtDecoder::decode(uint8_t *adpcmByteArray, int adpcmLength, int
     } else { // For mono
         return left_channel_data;
     }
+}
+
+AVCodecContext *AdpcmImaQtDecoder::getCodecContext() {
+    return ctx;
+}
+
+int AdpcmImaQtDecoder::getSampleRate() const {
+    return sampleRate;
+}
+
+int AdpcmImaQtDecoder::getChannels() const {
+    return channels;
 }

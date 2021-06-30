@@ -7,29 +7,27 @@
 AdpcmImaQtDecoder *pDecoder = nullptr;
 
 JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
-    LOGE("init decoder=%p", pDecoder);
+//    LOGE("init decoder=%p", pDecoder);
     if (nullptr == pDecoder) {
-        pDecoder = new AdpcmImaQtDecoder();
-        pDecoder->init(sampleRate, channels);
+        pDecoder = new AdpcmImaQtDecoder(sampleRate, channels);
         return 0;
     }
     return -1;
 }
 
 JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
-    return pDecoder->chunkSize();
+    return 34 * pDecoder->getChannels();
 }
 
 JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
-    pDecoder->release();
     delete pDecoder;
     pDecoder = nullptr;
 }
 
 JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
     int adpcmLen = env->GetArrayLength(adpcmByteArray);
-    if (adpcmLen != pDecoder->ctx->channels * 34) {
-        LOGE("ADPCM bytes must be %d", pDecoder->ctx->channels * 34);
+    if (adpcmLen != pDecoder->getCodecContext()->channels * 34) {
+        LOGE("Decoder: ADPCM bytes must be %d", pDecoder->getCodecContext()->channels * 34);
         return nullptr;
     }
     auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
@@ -38,7 +36,7 @@ JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmBy
     int pcmLength;
     uint8_t *pcmBytes = pDecoder->decode(adpcm_unit8_t_array, adpcmLen, &pcmLength);
 
-//    LOGE("adpcmLen=%d pcmLength=%d", adpcmLen, pcmLength);
+//    LOGE("Decoder: adpcmLen=%d pcmLength=%d", adpcmLen, pcmLength);
 
     jbyteArray pcm_byte_array = env->NewByteArray(pcmLength);
     env->SetByteArrayRegion(pcm_byte_array, 0, pcmLength, reinterpret_cast<const jbyte *>(pcmBytes));
@@ -65,18 +63,18 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
 
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-        LOGE("JNI_OnLoad GetEnv error.");
+        LOGE("Decoder: JNI_OnLoad GetEnv error.");
         return JNI_ERR;
     }
 
     jclass clz = env->FindClass(ADPCM_PACKAGE_BASE"AdpcmImaQtDecoder");
     if (clz == nullptr) {
-        LOGE("JNI_OnLoad FindClass error.");
+        LOGE("Decoder: JNI_OnLoad FindClass error.");
         return JNI_ERR;
     }
 
     if (env->RegisterNatives(clz, methods, sizeof(methods) / sizeof(methods[0]))) {
-        LOGE("JNI_OnLoad RegisterNatives error.");
+        LOGE("Decoder: JNI_OnLoad RegisterNatives error.");
         return JNI_ERR;
     }
 

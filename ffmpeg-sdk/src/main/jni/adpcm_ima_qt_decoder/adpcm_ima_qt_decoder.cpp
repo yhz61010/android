@@ -63,10 +63,10 @@ uint8_t *AdpcmImaQtDecoder::decode(uint8_t *adpcmByteArray, int adpcmLength, int
         uint8_t *right_channel_data = frame->data[1];
         int subI = 0;
         for (int k = 0; k < pcmSize; k += 4) {
-            outPcmBytes[k] = left_channel_data[subI];            // Left channel lower 8 bits
-            outPcmBytes[k + 1] = left_channel_data[subI + 1];    // Left channel higher 8 bits
-            outPcmBytes[k + 2] = right_channel_data[subI];       // Right channel lower 8 bits
-            outPcmBytes[k + 3] = right_channel_data[subI + 1];   // Right channel higher 8 bits
+            outPcmBytes[k] = left_channel_data[subI];            // Left channel low 8 bits
+            outPcmBytes[k + 1] = left_channel_data[subI + 1];    // Left channel high 8 bits
+            outPcmBytes[k + 2] = right_channel_data[subI];       // Right channel low 8 bits
+            outPcmBytes[k + 3] = right_channel_data[subI + 1];   // Right channel high 8 bits
             subI += 2;
         }
         return outPcmBytes;

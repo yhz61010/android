@@ -18,16 +18,22 @@ class AdpcmImaQtDecoder {
 private:
     AVFrame *frame = nullptr;
     AVPacket *pkt = nullptr;
-public:
     AVCodecContext *ctx = nullptr;
 
-    int init(int sampleRate, int channels);
+    int sampleRate;
+    int channels;
+public:
+    AdpcmImaQtDecoder(int sampleRate, int channels);
 
-    void release();
+    ~AdpcmImaQtDecoder();
 
     uint8_t *decode(uint8_t *adpcmByteArray, int length, int *outPcmLength);
 
-    int chunkSize() const;
+    int getSampleRate() const;
+
+    int getChannels() const;
+
+    AVCodecContext *getCodecContext();
 };
 
 #endif //LEOANDROIDBASEUTIL_ADPCM_IMA_QT_DECODER_H

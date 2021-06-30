@@ -1,62 +1,64 @@
 #include "adpcm_ima_qt_encoder.h"
 #include "logger.h"
 
-int AdpcmImaQtEncoder::init(int sampleRate, int channels, int bitRate) {
+AdpcmImaQtEncoder::AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate) {
     LOGE("ADPCM encoder init. sampleRate: %d, channels: %d bitRate: %d", sampleRate, channels, bitRate);
     const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_ADPCM_IMA_QT);
     if (!codec) {
-        LOGE("ADPCM IMA QT codec not found");
-        return -1;
+        LOGE("ADPCM IMA QT encoder does not found");
+        exit(-1);
     }
-    c = avcodec_alloc_context3(codec);
-    if (!c) {
-        LOGE("Could not allocate audio codec context");
-        return -2;
+    ctx = avcodec_alloc_context3(codec);
+    if (!ctx) {
+        LOGE("Could not allocate audio encoder context");
+        exit(-2);
     }
-
-    c->sample_rate = sampleRate;
-    c->bit_rate = bitRate;
-    c->sample_fmt = AV_SAMPLE_FMT_S16P; // ADPCM-IMA-QT only support AV_SAMPLE_FMT_S16P
-    c->channel_layout = channels == 2 ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
-    c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
+    ctx->sample_rate = sampleRate;
+    ctx->bit_rate = bitRate;
+    ctx->sample_fmt = AV_SAMPLE_FMT_S16P; // ADPCM-IMA-QT only support AV_SAMPLE_FMT_S16P
+    ctx->channel_layout = channels == 2 ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
+    ctx->channels = av_get_channel_layout_nb_channels(ctx->channel_layout);
 
     int ret;
     /* open it */
-    if ((ret = avcodec_open2(c, codec, nullptr)) < 0) {
-        LOGE("Could not open codec");
-        return ret;
+    if ((ret = avcodec_open2(ctx, codec, nullptr)) < 0) {
+        LOGE("Could not open encoder");
+        exit(ret);
     }
     /* packet for holding encoded output */
     pkt = av_packet_alloc();
     if (!pkt) {
         LOGE("Could not allocate the packet");
-        return -3;
+        exit(-3);
     }
     /* frame containing input raw audio */
     frame = av_frame_alloc();
     if (!frame) {
         LOGE("Could not allocate audio frame");
-        return -4;
+        exit(-4);
     }
 
-    frame->nb_samples = c->frame_size;
-    frame->format = c->sample_fmt;
-    frame->channel_layout = c->channel_layout;
+    frame->nb_samples = ctx->frame_size;
+    frame->format = ctx->sample_fmt;
+    frame->channel_layout = ctx->channel_layout;
 
     /* allocate the data buffers */
     ret = av_frame_get_buffer(frame, 0);
     if (ret < 0) {
         LOGE("Could not allocate audio data buffers");
-        return -5;
+        exit(-5);
     }
     ret = av_frame_make_writable(frame);
-    return ret;
+    if (ret < 0) {
+        LOGE("av_frame_make_writable error. code=%d", ret);
+        exit(-6);
+    }
 }
 
-void AdpcmImaQtEncoder::release() {
-    if (c != nullptr) {
-        avcodec_free_context(&c);
-        c = nullptr;
+AdpcmImaQtEncoder::~AdpcmImaQtEncoder() {
+    if (ctx != nullptr) {
+        avcodec_free_context(&ctx);
+        ctx = nullptr;
     }
     if (frame != nullptr) {
         av_frame_free(&frame);
@@ -70,16 +72,16 @@ void AdpcmImaQtEncoder::release() {
 }
 
 void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCallbackFunc callback) {
-    LOGE("channels=%d c->frame_size=%d frame->linesize[0]=%d frame->nb_samples=%d", c->channels, c->frame_size, frame->linesize[0], frame->nb_samples);
+    LOGE("channels=%d c->frame_size=%d frame->linesize[0]=%d frame->nb_samples=%d", ctx->channels, ctx->frame_size, frame->linesize[0], frame->nb_samples);
 
-    bool isStereo = c->channels == 2;
-    uint8_t *outs[c->channels];
-    const int BUF_SIZE = frame->linesize[0] * c->channels;
+    bool isStereo = ctx->channels == 2;
+    uint8_t *outs[ctx->channels];
+    const int BUF_SIZE = frame->linesize[0] * ctx->channels;
     outs[0] = new uint8_t[BUF_SIZE];
     if (isStereo)
         outs[1] = new uint8_t[BUF_SIZE];
 
-    const int loopStep = 2 * c->channels;
+    const int loopStep = 2 * ctx->channels;
     for (int loop = 0; loop < pcmLen / BUF_SIZE; loop++) {
         for (int idx = 0; idx < BUF_SIZE / loopStep; idx++) {
             outs[0][idx * 2 + 0] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 0];
@@ -95,9 +97,9 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
         if (isStereo)
             frame->data[1] = outs[1];
 
-//        LOGE("in loop frame->linesize[0]=%d", frame->linesize[0]);
+//        LOGE("Encoder: in loop frame->linesize[0]=%d", frame->linesize[0]);
 
-        encode_n(c, frame, pkt, callback);
+        do_encode(ctx, frame, pkt, callback);
     }
 
     delete outs[0];
@@ -105,10 +107,10 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
         delete outs[1];
 
     /* flush the encoder */
-    encode_n(c, nullptr, pkt, callback);
+    do_encode(ctx, nullptr, pkt, callback);
 }
 
-void AdpcmImaQtEncoder::encode_n(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback) {
+void AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback) {
     int ret;
 
     /* send the frame for encoding */

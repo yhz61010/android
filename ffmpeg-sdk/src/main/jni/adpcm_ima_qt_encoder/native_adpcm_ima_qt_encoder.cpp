@@ -11,15 +11,13 @@ jobject gObj;
 
 JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels, jint bitRate) {
     if (nullptr == pEncoder) {
-        pEncoder = new AdpcmImaQtEncoder();
-        pEncoder->init(sampleRate, channels, bitRate);
+        pEncoder = new AdpcmImaQtEncoder(sampleRate, channels, bitRate);
         return 0;
     }
     return -1;
 }
 
 JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
-    pEncoder->release();
     delete pEncoder;
     pEncoder = nullptr;
 }

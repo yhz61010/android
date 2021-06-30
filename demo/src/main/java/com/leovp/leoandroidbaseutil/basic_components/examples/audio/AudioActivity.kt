@@ -33,7 +33,7 @@ class AudioActivity : BaseDemonstrationActivity() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(16000, 48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
     }
 

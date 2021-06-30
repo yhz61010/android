@@ -21,7 +21,7 @@ class AdpcmImaQtDecoder private constructor() {
     external fun release()
 
     /**
-     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples).
+     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples) for each channel.
      * Channel data is interleaved per-chunk.
      *
      * @param adpcmBytes The length of this parameter is 34 bytes * channels
@@ -30,7 +30,7 @@ class AdpcmImaQtDecoder private constructor() {
     external fun getVersion(): String
 
     /**
-     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples).
+     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples) for each channel.
      * Channel data is interleaved per-chunk.
      *
      * The return result is 34 bytes * channels

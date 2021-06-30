@@ -1,10 +1,8 @@
 #ifndef LEO_FFMPEG4ANDROID_LOGGER_H
 #define LEO_FFMPEG4ANDROID_LOGGER_H
 
-#define LOG_TAG    "leo_ffmpeg_jni"
-
 #ifdef ANDROID
-
+#define LOG_TAG    "leo_ffmpeg_jni"
 #include <android/log.h>
 
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))

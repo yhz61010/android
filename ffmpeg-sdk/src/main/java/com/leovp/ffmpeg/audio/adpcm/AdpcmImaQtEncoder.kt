@@ -27,7 +27,6 @@ class AdpcmImaQtEncoder private constructor() {
     external fun encode(pcmBytes: ByteArray)
     external fun getVersion(): String
 
-    @Suppress("unused")
     fun encodedAudioCallback(encodeAudio: ByteArray) {
         encodedCallback?.onEncodedUpdate(encodeAudio)
     }

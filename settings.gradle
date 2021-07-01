@@ -1,4 +1,5 @@
 rootProject.name='LeoAndroidBaseUtil'
+include ':adpcm-ima-qt-codec-sdk'
 include ':demo'
 include ':screencapture-sdk'
 include ':basenetty-sdk'

@@ -202,8 +202,10 @@ dependencies {
     implementation project(':audio-sdk')
 
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
-    implementation project(':ffmpeg-sdk')
+//    implementation project(':ffmpeg-sdk')
 //    implementation project(':ffmpeg-javacpp-sdk')
+
+    implementation project(':adpcm-ima-qt-codec-sdk')
 
     implementation project(':basenetty-sdk')
     implementation project(':camera2live-sdk')

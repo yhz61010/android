@@ -79,13 +79,8 @@ lint/tmp/
 /screencapture-sdk/src/main/java/example/sszpf/x264/
 /screencapture-sdk/src/main/libs/armeabi-v7a/
 /.cxx/
-/src/main/cpp/prebuilt/
-/src/main/cpp/libs/
-/src/main/cpp/obj/
-/src/main/jni/obj/local/
+/src/main/obj/
+/src/main/jni/libx264/
 /src/main/jni/prebuilt/
 /src/main/libs/arm64-v8a/
 /src/main/libs/armeabi-v7a/
-/src/main/obj/local/arm64-v8a/
-/src/main/obj/local/armeabi-v7a/
-/src/main/jni/libx264/

@@ -17,7 +17,8 @@
 ```
 Unzip it into the following folder:
 ```shell
-/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+tar xvjf ffmpeg-4.4.tar.bz2
 ```
 2. Compile and get static library
 ```shell

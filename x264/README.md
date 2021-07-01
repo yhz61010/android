@@ -1,5 +1,5 @@
 ### How to compile x264 and generate so file for Android
-1. Get x264 source
+1. Get x264 source(until 20210701)
 ```shell
 $ cd /home/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/x264/src/main/jni
 $ git clone http://git.videolan.org/git/x264.git libx264

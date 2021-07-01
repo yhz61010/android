@@ -7,8 +7,7 @@ $ git clone http://git.videolan.org/git/x264.git libx264
 or get the zip file:
 ```shell
 % wget https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2
-% mkdir libx264
-% tar xvjf x264-master.tar.bz2 -C `pwd`/libx264 --strip-components=1
+% mkdir libx264 && tar xvjf x264-master.tar.bz2 -C `pwd`/libx264 --strip-components=1
 ```
 2. Compile and get static library
 ```shell

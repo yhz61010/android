@@ -37,7 +37,6 @@
             android:name=".basic_components.examples.ChangeAppLanguageActivity"
             android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.audio.ADPCMActivity" />
-        <activity android:name=".basic_components.examples.StaticIpActivity" />
         <activity android:name=".basic_components.examples.animation.PropertyAnimActivity" />
         <activity android:name=".basic_components.examples.animation.ViewAnimActivity" />
         <activity android:name=".basic_components.examples.animation.DrawableAnimActivity" />

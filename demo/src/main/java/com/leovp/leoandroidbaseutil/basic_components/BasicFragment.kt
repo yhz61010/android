@@ -3,12 +3,16 @@ package com.leovp.leoandroidbaseutil.basic_components
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.leovp.androidbase.exts.kotlin.ITAG
+import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
@@ -34,6 +38,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketServe
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.WifiActivity
+import kotlin.concurrent.thread
 
 class BasicFragment : Fragment() {
 
@@ -51,6 +56,14 @@ class BasicFragment : Fragment() {
                 val intent = Intent(requireContext(), featureList[position].second)
                 intent.putExtra("title", featureList[position].first)
                 startActivity(intent)
+            }
+        }
+        view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {
+            it.setOnRefreshListener {
+                thread {
+                    sleep(200)
+                    Handler(Looper.getMainLooper()).post { it.isRefreshing = false }
+                }
             }
         }
         view.findViewById<RecyclerView>(R.id.recyclerView).run {

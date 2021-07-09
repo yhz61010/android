@@ -171,6 +171,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appcompatVersion"
     implementation "androidx.cardview:cardview:$rootProject.ext.cardviewVersion"
     implementation "androidx.recyclerview:recyclerview:$recyclerviewVersion"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swiperefreshlayoutVersion"
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
     implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"

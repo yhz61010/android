@@ -22,30 +22,31 @@ import com.leovp.androidbase.utils.system.API
 /**
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
  */
-fun toast(@StringRes resId: Int, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
-    toast(app.getString(resId), duration, error, debug, normal)
+fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
+    toast(app.getString(resId), longDuration, error, debug, normal)
 }
 
 /**
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
  */
-fun toast(msg: String?, duration: Int = Toast.LENGTH_SHORT, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
+fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(msg, duration, error, debug, normal)
+        showToast(msg, longDuration, error, debug, normal)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post { showToast(msg, duration, error, debug, normal) }
+        Handler(Looper.getMainLooper()).post { showToast(msg, longDuration, error, debug, normal) }
     }
 }
 
 private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
-private fun showToast(msg: String?, duration: Int, error: Boolean, debug: Boolean, normal: Boolean) {
+private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean) {
     if (debug && !BuildConfig.DEBUG) {
         // Debug log only be shown in DEBUG flavor
         return
     }
+    val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String? = if (debug) "DEBUG: $msg" else msg
     if (normal || API.ABOVE_R) {
         if (error) {

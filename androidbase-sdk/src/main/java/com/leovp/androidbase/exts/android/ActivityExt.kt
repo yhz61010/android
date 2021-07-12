@@ -99,6 +99,12 @@ fun Context.startActivity(cls: KClass<*>) = this.startActivity(Intent(this, cls.
 fun Fragment.startActivity(cls: KClass<*>) = this.startActivity(Intent(context, cls.java))
 
 /** Launch a Activity */
+fun Context.startActivity(cls: KClass<*>, options: Bundle? = null) = this.startActivity(Intent(this, cls.java), options)
+
+/** Launch a Activity */
+fun Fragment.startActivity(cls: KClass<*>, options: Bundle? = null) = this.startActivity(Intent(context, cls.java), options)
+
+/** Launch a Activity */
 @JvmOverloads
 fun Activity.startActivityForResult(cls: KClass<*>, requestCode: Int, options: Bundle? = null) {
     startActivityForResult(Intent(this, cls.java), requestCode, options)

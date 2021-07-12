@@ -13,7 +13,6 @@ import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.*
@@ -422,7 +421,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                             webSocketClientHandler?.triggerIFrame()
                             return
                         } else {
-                            toast("Get SPS/PPS error.", duration = Toast.LENGTH_LONG, error = true)
+                            toast("Get SPS/PPS error.", longDuration = true, error = true)
                             return
                         }
                     }

@@ -21,27 +21,29 @@ import com.leovp.androidbase.utils.system.API
 
 /**
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
+ * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
  */
-fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
-    toast(app.getString(resId), longDuration, error, debug, normal)
+fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String = "#e65432") {
+    toast(app.getString(resId), longDuration, error, debug, normal, errorColor)
 }
 
 /**
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
+ * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
  */
-fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false) {
+fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String = "#e65432") {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(msg, longDuration, error, debug, normal)
+        showToast(msg, longDuration, error, debug, normal, errorColor)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post { showToast(msg, longDuration, error, debug, normal) }
+        Handler(Looper.getMainLooper()).post { showToast(msg, longDuration, error, debug, normal, errorColor) }
     }
 }
 
 private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
-private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean) {
+private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String) {
     if (debug && !BuildConfig.DEBUG) {
         // Debug log only be shown in DEBUG flavor
         return
@@ -50,7 +52,7 @@ private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolea
     val message: String? = if (debug) "DEBUG: $msg" else msg
     if (normal || API.ABOVE_R) {
         if (error) {
-            Toast.makeText(app, HtmlCompat.fromHtml("<font color='#eeff41'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+            Toast.makeText(app, HtmlCompat.fromHtml("<font color='$errorColor'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
         } else {
             Toast.makeText(app, message, duration).show()
         }

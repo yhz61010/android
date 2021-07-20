@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basic_components.examples.ToastActivity">
+
+    <Button
+        android:id="@+id/btnNormalToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Normal Toast"
+        android:onClick="onNormalToastClick"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnErrorToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Error Toast"
+        android:onClick="onErrorToastClick"
+        app:layout_constraintStart_toStartOf="@+id/btnNormalToast"
+        app:layout_constraintTop_toBottomOf="@+id/btnNormalToast" />
+
+    <Button
+        android:id="@+id/btnCustomColorToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Custom Error Color Toast"
+        android:onClick="onCustomErrorColorToastClick"
+        app:layout_constraintStart_toStartOf="@+id/btnErrorToast"
+        app:layout_constraintTop_toBottomOf="@+id/btnErrorToast" />
+</androidx.constraintlayout.widget.ConstraintLayout>

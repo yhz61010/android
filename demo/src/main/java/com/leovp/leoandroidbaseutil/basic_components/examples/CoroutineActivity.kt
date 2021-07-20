@@ -105,7 +105,7 @@ class CoroutineActivity : BaseDemonstrationActivity() {
             LogContext.log.e(ITAG, "Computing v2 | ${Thread.currentThread().name}")
             6
         }
-        LogContext.log.e(ITAG, "The answer for v1 / v2 = ${v1.await() / v2.await()}")
+        LogContext.log.e(ITAG, "The answer for v1=${v1.await()} v2=${v2.await()}")
     }
 
     private fun normalMethod() {

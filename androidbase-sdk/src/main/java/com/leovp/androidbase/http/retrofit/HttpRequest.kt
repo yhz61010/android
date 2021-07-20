@@ -39,4 +39,16 @@ object HttpRequest : BaseHttpRequest() {
 //        .addConverterFactory(MoshiConverterFactory.create())
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
     }
+
+    fun setReadTimeout(mills: Long) {
+        readTimeoutInMs = mills
+    }
+
+    fun setConnectTimeout(mills: Long) {
+        connectTimeoutInMs = mills
+    }
+
+    fun setWriteTimeout(mills: Long) {
+        writeTimeoutInMs = mills
+    }
 }

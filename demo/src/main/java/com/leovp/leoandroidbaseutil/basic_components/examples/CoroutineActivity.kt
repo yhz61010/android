@@ -6,6 +6,7 @@ import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import kotlinx.coroutines.*
+import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
 class CoroutineActivity : BaseDemonstrationActivity() {
@@ -15,6 +16,10 @@ class CoroutineActivity : BaseDemonstrationActivity() {
 //    private val ioScope = CoroutineScope(Dispatchers.IO)
 
 //    private val ioJobScope = CoroutineScope(Dispatchers.IO + Job())
+
+    private val singleContext = newSingleThreadContext("MyOwnThread")
+    private val fixedContext = newFixedThreadPoolContext(3, "three-th-ctx")
+    private val poolContext = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +70,20 @@ class CoroutineActivity : BaseDemonstrationActivity() {
         cs.launch(Dispatchers.Default) { // 将会获取默认调度器
             LogContext.log.e(ITAG, "Default               : I'm working in thread ${Thread.currentThread().name}")
         }
-        cs.launch(newSingleThreadContext("MyOwnThread")) { // 将使它获得一个新的线程
-            LogContext.log.e(ITAG, "newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+        repeat(20) {
+            cs.launch(singleContext) { // 将使它获得一个新的线程
+                LogContext.log.e(ITAG, "[$it] newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+            }
+        }
+        repeat(20) {
+            cs.launch(fixedContext) {
+                LogContext.log.e(ITAG, "[$it] newFixedThreadPoolContext: I'm working in thread ${Thread.currentThread().name}")
+            }
+        }
+        repeat(20) {
+            cs.launch(poolContext) {
+                LogContext.log.e(ITAG, "[$it] poolDispatcher: I'm working in thread ${Thread.currentThread().name}")
+            }
         }
         cs.launch(Dispatchers.Default + CoroutineName("-test")) { coroutineName() }
 

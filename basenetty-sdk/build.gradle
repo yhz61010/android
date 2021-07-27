@@ -34,8 +34,15 @@ dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
-    api group: 'io.netty', name: 'netty-all', version: "$rootProject.ext.nettyVersion"
+    // api group: 'io.netty', name: 'netty-all', version: "$rootProject.ext.nettyVersion"
+//    api group: 'io.netty', name: 'netty-handler', version: "$rootProject.ext.nettyVersion"
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
+    api group: 'io.netty', name: 'netty-codec-http', version: "$rootProject.ext.nettyVersion"
+
     api project(':androidbase-sdk')
 
-//    implementation 'org.greenrobot:eventbus:3.1.1'
+    // No need to use this library when adding pipeline however we indeed need its library.
+    // So what's the magic?
+    // https://mvnrepository.com/artifact/com.jcraft/jzlib
+    api group: 'com.jcraft', name: 'jzlib', version: "$jzlibVersion"
 }

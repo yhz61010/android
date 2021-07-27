@@ -39,35 +39,34 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
         var rtnCode: Int
         val pkt = avcodec.av_packet_alloc()
         try {
-            BytePointer(*adpcmBytes).use { p ->
-                pkt.data(p)
-                pkt.size(adpcmBytes.size)
-                rtnCode = avcodec.avcodec_send_packet(ctx, pkt)
-                if (rtnCode < 0) {
-                    avcodec.av_packet_free(pkt)
-                    return null
-                }
-                val frame = avutil.av_frame_alloc()
-                if (avcodec.avcodec_receive_frame(ctx, frame).also { rtnCode = it } < 0) {
-                    avutil.av_frame_free(frame)
-                    return null
-                }
+            val p = BytePointer(*adpcmBytes)
+            pkt.data(p)
+            pkt.size(adpcmBytes.size)
+            rtnCode = avcodec.avcodec_send_packet(ctx, pkt)
+            if (rtnCode < 0) {
+                avcodec.av_packet_free(pkt)
+                return null
+            }
+            val frame = avutil.av_frame_alloc()
+            if (avcodec.avcodec_receive_frame(ctx, frame).also { rtnCode = it } < 0) {
+                avutil.av_frame_free(frame)
+                return null
+            }
 
 //                if (LogContext.enableLog) LogContext.log.i(
 //                    "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())} ch:${frame.channels()} sampleRate:${frame.sample_rate()} np_samples:${frame.nb_samples()} " +
 //                            " linesize[0]=${frame.linesize(0)} fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
 //                )
 
-                val bpLeft: BytePointer = frame.extended_data(0)
-                val leftChunkBytes = ByteArray(frame.linesize(0))
-                bpLeft.get(leftChunkBytes)
+            val bpLeft: BytePointer = frame.extended_data(0)
+            val leftChunkBytes = ByteArray(frame.linesize(0))
+            bpLeft.get(leftChunkBytes)
 
-                val bpRight: BytePointer = frame.extended_data(1)
-                val rightChunkBytes = ByteArray(frame.linesize(1))
-                bpRight.get(rightChunkBytes)
+            val bpRight: BytePointer = frame.extended_data(1)
+            val rightChunkBytes = ByteArray(frame.linesize(0)) // "0" is not typo.
+            bpRight.get(rightChunkBytes)
 
-                return leftChunkBytes to rightChunkBytes
-            }
+            return leftChunkBytes to rightChunkBytes
         } finally {
             pkt.close()
             avcodec.av_packet_free(pkt)
@@ -82,7 +81,7 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
     }
 
     companion object {
-        fun getSampleFormatName(fmt: Int): String? = avutil.av_get_sample_fmt_name(fmt).use { ptr -> return if (ptr != null && !ptr.isNull) ptr.string else null }
+        fun getSampleFormatName(fmt: Int): String? = avutil.av_get_sample_fmt_name(fmt).let { ptr -> return if (ptr != null && !ptr.isNull) ptr.string else null }
 
         fun isAvSampleInPlanar(fmt: Int): Boolean = avutil.av_sample_fmt_is_planar(fmt) == 1
     }

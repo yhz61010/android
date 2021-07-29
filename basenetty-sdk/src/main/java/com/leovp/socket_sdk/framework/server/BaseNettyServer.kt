@@ -11,16 +11,12 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.Delimiters
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import io.netty.handler.codec.string.StringDecoder
-import io.netty.handler.codec.string.StringEncoder
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.stream.ChunkedWriteHandler
@@ -91,9 +87,9 @@ abstract class BaseNettyServer protected constructor(
 //                        addLast(WebSocketServerCompressionHandler())
                         addLast(WebSocketServerProtocolHandler(webSocketPath))
                     } else {
-                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-                        addLast(StringDecoder())
-                        addLast(StringEncoder())
+//                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+//                        addLast(StringDecoder())
+//                        addLast(StringEncoder())
                     }
                     addLastToPipeline(this)
                     defaultServerInboundHandler?.let { addLast("default-server-inbound-handler", it) }

@@ -121,7 +121,7 @@ object DeviceUtil {
      * The result is:
      * [0]: Available memory in bytes
      * [1]: Total memory in bytes
-     * [2]: Used memory in bytes
+     * [2]: Used percent
      */
     fun getMemInfoInBytes(): Triple<Long, Long, Float> {
         val mi = ActivityManager.MemoryInfo()

@@ -14,6 +14,11 @@ import com.leovp.socket_sdk.framework.server.ServerConnectListener
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelPipeline
+import io.netty.handler.codec.DelimiterBasedFrameDecoder
+import io.netty.handler.codec.Delimiters
+import io.netty.handler.codec.string.StringDecoder
+import io.netty.handler.codec.string.StringEncoder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -113,7 +118,16 @@ class SocketServerActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, false)
+    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, false) {
+        override fun addLastToPipeline(pipeline: ChannelPipeline) {
+            super.addLastToPipeline(pipeline)
+            with(pipeline) {
+                addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+                addLast(StringDecoder())
+                addLast(StringEncoder())
+            }
+        }
+    }
 
     @ChannelHandler.Sharable
     class SocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {

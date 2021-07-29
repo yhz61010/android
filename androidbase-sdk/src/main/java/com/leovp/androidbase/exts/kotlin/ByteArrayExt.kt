@@ -60,9 +60,30 @@ fun Short.toBytes(): ByteArray =
 
 fun Short.toBytesLE(): ByteArray = ByteArray(Short.SIZE_BYTES).also { for (i in it.indices) it[i] = ((this.toInt() ushr i * 8) and 0xFF).toByte() }
 
+/**
+ * A big-endian system stores the most significant byte of a word at the smallest memory address
+ * and the least significant byte at the largest.
+ *
+ * Example:
+ * 0x1A2B3C4D
+ *
+ * Big Endian:
+ * 1A 2B 3C 4D
+ */
 fun Int.toBytes(): ByteArray =
     ByteArray(Int.SIZE_BYTES).also { for (i in it.indices) it[i] = (this ushr ((Int.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte() }
 
+/**
+ * A little-endian system stores the least-significant byte at the smallest memory address.
+ * and the most significant byte at the largest.
+ * in contrast,
+ *
+ * Example:
+ * 0x1A2B3C4D
+ *
+ * Little Endian:
+ * 4D 3C 2B 1A
+ */
 fun Int.toBytesLE(): ByteArray = ByteArray(Int.SIZE_BYTES).also { for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte() }
 
 fun Long.toBytes(): ByteArray =

@@ -12,7 +12,7 @@ interface ServerConnectListener<in T : BaseNetty> {
     fun onStarted(netty: T)
     fun onStopped()
     fun onStartFailed(netty: T, code: Int, msg: String?)
-    fun onReceivedData(netty: T, clientChannel: Channel, data: Any?)
+    fun onReceivedData(netty: T, clientChannel: Channel, data: Any?, action: Int = -1)
     fun onClientConnected(netty: T, clientChannel: Channel)
     fun onClientDisconnected(netty: T, clientChannel: Channel)
 

@@ -38,7 +38,8 @@ abstract class BaseNettyServer protected constructor(
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }
 
-    private val tag = javaClass.simpleName
+    val tag: String by lazy { getTagName() }
+    abstract fun getTagName(): String
 
     private val bossGroup = NioEventLoopGroup()
     private val workerGroup = NioEventLoopGroup()
@@ -176,16 +177,16 @@ abstract class BaseNettyServer protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmdTypeAndId: String, cmd: Any?): Boolean {
         if (cmd == null) {
-            LogContext.log.e(tag, "The command is null. Stop processing.")
+            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("Command must be either String or ByteArray.")
         }
         if (!clientChannel.isActive) {
-            LogContext.log.e(tag, "Client channel is not active. Can not send command.")
+            LogContext.log.e(cmdTypeAndId, "Client channel is not active. Can not send command.")
             return false
         }
         return true
@@ -195,7 +196,7 @@ abstract class BaseNettyServer protected constructor(
      * @param isPing Only works in WebSocket mode
      */
     private fun executeUnifiedCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean): Boolean {
-        if (!isValidExecuteCommandEnv(clientChannel, cmd)) {
+        if (!isValidExecuteCommandEnv(clientChannel, cmdTypeAndId, cmd)) {
             return false
         }
         val stringCmd: String?
@@ -206,15 +207,19 @@ abstract class BaseNettyServer protected constructor(
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
-                if (showContent) LogContext.log.i(tag, "exeCmd[${cmd.length}]=$cmd")
-                else LogContext.log.i(tag, "exeCmd[${cmd.length}]")
+                if (showLog) {
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.length}]=$cmd")
+                    else LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.length}]")
+                }
             }
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
-                if (showContent) LogContext.log.i(tag, "exeCmd HEX[${cmd.size}]=[${cmd.toHexStringLE()}]")
-                else LogContext.log.i(tag, "exeCmd HEX[${cmd.size}]")
+                if (showLog) {
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
+                    else LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.size}]")
+                }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
@@ -229,12 +234,12 @@ abstract class BaseNettyServer protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+    fun executeCommand(clientChannel: Channel, cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
         executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+    fun executePingCommand(clientChannel: Channel, cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
         executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
 
     // ================================================

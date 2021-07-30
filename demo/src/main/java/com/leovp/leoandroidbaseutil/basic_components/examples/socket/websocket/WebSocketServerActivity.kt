@@ -59,7 +59,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
             }
         }
 
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
+        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data";binding.sv.fullScroll(View.FOCUS_DOWN) }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")

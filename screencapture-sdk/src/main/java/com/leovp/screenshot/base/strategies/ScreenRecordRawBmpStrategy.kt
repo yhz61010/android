@@ -9,8 +9,8 @@ import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
+import com.leovp.androidbase.exts.android.createBitmap
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.ImageUtil
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import java.util.*
@@ -55,7 +55,7 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
             setOnImageAvailableListener({ reader ->
                 runCatching {
                     val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
-                    val bitmap = ImageUtil.createBitmapFromImage(image)
+                    val bitmap = image.createBitmap()
                     image.close()
                     builder.screenDataListener.onDataUpdate(bitmap)
                 }.onFailure { it.printStackTrace() }

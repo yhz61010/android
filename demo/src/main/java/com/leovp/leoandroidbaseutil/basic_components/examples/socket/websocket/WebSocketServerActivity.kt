@@ -113,7 +113,9 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true)
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+        override fun getTagName() = "WSSA-WS"
+    }
 
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
@@ -129,7 +131,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         }
 
         fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
-            return netty.executeCommand(clientChannel, "[NA]", "responseClientMsg", msg)
+            return netty.executeCommand(clientChannel, msg, "responseClientMsg")
         }
 
         override fun release() {

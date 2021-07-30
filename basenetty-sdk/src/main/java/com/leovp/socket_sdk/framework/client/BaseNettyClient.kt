@@ -540,7 +540,7 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean, isPing: Boolean, showLog: Boolean = true): Boolean {
+    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean = true): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
@@ -585,12 +585,12 @@ abstract class BaseNettyClient protected constructor(
 
     @JvmOverloads
     fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, false, showLog)
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
 
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, showContent, true, showLog)
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
 
     // ================================================
 }

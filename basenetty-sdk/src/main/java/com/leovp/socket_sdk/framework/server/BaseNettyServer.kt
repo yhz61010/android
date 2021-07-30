@@ -194,7 +194,7 @@ abstract class BaseNettyServer protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean, isPing: Boolean): Boolean {
+    private fun executeUnifiedCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmd)) {
             return false
         }
@@ -229,12 +229,13 @@ abstract class BaseNettyServer protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean = true) = executeUnifiedCommand(clientChannel, cmd, showContent, false)
+    fun executeCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(clientChannel: Channel, cmd: Any?, showContent: Boolean = true) =
-        executeUnifiedCommand(clientChannel, cmd, showContent, true)
+    fun executePingCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
 
     // ================================================
 }

@@ -10,9 +10,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
+import com.leovp.androidbase.exts.android.compressBitmap
 import com.leovp.androidbase.utils.device.CaptureUtil
 import com.leovp.androidbase.utils.log.LogContext
-import com.leovp.androidbase.utils.media.ImageUtil
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import com.leovp.screenshot.base.TextureRenderer
@@ -288,7 +288,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
             while (isRecording) {
                 CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
-                        val compressedBitmap = ImageUtil.compressBitmap(it, builder.quality, builder.sampleSize)
+                        val compressedBitmap = it.compressBitmap(builder.quality, builder.sampleSize)
                         encodeImages(compressedBitmap)
                         compressedBitmap.recycle()
                     } else {

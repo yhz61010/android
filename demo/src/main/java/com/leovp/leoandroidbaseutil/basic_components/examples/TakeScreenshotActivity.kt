@@ -3,8 +3,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.exts.android.writeToFile
 import com.leovp.androidbase.utils.device.CaptureUtil
-import com.leovp.androidbase.utils.media.ImageUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import java.io.File
@@ -19,7 +19,7 @@ class TakeScreenshotActivity : BaseDemonstrationActivity() {
         val bitmap = CaptureUtil.takeScreenshot(window)
         bitmap?.let {
             val screenshotFile = File(getExternalFilesDir(null), "screenshot.jpg")
-            ImageUtil.writeBitmapToFile(screenshotFile, it, 100)
+            it.writeToFile(screenshotFile, 100)
             toast("Screenshot is saved in ${screenshotFile.absolutePath}")
         }
     }

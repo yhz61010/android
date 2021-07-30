@@ -197,7 +197,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
 
         fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand("WebSocketCmd", "Send msg to server", msg)
+            return netty.executeCommand(msg, "Send msg to server", "WebSocketCmd")
         }
 
         override fun release() {

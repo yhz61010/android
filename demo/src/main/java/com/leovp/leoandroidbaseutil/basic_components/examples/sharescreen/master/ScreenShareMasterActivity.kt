@@ -257,7 +257,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + data.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, data)
 
-            return netty.executeCommand(clientChannel, command, showContent = false)
+            return netty.executeCommand(clientChannel, "$cId", "sendVideoData", command, showContent = false)
         }
 
         override fun release() {

@@ -129,7 +129,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         }
 
         fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
-            return netty.executeCommand(clientChannel, msg)
+            return netty.executeCommand(clientChannel, "[NA]", "responseClientMsg", msg)
         }
 
         override fun release() {

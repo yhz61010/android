@@ -15,7 +15,6 @@ import android.os.Build
 import android.os.Process
 import android.util.TypedValue
 import android.view.inputmethod.InputMethodManager
-import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.androidbase.utils.log.LogContext
 import java.io.File
@@ -144,10 +143,9 @@ fun exitApp() {
     }
 }
 
-fun startApp() {
-    val launchIntent = app.packageManager.getLaunchIntentForPackage(BuildConfig.LIBRARY_PACKAGE_NAME)
-    launchIntent?.let {
-        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+fun startApp(targetPackageName: String = app.id) {
+    app.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
+        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         app.startActivity(it)
     }
 }

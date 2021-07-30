@@ -287,7 +287,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + cmdArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, cmdArray)
 
-            return netty.executeCommand("TriggerIFrame", "Acquire I Frame", command)
+            return netty.executeCommand(command, "Acquire I Frame", "TriggerIFrame")
         }
 
         fun sendDeviceScreenInfoToServer(point: Point): Boolean {
@@ -298,7 +298,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
 
-            return netty.executeCommand("ScreenInfo", "Send screen info to server", command)
+            return netty.executeCommand(command, "Send screen info to server", "ScreenInfo")
         }
 
         fun sendDragData(x: Float, y: Float, dstX: Float, dstY: Float, duration: Long): Boolean {
@@ -309,7 +309,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
 
-            return netty.executeCommand("WebSocketTouchDragCmd", "Touch[${touchBean.touchType}]", command, false)
+            return netty.executeCommand(command, "Touch[${touchBean.touchType}]", "WebSocketTouchDragCmd", false)
         }
 
         fun sendTouchData(type: TouchType, x: Float, y: Float): Boolean {
@@ -326,7 +326,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
 
-            return netty.executeCommand("WebSocketTouchCmd", "Touch[${type.name}]", command, false)
+            return netty.executeCommand(command, "Touch[${type.name}]", "WebSocketTouchCmd", false)
         }
 
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
@@ -338,7 +338,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
 
-            return netty.executeCommand("WebSocketCmd", "Paint[${type.name}]", command, false)
+            return netty.executeCommand(command, "Paint[${type.name}]", "WebSocketCmd", false)
         }
 
         fun clearCanvas(): Boolean {
@@ -350,7 +350,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
 
-            return netty.executeCommand("WebSocketCmd", "Clear canvas", command)
+            return netty.executeCommand(command, "Clear canvas", "WebSocketCmd")
         }
 
         fun undoDraw(): Boolean {
@@ -362,7 +362,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + paintArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, paintArray)
 
-            return netty.executeCommand("WebSocketCmd", "Undo", command)
+            return netty.executeCommand(command, "Undo", "WebSocketCmd")
         }
 
         override fun release() {

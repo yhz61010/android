@@ -10,6 +10,8 @@ import io.netty.channel.ChannelPipeline
  * Date: 20-11-10 上午10:14
  */
 class AudioReceiverWebSocket(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+    override fun getTagName() = "ARWS"
+
     override fun addLastToPipeline(pipeline: ChannelPipeline) {
         pipeline.addLast("messageDecoder", CustomSocketByteStreamDecoder())
     }

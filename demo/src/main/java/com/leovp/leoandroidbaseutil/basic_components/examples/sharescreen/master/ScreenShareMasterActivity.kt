@@ -216,6 +216,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private var clientChannel: Channel? = null
 
     class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+        override fun getTagName() = "SSMA-WS"
+
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             pipeline.addLast("messageDecoder", CustomSocketByteStreamDecoder())
         }
@@ -257,7 +259,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + data.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, data)
 
-            return netty.executeCommand(clientChannel, "$cId", "sendVideoData", command, showContent = false)
+            return netty.executeCommand(clientChannel, command, "sendVideoData", "$cId", showContent = false)
         }
 
         override fun release() {

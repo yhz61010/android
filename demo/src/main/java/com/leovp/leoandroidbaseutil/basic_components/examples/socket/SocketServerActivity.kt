@@ -119,6 +119,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
     // =====================================================
 
     class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, false) {
+        override fun getTagName() = "SSA-S"
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             super.addLastToPipeline(pipeline)
             with(pipeline) {
@@ -136,7 +137,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
         }
 
         fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
-            return netty.executeCommand(clientChannel, "[NA]", "responseClientMsg", msg)
+            return netty.executeCommand(clientChannel, msg)
         }
 
         override fun release() {

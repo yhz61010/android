@@ -584,12 +584,12 @@ abstract class BaseNettyClient protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+    fun executeCommand(cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
         executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, showContent: Boolean = true, showLog: Boolean = true) =
+    fun executePingCommand(cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
         executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
 
     // ================================================

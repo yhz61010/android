@@ -122,7 +122,7 @@ class SocketClientActivity : BaseDemonstrationActivity() {
         }
 
         fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand("SocketCmd", "Send msg to server", msg)
+            return netty.executeCommand(msg, "Send msg to server", "SocketCmd")
         }
 
         override fun release() {

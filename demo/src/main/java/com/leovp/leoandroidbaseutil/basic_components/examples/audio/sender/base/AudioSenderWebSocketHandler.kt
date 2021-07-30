@@ -40,7 +40,7 @@ class AudioSenderWebSocketHandler(private val netty: BaseNettyClient) : BaseClie
 
             val contentLen = (cmd.size + protoVer.size + audioData.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, audioData)
-            netty.executeCommand("AudioPCM", "SendAudio", command, false)
+            netty.executeCommand(command, "AudioPCM", "1", false)
         }.getOrDefault(false)
     }
 

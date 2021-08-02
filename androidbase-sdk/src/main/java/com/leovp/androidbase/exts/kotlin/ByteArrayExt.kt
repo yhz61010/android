@@ -17,6 +17,12 @@ fun Int.asByteAndForceToBytes(): ByteArray = this.toByte().toBytes()
 
 fun ByteArray.readByte(index: Int = 0): Byte = (this[index].toInt() and 0xFF).toByte()
 
+fun ByteArray.readBytes(length: Int, srcPos: Int = 0): ByteArray {
+    val bytes = ByteArray(length)
+    System.arraycopy(this, srcPos, bytes, 0, length)
+    return bytes
+}
+
 fun ByteArray.readShort(index: Int = 0): Short = (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
 fun ByteArray.readShortLE(index: Int = 0): Short = (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
 

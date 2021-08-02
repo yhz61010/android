@@ -2,6 +2,7 @@ package com.leovp.androidbase.exts.kotlin
 
 import android.util.Patterns
 import android.webkit.URLUtil
+import androidx.annotation.IntRange
 import java.util.regex.Pattern
 
 /**
@@ -15,6 +16,7 @@ fun String.toAsciiByteArray() = this.toByteArray(Charsets.US_ASCII)
  * Transform each 2 hex chars to one byte
  */
 fun String.hexToByteArray(): ByteArray {
+    if (this.length % 2 != 0) throw IllegalArgumentException("The length of string must be an even number.")
     val binary = ByteArray(this.length / 2)
     for (i in binary.indices) {
         binary[i] = this.substring(2 * i, 2 * i + 2).toInt(16).toByte()
@@ -31,4 +33,13 @@ fun String.isValidUrl(): Boolean {
     } else {
         false
     }
+}
+
+/**
+ * If [length] or [srcPos] is not valid, the original string will be returned.
+ */
+fun String.truncate(@IntRange(from = 1) length: Int, @IntRange(from = 0) srcPos: Int = 0): String {
+    if (srcPos > this.length - 1) return ""
+    val endIdx = if (srcPos + length > this.length) this.length else srcPos + length
+    return this.substring(srcPos, endIdx)
 }

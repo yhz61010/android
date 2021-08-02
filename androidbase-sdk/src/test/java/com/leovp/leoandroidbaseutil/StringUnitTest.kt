@@ -38,5 +38,7 @@ class StringUnitTest {
         assertEquals("ream. A song to sing.", longString.truncate(90, 10))
         assertEquals("", longString.truncate(90, 50))
         assertEquals("", longString.truncate(2, 50))
+        assertEquals("sing", longString.truncate(4, 26))
+        assertEquals("sing.", longString.truncate(5, 26))
     }
 }

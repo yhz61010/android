@@ -19,6 +19,32 @@ class CLog : ILog {
 
     override var enableLog = true
 
+    override fun printVerbLog(tag: String, message: String) {
+        Log.v(tag, message)
+    }
+
+    override fun printDebugLog(tag: String, message: String) {
+        Log.d(tag, message)
+    }
+
+    override fun printInfoLog(tag: String, message: String) {
+        Log.i(tag, message)
+    }
+
+    override fun printWarnLog(tag: String, message: String) {
+        Log.w(tag, message)
+    }
+
+    override fun printErrorLog(tag: String, message: String) {
+        Log.e(tag, message)
+    }
+
+    override fun printFatalLog(tag: String, message: String) {
+        Log.f(tag, message)
+    }
+
+    // ==============================
+
     private fun getLogDir(ctx: Context, baseFolderName: String): File {
         val builder = getBaseDirString(ctx, baseFolderName) + File.separator + "log"
         val dir = File(builder)
@@ -61,59 +87,7 @@ class CLog : ILog {
         Log.setLogImp(Xlog())
     }
 
-    override fun v(tag: String, message: String?) {
-        if (enableLog) Log.v(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun d(tag: String, message: String?) {
-        if (enableLog) Log.d(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun i(tag: String, message: String?) {
-        if (enableLog) Log.i(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun w(tag: String, message: String?) {
-        if (enableLog) Log.w(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun e(tag: String, message: String?) {
-        if (enableLog) Log.e(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun e(tag: String, throwable: Throwable?) {
-        if (enableLog) e(tag, null, throwable)
-    }
-
-    override fun f(tag: String, message: String?) {
-        if (enableLog) Log.f(getTagName(tag), message ?: "[null]")
-    }
-
-    override fun v(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.v(getTagName(tag), getMessage(message, throwable))
-    }
-
-    override fun d(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.d(getTagName(tag), getMessage(message, throwable))
-    }
-
-    override fun i(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.i(getTagName(tag), getMessage(message, throwable))
-    }
-
-    override fun w(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.w(getTagName(tag), getMessage(message, throwable))
-    }
-
-    override fun e(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.e(getTagName(tag), getMessage(message, throwable))
-    }
-
-    override fun f(tag: String, message: String?, throwable: Throwable?) {
-        if (enableLog) Log.f(getTagName(tag), getMessage(message, throwable))
-    }
-
-    fun flushLog(isSync: Boolean = true) {
+    fun flushLog(isSync: Boolean = false) {
         Log.appenderFlush(isSync)
     }
 

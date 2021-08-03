@@ -63,7 +63,7 @@ class AudioReceiver {
             startPlayThread()
         }
 
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?) {
+        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             val audioData = data as ByteArray
             LogContext.log.i(TAG, "onReceivedData Length=${audioData.size} from ${clientChannel.remoteAddress()}")
             receiveAudioQueue.offer(audioData)

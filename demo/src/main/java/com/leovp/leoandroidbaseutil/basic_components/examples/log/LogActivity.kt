@@ -31,6 +31,27 @@ class LogActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log)
 
+        LogContext.log.v("Hello v")
+        LogContext.log.d("Hello d")
+        LogContext.log.i("Hello i")
+        LogContext.log.w("Hello w")
+        LogContext.log.e("Hello e with fullOutput", fullOutput = true)
+        LogContext.log.f("Hello f")
+
+        LogContext.log.v(TAG, "Hello v")
+        LogContext.log.d(TAG, "Hello d")
+        LogContext.log.i(TAG, "Hello i")
+        LogContext.log.w(TAG, "Hello w")
+        LogContext.log.e(TAG, "Hello e")
+        LogContext.log.f(TAG, "Hello f")
+
+        LogContext.log.v(TAG, "Hello v", Exception("exception-v"))
+        LogContext.log.d(TAG, "Hello d", Exception("exception-d"))
+        LogContext.log.i(TAG, "Hello i", Exception("exception-i"))
+        LogContext.log.w(TAG, "Hello w", Exception("exception-w"))
+        LogContext.log.e(TAG, "Hello e", Exception("exception-e"))
+        LogContext.log.f(TAG, "Hello f", Exception("exception-f"))
+
         LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
 
         LogContext.enableLog = false
@@ -38,6 +59,17 @@ class LogActivity : BaseDemonstrationActivity() {
 
         LogContext.enableLog = true
         LogContext.log.w(ITAG, "This log will be outputted")
+
+
+        val sb = StringBuilder()
+        for (i in 0 until 1000) {
+            sb.append("[$i]")
+            sb.append(System.nanoTime())
+            sb.append(" | ")
+        }
+        val string = sb.toString()
+        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string")
+        LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true)
     }
 
     override fun onStop() {
@@ -49,5 +81,9 @@ class LogActivity : BaseDemonstrationActivity() {
         LogContext.log.w(ITAG, "=====> onDestroy <=====")
 //        (LogContext.log as CLog).closeLog()
         super.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "LogTest"
     }
 }

@@ -27,21 +27,21 @@ val Any.ITAG: String
 // ==============================
 
 fun String.vLog() {
-    LogContext.log.v("$ITAG-str", this)
+    LogContext.log.v(this)
 }
 
 fun String.dLog() {
-    LogContext.log.d("$ITAG-str", this)
+    LogContext.log.d(this)
 }
 
 fun String.iLog() {
-    LogContext.log.i("$ITAG-str", this)
+    LogContext.log.i(this)
 }
 
 fun String.wLog() {
-    LogContext.log.w("$ITAG-str", this)
+    LogContext.log.w(this)
 }
 
 fun String.fLog() {
-    LogContext.log.e("$ITAG-str", this)
+    LogContext.log.e(this)
 }

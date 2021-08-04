@@ -1,7 +1,9 @@
 package com.leovp.androidbase.utils
 
-import com.google.gson.Gson
-import com.leovp.androidbase.exts.kotlin.toHexString
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import com.google.gson.GsonBuilder
+import com.leovp.androidbase.exts.kotlin.Exclude
 import com.leovp.androidbase.utils.log.LogContext
 import java.lang.reflect.Type
 
@@ -11,7 +13,12 @@ import java.lang.reflect.Type
  */
 object JsonUtil {
     private const val TAG = "JsonUtil"
-    private val GSON = Gson()
+    private val gson
+        get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
+            override fun shouldSkipField(f: FieldAttributes) = f.getAnnotation(Exclude::class.java) != null
+
+            override fun shouldSkipClass(clazz: Class<*>?) = false
+        }).create()
 
     /**
      * Convert json string to object
@@ -23,7 +30,7 @@ object JsonUtil {
      * or if `json` is empty.
      */
     fun <T> toObject(json: String?, clazz: Class<T>): T? {
-        return runCatching { GSON.fromJson(json, clazz) }.getOrElse {
+        return runCatching { gson.fromJson(json, clazz) }.getOrElse {
             LogContext.log.e(TAG, "Can not to object. Exception: ${it.message}")
             null
         }
@@ -43,7 +50,7 @@ object JsonUtil {
      * or if `json` is empty.
      */
     fun <T> toObject(json: String?, type: Type): T? {
-        runCatching { return GSON.fromJson(json, type) }.onFailure { LogContext.log.e(TAG, "Can not to object. Exception: ${it.message}") }
+        runCatching { return gson.fromJson(json, type) }.onFailure { LogContext.log.e(TAG, "Can not to object. Exception: ${it.message}") }
         return null
     }
 
@@ -54,41 +61,9 @@ object JsonUtil {
      * @return Returns `json string` or `""` if serializing failed.
      */
     fun toJsonString(obj: Any?): String {
-        return runCatching { GSON.toJson(obj) }.getOrElse {
+        return runCatching { gson.toJson(obj) }.getOrElse {
             LogContext.log.e(TAG, "Can not to json string. Exception: ${it.message}")
             ""
         }
-    }
-
-    /**
-     * Serializing the specified object into string.
-     *
-     * @param bytes the object for which JSON representation is to be created
-     * @return Returns `Hex string in big endian` or `[]` if serializing failed.
-     */
-    @Deprecated(
-        "This method is not efficiency. Use ByteArray.toHexStringLE() instead",
-        ReplaceWith("toHexStringLE(addPadding, delimiter)", "com.leovp.androidbase.exts.kotlin.toHexStringLE")
-    )
-    fun toHexadecimalString(bytes: ByteArray?, addPadding: Boolean = false, delimiter: CharSequence = ","): String {
-        if (bytes == null || bytes.isEmpty()) {
-            return ""
-        }
-        try {
-            val sb = StringBuilder()
-            for (b in bytes) {
-                sb.append(b.toHexString(addPadding))
-                if (delimiter.isNotEmpty()) sb.append(delimiter)
-            }
-            sb.deleteCharAt(sb.length - 1)
-            return sb.toString()
-        } catch (ex: Exception) {
-            LogContext.log.e(
-                TAG,
-                "Can not toHexadecimalString. Generally, you can ignore this exception.",
-                ex
-            )
-        }
-        return "[]"
     }
 }

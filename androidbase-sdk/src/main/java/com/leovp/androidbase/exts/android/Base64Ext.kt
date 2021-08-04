@@ -108,7 +108,6 @@ fun Drawable.toBase64(flag: Int = Base64.DEFAULT, imgType: Bitmap.CompressFormat
     else {
         val compressedBmpOS = ByteArrayOutputStream()
         bmp.compress(imgType, 100, compressedBmpOS)
-        bmp.recycle()
         compressedBmpOS.toByteArray().toBase64()
     }
 }

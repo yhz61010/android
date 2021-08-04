@@ -1,15 +1,15 @@
 package com.leovp.androidbase.exts.android
 
+import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.exts.kotlin.toUTF8
 import com.leovp.androidbase.utils.system.API
 import java.io.ByteArrayOutputStream
-
-/** Convert base64 ByteArray to String(Default) */
-val String.fromBase64: String get() = Base64.decode(this, Base64.DEFAULT).toUTF8
+import java.nio.charset.Charset
 
 /**
  * Convert String to base64 String
@@ -37,19 +37,21 @@ fun String.toBase64(flag: Int = Base64.DEFAULT): String = Base64.encodeToString(
  * (see RFC 3548 section 4) where `-` and `_` are used in place of `+` and '/'.
  */
 @JvmOverloads
-fun String.fromBase64(flag: Int = Base64.DEFAULT): String = Base64.decode(this, flag).toUTF8
+fun String.fromBase64(flag: Int = Base64.DEFAULT): String = Base64.decode(this, flag).toString(Charset.forName("US-ASCII"))
+
+fun String.fromBase64ToByteArray(flag: Int = Base64.DEFAULT): ByteArray = Base64.decode(this, flag)
 
 /** Convert String to URL and Filename safe type base64 String */
 val String.toUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlEncoder().encodeToString(this.toByteArray())
 
 /** Convert URL and Filename safe type base64 String to String */
-val String.fromUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlDecoder().decode(this).toUTF8
+val String.fromUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlDecoder().decode(this).toString()
 
 /** Convert String to Mime type base64 String */
 val String.toMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeEncoder().encodeToString(this.toByteArray())
 
 /** Convert Mime type base64 String to String */
-val String.fromMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeDecoder().decode(this).toUTF8
+val String.fromMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeDecoder().decode(this).toString()
 
 /**
  * Convert base64 ByteArray to ByteArray
@@ -109,4 +111,11 @@ fun Drawable.toBase64(flag: Int = Base64.DEFAULT, imgType: Bitmap.CompressFormat
         bmp.recycle()
         compressedBmpOS.toByteArray().toBase64()
     }
+}
+
+fun String.fromBase64ToDrawable(resources: Resources, flag: Int = Base64.DEFAULT): Drawable? {
+    return runCatching {
+        val drawableBytes = this.fromBase64ToByteArray(flag)
+        BitmapDrawable(resources, BitmapFactory.decodeByteArray(drawableBytes, 0, drawableBytes.size))
+    }.getOrNull()
 }

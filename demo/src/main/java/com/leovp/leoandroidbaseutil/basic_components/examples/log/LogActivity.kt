@@ -3,6 +3,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.log
 import android.os.Bundle
 import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.ITAG
+import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -70,7 +72,15 @@ class LogActivity : BaseDemonstrationActivity() {
         val string = sb.toString()
         LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string")
         LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true)
+
+        val bean = Bean(1, "Michael", "This is a cool guy.")
+        val jsonBean = bean.toJsonString()
+        LogContext.log.i(TAG, "bean=$jsonBean")
+        val convBean = "{\"id\":1,\"name\":\"Michael\",\"desc\":\"I'm a cool man!\"}".toObject(Bean::class.java)!!
+        LogContext.log.i(TAG, "conv bean=${convBean.toJsonString()}")
     }
+
+    data class Bean(val id: Int, val name: String, @Transient val desc: String)
 
     override fun onStop() {
 //        (LogContext.log as CLog).flushLog()

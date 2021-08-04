@@ -1,6 +1,8 @@
 package com.leovp.androidbase.exts.kotlin
 
-import com.google.gson.Gson
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import com.google.gson.GsonBuilder
 import com.leovp.androidbase.utils.JsonUtil
 import java.lang.reflect.Type
 
@@ -8,8 +10,18 @@ import java.lang.reflect.Type
  * Author: Michael Leo
  * Date: 20-5-13 下午3:35
  */
-internal val gson
-    get() = Gson()
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FIELD)
+annotation class Exclude {
+
+}
+
+private val gson
+    get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
+        override fun shouldSkipField(f: FieldAttributes) = f.getAnnotation(Exclude::class.java) != null
+
+        override fun shouldSkipClass(clazz: Class<*>?) = false
+    }).create()
 
 fun Any.toJsonString(): String = runCatching { gson.toJson(this) }.getOrDefault("")
 

@@ -82,4 +82,5 @@ ext {
     ffmpegVersion = '4.3.2-1.5.5'
     javacppVersion = '1.5.5'
     jzlibVersion = '1.1.3'
+    bsonVersion = '2.12.0'
 }

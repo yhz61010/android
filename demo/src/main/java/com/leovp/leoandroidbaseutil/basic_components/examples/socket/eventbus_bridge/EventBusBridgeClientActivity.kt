@@ -122,7 +122,19 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
 
                     if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
-                    // TODO process your eventbus handler/replyHandler with address/replyAddress
+                    // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
+//                    replyAddress?.let { replyAddress ->
+////                        LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
+//                        EventBus.processReplyHandler(replyAddress) { h ->
+//                            h.handle(totalFrameData)
+//                        }
+//                    }
+//                    address?.let { address ->
+//                        EventBus.processHandlers(address) { idx, h ->
+////                            LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
+//                            h.handle(totalFrameData)
+//                        }
+//                    }
                 }
                 else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }

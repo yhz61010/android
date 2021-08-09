@@ -116,7 +116,7 @@ abstract class BaseNettyClient protected constructor(
     ) {
         this.webSocketUri = webSocketUri
         this.trustAllServers = trustAllServers
-        LogContext.log.w(tag, "WebSocket mode. Insecure: $trustAllServers. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+        LogContext.log.w(tag, "WebSocket mode. Secure: ${!trustAllServers}. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     val tag: String by lazy { getTagName() }

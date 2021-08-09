@@ -35,6 +35,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.SocketServerActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.WifiActivity
@@ -94,6 +95,7 @@ class BasicFragment : Fragment() {
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
+            Pair("Eventbus-bridge WebSocket Client", EventBusBridgeClientActivity::class.java),
             Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
             Pair("Record Single App Screen", RecordSingleAppScreenActivity::class.java),

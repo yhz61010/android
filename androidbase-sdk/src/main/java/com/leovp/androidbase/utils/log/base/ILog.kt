@@ -11,6 +11,7 @@ interface ILog {
     var enableLog: Boolean
 
     fun getTagName(tag: String): String
+    fun getLogMaxLength(): Int = MAX_LENGTH
 
     fun printVerbLog(tag: String, message: String)
     fun printDebugLog(tag: String, message: String)
@@ -105,9 +106,9 @@ interface ILog {
     }
 
     private fun splitOutputMessage(logLevel: LogLevel, tag: String, message: String) {
-        if (message.length > MAX_LENGTH) {
-            outputLog(logLevel, tag, message.substring(0, MAX_LENGTH))
-            splitOutputMessage(logLevel, tag, message.substring(MAX_LENGTH))
+        if (message.length > getLogMaxLength()) {
+            outputLog(logLevel, tag, message.substring(0, getLogMaxLength()))
+            splitOutputMessage(logLevel, tag, message.substring(getLogMaxLength()))
         } else {
             outputLog(logLevel, tag, message)
         }
@@ -134,6 +135,6 @@ interface ILog {
     }
 
     companion object {
-        private const val MAX_LENGTH = 4000
+        private const val MAX_LENGTH = 2000
     }
 }

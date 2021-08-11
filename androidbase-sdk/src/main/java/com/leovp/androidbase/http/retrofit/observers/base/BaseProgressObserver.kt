@@ -59,20 +59,21 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
             }
             is HttpException -> {
                 statusCode = e.code()
-                when (statusCode) {
-                    in 400..499 -> {
-                        LogContext.log.e(javaClass.simpleName, "Response status code[4xx]: $statusCode")
-                    }
-                    in 500..599 -> {
-                        LogContext.log.e(javaClass.simpleName, "Response status code[5xx]: $statusCode")
-                    }
-                    else -> {
-                        LogContext.log.e(
-                            javaClass.simpleName,
-                            "Response status code[neither 4xx nor 5xx]: $statusCode"
-                        )
-                    }
-                }
+                LogContext.log.e(javaClass.simpleName, "Response status code: $statusCode")
+//                when (statusCode) {
+//                    in 400..499 -> {
+//                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
+//                    }
+//                    in 500..599 -> {
+//                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
+//                    }
+//                    else -> {
+//                        LogContext.log.e(
+//                            javaClass.simpleName,
+//                            "Response status code[neither 4xx nor 5xx]: $statusCode"
+//                        )
+//                    }
+//                }
             }
         }
         mListener.onError(statusCode, e.message ?: "", e)

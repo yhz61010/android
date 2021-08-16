@@ -1,3 +1,6 @@
+**This module can no be imported by other projects.**
+If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
+
 ### Compile Environment：
 - OS：macOS 10.15.5
 - NDK：22.1.7171670

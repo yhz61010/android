@@ -58,15 +58,6 @@ class JsonUnitTest {
         val convSerializeExcludeTypeBean2 = "{\"id\":666,\"name\":\"Name333\",\"desc\":\"I'm a cool man333!\"}".toObject<SerializeExcludeBean2>(type)!!
         Assert.assertEquals("id: 666, name: Name333, desc: I'm a cool man333!", convSerializeExcludeTypeBean2.toString())
 
-        // ===========================
-
-        val deserializeExcludeBean2 = DeserializeExcludeBean(70, "Name40", "This is a cool guy40.")
-        Assert.assertEquals("{\"id\":70,\"name\":\"Name40\",\"desc\":\"This is a cool guy40.\"}", deserializeExcludeBean2.toJsonString())
-        val convDeserializeExcludeBean2 = "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}".toObject(DeserializeExcludeBean2::class.java)!!
-        Assert.assertEquals("id: 88, name: Name44, desc: null", convDeserializeExcludeBean2.toString())
-        type = object : TypeToken<DeserializeExcludeBean2>() {}.type
-        val convDeserializeExcludeTypeBean2 = "{\"id\":888,\"name\":\"Name444\",\"desc\":\"I'm a cool man444!\"}".toObject<DeserializeExcludeBean2>(type)!!
-        Assert.assertEquals("id: 888, name: Name444, desc: null", convDeserializeExcludeTypeBean2.toString())
 
         // ========
 
@@ -77,6 +68,16 @@ class JsonUnitTest {
         type = object : TypeToken<DeserializeExcludeBean>() {}.type
         val convDeserializeExcludeTypeBean = "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}".toObject<DeserializeExcludeBean>(type)!!
         Assert.assertEquals("id: 88, name: Name44, desc: null", convDeserializeExcludeTypeBean.toString())
+
+        // ===========================
+
+        val deserializeExcludeBean2 = DeserializeExcludeBean(70, "Name40", "This is a cool guy40.")
+        Assert.assertEquals("{\"id\":70,\"name\":\"Name40\",\"desc\":\"This is a cool guy40.\"}", deserializeExcludeBean2.toJsonString())
+        val convDeserializeExcludeBean2 = "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}".toObject(DeserializeExcludeBean2::class.java)!!
+        Assert.assertEquals("id: 88, name: Name44, desc: null", convDeserializeExcludeBean2.toString())
+        type = object : TypeToken<DeserializeExcludeBean2>() {}.type
+        val convDeserializeExcludeTypeBean2 = "{\"id\":888,\"name\":\"Name444\",\"desc\":\"I'm a cool man444!\"}".toObject<DeserializeExcludeBean2>(type)!!
+        Assert.assertEquals("id: 888, name: Name444, desc: null", convDeserializeExcludeTypeBean2.toString())
     }
 
     data class TransientBean(val id: Int, val name: String, @Transient val desc: String) {

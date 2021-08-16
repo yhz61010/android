@@ -15,11 +15,7 @@ android {
 
         consumerProguardFiles "consumer-rules.pro"
 
-        // https://stackoverflow.com/a/46051246
-        ndk {
-            // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            abiFilters "armeabi-v7a"
-        }
+        // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
     }
 
     buildTypes {

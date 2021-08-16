@@ -14,7 +14,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ffmpeg-javacpp-sdk/LeoAndroidBaseUtil.ffmpeg-javacpp-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/ffmpeg-javacpp-sdk/LeoAndroidBaseUtil.ffmpeg-javacpp-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/webrtc-sdk/LeoAndroidBaseUtil.webrtc-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/webrtc-sdk/LeoAndroidBaseUtil.webrtc-sdk.iml" />
     </modules>
   </component>
 </project>

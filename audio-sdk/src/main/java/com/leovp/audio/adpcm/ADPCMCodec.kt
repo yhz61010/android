@@ -5,6 +5,7 @@ package com.leovp.audio.adpcm
  *
  * https://github.com/nabto/android-audio-stream-demo/blob/master/app/src/main/java/com/nabto/androidaudiodemo/ADPCM.java
  */
+@Deprecated("Use [AdpcmImaQtEncoder] and [AdpcmImaQtDecoder] in adpcm-ima-qt-codec-sdk.")
 class ADPCMCodec {
     private var leftStepIndexEnc = 0
     private var rightStepIndexEnc = 0

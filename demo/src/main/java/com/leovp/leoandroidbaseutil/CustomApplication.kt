@@ -28,7 +28,6 @@ class CustomApplication : MultiDexApplication(), DIAware {
         super.onCreate()
         app = this
         buildConfigInDebug = BuildConfig.DEBUG
-        instance = this
 
 //        SslUtils.hostnames = arrayOf("postman-echo.com")
 //        SslUtils.certificateInputStream = assets.open("cert/postman-echo.com.crt")
@@ -47,10 +46,5 @@ class CustomApplication : MultiDexApplication(), DIAware {
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         MultiDex.install(this)
-    }
-
-    companion object {
-        lateinit var instance: CustomApplication
-            private set
     }
 }

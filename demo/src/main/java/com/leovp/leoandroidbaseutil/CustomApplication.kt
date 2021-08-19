@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.app
+import com.leovp.androidbase.exts.android.buildConfigInDebug
 import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.pref.LPref
@@ -26,6 +27,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
     override fun onCreate() {
         super.onCreate()
         app = this
+        buildConfigInDebug = BuildConfig.DEBUG
         instance = this
 
 //        SslUtils.hostnames = arrayOf("postman-echo.com")

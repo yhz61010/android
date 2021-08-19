@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
-import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.utils.system.API
 
@@ -18,6 +17,13 @@ import com.leovp.androidbase.utils.system.API
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:52
  */
+
+/**
+ * Whether the host project is working in `DEBUG` mode.
+ *
+ * You **MUST** initialize `buildConfigInDebug` first. For example: in your custom Application to initialize it.
+ */
+var buildConfigInDebug: Boolean = false
 
 /**
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
@@ -44,7 +50,7 @@ private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
 private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String) {
-    if (debug && !BuildConfig.DEBUG) {
+    if (debug && !buildConfigInDebug) {
         // Debug log only be shown in DEBUG flavor
         return
     }

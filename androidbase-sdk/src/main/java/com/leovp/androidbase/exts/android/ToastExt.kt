@@ -44,7 +44,7 @@ private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
 private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String) {
-    if (debug && !BuildConfig.IS_DEBUG) {
+    if (debug && !BuildConfig.DEBUG) {
         // Debug log only be shown in DEBUG flavor
         return
     }

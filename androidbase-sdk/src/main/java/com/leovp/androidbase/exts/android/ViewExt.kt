@@ -28,8 +28,8 @@ const val ANIMATION_SLOW_MILLIS = 100L
 /**
  * You should use this click listener to replace with [setOnClickListener] to avoid duplicated click on view
  */
-fun View.setOnSingleClickListener(delay: Long = OnSingleClickListener.DELAY_TIME, action: () -> Unit) {
-    val actionListener = OnSingleClickListener(delay, action)
+fun View.setOnSingleClickListener(interval: Long = OnSingleClickListener.INTERVAL_TIME, action: () -> Unit) {
+    val actionListener = OnSingleClickListener(interval, action)
 
     // This is the only place in the project where we should actually use setOnClickListener
     setOnClickListener {
@@ -42,9 +42,9 @@ fun View.removeOnSingleClickListener() {
     isClickable = false
 }
 
-internal class OnSingleClickListener(private val delay: Long = DELAY_TIME, private val action: () -> Unit) {
+internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME, private val action: () -> Unit) {
     companion object {
-        const val DELAY_TIME: Long = 500
+        const val INTERVAL_TIME: Long = 500
     }
 
     private var lastClickTime = 0L
@@ -53,7 +53,7 @@ internal class OnSingleClickListener(private val delay: Long = DELAY_TIME, priva
     private fun isDuplicatedClick(): Boolean {
         val time = System.currentTimeMillis()
         val delta = time - lastClickTime
-        if (delta < delay) {
+        if (delta < interval) {
             return true
         }
         lastClickTime = time
@@ -71,14 +71,14 @@ internal class OnSingleClickListener(private val delay: Long = DELAY_TIME, priva
  * Simulate a button click, including a small delay while it is being pressed to trigger the
  * appropriate animations.
  */
-fun View.simulateClick(delay: Long = ANIMATION_FAST_MILLIS) {
+fun View.simulateClick(interval: Long = ANIMATION_FAST_MILLIS) {
     performClick()
     isPressed = true
     invalidate()
     postDelayed({
         invalidate()
         isPressed = false
-    }, delay)
+    }, interval)
 }
 
 /** Same as [AlertDialog.show] but setting immersive mode in the dialog's window */

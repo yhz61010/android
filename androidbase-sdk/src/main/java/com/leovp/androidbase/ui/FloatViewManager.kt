@@ -1,6 +1,7 @@
 package com.leovp.androidbase.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Context.WINDOW_SERVICE
 import android.graphics.PixelFormat
@@ -9,7 +10,11 @@ import android.view.*
 import androidx.annotation.LayoutRes
 import androidx.core.view.children
 import com.leovp.androidbase.exts.android.canDrawOverlays
+import com.leovp.androidbase.exts.android.screenAvailableHeight
+import com.leovp.androidbase.exts.android.screenRealWidth
 import com.leovp.androidbase.exts.android.statusBarHeight
+import com.leovp.androidbase.exts.kotlin.fail
+import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.abs
 
 
@@ -68,6 +73,36 @@ class FloatViewManager(
             updateLayout()
         }
 
+    var x: Int
+        get() = layoutParams.x
+        set(x) {
+            if (context !is Activity) fail("The context should be Activity context.")
+            LogContext.log.e("floatView dimension x=${floatView.width}x${floatView.height}")
+            var finalX = x
+            if (x < 0) finalX = 0
+            if ((x + layoutParams.width) > context.screenRealWidth) finalX = context.screenRealWidth - layoutParams.width
+            layoutParams.x = finalX
+            windowManager.updateViewLayout(floatView, layoutParams)
+
+//            if (GlobalConstants.DEBUG) LogContext.log.e( "floatView dimension55=${floatView.width}x${floatView.height}")
+//            if (GlobalConstants.DEBUG) LogContext.log.e( "floatView dimension66=${floatView.measuredWidth}x${floatView.measuredHeight}")
+//            Handler(context.mainLooper).post {
+//                if (GlobalConstants.DEBUG) LogContext.log.e( "floatView dimension77=${floatView.width}x${floatView.height}")
+//                if (GlobalConstants.DEBUG) LogContext.log.e( "floatView dimension88=${floatView.measuredWidth}x${floatView.measuredHeight}")
+//            }
+        }
+
+    var y: Int
+        get() = layoutParams.y
+        set(y) {
+            LogContext.log.e("floatView dimension y=${floatView.width}x${floatView.height}")
+            var finalY = y
+            if (y < drawHeightOffset) finalY = drawHeightOffset
+            if ((y + layoutParams.height) > context.screenAvailableHeight) finalY = context.screenAvailableHeight - layoutParams.height
+            layoutParams.y = finalY
+            windowManager.updateViewLayout(floatView, layoutParams)
+        }
+
     /**
      * Note that, [dismiss] method will be executed when you call this method.
      */
@@ -113,9 +148,7 @@ class FloatViewManager(
                         layoutParams.y += deltaY
                         if (layoutParams.y <= drawHeightOffset) layoutParams.y = drawHeightOffset
                         touchConsumedByMove = true
-                        windowManager.apply {
-                            updateViewLayout(floatView, layoutParams)
-                        }
+                        windowManager.updateViewLayout(floatView, layoutParams)
                     } else {
                         touchConsumedByMove = false
                     }

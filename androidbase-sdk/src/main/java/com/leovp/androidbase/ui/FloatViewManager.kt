@@ -1,14 +1,16 @@
 package com.leovp.androidbase.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.WINDOW_SERVICE
 import android.graphics.PixelFormat
 import android.os.Build
 import android.view.*
 import androidx.annotation.LayoutRes
+import androidx.core.view.children
 import com.leovp.androidbase.exts.android.canDrawOverlays
+import com.leovp.androidbase.exts.android.statusBarHeight
 import kotlin.math.abs
-
 
 /**
  * Author: Michael Leo
@@ -16,27 +18,140 @@ import kotlin.math.abs
  *
  * Need permission: `<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />`
  *
- * if `enableFullScreen` is `true`, the `enableDrag` parameter will be ignored.
- *
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
+@Suppress("unused")
 class FloatViewManager(
     private val context: Context,
-    @LayoutRes private val layoutId: Int,
-    @Suppress("WeakerAccess") val enableDrag: Boolean = true,
-    @Suppress("WeakerAccess") val enableFullScreen: Boolean = false
+    @LayoutRes private var layoutId: Int,
+    private val posX: Int = 0,
+    private val posY: Int = 0
 ) {
+    var touchEventListener: TouchEventListener? = null
 
-    private var windowManager: WindowManager? = null
-        get() {
-            if (field == null) field = (context.getSystemService(WINDOW_SERVICE) as WindowManager)
-            return field
+    private var _enableDrag = true
+
+    private var _fullScreenFloatView = false
+    private var _canDragOverStatusBar = false
+
+    private var drawHeightOffset = 0
+
+    var enableDrag: Boolean
+        get() = _enableDrag
+        set(enableDrag) {
+            _enableDrag = enableDrag
+            updateLayout()
         }
 
-    @Suppress("WeakerAccess")
+    /**
+     * Whether the window itself in full screen mode.
+     * In full screen mode, the [enableDrag] will be ignored and the click event for this float view itself will be consumed.
+     */
+    var enableFullScreenFloatView: Boolean
+        get() = _fullScreenFloatView
+        set(enableFloatViewInFullScreen) {
+            _fullScreenFloatView = enableFloatViewInFullScreen
+            updateLayout()
+        }
+
+    /**
+     * If the float view is in full screen mode, this property will be ignored.
+     */
+    var canDragOverStatusBar: Boolean
+        get() = _canDragOverStatusBar
+        set(canDragOverStatusBar) {
+            _canDragOverStatusBar = canDragOverStatusBar
+            updateLayout()
+        }
+
+    /**
+     * Note that, [dismiss] method will be executed when you call this method.
+     */
+    fun replaceLayout(@LayoutRes layoutId: Int) {
+        dismiss()
+        this.layoutId = layoutId
+        floatView = LayoutInflater.from(context).inflate(layoutId, null)
+        init()
+    }
+
     var floatView: View = LayoutInflater.from(context).inflate(layoutId, null)
         private set
+
+    @SuppressLint("ClickableViewAccessibility")
+    private val onTouchListener = View.OnTouchListener { view, event ->
+        if (!_enableDrag || _fullScreenFloatView) return@OnTouchListener true
+        val totalDeltaX = lastX - firstX
+        val totalDeltaY = lastY - firstY
+
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                lastX = event.rawX.toInt()
+                lastY = event.rawY.toInt()
+                firstX = lastX
+                firstY = lastY
+                isClickGesture = true
+                touchConsumedByMove = touchEventListener?.touchDown(view, lastX, lastY) ?: false
+            }
+            MotionEvent.ACTION_UP -> {
+//                view.performClick()
+                touchConsumedByMove = touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: false
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val deltaX = event.rawX.toInt() - lastX
+                val deltaY = event.rawY.toInt() - lastY
+                lastX = event.rawX.toInt()
+                lastY = event.rawY.toInt()
+                if (abs(totalDeltaX) >= TOUCH_TOLERANCE_IN_PX || abs(totalDeltaY) >= TOUCH_TOLERANCE_IN_PX) {
+                    isClickGesture = false
+                    view.isPressed = false
+                    if (event.pointerCount == 1) {
+                        layoutParams.x += deltaX
+                        layoutParams.y += deltaY
+                        if (layoutParams.y <= drawHeightOffset) layoutParams.y = drawHeightOffset
+                        touchConsumedByMove = true
+                        windowManager.apply {
+                            updateViewLayout(floatView, layoutParams)
+                        }
+                    } else {
+                        touchConsumedByMove = false
+                    }
+                } else {
+                    isClickGesture = true
+                    touchConsumedByMove = false
+                }
+                touchConsumedByMove = touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
+            }
+            else -> Unit
+        }
+        touchConsumedByMove
+    }
+
+    init {
+        init()
+    }
+
+    private fun init() {
+        updateLayout()
+        addTouchListenerToView(floatView, onTouchListener)
+    }
+
+    private fun addTouchListenerToView(view: View, touchListener: View.OnTouchListener) {
+        if (view is ViewGroup) {
+//            runCatching {
+//                if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
+//            }
+            view.setOnTouchListener(onTouchListener)
+            view.children.forEach { child -> addTouchListenerToView(child, touchListener) }
+        } else {
+//            runCatching {
+//                if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
+//            }
+            view.setOnTouchListener(touchListener)
+        }
+    }
+
+    private val windowManager: WindowManager = (context.getSystemService(WINDOW_SERVICE) as WindowManager)
 
     private lateinit var layoutParams: WindowManager.LayoutParams
 
@@ -49,59 +164,18 @@ class FloatViewManager(
         private set
     private var touchConsumedByMove = false
 
+    private var isClickGesture = true
 
-    private val onTouchListener = View.OnTouchListener { view, event ->
-        if (!enableDrag or enableFullScreen) return@OnTouchListener false
-        val totalDeltaX = lastX - firstX
-        val totalDeltaY = lastY - firstY
-
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                lastX = event.rawX.toInt()
-                lastY = event.rawY.toInt()
-                firstX = lastX
-                firstY = lastY
-            }
-            MotionEvent.ACTION_UP -> {
-                view.performClick()
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val deltaX = event.rawX.toInt() - lastX
-                val deltaY = event.rawY.toInt() - lastY
-                lastX = event.rawX.toInt()
-                lastY = event.rawY.toInt()
-                if (abs(totalDeltaX) >= 5 || abs(totalDeltaY) >= 5) {
-                    if (event.pointerCount == 1) {
-                        layoutParams.x += deltaX
-                        layoutParams.y += deltaY
-                        touchConsumedByMove = true
-                        windowManager?.apply {
-                            updateViewLayout(floatView, layoutParams)
-                        }
-                    } else {
-                        touchConsumedByMove = false
-                    }
-                } else {
-                    touchConsumedByMove = false
-                }
-            }
-            else -> {
-            }
-        }
-        touchConsumedByMove
-    }
-
-    init {
-        floatView.setOnTouchListener(onTouchListener)
-
+    private fun updateLayout() {
+        drawHeightOffset = if (_canDragOverStatusBar) 0 else context.statusBarHeight
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
-            flags = if (enableDrag) {
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+            flags = if (_enableDrag && !_fullScreenFloatView) {
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             } else {
                 // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
                 // However the float layer itself can not be touched anymore.
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             @Suppress("DEPRECATION")
             type = when {
@@ -109,9 +183,11 @@ class FloatViewManager(
                 else -> WindowManager.LayoutParams.TYPE_TOAST
             }
 
-            gravity = Gravity.CENTER
-            width = if (enableFullScreen) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
-            height = if (enableFullScreen) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            gravity = Gravity.TOP or Gravity.START // Default value: Gravity.CENTER
+            x = posX
+            y = posY
+            width = if (_fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            height = if (_fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
 
@@ -120,7 +196,7 @@ class FloatViewManager(
             runCatching {
                 dismiss()
                 isShowing = true
-                windowManager?.addView(floatView, layoutParams)
+                windowManager.addView(floatView, layoutParams)
             }.onFailure { it.printStackTrace() }
         }
     }
@@ -128,8 +204,18 @@ class FloatViewManager(
     @Suppress("unused")
     fun dismiss() {
         if (isShowing) {
-            windowManager?.removeView(floatView)
+            windowManager.removeView(floatView)
             isShowing = false
         }
+    }
+
+    interface TouchEventListener {
+        fun touchDown(view: View, x: Int, y: Int): Boolean = false
+        fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
+        fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = false
+    }
+
+    companion object {
+        private const val TOUCH_TOLERANCE_IN_PX = 8
     }
 }

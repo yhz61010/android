@@ -9,10 +9,7 @@ import android.os.Build
 import android.view.*
 import androidx.annotation.LayoutRes
 import androidx.core.view.children
-import com.leovp.androidbase.exts.android.canDrawOverlays
-import com.leovp.androidbase.exts.android.screenAvailableHeight
-import com.leovp.androidbase.exts.android.screenRealWidth
-import com.leovp.androidbase.exts.android.statusBarHeight
+import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.fail
 import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.abs
@@ -129,11 +126,13 @@ class FloatViewManager(
                 firstX = lastX
                 firstY = lastY
                 isClickGesture = true
+//                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
                 touchConsumedByMove = touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
             MotionEvent.ACTION_UP -> {
 //                view.performClick()
-                touchConsumedByMove = touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: false
+//                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_UP isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} isClickGesture=$isClickGesture $view")
+                touchConsumedByMove = touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
             }
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = event.rawX.toInt() - lastX
@@ -169,7 +168,8 @@ class FloatViewManager(
 
     private fun init() {
         updateLayout()
-        addTouchListenerToView(floatView, onTouchListener)
+        // Ensure to set the touch listener to the root view.
+        floatView.setOnTouchListener(onTouchListener)
     }
 
     private fun addTouchListenerToView(view: View, touchListener: View.OnTouchListener) {
@@ -177,13 +177,23 @@ class FloatViewManager(
 //            runCatching {
 //                if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
 //            }
-            view.setOnTouchListener(onTouchListener)
+            if (view.hasOnClickListeners()) {
+//                runCatching {
+//                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
+//                }
+                view.setOnTouchListener(touchListener)
+            }
             view.children.forEach { child -> addTouchListenerToView(child, touchListener) }
         } else {
 //            runCatching {
 //                if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
 //            }
-            view.setOnTouchListener(touchListener)
+            if (view.hasOnClickListeners()) {
+//                runCatching {
+//                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${app.resources.getResourceEntryName(view.id)}:${view::class.simpleName}")
+//                }
+                view.setOnTouchListener(touchListener)
+            }
         }
     }
 
@@ -231,6 +241,7 @@ class FloatViewManager(
         if (context.canDrawOverlays) {
             runCatching {
                 dismiss()
+                addTouchListenerToView(floatView, onTouchListener)
                 isShowing = true
                 windowManager.addView(floatView, layoutParams)
             }.onFailure { it.printStackTrace() }

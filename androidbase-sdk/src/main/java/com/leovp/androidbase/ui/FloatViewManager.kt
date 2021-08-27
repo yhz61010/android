@@ -12,6 +12,7 @@ import com.leovp.androidbase.exts.android.canDrawOverlays
 import com.leovp.androidbase.exts.android.statusBarHeight
 import kotlin.math.abs
 
+
 /**
  * Author: Michael Leo
  * Date: 20-3-3 下午3:40
@@ -21,7 +22,6 @@ import kotlin.math.abs
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-@Suppress("unused")
 class FloatViewManager(
     private val context: Context,
     @LayoutRes private var layoutId: Int,
@@ -35,6 +35,9 @@ class FloatViewManager(
     private var _fullScreenFloatView = false
     private var _canDragOverStatusBar = false
 
+    /**
+     * If [_canDragOverStatusBar] is false, this values is the height of status bar.
+     */
     private var drawHeightOffset = 0
 
     var enableDrag: Boolean
@@ -212,7 +215,15 @@ class FloatViewManager(
     interface TouchEventListener {
         fun touchDown(view: View, x: Int, y: Int): Boolean = false
         fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
-        fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = false
+
+        /**
+         * Generally, if [isClickGesture] is `false` that means before touch up being triggered, user is just moving the view.
+         * At this time, we should consume this touch event so the click listener that use set should NOT be triggered.
+         *
+         * In contrast, if [isClickGesture] is `true` that means user triggers the click event,
+         * so this touch event should not be consumed.
+         */
+        fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = !isClickGesture
     }
 
     companion object {

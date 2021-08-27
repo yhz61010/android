@@ -123,7 +123,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        floatCanvas = FloatViewManager(this, R.layout.component_screen_share_float_canvas, enableDrag = false, enableFullScreen = true)
+        floatCanvas = FloatViewManager(this, R.layout.component_screen_share_float_canvas).apply {
+            enableDrag = false
+            enableFullScreenFloatView = true
+        }
 
         if (canDrawOverlays) {
             floatCanvas?.show()

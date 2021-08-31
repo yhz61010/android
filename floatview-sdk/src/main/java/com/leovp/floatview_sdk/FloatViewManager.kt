@@ -35,7 +35,11 @@ internal object FloatViewManager {
     }
 
     fun clear() {
-        windowMap.forEach { entry: Map.Entry<String, FloatViewImpl> -> entry.value.dismiss() }
+//        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
+//        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
+        for ((_, floatViewImpl) in windowMap) {
+            floatViewImpl.dismiss()
+        }
         windowMap.clear()
     }
 

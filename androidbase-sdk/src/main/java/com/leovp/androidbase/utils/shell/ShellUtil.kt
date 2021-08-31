@@ -163,10 +163,18 @@ object ShellUtil {
     }
 
     fun killProcessByName(processName: String, isRoot: Boolean) {
-        findProcessByName(
+        // As of API level 24: java.lang.Iterable#forEach
+//        findProcessByName(
+//            processName,
+//            isRoot
+//        ).forEach { (pid) -> killProcessByPid(pid, isRoot) }
+        val processList = findProcessByName(
             processName,
             isRoot
-        ).forEach { (pid) -> killProcessByPid(pid, isRoot) }
+        )
+        for (process in processList) {
+            killProcessByPid(process.pid, isRoot)
+        }
     }
 
     fun killProcessByPid(pid: Int, isRoot: Boolean) {

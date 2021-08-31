@@ -17,7 +17,7 @@ import com.leovp.androidbase.utils.system.API
 @RequiresApi(API.L)
 class SystemUiUtil(private val window: Window) {
 
-    constructor(fragment: Fragment) : this(fragment.activity!!)
+    constructor(fragment: Fragment) : this(fragment.requireActivity())
 
     constructor(activity: Activity) : this(activity.window)
 

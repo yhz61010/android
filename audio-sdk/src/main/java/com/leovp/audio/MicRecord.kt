@@ -1,5 +1,6 @@
 package com.leovp.audio
 
+import android.annotation.SuppressLint
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
@@ -18,9 +19,15 @@ import com.leovp.audio.base.iters.OutputCallback
 import kotlinx.coroutines.*
 
 /**
+ * **Need following permission:**
+ * ```xml
+ * <uses-permission android:name="android.permission.RECORD_AUDIO" />
+ * ```
+ *
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
+@SuppressLint("MissingPermission")
 class MicRecorder(
     encoderInfo: AudioEncoderInfo,
     val callback: RecordCallback,

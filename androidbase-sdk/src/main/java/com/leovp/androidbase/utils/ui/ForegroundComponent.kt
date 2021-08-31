@@ -82,9 +82,17 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
 
         if (wasBackground) {
             LogContext.log.i(TAG, "Went FG")
-            listeners.forEach {
+            // As of API level 24
+//            listeners.forEach {
+//                try {
+//                    it.onBecameForeground()
+//                } catch (e: Exception) {
+//                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+//                }
+//            }
+            for (listener in listeners) {
                 try {
-                    it.onBecameForeground()
+                    listener.onBecameForeground()
                 } catch (e: Exception) {
                     LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
                 }
@@ -103,9 +111,17 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             if (isForeground && paused) {
                 isForeground = false
                 LogContext.log.i(TAG, "Went BG")
-                listeners.forEach {
+                // As of API level 24
+//                listeners.forEach {
+//                    try {
+//                        it.onBecameBackground()
+//                    } catch (e: Exception) {
+//                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+//                    }
+//                }
+                for (lis in listeners) {
                     try {
-                        it.onBecameBackground()
+                        lis.onBecameBackground()
                     } catch (e: Exception) {
                         LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
                     }

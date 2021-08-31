@@ -19,11 +19,11 @@ import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
-import com.leovp.androidbase.ui.FloatViewManager
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
+import com.leovp.floatview_sdk.FloatView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -64,10 +64,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private lateinit var binding: ActivityScreenShareMasterBinding
+    private var fingerPaintView: FingerPaintView? = null
 
     private val cs = CoroutineScope(Dispatchers.IO)
-
-    private var floatCanvas: FloatViewManager? = null
 
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
@@ -123,16 +122,21 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        floatCanvas = FloatViewManager(this, R.layout.component_screen_share_float_canvas).apply {
-            enableDrag = false
-            enableFullScreenFloatView = true
-        }
-
         if (canDrawOverlays) {
-            floatCanvas?.show()
+            createFloatView()
         } else {
             startManageDrawOverlaysPermission()
         }
+    }
+
+    private fun createFloatView() {
+        FloatView.with(this)
+            .setLayout(R.layout.component_screen_share_float_canvas) { v ->
+                fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
+            }
+            .setEnableDrag(false)
+            .setEnableFullScreenFloatView(true)
+            .build()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -160,7 +164,14 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             REQUEST_CODE_DRAW_OVERLAY_PERMISSION -> {
-                if (canDrawOverlays) floatCanvas?.show() else toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
+                if (canDrawOverlays) {
+                    if (FloatView.exist()) {
+                        FloatView.clear()
+                        createFloatView()
+                    }
+                } else {
+                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
+                }
                 return
             }
         }
@@ -321,7 +332,6 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         }
 
                         withContext(Dispatchers.Main) {
-                            val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
                             val calX = currentScreen.x / clientScreenInfo!!.x.toFloat() * paintBean.x
                             val calY = currentScreen.y / clientScreenInfo!!.y.toFloat() * paintBean.y
                             when (paintBean.touchType) {
@@ -367,7 +377,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun startServer() {
-        floatCanvas?.show()
+        FloatView.show()
         cs.launch {
             webSocketServer = WebSocketServer(10086, connectionListener)
             webSocketServerHandler = WebSocketServerHandler(webSocketServer)
@@ -377,9 +387,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun stopServer() {
-        val fingerPaintView = floatCanvas?.floatView?.findViewById(R.id.finger) as? FingerPaintView
-        fingerPaintView?.clear()
-        floatCanvas?.dismiss()
+        FloatView.clear()
         clientChannel = null
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }

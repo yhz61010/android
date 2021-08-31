@@ -121,6 +121,7 @@ class BasicFragment : Fragment() {
             Pair("Animation", AnimationActivity::class.java),
             Pair("Change App Language", ChangeAppLanguageActivity::class.java),
             Pair("Toast", ToastActivity::class.java),
+            Pair("FloatView", FloatViewActivity::class.java),
         )
 
         val colors = arrayOf(

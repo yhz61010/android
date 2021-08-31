@@ -90,8 +90,14 @@ object AccessibilityUtil {
     }
 
     private fun performClick(nodesInfo: List<AccessibilityNodeInfo>?): Boolean {
-        nodesInfo?.forEach { node ->
-            if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+        // As of API level 24
+//        nodesInfo?.forEach { node ->
+//            if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+//        }
+        nodesInfo?.let { list ->
+            for (node in list) {
+                if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+            }
         }
         return false
     }

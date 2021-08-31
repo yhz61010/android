@@ -241,6 +241,12 @@ object BluetoothUtil {
         bluetoothLeAdvertiser.startAdvertising(settings, advertiseData, callback)
     }
 
+    /**
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+     * permission
+     */
+    @SuppressLint("MissingPermission")
     fun stopAdvertising(callback: AdvertiseCallback) {
         val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
         bluetoothLeAdvertiser.stopAdvertising(callback)

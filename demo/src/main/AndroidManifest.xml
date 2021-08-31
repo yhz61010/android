@@ -33,6 +33,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".basic_components.examples.FloatViewActivity"></activity>
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
         <activity android:name=".basic_components.examples.ToastActivity" />
         <activity

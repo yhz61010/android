@@ -114,7 +114,14 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
 
                 val transformedPath = Path()
                 val transformedPaint = Paint()
-                paths.forEach { (path, paint) ->
+                // Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]
+//                paths.forEach { (path, paint) ->
+//                    path.transform(inverse, transformedPath)
+//                    transformedPaint.set(paint)
+//                    transformedPaint.strokeWidth *= scale
+//                    canvas.drawPath(transformedPath, transformedPaint)
+//                }
+                for ((path, paint) in paths) {
                     path.transform(inverse, transformedPath)
                     transformedPaint.set(paint)
                     transformedPaint.strokeWidth *= scale

@@ -215,6 +215,7 @@ dependencies {
     implementation project(':camera2live-sdk')
     implementation project(':screencapture-sdk')
     implementation project(':drawOnScreen-sdk')
+    implementation project(':floatview-sdk')
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"

@@ -11,6 +11,7 @@ import com.leovp.floatview_sdk.base.StickyEdge
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityFloatViewBinding
+import java.util.*
 
 class FloatViewActivity : BaseDemonstrationActivity() {
     private lateinit var binding: ActivityFloatViewBinding
@@ -18,6 +19,11 @@ class FloatViewActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFloatViewBinding.inflate(layoutInflater).apply { setContentView(root) }
+
+        binding.btnChange.setOnSingleClickListener {
+            FloatView.getCustomLayout("f1")?.findViewById<TextView>(R.id.tvText)?.text = "I'm f1 in ${Random().nextInt(100)}"
+            FloatView.getCustomLayout("f2")?.findViewById<TextView>(R.id.tvText)?.text = "I'm f2 in ${Random().nextInt(100)}"
+        }
 
         FloatView.with(this)
             .setTag("f1")

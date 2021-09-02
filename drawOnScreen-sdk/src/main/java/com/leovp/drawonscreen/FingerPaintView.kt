@@ -8,10 +8,19 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.content.res.ResourcesCompat
 import kotlin.math.abs
 
+/**
+ * Author: Michael Leo
+ * Date: 2020/11/02 19:10
+ */
 class FingerPaintView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
     AppCompatImageView(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val DEF_EDIT_MODE = true
+    }
 
     private enum class BrushType {
         BLUR, /*EMBOSS,*/ NORMAL
@@ -29,7 +38,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var currentBrush = BrushType.NORMAL
 
     @Suppress("WeakerAccess")
-    var inEditMode = false
+    var inEditMode = DEF_EDIT_MODE
 
     /**
      * According to document, `EmbossMaskFilter` is deprecated.
@@ -80,11 +89,12 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
                 runCatching {
                     strokeColor = getColor(R.styleable.FingerPaintImageView_strokeColor, defaultStrokeColor)
                     strokeWidth = getDimension(R.styleable.FingerPaintImageView_strokeWidth, defaultStrokeWidth)
-                    inEditMode = getBoolean(R.styleable.FingerPaintImageView_inEditMode, false)
+                    inEditMode = getBoolean(R.styleable.FingerPaintImageView_inEditMode, DEF_EDIT_MODE)
                     touchTolerance = getFloat(R.styleable.FingerPaintImageView_touchTolerance, defaultTouchTolerance)
                 }.also { recycle() }
             }
         }
+        if (drawable == null) setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.onebyone, null))
     }
 
     /**

@@ -108,7 +108,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         binding.finger.strokeColor = Color.RED
         binding.finger.inEditMode = false
 
-        binding.finger.touchUpCallback = object : FingerPaintView.TouchUpCallback {
+        binding.finger.touchEventCallback = object : FingerPaintView.TouchEventCallback {
             override fun onTouchDown(x: Float, y: Float, paint: Paint) {
                 webSocketClientHandler?.sendPaintData(TouchType.DOWN, x, y, paint)
             }

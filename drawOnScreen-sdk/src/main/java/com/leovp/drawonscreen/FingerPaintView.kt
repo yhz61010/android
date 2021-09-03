@@ -14,6 +14,7 @@ import kotlin.math.abs
 /**
  * The component is inheriting [ImageView], so the the `android:src` attribute is mandatory.
  * The default `android:src` is a transparent 1x1 Pixel png.
+ * The default `android:scaleType` is `centerCrop`
  *
  * Author: Michael Leo
  * Date: 2020/11/02 19:10
@@ -29,7 +30,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
         BLUR, /*EMBOSS,*/ NORMAL
     }
 
-    var touchUpCallback: TouchUpCallback? = null
+    var touchEventCallback: TouchEventCallback? = null
 
     private val defaultStrokeColor = Color.RED
     private val defaultStrokeWidth = 12f
@@ -98,6 +99,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
         }
         if (drawable == null) setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.onebyone, null))
+        scaleType = ScaleType.CENTER_CROP
     }
 
     /**
@@ -154,18 +156,18 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
                 MotionEvent.ACTION_DOWN -> {
                     handleTouchStart(event)
                     invalidate()
-                    touchUpCallback?.onTouchDown(event.x, event.y, pathPaint)
+                    touchEventCallback?.onTouchDown(event.x, event.y, pathPaint)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     handleTouchMove(event)
                     invalidate()
-                    touchUpCallback?.onTouchMove(event.x, event.y, pathPaint)
+                    touchEventCallback?.onTouchMove(event.x, event.y, pathPaint)
                 }
                 MotionEvent.ACTION_UP -> {
                     handleTouchEnd()
                     countDrawn++
                     invalidate()
-                    touchUpCallback?.onTouchUp(event.x, event.y, pathPaint)
+                    touchEventCallback?.onTouchUp(event.x, event.y, pathPaint)
                 }
             }
         }
@@ -216,7 +218,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun handleTouchEnd() = getCurrentPath()?.lineTo(currentX, currentY)
 
-    interface TouchUpCallback {
+    interface TouchEventCallback {
         fun onTouchDown(x: Float, y: Float, paint: Paint)
         fun onTouchMove(x: Float, y: Float, paint: Paint)
         fun onTouchUp(x: Float, y: Float, paint: Paint)
@@ -276,7 +278,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
      * Removes the last full path from the view.
      */
     fun undo() {
-        touchUpCallback?.onUndo()
+        touchEventCallback?.onUndo()
         paths.takeIf { it.isNotEmpty() }?.removeAt(paths.lastIndex)
         countDrawn--
         invalidate()
@@ -301,7 +303,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
      */
     @Synchronized
     fun clear() {
-        touchUpCallback?.onClear()
+        touchEventCallback?.onClear()
         paths.clear()
         countDrawn = 0
         invalidate()

@@ -46,7 +46,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
-        if (!config.enableDrag || config.fullScreenFloatView) return@OnTouchListener true
+        if (!config.enableDrag || config.fullScreenFloatView) return@OnTouchListener false
         val totalDeltaX = lastX - firstX
         val totalDeltaY = lastY - firstY
 
@@ -269,9 +269,14 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         drawHeightOffset = if (config.canDragOverStatusBar) 0 else context.statusBarHeight
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
-            flags = if (config.enableDrag && !config.fullScreenFloatView) {
+            flags = if (config.touchable) {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             } else {
+                // In ScreenShareMasterActivity demo,
+                // I just want to mask a full screen transparent float window and I can show finger paint on screen.
+                // Meanwhile, I can still touch screen and pass through the float window to the bottom layer just like no that float window.
+                // In this case, I should set touchable status to `false`.
+
                 // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
                 // However the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR

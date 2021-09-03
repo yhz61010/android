@@ -96,7 +96,7 @@ class FloatView private constructor(private val context: Activity) {
         fun setY(y: Int) = apply { config.y = y }
 
         /**
-         * Sets the edge margin. The default margin is 2px.
+         * Sets the edge margin. The default margin is 0px.
          */
         fun setEdgeMargin(margin: Int) = apply { config.edgeMargin = margin }
         fun setStickyEdge(stickyEdge: StickyEdge) = apply { config.stickyEdge = stickyEdge }
@@ -108,6 +108,13 @@ class FloatView private constructor(private val context: Activity) {
         fun setDockAnimDuration(duration: Long) = apply { config.dockAnimDuration = duration }
 
         fun setTouchEventListener(touchEventListener: TouchEventListener) = apply { config.touchEventListener = touchEventListener }
+
+        /**
+         * In some cases, maybe you just want to mask a full screen transparent float window and you can show finger paint on screen.
+         * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
+         * In this case, you should set touchable status to `true`.
+         */
+        fun setTouchable(touchable: Boolean) = apply { config.touchable = touchable }
 
         /**
          * Create float view but don't add it to the window manager.

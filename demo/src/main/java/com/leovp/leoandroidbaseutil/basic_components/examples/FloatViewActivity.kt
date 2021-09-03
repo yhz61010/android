@@ -73,4 +73,9 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             }
         }
     }
+
+    override fun onDestroy() {
+        FloatView.clear()
+        super.onDestroy()
+    }
 }

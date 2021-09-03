@@ -134,6 +134,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             .setLayout(R.layout.component_screen_share_float_canvas) { v ->
                 fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
             }
+            .setTouchable(false) // We must set this value to false. Check that method comment.
             .setEnableDrag(false)
             .setEnableFullScreenFloatView(true)
             .build()

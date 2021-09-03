@@ -21,10 +21,11 @@ internal data class DefaultConfig(
     var edgeMargin: Int = DEFAULT_EDGE_MARGIN,
     var autoDock: AutoDock = AutoDock.NONE,
     var dockAnimDuration: Long = 200, // ms
+    var touchable: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_FLOAT_VIEW_TAG = "tag_default_float_view"
-        const val DEFAULT_EDGE_MARGIN = 2 // px
+        const val DEFAULT_EDGE_MARGIN = 0 // px
     }
 }
 

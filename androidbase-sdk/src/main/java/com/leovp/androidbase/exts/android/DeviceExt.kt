@@ -69,7 +69,7 @@ fun Activity.getRealResolution(): Point {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         this.display?.getRealSize(size)
     } else {
-        val wm = windowManager
+        val wm = app.windowManager
         val display = wm.defaultDisplay
         val displayMetrics = DisplayMetrics()
         display.getRealMetrics(displayMetrics)

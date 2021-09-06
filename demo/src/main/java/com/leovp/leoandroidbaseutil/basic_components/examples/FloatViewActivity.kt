@@ -1,10 +1,12 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.StickyEdge
@@ -50,6 +52,19 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             }
             .show()
 
+        FloatView.with(this)
+            .setTag("floatView_touchable")
+            .setDragOverStatusBar(true)
+            .setTouchable(false)
+            .setEnableDrag(false)
+            .setLayout(R.layout.float_view_fingerpaint_fullscreen) { v ->
+                val finger = v.findViewById(R.id.finger) as FingerPaintView
+                finger.strokeColor = Color.RED
+                finger.inEditMode = false
+                finger.strokeWidth = 8f
+            }
+            .show()
+
         binding.rgSticky.setOnCheckedChangeListener { group, checkedId ->
             when (checkedId) {
                 R.id.rbStickyNone -> FloatView.setStickyEdge(StickyEdge.NONE, "f1")
@@ -77,6 +92,17 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             when (checkedId) {
                 R.id.rbEnableDrag -> FloatView.setEnableDrag(true, "f1")
                 R.id.rbDisableDrag -> FloatView.setEnableDrag(false, "f1")
+            }
+        }
+
+        binding.rgTouchable.setOnCheckedChangeListener { group, checkedId ->
+            when (checkedId) {
+                R.id.rbTouchable -> {
+                    FloatView.setTouchable(true, "floatView_touchable")
+                }
+                R.id.rbNoneTouchable -> {
+                    FloatView.setTouchable(false, "floatView_touchable")
+                }
             }
         }
     }

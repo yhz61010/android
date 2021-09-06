@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.TextView
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
 import com.leovp.floatview_sdk.base.AutoDock
@@ -63,6 +64,22 @@ class FloatViewActivity : BaseDemonstrationActivity() {
                 finger.inEditMode = false
                 finger.strokeWidth = 8f
             }
+            .setTouchEventListener(object : FloatView.TouchEventListener {
+                override fun touchDown(view: View, x: Int, y: Int): Boolean {
+                    LogContext.log.w("touchDown ($x, $y)")
+                    return false
+                }
+
+                override fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean {
+                    LogContext.log.w("touchMove ($x, $y) isClickGesture=$isClickGesture")
+                    return false
+                }
+
+                override fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean {
+                    LogContext.log.w("touchUp ($x, $y) isClickGesture=$isClickGesture")
+                    return false
+                }
+            })
             .show()
 
         binding.rgSticky.setOnCheckedChangeListener { group, checkedId ->

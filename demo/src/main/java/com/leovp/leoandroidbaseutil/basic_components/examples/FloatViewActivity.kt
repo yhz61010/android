@@ -72,6 +72,13 @@ class FloatViewActivity : BaseDemonstrationActivity() {
                 R.id.rbAutoDockFull -> FloatView.setAutoDock(AutoDock.FULL, "f2")
             }
         }
+
+        binding.rgEnableDrag.setOnCheckedChangeListener { group, checkedId ->
+            when (checkedId) {
+                R.id.rbEnableDrag -> FloatView.setEnableDrag(true, "f1")
+                R.id.rbDisableDrag -> FloatView.setEnableDrag(false, "f1")
+            }
+        }
     }
 
     override fun onDestroy() {

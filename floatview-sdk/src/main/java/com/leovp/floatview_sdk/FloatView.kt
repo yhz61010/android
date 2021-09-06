@@ -151,7 +151,14 @@ class FloatView private constructor(private val context: Activity) {
     }
 
     interface TouchEventListener {
+        /**
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
+         */
         fun touchDown(view: View, x: Int, y: Int): Boolean = false
+
+        /**
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
+         */
         fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
 
         /**
@@ -160,6 +167,8 @@ class FloatView private constructor(private val context: Activity) {
          *
          * In contrast, if [isClickGesture] is `true` that means user triggers the click event,
          * so this touch event should not be consumed.
+         *
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
          */
         fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = !isClickGesture
     }

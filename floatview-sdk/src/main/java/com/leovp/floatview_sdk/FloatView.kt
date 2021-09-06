@@ -29,6 +29,9 @@ class FloatView private constructor(private val context: Activity) {
         fun with(context: Activity): FloatViewCreator = FloatViewCreator(FloatView(context))
         fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean = FloatViewManager.exist(tag)
         fun getCustomLayout(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): View? = FloatViewManager.getConfig(tag)?.customView
+        fun setEnableDrag(enable: Boolean, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
+            FloatViewManager.getConfig(tag)?.enableDrag = enable
+        }
 
         /**
          * Show a float view with specific tag.

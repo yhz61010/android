@@ -34,6 +34,16 @@ class FloatView private constructor(private val context: Activity) {
         }
 
         /**
+         * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
+         * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
+         * In this case, you should set touchable status to `false`.
+         */
+        fun setTouchable(touchable: Boolean, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
+            FloatViewManager.getConfig(tag)?.touchable = touchable
+            show(tag)
+        }
+
+        /**
          * Show a float view with specific tag.
          * Attention: The float view should be exist which is created by calling `build()` method like this [FloatView.with(ctx).build()]
          */
@@ -113,9 +123,9 @@ class FloatView private constructor(private val context: Activity) {
         fun setTouchEventListener(touchEventListener: TouchEventListener) = apply { config.touchEventListener = touchEventListener }
 
         /**
-         * In some cases, maybe you just want to mask a full screen transparent float window and you can show finger paint on screen.
+         * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
          * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
-         * In this case, you should set touchable status to `true`.
+         * In this case, you should set touchable status to `false`.
          */
         fun setTouchable(touchable: Boolean) = apply { config.touchable = touchable }
 

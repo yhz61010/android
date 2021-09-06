@@ -46,7 +46,8 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
-        if (!config.enableDrag || config.fullScreenFloatView) return@OnTouchListener false
+        val consumeIsAlwaysFalse = !config.enableDrag || config.fullScreenFloatView
+
         val totalDeltaX = lastX - firstX
         val totalDeltaY = lastY - firstY
 
@@ -63,7 +64,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             MotionEvent.ACTION_UP -> {
 //                view.performClick()
 //                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_UP isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} isClickGesture=$isClickGesture $view")
-                if (config.autoDock != AutoDock.NONE) {
+                if (!consumeIsAlwaysFalse && config.autoDock != AutoDock.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.autoDock)
                 }
                 touchConsumedByMove = config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
@@ -76,12 +77,14 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 if (abs(totalDeltaX) >= TOUCH_TOLERANCE_IN_PX || abs(totalDeltaY) >= TOUCH_TOLERANCE_IN_PX) {
                     isClickGesture = false
                     view.isPressed = false
-                    if (event.pointerCount == 1) {
-                        updateLayoutForSticky(deltaX, deltaY)
-                        touchConsumedByMove = true
-                        windowManager.updateViewLayout(config.customView, layoutParams)
-                    } else {
-                        touchConsumedByMove = false
+                    if (!consumeIsAlwaysFalse) {
+                        if (event.pointerCount == 1) {
+                            updateLayoutForSticky(deltaX, deltaY)
+                            touchConsumedByMove = true
+                            windowManager.updateViewLayout(config.customView, layoutParams)
+                        } else {
+                            touchConsumedByMove = false
+                        }
                     }
                 } else {
                     isClickGesture = true
@@ -91,6 +94,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             }
             else -> Unit
         }
+        if (consumeIsAlwaysFalse) touchConsumedByMove = false
         touchConsumedByMove
     }
 

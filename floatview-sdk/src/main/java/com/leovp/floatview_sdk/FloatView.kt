@@ -120,6 +120,11 @@ class FloatView private constructor(private val context: Activity) {
          */
         fun setDockAnimDuration(duration: Long) = apply { config.dockAnimDuration = duration }
 
+        /**
+         * If the [setTouchable] is `false`, this listener will not be triggered.
+         * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom layer.
+         * So the float layer itself can not be touched anymore.
+         */
         fun setTouchEventListener(touchEventListener: TouchEventListener) = apply { config.touchEventListener = touchEventListener }
 
         /**

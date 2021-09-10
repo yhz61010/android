@@ -95,7 +95,7 @@ fun Long.toEiB() = this * 1.0F / EiB
 
 /**
  * B -> XiB
- * Automatically convert Byte to the appropriate XiB.
+ * Automatically convert Byte to the appropriate XiB (1KiB = 1024B).
  */
 fun Long.autoByteInBinary() = when {
     this < 0 -> null
@@ -110,7 +110,7 @@ fun Long.autoByteInBinary() = when {
 
 /**
  * B -> XB
- * Automatically convert Byte to the appropriate XB.
+ * Automatically convert Byte to the appropriate XB (1KB = 1000B).
  */
 fun Long.autoByteInDecimal() = when {
     this < 0 -> null

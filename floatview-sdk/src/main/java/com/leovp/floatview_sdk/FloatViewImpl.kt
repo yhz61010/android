@@ -23,10 +23,6 @@ import kotlin.math.abs
  * Date: 2021/8/30 10:56
  */
 internal class FloatViewImpl(private val context: Activity, internal var config: DefaultConfig) {
-    companion object {
-        private const val TOUCH_TOLERANCE_IN_PX = 8
-    }
-
     private val windowManager: WindowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     internal lateinit var layoutParams: WindowManager.LayoutParams
 
@@ -74,7 +70,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 val deltaY = event.rawY.toInt() - lastY
                 lastX = event.rawX.toInt()
                 lastY = event.rawY.toInt()
-                if (abs(totalDeltaX) >= TOUCH_TOLERANCE_IN_PX || abs(totalDeltaY) >= TOUCH_TOLERANCE_IN_PX) {
+                if (abs(totalDeltaX) >= config.touchToleranceInPx || abs(totalDeltaY) >= config.touchToleranceInPx) {
                     isClickGesture = false
                     view.isPressed = false
                     if (!consumeIsAlwaysFalse) {

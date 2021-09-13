@@ -105,6 +105,7 @@ class FloatView private constructor(private val context: Activity) {
         fun setEnableDrag(enable: Boolean) = apply { config.enableDrag = enable }
         fun setEnableFullScreenFloatView(enable: Boolean) = apply { config.fullScreenFloatView = enable }
         fun setDragOverStatusBar(enable: Boolean) = apply { config.canDragOverStatusBar = enable }
+        fun setTouchToleranceInPx(value: Int) = apply { config.touchToleranceInPx = value }
         fun setX(x: Int) = apply { config.x = x }
         fun setY(y: Int) = apply { config.y = y }
 

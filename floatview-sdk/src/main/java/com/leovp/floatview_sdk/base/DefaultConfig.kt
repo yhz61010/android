@@ -22,10 +22,12 @@ internal data class DefaultConfig(
     var autoDock: AutoDock = AutoDock.NONE,
     var dockAnimDuration: Long = 200, // ms
     var touchable: Boolean = true,
+    var touchToleranceInPx: Int = TOUCH_TOLERANCE_IN_PX
 ) {
     companion object {
         const val DEFAULT_FLOAT_VIEW_TAG = "tag_default_float_view"
         const val DEFAULT_EDGE_MARGIN = 0 // px
+        const val TOUCH_TOLERANCE_IN_PX = 8
     }
 }
 

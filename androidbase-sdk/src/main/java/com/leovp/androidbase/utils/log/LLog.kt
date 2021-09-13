@@ -12,27 +12,27 @@ class LLog(private val prefix: String) : ILog {
 
     override var enableLog: Boolean = true
 
-    override fun printVerbLog(tag: String, message: String) {
-        Log.v(tag, message)
+    override fun printVerbLog(tag: String, message: String, outputType: Int) {
+        Log.v(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 
-    override fun printDebugLog(tag: String, message: String) {
-        Log.d(tag, message)
+    override fun printDebugLog(tag: String, message: String, outputType: Int) {
+        Log.d(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 
-    override fun printInfoLog(tag: String, message: String) {
-        Log.i(tag, message)
+    override fun printInfoLog(tag: String, message: String, outputType: Int) {
+        Log.i(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 
-    override fun printWarnLog(tag: String, message: String) {
-        Log.w(tag, message)
+    override fun printWarnLog(tag: String, message: String, outputType: Int) {
+        Log.w(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 
-    override fun printErrorLog(tag: String, message: String) {
-        Log.e(tag, message)
+    override fun printErrorLog(tag: String, message: String, outputType: Int) {
+        Log.e(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 
-    override fun printFatalLog(tag: String, message: String) {
-        Log.wtf(tag, message)
+    override fun printFatalLog(tag: String, message: String, outputType: Int) {
+        Log.wtf(tag, if (outputType == -1) message else "[$outputType]$message")
     }
 }

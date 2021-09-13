@@ -31,34 +31,27 @@ class LogActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log)
 
-        LogContext.log.v("Hello v")
-        LogContext.log.d("Hello d")
-        LogContext.log.i("Hello i")
-        LogContext.log.w("Hello w")
-        LogContext.log.e("Hello e with fullOutput", fullOutput = true)
-        LogContext.log.f("Hello f")
+        LogContext.log.v("Hello v", outputType = 1)
+        LogContext.log.d("Hello d", outputType = 2)
+        LogContext.log.i("Hello i", outputType = 3)
+        LogContext.log.w("Hello w", outputType = 4)
+        LogContext.log.e("Hello e with fullOutput", fullOutput = true, outputType = 5)
+        LogContext.log.f("Hello f", outputType = 6)
 
-        LogContext.log.v(TAG, "Hello v")
-        LogContext.log.d(TAG, "Hello d")
-        LogContext.log.i(TAG, "Hello i")
-        LogContext.log.w(TAG, "Hello w")
-        LogContext.log.e(TAG, "Hello e")
-        LogContext.log.f(TAG, "Hello f")
+        LogContext.log.v(TAG, "Hello v", Exception("exception-v"), outputType = 7)
+        LogContext.log.d(TAG, "Hello d", Exception("exception-d"), outputType = 8)
+        LogContext.log.i(TAG, "Hello i", Exception("exception-i"), outputType = 9)
+        LogContext.log.w(TAG, "Hello w", Exception("exception-w"), outputType = 10)
+        LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
+        LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
 
-        LogContext.log.v(TAG, "Hello v", Exception("exception-v"))
-        LogContext.log.d(TAG, "Hello d", Exception("exception-d"))
-        LogContext.log.i(TAG, "Hello i", Exception("exception-i"))
-        LogContext.log.w(TAG, "Hello w", Exception("exception-w"))
-        LogContext.log.e(TAG, "Hello e", Exception("exception-e"))
-        LogContext.log.f(TAG, "Hello f", Exception("exception-f"))
-
-        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
+        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}", outputType = 13)
 
         LogContext.enableLog = false
-        LogContext.log.w(ITAG, "This log will NOT be outputted")
+        LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
 
         LogContext.enableLog = true
-        LogContext.log.w(ITAG, "This log will be outputted")
+        LogContext.log.w(ITAG, "This log will be outputted", outputType = 15)
 
 
         val sb = StringBuilder()
@@ -68,8 +61,8 @@ class LogActivity : BaseDemonstrationActivity() {
             sb.append(" | ")
         }
         val string = sb.toString()
-        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string")
-        LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true)
+        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = 16)
+        LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true, outputType = 17)
     }
 
     override fun onStop() {

@@ -3,7 +3,6 @@ package com.leovp.androidbase.exts.kotlin
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.Calendar.*
 
 @SuppressLint("ConstantLocale")
 internal val sdf1 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -32,6 +31,21 @@ internal val sdf8 = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault())
 @SuppressLint("ConstantLocale")
 internal val sdf9 = SimpleDateFormat("HH:mm", Locale.getDefault())
 
+@SuppressLint("ConstantLocale")
+internal val sdf10 = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf11 = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf12 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf13 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss (z)", Locale.getDefault()).apply { timeZone = TimeZone.getDefault() }
+
+@SuppressLint("ConstantLocale")
+internal val sdf14 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss (z)", Locale.getDefault()).apply { timeZone = TimeZone.getDefault() }
+
 /**
  * Author: Michael Leo
  * Date: 20-8-17 下午4:06
@@ -42,12 +56,12 @@ fun Date.getToday(format: String) = SimpleDateFormat(format, Locale.getDefault()
 /**
  * Pattern: yyyy-MM-dd HH:mm:ss
  */
-fun Date.formatToDateTimeDefaults(): String = sdf1.format(this)
+fun Date.formatToDateTime(): String = sdf1.format(this)
 
 /**
  * Pattern: yyyy-MM-dd HH:mm
  */
-fun Date.formatToShortDateTimeDefaults(): String = sdf7.format(this)
+fun Date.formatToShortDateTime(): String = sdf7.format(this)
 
 /**
  * Pattern: yyyyMMddHHmmss
@@ -62,34 +76,69 @@ fun Date.formatToTruncatedShortDateTime(): String = sdf8.format(this)
 /**
  * Pattern: yyyy-MM-dd
  */
-fun Date.formatToServerDateDefaults(): String = sdf3.format(this)
+fun Date.formatToServerDate(): String = sdf3.format(this)
 
 /**
  * Pattern: HH:mm:ss
  */
-fun Date.formatToTimeDefaults(): String {
+fun Date.formatToTime(): String {
     return sdf4.format(this)
 }
 
 /**
  * Pattern: HH:mm
  */
-fun Date.formatToShortTimeDefaults(): String {
+fun Date.formatToShortTime(): String {
     return sdf9.format(this)
 }
 
 /**
  * Pattern: dd/MM/yyyy HH:mm:ss
  */
-fun Date.formatToViewDateTimeDefaults(): String {
+fun Date.formatToViewDateTime(): String {
     return sdf5.format(this)
 }
 
 /**
  * Pattern: dd/MM/yyyy
  */
-fun Date.formatToViewDateDefaults(): String {
+fun Date.formatToViewDate(): String {
     return sdf6.format(this)
+}
+
+/**
+ * Pattern: yyyy/MM/dd
+ */
+fun Date.formatToNormalDate(): String {
+    return sdf10.format(this)
+}
+
+/**
+ * Pattern: yyyy/MM/dd HH:mm
+ */
+fun Date.formatToNormalShortDateTime(): String {
+    return sdf11.format(this)
+}
+
+/**
+ * Pattern: yyyy/MM/dd HH:mm:ss
+ */
+fun Date.formatToNormalDateTime(): String {
+    return sdf12.format(this)
+}
+
+/**
+ * Pattern: yyyy/MM/dd HH:mm:ss (z)
+ */
+fun Date.formatToNormalFullDateTime(): String {
+    return sdf13.format(this)
+}
+
+/**
+ * Pattern: yyyy-MM-dd HH:mm:ss (z)
+ */
+fun Date.formatToNormalServerFullDateTime(): String {
+    return sdf14.format(this)
 }
 
 /**
@@ -148,7 +197,7 @@ fun Date.addSeconds(seconds: Int): Date {
  */
 val Calendar.utc: String
     get() {
-        add(MILLISECOND, -(get(ZONE_OFFSET) + get(DST_OFFSET)))
+        add(Calendar.MILLISECOND, -(get(Calendar.ZONE_OFFSET) + get(Calendar.DST_OFFSET)))
         return SimpleDateFormat("yyyy'-'MM'-'dd'T'kk':'mm':'ss'Z'", Locale.getDefault()).format(time)
     }
 
@@ -159,38 +208,38 @@ fun Calendar.date(pattern: String = "yyyy-MM-dd HH:mm:ss", locale: Locale = Loca
 
 /** Get year */
 var Calendar.year
-    get() = get(YEAR)
-    set(value) = set(YEAR, value)
+    get() = get(Calendar.YEAR)
+    set(value) = set(Calendar.YEAR, value)
 
 /** Get month(January(1) to December(12)) */
 var Calendar.month
-    get() = get(MONTH) + 1
-    set(value) = set(MONTH, value - 1)
+    get() = get(Calendar.MONTH) + 1
+    set(value) = set(Calendar.MONTH, value - 1)
 
 /** Get day */
 var Calendar.day
-    get() = get(DAY_OF_MONTH)
-    set(value) = set(DAY_OF_MONTH, value)
+    get() = get(Calendar.DAY_OF_MONTH)
+    set(value) = set(Calendar.DAY_OF_MONTH, value)
 
 /** Get hour */
 var Calendar.hour
-    get() = get(HOUR_OF_DAY)
-    set(value) = set(HOUR_OF_DAY, value)
+    get() = get(Calendar.HOUR_OF_DAY)
+    set(value) = set(Calendar.HOUR_OF_DAY, value)
 
 /** Get minute */
 var Calendar.minute
-    get() = get(MINUTE)
-    set(value) = set(MINUTE, value)
+    get() = get(Calendar.MINUTE)
+    set(value) = set(Calendar.MINUTE, value)
 
 /** Get second */
 var Calendar.second
-    get() = get(SECOND)
-    set(value) = set(SECOND, value)
+    get() = get(Calendar.SECOND)
+    set(value) = set(Calendar.SECOND, value)
 
 /** Get millisecond */
 var Calendar.millisecond
-    get() = get(MILLISECOND)
-    set(value) = set(MILLISECOND, value)
+    get() = get(Calendar.MILLISECOND)
+    set(value) = set(Calendar.MILLISECOND, value)
 
 /**
  * Get week number
@@ -203,7 +252,7 @@ var Calendar.millisecond
  * [Calendar.SATURDAY]  -> Saturday  -> 7
  **/
 val Calendar.week
-    get() = get(DAY_OF_WEEK)
+    get() = get(Calendar.DAY_OF_WEEK)
 
 /** Get week name */
 @JvmOverloads
@@ -216,8 +265,8 @@ fun Calendar.week(locale: Locale = Locale.getDefault()): String =
  */
 @JvmOverloads
 fun Calendar.firstOfWeek(firstDayOfWeek: Int = this.firstDayOfWeek): Calendar {
-    val now = get(DAY_OF_WEEK)
-    add(DATE, firstDayOfWeek - now - (if (now < firstDayOfWeek) 7 else 0))
+    val now = get(Calendar.DAY_OF_WEEK)
+    add(Calendar.DATE, firstDayOfWeek - now - (if (now < firstDayOfWeek) 7 else 0))
     return this
 }
 
@@ -227,15 +276,15 @@ fun Calendar.firstOfWeek(firstDayOfWeek: Int = this.firstDayOfWeek): Calendar {
  */
 @JvmOverloads
 fun Calendar.lastOfWeek(firstDayOfWeek: Int = this.firstDayOfWeek): Calendar {
-    val now = get(DAY_OF_WEEK)
-    add(DATE, firstDayOfWeek - now + (if (now < firstDayOfWeek) -1 else +6))
+    val now = get(Calendar.DAY_OF_WEEK)
+    add(Calendar.DATE, firstDayOfWeek - now + (if (now < firstDayOfWeek) -1 else +6))
     return this
 }
 
 /** Get week of month */
 val Calendar.weekOfMonth
-    get() = this.get(WEEK_OF_MONTH)
+    get() = this.get(Calendar.WEEK_OF_MONTH)
 
 /** Get week of year */
 val Calendar.weekOfYear
-    get() = if (get(WEEK_OF_YEAR) == 1 && month == 12) 53 else get(WEEK_OF_YEAR)
+    get() = if (get(Calendar.WEEK_OF_YEAR) == 1 && month == 12) 53 else get(Calendar.WEEK_OF_YEAR)

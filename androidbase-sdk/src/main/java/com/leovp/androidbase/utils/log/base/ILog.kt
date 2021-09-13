@@ -4,6 +4,11 @@ import android.util.Log
 import com.leovp.androidbase.exts.kotlin.ITAG
 
 /**
+ * Inherit this class and just implement [printXXXLog] methods.
+ *
+ * The [outputType] parameter in [printXXXLog] methods is just the handy parameter for you to identify the log output type.
+ * So that you can control how to output the log. For example, just output some logs on console or just send some logs to server.
+ *
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
  */
@@ -13,62 +18,62 @@ interface ILog {
     fun getTagName(tag: String): String
     fun getLogMaxLength(): Int = MAX_LENGTH
 
-    fun printVerbLog(tag: String, message: String)
-    fun printDebugLog(tag: String, message: String)
-    fun printInfoLog(tag: String, message: String)
-    fun printWarnLog(tag: String, message: String)
-    fun printErrorLog(tag: String, message: String)
-    fun printFatalLog(tag: String, message: String)
+    fun printVerbLog(tag: String, message: String, outputType: Int)
+    fun printDebugLog(tag: String, message: String, outputType: Int)
+    fun printInfoLog(tag: String, message: String, outputType: Int)
+    fun printWarnLog(tag: String, message: String, outputType: Int)
+    fun printErrorLog(tag: String, message: String, outputType: Int)
+    fun printFatalLog(tag: String, message: String, outputType: Int)
 
     // ==================================================
 
-    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) = v(ITAG, message, throwable, fullOutput)
-    fun v(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = v(ITAG, message, throwable, fullOutput, outputType)
+    fun v(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable))
-            else printVerbLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
+            else printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) = d(ITAG, message, throwable, fullOutput)
-    fun d(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = d(ITAG, message, throwable, fullOutput, outputType)
+    fun d(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable))
-            else printDebugLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
+            else printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) = i(ITAG, message, throwable, fullOutput)
-    fun i(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = i(ITAG, message, throwable, fullOutput, outputType)
+    fun i(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable))
-            else printInfoLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
+            else printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) = w(ITAG, message, throwable, fullOutput)
-    fun w(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = w(ITAG, message, throwable, fullOutput, outputType)
+    fun w(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable))
-            else printWarnLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
+            else printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun e(message: String?, fullOutput: Boolean = false) = e(ITAG, message, null, fullOutput)
-    fun e(throwable: Throwable?, fullOutput: Boolean = false) = e(ITAG, "", throwable, fullOutput)
-    fun e(tag: String, throwable: Throwable?, fullOutput: Boolean = false) = e(tag, "", throwable, fullOutput)
-    fun e(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun e(message: String?, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, message, null, fullOutput, outputType)
+    fun e(throwable: Throwable?, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, "", throwable, fullOutput, outputType)
+    fun e(tag: String, throwable: Throwable?, fullOutput: Boolean = false, outputType: Int = -1) = e(tag, "", throwable, fullOutput, outputType)
+    fun e(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable))
-            else printErrorLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
+            else printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) = f(ITAG, message, throwable, fullOutput)
-    fun f(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false) {
+    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = f(ITAG, message, throwable, fullOutput, outputType)
+    fun f(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable))
-            else printFatalLog(getTagName(tag), getMessage(message, throwable))
+            if (fullOutput) splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
+            else printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
@@ -105,23 +110,23 @@ interface ILog {
         }
     }
 
-    private fun splitOutputMessage(logLevel: LogLevel, tag: String, message: String) {
+    private fun splitOutputMessage(logLevel: LogLevel, tag: String, message: String, outputType: Int) {
         if (message.length > getLogMaxLength()) {
-            outputLog(logLevel, tag, message.substring(0, getLogMaxLength()))
-            splitOutputMessage(logLevel, tag, message.substring(getLogMaxLength()))
+            outputLog(logLevel, tag, message.substring(0, getLogMaxLength()), outputType)
+            splitOutputMessage(logLevel, tag, message.substring(getLogMaxLength()), outputType)
         } else {
-            outputLog(logLevel, tag, message)
+            outputLog(logLevel, tag, message, outputType)
         }
     }
 
-    private fun outputLog(logLevel: LogLevel, tag: String, message: String) {
+    private fun outputLog(logLevel: LogLevel, tag: String, message: String, outputType: Int) {
         when (logLevel) {
-            LogLevel.VERB -> printVerbLog(tag, message)
-            LogLevel.DEBUG -> printDebugLog(tag, message)
-            LogLevel.INFO -> printInfoLog(tag, message)
-            LogLevel.WARN -> printWarnLog(tag, message)
-            LogLevel.ERROR -> printErrorLog(tag, message)
-            LogLevel.FATAL -> printFatalLog(tag, message)
+            LogLevel.VERB -> printVerbLog(tag, message, outputType)
+            LogLevel.DEBUG -> printDebugLog(tag, message, outputType)
+            LogLevel.INFO -> printInfoLog(tag, message, outputType)
+            LogLevel.WARN -> printWarnLog(tag, message, outputType)
+            LogLevel.ERROR -> printErrorLog(tag, message, outputType)
+            LogLevel.FATAL -> printFatalLog(tag, message, outputType)
         }
     }
 

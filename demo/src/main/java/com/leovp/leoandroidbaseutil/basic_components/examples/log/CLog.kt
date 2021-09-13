@@ -19,27 +19,27 @@ class CLog : ILog {
 
     override var enableLog = true
 
-    override fun printVerbLog(tag: String, message: String) {
+    override fun printVerbLog(tag: String, message: String, outputType: Int) {
         Log.v(tag, message)
     }
 
-    override fun printDebugLog(tag: String, message: String) {
+    override fun printDebugLog(tag: String, message: String, outputType: Int) {
         Log.d(tag, message)
     }
 
-    override fun printInfoLog(tag: String, message: String) {
+    override fun printInfoLog(tag: String, message: String, outputType: Int) {
         Log.i(tag, message)
     }
 
-    override fun printWarnLog(tag: String, message: String) {
+    override fun printWarnLog(tag: String, message: String, outputType: Int) {
         Log.w(tag, message)
     }
 
-    override fun printErrorLog(tag: String, message: String) {
+    override fun printErrorLog(tag: String, message: String, outputType: Int) {
         Log.e(tag, message)
     }
 
-    override fun printFatalLog(tag: String, message: String) {
+    override fun printFatalLog(tag: String, message: String, outputType: Int) {
         Log.f(tag, message)
     }
 

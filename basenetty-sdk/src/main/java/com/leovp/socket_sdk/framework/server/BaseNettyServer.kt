@@ -1,5 +1,6 @@
 package com.leovp.socket_sdk.framework.server
 
+import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
@@ -20,6 +21,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.stream.ChunkedWriteHandler
+import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicReference
 
@@ -195,21 +197,31 @@ abstract class BaseNettyServer protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(clientChannel: Channel, cmdTypeAndId: String, cmdDesc: String, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean): Boolean {
+    private fun executeUnifiedCommand(
+        clientChannel: Channel,
+        cmdTypeAndId: String,
+        cmdDesc: String?,
+        cmd: Any?,
+        isPing: Boolean,
+        showContent: Boolean,
+        showLog: Boolean,
+        byteOrder: ByteOrder
+    ): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmdTypeAndId, cmd)) {
             return false
         }
         val stringCmd: String?
         val bytesCmd: ByteBuf?
         val isStringCmd: Boolean
+        val logPrefix = if (cmdDesc.isNullOrBlank()) "exe" else "exe[$cmdDesc]"
         when (cmd) {
             is String -> {
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.length}]=$cmd")
-                    else LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.length}]")
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd")
+                    else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
                 }
             }
             is ByteArray -> {
@@ -217,8 +229,10 @@ abstract class BaseNettyServer protected constructor(
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
-                    else LogContext.log.i(cmdTypeAndId, "exeCmd[$cmdDesc][${cmd.size}]")
+                    if (showContent) {
+                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]")
+                    } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
@@ -234,13 +248,29 @@ abstract class BaseNettyServer protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(clientChannel: Channel, cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
+    fun executeCommand(
+        clientChannel: Channel,
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) =
+        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(clientChannel: Channel, cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
+    fun executePingCommand(
+        clientChannel: Channel,
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) =
+        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     // ================================================
 }

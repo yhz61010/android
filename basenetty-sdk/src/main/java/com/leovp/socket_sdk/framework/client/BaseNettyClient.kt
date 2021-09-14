@@ -1,5 +1,6 @@
 package com.leovp.socket_sdk.framework.client
 
+import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.http.SslUtils
 import com.leovp.androidbase.utils.log.LogContext
@@ -35,6 +36,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.ConnectException
 import java.net.URI
+import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -540,10 +542,19 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean = true): Boolean {
+    private fun executeUnifiedCommand(
+        cmdTypeAndId: String,
+        cmdDesc: String?,
+        cmd: Any?,
+        isPing: Boolean,
+        showContent: Boolean,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder
+    ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
+        val logPrefix = if (cmdDesc.isNullOrBlank()) "exe" else "exe[$cmdDesc]"
         val stringCmd: String?
         val bytesCmd: ByteBuf?
         val isStringCmd: Boolean
@@ -553,8 +564,8 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.length}]=$cmd")
-                    else LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.length}]")
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd")
+                    else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
                 }
             }
             is ByteArray -> {
@@ -562,8 +573,10 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.size}]=HEX[${cmd.toHexStringLE()}]")
-                    else LogContext.log.i(cmdTypeAndId, "exe[$cmdDesc][${cmd.size}]")
+                    if (showContent) {
+                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]")
+                    } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
@@ -584,13 +597,27 @@ abstract class BaseNettyClient protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog)
+    fun executeCommand(
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmd: Any?, cmdDesc: String = "", cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog)
+    fun executePingCommand(
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) =
+        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     // ================================================
 }

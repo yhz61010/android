@@ -516,22 +516,22 @@ abstract class BaseNettyClient protected constructor(
 
     private fun isValidExecuteCommandEnv(cmdTypeAndId: String, cmd: Any?): Boolean {
         if (!::channel.isInitialized) {
-            LogContext.log.e(tag, "$cmdTypeAndId: Channel is not initialized. Stop processing.")
+            LogContext.log.e(cmdTypeAndId, "Channel is not initialized. Stop processing.")
             return false
         }
         if (cmd == null) {
-            LogContext.log.e(tag, "$cmdTypeAndId: The command is null. Stop processing.")
+            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("$cmdTypeAndId: Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectStatus.get()) {
-            LogContext.log.e(tag, "$cmdTypeAndId: Socket is not connected. Can not send command.")
+            LogContext.log.e(cmdTypeAndId, "Socket is not connected. Can not send command.")
             return false
         }
         if (::channel.isInitialized && !channel.isActive) {
-            LogContext.log.e(tag, "$cmdTypeAndId: Can not execute cmd because of Channel is not active.")
+            LogContext.log.e(cmdTypeAndId, "Can not execute cmd because of Channel is not active.")
             return false
         }
         return true

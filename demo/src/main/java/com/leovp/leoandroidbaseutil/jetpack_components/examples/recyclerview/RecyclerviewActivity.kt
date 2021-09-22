@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.Keep
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -168,6 +169,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
     }
 }
 
+@Keep
 data class ItemBean(val id: Long, val title: String, val imageUrl: String) : BaseMultipleCheckedItem()
 
 open class BaseMultipleCheckedItem {

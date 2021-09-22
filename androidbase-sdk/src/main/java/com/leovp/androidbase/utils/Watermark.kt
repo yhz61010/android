@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.IntRange
+import androidx.annotation.Keep
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.exts.android.sp2px
@@ -52,6 +53,7 @@ object Watermark {
         }
     }
 
+    @Keep
     data class WatermarkConfig(
         /**
          * Watermark text

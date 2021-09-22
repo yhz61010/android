@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
+import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.outputFormatByte
@@ -102,6 +103,7 @@ object DeviceUtil {
         }.getOrNull()
     }
 
+    @Keep
     data class CpuCoreInfo(val online: Boolean, val minFreq: Int, val maxFreq: Int)
 
     /**

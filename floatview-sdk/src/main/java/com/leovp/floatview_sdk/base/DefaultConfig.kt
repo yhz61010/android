@@ -1,12 +1,14 @@
 package com.leovp.floatview_sdk.base
 
 import android.view.View
+import androidx.annotation.Keep
 import com.leovp.floatview_sdk.FloatView
 
 /**
  * Author: Michael Leo
  * Date: 2021/8/30 10:58
  */
+@Keep
 internal data class DefaultConfig(
     var customView: View? = null,
     var floatViewTag: String = DEFAULT_FLOAT_VIEW_TAG,

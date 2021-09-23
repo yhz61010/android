@@ -28,6 +28,8 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         private const val AUDIO_CHANNELS = 2
     }
 
+    private var player: AudioPlayer? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_a_d_p_c_m)
@@ -58,7 +60,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val decoderInfo =
             AudioDecoderInfo(AUDIO_SAMPLE_RATE, if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        val player = AudioPlayer(this, decoderInfo, AudioType.PCM)
+        player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
         val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
         thread {
@@ -73,10 +75,15 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 val st = SystemClock.elapsedRealtimeNanos()
                 val pcmBytes = adpcmQT.decode(chunk)
                 if (LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
-                player.play(pcmBytes)
+                player?.play(pcmBytes)
             }
             adpcmQT.release()
-            player.release()
+            player?.release()
         }
+    }
+
+    override fun onDestroy() {
+        player?.release()
+        super.onDestroy()
     }
 }

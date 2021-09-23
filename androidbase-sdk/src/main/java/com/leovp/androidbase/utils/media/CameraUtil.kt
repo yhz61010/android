@@ -33,14 +33,14 @@ object CameraUtil {
     private const val TAG = "CameraUtil"
 
     fun takePhoto(ctx: Activity): Uri? {
-        var imageUri: Uri? = null
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
+        return runCatching {
+//            if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
             val imageFile = FileUtil.createImageFile(ctx, "jpg")
             LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
-            imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 // Above Android 7.0, we need convert File to Uri through FileProvider.
                 FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", imageFile)
             } else {
@@ -49,8 +49,9 @@ object CameraUtil {
             }
             takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
             ctx.startActivityForResult(takePhotoIntent, REQUEST_CODE_OPEN_CAMERA)
-        }
-        return imageUri
+            imageUri
+//            }
+        }.getOrDefault(null)
     }
 
     fun performCrop(ctx: Activity, srcImageUri: Uri?): Uri? {

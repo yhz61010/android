@@ -34,7 +34,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".basic_components.examples.FloatViewActivity"></activity>
+        <activity android:name=".basic_components.examples.FloatViewActivity" />
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
         <activity android:name=".basic_components.examples.ToastActivity" />
         <activity
@@ -69,7 +69,9 @@
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
         <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />
         <activity android:name=".jetpack_components.examples.room.RoomActivity" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

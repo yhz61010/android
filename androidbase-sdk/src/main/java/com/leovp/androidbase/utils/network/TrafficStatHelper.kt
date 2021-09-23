@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.network
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.TrafficStats
+import com.leovp.androidbase.SingletonHolder
 import java.io.RandomAccessFile
 
 /**
@@ -21,6 +22,7 @@ import java.io.RandomAccessFile
  * Date: 19-8-30 下午1:38
  */
 class TrafficStatHelper private constructor(val ctx: Context) {
+    private val uuid = ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
 
     /**
      * The data will be sent in every *freq* second(s)
@@ -55,13 +57,12 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val sendTraffic: Long
         get() {
-            var sendTraffic = TrafficStats.getUidTxBytes(UUID)
-            val sndPath = "/proc/uid_stat/$UUID/tcp_snd"
-            try {
-                RandomAccessFile(sndPath, "r").use { sendTraffic = it.readLine().toLong() }
-            } finally {
-                return sendTraffic
-            }
+            var sendTrafficBytes = TrafficStats.getUidTxBytes(uuid)
+            val sndPath = "/proc/uid_stat/$uuid/tcp_snd"
+            return runCatching {
+                RandomAccessFile(sndPath, "r").use { sendTrafficBytes = it.readLine().toLong() }
+                sendTrafficBytes
+            }.getOrDefault(sendTrafficBytes)
         }
 
     /**
@@ -69,13 +70,12 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val receiveTraffic: Long
         get() {
-            var recTraffic = TrafficStats.getUidRxBytes(UUID)
-            val rcvPath = "/proc/uid_stat/$UUID/tcp_rcv"
-            try {
-                RandomAccessFile(rcvPath, "r").use { recTraffic = it.readLine().toLong() }
-            } finally {
-                return recTraffic
-            }
+            var recTrafficBytes = TrafficStats.getUidRxBytes(uuid)
+            val rcvPath = "/proc/uid_stat/$uuid/tcp_rcv"
+            return runCatching {
+                RandomAccessFile(rcvPath, "r").use { recTrafficBytes = it.readLine().toLong() }
+                recTrafficBytes
+            }.getOrDefault(recTrafficBytes)
         }
 
     /**
@@ -102,22 +102,7 @@ class TrafficStatHelper private constructor(val ctx: Context) {
             return bytes
         }
 
-    companion object {
-        @Volatile
-        private var instance: TrafficStatHelper? = null
-        var UUID: Int = -1
-        fun getInstance(ctx: Context): TrafficStatHelper {
-            if (instance == null) {
-                synchronized(this) {
-                    if (instance == null) {
-                        UUID = ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
-                        instance = TrafficStatHelper(ctx)
-                    }
-                }
-            }
-            return instance!!
-        }
-
+    companion object : SingletonHolder<TrafficStatHelper, Context>(::TrafficStatHelper) {
         val totalReceivedBytes: Long get() = TrafficStats.getTotalRxBytes()
         val totalSentBytes: Long get() = TrafficStats.getTotalTxBytes()
     }

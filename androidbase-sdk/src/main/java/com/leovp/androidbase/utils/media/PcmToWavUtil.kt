@@ -42,10 +42,10 @@ object PcmToWavUtil {
     fun wavHeader(pcmLen: Int, numChannels: Int, sampleRate: Int, bitPerSample: Int): ByteArray {
         val header = ByteArray(44)
         // ChunkID, RIFF, 4 bytes respectively.
-        header[0] = 'R'.toByte()
-        header[1] = 'I'.toByte()
-        header[2] = 'F'.toByte()
-        header[3] = 'F'.toByte()
+        header[0] = 'R'.code.toByte()
+        header[1] = 'I'.code.toByte()
+        header[2] = 'F'.code.toByte()
+        header[3] = 'F'.code.toByte()
         // ChunkSize, pcmLen + 36, 4 bytes respectively.
         val chunkSize = pcmLen + 36.toLong()
         header[4] = (chunkSize and 0xff).toByte()
@@ -53,15 +53,15 @@ object PcmToWavUtil {
         header[6] = (chunkSize shr 16 and 0xff).toByte()
         header[7] = (chunkSize shr 24 and 0xff).toByte()
         // Format, WAVE, 4 bytes respectively
-        header[8] = 'W'.toByte()
-        header[9] = 'A'.toByte()
-        header[10] = 'V'.toByte()
-        header[11] = 'E'.toByte()
+        header[8] = 'W'.code.toByte()
+        header[9] = 'A'.code.toByte()
+        header[10] = 'V'.code.toByte()
+        header[11] = 'E'.code.toByte()
         // Subchunk1 ID, 'fmt ', 4 bytes
-        header[12] = 'f'.toByte()
-        header[13] = 'm'.toByte()
-        header[14] = 't'.toByte()
-        header[15] = ' '.toByte()
+        header[12] = 'f'.code.toByte()
+        header[13] = 'm'.code.toByte()
+        header[14] = 't'.code.toByte()
+        header[15] = ' '.code.toByte()
         // Subchunk1 Size, 16, 4 bytes
         header[16] = 16
         header[17] = 0
@@ -91,10 +91,10 @@ object PcmToWavUtil {
         header[34] = bitPerSample.toByte()
         header[35] = 0
         // Subhunk2ID, data, 4 bytes
-        header[36] = 'd'.toByte()
-        header[37] = 'a'.toByte()
-        header[38] = 't'.toByte()
-        header[39] = 'a'.toByte()
+        header[36] = 'd'.code.toByte()
+        header[37] = 'a'.code.toByte()
+        header[38] = 't'.code.toByte()
+        header[39] = 'a'.code.toByte()
         // Subchunk2Size, 4 bytes
         header[40] = (pcmLen and 0xff).toByte()
         header[41] = (pcmLen shr 8 and 0xff).toByte()
@@ -162,7 +162,7 @@ object PcmToWavUtil {
      */
     @Throws(IOException::class)
     private fun writeToOutput(output: OutputStream, data: String) {
-        for (element in data) output.write(element.toInt())
+        for (element in data) output.write(element.code)
     }
 
     @Throws(IOException::class)

@@ -13,6 +13,7 @@
         android:layout_marginTop="32dp"
         android:text="Keep Alive"
         android:onClick="onKeepAliveClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,6 +25,7 @@
         android:layout_marginTop="32dp"
         android:text="Stop"
         android:onClick="onStopClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="@+id/button"
         app:layout_constraintStart_toStartOf="@+id/button"
         app:layout_constraintTop_toBottomOf="@+id/button" />

@@ -5,6 +5,7 @@ import com.leovp.androidbase.utils.log.LLog
 import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.InternetUtil
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,10 +29,11 @@ class NetworkUnitTest {
         var ips = InternetUtil.getIpsByName("leovp.com").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
-        ips = InternetUtil.getIpsByName("lib.leovp.com").toTypedArray()
-        assertArrayEquals(arrayOf("163.181.22.213"), ips)
+        ips = InternetUtil.getIpsByName("barcode.50d.win").toTypedArray()
+//        InternetUtil.getIpsByName("lib.leovp.com").toTypedArray().forEach { println(it) }
+        assertEquals("142.11.215.254", ips[0])
 
-        ips = InternetUtil.getIpsByName("ho1 ho.com").toTypedArray()
+        ips = InternetUtil.getIpsByName("leo vp.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
         ips = InternetUtil.getIpsByName("leovp.com   ").toTypedArray()

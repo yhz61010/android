@@ -45,13 +45,14 @@ object DecodeH264RawFile {
      * @return
      */
     fun readSampleData(buffer: ByteBuffer): Int {
-        val nal = nALU
-        buffer.put(nal)
-        return nal!!.size
+        return nALU?.let { nal ->
+            buffer.put(nal)
+            nal.size
+        } ?: 0
     }
 
     private val nALU: ByteArray?
-        private get() {
+        get() {
             try {
                 var curpos = 0
                 val bb = ByteArray(100000)

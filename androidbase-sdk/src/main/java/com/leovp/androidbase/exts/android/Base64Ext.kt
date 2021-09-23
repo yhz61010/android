@@ -102,7 +102,7 @@ val ByteArray.toMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.
 /** Convert Mime type base64 ByteArray to ByteArray */
 val ByteArray.fromMimeBase64: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getMimeDecoder().decode(this)
 
-fun Drawable.toBase64(flag: Int = Base64.DEFAULT, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG): String? {
+fun Drawable.toBase64(imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG): String? {
     val bmp = this.getBitmap()
     return if (bmp == null) null
     else {

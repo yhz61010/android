@@ -35,7 +35,7 @@ object MD5Util {
                 }
                 result.append(temp)
             }
-            return result.toString().toUpperCase(Locale.getDefault())
+            return result.toString().uppercase(Locale.getDefault())
         } catch (e: NoSuchAlgorithmException) {
             e.printStackTrace()
         }

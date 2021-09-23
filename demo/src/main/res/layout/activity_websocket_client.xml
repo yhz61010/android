@@ -32,6 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:onClick="sendMsg"
+        tools:ignore="UsingOnClickInXml"
         android:text="Send"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/editText" />
@@ -42,6 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
         android:onClick="onDisconnectClick"
+        tools:ignore="UsingOnClickInXml"
         android:text="Disconnect"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btnConnect" />
@@ -52,6 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:onClick="onConnectClick"
+        tools:ignore="UsingOnClickInXml"
         android:text="Connect"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etSvrIp" />
@@ -62,6 +65,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:onClick="onConnectRelease"
+        tools:ignore="UsingOnClickInXml"
         android:text="Release"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -71,8 +71,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility "$rootProject.ext.java_version"
+        targetCompatibility "$rootProject.ext.java_version"
     }
 
     kotlinOptions {
@@ -138,10 +138,15 @@ android {
         pickFirst "META-INF/io.netty.versions.properties"
     }
 
-    dexOptions {
-        jumboMode true
-        javaMaxHeapSize "4g"
-    }
+/*
+* DSL element 'dexOptions' is obsolete and should be removed.
+* It will be removed in version 8.0 of the Android Gradle plugin.
+* Using it has no effect, and the AndroidGradle plugin optimizes dexing automatically.
+*/
+//    dexOptions {
+//        jumboMode true
+//        javaMaxHeapSize "4g"
+//    }
 
     lintOptions {
         checkReleaseBuilds false

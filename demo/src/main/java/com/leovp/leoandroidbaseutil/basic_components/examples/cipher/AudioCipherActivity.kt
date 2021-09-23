@@ -20,6 +20,8 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
 
     private lateinit var secretKey: SecretKey
 
+    private var player: MediaPlayer? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio_cipher)
@@ -41,7 +43,7 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
             tempMp3.deleteOnExit()
             FileOutputStream(tempMp3).use { it.write(mp3SoundByteArray) }
             val fis = FileInputStream(tempMp3)
-            MediaPlayer().run {
+            player = MediaPlayer().apply {
                 setDataSource(fis.fd)
                 prepare()
                 start()
@@ -58,5 +60,10 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
         val mp3File = File(getExternalFilesDir(null), ENCRYPTED_MP3_FILE_NAME)
         runCatching { playMP3(AESUtil.decrypt(FileInputStream(mp3File).use { it.readBytes() }, secretKey)) }.onFailure { it.printStackTrace() }
         toast("Play decrypted music!")
+    }
+
+    override fun onDestroy() {
+        player?.release()
+        super.onDestroy()
     }
 }

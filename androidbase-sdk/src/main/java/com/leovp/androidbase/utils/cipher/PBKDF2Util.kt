@@ -1,6 +1,8 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import androidx.annotation.RequiresApi
+import com.leovp.androidbase.utils.system.API
 import java.security.SecureRandom
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
@@ -22,6 +24,13 @@ object PBKDF2Util {
     // PBKDF2WithHmacSHA1: will produce a hash length of 160 bits
     // PBKDF2WithHmacSHA512: will produce a hash length of 512 bits
     private const val ALGORITHM_SHA1 = "PBKDF2WithHmacSHA1"
+
+    /**
+     * As of Android 8.0(Oreo) Level 26
+     *
+     * Check this [link](https://developer.android.com/reference/javax/crypto/SecretKeyFactory)
+     * to see supported SecretKeyFactory algorithms.
+     */
     private const val ALGORITHM_SHA512 = "PBKDF2WithHmacSHA512"
 
     private const val DEFAULT_SALT_LENGTH = 32
@@ -30,8 +39,9 @@ object PBKDF2Util {
     // ===== ALGORITHM_SHA512 - Start ================================================================
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         salt: ByteArray,
@@ -40,8 +50,9 @@ object PBKDF2Util {
     ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA512)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         salt: String,
@@ -50,8 +61,9 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA512(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         salt: String,
@@ -60,8 +72,9 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         salt: ByteArray,
@@ -70,8 +83,9 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: CharArray,
         saltLength: Int = DEFAULT_SALT_LENGTH,
@@ -80,8 +94,9 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA512(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
+    @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
         plainPassphrase: String,
         saltLength: Int = DEFAULT_SALT_LENGTH,
@@ -94,7 +109,7 @@ object PBKDF2Util {
     // ===== ALGORITHM_SHA1 - Start ================================================================
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
@@ -104,7 +119,7 @@ object PBKDF2Util {
     ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA1)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
@@ -114,7 +129,7 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA1(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
@@ -124,7 +139,7 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
@@ -134,7 +149,7 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: CharArray,
@@ -144,7 +159,7 @@ object PBKDF2Util {
     ): SecretKey = generateKeyWithSHA1(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
-     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey.encoded]
+     * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
         plainPassphrase: String,
@@ -217,16 +232,16 @@ object PBKDF2Util {
 //        return "$preSaltHex$onlyHash$suffixSaltHex"
 //    }
 
-    /**
-     * This method can valid the encrypted hash which is encrypted by [encryptWithSHA512] method.
-     *
-     * Usage:
-     * ```kotlin
-     * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")
-     * ```
-     *
-     * @param plainText The hex plain text should be padded.
-     */
+//    /**
+//     * This method can valid the encrypted hash which is encrypted by [encryptWithSHA512] method.
+//     *
+//     * Usage:
+//     * ```kotlin
+//     * PBKDF2Util.validate("1", "724C135B1AD210C216EF40E9C5230D7BF30FC2FEBCAAB75986EAE1356464DF292486B158ADD7")
+//     * ```
+//     *
+//     * @param plainText The hex plain text should be padded.
+//     */
 //    fun validate(plainText: String, encryptedHash: String): Boolean {
 ////        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
 //        val preSalt = encryptedHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)

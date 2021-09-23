@@ -24,4 +24,4 @@ val Int.toOctal: String get() = Integer.toOctalString(this)
  * Int.toString(16)             Example: (-12).toString(16) = -C
  * Integer.toHexString(int)     Example: Integer.toHexString(-12) = FFFFFFF4
  */
-val Int.toHexadecimal: String get() = Integer.toHexString(this).toUpperCase(Locale.getDefault())
+val Int.toHexadecimal: String get() = Integer.toHexString(this).uppercase(Locale.getDefault())

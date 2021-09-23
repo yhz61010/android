@@ -63,7 +63,7 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
             bpLeft.get(leftChunkBytes)
 
             val bpRight: BytePointer = frame.extended_data(1)
-            val rightChunkBytes = ByteArray(frame.linesize(0)) // "0" is not typo.
+            val rightChunkBytes = ByteArray(frame.linesize(0)) // "0" is not typo. Check its document.
             bpRight.get(rightChunkBytes)
 
             return leftChunkBytes to rightChunkBytes

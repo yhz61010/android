@@ -31,6 +31,7 @@
         android:layout_marginTop="16dp"
         android:text="Clear Clipboard"
         android:onClick="onClearClipboardClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edTxt" />
@@ -42,6 +43,7 @@
         android:layout_marginTop="16dp"
         android:text="Set text to clipboard"
         android:onClick="onSetTextToClipboardClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnClear" />

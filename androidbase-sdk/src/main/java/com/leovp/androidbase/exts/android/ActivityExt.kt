@@ -14,7 +14,6 @@ import android.view.WindowManager
 import androidx.fragment.app.Fragment
 import kotlin.reflect.KClass
 
-
 fun Activity.ignoreDuplicateStartSplash(): Boolean {
     return if (this.intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT > 0) {
         this.finish()
@@ -45,8 +44,6 @@ fun Activity.requestFullScreen() {
 
 /**
  * This method must be called before setContentView.
- *
- * @param act The activity
  *
  * Example:
  * ```kotlin

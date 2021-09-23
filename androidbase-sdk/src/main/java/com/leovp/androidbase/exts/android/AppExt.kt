@@ -160,7 +160,7 @@ fun restartApp(targetIntent: Intent) {
 /**
  * Remove Android P warning dialog.
  *
- * Detected problems with API compatibility(visit g.co/dev/appcompat for more info
+ * Detected problems with API compatibility(visit g.co/dev/appcompat for more info)
  */
 @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
 fun closeAndroidPDialog() {
@@ -181,8 +181,7 @@ fun closeAndroidPDialog() {
         val declaredMethod = cls.getDeclaredMethod("currentActivityThread")
         declaredMethod.isAccessible = true
         val activityThread = declaredMethod.invoke(null)
-        val mHiddenApiWarningShown =
-            cls.getDeclaredField("mHiddenApiWarningShown")
+        val mHiddenApiWarningShown = cls.getDeclaredField("mHiddenApiWarningShown")
         mHiddenApiWarningShown.isAccessible = true
         mHiddenApiWarningShown.setBoolean(activityThread, true)
     } catch (e: Exception) {

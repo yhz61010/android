@@ -22,6 +22,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:onClick="onGetClick"
+        tools:ignore="UsingOnClickInXml"
         android:text="Get"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtResult" />
@@ -33,6 +34,7 @@
         android:layout_marginStart="16dp"
         android:text="Post"
         android:onClick="onPostClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toEndOf="@+id/btnGet"
         app:layout_constraintTop_toTopOf="@+id/btnGet" />
 
@@ -43,6 +45,7 @@
         android:layout_marginTop="32dp"
         android:text="Upload"
         android:onClick="onUploadClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toStartOf="@+id/btnGet"
         app:layout_constraintTop_toBottomOf="@+id/btnGet" />
 
@@ -53,6 +56,7 @@
         android:layout_marginStart="16dp"
         android:text="Download"
         android:onClick="onDownloadClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toEndOf="@+id/btnUpload"
         app:layout_constraintTop_toTopOf="@+id/btnUpload" />
 </androidx.constraintlayout.widget.ConstraintLayout>

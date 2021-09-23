@@ -8,5 +8,5 @@ import java.util.*
  * Date: 20-6-17 上午10:28
  */
 fun String.toMd5(allUpperCase: Boolean = false): String {
-    return MD5Util.encrypt(this).let { if (allUpperCase) it.toUpperCase(Locale.getDefault()) else it }
+    return MD5Util.encrypt(this).let { if (allUpperCase) it.uppercase(Locale.getDefault()) else it }
 }

@@ -91,7 +91,7 @@ fun Long.toBytesLE(): ByteArray = ByteArray(Long.SIZE_BYTES).also { for (i in it
 // ==============================================
 
 fun Byte.toHexString(addPadding: Boolean = false) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
-fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toChar() }.joinToString(delimiter)
+fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toInt().toChar() }.joinToString(delimiter)
 
 /**
  * Attention.

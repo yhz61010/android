@@ -21,6 +21,6 @@ class ToastActivity : BaseDemonstrationActivity() {
     }
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is error toast.", error = true, errorColor = "#6200EE")
+        toast("This is custom error color toast.", error = true, errorColor = "#711CDE")
     }
 }

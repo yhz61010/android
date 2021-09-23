@@ -13,6 +13,7 @@
         android:layout_marginTop="16dp"
         android:text="Send Simple Email"
         android:onClick="onSendSimpleEmailClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,6 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="onSendAttachmentEmailClick"
+        tools:ignore="UsingOnClickInXml"
         android:text="Send Attachment Email"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,6 +37,7 @@
         android:layout_marginTop="16dp"
         android:text="Receive Mail"
         android:onClick="onReceiveMailClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnSendAttachment" />

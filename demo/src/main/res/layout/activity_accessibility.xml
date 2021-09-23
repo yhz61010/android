@@ -24,6 +24,7 @@
         android:layout_marginBottom="16dp"
         android:text="Start Accessibility"
         android:onClick="onStartAccessibilityClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -35,6 +36,7 @@
         android:layout_marginTop="8dp"
         android:text="Button"
         android:onClick="onButtonClick"
+        tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etDemo1" />
 

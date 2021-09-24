@@ -3,7 +3,7 @@
 buildscript {
     ext.kotlin_version = '1.5.31'
     ext.coroutines_version = '1.5.2-native-mt'
-    ext.java_version = JavaVersion.VERSION_11
+    ext.java_version = JavaVersion.VERSION_1_8
 
     repositories {
         google()
@@ -11,7 +11,7 @@ buildscript {
         maven { url "https://maven.java.net/content/groups/public/" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath 'com.android.tools.build:gradle:4.2.2'
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.1"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 

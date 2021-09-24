@@ -53,4 +53,14 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.7" />
+
+    <TextView
+        android:id="@+id/tvServerIp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Server IP"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/btnStartServer"
+        app:layout_constraintStart_toStartOf="@+id/btnStartServer"
+        app:layout_constraintTop_toBottomOf="@+id/btnStop" />
 </androidx.constraintlayout.widget.ConstraintLayout>

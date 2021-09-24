@@ -1,5 +1,5 @@
-[![Release](https://jitpack.io/v/User/Repo.svg)]
-(https://jitpack.io/#User/Repo)
+[![Release](https://jitpack.io/v/yhz61010/LeoAndroidBaseUtilProject-Kotlin.svg)]
+(https://jitpack.io/#yhz61010/LeoAndroidBaseUtilProject-Kotlin)
 
 # Known Issues
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~

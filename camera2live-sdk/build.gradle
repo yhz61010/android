@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
+apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
 
 android {
@@ -38,8 +39,21 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
 
     api project(':androidbase-sdk')
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'camera2live-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
 }

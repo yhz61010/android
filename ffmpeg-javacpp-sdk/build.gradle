@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
 
 android {
@@ -43,7 +44,6 @@ android {
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 //    api "androidx.appcompat:appcompat:$appcompatVersion"
 //    api "com.google.android.material:material:$rootProject.ext.materialVersion"
@@ -60,4 +60,18 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
 //    api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion" // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'ffmpeg-javacpp-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
@@ -9,6 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.HtmlCompat
 import com.leovp.androidbase.R
 import com.leovp.androidbase.utils.system.API
@@ -29,7 +33,7 @@ var buildConfigInDebug: Boolean = false
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
  * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
  */
-fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String = "#e65432") {
+fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String? = null) {
     toast(app.getString(resId), longDuration, error, debug, normal, errorColor)
 }
 
@@ -37,7 +41,7 @@ fun toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean =
  * @param normal On Android 11+(Android R+), this parameter will be ignored.
  * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
  */
-fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String = "#e65432") {
+fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String? = null) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
         showToast(msg, longDuration, error, debug, normal, errorColor)
     } else {
@@ -49,7 +53,7 @@ fun toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, d
 private var toast: Toast? = null
 
 @SuppressLint("InflateParams")
-private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String) {
+private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String?) {
     if (debug && !buildConfigInDebug) {
         // Debug log only be shown in DEBUG flavor
         return
@@ -58,19 +62,31 @@ private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolea
     val message: String? = if (debug) "DEBUG: $msg" else msg
     if (normal || API.ABOVE_R) {
         if (error) {
-            Toast.makeText(app, HtmlCompat.fromHtml("<font color='$errorColor'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+            val errorMsgColor = errorColor ?: "#e65432"
+            Toast.makeText(app, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
         } else {
             Toast.makeText(app, message, duration).show()
         }
     } else {
         toast?.cancel()
 
-        val view = LayoutInflater.from(app).inflate(R.layout.toast_tools_layout, null).apply {
-            findViewById<TextView>(R.id.tv_text).run {
-                setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                text = message
+        val view = LayoutInflater.from(app).inflate(R.layout.toast_tools_layout, null).also { v ->
+            v.findViewById<TextView>(R.id.tv_text).let { tv ->
+                tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
+                tv.text = message
             }
-            setBackgroundResource(if (error) R.drawable.toast_bg_error else R.drawable.toast_bg_normal)
+            if (error) {
+                if (errorColor == null) {
+                    v.setBackgroundResource(R.drawable.toast_bg_error)
+                } else {
+                    val errorDrawable: Drawable = ResourcesCompat.getDrawable(app.resources, R.drawable.toast_bg_error, null)!!
+                    val errorDrawableWrapper = DrawableCompat.wrap(errorDrawable).mutate()
+                    v.background = errorDrawableWrapper
+                    DrawableCompat.setTint(errorDrawableWrapper, Color.parseColor(errorColor))
+                }
+            } else {
+                v.setBackgroundResource(R.drawable.toast_bg_normal)
+            }
         }
 
         toast = Toast(app).apply {

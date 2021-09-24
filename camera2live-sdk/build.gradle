@@ -38,6 +38,8 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api project(':androidbase-sdk')
+    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+
+    api project(':androidbase-sdk')
 }

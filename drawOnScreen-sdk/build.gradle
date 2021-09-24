@@ -32,7 +32,9 @@ android {
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+
     api "androidx.appcompat:appcompat:$appcompatVersion"
     api "com.google.android.material:material:$rootProject.ext.materialVersion"
 }

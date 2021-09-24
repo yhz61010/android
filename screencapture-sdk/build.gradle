@@ -34,7 +34,9 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
     api project(':androidbase-sdk')
+
 }

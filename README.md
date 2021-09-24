@@ -1,3 +1,6 @@
+[![Release](https://jitpack.io/v/User/Repo.svg)]
+(https://jitpack.io/#User/Repo)
+
 # Known Issues
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~
 ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~

@@ -4,7 +4,7 @@ buildscript {
     ext.kotlin_version = '1.5.31'
     ext.coroutines_version = '1.5.2-native-mt'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '1.8.1-preview'
+    ext.leoVersion = '1.8.2-preview'
 
     repositories {
         google()
@@ -37,7 +37,7 @@ task clean(type: Delete) {
 ext {
     compileSdkVersion = 30
     buildToolsVersion = "30.0.3"
-    ndkVersion = "22.1.7171670"
+    ndkVersion = "21.1.6352462" // 22.1.7171670
 
     minSdkVersion = 21
     targetSdkVersion = 30

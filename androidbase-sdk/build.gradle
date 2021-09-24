@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
+apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
 
 android {
@@ -24,13 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    flavorDimensions 'default'
 
-    productFlavors {
-        develop {
-            dimension = 'default'
-        }
-    }
     compileOptions {
         sourceCompatibility "$rootProject.ext.java_version"
         targetCompatibility "$rootProject.ext.java_version"
@@ -57,7 +52,6 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
@@ -96,4 +90,18 @@ dependencies {
 
     // https://github.com/hyuwah/DraggableView
 //    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'androidbase-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
 }

@@ -60,8 +60,15 @@ android {
         sourceCompatibility "$rootProject.ext.java_version"
         targetCompatibility "$rootProject.ext.java_version"
     }
+
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+        disable 'MissingTranslation'
     }
 }
 

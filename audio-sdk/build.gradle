@@ -43,6 +43,7 @@ android {
 
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
+    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 

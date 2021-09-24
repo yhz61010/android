@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
+apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
 
 android {
@@ -32,7 +33,6 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.github.jitpack:android-example:$rootProject.ext.jitpackVerson"
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 
     // api group: 'io.netty', name: 'netty-all', version: "$rootProject.ext.nettyVersion"
@@ -46,4 +46,18 @@ dependencies {
     // So what's the magic?
     // https://mvnrepository.com/artifact/com.jcraft/jzlib
     api group: 'com.jcraft', name: 'jzlib', version: "$jzlibVersion"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'basenetty-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
 }

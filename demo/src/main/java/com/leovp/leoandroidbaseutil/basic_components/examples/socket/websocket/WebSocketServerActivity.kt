@@ -6,6 +6,7 @@ import android.view.View
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketServerBinding
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
@@ -84,6 +85,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityWebsocketServerBinding.inflate(layoutInflater).apply { setContentView(root) }
+
+        binding.tvServerIp.text = NetworkUtil.getIp()[0]
 
         binding.btnStop.setOnSingleClickListener {
             LogContext.log.d(TAG, "Stop button clicked.")

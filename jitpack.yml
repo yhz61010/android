@@ -2,4 +2,4 @@ jdk:
   - openjdk11
 
 before_install:
-  - yes | sdkmanager --install "ndk;22.1.7171670"
+  - yes | sdkmanager --install "ndk;22.1.7171670" "cmake;3.18.1"

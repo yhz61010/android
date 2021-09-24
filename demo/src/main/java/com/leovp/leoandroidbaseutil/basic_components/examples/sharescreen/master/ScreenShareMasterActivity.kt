@@ -21,6 +21,7 @@ import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
@@ -104,6 +105,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         if (!AccessibilityUtil.isAccessibilityEnabled()) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+
+        binding.txtInfo.text = NetworkUtil.getIp()[0]
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

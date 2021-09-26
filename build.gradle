@@ -4,7 +4,7 @@ buildscript {
     ext.kotlin_version = '1.5.31'
     ext.coroutines_version = '1.5.2-native-mt'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '1.8.9-preview'
+    ext.leoVersion = '1.8.7-preview'
 
     repositories {
         google()
@@ -70,7 +70,7 @@ ext {
     retrofit2Version = '2.9.0'
     gsonVersion = '2.8.8'
     eventbusVersion = '3.2.0'
-    marsXlogVersion = '1.2.4'
+    marsXlogVersion = '1.2.5'
 
     materialDialogVersion = '3.3.0'
     glideVersion = '4.12.0'

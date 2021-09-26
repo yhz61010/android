@@ -8,18 +8,7 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
 /**
- * You can implement your log wrapper by implement `ILog` or else the default log wrapper `LLog` will be used.
- * `LLog` is the wrapper of Android default log
- *
- * After implementing your log wrapper, you must initialize it in `Application` by calling:
- * Assume that `CLog` is your custom log wrapper.
- * ```kotlin
- * LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
- * ```
- * The default implementation is like this below:
- * ```kotlin
- * LogContext.setLogImp(LLog())
- * ```
+ * Check the [LogContext] documents to learn how to initialize your custom log wrapper.
  *
  * After initializing, the usage is very simple:
  * ```kotlin

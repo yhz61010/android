@@ -39,8 +39,8 @@ class CustomApplication : MultiDexApplication(), DIAware {
         RxJavaPlugins.setErrorHandler { }
 
         LogContext.setLogImp(LLog("LEO"))
-        PrefContext.setPrefImp(LPref())
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        PrefContext.setPrefImp(LPref())
     }
 
     override fun attachBaseContext(base: Context?) {

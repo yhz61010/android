@@ -72,7 +72,7 @@ class CLog : ILog {
         logConfig.mode = Xlog.AppednerModeAsync
         logConfig.logdir = logDir.absolutePath
         logConfig.nameprefix = "main"
-        logConfig.pubkey = if (debugMode) "x" else context.packageName
+        logConfig.pubkey = if (debugMode) "" else context.packageName
         logConfig.compressmode = Xlog.ZLIB_MODE
         logConfig.compresslevel = 0
         logConfig.cachedir = cacheDir.absolutePath

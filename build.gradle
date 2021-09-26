@@ -70,7 +70,7 @@ ext {
     retrofit2Version = '2.9.0'
     gsonVersion = '2.8.8'
     eventbusVersion = '3.2.0'
-    marsXlogVersion = '1.2.4'
+    marsXlogVersion = '1.2.5'
 
     materialDialogVersion = '3.3.0'
     glideVersion = '4.12.0'

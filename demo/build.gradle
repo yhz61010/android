@@ -205,9 +205,7 @@ dependencies {
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
 
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+    implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
 
     implementation project(':androidbase-sdk')
     implementation project(':audio-sdk')
@@ -221,19 +219,23 @@ dependencies {
     implementation project(':drawOnScreen-sdk')
     implementation project(':floatview-sdk')
 
+    testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
-    implementation "com.sun.mail:android-mail:$javaMailVersion"
-    implementation "com.sun.mail:android-activation:$javaMailVersion"
-
-    implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
-    implementation "com.tencent:mmkv-static:$mmkvVersion"
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
     implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
     implementation "org.greenrobot:eventbus:$eventbusVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
+    implementation "com.tencent:mmkv-static:$mmkvVersion"
+
+    implementation "com.sun.mail:android-mail:$javaMailVersion"
+    implementation "com.sun.mail:android-activation:$javaMailVersion"
+
     implementation "de.undercouch:bson4jackson:$bsonVersion"
 }

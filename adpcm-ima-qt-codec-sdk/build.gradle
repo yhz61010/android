@@ -67,3 +67,17 @@ dependencies {
 
     implementation project(':ffmpeg-sdk')
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'adpcm-ima-qt-codec-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

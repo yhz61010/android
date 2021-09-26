@@ -61,20 +61,13 @@ class CLog : ILog {
         System.loadLibrary("c++_shared")
         System.loadLibrary("marsxlog")
 
-        val logDir = getLogDir(context, "xlog")
-        val cacheDir = getLogDir(context, "x-cache-dir")
+        val logDir = getLogDir(context, "xlog").absolutePath
+        val cacheDir = getLogDir(context, "x-cache-dir").absolutePath
+        val defaultLogLevel = if (debugMode) Xlog.LEVEL_VERBOSE else Xlog.LEVEL_INFO
 
-        Log.setLogImp(Xlog().apply {
-            appenderOpen(
-                (if (debugMode) Xlog.LEVEL_VERBOSE else Xlog.LEVEL_INFO),
-                Xlog.AppednerModeAsync,
-                cacheDir.absolutePath,
-                logDir.absolutePath,
-                "main",
-                0
-            )
-            setConsoleLogOpen(0, debugMode)
-        })
+        Log.setLogImp(Xlog())
+        Log.setConsoleLogOpen(debugMode)
+        Log.appenderOpen(defaultLogLevel, Xlog.AppednerModeAsync, cacheDir, logDir, "main", 0)
 
 //        // Now, there is no way to use this XLogConfig. Probably this is a Xlog bug.
 //        val logConfig = Xlog.XLogConfig()

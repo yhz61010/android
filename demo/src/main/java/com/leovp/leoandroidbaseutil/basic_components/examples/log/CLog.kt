@@ -61,34 +61,34 @@ class CLog : ILog {
         System.loadLibrary("c++_shared")
         System.loadLibrary("marsxlog")
 
-        val logDir = getLogDir(context, "xlog")
-        val cacheDir = getLogDir(context, "x-cache-dir")
+        val logDir = getLogDir(context, "xlog").absolutePath
+        val cacheDir = getLogDir(context, "x-cache-dir").absolutePath
+        val defaultLogLevel = if (debugMode) Xlog.LEVEL_VERBOSE else Xlog.LEVEL_INFO
 
-        // this is necessary, or may crash for SIGBUS
-//        val cachePath = "${context.filesDir}/xlog"
-
-        //init xlog
-        val logConfig = Xlog.XLogConfig()
-        logConfig.mode = Xlog.AppednerModeAsync
-        logConfig.logdir = logDir.absolutePath
-        logConfig.nameprefix = "main"
-        logConfig.pubkey = if (debugMode) "x" else context.packageName
-        logConfig.compressmode = Xlog.ZLIB_MODE
-        logConfig.compresslevel = 0
-        logConfig.cachedir = cacheDir.absolutePath
-        logConfig.cachedays = 5
-        if (debugMode) {
-            logConfig.level = Xlog.LEVEL_VERBOSE
-            Xlog.setConsoleLogOpen(true)
-        } else {
-            logConfig.level = Xlog.LEVEL_INFO
-            Xlog.setConsoleLogOpen(false)
-        }
         Log.setLogImp(Xlog())
+        Log.setConsoleLogOpen(debugMode)
+        Log.appenderOpen(defaultLogLevel, Xlog.AppednerModeAsync, cacheDir, logDir, "main", 0)
+
+//        // Now, there is no way to use this XLogConfig. Probably this is a Xlog bug.
+//        val logConfig = Xlog.XLogConfig()
+//        logConfig.mode = Xlog.AppednerModeAsync
+//        logConfig.logdir = logDir.absolutePath
+//        logConfig.nameprefix = "main"
+//        logConfig.pubkey = if (debugMode) "" else context.packageName
+//        logConfig.compressmode = Xlog.ZLIB_MODE
+//        logConfig.compresslevel = 0
+//        logConfig.cachedir = cacheDir.absolutePath
+//        logConfig.cachedays = 5
+//        if (debugMode) {
+//            logConfig.level = Xlog.LEVEL_VERBOSE
+//        } else {
+//            logConfig.level = Xlog.LEVEL_INFO
+//        }
+//        Log.setLogImp(Xlog().apply { setConsoleLogOpen(0, debugMode) })
     }
 
     fun flushLog(isSync: Boolean = false) {
-        Log.appenderFlush(isSync)
+        Log.appenderFlushSync(isSync)
     }
 
     fun closeLog() {

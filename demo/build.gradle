@@ -221,8 +221,6 @@ dependencies {
     implementation project(':drawOnScreen-sdk')
     implementation project(':floatview-sdk')
 
-    implementation "de.undercouch:bson4jackson:$bsonVersion"
-
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
@@ -237,4 +235,5 @@ dependencies {
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
+    implementation "de.undercouch:bson4jackson:$bsonVersion"
 }

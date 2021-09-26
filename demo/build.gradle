@@ -168,8 +168,8 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
-        viewBinding = true
+        dataBinding true
+        viewBinding true
     }
 }
 
@@ -214,7 +214,8 @@ dependencies {
 //    implementation project(':ffmpeg-sdk')
 //    implementation project(':ffmpeg-javacpp-sdk')
 
-    implementation project(':adpcm-ima-qt-codec-sdk')
+//    implementation project(':adpcm-ima-qt-codec-sdk')
+    implementation "com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin:adpcm-ima-qt-codec-sdk:1.8.8-preview"
 
     implementation project(':basenetty-sdk')
     implementation project(':camera2live-sdk')

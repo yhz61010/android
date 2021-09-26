@@ -186,6 +186,11 @@ dependencies {
     implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
     implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
+    // Lifecycle components
+    // ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
+    // LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
 
     // ===== Room - Start
     implementation "androidx.room:room-runtime:$roomVersion"
@@ -199,13 +204,9 @@ dependencies {
     implementation "androidx.room:room-guava:$roomVersion"
     // ===== Room - End
 
-    // Lifecycle components
-    // ViewModel
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
-    // LiveData
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$archLifecycleVersion"
-
-    implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
+    testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
 
     implementation project(':androidbase-sdk')
     implementation project(':audio-sdk')
@@ -219,23 +220,18 @@ dependencies {
     implementation project(':drawOnScreen-sdk')
     implementation project(':floatview-sdk')
 
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
-
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
+    implementation "com.sun.mail:android-mail:$javaMailVersion"
+    implementation "com.sun.mail:android-activation:$javaMailVersion"
 
+    implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
+    implementation "com.tencent:mmkv-static:$mmkvVersion"
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
     implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
     implementation "org.greenrobot:eventbus:$eventbusVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
-    implementation "com.tencent:mmkv-static:$mmkvVersion"
-
-    implementation "com.sun.mail:android-mail:$javaMailVersion"
-    implementation "com.sun.mail:android-activation:$javaMailVersion"
-
     implementation "de.undercouch:bson4jackson:$bsonVersion"
 }

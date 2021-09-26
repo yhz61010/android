@@ -41,7 +41,6 @@ class CustomApplication : MultiDexApplication(), DIAware {
         LogContext.setLogImp(LLog("LEO"))
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
         PrefContext.setPrefImp(LPref())
-//        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
     }
 
     override fun attachBaseContext(base: Context?) {

@@ -65,7 +65,7 @@ dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
     api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    api project(':ffmpeg-sdk')
+    implementation project(':ffmpeg-sdk')
 }
 
 afterEvaluate {

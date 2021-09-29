@@ -71,7 +71,8 @@ abstract class BaseNettyClient protected constructor(
     private val port: Int,
     val connectionListener: ClientConnectListener<BaseNettyClient>,
     private val retryStrategy: RetryStrategy = ConstantRetry(),
-    private val headers: Map<String, String>? = null
+    private val headers: Map<String, String>? = null,
+    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
 ) : BaseNetty() {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
@@ -82,7 +83,8 @@ abstract class BaseNettyClient protected constructor(
         connectionListener: ClientConnectListener<BaseNettyClient>,
         certInputStream: InputStream,
         retryStrategy: RetryStrategy = ConstantRetry(),
-        headers: Map<String, String>? = null
+        headers: Map<String, String>? = null,
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
         webSocketUri.host,
         if (webSocketUri.port == -1) {
@@ -92,7 +94,7 @@ abstract class BaseNettyClient protected constructor(
                 else -> -1
             }
         } else webSocketUri.port,
-        connectionListener, retryStrategy, headers
+        connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
@@ -104,7 +106,8 @@ abstract class BaseNettyClient protected constructor(
         connectionListener: ClientConnectListener<BaseNettyClient>,
         trustAllServers: Boolean,
         retryStrategy: RetryStrategy = ConstantRetry(),
-        headers: Map<String, String>? = null
+        headers: Map<String, String>? = null,
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
         webSocketUri.host,
         if (webSocketUri.port == -1) {
@@ -114,7 +117,7 @@ abstract class BaseNettyClient protected constructor(
                 else -> -1
             }
         } else webSocketUri.port,
-        connectionListener, retryStrategy, headers
+        connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.trustAllServers = trustAllServers
@@ -172,7 +175,7 @@ abstract class BaseNettyClient protected constructor(
         .channel(NioSocketChannel::class.java)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT_IN_MILLS)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)
     private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseClientChannelInboundHandler<*>? = null

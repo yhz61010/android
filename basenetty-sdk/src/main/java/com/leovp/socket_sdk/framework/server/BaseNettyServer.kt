@@ -33,7 +33,8 @@ abstract class BaseNettyServer protected constructor(
     private val port: Int,
     val connectionListener: ServerConnectListener<BaseNettyServer>,
     internal var isWebSocket: Boolean = false,
-    internal var webSocketPath: String = "/"
+    internal var webSocketPath: String = "/",
+    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
 ) : BaseNetty() {
 
     companion object {
@@ -54,7 +55,7 @@ abstract class BaseNettyServer protected constructor(
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childOption(
             ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            CONNECTION_TIMEOUT_IN_MILLS
+            timeout
         )
 
     private lateinit var serverChannel: Channel

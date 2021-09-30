@@ -28,7 +28,7 @@ abstract class BaseHttpRequest {
 
         if (SslUtils.certificateInputStream == null) {
             httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
-            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory("TLS"), SslUtils.systemDefaultTrustManager())
+            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory(SslUtils.PROTOCOL), SslUtils.systemDefaultTrustManager())
         } else {
             httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
             requireNotNull(SslUtils.certificateInputStream, { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" })

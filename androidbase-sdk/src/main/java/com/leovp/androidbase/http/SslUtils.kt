@@ -7,7 +7,6 @@ import java.io.InputStream
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
 
@@ -21,8 +20,15 @@ import javax.net.ssl.*
  * ```
  *
  * Usage1 - HttpsURLConnection:
+ *
  * ```kotlin
- * SslUtils.trustAllHosts("TLS")
+ *  // "TLSv1.1", "TLSv1.2", "TLSv1.3", "DTLSv1.2" or "DTLSv1.3"
+ *  // It's better not to use "TLS"
+ *  // For okhttp library:
+ *  // val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+ *  //     .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
+ *  //     .build()
+ * SslUtils.trustAllHosts("TLSv1.2")
  * val urlServer = URL(url)
  * val conn = urlServer.openConnection() as HttpURLConnection
  * val useHttps: Boolean = url.toLowerCase().startsWith("https")
@@ -34,6 +40,7 @@ import javax.net.ssl.*
  * ```
  *
  * Usage2 - OkHttp:
+ *
  * ```kotlin
  * val builder = OkHttpClient.Builder()
  * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"), SslUtils.systemDefaultTrustManager())
@@ -43,11 +50,13 @@ import javax.net.ssl.*
  */
 @Suppress("unused")
 object SslUtils {
-    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-    })
+//    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+//        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+//        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+//        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+//    })
+
+    const val PROTOCOL = "TLSv1.2"
 
     val doNotVerifier = HostnameVerifier { _, _ ->
         LogContext.log.w(ITAG, "Trust all host names")
@@ -102,8 +111,8 @@ object SslUtils {
 //        }
     }
 
-    fun createSocketFactory(protocol: String): SSLSocketFactory =
-        SSLContext.getInstance(protocol).apply { init(null, trustAllCerts, SecureRandom()) }.socketFactory
+    fun createSocketFactory(protocol: String, km: Array<KeyManager>? = null, tm: Array<TrustManager>? = null): SSLSocketFactory =
+        SSLContext.getInstance(protocol).apply { init(km, tm/*trustAllCerts*/, SecureRandom()) }.socketFactory
 
     fun systemDefaultTrustManager(): X509TrustManager {
         return runCatching {
@@ -130,7 +139,13 @@ object SslUtils {
             }
 //        val kmf: KeyManagerFactory = KeyManagerFactory.getInstance("X509")
 //        kmf.init(keyStore, null)
-            val sslContext = SSLContext.getInstance("TLS")
+            // "TLSv1.1", "TLSv1.2", "TLSv1.3", "DTLSv1.2" or "DTLSv1.3"
+            // It's better not to use "TLS"
+            // For okhttp library:
+//            val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+//                .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
+//                .build()
+            val sslContext = SSLContext.getInstance(PROTOCOL)
             sslContext.init(null/*kmf.keyManagers*/, trustMgrFactory.trustManagers, SecureRandom())
 
             Pair<SSLContext, X509TrustManager>(sslContext, trustMgrFactory.trustManagers[0] as X509TrustManager)

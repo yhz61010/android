@@ -122,6 +122,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            android.R.id.home -> finish()
             R.id.add_item -> {
                 simpleAdapter.insertAdd(
                     0,

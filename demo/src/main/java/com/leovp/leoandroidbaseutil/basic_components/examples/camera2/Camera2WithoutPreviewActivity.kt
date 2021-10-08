@@ -5,7 +5,6 @@ import android.media.MediaCodecInfo
 import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.hjq.permissions.OnPermission
 import com.hjq.permissions.Permission
@@ -13,13 +12,14 @@ import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.camera2live.Camera2ComponentHelper
+import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCamera2WithoutPreviewBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class Camera2WithoutPreviewActivity : AppCompatActivity() {
+class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     companion object {
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL
     }

@@ -3,10 +3,9 @@ package com.leovp.audio.aac
 import android.content.Context
 import android.media.*
 import android.os.SystemClock
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
-import com.leovp.androidbase.utils.JsonUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.log_sdk.LogContext
+import com.leovp.util.toHexStringLE
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -113,7 +112,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     // AAC CSD: Decoder-specific information from ESDS
     private fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
-            LogContext.log.i(TAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecoderInfo)}")
+            LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
             val csd0BB = ByteBuffer.wrap(csd0)
             audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
             val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount).apply {

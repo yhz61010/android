@@ -4,7 +4,6 @@ import android.os.Bundle
 import com.leovp.androidbase.exts.android.getRealResolution
 import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
@@ -12,6 +11,7 @@ import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityDeviceInfoBinding
+import com.leovp.log_sdk.LogContext
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {
 

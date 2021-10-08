@@ -1,7 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.log
 
 import android.content.Context
-import com.leovp.androidbase.utils.log.base.ILog
 import com.leovp.leoandroidbaseutil.BuildConfig
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
@@ -12,7 +11,7 @@ import java.io.File
  * Date: 20-4-20 上午11:39
  */
 @Suppress("unused")
-class CLog : ILog {
+class CLog : com.leovp.log_sdk.base.ILog {
     private val debugMode = BuildConfig.DEBUG
 
     override fun getTagName(tag: String) = "LEO-$tag"

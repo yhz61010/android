@@ -43,11 +43,9 @@ android {
 }
 
 dependencies {
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 //    api "androidx.appcompat:appcompat:$appcompatVersion"
 //    api "com.google.android.material:material:$rootProject.ext.materialVersion"
-
-    api project(':androidbase-sdk')
 
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
     api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion", classifier: 'android-arm'

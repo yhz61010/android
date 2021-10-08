@@ -32,10 +32,7 @@ android {
 }
 
 dependencies {
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-
-    api "androidx.appcompat:appcompat:$appcompatVersion"
-    api "com.google.android.material:material:$rootProject.ext.materialVersion"
+    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 }
 
 afterEvaluate {

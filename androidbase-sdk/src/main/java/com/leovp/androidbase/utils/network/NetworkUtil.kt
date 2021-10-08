@@ -7,7 +7,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.telephony.TelephonyManager
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader

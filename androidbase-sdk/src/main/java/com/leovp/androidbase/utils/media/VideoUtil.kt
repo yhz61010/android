@@ -5,7 +5,7 @@ import android.media.MediaCodec
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 
 /**
  * Author: Michael Leo
@@ -18,7 +18,7 @@ object VideoUtil {
             val param = Bundle()
             param.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bitrate)
             mediaCodec.setParameters(param)
-        }.onFailure { if (LogContext.enableLog) LogContext.log.e("setBitrateDynamically error", it) }
+        }.onFailure { if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.e("setBitrateDynamically error", it) }
     }
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)

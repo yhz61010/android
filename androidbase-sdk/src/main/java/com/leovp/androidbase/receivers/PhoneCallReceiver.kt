@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.util.*
 
 /**

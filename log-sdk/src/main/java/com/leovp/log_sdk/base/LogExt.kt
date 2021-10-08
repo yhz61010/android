@@ -1,18 +1,11 @@
-package com.leovp.androidbase.exts.kotlin
+package com.leovp.log_sdk.base
 
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 
 /**
  * Author: Michael Leo
  * Date: 20-5-13 下午3:39
  */
-fun fail(message: String): Nothing {
-    throw IllegalArgumentException(message)
-}
-
-fun exception(message: String): Nothing {
-    throw Exception(message)
-}
 
 fun exceptionLog(message: String): Nothing {
     error(message)

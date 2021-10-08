@@ -43,8 +43,10 @@ android {
 }
 
 dependencies {
-    api fileTree(dir: "libs", include: ["*.jar"])
-    api project(':androidbase-sdk')
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
+    implementation "androidx.annotation:annotation:$annotationVersion"
+    api project(':log-sdk')
 }
 
 afterEvaluate {

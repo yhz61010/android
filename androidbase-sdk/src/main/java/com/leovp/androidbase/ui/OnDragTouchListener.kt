@@ -12,7 +12,6 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import androidx.core.view.isVisible
-import com.leovp.androidbase.utils.log.LogContext
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -140,7 +139,6 @@ class OnDragTouchListener(
                 //如果移动距离过小，则判定为点击
                 if (abs(event.rawX - mOriginalX) < MOVE_THRESHOLD && abs(event.rawY - mOriginalY) < MOVE_THRESHOLD) {
                     if (onDraggableClickListener != null) {
-                        LogContext.log.i(TAG, "Focused Button=${mFocusedCtlBtn}")
                         onDraggableClickListener!!.onClick(mFocusedCtlBtn!!)
                     }
                 } else {

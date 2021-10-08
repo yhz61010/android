@@ -10,10 +10,9 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.log.LLog
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.ILocalLogService
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
+import com.leovp.log_sdk.LogContext
 
 class MainActivity : AppCompatActivity() {
     private var remoteService: ILocalLogService? = null
@@ -23,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         app = application
-        LogContext.setLogImp(LLog("LEO-AIDL-CLIENT"))
+        com.leovp.log_sdk.LogContext.setLogImp(com.leovp.log_sdk.LLog("LEO-AIDL-CLIENT"))
 
         val serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {

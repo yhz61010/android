@@ -4,9 +4,9 @@ import android.os.Bundle
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.eventbus.handler.EventBusHandler
 import com.leovp.socket_sdk.eventbus.util.EventBus
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
@@ -120,7 +120,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
                         return
                     }
 
-                    if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
+                    if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
 //                    replyAddress?.let { replyAddress ->
@@ -136,7 +136,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
 //                        }
 //                    }
                 }
-                else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
+                else -> if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }
         }
 

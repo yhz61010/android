@@ -8,7 +8,6 @@ import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.audio.aac.AacFilePlayer
@@ -19,6 +18,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.AudioSender
 import com.leovp.leoandroidbaseutil.databinding.ActivityAudioBinding
+import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

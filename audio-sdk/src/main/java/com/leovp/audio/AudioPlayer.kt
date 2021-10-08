@@ -6,15 +6,14 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.SystemClock
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.exts.kotlin.toShortArrayLE
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.aac.AacStreamPlayer
 import com.leovp.audio.base.AudioDecoderManager
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
+import com.leovp.log_sdk.LogContext
+import com.leovp.util.toShortArrayLE
 
 /**
  * Author: Michael Leo
@@ -34,7 +33,7 @@ class AudioPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo, 
     init {
         val minBufferSize =
             AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat) * minPlayBufferSizeRatio
-        LogContext.log.w(TAG, "PCM Codec=${audioDecoderInfo.toJsonString()} minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
+        LogContext.log.w(TAG, "PCM Codec=$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
             setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION

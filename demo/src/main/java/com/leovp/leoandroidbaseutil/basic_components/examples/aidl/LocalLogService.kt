@@ -5,8 +5,8 @@ import android.content.Intent
 import android.os.IBinder
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
+import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 

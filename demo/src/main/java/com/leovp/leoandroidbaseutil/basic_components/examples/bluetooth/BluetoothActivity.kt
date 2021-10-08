@@ -5,9 +5,9 @@ import android.view.View
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothBinding
+import com.leovp.log_sdk.LogContext
 
 /**
  *  Need following permissions:

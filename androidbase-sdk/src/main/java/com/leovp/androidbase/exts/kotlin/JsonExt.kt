@@ -3,7 +3,7 @@ package com.leovp.androidbase.exts.kotlin
 import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes
 import com.google.gson.GsonBuilder
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.lang.reflect.Type
 
 /**

@@ -12,7 +12,7 @@ import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.util.*
 
 /**

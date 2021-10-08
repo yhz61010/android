@@ -9,11 +9,11 @@ import android.view.SurfaceHolder
 import android.view.View
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.view.BaseCamera2Fragment
+import com.leovp.log_sdk.LogContext
 
 /**
  * Author: Michael Leo

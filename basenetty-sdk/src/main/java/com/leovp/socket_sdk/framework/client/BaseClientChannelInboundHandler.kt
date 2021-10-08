@@ -1,6 +1,6 @@
 package com.leovp.socket_sdk.framework.client
 
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.base.ReadSocketDataListener
 import io.netty.channel.ChannelHandlerContext

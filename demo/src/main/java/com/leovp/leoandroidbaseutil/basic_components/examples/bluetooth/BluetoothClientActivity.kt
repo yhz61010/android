@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothClientBinding
+import com.leovp.log_sdk.LogContext
 
 /**
  * Steps:

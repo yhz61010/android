@@ -3,11 +3,11 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.os.Bundle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityChangeAppLanguageBinding
+import com.leovp.log_sdk.LogContext
 
 /**
  * Attention:

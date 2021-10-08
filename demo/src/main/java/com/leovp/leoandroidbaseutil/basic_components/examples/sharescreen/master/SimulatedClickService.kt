@@ -9,9 +9,9 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.leovp.log_sdk.LogContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

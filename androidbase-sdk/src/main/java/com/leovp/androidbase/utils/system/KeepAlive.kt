@@ -13,7 +13,7 @@ import androidx.annotation.RawRes
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.androidbase.exts.android.app
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 
 
 /**
@@ -48,14 +48,14 @@ class KeepAlive(
     private var mediaPlayer: MediaPlayer? = null
     private val keepAliveArgumentReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveArgumentReceiver()")
+            if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveArgumentReceiver()")
             callback()
         }
     }
 
     fun keepAlive() {
         release()
-        if (LogContext.enableLog) LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
+        if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
         runCatching {
             mediaPlayer = MediaPlayer.create(app, undeadAudioResId).apply {
                 setWakeMode(app, PowerManager.PARTIAL_WAKE_LOCK)
@@ -84,7 +84,7 @@ class KeepAlive(
 
     internal class KeepAliveReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveReceiver")
+            if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveReceiver")
             LocalBroadcastManager.getInstance(app).sendBroadcast(Intent("intent.com.leovp.receiver.keep.alive"))
         }
     }

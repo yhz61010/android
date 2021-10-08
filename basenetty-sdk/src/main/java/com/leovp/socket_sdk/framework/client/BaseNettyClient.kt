@@ -3,7 +3,7 @@ package com.leovp.socket_sdk.framework.client
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.http.SslUtils
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
@@ -133,9 +133,9 @@ abstract class BaseNettyClient protected constructor(
 
     internal fun setHeaders(headers: DefaultHttpHeaders) {
         this.headers?.let {
-            if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
+            if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
+                if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
                 headers.add(k, v)
             }
         }

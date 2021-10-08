@@ -7,7 +7,7 @@ import android.content.Intent
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy

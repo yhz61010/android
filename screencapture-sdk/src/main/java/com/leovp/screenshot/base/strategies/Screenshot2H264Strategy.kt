@@ -12,7 +12,7 @@ import android.os.HandlerThread
 import android.view.Surface
 import com.leovp.androidbase.exts.android.compressBitmap
 import com.leovp.androidbase.utils.device.CaptureUtil
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import com.leovp.screenshot.base.TextureRenderer

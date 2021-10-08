@@ -20,7 +20,6 @@ import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
@@ -29,6 +28,8 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.ScreenCapture.BY_IMAGE_2_H264
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder

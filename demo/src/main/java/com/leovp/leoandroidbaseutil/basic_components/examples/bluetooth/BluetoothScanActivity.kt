@@ -13,11 +13,11 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.device.ScanDeviceCallback
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceAdapter
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceModel
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothScanBinding
+import com.leovp.log_sdk.LogContext
 import java.util.*
 
 class BluetoothScanActivity : BaseDemonstrationActivity() {

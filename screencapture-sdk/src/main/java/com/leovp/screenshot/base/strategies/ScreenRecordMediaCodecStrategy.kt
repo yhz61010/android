@@ -12,7 +12,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.androidbase.exts.kotlin.exception
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import java.nio.ByteBuffer

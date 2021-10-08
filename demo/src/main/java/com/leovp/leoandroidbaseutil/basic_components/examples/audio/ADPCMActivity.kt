@@ -7,7 +7,6 @@ import android.view.View
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
@@ -16,6 +15,7 @@ import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder
 import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -74,7 +74,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
                 val st = SystemClock.elapsedRealtimeNanos()
                 val pcmBytes = adpcmQT.decode(chunk)
-                if (LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
+                if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
                 player?.play(pcmBytes)
             }
             adpcmQT.release()

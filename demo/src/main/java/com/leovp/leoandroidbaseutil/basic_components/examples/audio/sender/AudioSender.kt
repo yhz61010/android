@@ -3,7 +3,6 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender
 import android.annotation.SuppressLint
 import android.content.Context
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.leoandroidbaseutil.BuildConfig
@@ -11,6 +10,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.audio.AudioActivit
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.receiver.AudioReceiver.Companion.defaultAudioType
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base.AudioSenderWebSocket
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base.AudioSenderWebSocketHandler
+import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry

@@ -1,7 +1,6 @@
-package com.leovp.androidbase.utils.log.base
+package com.leovp.log_sdk.base
 
 import android.util.Log
-import com.leovp.androidbase.exts.kotlin.ITAG
 
 /**
  * Inherit this class and just implement [printXXXLog] methods.

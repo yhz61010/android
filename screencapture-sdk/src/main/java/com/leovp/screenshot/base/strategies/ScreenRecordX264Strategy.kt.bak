@@ -10,7 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import com.leovp.androidbase.annotations.NotImplemented
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import com.leovp.androidbase.utils.media.YuvUtil
 import com.leovp.x264.X264EncodeResult
 import com.leovp.x264.X264Encoder

@@ -1,7 +1,7 @@
-package com.leovp.androidbase.utils.log
+package com.leovp.log_sdk
 
 import android.util.Log
-import com.leovp.androidbase.utils.log.base.ILog
+import com.leovp.log_sdk.base.ILog
 
 /**
  * Author: Michael Leo

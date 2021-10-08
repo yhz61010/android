@@ -7,15 +7,13 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
-import androidx.viewbinding.BuildConfig
-import com.leovp.androidbase.exts.kotlin.toByteArrayLE
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.AudioEncoderManager
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
+import com.leovp.log_sdk.LogContext
+import com.leovp.util.toByteArrayLE
 import kotlinx.coroutines.*
 
 /**
@@ -47,7 +45,7 @@ class MicRecorder(
 
     init {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat) * recordMinBufferRatio
-        LogContext.log.w(TAG, "recordAudio=${encoderInfo.toJsonString()} recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
+        LogContext.log.w(TAG, "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
 
         encodeWrapper = AudioEncoderManager.getWrapper(type, encoderInfo, object : OutputCallback {
             override fun output(out: ByteArray) {

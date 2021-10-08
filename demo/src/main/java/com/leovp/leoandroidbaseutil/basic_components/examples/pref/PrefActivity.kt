@@ -1,12 +1,12 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.pref
 
 import android.os.Bundle
-import com.leovp.androidbase.exts.kotlin.ITAG
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class PrefActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -6,10 +6,10 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 
-class NewWordActivity : AppCompatActivity() {
+class NewWordActivity : BaseDemonstrationActivity() {
     private lateinit var editWordView: EditText
 
     public override fun onCreate(savedInstanceState: Bundle?) {

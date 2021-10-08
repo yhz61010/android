@@ -1,4 +1,5 @@
 rootProject.name='LeoAndroidBaseUtil'
+include ':log-sdk'
 include ':floatview-sdk'
 include ':adpcm-ima-qt-codec-sdk'
 include ':demo'

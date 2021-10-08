@@ -12,12 +12,12 @@ import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.io.FileOutputStream
 

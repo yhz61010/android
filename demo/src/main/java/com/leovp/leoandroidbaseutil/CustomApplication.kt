@@ -5,8 +5,6 @@ import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.buildConfigInDebug
-import com.leovp.androidbase.utils.log.LLog
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
@@ -38,7 +36,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
 
-        LogContext.setLogImp(LLog("LEO"))
+        com.leovp.log_sdk.LogContext.setLogImp(com.leovp.log_sdk.LLog("LEO"))
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
         PrefContext.setPrefImp(LPref())
     }

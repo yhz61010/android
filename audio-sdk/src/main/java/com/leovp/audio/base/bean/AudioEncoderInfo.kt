@@ -2,6 +2,7 @@ package com.leovp.audio.base.bean
 
 import androidx.annotation.Keep
 
+
 /**
  * Author: Michael Leo
  * Date: 20-8-13 下午7:21

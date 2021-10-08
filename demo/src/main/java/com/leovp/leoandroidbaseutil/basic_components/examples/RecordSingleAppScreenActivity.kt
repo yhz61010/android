@@ -7,13 +7,13 @@ import androidx.appcompat.app.AlertDialog
 import com.leovp.androidbase.exts.android.densityDpi
 import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareSetting
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy

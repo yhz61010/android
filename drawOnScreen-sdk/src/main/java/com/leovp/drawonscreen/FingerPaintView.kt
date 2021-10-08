@@ -7,7 +7,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.MotionEvent
-import androidx.appcompat.widget.AppCompatImageView
+import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
 import kotlin.math.abs
 
@@ -20,7 +20,7 @@ import kotlin.math.abs
  * Date: 2020/11/02 19:10
  */
 class FingerPaintView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
-    AppCompatImageView(context, attrs, defStyleAttr) {
+    ImageView(context, attrs, defStyleAttr) {
 
     companion object {
         private const val DEF_EDIT_MODE = true
@@ -99,7 +99,7 @@ class FingerPaintView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
         }
         if (drawable == null) setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.onebyone, null))
-        scaleType = ScaleType.CENTER_CROP
+        scaleType = ImageView.ScaleType.CENTER_CROP
     }
 
     /**

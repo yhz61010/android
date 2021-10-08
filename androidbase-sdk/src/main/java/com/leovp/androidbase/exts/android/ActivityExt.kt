@@ -90,21 +90,22 @@ fun Window.hideNavigationBar() {
 // ============================================================================
 
 /** Launch a Activity */
-fun Context.startActivity(cls: KClass<*>) = this.startActivity(Intent(this, cls.java))
+fun Context.startActivity(cls: KClass<*>, flags: Int? = null) = this.startActivity(Intent(this, cls.java).apply { flags?.let { addFlags(it) } })
 
 /** Launch a Activity */
-fun Fragment.startActivity(cls: KClass<*>) = this.startActivity(Intent(context, cls.java))
+fun Fragment.startActivity(cls: KClass<*>, flags: Int? = null) = this.startActivity(Intent(context, cls.java).apply { flags?.let { addFlags(it) } })
 
 /** Launch a Activity */
-fun Context.startActivity(cls: KClass<*>, options: Bundle? = null) = this.startActivity(Intent(this, cls.java), options)
+fun Context.startActivity(cls: KClass<*>, flags: Int? = null, options: Bundle? = null) = this.startActivity(Intent(this, cls.java).apply { flags?.let { addFlags(it) } }, options)
 
 /** Launch a Activity */
-fun Fragment.startActivity(cls: KClass<*>, options: Bundle? = null) = this.startActivity(Intent(context, cls.java), options)
+fun Fragment.startActivity(cls: KClass<*>, flags: Int? = null, options: Bundle? = null) =
+    this.startActivity(Intent(context, cls.java).apply { flags?.let { addFlags(it) } }, options)
 
 /** Launch a Activity */
 @JvmOverloads
-fun Activity.startActivityForResult(cls: KClass<*>, requestCode: Int, options: Bundle? = null) {
-    startActivityForResult(Intent(this, cls.java), requestCode, options)
+fun Activity.startActivityForResult(cls: KClass<*>, requestCode: Int, flags: Int? = null, options: Bundle? = null) {
+    startActivityForResult(Intent(this, cls.java).apply { flags?.let { addFlags(it) } }, requestCode, options)
 }
 
 /** Launch a Activity */

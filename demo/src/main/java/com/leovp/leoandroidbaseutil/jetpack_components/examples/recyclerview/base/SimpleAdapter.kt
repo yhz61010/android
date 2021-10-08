@@ -18,10 +18,10 @@ import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
-import com.leovp.androidbase.exts.kotlin.ITAG
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.ItemBean
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.util.concurrent.CopyOnWriteArrayList
 
 

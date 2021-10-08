@@ -6,7 +6,7 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**

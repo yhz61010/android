@@ -10,9 +10,9 @@ import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothServerBinding
+import com.leovp.log_sdk.LogContext
 import java.util.*
 
 /**

@@ -11,9 +11,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.exts.kotlin.sleep
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
@@ -39,6 +37,8 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.socket.eventbus_br
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.socket.websocket.WebSocketServerActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.WifiActivity
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlin.concurrent.thread
 
 class BasicFragment : Fragment() {

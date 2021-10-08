@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basic_components.examples.CircleProgressbarActivity">
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vDownload"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:determinateBackgroundColor="@color/cardview_dark_background"
+        app:finishBackgroundColor="@color/cardview_dark_background"
+        app:idleBackgroundColor="@color/cardview_dark_background"
+        app:showProgressText="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vUpload"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        app:determinateBackgroundColor="@color/design_default_color_secondary"
+        app:finishBackgroundColor="@color/design_default_color_secondary"
+        app:finishIconDrawable="@drawable/ic_default_finish"
+        app:idleBackgroundColor="@color/design_default_color_secondary"
+        app:idleIconDrawable="@drawable/ic_default_upload"
+        app:layout_constraintStart_toStartOf="@+id/vDownload"
+        app:layout_constraintTop_toBottomOf="@+id/textView27"
+        app:progressDeterminateColor="@color/white" />
+
+    <Button
+        android:id="@+id/btnDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Download"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toEndOf="@+id/vDownload"
+        app:layout_constraintTop_toTopOf="@+id/vDownload" />
+
+    <Button
+        android:id="@+id/btnUpload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toStartOf="@+id/btnDownload"
+        app:layout_constraintTop_toTopOf="@+id/vUpload" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomIdle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        app:idleBackgroundColor="@color/design_default_color_error"
+        app:idleIconDrawable="@drawable/ic_default_upload"
+        app:idleIconHeight="34dp"
+        app:idleIconWidth="34dp"
+        app:layout_constraintStart_toStartOf="@+id/vUpload"
+        app:layout_constraintTop_toBottomOf="@+id/vUpload" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomFinish"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        app:finishBackgroundColor="@color/purple_200"
+        app:finishIconHeight="34dp"
+        app:finishIconWidth="34dp"
+        app:layout_constraintStart_toEndOf="@+id/vCustomIdle"
+        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:state="FINISHED" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomInd"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        app:progressIndeterminateColor="@color/design_default_color_secondary"
+        app:indeterminateBackgroundColor="@color/purple_500"
+        app:layout_constraintStart_toEndOf="@+id/vCustomFinish"
+        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:state="INDETERMINATE" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomInd2"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        app:currentProgress="45"
+        app:indeterminateBackgroundColor="@color/purple_200"
+        app:layout_constraintStart_toEndOf="@+id/vCustomInd"
+        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:progressDeterminateColor="@color/white"
+        app:progressIndeterminateSweepAngle="1"
+        app:state="INDETERMINATE" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomDe"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        app:currentProgress="45"
+        app:determinateBackgroundColor="@color/purple_700"
+        app:layout_constraintStart_toEndOf="@+id/vCustomInd2"
+        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:progressDeterminateColor="@color/white"
+        app:state="DETERMINATE" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomDe2"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        app:currentProgress="45"
+        app:determinateBackgroundColor="@color/design_default_color_primary"
+        app:layout_constraintStart_toEndOf="@+id/vCustomDe"
+        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:progressDeterminateColor="@color/white"
+        app:showProgressText="true"
+        app:state="DETERMINATE" />
+
+    <TextView
+        android:id="@+id/textView26"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Click this button"
+        app:layout_constraintEnd_toEndOf="@+id/vCustomInd"
+        app:layout_constraintStart_toStartOf="@+id/vCustomInd"
+        app:layout_constraintTop_toBottomOf="@+id/vCustomInd" />
+
+    <TextView
+        android:id="@+id/textView27"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Yuo can click above progressbar."
+        app:layout_constraintStart_toStartOf="@+id/vDownload"
+        app:layout_constraintTop_toBottomOf="@+id/vDownload" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,7 +6,16 @@
         <entry key="aidl-client/src/main/res/layout/activity_main.xml" value="0.3541666666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_error.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
+        <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
+        <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
+        <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />
+        <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_idle.xml" value="0.5927083333333333" />
+        <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_upload.xml" value="0.5927083333333333" />
         <entry key="demo/src/main/res/layout/activity_audio.xml" value="0.67" />
+        <entry key="demo/src/main/res/layout/activity_change_app_language.xml" value="0.22962962962962963" />
+        <entry key="demo/src/main/res/layout/activity_circle_progressbar.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_clipboard.xml" value="0.5911458333333334" />
+        <entry key="demo/src/main/res/layout/activity_device_info.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_screen_share_master.xml" value="0.14412360688956433" />
         <entry key="demo/src/main/res/layout/activity_socket_client.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_socket_server.xml" value="0.5911458333333334" />

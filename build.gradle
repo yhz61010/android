@@ -35,12 +35,13 @@ task clean(type: Delete) {
 }
 
 ext {
-    compileSdkVersion = 30
-    buildToolsVersion = "30.0.3"
+    compileSdkVersion = 31
+    buildToolsVersion = "31.0.0"
+    // This version is just for JitPack
     ndkVersion = "21.1.6352462" // 22.1.7171670
 
     minSdkVersion = 21
-    targetSdkVersion = 30
+    targetSdkVersion = 31
 
     junitVersion = '4.13.2'
     androidTestRunnerVersion = '1.4.0'

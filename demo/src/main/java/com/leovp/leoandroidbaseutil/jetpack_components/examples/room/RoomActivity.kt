@@ -73,6 +73,7 @@ class RoomActivity : BaseDemonstrationActivity() {
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {
             val intent = Intent(this@RoomActivity, NewWordActivity::class.java)
+            intent.putExtra("title", "New Word")
             startActivityForResult(intent, newWordActivityRequestCode)
         }
     }

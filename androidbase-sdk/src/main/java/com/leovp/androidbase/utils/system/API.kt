@@ -97,6 +97,13 @@ object API {
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
     val ABOVE_R = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
 
+    /** Android 12 */
+    const val S = Build.VERSION_CODES.S
+
+    /** Android >= 12 */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
+    val ABOVE_S = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
     val isOsVersionHigherThenGingerbread: Boolean
         get() = !(Build.VERSION.RELEASE.startsWith("1.") || Build.VERSION.RELEASE.startsWith("2.0")
                 || Build.VERSION.RELEASE.startsWith("2.1") || Build.VERSION.RELEASE.startsWith("2.2")

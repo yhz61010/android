@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
-import com.leovp.androidbase.exts.android.utils.ResourcesUtil.saveRawResourceToFile
+import com.leovp.androidbase.utils.file.ResourcesUtil.saveRawResourceToFile
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity

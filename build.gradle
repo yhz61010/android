@@ -4,7 +4,7 @@ buildscript {
     ext.kotlin_version = '1.5.31'
     ext.coroutines_version = '1.5.2-native-mt'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '1.9.6'
+    ext.leoVersion = '1.9.7'
 
     repositories {
         google()
@@ -55,7 +55,7 @@ ext {
     recyclerviewVersion = '1.2.1'
     materialVersion = '1.4.0'
     cardviewVersion = '1.0.0'
-    constraintlayoutVersion = '2.1.0'
+    constraintlayoutVersion = '2.1.1'
     multidexVersion = '2.0.1'
     preferenceVersion = '1.1.1'
     navVersion = '2.3.5'

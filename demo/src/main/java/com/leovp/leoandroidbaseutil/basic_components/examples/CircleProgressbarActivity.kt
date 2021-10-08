@@ -39,7 +39,7 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
                     sleep(20)
                     binding.vUpload.currentProgress = prog
                 }
-                binding.vUpload.setFinish()
+                binding.vUpload.setError()
             }
         }
 
@@ -59,6 +59,10 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
             override fun onFinishButtonClick(view: View) {
                 toast("onFinishButtonClick")
             }
+
+            override fun onErrorButtonClick(view: View) {
+                TODO("onErrorButtonClick")
+            }
         })
 
         binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar.OnStateChangedListener {
@@ -68,6 +72,7 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
                     CircleProgressbar.STATE_INDETERMINATE -> "Indeterminate"
                     CircleProgressbar.STATE_DETERMINATE -> "Determinate"
                     CircleProgressbar.STATE_FINISHED -> "Finish"
+                    CircleProgressbar.STATE_ERROR -> "Error"
                     else -> "Unknown"
                 }
                 toast("Current state=$stateName")

@@ -11,8 +11,8 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
-import com.leovp.androidbase.exts.android.utils.DeviceUtil
 import com.leovp.androidbase.utils.device.DeviceProp
+import com.leovp.androidbase.utils.device.DeviceUtil
 import java.lang.reflect.Method
 import java.util.*
 

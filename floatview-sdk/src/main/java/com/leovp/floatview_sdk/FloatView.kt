@@ -16,6 +16,10 @@ import com.leovp.floatview_sdk.util.canDrawOverlays
  * Author: Michael Leo
  * Date: 2021/8/26 10:27
  *
+ * **Attention**:
+ * By using `FloatView`, you can still drag the whole float view even you drag on a button or any other view.
+ * However, the view in layout can **NOT** have an empty `onClickListener` otherwise you can't drag on it.
+ *
  * Need permission: `<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />`
  *
  * @see [Easy Float](https://github.com/princekin-f/EasyFloat)

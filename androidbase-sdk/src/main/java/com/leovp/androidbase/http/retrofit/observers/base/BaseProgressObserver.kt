@@ -2,7 +2,7 @@ package com.leovp.androidbase.http.retrofit.observers.base
 
 import com.google.gson.stream.MalformedJsonException
 import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
 import retrofit2.HttpException

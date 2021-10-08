@@ -2,10 +2,10 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.log
 
 import android.os.Bundle
 import com.leovp.androidbase.exts.android.utils.DeviceUtil
-import com.leovp.androidbase.exts.kotlin.ITAG
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 /**
  * Check the [LogContext] documents to learn how to initialize your custom log wrapper.
@@ -36,10 +36,10 @@ class LogActivity : BaseDemonstrationActivity() {
 
         LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}", outputType = 13)
 
-        LogContext.enableLog = false
+        com.leovp.log_sdk.LogContext.enableLog = false
         LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
 
-        LogContext.enableLog = true
+        com.leovp.log_sdk.LogContext.enableLog = true
         LogContext.log.w(ITAG, "This log will be outputted", outputType = 15)
 
 

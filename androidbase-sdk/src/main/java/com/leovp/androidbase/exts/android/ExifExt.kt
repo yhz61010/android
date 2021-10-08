@@ -19,7 +19,7 @@ package com.leovp.androidbase.exts.android
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 
 private const val TAG: String = "ExifUtils"
 

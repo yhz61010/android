@@ -13,7 +13,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import androidx.core.content.FileProvider
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.min

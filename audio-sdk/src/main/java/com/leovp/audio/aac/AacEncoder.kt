@@ -3,9 +3,9 @@ package com.leovp.audio.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.BuildConfig
+import com.leovp.log_sdk.LogContext
+import com.leovp.util.toHexStringLE
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 

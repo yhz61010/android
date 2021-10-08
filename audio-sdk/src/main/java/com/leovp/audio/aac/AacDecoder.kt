@@ -3,9 +3,8 @@ package com.leovp.audio.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.androidbase.utils.JsonUtil
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -29,6 +28,7 @@ class AacDecoder(private val audioDecodeInfo: AudioDecoderInfo, private val call
     //    private var outputFormat: MediaFormat? = null
     private var frameCount = AtomicLong(0)
     private var audioDecoder: MediaCodec? = null
+
     @Suppress("WeakerAccess")
     var csd0: ByteArray? = null
         private set
@@ -60,7 +60,7 @@ class AacDecoder(private val audioDecodeInfo: AudioDecoderInfo, private val call
     fun initAudioDecoder(csd0: ByteArray) {
         runCatching {
             this.csd0 = csd0
-            LogContext.log.i(TAG, "initAudioDecoder: ${JsonUtil.toJsonString(audioDecodeInfo)}")
+            LogContext.log.i(TAG, "initAudioDecoder: $audioDecodeInfo")
             val csd0BB = ByteBuffer.wrap(csd0)
             audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
             val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount).apply {

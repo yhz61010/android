@@ -2,7 +2,7 @@ package com.leovp.androidbase.utils.media
 
 import android.media.MediaFormat
 import com.leovp.androidbase.exts.kotlin.toHexString
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import kotlin.experimental.and
 
 

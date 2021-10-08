@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import com.leovp.androidbase.exts.kotlin.ITAG
 import com.leovp.androidbase.utils.Watermark
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityWatermarkBinding
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 
 class WatermarkActivity : BaseDemonstrationActivity() {

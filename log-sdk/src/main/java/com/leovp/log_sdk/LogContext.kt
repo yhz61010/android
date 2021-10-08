@@ -1,6 +1,6 @@
-package com.leovp.androidbase.utils.log
+package com.leovp.log_sdk
 
-import com.leovp.androidbase.utils.log.base.ILog
+import com.leovp.log_sdk.base.ILog
 
 /**
  *  You can implement your log wrapper by implement `ILog` or else the default log wrapper `LLog` will be used.
@@ -23,7 +23,7 @@ object LogContext {
     var enableLog = true
         set(value) {
             field = value
-            if (!::log.isInitialized) throw IllegalAccessException("You must call setLogImp() first")
+            if (!LogContext::log.isInitialized) throw IllegalAccessException("You must call setLogImp() first")
             log.enableLog = value
         }
 
@@ -31,6 +31,6 @@ object LogContext {
         private set
 
     fun setLogImp(log: ILog) {
-        this.log = log
+        LogContext.log = log
     }
 }

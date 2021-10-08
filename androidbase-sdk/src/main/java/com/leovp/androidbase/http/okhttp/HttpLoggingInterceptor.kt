@@ -1,7 +1,7 @@
 package com.leovp.androidbase.http.okhttp
 
 
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol

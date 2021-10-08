@@ -8,12 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.androidbase.exts.kotlin.ITAG
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.RecyclerviewActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.RoomActivity
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class JetpackFragment : Fragment() {
 

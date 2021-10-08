@@ -1,7 +1,7 @@
 package com.leovp.androidbase.utils.network
 
 import com.leovp.androidbase.iters.EventCallBack
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.net.InetAddress
 import kotlin.concurrent.thread
 

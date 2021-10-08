@@ -11,7 +11,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.bluetoothManager
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -109,14 +109,14 @@ object BluetoothUtil {
             // Get all methods
             val hideMethod: Array<Method> = clsShow.methods
             hideMethod.forEachIndexed { index, method ->
-                if (LogContext.enableLog) {
+                if (com.leovp.log_sdk.LogContext.enableLog) {
                     LogContext.log.d("Method[$index] name: ${method.name}")
                 }
             }
             // Get all const values
             val allFields: Array<Field> = clsShow.fields
             allFields.forEachIndexed { index, field ->
-                if (LogContext.enableLog) {
+                if (com.leovp.log_sdk.LogContext.enableLog) {
                     LogContext.log.d("Field[$index] name: ${field.name}")
                 }
             }

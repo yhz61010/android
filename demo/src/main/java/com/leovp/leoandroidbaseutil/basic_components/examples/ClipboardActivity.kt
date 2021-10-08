@@ -2,11 +2,11 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.kotlin.ITAG
-import com.leovp.androidbase.utils.log.LogContext
 import com.leovp.androidbase.utils.system.ClipboardUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityClipboardBinding
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class ClipboardActivity : BaseDemonstrationActivity() {
     private lateinit var binding: ActivityClipboardBinding

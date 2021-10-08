@@ -1,6 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 
-import com.leovp.androidbase.utils.log.LogContext
+import com.leovp.log_sdk.LogContext
 
 /**
  * Movie player callback.

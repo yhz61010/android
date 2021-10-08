@@ -1,9 +1,8 @@
-package com.leovp.androidbase.exts.android.utils
+package com.leovp.androidbase.utils.file
 
 import android.content.Context
 import androidx.annotation.RawRes
 import com.leovp.androidbase.exts.android.app
-import com.leovp.androidbase.utils.file.FileUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets

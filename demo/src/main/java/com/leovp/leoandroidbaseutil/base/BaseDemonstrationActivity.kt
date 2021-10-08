@@ -26,12 +26,28 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i("onCreate()")
         super.onCreate(savedInstanceState)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
         LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getAppLanguage()
         LogContext.log.i("Pref lang=$lang")
         LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
     }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
+
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        return when (item.itemId) {
+//            R.id.home -> {
+//                finish()
+//                true
+//            }
+//            else -> super.onOptionsItemSelected(item)
+//        }
+//    }
 
     /**
      * If you set `android:configChanges="orientation|screenSize"` for activity on `AndroidManifest`, this method will be called.

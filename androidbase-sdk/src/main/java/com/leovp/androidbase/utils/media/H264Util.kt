@@ -3,7 +3,6 @@ package com.leovp.androidbase.utils.media
 import android.media.MediaFormat
 import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.log_sdk.LogContext
-import kotlin.experimental.and
 
 
 /**
@@ -159,11 +158,11 @@ object H264Util {
             //
             // NALU类型 & 0001 1111(0x1F)(31) = 5 即 NALU类型 & 31(十进制) = 5
             val nalu = data[4]
-            nalu.and(0x1F).toInt()
+            nalu.toInt() and 0x1F
         }
     }
 
-    fun getNaluType(naluByte: Byte) = naluByte.and(0x1F).toInt()
+    fun getNaluType(naluByte: Byte): Int = naluByte.toInt() and 0x1F
 
     @Suppress("unused")
     fun getNaluTypeInStr(naluType: Int): String {

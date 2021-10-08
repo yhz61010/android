@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android.utils
+package com.leovp.androidbase.utils.device
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -11,7 +11,6 @@ import androidx.core.content.ContextCompat
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.outputFormatByte
 import com.leovp.androidbase.exts.kotlin.round
-import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.androidbase.utils.shell.ShellUtil
 import com.leovp.androidbase.utils.system.LangUtil

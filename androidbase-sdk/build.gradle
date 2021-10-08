@@ -53,7 +53,6 @@ android {
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
     api "androidx.lifecycle:lifecycle-livedata-core-ktx:$rootProject.ext.archLifecycleVersion"

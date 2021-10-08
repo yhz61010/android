@@ -15,9 +15,9 @@
         app:determinateBackgroundColor="@color/cardview_dark_background"
         app:finishBackgroundColor="@color/cardview_dark_background"
         app:idleBackgroundColor="@color/cardview_dark_background"
-        app:showProgressText="true"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:showProgressText="true" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
         android:id="@+id/vUpload"
@@ -25,6 +25,7 @@
         android:layout_height="48dp"
         android:layout_marginTop="8dp"
         app:determinateBackgroundColor="@color/design_default_color_secondary"
+        app:errorBackgroundColor="@color/design_default_color_secondary"
         app:finishBackgroundColor="@color/design_default_color_secondary"
         app:finishIconDrawable="@drawable/ic_default_finish"
         app:idleBackgroundColor="@color/design_default_color_secondary"
@@ -77,14 +78,26 @@
         app:state="FINISHED" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomInd"
+        android:id="@+id/vCustomError"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
-        app:progressIndeterminateColor="@color/design_default_color_secondary"
-        app:indeterminateBackgroundColor="@color/purple_500"
+        app:errorBackgroundColor="@color/purple_500"
+        app:errorIconHeight="24dp"
+        app:errorIconWidth="24dp"
         app:layout_constraintStart_toEndOf="@+id/vCustomFinish"
         app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:state="ERROR" />
+
+    <com.leovp.circle_progressbar.CircleProgressbar
+        android:id="@+id/vCustomInd"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        app:indeterminateBackgroundColor="@color/purple_500"
+        app:layout_constraintStart_toStartOf="@+id/vCustomIdle"
+        app:layout_constraintTop_toBottomOf="@+id/vCustomIdle"
+        app:progressIndeterminateColor="@color/design_default_color_secondary"
         app:state="INDETERMINATE" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
@@ -95,7 +108,7 @@
         app:currentProgress="45"
         app:indeterminateBackgroundColor="@color/purple_200"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd"
-        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
         app:progressIndeterminateSweepAngle="1"
         app:state="INDETERMINATE" />
@@ -108,7 +121,7 @@
         app:currentProgress="45"
         app:determinateBackgroundColor="@color/purple_700"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd2"
-        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
         app:state="DETERMINATE" />
 
@@ -120,7 +133,7 @@
         app:currentProgress="45"
         app:determinateBackgroundColor="@color/design_default_color_primary"
         app:layout_constraintStart_toEndOf="@+id/vCustomDe"
-        app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
+        app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
         app:showProgressText="true"
         app:state="DETERMINATE" />
@@ -130,8 +143,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Click this button"
-        app:layout_constraintEnd_toEndOf="@+id/vCustomInd"
+        android:text="     ↑ Click this button"
         app:layout_constraintStart_toStartOf="@+id/vCustomInd"
         app:layout_constraintTop_toBottomOf="@+id/vCustomInd" />
 
@@ -140,7 +152,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Yuo can click above progressbar."
+        android:text="You can click above progressbar."
         app:layout_constraintStart_toStartOf="@+id/vDownload"
         app:layout_constraintTop_toBottomOf="@+id/vDownload" />
 

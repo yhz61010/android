@@ -36,10 +36,10 @@ class LogActivity : BaseDemonstrationActivity() {
 
         LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}", outputType = 13)
 
-        com.leovp.log_sdk.LogContext.enableLog = false
+        LogContext.enableLog = false
         LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
 
-        com.leovp.log_sdk.LogContext.enableLog = true
+        LogContext.enableLog = true
         LogContext.log.w(ITAG, "This log will be outputted", outputType = 15)
 
 

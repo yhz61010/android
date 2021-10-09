@@ -134,9 +134,9 @@ abstract class BaseNettyClient protected constructor(
 
     internal fun setHeaders(headers: DefaultHttpHeaders) {
         this.headers?.let {
-            if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
+            if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
+                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
                 headers.add(k, v)
             }
         }

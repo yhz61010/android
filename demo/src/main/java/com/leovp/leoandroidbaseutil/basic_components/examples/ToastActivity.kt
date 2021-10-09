@@ -2,6 +2,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
+import com.leovp.androidbase.exts.android.cancelToast
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -22,5 +23,9 @@ class ToastActivity : BaseDemonstrationActivity() {
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
         toast("This is custom error color toast.", error = true, errorColor = "#711CDE")
+    }
+
+    fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        cancelToast()
     }
 }

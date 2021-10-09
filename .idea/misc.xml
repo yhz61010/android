@@ -20,6 +20,7 @@
         <entry key="demo/src/main/res/layout/activity_screen_share_master.xml" value="0.14412360688956433" />
         <entry key="demo/src/main/res/layout/activity_socket_client.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_socket_server.xml" value="0.5911458333333334" />
+        <entry key="demo/src/main/res/layout/activity_toast.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_websocket_server.xml" value="0.5" />
       </map>
     </option>

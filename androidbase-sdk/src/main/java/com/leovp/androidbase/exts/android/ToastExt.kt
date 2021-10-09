@@ -98,6 +98,9 @@ private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolea
     }
 }
 
+/**
+ * This method also works in thread.
+ */
 fun cancelToast() {
     toast?.cancel()
 }

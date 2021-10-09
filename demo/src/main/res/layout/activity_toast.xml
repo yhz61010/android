@@ -39,4 +39,15 @@
         tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toStartOf="@+id/btnErrorToast"
         app:layout_constraintTop_toBottomOf="@+id/btnErrorToast" />
+
+    <Button
+        android:id="@+id/btnCancelToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Cancel Toast"
+        android:onClick="onCancelToastClick"
+        app:layout_constraintStart_toStartOf="@+id/btnCustomColorToast"
+        app:layout_constraintTop_toBottomOf="@+id/btnCustomColorToast"
+        tools:ignore="OnClick" />
 </androidx.constraintlayout.widget.ConstraintLayout>

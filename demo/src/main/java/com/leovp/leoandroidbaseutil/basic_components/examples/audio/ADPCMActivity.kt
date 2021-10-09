@@ -74,7 +74,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
                 val st = SystemClock.elapsedRealtimeNanos()
                 val pcmBytes = adpcmQT.decode(chunk)
-                if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
+                if (LogContext.enableLog) LogContext.log.i("PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us")
                 player?.play(pcmBytes)
             }
             adpcmQT.release()

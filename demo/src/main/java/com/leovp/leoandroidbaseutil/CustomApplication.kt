@@ -8,6 +8,8 @@ import com.leovp.androidbase.exts.android.buildConfigInDebug
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
+import com.leovp.log_sdk.LLog
+import com.leovp.log_sdk.LogContext
 import io.reactivex.plugins.RxJavaPlugins
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -36,7 +38,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
 
-        com.leovp.log_sdk.LogContext.setLogImp(com.leovp.log_sdk.LLog("LEO"))
+        LogContext.setLogImp(LLog("LEO"))
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
         PrefContext.setPrefImp(LPref())
     }

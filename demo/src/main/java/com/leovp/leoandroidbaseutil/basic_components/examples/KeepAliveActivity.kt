@@ -12,7 +12,7 @@ class KeepAliveActivity : BaseDemonstrationActivity() {
 
     private val keepAlive: KeepAlive by lazy {
         KeepAlive(R.raw.single_note30, 0.05f) {
-            if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i("KeepAliveActivity Time up!!!")
+            if (LogContext.enableLog) LogContext.log.i("KeepAliveActivity Time up!!!")
             toast("KeepAliveActivity Time up!!!")
         }
     }

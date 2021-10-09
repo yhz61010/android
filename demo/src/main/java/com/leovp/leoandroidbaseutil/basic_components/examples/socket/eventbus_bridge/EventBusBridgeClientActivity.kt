@@ -120,7 +120,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
                         return
                     }
 
-                    if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
+                    if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
 //                    replyAddress?.let { replyAddress ->
@@ -136,7 +136,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
 //                        }
 //                    }
                 }
-                else -> if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
+                else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }
         }
 

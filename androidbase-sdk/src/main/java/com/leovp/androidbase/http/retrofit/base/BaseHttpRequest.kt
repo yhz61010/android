@@ -69,7 +69,7 @@ abstract class BaseHttpRequest {
             // .addHeader("Content-Type", "application/json")
             headerMap?.let {
                 for ((k, v) in headerMap) {
-                    if (com.leovp.log_sdk.LogContext.enableLog) LogContext.log.d("Assign cookie: $k=$v")
+                    if (LogContext.enableLog) LogContext.log.d("Assign cookie: $k=$v")
                     build.addHeader(k, v)
                 }
             }

@@ -109,14 +109,14 @@ object BluetoothUtil {
             // Get all methods
             val hideMethod: Array<Method> = clsShow.methods
             hideMethod.forEachIndexed { index, method ->
-                if (com.leovp.log_sdk.LogContext.enableLog) {
+                if (LogContext.enableLog) {
                     LogContext.log.d("Method[$index] name: ${method.name}")
                 }
             }
             // Get all const values
             val allFields: Array<Field> = clsShow.fields
             allFields.forEachIndexed { index, field ->
-                if (com.leovp.log_sdk.LogContext.enableLog) {
+                if (LogContext.enableLog) {
                     LogContext.log.d("Field[$index] name: ${field.name}")
                 }
             }

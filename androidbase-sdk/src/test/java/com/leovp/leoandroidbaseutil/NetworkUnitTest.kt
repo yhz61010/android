@@ -2,6 +2,8 @@ package com.leovp.leoandroidbaseutil
 
 import android.util.Log
 import com.leovp.androidbase.utils.network.InternetUtil
+import com.leovp.log_sdk.LLog
+import com.leovp.log_sdk.LogContext
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -19,7 +21,7 @@ class NetworkUnitTest {
 
     @Before
     fun preTest() {
-        com.leovp.log_sdk.LogContext.setLogImp(com.leovp.log_sdk.LLog("LEO"))
+        LogContext.setLogImp(LLog("LEO"))
     }
 
     @Test

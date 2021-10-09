@@ -97,3 +97,7 @@ private fun showToast(msg: String?, longDuration: Boolean = false, error: Boolea
         }
     }
 }
+
+fun cancelToast() {
+    toast?.cancel()
+}

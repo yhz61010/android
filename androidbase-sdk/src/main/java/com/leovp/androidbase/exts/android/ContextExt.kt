@@ -146,3 +146,4 @@ val Application.companionDeviceManager @RequiresApi(API.O) get() = this.getSyste
 val Application.textClassificationManager @RequiresApi(API.O) get() = this.getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
 val Application.euiccManager @RequiresApi(API.P) get() = this.getSystemService(Context.EUICC_SERVICE) as EuiccManager
 val Application.ipSecManager @RequiresApi(API.P) get() = this.getSystemService(Context.IPSEC_SERVICE) as IpSecManager
+val Application.vibratorManager @RequiresApi(Build.VERSION_CODES.S) get() = this.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager

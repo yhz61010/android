@@ -6,6 +6,7 @@ import android.content.Context.VIBRATOR_SERVICE
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 
 /**
  * Author: Michael Leo
@@ -17,8 +18,8 @@ object VibrationUtil {
      */
     @SuppressLint("MissingPermission")
     fun vibrate(context: Context, milliseconds: Long = 500) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator.vibrate(
                 VibrationEffect.createOneShot(
                     milliseconds,
                     VibrationEffect.DEFAULT_AMPLITUDE

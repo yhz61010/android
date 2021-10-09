@@ -6,7 +6,7 @@ import android.util.Log
  * Inherit this class and just implement [printXXXLog] methods.
  *
  * The [outputType] parameter in [printXXXLog] methods is just the handy parameter for you to identify the log output type.
- * So that you can control how to output the log. For example, just output some logs on console or just send some logs to server.
+ * So that you can control how to output the log. For example, just output some logs on console or send some logs to server.
  *
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
@@ -140,5 +140,7 @@ interface ILog {
 
     companion object {
         private const val MAX_LENGTH = 2000
+        const val OUTPUT_TYPE_SYSTEM = 0x20211009
+        const val OUTPUT_TYPE_CLIENT_COMMAND = OUTPUT_TYPE_SYSTEM + 1
     }
 }

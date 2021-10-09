@@ -4,6 +4,7 @@ import com.leovp.androidbase.exts.kotlin.toHexString
 import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.http.SslUtils
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry
@@ -525,18 +526,18 @@ abstract class BaseNettyClient protected constructor(
             return false
         }
         if (cmd == null) {
-            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.")
+            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("$cmdTypeAndId: Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectStatus.get()) {
-            LogContext.log.e(cmdTypeAndId, "Socket is not connected. Can not send command.")
+            LogContext.log.e(cmdTypeAndId, "Socket is not connected. Can not send command.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
             return false
         }
         if (::channel.isInitialized && !channel.isActive) {
-            LogContext.log.e(cmdTypeAndId, "Can not execute cmd because of Channel is not active.")
+            LogContext.log.e(cmdTypeAndId, "Can not execute cmd because of Channel is not active.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
             return false
         }
         return true

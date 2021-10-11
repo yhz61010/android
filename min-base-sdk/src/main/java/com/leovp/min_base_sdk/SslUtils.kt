@@ -1,8 +1,5 @@
-package com.leovp.androidbase.http
+package com.leovp.min_base_sdk
 
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
 import java.io.InputStream
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -59,7 +56,6 @@ object SslUtils {
     const val PROTOCOL = "TLSv1.2"
 
     val doNotVerifier = HostnameVerifier { _, _ ->
-        LogContext.log.w(ITAG, "Trust all host names")
         true
     }
 
@@ -102,7 +98,6 @@ object SslUtils {
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->
-        LogContext.log.w(ITAG, "Only trust the following host names: ${hostname.toJsonString()}")
         requireNotNull(hostnames, { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" })
         hostnames!!.contains(hostname)
 //        else {

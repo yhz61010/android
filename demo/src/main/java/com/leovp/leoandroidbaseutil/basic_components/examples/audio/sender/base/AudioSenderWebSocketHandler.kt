@@ -1,8 +1,8 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.base
 
-import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
-import com.leovp.androidbase.exts.kotlin.toBytesLE
 import com.leovp.androidbase.utils.ByteUtil
+import com.leovp.min_base_sdk.bytes.asByteAndForceToBytes
+import com.leovp.min_base_sdk.bytes.toBytesLE
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import io.netty.channel.ChannelHandler

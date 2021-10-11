@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.kotlin
+package com.leovp.min_base_sdk
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream

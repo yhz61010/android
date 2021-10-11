@@ -6,9 +6,9 @@ import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import com.leovp.min_base_sdk.bytes.toHexStringLE
 import java.io.File
 import java.io.FileOutputStream
 

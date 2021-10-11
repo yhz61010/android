@@ -1,6 +1,6 @@
-package com.leovp.androidbase.http.retrofit
+package com.leovp.http_sdk.retrofit
 
-import com.leovp.androidbase.http.retrofit.base.BaseHttpRequest
+import com.leovp.http_sdk.retrofit.base.BaseHttpRequest
 import okhttp3.HttpUrl
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory

@@ -1,8 +1,8 @@
 package com.leovp.leoandroidbaseutil
 
 import android.util.Log
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.utils.cipher.GZipUtil
+import com.leovp.min_base_sdk.bytes.toHexStringLE
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

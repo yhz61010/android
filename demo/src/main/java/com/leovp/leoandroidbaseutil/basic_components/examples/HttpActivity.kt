@@ -5,10 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.http.retrofit.ApiService
-import com.leovp.androidbase.http.retrofit.ApiSubscribe
-import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
-import com.leovp.androidbase.http.retrofit.observers.NoProgressObserver
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.file.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
@@ -55,20 +51,20 @@ class HttpActivity : BaseDemonstrationActivity() {
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+        val observer: com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String> = object : com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response bean=${t?.toJsonString()}")
                 binding.txtResult.text = t
             }
         }
-        val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
-        ApiSubscribe.subscribe(service.getData("200"), NoProgressObserver(observer))
+        val service = com.leovp.http_sdk.retrofit.ApiService.getService("https://postman-echo.com", CommonService::class.java)
+        com.leovp.http_sdk.retrofit.ApiSubscribe.subscribe(service.getData("200"), com.leovp.http_sdk.retrofit.observers.NoProgressObserver(observer))
     }
 
     @SuppressLint("SetTextI18n")
     fun onPostClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.txtResult.text = "It will cost several seconds. Please be patient..."
-        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+        val observer: com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String> = object : com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
                 binding.txtResult.text = t
@@ -79,17 +75,17 @@ class HttpActivity : BaseDemonstrationActivity() {
                 binding.txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
-        val service = ApiService.getService("https://postman-echo.com", CommonService::class.java)
-        ApiSubscribe.subscribe(
+        val service = com.leovp.http_sdk.retrofit.ApiService.getService("https://postman-echo.com", CommonService::class.java)
+        com.leovp.http_sdk.retrofit.ApiSubscribe.subscribe(
             service.postData("This is expected to be sent back as part of response body."),
-            NoProgressObserver(observer)
+            com.leovp.http_sdk.retrofit.observers.NoProgressObserver(observer)
         )
     }
 
     @SuppressLint("SetTextI18n")
     fun onUploadClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.txtResult.text = "It may cost several seconds. Please be patient..."
-        val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
+        val observer: com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String> = object : com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
                 LogContext.log.w(ITAG, "Response=$t")
                 binding.txtResult.text = "Upload Done"
@@ -119,14 +115,14 @@ class HttpActivity : BaseDemonstrationActivity() {
             "your_parameter2" to "2"
         )
 
-        val service = ApiService.getService("server_url", CommonService::class.java)
-        ApiSubscribe.subscribe(service.uploadFile(parameters, body), NoProgressObserver(observer))
+        val service = com.leovp.http_sdk.retrofit.ApiService.getService("server_url", CommonService::class.java)
+        com.leovp.http_sdk.retrofit.ApiSubscribe.subscribe(service.uploadFile(parameters, body), com.leovp.http_sdk.retrofit.observers.NoProgressObserver(observer))
     }
 
     @SuppressLint("SetTextI18n")
     fun onDownloadClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.txtResult.text = "Downloading..."
-        val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody?> {
+        val observer: com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<ResponseBody> = object : com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener<ResponseBody?> {
             override fun onNext(t: ResponseBody?) {
                 val filePath = FileUtil.createFile(this@HttpActivity, "download.pdf").absolutePath
                 FileUtil.copyInputStreamToFile(t!!.byteStream(), filePath)
@@ -139,10 +135,10 @@ class HttpActivity : BaseDemonstrationActivity() {
                 binding.txtResult.text = "Download error. code=$code msg=$msg"
             }
         }
-        val service = ApiService.getService("http://temp.leovp.com", CommonService::class.java)
-        ApiSubscribe.subscribe(
+        val service = com.leovp.http_sdk.retrofit.ApiService.getService("http://temp.leovp.com", CommonService::class.java)
+        com.leovp.http_sdk.retrofit.ApiSubscribe.subscribe(
             service.downloadFile("%E6%96%B0%E4%B8%9C%E6%96%B9%E6%89%98%E4%B8%9A%E8%80%83%E8%AF%95%E5%AE%98%E6%96%B9%E6%8C%87%E5%8D%97.pdf"),
-            NoProgressObserver(observer)
+            com.leovp.http_sdk.retrofit.observers.NoProgressObserver(observer)
         )
     }
 

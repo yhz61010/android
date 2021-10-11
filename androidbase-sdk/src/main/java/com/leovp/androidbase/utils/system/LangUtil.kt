@@ -8,7 +8,7 @@ import android.os.LocaleList
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.sharedPrefs
-import com.leovp.androidbase.exts.kotlin.fail
+import com.leovp.min_base_sdk.exceptions.fail
 import java.util.*
 
 /**

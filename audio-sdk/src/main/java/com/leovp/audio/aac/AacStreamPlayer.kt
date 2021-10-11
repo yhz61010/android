@@ -5,7 +5,7 @@ import android.media.*
 import android.os.SystemClock
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.log_sdk.LogContext
-import com.leovp.util.toHexStringLE
+import com.leovp.min_base_sdk.bytes.toHexStringLE
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue

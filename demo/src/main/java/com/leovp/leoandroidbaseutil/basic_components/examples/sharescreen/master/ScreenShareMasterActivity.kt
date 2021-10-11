@@ -30,6 +30,9 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import com.leovp.min_base_sdk.bytes.asByteAndForceToBytes
+import com.leovp.min_base_sdk.bytes.toBytesLE
+import com.leovp.min_base_sdk.exceptions.exception
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.ScreenCapture.BY_IMAGE_2_H264
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder

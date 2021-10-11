@@ -9,10 +9,10 @@ import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
-import com.leovp.androidbase.exts.android.createBitmap
 import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
+import com.leovp.screenshot.util.createBitmap
 import java.util.*
 
 /**

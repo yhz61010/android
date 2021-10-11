@@ -10,12 +10,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
-import com.leovp.androidbase.exts.android.compressBitmap
-import com.leovp.androidbase.utils.device.CaptureUtil
 import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
 import com.leovp.screenshot.base.TextureRenderer
+import com.leovp.screenshot.util.CaptureUtil
+import com.leovp.screenshot.util.compressBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

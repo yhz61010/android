@@ -10,11 +10,10 @@ import android.media.projection.MediaProjection
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
-import com.leovp.androidbase.exts.kotlin.exception
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.ScreenProcessor
+import com.leovp.screenshot.util.exception
 import java.nio.ByteBuffer
 
 /**
@@ -230,7 +229,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
         if (MediaCodec.BUFFER_FLAG_CODEC_CONFIG == flags) {
             spsPpsBuf = bytes.copyOf()
-            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.toJsonString()}")
+            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.decodeToString()}")
         }
 
 //        val naluTypeStr = when (naluType) {

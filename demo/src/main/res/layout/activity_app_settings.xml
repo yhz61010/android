@@ -42,4 +42,16 @@
         app:layout_constraintStart_toStartOf="@+id/button6"
         app:layout_constraintTop_toBottomOf="@+id/button6"
         tools:ignore="UsingOnClickInXml" />
+
+    <Button
+        android:id="@+id/button8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Open Unity Setting Page"
+        android:textAllCaps="false"
+        android:onClick="onUnitySettingClick"
+        app:layout_constraintStart_toStartOf="@+id/button7"
+        app:layout_constraintTop_toBottomOf="@+id/button7"
+        tools:ignore="OnClick" />
 </androidx.constraintlayout.widget.ConstraintLayout>

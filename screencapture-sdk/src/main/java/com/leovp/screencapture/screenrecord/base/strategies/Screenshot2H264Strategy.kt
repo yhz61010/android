@@ -16,13 +16,12 @@ import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
 
 /**
+ * Require API 26 (Android 8.0+)
+ *
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
  */
@@ -286,6 +285,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
             onInit()
             onStart()
             while (isRecording) {
+                ensureActive()
                 CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
                         val compressedBitmap = it.compressBitmap(builder.quality, builder.sampleSize)

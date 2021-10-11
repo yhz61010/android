@@ -32,7 +32,6 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api project(':min-base-sdk')
     api project(':log-sdk')
 

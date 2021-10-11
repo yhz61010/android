@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base
+package com.leovp.screencapture.screenshot.base
 
 import android.graphics.ImageFormat
 import android.hardware.display.DisplayManager

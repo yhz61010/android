@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base.strategies
+package com.leovp.screencapture.screenrecord.base.strategies
 
 import android.annotation.SuppressLint
 import android.hardware.display.DisplayManager
@@ -11,9 +11,10 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.log_sdk.LogContext
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.util.exception
+import com.leovp.min_base_sdk.exception
+import com.leovp.min_base_sdk.toHexStringLE
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.nio.ByteBuffer
 
 /**
@@ -229,7 +230,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
         if (MediaCodec.BUFFER_FLAG_CODEC_CONFIG == flags) {
             spsPpsBuf = bytes.copyOf()
-            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.decodeToString()}")
+            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.toHexStringLE()}")
         }
 
 //        val naluTypeStr = when (naluType) {

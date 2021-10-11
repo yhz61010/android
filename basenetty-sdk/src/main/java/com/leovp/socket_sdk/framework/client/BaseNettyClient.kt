@@ -1,10 +1,10 @@
 package com.leovp.socket_sdk.framework.client
 
-import com.leovp.androidbase.exts.kotlin.toHexString
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
-import com.leovp.androidbase.http.SslUtils
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
+import com.leovp.min_base_sdk.SslUtils
+import com.leovp.min_base_sdk.bytes.toHexString
+import com.leovp.min_base_sdk.bytes.toHexStringLE
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
 import com.leovp.socket_sdk.framework.client.retry_strategy.ConstantRetry

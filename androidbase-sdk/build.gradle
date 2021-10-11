@@ -75,18 +75,13 @@ dependencies {
     testImplementation "org.powermock:powermock-core:$rootProject.ext.powermockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
+    api project(':min-base-sdk')
     api project(':log-sdk')
+    api project(':http-sdk')
 
     // EXIF Interface
     api "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
-    api group: 'com.squareup.okhttp3', name: 'okhttp', version: "$rootProject.ext.okhttpVersion"
-    api group: 'io.reactivex.rxjava2', name: 'rxjava', version: "$rootProject.ext.rxjava2RxjavaVersion"
-    api group: 'io.reactivex.rxjava2', name: 'rxandroid', version: "$rootProject.ext.rxjava2RxAndroidVersion"
-    api group: 'com.squareup.retrofit2', name: 'retrofit', version: "$rootProject.ext.retrofit2Version"
-    api "com.squareup.retrofit2:converter-scalars:$rootProject.ext.retrofit2Version"
-    api "com.squareup.retrofit2:converter-gson:$rootProject.ext.retrofit2Version"
-//    api "com.squareup.retrofit2:converter-moshi:$rootProject.ext.retrofit2Version"
-    api "com.squareup.retrofit2:adapter-rxjava2:$rootProject.ext.retrofit2Version"
+
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
 
     // https://github.com/hyuwah/DraggableView

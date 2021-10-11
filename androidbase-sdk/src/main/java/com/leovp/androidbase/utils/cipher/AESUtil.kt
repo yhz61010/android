@@ -4,7 +4,7 @@ import android.os.Build
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.min_base_sdk.bytes.toHexStringLE
+import com.leovp.min_base_sdk.toHexStringLE
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKey

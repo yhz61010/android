@@ -28,7 +28,6 @@ import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
 import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
-import com.leovp.androidbase.exts.kotlin.fail
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
@@ -38,6 +37,7 @@ import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.log_sdk.LogContext
+import com.leovp.min_base_sdk.exceptions.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

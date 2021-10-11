@@ -123,6 +123,7 @@ class BasicFragment : Fragment() {
             Pair("Toast", ToastActivity::class.java),
             Pair("FloatView", FloatViewActivity::class.java),
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
+            Pair("App Settings", AppSettingsActivity::class.java),
         )
 
         val colors = arrayOf(

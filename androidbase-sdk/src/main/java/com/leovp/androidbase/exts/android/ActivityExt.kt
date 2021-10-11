@@ -114,44 +114,146 @@ fun Fragment.startActivityForResult(cls: KClass<*>, requestCode: Int, options: B
     startActivityForResult(Intent(context, cls.java), requestCode, options)
 }
 
-/** Launch applications detail page */
-fun Context.startAppDetails() = startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri))
+// ============================================================
+// ====== Open Settings ==========
+// ============================================================
 
-/** Launch applications detail page */
-fun Fragment.startAppDetails() {
+/**
+ * Launch applications detail page
+ *
+ * Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Context.startAppDetailSetting() {
+    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri))
+}
+
+/**
+ * Launch applications detail page
+ *
+ * Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Fragment.startAppDetailSetting() {
     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri))
 }
 
-/** Launch applications detail page */
+/**
+ * Launch applications detail page
+ *
+ * Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
 @JvmOverloads
-fun Activity.startAppDetailsForResult(requestCode: Int, options: Bundle? = null) {
+fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
     startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri), requestCode, options)
 }
 
-/** Launch applications detail page */
+/**
+ * Launch applications detail page
+ *
+ * Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
 @JvmOverloads
-fun Fragment.startAppDetailsForResult(requestCode: Int, options: Bundle? = null) {
+fun Fragment.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
     startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri), requestCode, options)
 }
 
-/** Launch internal storage settings page */
-fun Context.startStorageSettings() {
-    startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS))
+// --------------------------------------------------
+
+/**
+ * Launch internal storage settings page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Context.startAppStorageSettings() {
+    startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri))
 }
 
-/** Launch internal storage settings page */
-fun Fragment.startStorageSettings() {
-    startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS))
+/**
+ * Launch internal storage settings page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Fragment.startAppStorageSettings() {
+    startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri))
 }
 
-/** Launch internal storage settings page */
+/**
+ * Launch internal storage settings page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
 @JvmOverloads
-fun Activity.startStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
-    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), requestCode, options)
+fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
+    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri), requestCode, options)
 }
 
-/** Launch internal storage settings page */
+/**
+ * Launch internal storage settings page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
 @JvmOverloads
-fun Fragment.startStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
-    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), requestCode, options)
+fun Fragment.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
+    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri), requestCode, options)
 }
+
+// --------------------------------------------------
+
+/**
+ * Launch overlays permission page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Context.startManageDrawOverlaysPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.packageUri))
+    }
+}
+
+/**
+ * Launch overlays permission page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Fragment.startManageDrawOverlaysPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.requireContext().packageUri))
+    }
+}
+
+/**
+ * Launch overlays permission page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+@JvmOverloads
+fun Activity.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.packageUri), requestCode, options)
+    }
+}
+
+/**
+ * Launch overlays permission page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+@JvmOverloads
+fun Fragment.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.requireContext().packageUri), requestCode, options)
+    }
+}
+
+// --------------------------------------------------

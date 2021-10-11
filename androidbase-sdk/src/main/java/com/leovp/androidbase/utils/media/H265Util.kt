@@ -2,7 +2,7 @@ package com.leovp.androidbase.utils.media
 
 import android.media.MediaFormat
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.bytes.toHexString
+import com.leovp.min_base_sdk.toHexString
 
 /**
  * [H265 NAL Unit Header](https://tools.ietf.org/html/rfc7798#page-13)

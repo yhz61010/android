@@ -37,7 +37,7 @@ import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.exceptions.fail
+import com.leovp.min_base_sdk.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

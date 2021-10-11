@@ -8,7 +8,7 @@ import android.view.Surface
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.min_base_sdk.bytes.toHexStringLE
+import com.leovp.min_base_sdk.toHexStringLE
 import java.io.File
 import java.io.FileOutputStream
 

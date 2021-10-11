@@ -1,4 +1,4 @@
-package com.leovp.min_base_sdk.bytes
+package com.leovp.min_base_sdk
 
 import java.nio.ByteBuffer
 

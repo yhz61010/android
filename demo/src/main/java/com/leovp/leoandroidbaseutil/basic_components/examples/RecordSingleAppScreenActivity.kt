@@ -14,9 +14,9 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Bind
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.toHexString
-import com.leovp.screenshot.ScreenCapture
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy
+import com.leovp.screencapture.screenrecord.ScreenCapture
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H264Strategy
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream

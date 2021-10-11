@@ -1,4 +1,4 @@
-package com.leovp.screenshot.util
+package com.leovp.screencapture.screenshot
 
 import android.app.Activity
 import android.graphics.Bitmap

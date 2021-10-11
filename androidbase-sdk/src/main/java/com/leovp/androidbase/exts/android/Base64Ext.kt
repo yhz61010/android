@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.system.API
+import com.leovp.min_base_sdk.getBitmap
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 

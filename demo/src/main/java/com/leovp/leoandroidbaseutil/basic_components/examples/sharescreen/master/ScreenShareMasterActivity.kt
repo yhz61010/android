@@ -33,8 +33,8 @@ import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.asByteAndForceToBytes
 import com.leovp.min_base_sdk.exception
 import com.leovp.min_base_sdk.toBytesLE
-import com.leovp.screenshot.ScreenCapture
-import com.leovp.screenshot.ScreenCapture.BY_IMAGE_2_H264
+import com.leovp.screencapture.screenrecord.ScreenCapture
+import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H264
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler

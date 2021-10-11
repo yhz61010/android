@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base.strategies
+package com.leovp.screencapture.screenrecord.base.strategies
 
 import android.annotation.SuppressLint
 import android.graphics.PixelFormat
@@ -10,9 +10,9 @@ import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.log_sdk.LogContext
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.util.createBitmap
+import com.leovp.min_base_sdk.createBitmap
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.util.*
 
 /**

@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.min_base_sdk
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory

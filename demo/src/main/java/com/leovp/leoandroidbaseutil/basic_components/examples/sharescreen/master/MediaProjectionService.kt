@@ -15,10 +15,10 @@ import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.screenshot.ScreenCapture
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
+import com.leovp.screencapture.screenrecord.ScreenCapture
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.ScreenProcessor
+import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import io.karn.notify.Notify
 import okhttp3.internal.closeQuietly
 import java.io.BufferedOutputStream

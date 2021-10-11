@@ -77,7 +77,6 @@ dependencies {
 
     api project(':min-base-sdk')
     api project(':log-sdk')
-    api project(':http-sdk')
 
     // EXIF Interface
     api "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"

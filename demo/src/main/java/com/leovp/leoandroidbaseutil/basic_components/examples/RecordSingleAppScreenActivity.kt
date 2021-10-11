@@ -13,7 +13,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.min_base_sdk.bytes.toHexString
+import com.leovp.min_base_sdk.toHexString
 import com.leovp.screenshot.ScreenCapture
 import com.leovp.screenshot.base.ScreenDataListener
 import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy

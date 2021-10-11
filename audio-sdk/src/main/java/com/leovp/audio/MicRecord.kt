@@ -13,7 +13,7 @@ import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.log_sdk.LogContext
-import com.leovp.util.toByteArrayLE
+import com.leovp.min_base_sdk.bytes.toByteArrayLE
 import kotlinx.coroutines.*
 
 /**

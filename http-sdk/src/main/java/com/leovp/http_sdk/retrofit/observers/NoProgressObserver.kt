@@ -1,7 +1,7 @@
-package com.leovp.androidbase.http.retrofit.observers
+package com.leovp.http_sdk.retrofit.observers
 
-import com.leovp.androidbase.http.retrofit.iter.ObserverOnNextListener
-import com.leovp.androidbase.http.retrofit.observers.base.BaseProgressObserver
+import com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener
+import com.leovp.http_sdk.retrofit.observers.base.BaseProgressObserver
 
 /**
  * Author: Michael Leo

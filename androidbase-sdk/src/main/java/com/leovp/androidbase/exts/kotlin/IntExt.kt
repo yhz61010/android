@@ -7,7 +7,7 @@ val Int.toBoolean: Boolean get() = this != 0
 
 /**
  * Convert Int value to binary value(Int.toString(2))
- * Int.toString(2)             Example: (-12).toString(2) = -1100
+ * Int.toString(2)              Example: (-12).toString(2) = -1100
  * Integer.toBinaryString(int)  Example: Integer.toBinaryString(-12) = 11111111111111111111111111110100
  */
 val Int.toBinary: String get() = Integer.toBinaryString(this)

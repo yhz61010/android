@@ -15,10 +15,6 @@ import android.util.DisplayMetrics
 val Context.canDrawOverlays: Boolean
     get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
-fun fail(message: String): Nothing {
-    throw IllegalArgumentException(message)
-}
-
 /**
  * As of API 30(Android 11), you must use Activity context to retrieve screen real size
  */
@@ -60,8 +56,6 @@ fun Activity.getAvailableResolution(): Point {
 }
 
 val Activity.screenRealWidth get() = getRealResolution().x
-
-val Activity.screenRealHeight get() = getRealResolution().y
 
 val Activity.screenAvailableHeight get() = getAvailableResolution().y
 

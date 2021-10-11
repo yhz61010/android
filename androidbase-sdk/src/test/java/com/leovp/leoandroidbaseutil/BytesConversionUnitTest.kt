@@ -1,6 +1,6 @@
 package com.leovp.leoandroidbaseutil
 
-import com.leovp.androidbase.exts.kotlin.*
+import com.leovp.min_base_sdk.bytes.*
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -16,9 +16,6 @@ import android.view.View
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.*
-import com.leovp.androidbase.exts.kotlin.asByteAndForceToBytes
-import com.leovp.androidbase.exts.kotlin.toBytesLE
-import com.leovp.androidbase.exts.kotlin.toHexStringLE
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.media.H264Util
@@ -33,6 +30,9 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareClientBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import com.leovp.min_base_sdk.bytes.asByteAndForceToBytes
+import com.leovp.min_base_sdk.bytes.toBytesLE
+import com.leovp.min_base_sdk.bytes.toHexStringLE
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient

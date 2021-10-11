@@ -1,4 +1,4 @@
-package com.leovp.androidbase.http.retrofit
+package com.leovp.http_sdk.retrofit
 
 import okhttp3.HttpUrl
 

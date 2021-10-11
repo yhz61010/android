@@ -1,4 +1,4 @@
-package com.leovp.screenshot.base.strategies
+package com.leovp.screencapture.screenrecord.base.strategies
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -11,11 +11,11 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
 import com.leovp.log_sdk.LogContext
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.base.TextureRenderer
-import com.leovp.screenshot.util.CaptureUtil
-import com.leovp.screenshot.util.compressBitmap
+import com.leovp.min_base_sdk.compressBitmap
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.ScreenProcessor
+import com.leovp.screencapture.screenrecord.base.TextureRenderer
+import com.leovp.screencapture.screenshot.CaptureUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

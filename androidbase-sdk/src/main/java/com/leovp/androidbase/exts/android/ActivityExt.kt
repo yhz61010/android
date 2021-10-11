@@ -257,3 +257,55 @@ fun Fragment.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle
 }
 
 // --------------------------------------------------
+
+/**
+ * Launch unity setting page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Context.startUnitySettingPage(action: String) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivity(Intent(action, this.packageUri))
+    }
+}
+
+/**
+ * Launch unity setting page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+fun Fragment.startUnitySettingPage(action: String) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivity(Intent(action, this.requireContext().packageUri))
+    }
+}
+
+/**
+ * Launch unity setting page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+@JvmOverloads
+fun Activity.startUnitySettingPage(action: String, requestCode: Int, options: Bundle? = null) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivityForResult(Intent(action, this.packageUri), requestCode, options)
+    }
+}
+
+/**
+ * Launch unity setting page
+ *
+ *  Attention:
+ * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
+ */
+@JvmOverloads
+fun Fragment.startUnitySettingPage(action: String, requestCode: Int, options: Bundle? = null) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        startActivityForResult(Intent(action, this.requireContext().packageUri), requestCode, options)
+    }
+}
+
+// --------------------------------------------------

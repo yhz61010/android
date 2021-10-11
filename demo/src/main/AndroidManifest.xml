@@ -36,6 +36,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity
+            android:name=".basic_components.AppSettingsActivity"
+            android:exported="true" />
         <activity android:name=".basic_components.examples.CircleProgressbarActivity" />
         <activity android:name=".basic_components.examples.FloatViewActivity" />
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />

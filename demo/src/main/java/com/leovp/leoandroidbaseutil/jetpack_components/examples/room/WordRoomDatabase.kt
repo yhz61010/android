@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
  * Date: 2020/9/4 上午11:42
  */
 // Annotates class to be a Room Database with a table (entity) of the Word class
-@Database(entities = arrayOf(Word::class), version = 1, exportSchema = false)
+@Database(entities = [Word::class], version = 1, exportSchema = false)
 abstract class WordRoomDatabase : RoomDatabase() {
 
     abstract fun wordDao(): WordDao
@@ -24,11 +24,11 @@ abstract class WordRoomDatabase : RoomDatabase() {
         private val scope: CoroutineScope
     ) : RoomDatabase.Callback() {
 
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
-            // Note: If you only want to populate the database the first time the app is launched,
-            // you can override the onCreate() method within the RoomDatabase.Callback.
-        }
+//        override fun onCreate(db: SupportSQLiteDatabase) {
+//            super.onCreate(db)
+//            // Note: If you only want to populate the database the first time the app is launched,
+//            // you can override the onCreate() method within the RoomDatabase.Callback.
+//        }
 
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)

@@ -1,4 +1,4 @@
-package com.leovp.min_base_sdk.exceptions
+package com.leovp.min_base_sdk
 
 fun fail(message: String): Nothing {
     throw IllegalArgumentException(message)

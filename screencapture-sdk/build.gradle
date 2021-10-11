@@ -35,9 +35,9 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-
-    api project(':androidbase-sdk')
+//    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
+    api project(':log-sdk')
 }
 
 afterEvaluate {

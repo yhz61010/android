@@ -1,4 +1,4 @@
-package com.leovp.screenshot
+package com.leovp.screencapture.screenrecord
 
 import android.app.Activity
 import android.app.Activity.RESULT_OK
@@ -8,11 +8,11 @@ import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import com.leovp.log_sdk.LogContext
-import com.leovp.screenshot.base.ScreenDataListener
-import com.leovp.screenshot.base.ScreenProcessor
-import com.leovp.screenshot.base.strategies.ScreenRecordMediaCodecStrategy
-import com.leovp.screenshot.base.strategies.ScreenRecordRawBmpStrategy
-import com.leovp.screenshot.base.strategies.Screenshot2H264Strategy
+import com.leovp.screencapture.screenrecord.base.ScreenDataListener
+import com.leovp.screencapture.screenrecord.base.ScreenProcessor
+import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
+import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordRawBmpStrategy
+import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H264Strategy
 
 /**
  * Author: Michael Leo

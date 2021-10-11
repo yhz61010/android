@@ -89,7 +89,7 @@ class DecoderVideoFileManager {
                     }
                 }
             }.onFailure {
-                LogContext.log.e(TAG, "decode mp4 error", it)
+                LogContext.log.d(TAG, "decode mp4 error", it)
             }
         }
 
@@ -98,7 +98,7 @@ class DecoderVideoFileManager {
                 LogContext.log.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
                 mSpeedController.preRender(info.presentationTimeUs)
                 codec.releaseOutputBuffer(index, true)
-            }.onFailure { LogContext.log.e(TAG, "onOutputBufferAvailable error", it) }
+            }.onFailure { LogContext.log.d(TAG, "onOutputBufferAvailable error", it) }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

@@ -30,6 +30,8 @@ object LogContext {
     lateinit var log: ILog
         private set
 
+    fun isLogInitialized(): Boolean = ::log.isInitialized
+
     fun setLogImp(log: ILog) {
         LogContext.log = log
     }

@@ -1,6 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.log
 
 import android.os.Bundle
+import android.util.Log
 import com.leovp.androidbase.utils.device.DeviceUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -42,7 +43,6 @@ class LogActivity : BaseDemonstrationActivity() {
         LogContext.enableLog = true
         LogContext.log.w(ITAG, "This log will be outputted", outputType = 15)
 
-
         val sb = StringBuilder()
         for (i in 0 until 1000) {
             sb.append("[$i]")
@@ -52,6 +52,12 @@ class LogActivity : BaseDemonstrationActivity() {
         val string = sb.toString()
         LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = 16)
         LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true, outputType = 17)
+
+        if (LogContext.isLogInitialized()) {
+            Log.w(TAG, "Log is initialized.")
+        } else {
+            Log.e(TAG, "Log is NOT initialized.")
+        }
     }
 
     override fun onStop() {

@@ -48,6 +48,10 @@ fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? 
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
     startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
@@ -67,6 +71,10 @@ fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((i
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
@@ -84,6 +92,10 @@ fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: (
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
@@ -119,6 +131,10 @@ fun Fragment.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)?
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
     startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
@@ -138,6 +154,10 @@ fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((i
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
@@ -155,6 +175,10 @@ fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: (
  * @see <a href="https://stackoverflow.com/a/48177487">Using startactivityforresult with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
 @JvmOverloads
+@Deprecated(
+    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
+)
 fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 

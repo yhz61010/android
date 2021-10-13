@@ -66,6 +66,8 @@ dependencies {
     api "androidx.lifecycle:lifecycle-process:$rootProject.ext.archLifecycleVersion"
     api "com.google.android.material:material:$materialVersion"
     api "androidx.preference:preference-ktx:$preferenceVersion"
+    api "androidx.activity:activity-ktx:$activityVersion"
+    api "androidx.fragment:fragment-ktx:$fragmentVersion"
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidTestRunnerVersion"

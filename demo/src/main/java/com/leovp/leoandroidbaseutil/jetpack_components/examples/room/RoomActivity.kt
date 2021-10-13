@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,14 +14,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.leovp.androidbase.exts.android.startActivityForResult
+import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.entity.Word
 
 class RoomActivity : BaseDemonstrationActivity() {
 
-    private val newWordActivityRequestCode = 1
     private lateinit var wordViewModel: WordViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,15 +73,13 @@ class RoomActivity : BaseDemonstrationActivity() {
 
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {
-            startActivityForResult(NewWordActivity::class, newWordActivityRequestCode, { intent -> intent.putExtra("title", "New Word") })
+            newWordActivityLauncher.launch(Intent(this, NewWordActivity::class.java).apply { putExtra("title", "New Word") })
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == newWordActivityRequestCode && resultCode == Activity.RESULT_OK) {
-            data?.getStringExtra(NewWordActivity.EXTRA_REPLY)?.let {
+    private val newWordActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.getStringExtra(NewWordActivity.EXTRA_REPLY)?.let {
                 val word = Word(it)
                 wordViewModel.insert(word)
             }

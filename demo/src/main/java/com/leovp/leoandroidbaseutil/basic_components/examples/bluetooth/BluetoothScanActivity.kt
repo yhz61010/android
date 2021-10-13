@@ -1,5 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
@@ -9,6 +10,7 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
@@ -20,6 +22,7 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothScanBinding
 import com.leovp.log_sdk.LogContext
 import java.util.*
 
+@SuppressLint("SetTextI18n")
 class BluetoothScanActivity : BaseDemonstrationActivity() {
 
     private var _binding: ActivityBluetoothScanBinding? = null
@@ -62,9 +65,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     BluetoothUtil.cancelDiscovery()
-                    val intent = Intent(this@BluetoothScanActivity, BluetoothClientActivity::class.java)
-                    intent.putExtra("device", item.device)
-                    startActivity(intent)
+                    startActivity(BluetoothClientActivity::class, { intent -> intent.putExtra("device", item.device) })
                 }
             }
         }
@@ -112,6 +113,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
             override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (result?.isConnectable == false) {
+                        // Call [device.name] needs <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
                         LogContext.log.e("Ignore device:${device.name}|${device.address}")
                         return
                     }
@@ -120,6 +122,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                 if (bluetoothDeviceMap.containsKey(device.address)) {
                     return
                 }
+                // Call [device.name] needs <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
                 val model = DeviceModel(device, device.name, device.address, rssi.toString())
                 bluetoothDeviceMap[device.address] = model
                 binding.btnDoScan.text = "Scan(${bluetoothDeviceMap.size})"

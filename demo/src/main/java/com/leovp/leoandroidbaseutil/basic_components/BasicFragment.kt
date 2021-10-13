@@ -1,6 +1,5 @@
 package com.leovp.leoandroidbaseutil.basic_components
 
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -11,6 +10,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
@@ -54,9 +54,7 @@ class BasicFragment : Fragment() {
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                val intent = Intent(requireContext(), featureList[position].second)
-                intent.putExtra("title", featureList[position].first)
-                startActivity(intent)
+                startActivity(featureList[position].second, { intent -> intent.putExtra("title", featureList[position].first) })
             }
         }
         view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {

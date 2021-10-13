@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.leovp.androidbase.exts.android.startActivityForResult
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.entity.Word
@@ -72,9 +73,7 @@ class RoomActivity : BaseDemonstrationActivity() {
 
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {
-            val intent = Intent(this@RoomActivity, NewWordActivity::class.java)
-            intent.putExtra("title", "New Word")
-            startActivityForResult(intent, newWordActivityRequestCode)
+            startActivityForResult(NewWordActivity::class, newWordActivityRequestCode, { intent -> intent.putExtra("title", "New Word") })
         }
     }
 

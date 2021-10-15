@@ -1,5 +1,6 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
@@ -19,6 +20,7 @@ import java.util.*
 class FloatViewActivity : BaseDemonstrationActivity() {
     private lateinit var binding: ActivityFloatViewBinding
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFloatViewBinding.inflate(layoutInflater).apply { setContentView(root) }
@@ -43,7 +45,7 @@ class FloatViewActivity : BaseDemonstrationActivity() {
         FloatView.with(this)
             .setTag("f2")
             .setDragOverStatusBar(true)
-            .setEdgeMargin(20)
+            .setEdgeMargin(80)
             .setX(100)
             .setY(600)
             .setLayout(R.layout.floatview) { v ->
@@ -127,5 +129,10 @@ class FloatViewActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         FloatView.clear()
         super.onDestroy()
+    }
+
+    fun onChangePosClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        FloatView.setX(10240, "f2")
+        FloatView.setY(10240, "f2")
     }
 }

@@ -56,6 +56,30 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             .show()
 
         FloatView.with(this)
+            .setTag("f3")
+            .setDragOverStatusBar(true)
+            .setY(900)
+            .setStickyEdge(StickyEdge.RIGHT)
+            .setLayout(R.layout.floatview) { v ->
+                v.findViewById<TextView>(R.id.tvText).text = "FloatWindow 3"
+                v.findViewById<View>(R.id.floatViewBtn).setOnSingleClickListener { toast("Win3 Button") }
+                v.findViewById<View>(R.id.linearLayout).setOnSingleClickListener { toast("Win3 Image") }
+            }
+            .show()
+
+        FloatView.with(this)
+            .setTag("f4")
+            .setDragOverStatusBar(true)
+            .setY(700)
+            .setAutoDock(AutoDock.LEFT)
+            .setLayout(R.layout.floatview) { v ->
+                v.findViewById<TextView>(R.id.tvText).text = "FloatWindow 4"
+                v.findViewById<View>(R.id.floatViewBtn).setOnSingleClickListener { toast("Win4 Button") }
+                v.findViewById<View>(R.id.linearLayout).setOnSingleClickListener { toast("Win4 Image") }
+            }
+            .show()
+
+        FloatView.with(this)
             .setTag("floatView_touchable")
             .setDragOverStatusBar(true)
             .setTouchable(false)

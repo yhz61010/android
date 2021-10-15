@@ -15,8 +15,6 @@ class ViewAnimActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityViewAnimBinding.inflate(layoutInflater).apply { setContentView(root) }
         title = "View Animation"
-
-
         initView()
     }
 

@@ -216,8 +216,16 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
     fun updateFloatViewPosition(x: Int?, y: Int?) {
         config.customView?.let { v ->
             runCatching {
-                x?.let { layoutParams.x = it }
-                y?.let { layoutParams.y = it }
+                x?.let {
+                    val finalX = adjustPosX(x, config.edgeMargin)
+                    layoutParams.x = finalX
+                    config.x = finalX
+                }
+                y?.let {
+                    val finalY = adjustPosY(y, config.edgeMargin)
+                    layoutParams.y = finalY
+                    config.y = finalY
+                }
                 windowManager.updateViewLayout(v, layoutParams)
             }.onFailure { e ->
                 e.printStackTrace()

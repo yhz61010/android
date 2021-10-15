@@ -233,6 +233,12 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         }
     }
 
+    fun getFloatViewPosition(): Point {
+        config.x = adjustPosX(layoutParams.x, config.edgeMargin)
+        config.y = adjustPosY(layoutParams.y, config.edgeMargin)
+        return Point(config.x, config.y)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun init() {
         setWindowLayoutParams()

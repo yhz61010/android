@@ -82,8 +82,20 @@ class FloatView private constructor(private val context: Activity) {
         fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.layoutParams?.y ?: 0
         fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point = Point(getX(tag), getY(tag))
 
+        /**
+         * @param x If `x` value is out of screen dimension, it will be modified to proper value.
+         */
         fun setX(x: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, null)
+
+        /**
+         * @param y If `y` value is out of screen dimension, it will be modified to proper value.
+         */
         fun setY(y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, y)
+
+        /**
+         * @param x If `x` value is out of screen dimension, it will be modified to proper value.
+         * @param y If `y` value is out of screen dimension, it will be modified to proper value.
+         */
         fun setPosition(x: Int, y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, y)
 
         fun setStickyEdge(stickyEdge: StickyEdge, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateStickyEdge(stickyEdge)

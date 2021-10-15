@@ -341,6 +341,8 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
             visible(true)
+            updateAutoDock(config.autoDock)
+            updateStickyEdge(config.stickyEdge)
         }.onFailure { it.printStackTrace() }
     }
 

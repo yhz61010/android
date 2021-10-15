@@ -78,9 +78,9 @@ class FloatView private constructor(private val context: Activity) {
          */
         fun clear() = FloatViewManager.clear()
 
-        fun getX(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.layoutParams?.x ?: 0
-        fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.layoutParams?.y ?: 0
-        fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point = Point(getX(tag), getY(tag))
+        fun getX(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.x ?: 0
+        fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.y ?: 0
+        fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition() ?: Point(0, 0)
 
         /**
          * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.

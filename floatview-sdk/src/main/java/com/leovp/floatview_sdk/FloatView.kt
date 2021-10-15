@@ -83,18 +83,18 @@ class FloatView private constructor(private val context: Activity) {
         fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point = Point(getX(tag), getY(tag))
 
         /**
-         * @param x If `x` value is out of screen dimension, it will be modified to proper value.
+         * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
         fun setX(x: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, null)
 
         /**
-         * @param y If `y` value is out of screen dimension, it will be modified to proper value.
+         * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
         fun setY(y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, y)
 
         /**
-         * @param x If `x` value is out of screen dimension, it will be modified to proper value.
-         * @param y If `y` value is out of screen dimension, it will be modified to proper value.
+         * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
+         * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
         fun setPosition(x: Int, y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, y)
 
@@ -122,7 +122,15 @@ class FloatView private constructor(private val context: Activity) {
         fun setEnableFullScreenFloatView(enable: Boolean) = apply { config.fullScreenFloatView = enable }
         fun setDragOverStatusBar(enable: Boolean) = apply { config.canDragOverStatusBar = enable }
         fun setTouchToleranceInPx(value: Int) = apply { config.touchToleranceInPx = value }
+
+        /**
+         * @param x It's better to set a proper value in here. Otherwise if this value is out of screen dimension, it will be modified to proper value after float view has already been shown.
+         */
         fun setX(x: Int) = apply { config.x = x }
+
+        /**
+         * @param y It's better to set a proper value in here. Otherwise if this value is out of screen dimension, it will be modified to proper value after float view has already been shown.
+         */
         fun setY(y: Int) = apply { config.y = y }
 
         /**

@@ -17,6 +17,7 @@
         <entry key="demo/src/main/res/layout/activity_circle_progressbar.xml" value="0.67" />
         <entry key="demo/src/main/res/layout/activity_clipboard.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_device_info.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_new_word.xml" value="0.3351851851851852" />
         <entry key="demo/src/main/res/layout/activity_screen_share_master.xml" value="0.14412360688956433" />
         <entry key="demo/src/main/res/layout/activity_socket_client.xml" value="0.5911458333333334" />
@@ -32,5 +33,12 @@
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.35185185185185186" />
+      </ProjectState>
+    </option>
   </component>
 </project>

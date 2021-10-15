@@ -259,8 +259,9 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private fun adjustPosY(y: Int, minValue: Int): Int {
         if (y <= minValue + drawHeightOffset) return minValue + drawHeightOffset
-        return if ((y + (config.customView?.height ?: 0) + minValue) >= context.screenAvailableHeight) context.screenAvailableHeight - (config.customView?.height
-            ?: 0) - minValue else y
+        return if ((y + (config.customView?.height ?: 0) + minValue) >= context.screenAvailableHeight)
+            context.screenAvailableHeight - (config.customView?.height ?: 0) - minValue
+        else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin

@@ -70,7 +70,7 @@ class FloatViewActivity : BaseDemonstrationActivity() {
         FloatView.with(this)
             .setTag("f4")
             .setDragOverStatusBar(true)
-            .setY(700)
+            .setY(900)
             .setAutoDock(AutoDock.LEFT)
             .setLayout(R.layout.floatview) { v ->
                 v.findViewById<TextView>(R.id.tvText).text = "FloatWindow 4"

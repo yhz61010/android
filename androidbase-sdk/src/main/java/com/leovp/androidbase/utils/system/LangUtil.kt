@@ -74,6 +74,11 @@ import java.util.*
  * }
  * ```
  *
+ * When you want to change app language, it's easy:
+ * ```kotlin
+ * LangUtil.setLocale(context, LangUtil.getLocale("zh_CN")!!, refreshUI = true)
+ * ```
+ *
  * Author: Michael Leo
  * Date: 2021/6/4 13:05
  */

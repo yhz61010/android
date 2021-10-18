@@ -36,7 +36,7 @@ import java.util.*
  *      super.attachBaseContext(LangUtil.setLocale(base))
  * }
  *
- *   override fun onConfigurationChanged(newConfig: Configuration) {
+ * override fun onConfigurationChanged(newConfig: Configuration) {
  *      super.onConfigurationChanged(newConfig)
  *      LangUtil.setLocale(this)
  * }
@@ -58,7 +58,6 @@ import java.util.*
  * override fun onCreate(savedInstanceState: Bundle?) {
  *     super.onCreate(savedInstanceState)
  *     LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
- *     LangUtil.setLocale(this)
  * }
  *
  * override fun onDestroy() {

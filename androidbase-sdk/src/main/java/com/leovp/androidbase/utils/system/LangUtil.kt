@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.sharedPrefs
 import com.leovp.min_base_sdk.fail
 import java.util.*
@@ -36,6 +35,46 @@ object LangUtil {
 
     @Volatile
     private var currentAppLang: Locale? = null
+
+    /**
+     * Most of time, you should call the handy method [saveLanguageAndRefreshUI].
+     */
+    @Synchronized
+    fun saveLanguage(ctx: Context, language: Locale) {
+        // Use commit() instead of apply(), because sometimes we kill the application process
+        // immediately that prevents apply() from finishing
+        // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
+        ctx.sharedPrefs.edit().run { putString(PREF_KEY_LANGUAGE, language.toString()); commit() }
+        currentAppLang = language
+    }
+
+    @Synchronized
+    fun saveLanguageAndRefreshUI(ctx: Context, language: Locale) {
+        saveLanguage(ctx, language)
+        LocalBroadcastManager.getInstance(ctx).sendBroadcast(Intent(INTENT_APP_LANG_CHANGE))
+    }
+
+    /**
+     * This method should be called on `onCreate`.
+     *
+     * @param ctx Most of time, this context should be `Activity` context.
+     */
+    fun setLocale(ctx: Context): Context {
+        val savedLang: Locale = getAppLanguage(ctx)
+        val res: Resources = ctx.resources
+        val conf = res.configuration
+        conf.locale = savedLang
+        res.updateConfiguration(conf, res.displayMetrics)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Locale.setDefault(savedLang)
+            val localeList = LocaleList(savedLang)
+            conf.setLocales(localeList)
+            ctx.createConfigurationContext(conf)
+        }
+        return ctx
+    }
+
+    // ================================
 
     fun getLocale(languageAndCountry: String): Locale? {
         return runCatching {
@@ -79,6 +118,7 @@ object LangUtil {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Resources.getSystem().configuration.locales[0]
         } else {
+            @Suppress("DEPRECATION")
             Resources.getSystem().configuration.locale
         }
     }
@@ -88,45 +128,11 @@ object LangUtil {
      */
     fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
 
-    /**
-     * Most of time, you should call the handy method [saveLanguageAndRefreshUI].
-     */
     @Synchronized
-    fun saveLanguage(language: Locale) {
-        app.sharedPrefs.edit().run { putString(PREF_KEY_LANGUAGE, language.toString()); apply() }
-        currentAppLang = language
-    }
-
-    @Synchronized
-    fun saveLanguageAndRefreshUI(language: Locale) {
-        saveLanguage(language)
-        LocalBroadcastManager.getInstance(app).sendBroadcast(Intent(INTENT_APP_LANG_CHANGE))
-    }
-
-    @Synchronized
-    fun getAppLanguage(): Locale {
+    fun getAppLanguage(ctx: Context): Locale {
         if (currentAppLang == null) {
-            currentAppLang = getLocale(app.sharedPrefs.getString(PREF_KEY_LANGUAGE, "en") ?: "en")
+            currentAppLang = getLocale(ctx.sharedPrefs.getString(PREF_KEY_LANGUAGE, "en") ?: "en")
         }
         return currentAppLang ?: fail("Unexpected exception on getLanguageFromPreference()")
-    }
-
-    /**
-     * This method should be called on `onCreate`.
-     *
-     * @param ctx Most of time, this context should be `Activity` context.
-     */
-    fun changeAppLanguage(ctx: Context) {
-        val savedLang: Locale = getAppLanguage()
-        val res: Resources = ctx.resources
-        val conf = res.configuration
-        conf.locale = savedLang
-        res.updateConfiguration(conf, res.displayMetrics)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Locale.setDefault(savedLang)
-            val localeList = LocaleList(savedLang)
-            conf.setLocales(localeList)
-            ctx.createConfigurationContext(conf)
-        }
     }
 }

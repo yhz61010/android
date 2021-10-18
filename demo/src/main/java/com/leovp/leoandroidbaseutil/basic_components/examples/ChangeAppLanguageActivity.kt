@@ -1,8 +1,13 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples
 
+import android.app.Service
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -52,10 +57,26 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setTitle(R.string.select_lang)
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
-                    LangUtil.saveLanguageAndRefreshUI(LangUtil.getLocale(langCode)!!)
+                    LangUtil.saveLanguageAndRefreshUI(this@ChangeAppLanguageActivity, LangUtil.getLocale(langCode)!!)
                     dlg.dismiss()
                 }
                 .show()
         }
+
+        binding.btnStartService.setOnSingleClickListener { startService(Intent(this@ChangeAppLanguageActivity, ChangeAppTestService::class.java)) }
+    }
+}
+
+class ChangeAppTestService : Service() {
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LangUtil.setLocale(base))
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        toast(R.string.tv_i18n)
+        stopSelf()
     }
 }

@@ -8,7 +8,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.log_sdk.LogContext
 
@@ -32,10 +31,10 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
-        LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
+        LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getAppLanguage(this)
         LogContext.log.i("Pref lang=$lang")
-        LangUtil.setLocale(this@BaseDemonstrationActivity)
+        LangUtil.setLocale(this)
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -63,7 +62,7 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         LogContext.log.i("onDestroy()")
-        LocalBroadcastManager.getInstance(app).unregisterReceiver(appLangChangeReceiver)
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
         super.onDestroy()
     }
 }

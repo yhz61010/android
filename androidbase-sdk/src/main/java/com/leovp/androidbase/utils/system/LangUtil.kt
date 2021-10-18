@@ -18,15 +18,61 @@ import java.util.*
  * - If you set language in `zh_CN`, you should create `values-zh-rCN` folder in `values` folder.
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  *
- * Locale.getDefault().getLanguage()       ---> en
- * Locale.getDefault().getISO3Language()   ---> eng
- * Locale.getDefault().getCountry()        ---> US
- * Locale.getDefault().getISO3Country()    ---> USA
- * Locale.getDefault().getDisplayCountry() ---> United States
- * Locale.getDefault().getDisplayName()    ---> English (United States)
- * Locale.getDefault().toString()          ---> en_US
- * Locale.getDefault().getDisplayLanguage()---> English
- * Locale.getDefault().toLanguageTag()     ---> en-US
+ * - Locale.getDefault().getLanguage()       ---> en
+ * - Locale.getDefault().getISO3Language()   ---> eng
+ * - Locale.getDefault().getCountry()        ---> US
+ * - Locale.getDefault().getISO3Country()    ---> USA
+ * - Locale.getDefault().getDisplayCountry() ---> United States
+ * - Locale.getDefault().getDisplayName()    ---> English (United States)
+ * - Locale.getDefault().toString()          ---> en_US
+ * - Locale.getDefault().getDisplayLanguage()---> English
+ * - Locale.getDefault().toLanguageTag()     ---> en-US
+ *
+ * **HOW TO USE**
+ *
+ * Add these codes in your custom Application:
+ * ```kotlin
+ * override fun attachBaseContext(base: Context) {
+ *      super.attachBaseContext(LangUtil.setLocale(base))
+ * }
+ *
+ *   override fun onConfigurationChanged(newConfig: Configuration) {
+ *      super.onConfigurationChanged(newConfig)
+ *      LangUtil.setLocale(this)
+ * }
+ * ```
+ *
+ * Add the following codes into your base activity:
+ *
+ * ```kotlin
+ * private val appLangChangeReceiver = object : BroadcastReceiver() {
+ *     override fun onReceive(context: Context, intent: Intent?) {
+ *         recreate()
+ *     }
+ * }
+ *
+ * override fun attachBaseContext(base: Context) {
+ *      super.attachBaseContext(LangUtil.setLocale(base))
+ * }
+ *
+ * override fun onCreate(savedInstanceState: Bundle?) {
+ *     super.onCreate(savedInstanceState)
+ *     LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
+ *     LangUtil.setLocale(this)
+ * }
+ *
+ * override fun onDestroy() {
+ *     LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
+ *     super.onDestroy()
+ * }
+ * ```
+ *
+ * If you use text string in your Service, add these lines in it:
+ * ```kotlin
+ * override fun attachBaseContext(base: Context) {
+ *     super.attachBaseContext(LangUtil.setLocale(base))
+ * }
+ * ```
  *
  * Author: Michael Leo
  * Date: 2021/6/4 13:05

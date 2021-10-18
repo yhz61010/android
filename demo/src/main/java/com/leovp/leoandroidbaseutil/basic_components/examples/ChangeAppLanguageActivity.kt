@@ -19,27 +19,6 @@ import com.leovp.log_sdk.LogContext
  * For Chinese language(Simplified Chinese, Traditional Chinese),
  * - If you set language in `zh_CN`, you should create `values-zh-rCN` folder in `values` folder.
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
- *
- * Add the following codes into your base activity:
- *
- * ```kotlin
- * private val appLangChangeReceiver = object : BroadcastReceiver() {
- *     override fun onReceive(context: Context, intent: Intent?) {
- *     recreate()
- *     }
- * }
- *
- * override fun onCreate(savedInstanceState: Bundle?) {
- *     super.onCreate(savedInstanceState)
- *     LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
- *     LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
- * }
- *
- * override fun onDestroy() {
- *     LocalBroadcastManager.getInstance(app).unregisterReceiver(appLangChangeReceiver)
- *     super.onDestroy()
- * }
- * ```
  */
 class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

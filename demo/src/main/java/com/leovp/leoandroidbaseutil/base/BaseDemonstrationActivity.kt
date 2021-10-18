@@ -34,7 +34,6 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getAppLanguage(this)
         LogContext.log.i("Pref lang=$lang")
-        LangUtil.setLocale(this)
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -2,9 +2,11 @@ package com.leovp.androidbase.utils.system
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
+import androidx.annotation.RequiresApi
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.androidbase.exts.android.sharedPrefs
 import com.leovp.min_base_sdk.fail
@@ -61,11 +63,24 @@ object LangUtil {
         res.updateConfiguration(conf, res.displayMetrics)
         Locale.setDefault(targetLocale)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val localeList = LocaleList(targetLocale)
-            conf.setLocales(localeList)
-            ctx.createConfigurationContext(conf)
+            setLocaleForApi24(conf, targetLocale)
         }
+        ctx.createConfigurationContext(conf)
         return ctx
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private fun setLocaleForApi24(config: Configuration, targetLocale: Locale) {
+        val set: MutableSet<Locale> = LinkedHashSet()
+        // Bring the target locale to the front of the list
+        set.add(targetLocale)
+        val all = LocaleList.getDefault()
+        for (i in 0 until all.size()) {
+            // Append other locales supported by the user
+            set.add(all[i])
+        }
+        val locales = set.toTypedArray()
+        config.setLocales(LocaleList(*locales))
     }
 
     // ================================

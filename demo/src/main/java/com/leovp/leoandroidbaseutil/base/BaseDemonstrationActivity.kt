@@ -23,15 +23,19 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         }
     }
 
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LangUtil.setLocale(base))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i("onCreate()")
         super.onCreate(savedInstanceState)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
         LocalBroadcastManager.getInstance(app).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
-        val lang = LangUtil.getAppLanguage()
+        val lang = LangUtil.getAppLanguage(this)
         LogContext.log.i("Pref lang=$lang")
-        LangUtil.changeAppLanguage(this@BaseDemonstrationActivity)
+        LangUtil.setLocale(this@BaseDemonstrationActivity)
     }
 
     override fun onSupportNavigateUp(): Boolean {

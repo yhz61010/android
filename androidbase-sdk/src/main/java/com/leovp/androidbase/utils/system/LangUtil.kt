@@ -37,21 +37,14 @@ object LangUtil {
     private var currentAppLang: Locale? = null
 
     /**
-     * Most of time, you should call the handy method [saveLanguageAndRefreshUI].
+     * Most of time, just call this method is enough.
      */
     @Synchronized
-    fun saveLanguage(ctx: Context, language: Locale) {
-        // Use commit() instead of apply(), because sometimes we kill the application process
-        // immediately that prevents apply() from finishing
-        // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
-        ctx.sharedPrefs.edit().run { putString(PREF_KEY_LANGUAGE, language.toString()); commit() }
-        currentAppLang = language
-    }
-
-    @Synchronized
-    fun saveLanguageAndRefreshUI(ctx: Context, language: Locale) {
-        saveLanguage(ctx, language)
-        LocalBroadcastManager.getInstance(ctx).sendBroadcast(Intent(INTENT_APP_LANG_CHANGE))
+    fun setLocale(ctx: Context, targetLocale: Locale = getAppLanguage(ctx), refreshUI: Boolean = false): Context {
+        saveLanguage(ctx, targetLocale)
+        val context = updateResources(ctx, targetLocale)
+        if (refreshUI) LocalBroadcastManager.getInstance(ctx).sendBroadcast(Intent(INTENT_APP_LANG_CHANGE))
+        return context
     }
 
     /**
@@ -59,15 +52,16 @@ object LangUtil {
      *
      * @param ctx Most of time, this context should be `Activity` context.
      */
-    fun setLocale(ctx: Context): Context {
-        val savedLang: Locale = getAppLanguage(ctx)
+    private fun updateResources(ctx: Context, targetLocale: Locale): Context {
         val res: Resources = ctx.resources
         val conf = res.configuration
-        conf.locale = savedLang
+        // There two line codes(although they have already deprecated) are the magic.
+        // If I comment them, the text string in Service will not be shown in correct language.
+        conf.locale = targetLocale
         res.updateConfiguration(conf, res.displayMetrics)
+        Locale.setDefault(targetLocale)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Locale.setDefault(savedLang)
-            val localeList = LocaleList(savedLang)
+            val localeList = LocaleList(targetLocale)
             conf.setLocales(localeList)
             ctx.createConfigurationContext(conf)
         }
@@ -127,6 +121,15 @@ object LangUtil {
      * @return The result is only contains language and country, just like this: `zh_CN`. Please notice the difference with [getDefaultLanguageFullCode].
      */
     fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
+
+    @Synchronized
+    fun saveLanguage(ctx: Context, language: Locale) {
+        // Use commit() instead of apply(), because sometimes we kill the application process
+        // immediately that prevents apply() from finishing
+        // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
+        ctx.sharedPrefs.edit().run { putString(PREF_KEY_LANGUAGE, language.toString()); commit() }
+        currentAppLang = language
+    }
 
     @Synchronized
     fun getAppLanguage(ctx: Context): Locale {

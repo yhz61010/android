@@ -85,6 +85,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
+                        LogContext.log.i("onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs")
                         if (clientChannel != null) {
                             runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size} presentationTimeUs=$presentationTimeUs" }
                             runCatching {
@@ -188,7 +189,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (result) {
                     ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
                         LogContext.log.w(ITAG, "Prepare to record...")
-                        startServer()
+//                        startServer()
                         checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
                         mediaProjectService?.setData(
                             resultCode,

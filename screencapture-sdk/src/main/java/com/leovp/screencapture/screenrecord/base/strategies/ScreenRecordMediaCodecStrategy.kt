@@ -37,6 +37,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private var outputFormat: MediaFormat? = null
     private val mediaCodecCallback = object : MediaCodec.Callback() {
+        private var beginPTS: Long = 0L
+
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
 //            val inputBuffer = codec.getInputBuffer(inputBufferId)
 //            // fill inputBuffer with valid data
@@ -52,7 +54,22 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let { onSendAvcFrame(it, info.flags, info.size, info.presentationTimeUs) }
+                outputBuffer?.let {
+                    val calcPTS = if (beginPTS == 0L) {
+                        beginPTS = info.presentationTimeUs
+                        0
+                    } else {
+                        info.presentationTimeUs - beginPTS
+                    }
+//                    LogContext.log.w(
+//                        TAG, "ori presentationTimeUs=${currentPTS / 1000 / 1000} new=${info.presentationTimeUs} " +
+//                                "currentTimeMillis=${System.currentTimeMillis()} " +
+//                                "elapsedRealtime=${SystemClock.elapsedRealtime()} " +
+//                                "currentThreadTimeMillis=${SystemClock.currentThreadTimeMillis()} " +
+//                                "uptimeMillis=${SystemClock.uptimeMillis()}"
+//                    )
+                    onSendAvcFrame(it, info.flags, info.size, calcPTS)
+                }
                 codec.releaseOutputBuffer(outputBufferId, false)
             } catch (e: Exception) {
                 e.printStackTrace()

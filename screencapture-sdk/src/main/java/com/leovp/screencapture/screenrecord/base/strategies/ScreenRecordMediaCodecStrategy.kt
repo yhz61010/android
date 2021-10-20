@@ -52,7 +52,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let { onSendAvcFrame(it, info.flags, info.size) }
+                outputBuffer?.let { onSendAvcFrame(it, info.flags, info.size, info.presentationTimeUs) }
                 codec.releaseOutputBuffer(outputBufferId, false)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -218,7 +218,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendThread?.quitSafely()
     }
 
-    private fun onSendAvcFrame(bb: ByteBuffer, flags: Int, bufferSize: Int) {
+    private fun onSendAvcFrame(bb: ByteBuffer, flags: Int, bufferSize: Int, presentationTimeUs: Long) {
 //        var naluIndex = 4
 //        if (bb[2].toInt() == 0x01) {
 //            naluIndex = 3
@@ -255,9 +255,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //            )
 //        }
 
-        videoDataSendHandler?.post {
-            builder.screenDataListener.onDataUpdate(bytes, flags)
-        }
+        videoDataSendHandler?.post { builder.screenDataListener.onDataUpdate(bytes, flags, presentationTimeUs) }
     }
 
     companion object {

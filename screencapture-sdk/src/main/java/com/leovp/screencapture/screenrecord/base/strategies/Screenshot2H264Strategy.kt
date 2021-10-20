@@ -70,7 +70,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
                 val encodedBytes = ByteArray(info.size)
                 it.get(encodedBytes)
 
-                info.presentationTimeUs = computePresentationTimeUs(++frameCount)
+                info.presentationTimeUs = computePresentationTimeUs(++frameCount, builder.fps)
 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
@@ -165,7 +165,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay, eglSurface,
-            computePresentationTimeUs(frameCount) * 1000
+            computePresentationTimeUs(frameCount, builder.fps) * 1000
         )
 
         // Feed encoder with next frame produced by OpenGL
@@ -320,6 +320,4 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         if (::screenshotHandler.isInitialized) screenshotHandler.removeCallbacksAndMessages(null)
         if (::screenshotThread.isInitialized) screenshotThread.quitSafely()
     }
-
-    private fun computePresentationTimeUs(frameIndex: Long): Long = (frameIndex * 1_000_000 / builder.fps).toLong()
 }

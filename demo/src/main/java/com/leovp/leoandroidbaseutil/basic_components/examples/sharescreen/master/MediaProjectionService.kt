@@ -61,7 +61,7 @@ class MediaProjectionService : Service() {
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
     private val screenDataListener = object : ScreenDataListener {
-        override fun onDataUpdate(buffer: Any, flags: Int) {
+        override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
             val data = buffer as ByteArray
             if (outputH264File) {
                 try {
@@ -71,7 +71,7 @@ class MediaProjectionService : Service() {
                 }
             }
 //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
-            screenDataUpdateListener?.onUpdate(data, flags)
+            screenDataUpdateListener?.onUpdate(data, flags, presentationTimeUs)
 
             // Bitmap for screenshot
 //            val file = FileUtil.createImageFile(app, "bmp")
@@ -143,7 +143,12 @@ class MediaProjectionService : Service() {
                     this@MediaProjectionService,
                     SystemClock.elapsedRealtime().toInt(),
                     Intent(this@MediaProjectionService, BasicFragment::class.java),
-                    PendingIntent.FLAG_UPDATE_CURRENT
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    } else {
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    }
+
                 )
                 cancelOnClick = false
             }
@@ -241,5 +246,5 @@ class MediaProjectionService : Service() {
 }
 
 interface ScreenDataUpdateListener {
-    fun onUpdate(data: ByteArray, flags: Int)
+    fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long)
 }

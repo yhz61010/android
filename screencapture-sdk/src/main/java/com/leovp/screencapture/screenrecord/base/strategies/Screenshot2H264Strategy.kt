@@ -90,9 +90,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
                         // Do nothing
                     }
                 }
-                screenshotHandler.post {
-                    builder.screenDataListener.onDataUpdate(encodedBytes, info.flags)
-                }
+                screenshotHandler.post { builder.screenDataListener.onDataUpdate(encodedBytes, info.flags, info.presentationTimeUs) }
             }
             codec.releaseOutputBuffer(outputBufferId, false)
         }

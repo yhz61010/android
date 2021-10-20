@@ -82,7 +82,6 @@ dependencies {
 
     // EXIF Interface
     api "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
-
     api group: 'com.google.code.gson', name: 'gson', version: "$rootProject.ext.gsonVersion"
 
     // https://github.com/hyuwah/DraggableView

@@ -39,4 +39,6 @@ interface ScreenProcessor {
      * Once do `onRelease()` you can not start again. Please call `onInit()` then `onStart()`
      */
     fun onRelease()
+
+    fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()
 }

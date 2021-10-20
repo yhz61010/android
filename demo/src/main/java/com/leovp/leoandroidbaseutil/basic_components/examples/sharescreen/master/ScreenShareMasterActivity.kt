@@ -84,9 +84,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.outputH264File = false
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
-                    override fun onUpdate(data: ByteArray, flags: Int) {
+                    override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
                         if (clientChannel != null) {
-                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size}" }
+                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size} presentationTimeUs=$presentationTimeUs" }
                             runCatching {
                                 clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data) }
                             }.onFailure { e -> e.printStackTrace() }

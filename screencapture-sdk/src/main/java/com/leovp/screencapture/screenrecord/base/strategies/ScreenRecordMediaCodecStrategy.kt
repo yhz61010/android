@@ -185,7 +185,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         h26xEncoder = if (builder.useGoogleEncoder) {
             when (builder.encodeType) {
                 EncodeType.H264 -> MediaCodec.createByCodecName("OMX.google.h264.encoder")
-                EncodeType.H265 -> MediaCodec.createByCodecName("OMX.google.hevc.encoder")
+                EncodeType.H265 -> MediaCodec.createByCodecName("c2.android.hevc.encoder")
             }
         } else {
             when (builder.encodeType) {

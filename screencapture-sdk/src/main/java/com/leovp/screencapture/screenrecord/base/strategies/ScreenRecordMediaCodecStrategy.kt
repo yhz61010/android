@@ -32,7 +32,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     private var videoDataSendHandler: Handler? = null
 
     @Suppress("WeakerAccess")
-    var spsPpsBuf: ByteArray? = null
+    var vpsSpsPpsBuf: ByteArray? = null
         private set
 
     private var outputFormat: MediaFormat? = null
@@ -261,8 +261,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         bb.get(bytes)
 
         if (MediaCodec.BUFFER_FLAG_CODEC_CONFIG == flags) {
-            spsPpsBuf = bytes.copyOf()
-            LogContext.log.w(TAG, "Found SPS/PPS=${spsPpsBuf?.toHexStringLE()}")
+            vpsSpsPpsBuf = bytes.copyOf()
+            when (builder.encodeType) {
+                EncodeType.H264 -> LogContext.log.w(TAG, "Found SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}")
+                EncodeType.H265 -> LogContext.log.w(TAG, "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}")
+            }
         }
 
 //        val naluTypeStr = when (naluType) {

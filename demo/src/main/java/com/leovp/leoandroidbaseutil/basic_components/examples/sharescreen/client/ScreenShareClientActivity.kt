@@ -19,8 +19,10 @@ import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.MediaProjectionService
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_GRAPHIC_CSD
@@ -33,6 +35,7 @@ import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.asByteAndForceToBytes
 import com.leovp.min_base_sdk.toBytesLE
 import com.leovp.min_base_sdk.toHexStringLE
+import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
@@ -72,6 +75,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         DOWN, MOVE, UP, CLEAR, UNDO, DRAG, HOME, BACK, RECENT
     }
 
+    private var vps: ByteArray? = null
     private var sps: ByteArray? = null
     private var pps: ByteArray? = null
 
@@ -91,7 +95,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 // When surface recreated, we need to redraw screen again.
                 // The surface will be recreated if you reopen you app from background
                 if (sps != null && pps != null) {
-                    initDecoder(sps!!, pps!!)
+                    initDecoder(vps, sps!!, pps!!)
                     webSocketClientHandler?.triggerIFrame()
                 }
             }
@@ -174,18 +178,39 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun initDecoder(sps: ByteArray, pps: ByteArray) {
-        LogContext.log.w(ITAG, "initDecoder sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
+    private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
+        LogContext.log.w(ITAG, "initDecoder vps=${vps?.toHexStringLE()} sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
+        this.vps = vps
         this.sps = sps
         this.pps = pps
-        decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        decoder = MediaCodec.createDecoderByType(
+            when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
+                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+            }
+        )
 //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
         val screenInfo = getAvailableResolution()
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, screenInfo.x, screenInfo.y)
+        val format = MediaFormat.createVideoFormat(
+            when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
+                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+            }, screenInfo.x, screenInfo.y
+        )
 //        val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
 //        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
-        format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
-        format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
+
+        when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
+            ScreenRecordMediaCodecStrategy.EncodeType.H264 -> {
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
+                format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
+            }
+            ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
+                val csd0 = vps!! + sps + pps
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+            }
+        }
+
         decoder?.configure(format, binding.surfaceView.holder.surface, null, 0)
         outputFormat = decoder?.outputFormat // option B
         decoder?.setCallback(mediaCodecCallback)
@@ -416,12 +441,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                     CMD_GRAPHIC_CSD -> {
                         foundCsd.set(true)
                         queue.offer(dataArray)
-                        LogContext.log.w(ITAG, "csd=${dataArray.contentToString()}")
+                        LogContext.log.w(ITAG, "csd=${dataArray.toHexStringLE()}")
+                        val vps = H265Util.getVps(dataArray)
                         val sps = H264Util.getSps(dataArray)
                         val pps = H264Util.getPps(dataArray)
-                        LogContext.log.w(ITAG, "initDecoder with sps=${sps?.contentToString()} pps=${pps?.contentToString()}")
+                        LogContext.log.w(ITAG, "initDecoder with vps=${vps?.toHexStringLE()} sps=${sps?.toHexStringLE()} pps=${pps?.toHexStringLE()}")
                         if (sps != null && pps != null) {
-                            initDecoder(sps, pps)
+                            initDecoder(vps, sps, pps)
                             webSocketClientHandler?.triggerIFrame()
                             return
                         } else {

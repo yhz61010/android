@@ -16,7 +16,7 @@ import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.toHexString
 import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
-import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H264Strategy
+import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xStrategy
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -63,7 +63,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
             setting.height, // 800 1024 1280
             setting.dpi,
             null,
-            ScreenCapture.BY_IMAGE_2_H264,
+            ScreenCapture.BY_IMAGE_2_H26x,
             screenDataListener
         ).setFps(setting.fps)
             .setKeyFrameRate(20)
@@ -73,7 +73,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (screenProcessor as Screenshot2H264Strategy).startRecord(this)
+                (screenProcessor as Screenshot2H26xStrategy).startRecord(this)
             } else {
                 videoH264OsForDebug.flush()
                 videoH264OsForDebug.close()

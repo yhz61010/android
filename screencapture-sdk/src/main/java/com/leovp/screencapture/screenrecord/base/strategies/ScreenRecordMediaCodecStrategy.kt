@@ -25,7 +25,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private var virtualDisplay: VirtualDisplay? = null
 
-    var h264Encoder: MediaCodec? = null
+    var h26xEncoder: MediaCodec? = null
         private set
     private var videoEncoderLoop = false
     private var videoDataSendThread: HandlerThread? = null
@@ -95,6 +95,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         val mediaProjection: MediaProjection?,
         val screenDataListener: ScreenDataListener
     ) {
+        var encodeType: EncodeType = EncodeType.H264
+            private set
         var fps = 20F
             private set
         var bitrate = width * height
@@ -108,6 +110,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         var useGoogleEncoder = false
             private set
 
+        fun setEncodeType(encodeType: EncodeType) = apply { this.encodeType = encodeType }
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
@@ -118,7 +121,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
                 TAG,
-                "width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval"
             )
             return ScreenRecordMediaCodecStrategy(this)
         }
@@ -127,7 +130,13 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     @SuppressLint("InlinedApi")
     @Throws(Exception::class)
     override fun onInit() {
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
+        val format = MediaFormat.createVideoFormat(
+            when (builder.encodeType) {
+                EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+                EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+            }, builder.width, builder.height
+        )
+
         with(format) {
             // MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
             // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
@@ -173,15 +182,21 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
 //            }
         }
-        h264Encoder = if (builder.useGoogleEncoder) {
-            MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        h26xEncoder = if (builder.useGoogleEncoder) {
+            when (builder.encodeType) {
+                EncodeType.H264 -> MediaCodec.createByCodecName("OMX.google.h264.encoder")
+                EncodeType.H265 -> MediaCodec.createByCodecName("OMX.google.hevc.encoder")
+            }
         } else {
-            MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            when (builder.encodeType) {
+                EncodeType.H264 -> MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                EncodeType.H265 -> MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+            }
         }
-        h264Encoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        outputFormat = h264Encoder?.outputFormat // option B
-        h264Encoder?.setCallback(mediaCodecCallback)
-        val surface = h264Encoder!!.createInputSurface()
+        h26xEncoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        outputFormat = h26xEncoder?.outputFormat // option B
+        h26xEncoder?.setCallback(mediaCodecCallback)
+        val surface = h26xEncoder!!.createInputSurface()
         virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
             "screen-record", builder.width, builder.height, builder.dpi,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, surface, null, null
@@ -196,7 +211,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
         LogContext.log.i(TAG, "onRelease()")
         onStop()
-        h264Encoder?.release()
+        h26xEncoder?.release()
         virtualDisplay?.release()
     }
 
@@ -207,7 +222,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         LogContext.log.i(TAG, "onStop()")
         videoEncoderLoop = false
         releaseHandler()
-        h264Encoder?.stop()
+        h26xEncoder?.stop()
         builder.mediaProjection?.stop()
     }
 
@@ -219,7 +234,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
         LogContext.log.i(TAG, "onStart()")
         initHandler()
-        h264Encoder?.start() ?: exception("You must initialize Video Encoder.")
+        h26xEncoder?.start() ?: exception("You must initialize Video Encoder.")
         videoEncoderLoop = true
     }
 
@@ -273,6 +288,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //        }
 
         videoDataSendHandler?.post { builder.screenDataListener.onDataUpdate(bytes, flags, presentationTimeUs) }
+    }
+
+    enum class EncodeType {
+        H264,
+        H265
     }
 
     companion object {

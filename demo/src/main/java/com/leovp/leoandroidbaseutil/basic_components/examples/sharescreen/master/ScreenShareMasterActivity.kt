@@ -34,7 +34,7 @@ import com.leovp.min_base_sdk.asByteAndForceToBytes
 import com.leovp.min_base_sdk.exception
 import com.leovp.min_base_sdk.toBytesLE
 import com.leovp.screencapture.screenrecord.ScreenCapture
-import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H264
+import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
@@ -81,7 +81,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             LogContext.log.i(ITAG, "===== onServiceConnected($name) =====")
             bound = true
             mediaProjectService = (service as MediaProjectionService.CustomBinder).service.also {
-                it.outputH264File = false
+                it.outputH26xFile = true
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
@@ -189,7 +189,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (result) {
                     ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
                         LogContext.log.w(ITAG, "Prepare to record...")
-//                        startServer()
+                        startServer()
                         checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
                         mediaProjectService?.setData(
                             resultCode,
@@ -410,7 +410,7 @@ data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var keyFrameRate = 8
     var iFrameInterval = 4
 
-    /** Only used in [BY_IMAGE_2_H264] mode */
+    /** Only used in [BY_IMAGE_2_H26x] mode */
     @Suppress("unused")
     var sampleSize: Int = 1
 }

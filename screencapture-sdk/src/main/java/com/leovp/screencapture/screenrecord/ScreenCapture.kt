@@ -12,7 +12,7 @@ import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordRawBmpStrategy
-import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H264Strategy
+import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xStrategy
 
 /**
  * Author: Michael Leo
@@ -22,7 +22,7 @@ object ScreenCapture {
 
     private const val TAG = "ScrCap"
 
-    const val BY_IMAGE_2_H264 = 1
+    const val BY_IMAGE_2_H26x = 1
     const val BY_MEDIA_CODEC = 2
     const val BY_RAW_BMP = 3
 
@@ -42,7 +42,7 @@ object ScreenCapture {
     }
 
     /**
-     * @param dpi Not used for [Screenshot2H264Strategy] which type is [BY_IMAGE_2_H264]
+     * @param dpi Not used for [Screenshot2H26xStrategy] which type is [BY_IMAGE_2_H26x]
      */
     class Builder(
         private val width: Int,
@@ -55,7 +55,8 @@ object ScreenCapture {
         // Common setting
         private var fps = 20F
 
-        // H264 setting
+        // H26x setting
+        private var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
         private var bitrate = width * height
         private var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         private var keyFrameRate = 20
@@ -67,8 +68,9 @@ object ScreenCapture {
         private var quality = 100
 
         // ==================================================
-        // ===== Common For H264
+        // ===== Common For H26x
         // ==================================================
+        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) = apply { this.encodeType = encodeType }
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
@@ -76,27 +78,28 @@ object ScreenCapture {
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         // ==================================================
-        // ===== Only For H264
+        // ===== Only For H26x
         // ==================================================
         fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         // ==================================================
         // ===== Only For Image
         // ==================================================
-        /** Only used in [BY_IMAGE_2_H264] mode */
+        /** Only used in [BY_IMAGE_2_H26x] mode */
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
 
-        /** Only used in [BY_IMAGE_2_H264] mode */
+        /** Only used in [BY_IMAGE_2_H26x] mode */
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
             LogContext.log.i(
                 TAG,
-                "width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
-                BY_IMAGE_2_H264 ->
-                    Screenshot2H264Strategy.Builder(width, height, dpi, screenDataListener)
+                BY_IMAGE_2_H26x ->
+                    Screenshot2H26xStrategy.Builder(width, height, dpi, screenDataListener)
+                        .setEncodeType(encodeType)
                         .setFps(fps)
                         .setBitrate(bitrate)
                         .setBitrateMode(bitrateMode)
@@ -107,6 +110,7 @@ object ScreenCapture {
                         .build()
                 BY_MEDIA_CODEC ->
                     ScreenRecordMediaCodecStrategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+                        .setEncodeType(encodeType)
                         .setFps(fps)
                         .setBitrate(bitrate)
                         .setBitrateMode(bitrateMode)

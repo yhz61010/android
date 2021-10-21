@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
+import androidx.annotation.RequiresApi
 import com.leovp.log_sdk.LogContext
 import com.leovp.min_base_sdk.compressBitmap
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
@@ -25,7 +26,7 @@ import java.lang.ref.WeakReference
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
  */
-class Screenshot2H264Strategy private constructor(private val builder: Builder) : ScreenProcessor {
+class Screenshot2H26xStrategy private constructor(private val builder: Builder) : ScreenProcessor {
 
     companion object {
         private const val TAG = "ScrShotRec"
@@ -51,7 +52,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
     @SuppressWarnings("unused")
     var spsPpsBytes: ByteArray? = null
         private set
-    var h264Encoder: MediaCodec? = null
+    var h26xEncoder: MediaCodec? = null
         private set
     private lateinit var screenshotThread: HandlerThread
     private lateinit var screenshotHandler: Handler
@@ -113,6 +114,9 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         val dpi: Int,
         val screenDataListener: ScreenDataListener
     ) {
+        var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
+            private set
+
         // FIXME: Seems does not work. Check bellow setKeyFrameRate
         var fps = 20F
             private set
@@ -129,6 +133,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         var iFrameInterval = 1
             private set
 
+        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) = apply { this.encodeType = encodeType }
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setQuality(quality: Int) = apply { this.quality = quality }
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
@@ -137,9 +142,9 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
-        fun build(): Screenshot2H264Strategy {
+        fun build(): Screenshot2H26xStrategy {
             LogContext.log.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
-            return Screenshot2H264Strategy(this)
+            return Screenshot2H26xStrategy(this)
         }
     }
 
@@ -172,8 +177,9 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         EGL14.eglSwapBuffers(eglDisplay, eglSurface)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun initEgl() {
-        surface = h264Encoder?.createInputSurface()
+        surface = h26xEncoder?.createInputSurface()
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
         if (eglDisplay == EGL14.EGL_NO_DISPLAY) throw RuntimeException("eglDisplay == EGL14.EGL_NO_DISPLAY: ${GLUtils.getEGLErrorString(EGL14.eglGetError())}")
 
@@ -236,6 +242,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
         eglSurface = EGL14.EGL_NO_SURFACE
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
         with(format) {
@@ -247,7 +254,7 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
-                @Suppress("unchecked")
+                @Suppress("unchecked", "InlinedApi")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -259,7 +266,12 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
             }
         }
 //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
+        h26xEncoder = MediaCodec.createEncoderByType(
+            when (builder.encodeType) {
+                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+            }
+        ).also {
             it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             outputFormat = it.outputFormat // option B
             it.setCallback(mediaCodecCallback)
@@ -274,10 +286,11 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
 
     override fun onStart() {
         isRecording = true
-        h264Encoder?.start()
+        h26xEncoder?.start()
         // Prepare surface
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun startRecord(act: Activity) {
         CoroutineScope(Dispatchers.IO).launch {
             onInit()
@@ -300,14 +313,14 @@ class Screenshot2H264Strategy private constructor(private val builder: Builder) 
     }
 
     override fun onStop() {
-        h264Encoder?.stop()
+        h26xEncoder?.stop()
         isRecording = false
     }
 
     override fun onRelease() {
         onStop()
         releaseHandler()
-        h264Encoder?.release()
+        h26xEncoder?.release()
         releaseEgl()
     }
 

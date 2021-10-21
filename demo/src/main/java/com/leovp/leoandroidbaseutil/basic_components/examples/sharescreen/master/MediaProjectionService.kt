@@ -42,9 +42,13 @@ import java.io.FileOutputStream
 
 class MediaProjectionService : Service() {
 
-    var outputH264File = false
-    private lateinit var videoH264File: File
-    private lateinit var videoH264Os: BufferedOutputStream
+    companion object {
+        val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265
+    }
+
+    var outputH26xFile = false
+    private lateinit var videoH26xFile: File
+    private lateinit var videoH26xOs: BufferedOutputStream
 
     private var resultCode = -1
     private lateinit var data: Intent
@@ -63,9 +67,9 @@ class MediaProjectionService : Service() {
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
             val data = buffer as ByteArray
-            if (outputH264File) {
+            if (outputH26xFile) {
                 try {
-                    videoH264Os.write(data)
+                    videoH26xOs.write(data)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -89,13 +93,19 @@ class MediaProjectionService : Service() {
     }
 
     private fun setDebugInfo() {
-        if (outputH264File) {
+        if (outputH26xFile) {
             try {
                 val baseFolder = File(getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media")
-                LogContext.log.w(ITAG, "Output H.264 file path=$baseFolder")
+                LogContext.log.w(ITAG, "Output H.26x file path=$baseFolder")
                 baseFolder.mkdirs()
-                videoH264File = File(baseFolder, "screen.h264")
-                videoH264Os = BufferedOutputStream(FileOutputStream(videoH264File))
+                videoH26xFile = File(
+                    baseFolder,
+                    "screen" + when (VIDEO_ENCODE_TYPE) {
+                        ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
+                        ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
+                    }
+                )
+                videoH26xOs = BufferedOutputStream(FileOutputStream(videoH26xFile))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -189,12 +199,13 @@ class MediaProjectionService : Service() {
             setting.height, // 800 1024 1280
             setting.dpi,
             mediaProjection,
-            // BY_IMAGE_2_H264
+            // BY_IMAGE_2_H26x
             // BY_MEDIA_CODEC
             // BY_RAW_BMP
             ScreenCapture.BY_MEDIA_CODEC,
             screenDataListener
         )
+            .setEncodeType(VIDEO_ENCODE_TYPE)
             .setGoogleEncoder(false)
             .setFps(setting.fps)
             // For H264 and x264
@@ -213,10 +224,10 @@ class MediaProjectionService : Service() {
 
     fun stopScreenShare() {
         LogContext.log.w(ITAG, "stopScreenShare")
-        if (outputH264File) {
+        if (outputH26xFile) {
             try {
-                videoH264Os.flush()
-                videoH264Os.closeQuietly()
+                videoH26xOs.flush()
+                videoH26xOs.closeQuietly()
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
@@ -240,7 +251,7 @@ class MediaProjectionService : Service() {
     @Suppress("WeakerAccess")
     fun triggerIFrame() {
         LogContext.log.w(ITAG, "triggerIFrame()")
-        val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h264Encoder
+        val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h26xEncoder
         encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
     }
 }

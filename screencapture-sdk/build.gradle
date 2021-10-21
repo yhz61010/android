@@ -36,6 +36,7 @@ android {
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
 //    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "androidx.annotation:annotation:$annotationVersion"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api project(':log-sdk')
     api project(':min-base-sdk')

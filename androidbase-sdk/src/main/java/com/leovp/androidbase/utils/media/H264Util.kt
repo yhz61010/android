@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.media
 
+import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.log_sdk.LogContext
 import com.leovp.min_base_sdk.toHexString
@@ -175,7 +176,7 @@ object H264Util {
         }
     }
 
-    fun getNaluTypeInStr(data: ByteArray) = getNaluTypeInStr(getNaluType(data))
+    fun getNaluTypeInStr(data: ByteArray): String = getNaluTypeInStr(getNaluType(data))
 
-    fun getAvcCodec(encoder: Boolean = true) = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
+    fun getAvcCodec(encoder: Boolean = true): List<MediaCodecInfo> = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
 }

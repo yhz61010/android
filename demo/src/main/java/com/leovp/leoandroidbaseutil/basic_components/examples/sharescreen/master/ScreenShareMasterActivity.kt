@@ -301,7 +301,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(ITAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             cs.launch {
-                webSocketServerHandler.sendVideoData(clientChannel, CMD_GRAPHIC_CSD, mediaProjectService?.spsPps!!)
+                webSocketServerHandler.sendVideoData(clientChannel, CMD_GRAPHIC_CSD, mediaProjectService?.vpsSpsPps!!)
                 mediaProjectService?.triggerIFrame()
                 this@ScreenShareMasterActivity.clientChannel = clientChannel
             }

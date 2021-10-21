@@ -60,7 +60,7 @@ class MediaProjectionService : Service() {
     private lateinit var mediaProjection: MediaProjection
     private var screenProcessor: ScreenProcessor? = null
 
-    val spsPps get() = run { (screenProcessor as? ScreenRecordMediaCodecStrategy)?.spsPpsBuf }
+    val vpsSpsPps get() = run { (screenProcessor as? ScreenRecordMediaCodecStrategy)?.vpsSpsPpsBuf }
 
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
@@ -208,9 +208,9 @@ class MediaProjectionService : Service() {
             .setEncodeType(VIDEO_ENCODE_TYPE)
             .setGoogleEncoder(false)
             .setFps(setting.fps)
-            // For H264 and x264
+            // For H26x and x264
             .setBitrate(setting.bitrate)
-            // For H264
+            // For H26x
             .setBitrateMode(setting.bitrateMode)
             .setKeyFrameRate(setting.keyFrameRate)
             .setIFrameInterval(setting.iFrameInterval) // 20

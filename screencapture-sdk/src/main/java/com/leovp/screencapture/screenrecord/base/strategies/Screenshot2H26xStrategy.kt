@@ -50,7 +50,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private var frameCount: Long = 0
 
     @SuppressWarnings("unused")
-    var spsPpsBytes: ByteArray? = null
+    var vpsSpsPpsBytes: ByteArray? = null
         private set
     var h26xEncoder: MediaCodec? = null
         private set
@@ -75,7 +75,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                        spsPpsBytes = encodedBytes.copyOf()
+                        vpsSpsPpsBytes = encodedBytes.copyOf()
 //                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
@@ -143,7 +143,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         fun build(): Screenshot2H26xStrategy {
-            LogContext.log.w(TAG, "width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
+            LogContext.log.w(TAG, "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
             return Screenshot2H26xStrategy(this)
         }
     }
@@ -244,7 +244,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onInit() {
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, builder.width, builder.height)
+        val format = MediaFormat.createVideoFormat(
+            when (builder.encodeType) {
+                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+            }, builder.width, builder.height
+        )
         with(format) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)

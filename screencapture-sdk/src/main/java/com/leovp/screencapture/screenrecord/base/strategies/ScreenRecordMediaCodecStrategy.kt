@@ -128,7 +128,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     }
 
     @SuppressLint("InlinedApi")
-    @Throws(Exception::class)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(
             when (builder.encodeType) {
@@ -185,7 +184,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         h26xEncoder = if (builder.useGoogleEncoder) {
             when (builder.encodeType) {
                 EncodeType.H264 -> MediaCodec.createByCodecName("OMX.google.h264.encoder")
-                EncodeType.H265 -> MediaCodec.createByCodecName("c2.android.hevc.encoder")
+                EncodeType.H265 -> {
+                    val hevcEncoderName = getHevcCodec(encoder = true)[0].name
+                    LogContext.log.i(TAG, "hevcEncoderName=$hevcEncoderName")
+                    MediaCodec.createByCodecName(hevcEncoderName)
+                } // "c2.android.hevc.encoder"
             }
         } else {
             when (builder.encodeType) {

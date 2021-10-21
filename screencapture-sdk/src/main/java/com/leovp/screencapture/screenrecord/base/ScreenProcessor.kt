@@ -1,5 +1,9 @@
 package com.leovp.screencapture.screenrecord.base
 
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaFormat
+
 /**
  * Author: Michael Leo
  * Date: 20-5-15 下午2:10
@@ -41,4 +45,9 @@ interface ScreenProcessor {
     fun onRelease()
 
     fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()
+
+    fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS) // MediaCodecList.ALL_CODECS
+        .codecInfos.filter { it.isEncoder == encoder }.filter { it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1 }
+
+    fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> = getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

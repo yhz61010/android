@@ -11,10 +11,9 @@ import android.graphics.Path
 import android.graphics.Point
 import android.media.MediaCodecInfo
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.IBinder
+import android.os.*
 import android.provider.Settings
+import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.exts.android.*
@@ -399,6 +398,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         FloatView.clear()
         clientChannel = null
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
+    }
+
+    fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("Prepare to take screenshot in 3s...")
+        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot() }, 3000)
     }
 }
 

@@ -66,10 +66,10 @@ fun Bitmap.compressBitmap(quality: Int = 100, sampleSize: Int = 1, imgType: Bitm
 /**
  * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
  */
-fun Bitmap.writeToFile(outputFile: File, quality: Int = 100) {
+fun Bitmap.writeToFile(outputFile: File, quality: Int = 100, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG) {
     val outputStream = FileOutputStream(outputFile)
     outputStream.use {
-        this.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        this.compress(imgType, quality, outputStream)
         outputStream.flush()
     }
 }

@@ -1,21 +1,22 @@
 package com.leovp.screencapture.screenrecord.base.strategies
 
 import android.annotation.SuppressLint
+import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
-import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
+import android.media.*
 import android.media.projection.MediaProjection
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import com.leovp.log_sdk.LogContext
+import com.leovp.min_base_sdk.createBitmap
 import com.leovp.min_base_sdk.exception
 import com.leovp.min_base_sdk.toHexStringLE
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Author: Michael Leo
@@ -24,12 +25,16 @@ import java.nio.ByteBuffer
 class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) : ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
+    private var virtualDisplayForImageReader: VirtualDisplay? = null
 
     var h26xEncoder: MediaCodec? = null
         private set
     private var videoEncoderLoop = false
     private var videoDataSendThread: HandlerThread? = null
     private var videoDataSendHandler: Handler? = null
+
+    private var imageReader: ImageReader? = null
+    private var takeScreenshotFlag = AtomicBoolean(false)
 
     @Suppress("WeakerAccess")
     var vpsSpsPpsBuf: ByteArray? = null
@@ -205,6 +210,34 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, surface, null, null
         )
 
+        imageReader = ImageReader.newInstance(builder.width, builder.height, PixelFormat.RGBA_8888, 3).also {
+            virtualDisplayForImageReader = builder.mediaProjection.createVirtualDisplay(
+                "screen-record", builder.width, builder.height, builder.dpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, it.surface, null, null
+            )
+            it.setOnImageAvailableListener({ reader ->
+                runCatching {
+                    LogContext.log.i(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
+                    val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+                    if (takeScreenshotFlag.get()) {
+                        synchronized(ScreenRecordMediaCodecStrategy::class.java) {
+                            if (!takeScreenshotFlag.get()) return@synchronized
+                            LogContext.log.i(TAG, "createBitmap")
+                            takeScreenshotFlag.set(false)
+                            val bitmap = image.createBitmap()
+                            builder.screenDataListener.onScreenshot(bitmap)
+
+//                            val buffer = image.planes[0].buffer
+//                            val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+//                            builder.screenDataListener.onScreenshot(imageBytes)
+                        }
+                    } else {
+                        image.close()
+                    }
+                }
+            }, null)
+        }
+
         initHandler()
     }
 
@@ -216,6 +249,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         onStop()
         h26xEncoder?.release()
         virtualDisplay?.release()
+        virtualDisplayForImageReader?.release()
     }
 
     override fun onStop() {
@@ -294,6 +328,10 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //        }
 
         videoDataSendHandler?.post { builder.screenDataListener.onDataUpdate(bytes, flags, presentationTimeUs) }
+    }
+
+    override fun takeScreenshot() {
+        takeScreenshotFlag.compareAndSet(false, true)
     }
 
     enum class EncodeType {

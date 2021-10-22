@@ -10,4 +10,5 @@ interface ScreenDataListener {
      * @param presentationTimeUs Only works for [ScreenCapture.BY_IMAGE_2_H26x] and [ScreenCapture.BY_MEDIA_CODEC]. In other cases, `-1` will be returned.
      */
     fun onDataUpdate(buffer: Any, flags: Int = -1, presentationTimeUs: Long = -1)
+    fun onScreenshot(data: Any) {}
 }

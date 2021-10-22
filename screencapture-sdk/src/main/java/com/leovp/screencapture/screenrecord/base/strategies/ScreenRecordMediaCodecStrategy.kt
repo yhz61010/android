@@ -217,12 +217,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             )
             it.setOnImageAvailableListener({ reader ->
                 runCatching {
-                    LogContext.log.i(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
+//                    LogContext.log.i(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
                     val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
                     if (takeScreenshotFlag.get()) {
                         synchronized(ScreenRecordMediaCodecStrategy::class.java) {
                             if (!takeScreenshotFlag.get()) return@synchronized
-                            LogContext.log.i(TAG, "createBitmap")
+//                            LogContext.log.i(TAG, "createBitmap")
                             takeScreenshotFlag.set(false)
                             val bitmap = image.createBitmap()
                             builder.screenDataListener.onScreenshot(bitmap)

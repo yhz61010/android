@@ -23,12 +23,12 @@ import com.leovp.min_base_sdk.fail
 class BetterActivityResult<I, O> private constructor(
     caller: ActivityResultCaller,
     contract: ActivityResultContract<I, O>,
-    private var result: ((O) -> Unit)? = null
+    private var defaultResult: ((O) -> Unit)? = null
 ) {
     private var internalResult: ((O) -> Unit)? = null
 
     private val launcher: ActivityResultLauncher<I> = caller.registerForActivityResult(contract) { re: O ->
-        val finalResult = (this.internalResult ?: this.result) ?: fail("The [Result] can not be null.")
+        val finalResult = (this.internalResult ?: this.defaultResult) ?: fail("The [Result] can not be null.")
         finalResult(re)
     }
 
@@ -37,7 +37,7 @@ class BetterActivityResult<I, O> private constructor(
      * executed after receiving a result from the target activity.
      *
      * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.registerForActivityResult].
-     * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [launch] will be used first.
+     * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in [launch] will be used first.
      */
     @JvmOverloads
     fun launch(input: I, result: ((O) -> Unit)? = null) {
@@ -51,7 +51,7 @@ class BetterActivityResult<I, O> private constructor(
          * the default approach. You can still customise callback using [launch].
          *
          * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.launch]
-         * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [launch] will be used first.
+         * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in [launch] will be used first.
          */
         fun <I, O> registerForActivityResult(
             caller: ActivityResultCaller,

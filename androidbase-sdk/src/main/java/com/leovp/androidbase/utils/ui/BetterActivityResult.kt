@@ -25,18 +25,23 @@ class BetterActivityResult<I, O> private constructor(
     contract: ActivityResultContract<I, O>,
     private var result: ((O) -> Unit)? = null
 ) {
-    private val launcher: ActivityResultLauncher<I> = caller.registerForActivityResult(contract) { re: O -> result!!(re) }
+    private var internalResult: ((O) -> Unit)? = null
+
+    private val launcher: ActivityResultLauncher<I> = caller.registerForActivityResult(contract) { re: O ->
+        val finalResult = (this.internalResult ?: this.result) ?: fail("The [Result] can not be null.")
+        finalResult(re)
+    }
 
     /**
      * Launch activity, same as [ActivityResultLauncher.launch] except that it allows a callback
      * executed after receiving a result from the target activity.
      *
      * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.registerForActivityResult].
-     * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [registerForActivityResult] will be used first.
+     * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [launch] will be used first.
      */
     @JvmOverloads
     fun launch(input: I, result: ((O) -> Unit)? = null) {
-        this.result = (this.result ?: result) ?: fail("The [Result] can not be null.")
+        internalResult = result
         launcher.launch(input)
     }
 
@@ -46,7 +51,7 @@ class BetterActivityResult<I, O> private constructor(
          * the default approach. You can still customise callback using [launch].
          *
          * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.launch]
-         * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [registerForActivityResult] will be used first.
+         * If you set `result` in both [launch] and [registerForActivityResult], the `result` in [launch] will be used first.
          */
         fun <I, O> registerForActivityResult(
             caller: ActivityResultCaller,

@@ -6,9 +6,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.system.LangUtil
+import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.log_sdk.LogContext
 
 /**
@@ -16,6 +20,8 @@ import com.leovp.log_sdk.LogContext
  * Date: 20-6-17 上午11:14
  */
 open class BaseDemonstrationActivity : AppCompatActivity() {
+    lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
+
     private val appLangChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
             recreate()
@@ -31,6 +37,9 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
+        simpleActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
+            toast("Result in BaseActivity: ${result.resultCode}")
+        }
         LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getAppLanguage(this)
         LogContext.log.i("Pref lang=$lang")

@@ -149,7 +149,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation
-                        (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)?.changeOrientation()
+                        runOnUiThread { (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)?.changeOrientation() }
                     }
                 }
             }

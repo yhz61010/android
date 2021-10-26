@@ -276,6 +276,7 @@ class MediaProjectionService : Service() {
     }
 
     fun takeScreenshot() {
+        LogContext.log.w("Prepare to call takeScreenshot()...")
         screenProcessor?.takeScreenshot()
     }
 }

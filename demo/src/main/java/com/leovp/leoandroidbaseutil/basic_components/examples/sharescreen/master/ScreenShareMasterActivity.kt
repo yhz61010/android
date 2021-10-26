@@ -20,6 +20,7 @@ import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.network.NetworkUtil
+import com.leovp.androidbase.utils.system.API
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
@@ -34,6 +35,7 @@ import com.leovp.min_base_sdk.exception
 import com.leovp.min_base_sdk.toBytesLE
 import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
+import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
@@ -48,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
+import java.util.*
 
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
@@ -71,6 +74,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private var fingerPaintView: FingerPaintView? = null
 
     private val cs = CoroutineScope(Dispatchers.IO)
+
+    private var lastScreenRotation = 0
+    private var testTimer: Timer? = null
+    private var testTimerTask: TimerTask? = null
 
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
@@ -134,6 +141,20 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         } else {
             startManageDrawOverlaysPermission()
         }
+
+        testTimerTask = object : TimerTask() {
+            override fun run() {
+                runCatching {
+                    val currentScreenRotation = if (API.ABOVE_R) display!!.rotation else app.windowManager.defaultDisplay.rotation
+//                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
+                    if (currentScreenRotation != lastScreenRotation) {
+                        lastScreenRotation = currentScreenRotation
+                        (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)?.changeOrientation()
+                    }
+                }
+            }
+        }
+        testTimer = Timer(true).apply { scheduleAtFixedRate(testTimerTask, 1000, 1000) }
     }
 
     private fun createFloatView() {
@@ -188,7 +209,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (result) {
                     ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
                         LogContext.log.w(ITAG, "Prepare to record...")
-                        startServer()
+//                        startServer()
                         checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
                         mediaProjectService?.setData(
                             resultCode,
@@ -196,8 +217,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
-                            (screenInfo.x * 0.5F / 16).toInt() * 16,
-                            (screenInfo.y * 0.5F / 16).toInt() * 16,
+                            (screenInfo.x * 0.7F / 16).toInt() * 16,
+                            (screenInfo.y * 0.7F / 16).toInt() * 16,
                             densityDpi
                         )
 //                        setting.fps = 20F
@@ -408,7 +429,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
 @Keep
 data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
-    var fps: Float = 15F
+    var fps: Float = 20F
     var bitrate = (width * height * 1.8f).toInt()
     var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
     var keyFrameRate = 8

@@ -63,7 +63,8 @@ class MediaProjectionService : Service() {
     private val binder = CustomBinder()
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private lateinit var mediaProjection: MediaProjection
-    private var screenProcessor: ScreenProcessor? = null
+    var screenProcessor: ScreenProcessor? = null
+        private set
 
     val vpsSpsPps get() = run { (screenProcessor as? ScreenRecordMediaCodecStrategy)?.vpsSpsPpsBuf }
 

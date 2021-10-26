@@ -44,6 +44,8 @@ interface ScreenProcessor {
      */
     fun onRelease()
 
+    fun changeOrientation() {}
+
     fun takeScreenshot() {}
 
     fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()

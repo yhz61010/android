@@ -263,11 +263,13 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             return
         }
         LogContext.log.i(TAG, "onRelease()")
+        imageReader?.setOnImageAvailableListener(null, null)
+        runCatching { imageReader?.close() }
+        imageReader = null
         onStop()
         h26xEncoder?.release()
         virtualDisplay?.release()
         virtualDisplayForImageReader?.release()
-        runCatching { imageReader?.close() }
     }
 
     override fun onStop() {

@@ -42,32 +42,31 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private var outputFormat: MediaFormat? = null
 
-    private fun createMediaCodecCallback(): MediaCodec.Callback {
-        return object : MediaCodec.Callback() {
-            private var beginPTS: Long = 0L
+    private var mediaCodecCallback: MediaCodec.Callback = object : MediaCodec.Callback() {
+        private var beginPTS: Long = 0L
 
-            override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
+        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
 //            val inputBuffer = codec.getInputBuffer(inputBufferId)
 //            // fill inputBuffer with valid data
 //
 //            codec.queueInputBuffer(inputBufferId,)
 //            LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
-            }
+        }
 
-            override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-                try {
+        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+            try {
 //                    LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
-                    val outputBuffer = codec.getOutputBuffer(outputBufferId)
-                    // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                    // bufferFormat is equivalent to member variable outputFormat
-                    // outputBuffer is ready to be processed or rendered.
-                    outputBuffer?.let {
-                        val calcPTS = if (beginPTS == 0L) {
-                            beginPTS = info.presentationTimeUs
-                            0
-                        } else {
-                            info.presentationTimeUs - beginPTS
-                        }
+                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+                // bufferFormat is equivalent to member variable outputFormat
+                // outputBuffer is ready to be processed or rendered.
+                outputBuffer?.let {
+                    val calcPTS = if (beginPTS == 0L) {
+                        beginPTS = info.presentationTimeUs
+                        0
+                    } else {
+                        info.presentationTimeUs - beginPTS
+                    }
 //                    LogContext.log.w(
 //                        TAG, "ori presentationTimeUs=${currentPTS / 1000 / 1000} new=${info.presentationTimeUs} " +
 //                                "currentTimeMillis=${System.currentTimeMillis()} " +
@@ -75,28 +74,25 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 //                                "currentThreadTimeMillis=${SystemClock.currentThreadTimeMillis()} " +
 //                                "uptimeMillis=${SystemClock.uptimeMillis()}"
 //                    )
-                        onSendAvcFrame(it, info.flags, info.size, calcPTS)
-                    }
-                    codec.releaseOutputBuffer(outputBufferId, false)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                    onSendAvcFrame(it, info.flags, info.size, calcPTS)
                 }
-            }
-
-            override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
-                // Subsequent data will conform to new format.
-                // Can ignore if using getOutputFormat(outputBufferId)
-                outputFormat = format // option B
-            }
-
-            override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-                LogContext.log.d(TAG, "onError error=${e.message}", e)
+                codec.releaseOutputBuffer(outputBufferId, false)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
-    }
 
-    private var mediaCodecCallback: MediaCodec.Callback? = createMediaCodecCallback()
+        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+//            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+            // Subsequent data will conform to new format.
+            // Can ignore if using getOutputFormat(outputBufferId)
+            outputFormat = format // option B
+        }
+
+        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+            LogContext.log.d(TAG, "onError error=${e.message}", e)
+        }
+    }
 
     class Builder(
         var width: Int,
@@ -226,17 +222,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             )
             LogContext.log.i(TAG, "virtualDisplayForImageReader created.")
             LogContext.log.i(TAG, "Prepare to call ImageReader#setOnImageAvailableListener...")
-            it.setOnImageAvailableListener(createImageAvailableListener(), videoDataSendHandler)
-            LogContext.log.i(TAG, "ImageReader#setOnImageAvailableListener set.")
-        }
-        LogContext.log.i(TAG, "ImageReader created.")
-    }
-
-    private fun createImageAvailableListener(): ImageReader.OnImageAvailableListener {
-        return object : ImageReader.OnImageAvailableListener {
-            override fun onImageAvailable(reader: ImageReader) {
+            it.setOnImageAvailableListener({ reader ->
                 runCatching {
-//                    LogContext.log.i(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
+//                    LogContext.log.e(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
                     val image: Image = reader.acquireLatestImage() ?: return@runCatching
                     runCatching {
                         if (takeScreenshotFlag.get()) {
@@ -254,8 +242,10 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                         }
                     }.also { image.close() }
                 }
-            }
+            }, null)
+            LogContext.log.i(TAG, "ImageReader#setOnImageAvailableListener set.")
         }
+        LogContext.log.i(TAG, "ImageReader created.")
     }
 
     override fun onRelease() {
@@ -263,7 +253,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             return
         }
         LogContext.log.i(TAG, "onRelease()")
-        imageReader?.setOnImageAvailableListener(null, null)
+        imageReader?.setOnImageAvailableListener(null, videoDataSendHandler)
         runCatching { imageReader?.close() }
         imageReader = null
         onStop()
@@ -277,6 +267,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             return
         }
         LogContext.log.i(TAG, "onStop()")
+        takeScreenshotFlag.set(false)
         videoEncoderLoop.set(false)
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -300,7 +291,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoEncoderLoop.set(true)
     }
 
+    /**
+     * This method must be called on main thread.
+     */
     override fun changeOrientation() {
+        takeScreenshotFlag.set(false)
+
         imageReader?.setOnImageAvailableListener(null, null)
         runCatching { imageReader?.close() }
         imageReader = null
@@ -311,7 +307,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         virtualDisplayForImageReader = null
         runCatching { h26xEncoder?.release() }.onFailure { it.printStackTrace() }
         h26xEncoder = null
-        mediaCodecCallback = null
+//        mediaCodecCallback = null
         runCatching { releaseHandler() }.onFailure { it.printStackTrace() }
 
         videoEncoderLoop.set(false)
@@ -320,7 +316,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         builder.height = oriWidth
         LogContext.log.w(TAG, "Size after orientation: ${builder.width}x${builder.height}")
 
-        mediaCodecCallback = createMediaCodecCallback()
+//        mediaCodecCallback = createMediaCodecCallback()
         onInit()
         onStart()
     }
@@ -333,7 +329,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private fun releaseHandler() {
         videoDataSendHandler?.removeCallbacksAndMessages(null)
+        videoDataSendHandler = null
         videoDataSendThread?.quitSafely()
+        videoDataSendThread = null
     }
 
     private fun onSendAvcFrame(bb: ByteBuffer, flags: Int, bufferSize: Int, presentationTimeUs: Long) {

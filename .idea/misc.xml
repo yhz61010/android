@@ -19,6 +19,7 @@
         <entry key="demo/src/main/res/layout/activity_device_info.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_new_word.xml" value="0.3351851851851852" />
+        <entry key="demo/src/main/res/layout/activity_orientation.xml" value="0.5625" />
         <entry key="demo/src/main/res/layout/activity_screen_share_master.xml" value="0.5676923076923077" />
         <entry key="demo/src/main/res/layout/activity_socket_client.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_socket_server.xml" value="0.5911458333333334" />

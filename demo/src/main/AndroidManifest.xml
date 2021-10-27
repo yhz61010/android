@@ -38,6 +38,9 @@
         android:theme="@style/AppTheme"
         tools:targetApi="n">
         <activity
+            android:name=".basic_components.examples.OrientationActivity"
+            android:exported="true" />
+        <activity
             android:name=".basic_components.AppSettingsActivity"
             android:exported="true" />
         <activity android:name=".basic_components.examples.CircleProgressbarActivity" />

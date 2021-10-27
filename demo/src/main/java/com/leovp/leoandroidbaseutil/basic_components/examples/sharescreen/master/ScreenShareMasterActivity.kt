@@ -209,7 +209,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (result) {
                     ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
                         LogContext.log.w(ITAG, "Prepare to record...")
-//                        startServer()
+                        startServer()
                         checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
                         mediaProjectService?.setData(
                             resultCode,

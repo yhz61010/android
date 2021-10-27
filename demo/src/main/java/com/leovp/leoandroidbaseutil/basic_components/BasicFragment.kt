@@ -122,6 +122,7 @@ class BasicFragment : Fragment() {
             Pair("FloatView", FloatViewActivity::class.java),
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
             Pair("App Settings", AppSettingsActivity::class.java),
+            Pair("Orientation", OrientationActivity::class.java),
         )
 
         val colors = arrayOf(

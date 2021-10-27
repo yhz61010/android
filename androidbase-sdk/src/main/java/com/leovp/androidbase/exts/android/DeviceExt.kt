@@ -3,6 +3,7 @@ package com.leovp.androidbase.exts.android
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Point
 import android.graphics.Rect
@@ -11,6 +12,9 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.view.OrientationEventListener
+import android.view.Surface
+import androidx.annotation.IntRange
 import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.device.DeviceUtil
 import java.lang.reflect.Method
@@ -250,3 +254,53 @@ fun isProbablyAnEmulator(): Boolean {
 fun Context.isTablet(): Boolean {
     return (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 }
+
+// ================================
+
+fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) || isReversePortraitByDegree(orientationInDegree, thresholdInDegree)
+}
+
+fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return isNormalLandscapeByDegree(orientationInDegree, thresholdInDegree) || isReverseLandscapeByDegree(orientationInDegree, thresholdInDegree)
+}
+
+/**
+ * @param rotation The value may be Surface.ROTATION_0 (no rotation), Surface.ROTATION_90, Surface.ROTATION_180, or Surface.ROTATION_270.
+ */
+fun isPortrait(rotation: Int): Boolean = Surface.ROTATION_0 == rotation || Surface.ROTATION_180 == rotation
+
+/**
+ * @param rotation The value may be Surface.ROTATION_0 (no rotation), Surface.ROTATION_90, Surface.ROTATION_180, or Surface.ROTATION_270.
+ */
+fun isLandscape(rotation: Int): Boolean = Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation
+
+// ---------------
+
+fun isNormalPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return (orientationInDegree in 0..thresholdInDegree) || (orientationInDegree in (360 - thresholdInDegree)..359)
+}
+
+fun isReversePortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return orientationInDegree >= (180 - thresholdInDegree) && orientationInDegree <= (180 + thresholdInDegree)
+}
+
+fun isNormalLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return orientationInDegree > (270 - thresholdInDegree) && orientationInDegree < (270 + thresholdInDegree)
+}
+
+fun isReverseLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    return orientationInDegree > (90 - thresholdInDegree) && orientationInDegree < (90 + thresholdInDegree)
+}
+
+fun getOrientationByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int, @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Int {
+    return when {
+        isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        isReversePortraitByDegree(orientationInDegree, thresholdInDegree) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        isNormalLandscapeByDegree(orientationInDegree, thresholdInDegree) -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        isReverseLandscapeByDegree(orientationInDegree, thresholdInDegree) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+        else -> OrientationEventListener.ORIENTATION_UNKNOWN
+    }
+}
+
+// =================

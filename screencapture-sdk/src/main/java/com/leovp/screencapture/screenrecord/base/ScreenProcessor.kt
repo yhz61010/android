@@ -30,6 +30,9 @@ interface ScreenProcessor {
         //        const val NAL_FILLER = 12
     }
 
+    /**
+     * This method must be called on main thread.
+     */
     fun onInit()
     fun onStart()
 
@@ -44,6 +47,9 @@ interface ScreenProcessor {
      */
     fun onRelease()
 
+    /**
+     * This method must be called on main thread.
+     */
     fun changeOrientation() {}
 
     fun takeScreenshot() {}

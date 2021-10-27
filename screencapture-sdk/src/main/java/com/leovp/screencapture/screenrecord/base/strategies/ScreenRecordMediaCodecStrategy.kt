@@ -133,6 +133,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
     }
 
+    /**
+     * This method must be called on main thread.
+     */
     @SuppressLint("InlinedApi")
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(

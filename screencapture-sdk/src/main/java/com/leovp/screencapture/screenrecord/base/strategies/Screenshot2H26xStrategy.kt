@@ -9,6 +9,7 @@ import android.opengl.*
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Size
 import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.leovp.log_sdk.LogContext
@@ -328,6 +329,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         h26xEncoder?.release()
         releaseEgl()
     }
+
+    override fun getVideoSize(): Size = Size(builder.width, builder.height)
 
     private fun initHandler() {
         screenshotThread = HandlerThread("scr-rec-send").apply { start() }

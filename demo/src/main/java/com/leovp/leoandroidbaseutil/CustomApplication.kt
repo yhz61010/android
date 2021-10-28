@@ -13,6 +13,7 @@ import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
 import io.reactivex.plugins.RxJavaPlugins
+import me.weishu.reflection.Reflection
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.android.x.androidXModule
@@ -47,6 +48,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(LangUtil.setLocale(base))
+        Reflection.unseal(base)
         MultiDex.install(this)
     }
 

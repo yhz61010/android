@@ -90,7 +90,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.recyclerview_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }

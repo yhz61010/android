@@ -175,11 +175,11 @@ object BluetoothUtil {
     @SuppressLint("MissingPermission")
     fun scan(scanDeviceCallback: ScanDeviceCallback) {
         this.scanDeviceCallback = scanDeviceCallback
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothAdapter.bluetoothLeScanner?.startScan(scanCallback)
-        } else {
-            bluetoothAdapter.startLeScan(leScanCallback)
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        bluetoothAdapter.bluetoothLeScanner?.startScan(scanCallback)
+//        } else {
+//            bluetoothAdapter.startLeScan(leScanCallback)
+//        }
     }
 
     /**
@@ -191,11 +191,11 @@ object BluetoothUtil {
      */
     @SuppressLint("MissingPermission")
     fun stopScan() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
-        } else {
-            bluetoothAdapter.stopLeScan(leScanCallback)
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
+//        } else {
+//            bluetoothAdapter.stopLeScan(leScanCallback)
+//        }
     }
 
     /**

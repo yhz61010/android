@@ -1,6 +1,7 @@
 package com.leovp.screencapture.screenrecord.base.strategies
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
@@ -9,6 +10,7 @@ import android.media.projection.MediaProjection
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Size
 import com.leovp.log_sdk.LogContext
 import com.leovp.min_base_sdk.createBitmap
 import com.leovp.min_base_sdk.exception
@@ -25,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) : ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
-    private var virtualDisplayForImageReader: VirtualDisplay? = null
 
     var h26xEncoder: MediaCodec? = null
         private set
@@ -33,8 +34,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     private var videoDataSendThread: HandlerThread? = null
     private var videoDataSendHandler: Handler? = null
 
-    private var imageReader: ImageReader? = null
-    private var takeScreenshotFlag = AtomicBoolean(false)
+    private val takeScreenshotFlag = AtomicBoolean(false)
 
     @Suppress("WeakerAccess")
     var vpsSpsPpsBuf: ByteArray? = null
@@ -42,7 +42,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private var outputFormat: MediaFormat? = null
 
-    private var mediaCodecCallback: MediaCodec.Callback = object : MediaCodec.Callback() {
+    private val mediaCodecCallback = object : MediaCodec.Callback() {
         private var beginPTS: Long = 0L
 
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
@@ -54,7 +54,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
 
         override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            try {
+            runCatching {
 //                    LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
@@ -77,8 +77,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                     onSendAvcFrame(it, info.flags, info.size, calcPTS)
                 }
                 codec.releaseOutputBuffer(outputBufferId, false)
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
 
@@ -215,40 +213,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         )
 
         initHandler()
-
-        LogContext.log.i(TAG, "Prepare to create ImageReader...")
-        imageReader = ImageReader.newInstance(builder.width, builder.height, PixelFormat.RGBA_8888, 3).also {
-            LogContext.log.i(TAG, "Prepare to create virtualDisplayForImageReader...")
-            virtualDisplayForImageReader = builder.mediaProjection.createVirtualDisplay(
-                "screen-record", builder.width, builder.height, builder.dpi,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, it.surface, null, null
-            )
-            LogContext.log.i(TAG, "virtualDisplayForImageReader created.")
-            LogContext.log.i(TAG, "Prepare to call ImageReader#setOnImageAvailableListener...")
-            it.setOnImageAvailableListener({ reader ->
-                runCatching {
-//                    LogContext.log.e(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
-                    val image: Image = reader.acquireLatestImage() ?: return@runCatching
-                    runCatching {
-                        if (takeScreenshotFlag.get()) {
-                            synchronized(ScreenRecordMediaCodecStrategy::class.java) {
-                                if (!takeScreenshotFlag.get()) return@synchronized
-//                            LogContext.log.i(TAG, "createBitmap")
-                                takeScreenshotFlag.set(false)
-                                val bitmap = image.createBitmap()
-                                builder.screenDataListener.onScreenshot(bitmap)
-
-//                            val buffer = image.planes[0].buffer
-//                            val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
-//                            builder.screenDataListener.onScreenshot(imageBytes)
-                            }
-                        }
-                    }.also { image.close() }
-                }
-            }, null)
-            LogContext.log.i(TAG, "ImageReader#setOnImageAvailableListener set.")
-        }
-        LogContext.log.i(TAG, "ImageReader created.")
     }
 
     override fun onRelease() {
@@ -256,13 +220,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             return
         }
         LogContext.log.i(TAG, "onRelease()")
-        imageReader?.setOnImageAvailableListener(null, videoDataSendHandler)
-        runCatching { imageReader?.close() }
-        imageReader = null
         onStop()
         h26xEncoder?.release()
         virtualDisplay?.release()
-        virtualDisplayForImageReader?.release()
     }
 
     override fun onStop() {
@@ -270,13 +230,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             return
         }
         LogContext.log.i(TAG, "onStop()")
-        takeScreenshotFlag.set(false)
         videoEncoderLoop.set(false)
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                imageReader?.discardFreeBuffers()
-            }
-        }
         releaseHandler()
         h26xEncoder?.stop()
         builder.mediaProjection?.stop()
@@ -294,20 +248,14 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoEncoderLoop.set(true)
     }
 
+    override fun getVideoSize(): Size = Size(builder.width, builder.height)
+
     /**
      * This method must be called on main thread.
      */
     override fun changeOrientation() {
-        takeScreenshotFlag.set(false)
-
-        imageReader?.setOnImageAvailableListener(null, null)
-        runCatching { imageReader?.close() }
-        imageReader = null
-
         runCatching { virtualDisplay?.release() }.onFailure { it.printStackTrace() }
         virtualDisplay = null
-        runCatching { virtualDisplayForImageReader?.release() }.onFailure { it.printStackTrace() }
-        virtualDisplayForImageReader = null
         runCatching { h26xEncoder?.release() }.onFailure { it.printStackTrace() }
         h26xEncoder = null
 //        mediaCodecCallback = null
@@ -380,8 +328,34 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendHandler?.post { builder.screenDataListener.onDataUpdate(bytes, flags, presentationTimeUs) }
     }
 
-    override fun takeScreenshot() {
-        takeScreenshotFlag.compareAndSet(false, true)
+    @SuppressLint("WrongConstant")
+    @Synchronized
+    override fun takeScreenshot(width: Int?, height: Int?, result: (bitmap: Bitmap) -> Unit) {
+        if (takeScreenshotFlag.get()) {
+            LogContext.log.w(TAG, "Doing take screenshot... Skip processing.")
+            return
+        }
+        takeScreenshotFlag.set(true)
+        val finalWidth = width ?: builder.width
+        val finalHeight = height ?: builder.height
+        // TODO PixelFormat.RGBA_8888 is a wrong constant? Using ImageFormat instead.
+        val imageReader: ImageReader = ImageReader.newInstance(finalWidth, finalHeight, PixelFormat.RGBA_8888, 3)
+        val virtualDisplayForImageReader: VirtualDisplay? = builder.mediaProjection!!.createVirtualDisplay(
+            "screen-record", finalWidth, finalHeight, builder.dpi,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, imageReader.surface, null, null
+        )
+        imageReader.setOnImageAvailableListener({ reader ->
+//            LogContext.log.e(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
+            val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+            runCatching {
+                result.invoke(image.createBitmap())
+
+                imageReader.setOnImageAvailableListener(null, videoDataSendHandler)
+                runCatching { imageReader.close() }.onFailure { it.printStackTrace() }
+                runCatching { virtualDisplayForImageReader?.release() }.onFailure { it.printStackTrace() }
+                takeScreenshotFlag.set(false)
+            }.also { image.close() }
+        }, null)
     }
 
     enum class EncodeType {

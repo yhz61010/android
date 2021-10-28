@@ -1,8 +1,10 @@
 package com.leovp.screencapture.screenrecord.base
 
+import android.graphics.Bitmap
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaFormat
+import android.util.Size
 
 /**
  * Author: Michael Leo
@@ -47,12 +49,18 @@ interface ScreenProcessor {
      */
     fun onRelease()
 
+    // ==================================================
+
     /**
      * This method must be called on main thread.
      */
     fun changeOrientation() {}
 
-    fun takeScreenshot() {}
+    fun takeScreenshot(width: Int? = null, height: Int? = null, result: (bitmap: Bitmap) -> Unit) {}
+
+    fun getVideoSize(): Size
+
+    // ==================================================
 
     fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()
 

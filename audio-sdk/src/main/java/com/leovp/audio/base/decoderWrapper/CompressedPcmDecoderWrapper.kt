@@ -9,7 +9,7 @@ import com.leovp.min_base_sdk.decompress
  * Author: Michael Leo
  * Date: 20-11-14 上午11:03
  */
-class CompressedPcmDecoderWrapper(decoderInfo: AudioDecoderInfo, private val outputCallback: OutputCallback) : AudioDecoderWrapper {
+class CompressedPcmDecoderWrapper(@Suppress("UNUSED_PARAMETER") decoderInfo: AudioDecoderInfo, private val outputCallback: OutputCallback) : AudioDecoderWrapper {
     override fun decode(input: ByteArray) {
         outputCallback.output(input.decompress())
     }

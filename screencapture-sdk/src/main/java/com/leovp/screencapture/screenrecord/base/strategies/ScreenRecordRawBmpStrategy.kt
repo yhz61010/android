@@ -9,6 +9,7 @@ import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Size
 import com.leovp.log_sdk.LogContext
 import com.leovp.min_base_sdk.createBitmap
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
@@ -94,6 +95,8 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
         LogContext.log.i(TAG, "onStart()")
         videoEncoderLoop = true
     }
+
+    override fun getVideoSize(): Size = Size(builder.width, builder.height)
 
     companion object {
         private const val TAG = "ScrRec"

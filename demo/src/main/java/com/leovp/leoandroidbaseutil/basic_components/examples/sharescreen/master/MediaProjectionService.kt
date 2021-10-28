@@ -5,7 +5,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.graphics.Bitmap
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
@@ -86,20 +85,6 @@ class MediaProjectionService : Service() {
             // Bitmap for screenshot
 //            val file = FileUtil.createImageFile(app, "bmp")
 //            ImageUtil.writeBitmapToFile(file, buffer as Bitmap, 90)
-        }
-
-        override fun onScreenshot(data: Any) {
-            LogContext.log.w("onScreenshot")
-            val bmp = data as Bitmap
-            val compressedBmp = bmp.compressBitmap()
-            bmp.recycle()
-            compressedBmp.writeToFile(File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg"))
-            compressedBmp.recycle()
-            toast("Screenshot saved.")
-
-//            val imageBytes = data as ByteArray
-//            val screenshotFile = File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg")
-//            screenshotFile.writeBytes(imageBytes)
         }
     }
 
@@ -275,9 +260,20 @@ class MediaProjectionService : Service() {
         encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
     }
 
-    fun takeScreenshot() {
-        LogContext.log.w("Prepare to call takeScreenshot()...")
-        screenProcessor?.takeScreenshot()
+    fun takeScreenshot(width: Int?, height: Int?) {
+        LogContext.log.w("Prepare to call takeScreenshot($width, $height)...")
+        screenProcessor?.takeScreenshot(width, height) { bmp ->
+            LogContext.log.w("onScreenshot")
+            val compressedBmp = bmp.compressBitmap()
+            bmp.recycle()
+            compressedBmp.writeToFile(File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg"))
+            compressedBmp.recycle()
+            toast("Screenshot saved.")
+
+//            val imageBytes = data as ByteArray
+//            val screenshotFile = File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg")
+//            screenshotFile.writeBytes(imageBytes)
+        }
     }
 }
 

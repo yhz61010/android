@@ -3,6 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.widget.TextView
@@ -14,6 +15,7 @@ import com.leovp.log_sdk.LogContext
 class OrientationActivity : BaseDemonstrationActivity() {
     private lateinit var tvOrientation: TextView
     private lateinit var tvDirection: TextView
+    private lateinit var tvRotationInDisplay: TextView
 
     private var currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var screenOrientationEventListener: ScreenOrientationListener? = null
@@ -24,6 +26,8 @@ class OrientationActivity : BaseDemonstrationActivity() {
 
         tvOrientation = findViewById(R.id.tvOrientation)
         tvDirection = findViewById(R.id.tvDirection)
+        tvRotationInDisplay = findViewById(R.id.tvRotationInDisplay)
+
         screenOrientationEventListener = ScreenOrientationListener(this)
     }
 
@@ -49,6 +53,8 @@ class OrientationActivity : BaseDemonstrationActivity() {
                 return
             }
 //            if (currentScreenOrientation == newOrientation) return
+            val currentScreenRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else app.windowManager.defaultDisplay.rotation
+            tvRotationInDisplay.text = currentScreenRotation.toString()
 
             when {
                 isNormalPortraitByDegree(orientation) -> {

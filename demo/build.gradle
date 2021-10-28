@@ -235,4 +235,5 @@ dependencies {
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
     implementation "com.hjq:xxpermissions:$xxPermissionVersion"
     implementation "de.undercouch:bson4jackson:$bsonVersion"
+    implementation "com.github.tiann:FreeReflection:$freeReflectionVersion"
 }

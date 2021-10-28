@@ -34,8 +34,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     private var videoDataSendThread: HandlerThread? = null
     private var videoDataSendHandler: Handler? = null
 
-    private val takeScreenshotFlag = AtomicBoolean(false)
-
     @Suppress("WeakerAccess")
     var vpsSpsPpsBuf: ByteArray? = null
         private set
@@ -331,11 +329,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     @SuppressLint("WrongConstant")
     @Synchronized
     override fun takeScreenshot(width: Int?, height: Int?, result: (bitmap: Bitmap) -> Unit) {
-        if (takeScreenshotFlag.get()) {
-            LogContext.log.w(TAG, "Doing take screenshot... Skip processing.")
-            return
-        }
-        takeScreenshotFlag.set(true)
         val finalWidth = width ?: builder.width
         val finalHeight = height ?: builder.height
         // TODO PixelFormat.RGBA_8888 is a wrong constant? Using ImageFormat instead.
@@ -353,7 +346,6 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 imageReader.setOnImageAvailableListener(null, videoDataSendHandler)
                 runCatching { imageReader.close() }.onFailure { it.printStackTrace() }
                 runCatching { virtualDisplayForImageReader?.release() }.onFailure { it.printStackTrace() }
-                takeScreenshotFlag.set(false)
             }.also { image.close() }
         }, null)
     }

@@ -263,16 +263,13 @@ class MediaProjectionService : Service() {
     fun takeScreenshot(width: Int?, height: Int?) {
         LogContext.log.w("Prepare to call takeScreenshot($width, $height)...")
         screenProcessor?.takeScreenshot(width, height) { bmp ->
-            LogContext.log.w("onScreenshot")
             val compressedBmp = bmp.compressBitmap()
             bmp.recycle()
-            compressedBmp.writeToFile(File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg"))
+            val jpegFile = File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg")
+            compressedBmp.writeToFile(jpegFile)
             compressedBmp.recycle()
-            toast("Screenshot saved.")
-
-//            val imageBytes = data as ByteArray
-//            val screenshotFile = File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg")
-//            screenshotFile.writeBytes(imageBytes)
+            LogContext.log.w("onScreenshot[${jpegFile.length()}]")
+            toast("Screenshot saved[${jpegFile.length()}]")
         }
     }
 }

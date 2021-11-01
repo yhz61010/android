@@ -58,6 +58,8 @@ import com.leovp.androidbase.utils.system.API
  */
 lateinit var app: Application
 
+fun isGlobalApplicationInitialized(): Boolean = ::app.isInitialized
+
 /**
  * Get the package name
  */

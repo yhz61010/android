@@ -49,8 +49,7 @@ fun sp2px(spValue: Float, ctx: Context? = null): Int {
  * TypedValue.COMPLEX_UNIT_IN:  inch -> px
  */
 @JvmOverloads
-fun px(value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP) = TypedValue.applyDimension(unit, value, app.resources.displayMetrics).toInt()
-
+fun px(value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP): Int = TypedValue.applyDimension(unit, value, app.resources.displayMetrics).toInt()
 
 /**
  * Get meta data in Activity or Application.<br></br>
@@ -162,7 +161,7 @@ fun restartApp(targetIntent: Intent) {
  *
  * Detected problems with API compatibility(visit g.co/dev/appcompat for more info)
  */
-@SuppressLint("PrivateApi", "DiscouragedPrivateApi")
+@SuppressLint("PrivateApi", "DiscouragedPrivateApi", "SoonBlockedPrivateApi")
 fun closeAndroidPDialog() {
     if (Build.VERSION.SDK_INT != Build.VERSION_CODES.P) {
         LogContext.log.w("AppExt", "Not Android 9. Do not closeAndroidPDialog")

@@ -59,7 +59,7 @@ pushd ffmpeg-4.4
     --enable-pic
 
 make clean
-make -j6
+make -j$(nproc)
 make install
 popd
 }

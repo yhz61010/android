@@ -12,11 +12,6 @@ android {
         versionCode 1
         versionName "1.0"
 
-        externalNativeBuild {
-            ndkBuild {
-                cppFlags ""
-            }
-        }
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', "x86"
         }
@@ -28,16 +23,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            externalNativeBuild {
-                ndkBuild {
-                    arguments "LOCAL_LDFLAGS:=-Wl,-s"
-                }
-            }
-        }
-    }
-    externalNativeBuild {
-        ndkBuild {
-            path "src/main/jni/Android.mk"
         }
     }
     compileOptions {

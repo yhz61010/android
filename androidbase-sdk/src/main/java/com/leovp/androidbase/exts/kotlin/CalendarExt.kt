@@ -46,6 +46,12 @@ internal val sdf13 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss (z)", Locale.getDefau
 @SuppressLint("ConstantLocale")
 internal val sdf14 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss (z)", Locale.getDefault()).apply { timeZone = TimeZone.getDefault() }
 
+@SuppressLint("ConstantLocale")
+internal val sdf15 = SimpleDateFormat("HHmmss", Locale.getDefault())
+
+@SuppressLint("ConstantLocale")
+internal val sdf16 = SimpleDateFormat("HHmm", Locale.getDefault())
+
 /**
  * Author: Michael Leo
  * Date: 20-8-17 下午4:06
@@ -86,10 +92,24 @@ fun Date.formatToTime(): String {
 }
 
 /**
+ * Pattern: HHmmss
+ */
+fun Date.formatToSimpleTime(): String {
+    return sdf15.format(this)
+}
+
+/**
  * Pattern: HH:mm
  */
 fun Date.formatToShortTime(): String {
     return sdf9.format(this)
+}
+
+/**
+ * Pattern: HHmm
+ */
+fun Date.formatToSimpleShortTime(): String {
+    return sdf16.format(this)
 }
 
 /**

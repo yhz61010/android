@@ -1,9 +1,12 @@
-package com.leovp.ffmpeg.audio.x264
+package com.leovp.x264
+
+import androidx.annotation.Keep
 
 /**
  * Author: Michael Leo
  * Date: 21-3-18 下午4:21
  */
+@Keep
 class X264Params {
     var width = 1280
     var height = 720

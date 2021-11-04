@@ -9,7 +9,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 #include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := x264codec
+LOCAL_MODULE := x264-encoder
 LOCAL_SRC_FILES := libx264_jni.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog

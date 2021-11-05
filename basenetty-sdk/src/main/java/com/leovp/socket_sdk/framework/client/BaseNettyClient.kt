@@ -151,7 +151,7 @@ abstract class BaseNettyClient protected constructor(
         }
         return try {
             val baos = ByteArrayOutputStream()
-            val buffer = ByteArray(1024)
+            val buffer = ByteArray(8 shl 10)
             var len: Int
             while (certificateInputStream!!.read(buffer).also { len = it } > -1) {
                 baos.write(buffer, 0, len)

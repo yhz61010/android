@@ -1,9 +1,7 @@
 package com.leovp.leoandroidbaseutil
 
 import android.util.Log
-import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.androidbase.exts.kotlin.toAsciiByteArray
-import com.leovp.androidbase.exts.kotlin.truncate
+import com.leovp.androidbase.exts.kotlin.*
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -40,5 +38,62 @@ class StringUnitTest {
         assertEquals("", longString.truncate(2, 50))
         assertEquals("sing", longString.truncate(4, 26))
         assertEquals("sing.", longString.truncate(5, 26))
+    }
+
+    @Test
+    fun formatTest() {
+        assertEquals("NA", (-1L).autoFormatByte(false))
+        assertEquals("NA", (-1234L).autoFormatByte(false))
+        assertEquals("1B", 1L.autoFormatByte(false))
+        assertEquals("0B", 0L.autoFormatByte(false))
+        assertEquals("3B", 3L.autoFormatByte(false))
+        assertEquals("1000B", 1000L.autoFormatByte(false))
+        assertEquals("1.00KiB", 1024L.autoFormatByte(false))
+        assertEquals("9.77KiB", 10000L.autoFormatByte(false))
+        assertEquals("10.00KiB", 10240L.autoFormatByte(false))
+        assertEquals("14.92MiB", 15645678L.autoFormatByte(false))
+        assertEquals("630.39GiB", 676876567896L.autoFormatByte(false))
+
+        assertEquals("NA", (-1L).autoFormatByte(true, 1))
+        assertEquals("NA", (-1234L).autoFormatByte(true, 1))
+        assertEquals("1B", 1L.autoFormatByte(true, 1))
+        assertEquals("0B", 0L.autoFormatByte(true, 1))
+        assertEquals("3B", 3L.autoFormatByte(true, 1))
+        assertEquals("1.0kB", 1000L.autoFormatByte(true, 1))
+        assertEquals("1.0kB", 1024L.autoFormatByte(true, 1))
+        assertEquals("10.0kB", 10000L.autoFormatByte(true, 1))
+        assertEquals("10.2kB", 10240L.autoFormatByte(true, 1))
+        assertEquals("15.6MB", 15645678L.autoFormatByte(true, 1))
+        assertEquals("676.9GB", 676876567896L.autoFormatByte(true, 1))
+
+        assertEquals("NA", (-1L).humanReadableByteCount(false))
+        assertEquals("NA", (-1234L).humanReadableByteCount(false))
+        assertEquals("1B", 1L.humanReadableByteCount(false))
+        assertEquals("0B", 0L.humanReadableByteCount(false))
+        assertEquals("3B", 3L.humanReadableByteCount(false))
+        assertEquals("1000B", 1000L.humanReadableByteCount(false))
+        assertEquals("1.00KiB", 1024L.humanReadableByteCount(false))
+        assertEquals("9.77KiB", 10000L.humanReadableByteCount(false))
+        assertEquals("10.00KiB", 10240L.humanReadableByteCount(false))
+        assertEquals("14.92MiB", 15645678L.humanReadableByteCount(false))
+        assertEquals("630.39GiB", 676876567896L.humanReadableByteCount(false))
+        assertEquals("61.56TiB", 67687656789659L.humanReadableByteCount(false))
+        assertEquals("1.75PiB", 1967687656789659L.humanReadableByteCount(false))
+        assertEquals("2.23EiB", 2567967687656789659L.humanReadableByteCount(false))
+
+        assertEquals("NA", (-1L).humanReadableByteCount(true, 1))
+        assertEquals("NA", (-1234L).humanReadableByteCount(true, 1))
+        assertEquals("1B", 1L.humanReadableByteCount(true, 1))
+        assertEquals("0B", 0L.humanReadableByteCount(true, 1))
+        assertEquals("3B", 3L.humanReadableByteCount(true, 1))
+        assertEquals("1.0kB", 1000L.humanReadableByteCount(true, 1))
+        assertEquals("1.0kB", 1024L.humanReadableByteCount(true, 1))
+        assertEquals("10.0kB", 10000L.humanReadableByteCount(true, 1))
+        assertEquals("10.2kB", 10240L.humanReadableByteCount(true, 1))
+        assertEquals("15.6MB", 15645678L.humanReadableByteCount(true, 1))
+        assertEquals("676.9GB", 676876567896L.humanReadableByteCount(true, 1))
+        assertEquals("67.7TB", 67687656789659L.humanReadableByteCount(true, 1))
+        assertEquals("2.0PB", 1967687656789659L.humanReadableByteCount(true, 1))
+        assertEquals("2.6EB", 2567967687656789659L.humanReadableByteCount(true, 1))
     }
 }

@@ -21,38 +21,38 @@ const val PiB: Long = 1L shl 50
 const val EiB: Long = 1L shl 60
 
 /**
- * B -> KB
- * Convert Byte to KB (1KB = 1000B).
+ * B -> kB
+ * Convert Byte to KB (1kB = 1000B).
  */
 fun Long.toKB() = this * 1.0F / KB
 
 /**
  * B -> MB
- * Convert Byte to MB (1KB = 1000B).
+ * Convert Byte to MB (1kB = 1000B).
  */
 fun Long.toMB() = this * 1.0F / MB
 
 /**
  * B -> GB
- * Convert Byte to GB (1KB = 1000B).
+ * Convert Byte to GB (1kB = 1000B).
  */
 fun Long.toGB() = this * 1.0F / GB
 
 /**
  * B -> TB
- * Convert Byte to TB (1KB = 1000B).
+ * Convert Byte to TB (1kB = 1000B).
  */
 fun Long.toTB() = this * 1.0F / TB
 
 /**
  * B -> PB
- * Convert Byte to PB (1KB = 1000B).
+ * Convert Byte to PB (1kB = 1000B).
  */
 fun Long.toPB() = this * 1.0F / PB
 
 /**
  * B -> EB
- * Convert Byte to EB (1KB = 1000B).
+ * Convert Byte to EB (1kB = 1000B).
  */
 fun Long.toEB() = this * 1.0F / EB
 
@@ -97,46 +97,55 @@ fun Long.toEiB() = this * 1.0F / EiB
  * B -> XiB
  * Automatically convert Byte to the appropriate XiB (1KiB = 1024B).
  */
-fun Long.autoByteInBinary() = when {
-    this < 0 -> null
-    this >= EiB -> String.format("%.2fEiB", toEiB())
-    this >= PiB -> String.format("%.2fPiB", toPiB())
-    this >= TiB -> String.format("%.2fTiB", toTiB())
-    this >= GiB -> String.format("%.2fGiB", toGiB())
-    this >= MiB -> String.format("%.2fMiB", toMiB())
-    this >= KiB -> String.format("%.2fKiB", toKiB())
-    else -> String.format("%.2fB", this)
+fun Long.autoByteInBinary(precision: Int = 2): String = when {
+    this < 0 -> "NA"
+    this >= EiB -> String.format("%.${precision}fEiB", toEiB())
+    this >= PiB -> String.format("%.${precision}fPiB", toPiB())
+    this >= TiB -> String.format("%.${precision}fTiB", toTiB())
+    this >= GiB -> String.format("%.${precision}fGiB", toGiB())
+    this >= MiB -> String.format("%.${precision}fMiB", toMiB())
+    this >= KiB -> String.format("%.${precision}fKiB", toKiB())
+    else -> "${this}B"
 }
 
 /**
  * B -> XB
- * Automatically convert Byte to the appropriate XB (1KB = 1000B).
+ * Automatically convert Byte to the appropriate XB (1kB = 1000B).
  */
-fun Long.autoByteInDecimal() = when {
-    this < 0 -> null
-    this >= EB -> String.format("%.2fEB", toEB())
-    this >= PB -> String.format("%.2fPB", toPB())
-    this >= TB -> String.format("%.2fTB", toTB())
-    this >= GB -> String.format("%.2fGB", toGB())
-    this >= MB -> String.format("%.2fMB", toMB())
-    this >= KB -> String.format("%.2fKB", toKB())
-    else -> String.format("%.2fB", this)
+fun Long.autoByteInDecimal(precision: Int = 2): String = when {
+    this < 0 -> "NA"
+    this >= EB -> String.format("%.${precision}fEB", toEB())
+    this >= PB -> String.format("%.${precision}fPB", toPB())
+    this >= TB -> String.format("%.${precision}fTB", toTB())
+    this >= GB -> String.format("%.${precision}fGB", toGB())
+    this >= MB -> String.format("%.${precision}fMB", toMB())
+    this >= KB -> String.format("%.${precision}fkB", toKB())
+    else -> "${this}B"
 }
 
 /**
  * B -> XB/XiB
  * Automatically convert Byte to the appropriate XB/XiB.
- * @param decimal true -> B -> XB; false -> B -> XiB
+ *
+ * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB, EB, ZB, YB.
+ * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB.
+ *
+ * @param si true -> B -> XB; false -> B -> XiB
  */
-fun Long.autoFormatByte(decimal: Boolean) = if (decimal) autoByteInDecimal() else autoByteInBinary()
+fun Long.autoFormatByte(si: Boolean = false, precision: Int = 2): String = if (si) autoByteInDecimal(precision) else autoByteInBinary(precision)
 
 // Formatter.formatShortFileSize(ctx, bytes)
-fun Long.humanReadableByteCount(si: Boolean = false): String {
-    val unit = if (si) 1000 else 1024
-    if (this < unit) return "${this}B"
-    val exp = (ln(this.toDouble()) / ln(unit.toDouble())).toInt()
-    val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1].toString()
-    return "%.1f%s".format(this / unit.toDouble().pow(exp.toDouble()), pre)
+/**
+ * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB, EB, ZB, YB.
+ * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB.
+ */
+fun Long.humanReadableByteCount(si: Boolean = false, precision: Int = 2): String {
+    if (this < 0) return "NA"
+    val base = if (si) 1000 else 1024
+    if (this < base) return "${this}B"
+    val exp = (ln(this.toDouble()) / ln(base.toDouble())).toInt()
+    val pre = (if (si) "kMGTPEZY" else "KMGTPEZY")[exp - 1].toString()
+    return "%.${precision}f%s%s".format(this / base.toDouble().pow(exp.toDouble()), pre, if (si) "B" else "iB")
 }
 
-fun Long.outputFormatByte() = "${autoByteInBinary()}(${autoByteInDecimal()})"
+fun Long.outputFormatByte(): String = "${autoByteInBinary()}(${autoByteInDecimal()})"

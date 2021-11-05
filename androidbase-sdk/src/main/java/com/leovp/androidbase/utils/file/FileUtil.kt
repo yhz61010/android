@@ -49,12 +49,12 @@ object FileUtil {
         return createFile(ctx, "tmp", "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}")
     }
 
-//    @Deprecated("Alternatives such as Context.getExternalFilesDir(String), MediaStore, or Intent.ACTION_OPEN_DOCUMENT offer better performance.")
-//    fun getExternalFolder(baseFolder: String): File {
-//        val dir = File(Environment.getExternalStorageDirectory().absolutePath, baseFolder)
-//        if (!dir.exists()) dir.mkdirs()
-//        return dir
-//    }
+    @Deprecated("Alternatives such as Context.getExternalFilesDir(String), MediaStore, or Intent.ACTION_OPEN_DOCUMENT offer better performance.")
+    fun getExternalFolder(baseFolder: String): File {
+        val dir = File(Environment.getExternalStorageDirectory().absolutePath, baseFolder)
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
 
     fun fileExists(filePath: String): Boolean = File(filePath).exists()
 

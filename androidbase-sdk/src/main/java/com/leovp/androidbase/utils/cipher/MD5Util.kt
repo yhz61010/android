@@ -42,15 +42,15 @@ object MD5Util {
         return ""
     }
 
-    fun checkMd5(md5: String, updateFile: File) = calculateFileMd5(updateFile).let {
+    fun checkMd5(md5: String, targetFile: File, bufferSize: Int = 256 shl 10) = calculateFileMd5(targetFile, bufferSize).let {
         if (TextUtils.isEmpty(it)) false else it.equals(md5, ignoreCase = true)
     }
 
-    fun calculateFileMd5(file: File): String {
+    fun calculateFileMd5(file: File, bufferSize: Int = 256 shl 10): String {
         if (!file.isFile) {
             return ""
         }
-        val buffer = ByteArray(8 shl 10)
+        val buffer = ByteArray(bufferSize)
         var len: Int
         return runCatching {
             FileInputStream(file).use { fis ->

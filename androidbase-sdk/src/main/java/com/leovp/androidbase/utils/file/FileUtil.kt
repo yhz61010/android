@@ -15,10 +15,9 @@ import java.util.*
  */
 @Suppress("unused")
 object FileUtil {
-    fun copyInputStreamToFile(inputStream: InputStream, fullPath: String, force: Boolean = false) {
+    fun copyInputStreamToFile(inputStream: InputStream, fullPath: String, bufferSize: Int = 256 shl 10, force: Boolean = false) {
         val file = File(fullPath)
         if (force || !file.exists()) {
-            val bufferSize = 32 shl 10
             val readBuffer = ByteArray(bufferSize)
             var readLen: Int
             inputStream.use { input ->

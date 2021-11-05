@@ -24,13 +24,13 @@ object ResourcesUtil {
         if (!file.exists()) {
             file.mkdirs()
         }
-        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName, force)
+        FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName, force = force)
         return storagePath + File.separatorChar + outFileName
     }
 
     fun saveAssetToFile(ctx: Context, assetFileName: String, storagePath: String, outFileName: String, force: Boolean = false): Boolean {
         return runCatching {
-            FileUtil.copyInputStreamToFile(ctx.assets.open(assetFileName), File(storagePath, outFileName).absolutePath, force)
+            FileUtil.copyInputStreamToFile(ctx.assets.open(assetFileName), File(storagePath, outFileName).absolutePath, force = force)
             true
         }.getOrElse {
             it.printStackTrace()

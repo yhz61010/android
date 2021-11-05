@@ -30,24 +30,12 @@ object ShellUtil {
         return execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
     }
 
-    fun execCmd(command: String, isRoot: Boolean): CommandResult {
-        return execCmd(listOf(command), isRoot, true)
-    }
-
-    fun execCmd(commands: List<String>, isRoot: Boolean): CommandResult {
-        return execCmd(commands, isRoot, true)
-    }
-
-    fun execCmd(command: String, isRoot: Boolean, isNeedResultMsg: Boolean): CommandResult {
+    fun execCmd(command: String, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
         return execCmd(listOf(command), isRoot, isNeedResultMsg)
     }
 
-    fun forceStop(pkgName: String) {
-        execCmd("am force-stop $pkgName", true)
-    }
-
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    fun execCmd(commands: List<String>, isRoot: Boolean, isNeedResultMsg: Boolean = true): CommandResult {
+    fun execCmd(commands: List<String>, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
         var result = -1
         if (commands.isEmpty()) {
             return CommandResult(result, "", "")
@@ -110,10 +98,14 @@ object ShellUtil {
         )
     }
 
+    fun forceStop(pkgName: String) {
+        execCmd("am force-stop $pkgName", true)
+    }
+
     // ========================================================================
-    fun getProcessesList(isRoot: Boolean): List<LinuxProcess> {
+    fun getProcessesList(isRoot: Boolean = false): List<LinuxProcess> {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
-        val reader = BufferedReader(StringReader(processesListString), 4 * 1024)
+        val reader = BufferedReader(StringReader(processesListString), 256 shl 1024)
         val processes: MutableList<LinuxProcess> = ArrayList()
         try {
             var info: LinuxProcess
@@ -139,7 +131,7 @@ object ShellUtil {
         return processes
     }
 
-    fun findProcessByPid(pid: Int, isRoot: Boolean): LinuxProcess? {
+    fun findProcessByPid(pid: Int, isRoot: Boolean = false): LinuxProcess? {
         val processes = getProcessesList(isRoot)
         for (process in processes) {
             if (process.pid == pid) {
@@ -156,13 +148,13 @@ object ShellUtil {
      * @param name   Specific process named
      * @return Return found process list or return empty list.
      */
-    fun findProcessByName(name: String, isRoot: Boolean): List<LinuxProcess> {
+    fun findProcessByName(name: String, isRoot: Boolean = false): List<LinuxProcess> {
         return getProcessesList(isRoot)
             .filter { process -> name.equals(process.name, true) }
             .toCollection(arrayListOf())
     }
 
-    fun killProcessByName(processName: String, isRoot: Boolean) {
+    fun killProcessByName(processName: String, isRoot: Boolean = false) {
         // As of API level 24: java.lang.Iterable#forEach
 //        findProcessByName(
 //            processName,
@@ -177,7 +169,7 @@ object ShellUtil {
         }
     }
 
-    fun killProcessByPid(pid: Int, isRoot: Boolean) {
+    fun killProcessByPid(pid: Int, isRoot: Boolean = false) {
         val process = findProcessByPid(pid, isRoot)
         if (process != null) {
             execCmd(String.format("kill -9 %s", pid), isRoot)
@@ -196,9 +188,9 @@ object ShellUtil {
     }
 
     // unverified
-    fun isProcessRunning(processName: String, isRoot: Boolean): Boolean {
+    fun isProcessRunning(processName: String, isRoot: Boolean = false): Boolean {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
-        val reader = BufferedReader(StringReader(processesListString), 4 * 1024)
+        val reader = BufferedReader(StringReader(processesListString), 256 shl 10)
         try {
             var line: String
             while (reader.readLine().also { line = it } != null) {
@@ -217,7 +209,7 @@ object ShellUtil {
     fun remountFileSystem(write: Boolean) {
         try {
             val cmdResult = execCmd(CMD_MOUNT, true).successMsg
-            val reader = BufferedReader(StringReader(cmdResult), 4 * 104)
+            val reader = BufferedReader(StringReader(cmdResult), 256 shl 10)
             var line: String?
             // Find /system line
             while (reader.readLine().also { line = it } != null) {

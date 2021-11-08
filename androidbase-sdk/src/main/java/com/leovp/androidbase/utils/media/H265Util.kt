@@ -60,6 +60,7 @@ import com.leovp.min_base_sdk.toHexString
  * 00 00 00 01 44 01  nal_unit_type 值为 34， PPS 语义为图像参数集
  * 00 00 00 01 4E 01  nal_unit_type 值为 39， SEI 语义为补充增强信息
  * 00 00 00 01 26 01  nal_unit_type 值为 19， IDR 语义为可能有 RADL 图像的 IDR 图像的 SS(Slice Segment) 编码数据
+ * 00 00 00 01 28 01  nal_unit_type 值为 20， IDR_N_LP
  * 00 00 00 01 02 01  nal_unit_type 值为  1， P   语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
  * ```
  *
@@ -110,9 +111,11 @@ object H265Util {
     const val NALU_TYPE_PPS = 34 // 0x22
     const val NALU_TYPE_SEI = 39 // 0x27
     const val NALU_TYPE_IDR = 19 // 0x13
+    const val NALU_TYPE_IDR_N_LP = 20 // 0x14
 
     fun isIdrFrame(data: ByteArray): Boolean {
         return getNaluType(data) == NALU_TYPE_IDR // 19
+                || getNaluType(data) == NALU_TYPE_IDR_N_LP // 20
     }
 
     fun isVps(data: ByteArray): Boolean {
@@ -133,6 +136,7 @@ object H265Util {
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,28,1,AE,E0,......
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -146,6 +150,7 @@ object H265Util {
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,28,1,AE,E0,......
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
                     val vps = ByteArray(i)
@@ -166,6 +171,7 @@ object H265Util {
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,28,1,AE,E0,......
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -182,6 +188,7 @@ object H265Util {
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,28,1,AE,E0,......
             var startIndex = -1
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
@@ -208,6 +215,7 @@ object H265Util {
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,28,1,AE,E0,......
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
@@ -224,6 +232,7 @@ object H265Util {
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,28,1,AE,E0,......
             var startIndex = -1
             var prefixOccurTimes = 1
             for (i in 5 until data.size) {

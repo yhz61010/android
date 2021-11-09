@@ -24,7 +24,7 @@ import kotlin.math.abs
  */
 internal class FloatViewImpl(private val context: Activity, internal var config: DefaultConfig) {
     private val windowManager: WindowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-    internal lateinit var layoutParams: WindowManager.LayoutParams
+    private lateinit var layoutParams: WindowManager.LayoutParams
 
     private var lastX: Int = 0
     private var lastY: Int = 0
@@ -299,7 +299,9 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             @Suppress("DEPRECATION")
             type = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else -> WindowManager.LayoutParams.TYPE_TOAST
+                else -> WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
+                // android.view.WindowManager$BadTokenException: Unable to add window -- token null is not valid; is your activity running?
             }
 
             gravity = Gravity.TOP or Gravity.START // Default value: Gravity.CENTER

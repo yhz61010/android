@@ -21,5 +21,5 @@ object PrefContext {
         this.pref = pref
     }
 
-    fun isPrefInitialized(): Boolean = PrefContext::pref.isInitialized
+    fun isPrefInitialized(): Boolean = ::pref.isInitialized
 }

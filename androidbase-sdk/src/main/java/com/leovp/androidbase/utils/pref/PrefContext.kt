@@ -20,4 +20,6 @@ object PrefContext {
     fun setPrefImp(pref: IPref) {
         this.pref = pref
     }
+
+    fun isPrefInitialized(): Boolean = PrefContext::pref.isInitialized
 }

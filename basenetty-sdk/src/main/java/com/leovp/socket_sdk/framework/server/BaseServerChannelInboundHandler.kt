@@ -22,7 +22,7 @@ import java.net.URI
  */
 abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) : SimpleChannelInboundHandler<T>(),
     ReadSocketDataListener<T> {
-    private val tag = javaClass.simpleName
+    private val tag = netty.tag
 
     // All client channels
     @Suppress("WeakerAccess")

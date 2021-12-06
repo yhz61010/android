@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.notch
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
+import com.leovp.androidbase.SingletonHolder
 import com.leovp.androidbase.exts.android.isHuaWei
 import com.leovp.androidbase.exts.android.isOppo
 import com.leovp.androidbase.exts.android.isVivo
@@ -23,7 +24,7 @@ import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
  * Example2:
  * Get notch information
  * ```kotlin
- * NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
+ * NotchScreenManager.getInstance(activity).getNotchInfo(object : INotchScreen.NotchScreenCallback {
  *     override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
  *         LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
  *         notchScreenInfo.notchRects?.let {
@@ -44,15 +45,16 @@ import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
  * Date: 20-11-26 下午7:39
  */
 @Suppress("unused")
-object NotchScreenManager {
+class NotchScreenManager private constructor(private val activity: Activity) {
+    companion object : SingletonHolder<NotchScreenManager, Activity>(::NotchScreenManager)
 
     private val notchScreen: INotchScreen? = getNotchScreen()
 
-    fun setDisplayInNotch(activity: Activity) {
+    fun setDisplayInNotch() {
         notchScreen?.setDisplayInNotch(activity)
     }
 
-    fun getNotchInfo(activity: Activity, notchScreenCallback: NotchScreenCallback) {
+    fun getNotchInfo(notchScreenCallback: NotchScreenCallback) {
         val notchScreenInfo = NotchScreenInfo()
         if (notchScreen != null && notchScreen.hasNotch(activity)) {
             notchScreen.getNotchRect(activity, object : NotchSizeCallback {
@@ -75,10 +77,10 @@ object NotchScreenManager {
             notchScreen = AndroidPNotchScreen()
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             when {
-                isHuaWei -> notchScreen = HuaweiNotchScreen()
-                isOppo -> notchScreen = OppoNotchScreen()
-                isVivo -> notchScreen = HuaweiNotchScreen()
-                isXiaoMi -> notchScreen = MiNotchScreen()
+                activity.isHuaWei -> notchScreen = HuaweiNotchScreen()
+                activity.isOppo -> notchScreen = OppoNotchScreen()
+                activity.isVivo -> notchScreen = HuaweiNotchScreen()
+                activity.isXiaoMi -> notchScreen = MiNotchScreen()
             }
         }
         return notchScreen

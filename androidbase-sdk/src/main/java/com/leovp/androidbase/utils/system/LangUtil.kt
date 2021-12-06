@@ -66,7 +66,7 @@ import java.util.*
  * }
  * ```
  *
- * If you use text string in your Service, add these lines in it:
+ * If you use text string in your `Service`, add these lines in it:
  * ```kotlin
  * override fun attachBaseContext(base: Context) {
  *     super.attachBaseContext(LangUtil.setLocale(base))
@@ -90,6 +90,8 @@ object LangUtil {
 
     /**
      * Most of time, just call this method is enough.
+     *
+     * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
     @Synchronized
     fun setLocale(ctx: Context, targetLocale: Locale = getAppLanguage(ctx), refreshUI: Boolean = false): Context {

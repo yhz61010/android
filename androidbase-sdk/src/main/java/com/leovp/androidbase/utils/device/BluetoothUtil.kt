@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.bluetooth.le.*
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.exts.android.app
-import com.leovp.androidbase.exts.android.bluetoothManager
+import com.leovp.androidbase.SingletonHolder
 import com.leovp.log_sdk.LogContext
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -30,16 +28,18 @@ import java.lang.reflect.Method
  * [BLE_2](https://blog.csdn.net/qq_25827845/article/details/52997523)
  */
 @Suppress("unused")
-object BluetoothUtil {
-    private val bluetoothManager: BluetoothManager by lazy { app.bluetoothManager }
-    private val bluetoothAdapter: BluetoothAdapter by lazy {
-        bluetoothManager.adapter
-//        BluetoothAdapter.getDefaultAdapter()
+class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothAdapter) {
+    companion object : SingletonHolder<BluetoothUtil, BluetoothAdapter>(::BluetoothUtil)
 
-        // TODO The following descriptions are right?
-        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
-        // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
-    }
+//    private val bluetoothManager: BluetoothManager by lazy { ctx.bluetoothManager }
+//    private val bluetoothAdapter: BluetoothAdapter by lazy {
+//        bluetoothManager.adapter
+////        BluetoothAdapter.getDefaultAdapter()
+//
+//        // TODO The following descriptions are right?
+//        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
+//        // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
+//    }
 
     /**
      * Create bond with device
@@ -139,7 +139,7 @@ object BluetoothUtil {
     }
 
     // Bluetooth Low Energy
-    fun isSupportBle(): Boolean = app.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    fun isSupportBle(pm: PackageManager): Boolean = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     @SuppressLint("MissingPermission")
     var isEnabled: Boolean = bluetoothAdapter.isEnabled

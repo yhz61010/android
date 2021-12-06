@@ -35,7 +35,7 @@ class LogActivity : BaseDemonstrationActivity() {
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
 
-        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getDeviceInfo(this)}", outputType = 13)
+        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}", outputType = 13)
 
         LogContext.enableLog = false
         LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)

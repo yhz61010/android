@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
+import com.leovp.androidbase.exts.android.saveRawResourceToFile
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.file.FileUtil
-import com.leovp.androidbase.utils.file.ResourcesUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityHttpBinding
@@ -97,7 +97,7 @@ class HttpActivity : BaseDemonstrationActivity() {
             }
         }
 
-        val fileFullPath = ResourcesUtil.saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
+        val fileFullPath = saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
         val sourceFile = File(fileFullPath)
         val mimeType = getMimeType(sourceFile)
         if (mimeType == null) {

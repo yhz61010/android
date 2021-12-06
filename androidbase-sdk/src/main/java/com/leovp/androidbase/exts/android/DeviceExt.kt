@@ -2,6 +2,7 @@ package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -33,19 +34,19 @@ const val VENDOR_ONEPLUS = "OnePlus"
 const val VENDOR_SAMSUNG = "samsung"
 const val VENDOR_OTHER = "other"
 
-val isHuaWei: Boolean get() = VENDOR_HUAWEI.equals(DeviceUtil.manufacturer, ignoreCase = true)
-val isXiaoMi: Boolean get() = VENDOR_XIAOMI.equals(DeviceUtil.manufacturer, ignoreCase = true)
-val isOppo: Boolean get() = VENDOR_OPPO.equals(DeviceUtil.manufacturer, ignoreCase = true)
-val isOnePlus: Boolean get() = VENDOR_ONEPLUS.equals(DeviceUtil.manufacturer, ignoreCase = true)
-val isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.manufacturer, ignoreCase = true)
-val isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.manufacturer, ignoreCase = true)
+val Context.isHuaWei: Boolean get() = VENDOR_HUAWEI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isXiaoMi: Boolean get() = VENDOR_XIAOMI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isOppo: Boolean get() = VENDOR_OPPO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isOnePlus: Boolean get() = VENDOR_ONEPLUS.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 
 val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
 val Context.density get(): Float = this.resources.displayMetrics.density
 
-fun getAvailableResolution(): Point {
+fun Context.getAvailableResolution(): Point {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val wm = app.windowManager
+        val wm = windowManager
         val width = wm.currentWindowMetrics.bounds.width()
         val height = wm.currentWindowMetrics.bounds.height()
         Point(width, height)
@@ -60,7 +61,7 @@ fun getAvailableResolution(): Point {
 //            display.getMetrics(displayMetrics)
 //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
 
-        val displayMetrics = app.resources.displayMetrics
+        val displayMetrics = resources.displayMetrics
         return runCatching { Point(displayMetrics.widthPixels, displayMetrics.heightPixels) }.getOrDefault(Point())
     }
 }
@@ -68,12 +69,12 @@ fun getAvailableResolution(): Point {
 /**
  * As of API 30(Android 11), you must use Activity context to retrieve screen real size
  */
-fun Activity.getRealResolution(): Point {
+fun Context.getRealResolution(): Point {
     val size = Point()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         this.display?.getRealSize(size)
     } else {
-        val wm = app.windowManager
+        val wm = windowManager
         val display = wm.defaultDisplay
         val displayMetrics = DisplayMetrics()
         display.getRealMetrics(displayMetrics)
@@ -87,7 +88,7 @@ val Activity.screenRealWidth get() = getRealResolution().x
 
 val Activity.screenRealHeight get() = getRealResolution().y
 
-val Context.screenAvailableHeight get() = getAvailableResolution().y
+val Application.screenAvailableHeight get() = getAvailableResolution().y
 
 val Context.statusBarHeight
     get() : Int {
@@ -99,7 +100,7 @@ val Context.statusBarHeight
         return result
     }
 
-val Activity.isFullScreenDevice
+val Context.isFullScreenDevice
     @SuppressLint("ObsoleteSdkInt")
     get(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -128,7 +129,7 @@ val Context.isNavigationGestureEnabled
         return value != 0
     }
 
-private fun getNavigationBarName(): String {
+private fun Context.getNavigationBarName(): String {
     val brand = Build.BRAND
     if (TextUtils.isEmpty(brand)) return "navigationbar_is_min"
     return when {
@@ -203,7 +204,7 @@ fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
     return Rect(left, top, right, bottom)
 }
 
-val Activity.screenRatio
+val Context.screenRatio
     get(): Float {
         val p = getRealResolution()
         return 1.0f * p.y / p.x
@@ -228,9 +229,9 @@ fun getImei(ctx: Context, slotId: Int): String? {
     }
 }
 
-fun getDimenInPixel(name: String): Int {
-    val resourceId = app.resources.getIdentifier(name, "dimen", "android")
-    return if (resourceId > 0) app.resources.getDimensionPixelSize(resourceId) else -1
+fun Context.getDimenInPixel(name: String): Int {
+    val resourceId = resources.getIdentifier(name, "dimen", "android")
+    return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else -1
 }
 
 fun isProbablyAnEmulator(): Boolean {

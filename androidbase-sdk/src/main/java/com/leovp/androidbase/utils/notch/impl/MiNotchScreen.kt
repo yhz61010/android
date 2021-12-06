@@ -2,6 +2,7 @@ package com.leovp.androidbase.utils.notch.impl
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.view.Window
@@ -25,7 +26,7 @@ class MiNotchScreen : INotchScreen {
     }
 
     override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
-        val rect = calculateNotchRect(activity, getNotchWidth(), getNotchHeight())
+        val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
         val rects = ArrayList<Rect>()
         rects.add(rect)
         callback.onResult(rects)
@@ -33,7 +34,7 @@ class MiNotchScreen : INotchScreen {
 
     companion object {
         private val isNotch: Boolean = runCatching { DeviceProp.getSystemProperty("ro.miui.notch").toInt() == 1 }.getOrDefault(false)
-        fun getNotchHeight() = getDimenInPixel("notch_height")
-        fun getNotchWidth() = getDimenInPixel("notch_width")
+        fun getNotchHeight(ctx: Context) = ctx.getDimenInPixel("notch_height")
+        fun getNotchWidth(ctx: Context) = ctx.getDimenInPixel("notch_width")
     }
 }

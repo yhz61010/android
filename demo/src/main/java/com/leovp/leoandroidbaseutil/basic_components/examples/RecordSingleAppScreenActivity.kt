@@ -65,7 +65,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
         LogContext.log.i("dstFile=${dstFile.absolutePath}")
 
-        val screenInfo = getAvailableResolution()
+        val screenInfo = application.getAvailableResolution()
         val setting = ScreenShareSetting(
             (screenInfo.x * 0.8F / 16).toInt() * 16,
             (screenInfo.y * 0.8F / 16).toInt() * 16,

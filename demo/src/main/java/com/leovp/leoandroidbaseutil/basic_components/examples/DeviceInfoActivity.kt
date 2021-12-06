@@ -24,11 +24,11 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
-        val deviceInfo = DeviceUtil.getDeviceInfo(this)
+        val deviceInfo = DeviceUtil.getInstance(this).getDeviceInfo()
         binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 
-        NotchScreenManager.getNotchInfo(this, object : INotchScreen.NotchScreenCallback {
+        NotchScreenManager.getInstance(this).getNotchInfo(object : INotchScreen.NotchScreenCallback {
             override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
                 LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
                 notchScreenInfo.notchRects?.let {
@@ -44,8 +44,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
             }
         })
 
-        for (index in 0 until DeviceUtil.cpuCoreCount) {
-            val coreInfo = DeviceUtil.getCpuCoreInfoByIndex(index)
+        for (index in 0 until DeviceUtil.getInstance(this).cpuCoreCount) {
+            val coreInfo = DeviceUtil.getInstance(this).getCpuCoreInfoByIndex(index)
             LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
         }
 

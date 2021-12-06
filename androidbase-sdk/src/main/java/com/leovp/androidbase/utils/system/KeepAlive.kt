@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.system
 
 import android.app.AlarmManager
+import android.app.Application
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,7 +14,6 @@ import android.os.SystemClock
 import androidx.annotation.RawRes
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.leovp.androidbase.exts.android.app
 import com.leovp.log_sdk.LogContext
 
 
@@ -30,17 +30,19 @@ import com.leovp.log_sdk.LogContext
  *
  * Need `<uses-permission android:name="android.permission.WAKE_LOCK" />` permission
  *
- * @param keepAliveTime Unit: minute. Default value 25 min
+ * @param keepAliveTimeInMin Unit: minute. Default value 25 min
  * Author: Michael Leo
  * Date: 20-8-28 下午1:40
  */
 class KeepAlive(
+    private val app: Application,
     @RawRes private val undeadAudioResId: Int,
     private val keepAliveTimeInMin: Float = 25f,
     val callback: () -> Unit
 ) {
     companion object {
         private const val TAG = "KA"
+        private const val INTENT_KEEP_ALIVE_RECEIVER = "intent.com.leovp.receiver.keep.alive"
 //        private const val SAMPLE_RATE = 44100
 //        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_OUT_MONO
 //        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
@@ -66,7 +68,7 @@ class KeepAlive(
             }
         }.onFailure { it.printStackTrace() }
 
-        LocalBroadcastManager.getInstance(app).registerReceiver(keepAliveArgumentReceiver, IntentFilter("intent.com.leovp.receiver.keep.alive"))
+        LocalBroadcastManager.getInstance(app).registerReceiver(keepAliveArgumentReceiver, IntentFilter(INTENT_KEEP_ALIVE_RECEIVER))
 
         val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
         val alarmManager: AlarmManager = ContextCompat.getSystemService(app, AlarmManager::class.java)!!
@@ -92,7 +94,7 @@ class KeepAlive(
     internal class KeepAliveReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveReceiver")
-            LocalBroadcastManager.getInstance(app).sendBroadcast(Intent("intent.com.leovp.receiver.keep.alive"))
+            LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(INTENT_KEEP_ALIVE_RECEIVER))
         }
     }
 

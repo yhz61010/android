@@ -6,10 +6,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -45,12 +46,14 @@ class WifiActivity : BaseDemonstrationActivity() {
     private val binding get() = _binding!!
 
     private var adapter: WifiAdapter? = null
+    private val wifi: WifiUtil by lazy { WifiUtil.getInstance(this) }
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
+        @RequiresApi(Build.VERSION_CODES.M)
         override fun onReceive(context: Context, intent: Intent) {
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (success) {
-                scanSuccess(app.wifiManager.scanResults)
+                scanSuccess(wifiManager.scanResults)
             } else {
                 scanFailure()
             }
@@ -66,11 +69,11 @@ class WifiActivity : BaseDemonstrationActivity() {
         initReceiver()
         initData()
 
-        LogContext.log.e(ITAG, "current ssid=${WifiUtil.getCurrentSsid()}")
+        LogContext.log.e(ITAG, "current ssid=${wifi.getCurrentSsid()}")
     }
 
     private fun initData() {
-        val previousScanResults: List<ScanResult>? = app.wifiManager.scanResults
+        val previousScanResults: List<ScanResult>? = wifiManager.scanResults
         if (previousScanResults?.isNullOrEmpty() == true) {
             LogContext.log.w("Scan automatically.")
             toast("Scan automatically.")
@@ -89,7 +92,7 @@ class WifiActivity : BaseDemonstrationActivity() {
     }
 
     private fun initView() {
-        adapter = WifiAdapter(WifiUtil.getCurrentSsid()).apply {
+        adapter = WifiAdapter(wifi.getCurrentSsid()).apply {
             onItemClickListener = object : WifiAdapter.OnItemClickListener {
                 override fun onItemClick(item: WifiModel, position: Int) {
                     binding.etWifiName.setText(item.name)
@@ -127,7 +130,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         toast("scanFailure")
         // handle failure: new scan did NOT succeed
         // consider using old scan results: these are the OLD results!
-        val results = app.wifiManager.scanResults
+        val results = wifiManager.scanResults
         scanSuccess(results)
     }
 
@@ -140,7 +143,7 @@ class WifiActivity : BaseDemonstrationActivity() {
     fun onSetWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val ssid = binding.etWifiName.text.toString()
         val pwd = binding.etWifiPwd.text.toString()
-        WifiUtil.connectWifi(ssid, pwd)
+        wifi.connectWifi(ssid, pwd)
     }
 
     fun onScanWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -151,7 +154,7 @@ class WifiActivity : BaseDemonstrationActivity() {
     }
 
     private fun doScan() {
-        val success = app.wifiManager.startScan()
+        val success = wifiManager.startScan()
         if (!success) {
             // scan failure handling
             scanFailure()

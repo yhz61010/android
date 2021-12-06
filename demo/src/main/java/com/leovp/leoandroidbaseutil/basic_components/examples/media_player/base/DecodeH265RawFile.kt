@@ -3,7 +3,6 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.media_player.base
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.Surface
-import com.leovp.androidbase.exts.android.toast
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.toHexStringLE
@@ -149,7 +148,7 @@ class DecodeH265RawFile {
             mediaCodec.configure(format, surface, null, 0)
             outputFormat = mediaCodec.outputFormat // option B
             mediaCodec.setCallback(mediaCodecCallback)
-        }.onFailure { it.printStackTrace();toast("Init Decoder error", error = true) }
+        }.onFailure { it.printStackTrace() }
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
@@ -159,7 +158,7 @@ class DecodeH265RawFile {
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-//                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
+//                LogContext.log.i(TAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                     LogContext.log.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
                 }

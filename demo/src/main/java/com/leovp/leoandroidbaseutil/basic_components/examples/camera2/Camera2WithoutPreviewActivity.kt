@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
 import androidx.lifecycle.lifecycleScope
-import com.hjq.permissions.OnPermission
+import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
@@ -33,14 +33,14 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        XXPermissions.with(this@Camera2WithoutPreviewActivity)
+        XXPermissions.with(this)
             .permission(Permission.CAMERA)
-            .request(object : OnPermission {
-                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                     toast("Grant camera permission")
                 }
 
-                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                     toast("Deny camera permission")
                     finish()
                 }

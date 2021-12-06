@@ -1,21 +1,20 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.pref
 
-import com.leovp.androidbase.exts.android.app
+import android.content.Context
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.utils.pref.base.IPref
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.tencent.mmkv.MMKV
-import java.io.File
 
 /**
  * Author: Michael Leo
  * Date: 20-12-10 下午1:47
  */
-class MMKVPref : IPref {
+class MMKVPref(ctx: Context) : IPref {
     init {
-        val mmkvRootDir: String = MMKV.initialize(app.filesDir.absolutePath + File.separator + "mmkv")
+        val mmkvRootDir: String = MMKV.initialize(ctx)
         LogContext.log.i(ITAG, "mmkvRootDir=$mmkvRootDir")
     }
 

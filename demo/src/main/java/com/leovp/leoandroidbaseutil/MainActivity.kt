@@ -6,7 +6,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.hjq.permissions.OnPermission
+import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -31,14 +31,19 @@ class MainActivity : BaseDemonstrationActivity() {
 
         XXPermissions.with(this)
             .permission(
-                Permission.MANAGE_EXTERNAL_STORAGE, Permission.CAMERA, Permission.RECORD_AUDIO, Permission.ACCESS_COARSE_LOCATION,
-                Permission.SYSTEM_ALERT_WINDOW
+                Permission.MANAGE_EXTERNAL_STORAGE, Permission.CAMERA, Permission.RECORD_AUDIO,
+                Permission.ACCESS_FINE_LOCATION,
+                Permission.ACCESS_COARSE_LOCATION,
+                Permission.SYSTEM_ALERT_WINDOW,
+                Permission.BLUETOOTH_ADVERTISE,
+                Permission.BLUETOOTH_CONNECT,
+                Permission.BLUETOOTH_SCAN
             )
-            .request(object : OnPermission {
-                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                 }
 
-                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                 }
             })
     }

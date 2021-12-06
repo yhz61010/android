@@ -5,7 +5,6 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -40,6 +39,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     private var _binding: ActivityBluetoothServerBinding? = null
     private val binding get() = _binding!!
 
+    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+
     private var connectedDevice: BluetoothDevice? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
     private var bluetoothGattServer: BluetoothGattServer? = null
@@ -64,7 +65,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-        BluetoothUtil.stopAdvertising(advertiseCallback)
+        bluetooth.stopAdvertising(advertiseCallback)
         disconnect()
     }
 
@@ -80,13 +81,13 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     }
 
     private fun initBleServer() {
-        if (!BluetoothUtil.isSupportBle()) {
+        if (!bluetooth.isSupportBle(packageManager)) {
             toast("Does not support bluetooth!")
             finish()
             return
         }
-        BluetoothUtil.enable()
-        BluetoothUtil.startAdvertising(SERVER_NAME, advertiseCallback)
+        bluetooth.enable()
+        bluetooth.startAdvertising(SERVER_NAME, advertiseCallback)
     }
 
     /**
@@ -111,7 +112,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         gattService.addCharacteristic(characteristicRead)
         gattService.addCharacteristic(characteristicWrite)
         // Client monitor listener
-        bluetoothGattServer = app.bluetoothManager.openGattServer(this, gattServerCallback)
+        bluetoothGattServer = bluetoothManager.openGattServer(this, gattServerCallback)
         bluetoothGattServer?.addService(gattService)
     }
 

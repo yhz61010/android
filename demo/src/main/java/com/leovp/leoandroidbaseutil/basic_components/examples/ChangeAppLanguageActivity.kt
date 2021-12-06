@@ -8,6 +8,7 @@ import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -25,6 +26,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivityChangeAppLanguageBinding.inflate(layoutInflater).apply { setContentView(root) }
         val itemList = resources.getStringArray(R.array.lang_list)
+        LogContext.log.w("itemList=${itemList.toJsonString()}")
         val itemCodeList = resources.getStringArray(R.array.lang_code_list)
 
         LogContext.log.i("Default language: ${LangUtil.getDefaultDisplayLanguage()}[${LangUtil.getDefaultLanguageCountryCode()}][${LangUtil.getDefaultLanguageFullCode()}]")
@@ -36,7 +38,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setTitle(R.string.select_lang)
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
-                    LangUtil.setLocale(this@ChangeAppLanguageActivity, LangUtil.getLocale(langCode)!!, refreshUI = true)
+                    LangUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, LangUtil.getLocale(langCode)!!, refreshUI = true)
                     dlg.dismiss()
                 }
                 .show()

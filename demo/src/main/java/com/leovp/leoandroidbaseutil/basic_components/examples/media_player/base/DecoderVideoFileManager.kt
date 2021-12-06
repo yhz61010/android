@@ -5,7 +5,6 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
-import com.leovp.androidbase.exts.android.toast
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.min_base_sdk.toHexStringLE
@@ -64,7 +63,7 @@ class DecoderVideoFileManager {
                 }
             }
 
-        }.onFailure { it.printStackTrace();toast("Init Decoder error", error = true) }
+        }.onFailure { it.printStackTrace() }
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {

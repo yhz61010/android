@@ -2,6 +2,10 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
 import android.os.Bundle
 import android.view.View
+import com.hjq.permissions.OnPermissionCallback
+import com.hjq.permissions.Permission
+import com.hjq.permissions.XXPermissions
+import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
@@ -21,20 +25,40 @@ class BluetoothActivity : BaseDemonstrationActivity() {
     private var _binding: ActivityBluetoothBinding? = null
     private val binding get() = _binding!!
 
+    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothBinding.inflate(layoutInflater).apply {
             setContentView(this.root)
         }
 
-        BluetoothUtil.enable()
+        XXPermissions.with(this)
+            .permission(
+                Permission.ACCESS_FINE_LOCATION,
+                Permission.ACCESS_COARSE_LOCATION,
+                Permission.BLUETOOTH_ADVERTISE,
+                Permission.BLUETOOTH_CONNECT,
+                Permission.BLUETOOTH_SCAN
+            )
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                    this@BluetoothActivity.toast("All permissions granted.")
+                }
+
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                    this@BluetoothActivity.toast("Permissions denied.", error = true)
+                }
+            })
+
+        bluetooth.enable()
     }
 
     override fun onResume() {
         super.onResume()
 
         var msg = ""
-        val boundedDevices = BluetoothUtil.boundedDevices
+        val boundedDevices = bluetooth.boundedDevices
         if (boundedDevices.isNotEmpty()) {
             boundedDevices.forEachIndexed { index, bluetoothDevice ->
                 msg += "${index + 1}: ${bluetoothDevice.name}|${bluetoothDevice.address}\n"
@@ -49,13 +73,13 @@ class BluetoothActivity : BaseDemonstrationActivity() {
     }
 
     fun onEnableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
-        val enable = BluetoothUtil.enable()
+        val enable = bluetooth.enable()
         LogContext.log.i("Enable=$enable")
         toast("Enable=$enable")
     }
 
     fun onDisableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
-        val disable = BluetoothUtil.disable()
+        val disable = bluetooth.disable()
         LogContext.log.i("Disable=$disable")
         toast("Disable=$disable")
     }

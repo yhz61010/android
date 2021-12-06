@@ -3,6 +3,7 @@ package com.leovp.androidbase.exts.android
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.Application
 import android.app.Service
 import android.content.ComponentName
@@ -26,9 +27,9 @@ import kotlin.system.exitProcess
  */
 
 // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
-fun dp2px(dipValue: Float) = (dipValue * app.resources.displayMetrics.density + 0.5f).toInt()
+fun dp2px(ctx: Context, dipValue: Float) = (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
 
-fun px2dp(pxValue: Float) = (pxValue / app.resources.displayMetrics.density + 0.5f).toInt()
+fun px2dp(ctx: Context, pxValue: Float) = (pxValue / ctx.resources.displayMetrics.density + 0.5f).toInt()
 
 fun sp2px(spValue: Float, ctx: Context? = null): Int {
     return if (ctx == null) {
@@ -49,7 +50,7 @@ fun sp2px(spValue: Float, ctx: Context? = null): Int {
  * TypedValue.COMPLEX_UNIT_IN:  inch -> px
  */
 @JvmOverloads
-fun px(value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP): Int = TypedValue.applyDimension(unit, value, app.resources.displayMetrics).toInt()
+fun px(ctx: Context, value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP): Int = TypedValue.applyDimension(unit, value, ctx.resources.displayMetrics).toInt()
 
 /**
  * Get meta data in Activity or Application.<br></br>
@@ -112,11 +113,11 @@ fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
 }
 
 // https://stackoverflow.com/questions/4604239/install-application-programmatically-on-android
-fun installApk(file: File) {
+fun installApk(ctx: Context, file: File) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val downloadedApkUri = FileDocumentUtil.getFileUri(app, file)
+            val downloadedApkUri = FileDocumentUtil.getFileUri(ctx, file)
             intent.setDataAndType(downloadedApkUri, "application/vnd.android.package-archive")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -124,16 +125,16 @@ fun installApk(file: File) {
             intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        app.startActivity(intent)
+        ctx.startActivity(intent)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 }
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-fun exitApp() {
+fun exitApp(am: ActivityManager) {
     try {
-        for (appTask in app.activityManager.appTasks) {
+        for (appTask in am.appTasks) {
             appTask.finishAndRemoveTask()
         }
         exitProcess(0)
@@ -142,16 +143,16 @@ fun exitApp() {
     }
 }
 
-fun startApp(targetPackageName: String = app.id) {
-    app.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
+fun startApp(ctx: Context, targetPackageName: String) {
+    ctx.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
         it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-        app.startActivity(it)
+        ctx.startActivity(it)
     }
 }
 
-fun restartApp(targetIntent: Intent) {
+fun restartApp(ctx: Context, targetIntent: Intent) {
     targetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-    app.startActivity(targetIntent)
+    ctx.startActivity(targetIntent)
     Process.killProcess(Process.myPid())
 //        Runtime.getRuntime().exit(0)
 }
@@ -190,8 +191,8 @@ fun closeAndroidPDialog() {
 
 // ============================================================================
 
-fun openSoftKeyboard() {
-    val imm = app.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+fun openSoftKeyboard(imm: InputMethodManager) {
+//    val imm = app.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
     imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
 }
 

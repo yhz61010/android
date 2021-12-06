@@ -10,6 +10,10 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.hjq.permissions.OnPermissionCallback
+import com.hjq.permissions.Permission
+import com.hjq.permissions.XXPermissions
+import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -31,16 +35,35 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     private var adapter: DeviceAdapter? = null
     private val bluetoothDeviceMap = mutableMapOf<String, DeviceModel>()
 
+    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothScanBinding.inflate(layoutInflater).apply {
             setContentView(this.root)
         }
 
+        initReceiver()
         initView()
         initBluetooth()
-        initReceiver()
-        doDiscovery()
+
+        XXPermissions.with(this)
+            .permission(
+                Permission.ACCESS_FINE_LOCATION,
+                Permission.ACCESS_COARSE_LOCATION,
+                Permission.BLUETOOTH_ADVERTISE,
+                Permission.BLUETOOTH_CONNECT,
+                Permission.BLUETOOTH_SCAN
+            )
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                    doDiscovery()
+                }
+
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                    this@BluetoothScanActivity.toast("Please grant Location permissions.")
+                }
+            })
     }
 
     private fun initReceiver() {
@@ -55,7 +78,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-        BluetoothUtil.release()
+        bluetooth.release()
         unregisterReceiver(bluetoothReceiver)
     }
 
@@ -64,7 +87,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         adapter = DeviceAdapter().apply {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
-                    BluetoothUtil.cancelDiscovery()
+                    bluetooth.cancelDiscovery()
                     startActivity(BluetoothClientActivity::class, { intent -> intent.putExtra("device", item.device) })
                 }
             }
@@ -77,39 +100,45 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     }
 
     private fun initBluetooth() {
-        if (!BluetoothUtil.isSupportBle()) {
+        if (!bluetooth.isSupportBle(packageManager)) {
             toast("Does not support bluetooth!")
             finish()
             return
         }
-        BluetoothUtil.enable()
+        bluetooth.enable()
     }
 
     private fun doDiscovery() {
         bluetoothDeviceMap.clear()
         binding.btnDiscovery.text = "Discovery"
-        BluetoothUtil.startDiscovery()
+        val rtn = bluetooth.startDiscovery()
+        LogContext.log.w("startDiscovery rtn=$rtn")
     }
 
     fun onDiscoveryClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LogContext.log.w("onDiscoveryClick")
+        toast("onDiscoveryClick")
         doDiscovery()
     }
 
     fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("You must click STOP SCAN button to stop scanning.", longDuration = true)
+        LogContext.log.w("onScanClick Before Scanning, please stop it first if you don't do that.")
+        toast("onScanClick Before Scanning, please stop it first if you don't do that.")
         doScan()
     }
 
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {
+        LogContext.log.w("onStopScan")
+        toast("onStopScan")
         bluetoothDeviceMap.clear()
-        BluetoothUtil.cancelDiscovery()
-        BluetoothUtil.stopScan()
+        bluetooth.cancelDiscovery()
+        bluetooth.stopScan()
     }
 
     private fun doScan() {
         bluetoothDeviceMap.clear()
         binding.btnDoScan.text = "Scan"
-        BluetoothUtil.scan(object : ScanDeviceCallback {
+        bluetooth.scan(object : ScanDeviceCallback {
             override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (result?.isConnectable == false) {
@@ -161,6 +190,10 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     LogContext.log.w("Device disconnected")
                     toast("ACTION_ACL_DISCONNECTED")
+                }
+                else -> {
+                    LogContext.log.e("Bluetooth discovery unknown error.")
+                    toast("Bluetooth discovery unknown error.")
                 }
             }
         }

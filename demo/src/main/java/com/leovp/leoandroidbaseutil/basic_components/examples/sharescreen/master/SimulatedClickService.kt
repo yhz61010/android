@@ -56,7 +56,6 @@ class SimulatedClickService : AccessibilityService() {
     }
 
     // Attention: this callback is calling from main thread.
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // The package names that you want to monitor which have been set in accessibility_service_config.
         // If you does not set it, it means monitor all application.
@@ -65,6 +64,7 @@ class SimulatedClickService : AccessibilityService() {
         val className: String? = event.className?.toString()
         // eventType: AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
         val st = SystemClock.elapsedRealtimeNanos()
+        // FIXME Can I initialized AccessibilityUtil in onCreate()?
         AccessibilityUtil.init(this)
         LogContext.log.i(TAG, "init cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us onAccessibilityEvent [$className]:$eventType")
     }

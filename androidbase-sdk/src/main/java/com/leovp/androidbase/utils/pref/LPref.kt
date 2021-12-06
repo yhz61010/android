@@ -1,6 +1,6 @@
 package com.leovp.androidbase.utils.pref
 
-import com.leovp.androidbase.exts.android.app
+import android.content.Context
 import com.leovp.androidbase.exts.android.sharedPrefs
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.exts.kotlin.toObject
@@ -10,8 +10,8 @@ import com.leovp.androidbase.utils.pref.base.IPref
  * Author: Michael Leo
  * Date: 20-12-10 上午10:01
  */
-class LPref(name: String = app.packageName) : IPref {
-    private val pref = app.sharedPrefs(name)
+class LPref(ctx: Context, name: String = ctx.packageName) : IPref {
+    private val pref = ctx.sharedPrefs(name)
 
     @Synchronized
     override fun put(key: String, v: Int) {

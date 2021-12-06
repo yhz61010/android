@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.androidbase.exts.android.app
 import com.leovp.leoandroidbaseutil.databinding.RecyclerviewBluetoothDeviceItemBinding
 
 /**
@@ -19,7 +18,7 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        binding = RecyclerviewBluetoothDeviceItemBinding.inflate(LayoutInflater.from(app), parent, false)
+        binding = RecyclerviewBluetoothDeviceItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ItemViewHolder(binding.root)
     }
 
@@ -45,12 +44,14 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
         notifyItemRangeInserted(0, 1)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clearAndAddList(list: MutableList<DeviceModel>) {
         dataArray.clear()
         dataArray.addAll(list)
         notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clear() {
         dataArray.clear()
         notifyDataSetChanged()

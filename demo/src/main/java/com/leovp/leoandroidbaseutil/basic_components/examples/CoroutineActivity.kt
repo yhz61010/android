@@ -17,8 +17,8 @@ class CoroutineActivity : BaseDemonstrationActivity() {
 
 //    private val ioJobScope = CoroutineScope(Dispatchers.IO + Job())
 
-    private val singleContext = newSingleThreadContext("MyOwnThread")
-    private val fixedContext = newFixedThreadPoolContext(3, "three-th-ctx")
+    private val singleContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val fixedContext = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
     private val poolContext = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
 
     override fun onCreate(savedInstanceState: Bundle?) {

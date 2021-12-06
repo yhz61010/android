@@ -18,7 +18,7 @@ class PrefActivity : BaseDemonstrationActivity() {
     }
 
     private fun defaultPref() {
-        PrefContext.setPrefImp(LPref())
+        PrefContext.setPrefImp(LPref(this))
 
         PrefContext.pref.put("string", "this is a string")
         PrefContext.pref.put("boolean", true)
@@ -47,7 +47,7 @@ class PrefActivity : BaseDemonstrationActivity() {
     }
 
     private fun mmkvPref() {
-        PrefContext.setPrefImp(MMKVPref())
+        PrefContext.setPrefImp(MMKVPref(this))
 
         PrefContext.pref.put("mmkv_string", "mmkv_this is a string")
         PrefContext.pref.put("mmkv_boolean", true)

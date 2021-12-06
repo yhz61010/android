@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.android.hideNavigationBar
 import com.leovp.androidbase.exts.android.requestFullScreen
-import com.leovp.androidbase.utils.file.ResourcesUtil
+import com.leovp.androidbase.exts.android.saveRawResourceToFile
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -34,7 +34,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 uiScope.launch {
                     val videoFile = withContext(Dispatchers.IO) {
-                        ResourcesUtil.saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
+                        saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
                     }
                     decoderManager.init(videoFile, surface)
                     // In order to fix the SurfaceView blink problem,

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
-import com.leovp.androidbase.exts.android.app
 import com.leovp.androidbase.exts.android.buildConfigInDebug
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
@@ -29,7 +28,6 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
     override fun onCreate() {
         super.onCreate()
-        app = this
         buildConfigInDebug = BuildConfig.DEBUG
 
 //        SslUtils.hostnames = arrayOf("postman-echo.com")
@@ -43,7 +41,7 @@ class CustomApplication : MultiDexApplication(), DIAware {
 
         LogContext.setLogImp(LLog("LEO"))
 //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
-        PrefContext.setPrefImp(LPref())
+        PrefContext.setPrefImp(LPref(this))
     }
 
     override fun attachBaseContext(base: Context) {

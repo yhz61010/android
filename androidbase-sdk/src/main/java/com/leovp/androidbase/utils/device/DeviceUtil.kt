@@ -1,6 +1,5 @@
 package com.leovp.androidbase.utils.device
 
-import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
@@ -8,6 +7,7 @@ import android.os.StatFs
 import android.os.SystemClock
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import com.leovp.androidbase.SingletonHolder
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.outputFormatByte
 import com.leovp.androidbase.exts.kotlin.round
@@ -16,15 +16,16 @@ import com.leovp.androidbase.utils.shell.ShellUtil
 import com.leovp.androidbase.utils.system.LangUtil
 import java.io.File
 
-
 /**
  * Author: Michael Leo
  * Date: 20-5-15 下午3:23
  */
 
 @Suppress("WeakerAccess", "unused", "UNUSED_PARAMETER")
-object DeviceUtil {
-    private const val TAG = "DeviceUtil"
+class DeviceUtil private constructor(private val ctx: Context) {
+    companion object : SingletonHolder<DeviceUtil, Context>(::DeviceUtil) {
+        private const val TAG = "DeviceUtil"
+    }
 
     val osVersion: String = Build.VERSION.RELEASE
     val osVersionSdkInt = Build.VERSION.SDK_INT
@@ -112,7 +113,7 @@ object DeviceUtil {
         val powerProfileClass = "com.android.internal.os.PowerProfile"
         val powerProfile = Class.forName(powerProfileClass)
             .getConstructor(Context::class.java)
-            .newInstance(app)
+            .newInstance(ctx)
         Class.forName(powerProfileClass)
             .getMethod("getBatteryCapacity")
             .invoke(powerProfile) as Double
@@ -126,7 +127,7 @@ object DeviceUtil {
      */
     fun getMemInfoInBytes(): Triple<Long, Long, Float> {
         val mi = ActivityManager.MemoryInfo()
-        app.activityManager.getMemoryInfo(mi)
+        ctx.activityManager.getMemoryInfo(mi)
         val availableBytes = mi.availMem
         val totalBytes = mi.totalMem
         val percentUsed = (mi.totalMem - mi.availMem) * 100.0F / mi.totalMem
@@ -141,7 +142,7 @@ object DeviceUtil {
      */
     fun getExternalStorageInBytes(): ArrayList<Triple<Long, Long, Float>> {
         val bytesAvailable: ArrayList<Triple<Long, Long, Float>> = ArrayList()
-        val externalStorageDirs = ContextCompat.getExternalFilesDirs(app, null)
+        val externalStorageDirs = ContextCompat.getExternalFilesDirs(ctx, null)
         for (storageDir in externalStorageDirs) {
             val availableSizeInBytes = StatFs(storageDir.path).availableBytes
             val totalSizeInBytes = StatFs(storageDir.path).totalBytes
@@ -166,20 +167,20 @@ object DeviceUtil {
     /**
      * As of API 30(Android 11), you must use Activity context to retrieve screen real size
      */
-    fun getDeviceInfo(act: Activity): String {
+    fun getDeviceInfo(): String {
         return runCatching {
             val st = SystemClock.elapsedRealtimeNanos()
             val memInfo = getMemInfoInBytes()
-            val screenSize = act.getRealResolution()
-            val availableSize = getAvailableResolution()
-            val statusBarHeight = app.statusBarHeight
-            val navBarHeight = app.navigationBarHeight
+            val screenSize = ctx.getRealResolution()
+            val availableSize = ctx.getAvailableResolution()
+            val statusBarHeight = ctx.statusBarHeight
+            val navBarHeight = ctx.navigationBarHeight
             """
             Device basic information:
-            App version     : ${app.versionName}(${app.versionCode})
+            App version     : ${ctx.versionName}(${ctx.versionCode})
             Device locale   : ${LangUtil.getDeviceLanguageCountryCode()}
             Default locale  : ${LangUtil.getDefaultLanguageCountryCode()}
-            Network Type    : ${NetworkUtil.getNetworkTypeName(app)} | ${NetworkUtil.getNetworkSubTypeName(app)}(${NetworkUtil.getNetworkGeneration(app)})
+            Network Type    : ${NetworkUtil.getNetworkTypeName(ctx)} | ${NetworkUtil.getNetworkSubTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
             Manufacturer    : $manufacturer
             Brand           : $brand
             Board           : $board
@@ -194,22 +195,22 @@ object DeviceUtil {
             CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}
             Display         : $display
-            Screen          : ${screenSize.x}x${screenSize.y}(${act.screenRatio.round()})  (${app.densityDpi}:${app.density})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
+            Screen          : ${screenSize.x}x${screenSize.y}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
             MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}
-            Tablet          : ${app.isTablet()}
+            Tablet          : ${ctx.isTablet()}
             Emulator        : ${isProbablyAnEmulator()}
             Battery Capacity: $batteryCapacity
-            MAC             : ${NetworkUtil.getMacAddress(app)}
+            MAC             : ${NetworkUtil.getMacAddress(ctx)}
             IMEI:
-                    slot0: ${getImei(app, 0) ?: "NA"}
-                    slot1: ${getImei(app, 1) ?: "NA"}
+                    slot0: ${getImei(ctx, 0) ?: "NA"}
+                    slot1: ${getImei(ctx, 1) ?: "NA"}
             Device Features:
-                    Full screen device        : ${act.isFullScreenDevice}
+                    Full screen device        : ${ctx.isFullScreenDevice}
                     Device has navigation bar : ${doesDeviceHasNavigationBar()}
-                    Navigation bar is showing : ${app.isNavigationBarShown} (PS: In full screen(AKA all screen) device, this value is always 'true'.)
-                    Navigation gesture enable : ${app.isNavigationGestureEnabled}
+                    Navigation bar is showing : ${ctx.isNavigationBarShown} (PS: In full screen(AKA all screen) device, this value is always 'true'.)
+                    Navigation gesture enable : ${ctx.isNavigationGestureEnabled}
 
             Cost: ${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us 
             """.trimIndent()

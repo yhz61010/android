@@ -125,11 +125,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
-        val screenSize = getAvailableResolution()
+        val screenSize = context.getAvailableResolution()
         max(screenSize.x, screenSize.y)
     }
     private val cameraSupportedMaxPreviewHeight: Int by lazy {
-        val screenSize = getAvailableResolution()
+        val screenSize = context.getAvailableResolution()
         min(screenSize.x, screenSize.y)
     }
 
@@ -252,6 +252,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             context.display?.rotation ?: -1
         } else {
+            @Suppress("DEPRECATION")
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
@@ -671,6 +672,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             context.display?.rotation ?: -1
         } else {
+            @Suppress("DEPRECATION")
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!

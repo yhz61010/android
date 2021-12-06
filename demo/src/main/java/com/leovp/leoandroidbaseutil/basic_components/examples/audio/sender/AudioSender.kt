@@ -43,7 +43,7 @@ class AudioSender {
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
-            toast("onConnected", debug = true)
+            ctx?.toast("onConnected", debug = true)
             audioPlayer = AudioPlayer(ctx!!, AudioActivity.audioDecoderInfo, defaultAudioType)
             sendRecAudioThread()
             startPlayThread()
@@ -58,13 +58,13 @@ class AudioSender {
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
             LogContext.log.w(TAG, "onDisconnect")
-            toast("onDisconnect", debug = true)
+            ctx?.toast("onDisconnect", debug = true)
             stop()
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            toast("onFailed code: $code message: $msg", debug = true)
+            ctx?.toast("onFailed code: $code message: $msg", debug = true)
             stop()
         }
     }

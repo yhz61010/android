@@ -10,7 +10,6 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
-import com.leovp.androidbase.exts.android.app
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.databinding.RecyclerviewWifiItemBinding
 
@@ -25,7 +24,7 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        binding = RecyclerviewWifiItemBinding.inflate(LayoutInflater.from(app), parent, false)
+        binding = RecyclerviewWifiItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ItemViewHolder(binding.root)
     }
 
@@ -38,11 +37,11 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
         holder.bind(currentItem)
         val cardView = holder.view.findViewById<CardView>(R.id.cardView)
         if (currentSsid == currentItem.name) {
-            cardView.setCardBackgroundColor(ContextCompat.getColor(app, R.color.purple_200))
+            cardView.setCardBackgroundColor(ContextCompat.getColor(holder.view.context, R.color.purple_200))
             val innerViewGroup = cardView.children.first() as ViewGroup
             innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.WHITE) }
         } else {
-            cardView.setCardBackgroundColor(ContextCompat.getColor(app, android.R.color.white))
+            cardView.setCardBackgroundColor(ContextCompat.getColor(holder.view.context, android.R.color.white))
             val innerViewGroup = cardView.children.first() as ViewGroup
             innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.BLACK) }
         }
@@ -63,12 +62,14 @@ class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiA
         notifyItemRangeInserted(0, 1)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clearAndAddList(list: MutableList<WifiModel>) {
         dataArray.clear()
         dataArray.addAll(list)
         notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clear() {
         dataArray.clear()
         notifyDataSetChanged()

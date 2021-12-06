@@ -52,15 +52,6 @@ import androidx.preference.PreferenceManager
 import com.leovp.androidbase.utils.system.API
 
 /**
- * Application Context
- *
- * You **MUST** initialize `app` in your custom Application
- */
-lateinit var app: Application
-
-fun isGlobalApplicationInitialized(): Boolean = ::app.isInitialized
-
-/**
  * Get the package name
  */
 val Context.id get() = this.packageName!!
@@ -95,57 +86,57 @@ val Context.isLandscape get() = this.resources.configuration.orientation == Conf
 val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
 fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, AppCompatActivity.MODE_PRIVATE)
 
-val Application.accessibilityManager get() = this.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-val Application.accountManager get() = this.getSystemService(Context.ACCOUNT_SERVICE) as AccountManager
-val Application.activityManager get() = this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-val Application.alarmManager get() = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-val Application.audioManager get() = this.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-val Application.clipboardManager get() = this.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-val Application.connectivityManager get() = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-val Application.devicePolicyManager get() = this.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-val Application.downloadManager get() = this.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-val Application.dropBoxManager get() = this.getSystemService(Context.DROPBOX_SERVICE) as DropBoxManager
-val Application.inputManager get() = this.getSystemService(Context.INPUT_SERVICE) as InputManager
-val Application.inputMethodManager get() = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-val Application.keyguardManager get() = this.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-val Application.locationManager get() = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-val Application.nfcManager get() = this.getSystemService(Context.NFC_SERVICE) as NfcManager
-val Application.notificationManager get() = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-val Application.powerManager get() = this.getSystemService(Context.POWER_SERVICE) as PowerManager
-val Application.searchManager get() = this.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-val Application.sensorManager get() = this.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-val Application.storageManager get() = this.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-val Application.telephonyManager get() = this.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-val Application.uiModeManager get() = this.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
-val Application.usbManager get() = this.getSystemService(Context.USB_SERVICE) as UsbManager
-val Application.wallpaperManager get() = this.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
-val Application.wifiManager get() = this.getSystemService(Context.WIFI_SERVICE) as WifiManager
-val Application.wifiP2pManager get() = this.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
-val Application.windowManager get() = this.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-val Application.userManager @RequiresApi(API.J_MR1) get() = this.getSystemService(Context.USER_SERVICE) as UserManager
-val Application.displayManager @RequiresApi(API.J_MR1) get() = this.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-val Application.bluetoothManager @RequiresApi(API.J_MR2) get() = this.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-val Application.captioningManager @RequiresApi(API.K) get() = this.getSystemService(Context.CAPTIONING_SERVICE) as CaptioningManager
-val Application.appOpsManager @RequiresApi(API.K) get() = this.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-val Application.printManager @RequiresApi(API.K) get() = this.getSystemService(Context.PRINT_SERVICE) as PrintManager
-val Application.consumerManager @RequiresApi(API.K) get() = this.getSystemService(Context.CONSUMER_IR_SERVICE) as ConsumerIrManager
-val Application.telecomManager @RequiresApi(API.L) get() = this.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-val Application.cameraManager @RequiresApi(API.L) get() = this.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-val Application.batteryManager @RequiresApi(API.L) get() = this.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-val Application.appWidgetManager @RequiresApi(API.L) get() = this.getSystemService(Context.APPWIDGET_SERVICE) as AppWidgetManager
-val Application.restrictionsManager @RequiresApi(API.L) get() = this.getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
-val Application.mediaSessionManager @RequiresApi(API.L) get() = this.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-val Application.mediaProjectionManager @RequiresApi(API.L) get() = this.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-val Application.usageStatsManager @RequiresApi(API.L_MR1) get() = this.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-val Application.midiManager @RequiresApi(API.M) get() = this.getSystemService(Context.MIDI_SERVICE) as MidiManager
-val Application.networkStatusManager @RequiresApi(API.M) get() = this.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
-val Application.carrierConfigManager @RequiresApi(API.M) get() = this.getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
-val Application.systemHealthManager @RequiresApi(API.N) get() = this.getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
-val Application.hardwarePropertiesManager @RequiresApi(API.N) get() = this.getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
-val Application.shortcutManager @RequiresApi(API.N_MR1) get() = this.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
-val Application.storageStatsManager @RequiresApi(API.O) get() = this.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
-val Application.companionDeviceManager @RequiresApi(API.O) get() = this.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
-val Application.textClassificationManager @RequiresApi(API.O) get() = this.getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
-val Application.euiccManager @RequiresApi(API.P) get() = this.getSystemService(Context.EUICC_SERVICE) as EuiccManager
-val Application.ipSecManager @RequiresApi(API.P) get() = this.getSystemService(Context.IPSEC_SERVICE) as IpSecManager
-val Application.vibratorManager @RequiresApi(Build.VERSION_CODES.S) get() = this.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+val Context.accessibilityManager get() = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+val Context.accountManager get() = getSystemService(Context.ACCOUNT_SERVICE) as AccountManager
+val Context.activityManager get() = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+val Context.alarmManager get() = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+val Context.audioManager get() = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+val Context.clipboardManager get() = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+val Context.connectivityManager get() = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+val Context.devicePolicyManager get() = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+val Context.downloadManager get() = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+val Context.dropBoxManager get() = getSystemService(Context.DROPBOX_SERVICE) as DropBoxManager
+val Context.inputManager get() = getSystemService(Context.INPUT_SERVICE) as InputManager
+val Context.inputMethodManager get() = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+val Context.keyguardManager get() = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+val Context.locationManager get() = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+val Context.nfcManager get() = getSystemService(Context.NFC_SERVICE) as NfcManager
+val Context.notificationManager get() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+val Context.powerManager get() = getSystemService(Context.POWER_SERVICE) as PowerManager
+val Context.searchManager get() = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+val Context.sensorManager get() = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+val Context.storageManager get() = getSystemService(Context.STORAGE_SERVICE) as StorageManager
+val Context.telephonyManager get() = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+val Context.uiModeManager get() = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+val Context.usbManager get() = getSystemService(Context.USB_SERVICE) as UsbManager
+val Context.wallpaperManager get() = getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
+val Context.wifiManager get() = getSystemService(Context.WIFI_SERVICE) as WifiManager
+val Context.wifiP2pManager get() = getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
+val Context.windowManager get() = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+val Context.userManager @RequiresApi(API.J_MR1) get() = getSystemService(Context.USER_SERVICE) as UserManager
+val Context.displayManager @RequiresApi(API.J_MR1) get() = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+val Context.bluetoothManager @RequiresApi(API.J_MR2) get() = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+val Context.captioningManager @RequiresApi(API.K) get() = getSystemService(Context.CAPTIONING_SERVICE) as CaptioningManager
+val Context.appOpsManager @RequiresApi(API.K) get() = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+val Context.printManager @RequiresApi(API.K) get() = getSystemService(Context.PRINT_SERVICE) as PrintManager
+val Context.consumerManager @RequiresApi(API.K) get() = getSystemService(Context.CONSUMER_IR_SERVICE) as ConsumerIrManager
+val Context.telecomManager @RequiresApi(API.L) get() = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+val Context.cameraManager @RequiresApi(API.L) get() = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+val Context.batteryManager @RequiresApi(API.L) get() = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+val Context.appWidgetManager @RequiresApi(API.L) get() = getSystemService(Context.APPWIDGET_SERVICE) as AppWidgetManager
+val Context.restrictionsManager @RequiresApi(API.L) get() = getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
+val Context.mediaSessionManager @RequiresApi(API.L) get() = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+val Context.mediaProjectionManager @RequiresApi(API.L) get() = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+val Context.usageStatsManager @RequiresApi(API.L_MR1) get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+val Context.midiManager @RequiresApi(API.M) get() = getSystemService(Context.MIDI_SERVICE) as MidiManager
+val Context.networkStatusManager @RequiresApi(API.M) get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+val Context.carrierConfigManager @RequiresApi(API.M) get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
+val Context.systemHealthManager @RequiresApi(API.N) get() = getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
+val Context.hardwarePropertiesManager @RequiresApi(API.N) get() = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
+val Context.shortcutManager @RequiresApi(API.N_MR1) get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
+val Context.storageStatsManager @RequiresApi(API.O) get() = getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
+val Context.companionDeviceManager @RequiresApi(API.O) get() = getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+val Context.textClassificationManager @RequiresApi(API.O) get() = getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
+val Context.euiccManager @RequiresApi(API.P) get() = getSystemService(Context.EUICC_SERVICE) as EuiccManager
+val Context.ipSecManager @RequiresApi(API.P) get() = getSystemService(Context.IPSEC_SERVICE) as IpSecManager
+val Context.vibratorManager @RequiresApi(Build.VERSION_CODES.S) get() = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager

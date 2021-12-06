@@ -1,13 +1,14 @@
 package com.leovp.androidbase.utils.device
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiNetworkSpecifier
-import com.leovp.androidbase.exts.android.app
+import com.leovp.androidbase.SingletonHolder
 import com.leovp.androidbase.exts.android.connectivityManager
 import com.leovp.androidbase.exts.android.wifiManager
 
@@ -16,7 +17,9 @@ import com.leovp.androidbase.exts.android.wifiManager
  * Author: Michael Leo
  * Date: 21-3-6 下午6:24
  */
-object WifiUtil {
+class WifiUtil private constructor(private val ctx: Context) {
+    companion object : SingletonHolder<WifiUtil, Context>(::WifiUtil)
+
     /**
      *
      * ```xml
@@ -37,7 +40,7 @@ object WifiUtil {
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .setNetworkSpecifier(wifiNetworkSpecifier)
                 .build()
-            app.connectivityManager.requestNetwork(networkRequest, ConnectivityManager.NetworkCallback())
+            ctx.connectivityManager.requestNetwork(networkRequest, ConnectivityManager.NetworkCallback())
         } else {
             // 1. Hotspot and password need to be in quotes!!!
             val ssid = "\"" + wifiSsid + "\""
@@ -60,9 +63,9 @@ object WifiUtil {
                     conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE)
             }
             // 3. Connect to WIFI
-            val wifiManager = app.wifiManager
+            val wifiManager = ctx.wifiManager
             wifiManager.addNetwork(conf)
-            val configuredNetworks = app.wifiManager.configuredNetworks
+            val configuredNetworks = ctx.wifiManager.configuredNetworks
             for (network in configuredNetworks) {
                 if (network.SSID != null && network.SSID == ssid) {
                     wifiManager.disconnect()
@@ -83,9 +86,9 @@ object WifiUtil {
     @SuppressLint("MissingPermission")
     fun getCurrentSsid(): String? {
         var ssid: String? = null
-        val networkInfo: NetworkInfo? = app.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        val networkInfo: NetworkInfo? = ctx.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
         if (networkInfo?.isConnected == true) {
-            val connectionInfo = app.wifiManager.connectionInfo
+            val connectionInfo = ctx.wifiManager.connectionInfo
             if (connectionInfo != null && connectionInfo.ssid.isNotEmpty()) {
                 ssid = connectionInfo.ssid
             }

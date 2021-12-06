@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.audio
 import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
-import com.hjq.permissions.OnPermission
+import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.toast
@@ -59,12 +59,12 @@ class AudioActivity : BaseDemonstrationActivity() {
 
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
-            .request(object : OnPermission {
-                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                     toast("Grand recording permission")
                 }
 
-                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                     toast("Deny record permission");finish()
                 }
             })
@@ -124,8 +124,8 @@ class AudioActivity : BaseDemonstrationActivity() {
     private fun record(type: AudioType) {
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
-            .request(object : OnPermission {
-                override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+            .request(object : OnPermissionCallback {
+                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
                         AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
@@ -158,7 +158,7 @@ class AudioActivity : BaseDemonstrationActivity() {
                     micRecorder?.startRecord()
                 }
 
-                override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                     toast("Deny record permission")
                     finish()
                 }

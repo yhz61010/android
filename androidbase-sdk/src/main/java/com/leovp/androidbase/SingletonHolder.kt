@@ -6,17 +6,17 @@ package com.leovp.androidbase
  *
  * Usage:
  * ```kotlin
- * class SomeSingleton private constructor(context: Context) {
+ * class SomeSingleton private constructor(app: Application) {
  *     init {
  *         // Init using context argument
- *         context.getString(R.string.app_name)
+ *         app.getString(R.string.app_name)
  *     }
- *     companion object : SingletonHolder<SomeSingleton, Context>(::SomeSingleton)
+ *     companion object : SingletonHolder<SomeSingleton, Application>(::SomeSingleton)
  * }
  * ```
  * Get your singleton instance like this below:
  * ```kotlin
- * SomeSingleton.getInstance(context).doSomething()
+ * SomeSingleton.getInstance(application).doSomething()
  * ```
  */
 open class SingletonHolder<out T, in A>(creator: (A) -> T) {

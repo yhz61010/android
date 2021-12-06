@@ -233,7 +233,16 @@ dependencies {
     implementation "org.greenrobot:eventbus:$eventbusVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
-    implementation "com.hjq:xxpermissions:$xxPermissionVersion"
+    implementation "com.github.getActivity:XXPermissions:$xxPermissionVersion"
+
+    // As of bson4jackson 2.13.0, you need add fasterxml jackson manually.
     implementation "de.undercouch:bson4jackson:$bsonVersion"
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    implementation "com.fasterxml.jackson.core:jackson-core:$fasterxmlVersion"
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    implementation "com.fasterxml.jackson.core:jackson-databind:$fasterxmlVersion"
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
+    implementation "com.fasterxml.jackson.core:jackson-annotations:$fasterxmlVersion"
+
     implementation "com.github.tiann:FreeReflection:$freeReflectionVersion"
 }

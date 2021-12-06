@@ -6,13 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityNodeInfo
-import com.leovp.androidbase.exts.android.app
 import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
 import java.lang.ref.WeakReference
 
 
 /**
+ * `AccessibilityUtil` must be initialized in your custom `AccessibilityService`.
+ *
  * https://github.com/PopFisher/AccessibilitySample
  * https://www.jianshu.com/p/27df6983321f
  * https://www.jianshu.com/p/cd1cd53909d7
@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference
  */
 object AccessibilityUtil {
     private lateinit var weakService: WeakReference<AccessibilityService>
+    private const val TAG = "acce"
 
     /**
      * This method must be called in your AccessibilityService's onAccessibilityEvent method.
@@ -46,18 +47,19 @@ object AccessibilityUtil {
      */
     fun isAccessibilityEnabled(): Boolean {
         if (!::weakService.isInitialized) {
-            LogContext.log.e(ITAG, "You must call init method first.")
+            LogContext.log.e(TAG, "You must call init method first.")
             return false
         }
+        val accessibilityService = weakService.get() ?: return false
         var accessibilityEnabled = 0
         runCatching {
-            accessibilityEnabled = Settings.Secure.getInt(app.applicationContext.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
+            accessibilityEnabled = Settings.Secure.getInt(accessibilityService.applicationContext.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
         }.onFailure { it.printStackTrace() }
-        val packageName: String = app.packageName
-        val serviceCanonicalName = "$packageName/${weakService.get()?.javaClass?.canonicalName}"
+        val packageName: String = accessibilityService.packageName
+        val serviceCanonicalName = "$packageName/${accessibilityService.javaClass.canonicalName}"
         LogContext.log.d("serviceCanonicalName: $serviceCanonicalName")
         if (accessibilityEnabled == 1) {
-            val settingValue: String? = Settings.Secure.getString(app.applicationContext.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            val settingValue: String? = Settings.Secure.getString(accessibilityService.applicationContext.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
             settingValue?.split(':', ignoreCase = true)?.forEach { value ->
                 if (value.equals(serviceCanonicalName, ignoreCase = true)) return true
             }
@@ -72,7 +74,7 @@ object AccessibilityUtil {
      */
     fun findNodesById(resourceId: String): List<AccessibilityNodeInfo>? {
         if (!::weakService.isInitialized) {
-            LogContext.log.e(ITAG, "You must call init method first.")
+            LogContext.log.e(TAG, "You must call init method first.")
             return null
         }
         return weakService.get()?.rootInActiveWindow?.findAccessibilityNodeInfosByViewId(resourceId)
@@ -83,7 +85,7 @@ object AccessibilityUtil {
      */
     fun findNodesByText(text: String): List<AccessibilityNodeInfo>? {
         if (!::weakService.isInitialized) {
-            LogContext.log.e(ITAG, "You must call init method first.")
+            LogContext.log.e(TAG, "You must call init method first.")
             return null
         }
         return weakService.get()?.rootInActiveWindow?.findAccessibilityNodeInfosByText(text)
@@ -122,7 +124,7 @@ object AccessibilityUtil {
 
     fun performFunctionKey(action: Int): Boolean {
         if (!::weakService.isInitialized) {
-            LogContext.log.e(ITAG, "You must call init method first.")
+            LogContext.log.e(TAG, "You must call init method first.")
             return false
         }
         return weakService.get()?.performGlobalAction(action) ?: false

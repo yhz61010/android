@@ -11,7 +11,7 @@ import com.leovp.log_sdk.LogContext
 class KeepAliveActivity : BaseDemonstrationActivity() {
 
     private val keepAlive: KeepAlive by lazy {
-        KeepAlive(R.raw.single_note30, 0.05f) {
+        KeepAlive(application, R.raw.single_note30, 0.05f) {
             if (LogContext.enableLog) LogContext.log.i("KeepAliveActivity Time up!!!")
             toast("KeepAliveActivity Time up!!!")
         }
@@ -23,10 +23,12 @@ class KeepAliveActivity : BaseDemonstrationActivity() {
     }
 
     fun onKeepAliveClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("Start KeepAlive")
         keepAlive.keepAlive()
     }
 
     fun onStopClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("Stop KeepAlive")
         keepAlive.release()
     }
 }

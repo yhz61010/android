@@ -2,9 +2,11 @@
 <resources>
     <string name="title_common">Common組件</string>
     <string name="title_jetpack">Jetpack組件</string>
+    <string name="act_title_change_app_lang">更改應用語言</string>
 
     <string name="tv_i18n">這裡是繁體中文。</string>
     <string name="select_lang">語言選擇</string>
+    <string name="start_service">啟動服務</string>
     <string-array name="lang_list">
         <item>英語</item>
         <item>簡體中文</item>

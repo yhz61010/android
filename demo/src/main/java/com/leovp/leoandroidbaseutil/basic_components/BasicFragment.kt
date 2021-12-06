@@ -51,38 +51,8 @@ class BasicFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
-        colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
-            override fun onItemClick(view: View, position: Int) {
-                startActivity(featureList[position].second, { intent -> intent.putExtra("title", featureList[position].first) })
-            }
-        }
-        view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {
-            it.setOnRefreshListener {
-                thread {
-                    sleep(2000)
-                    Handler(Looper.getMainLooper()).post { it.isRefreshing = false }
-                }
-            }
-        }
-        view.findViewById<RecyclerView>(R.id.recyclerView).run {
-            setHasFixedSize(true)
-//            layoutManager = LinearLayoutManager(requireActivity())
-            adapter = colorBaseAdapter
-        }
-    }
 
-    override fun onDestroy() {
-//        CustomApplication.instance.closeDebugOutputFile()
-        LogContext.log.i(ITAG, "onDestroy()")
-        super.onDestroy()
-        // In some cases, if you use saved some parameters in Application, when app exits,
-        // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
-//        AppUtil.exitApp(this)
-    }
-
-    companion object {
-        private val featureList = arrayOf(
+        val featureList = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("Socket Server", SocketServerActivity::class.java),
@@ -117,7 +87,7 @@ class BasicFragment : Fragment() {
             Pair("AIDL", AidlActivity::class.java),
             Pair("Provider", ProviderActivity::class.java),
             Pair("Animation", AnimationActivity::class.java),
-            Pair("Change App Language", ChangeAppLanguageActivity::class.java),
+            Pair(getString(R.string.act_title_change_app_lang), ChangeAppLanguageActivity::class.java),
             Pair("Toast", ToastActivity::class.java),
             Pair("FloatView", FloatViewActivity::class.java),
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
@@ -125,6 +95,37 @@ class BasicFragment : Fragment() {
             Pair("Orientation", OrientationActivity::class.java),
         )
 
+        val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
+        colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
+            override fun onItemClick(view: View, position: Int) {
+                startActivity(featureList[position].second, { intent -> intent.putExtra("title", featureList[position].first) })
+            }
+        }
+        view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {
+            it.setOnRefreshListener {
+                thread {
+                    sleep(2000)
+                    Handler(Looper.getMainLooper()).post { it.isRefreshing = false }
+                }
+            }
+        }
+        view.findViewById<RecyclerView>(R.id.recyclerView).run {
+            setHasFixedSize(true)
+//            layoutManager = LinearLayoutManager(requireActivity())
+            adapter = colorBaseAdapter
+        }
+    }
+
+    override fun onDestroy() {
+//        CustomApplication.instance.closeDebugOutputFile()
+        LogContext.log.i(ITAG, "onDestroy()")
+        super.onDestroy()
+        // In some cases, if you use saved some parameters in Application, when app exits,
+        // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
+//        AppUtil.exitApp(this)
+    }
+
+    companion object {
         val colors = arrayOf(
             Color.parseColor("#80CBC4"),
             Color.parseColor("#80DEEA"),

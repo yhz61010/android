@@ -26,6 +26,8 @@ class AudioReceiver {
         val defaultAudioType = AudioType.PCM
     }
 
+    private var ctx: Context? = null
+
     private var receiverServer: AudioReceiverWebSocket? = null
     private var receiverHandler: AudioReceiverWebSocketHandler? = null
 
@@ -45,19 +47,19 @@ class AudioReceiver {
 
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted")
-            toast("onStarted", debug = true)
+            ctx?.toast("onStarted", debug = true)
         }
 
         override fun onStopped() {
             LogContext.log.i(TAG, "onStop")
-            toast("onStop", debug = true)
+            ctx?.toast("onStop", debug = true)
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             nettyServer = netty
             this.clientChannel = clientChannel
             LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
-            toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
+            ctx?.toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             startMicRecording()
             sendRecAudioThread()
             startPlayThread()
@@ -71,13 +73,13 @@ class AudioReceiver {
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
-            toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
+            ctx?.toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             stopServer()
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
-            toast("onFailed code: $code message: $msg", debug = true)
+            ctx?.toast("onFailed code: $code message: $msg", debug = true)
             stopServer()
         }
 
@@ -120,6 +122,7 @@ class AudioReceiver {
     }
 
     fun startServer(ctx: Context) {
+        this.ctx = ctx
         audioPlayer = AudioPlayer(ctx, AudioActivity.audioDecoderInfo, defaultAudioType)
 //        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
 //        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))

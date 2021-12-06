@@ -1,7 +1,6 @@
 package com.leovp.androidbase.utils.network
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
@@ -160,17 +159,17 @@ object NetworkUtil {
      * ```
      */
     @SuppressLint("HardwareIds", "MissingPermission")
-    private fun getMacAddressBeforeAndroidM(application: Application): String {
-        val wifiMan = application.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private fun getMacAddressBeforeAndroidM(ctx: Context): String {
+        val wifiMan = ctx.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val wifiInf = wifiMan.connectionInfo
         // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
         // Please check WifiInfo#DEFAULT_MAC_ADDRESS
         return if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress
     }
 
-    fun getMacAddress(application: Application): String {
+    fun getMacAddress(ctx: Context): String {
         return runCatching {
-            var address = getMacAddressBeforeAndroidM(application)
+            var address = getMacAddressBeforeAndroidM(ctx)
             if (address.isNotBlank()) {
                 return address
             }

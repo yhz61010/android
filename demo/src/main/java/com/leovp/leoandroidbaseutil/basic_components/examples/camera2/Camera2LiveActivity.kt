@@ -6,7 +6,7 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.os.Environment
 import android.view.WindowManager
-import com.hjq.permissions.OnPermission
+import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.hideNavigationBar
@@ -41,18 +41,18 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
             }
         }
 
-        if (XXPermissions.hasPermission(this, Permission.CAMERA)) {
+        if (XXPermissions.isGranted(this, Permission.CAMERA)) {
             addFragment()
         } else {
             XXPermissions.with(this)
                 .permission(Permission.CAMERA)
-                .request(object : OnPermission {
-                    override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
+                .request(object : OnPermissionCallback {
+                    override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                         toast("Grant camera permission")
                         addFragment()
                     }
 
-                    override fun noPermission(denied: MutableList<String>?, never: Boolean) {
+                    override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                         toast("Deny camera permission")
                         finish()
                     }

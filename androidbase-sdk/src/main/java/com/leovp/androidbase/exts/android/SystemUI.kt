@@ -105,7 +105,7 @@ fun Window.requestFullScreenAfterVisible() {
  * ```
  */
 @SuppressLint("ObsoleteSdkInt")
-fun Activity.hideNavigationBar(rootView: View) {
+fun Activity.hideNavigationBar(rootView: View = window.decorView) {
     this.window.hideNavigationBar(rootView)
 }
 
@@ -122,7 +122,7 @@ fun Activity.hideNavigationBar(rootView: View) {
  * ```
  */
 @SuppressLint("ObsoleteSdkInt")
-fun Window.hideNavigationBar(rootView: View) {
+fun Window.hideNavigationBar(rootView: View = decorView) {
     // Translucent virtual NavigationBar
 //    this.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
 

@@ -57,7 +57,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
     override fun onResume() {
         super.onResume()
         requestFullScreenAfterVisible()
-        hideNavigationBar(binding.root)
+        hideNavigationBar()
     }
 
     override fun onStop() {

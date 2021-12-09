@@ -4,7 +4,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.SurfaceHolder
 import com.leovp.androidbase.exts.android.hideNavigationBar
-import com.leovp.androidbase.exts.android.requestFullScreen
+import com.leovp.androidbase.exts.android.requestFullScreenAfterVisible
+import com.leovp.androidbase.exts.android.requestFullScreenBeforeSetContentView
 import com.leovp.androidbase.exts.android.saveRawResourceToFile
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.leoandroidbaseutil.R
@@ -23,7 +24,7 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
     private val decoderManager = DecoderVideoFileManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        requestFullScreen()
+        requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
         binding = ActivityPlayVideoBinding.inflate(layoutInflater).apply { setContentView(root) }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
@@ -54,8 +55,9 @@ class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        hideNavigationBar()
         super.onResume()
+        requestFullScreenAfterVisible()
+        hideNavigationBar(binding.root)
     }
 
     override fun onStop() {

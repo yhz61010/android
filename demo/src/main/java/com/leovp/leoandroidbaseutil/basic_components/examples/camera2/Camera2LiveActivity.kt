@@ -92,7 +92,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     override fun onResume() {
         super.onResume()
         requestFullScreenAfterVisible()
-        hideNavigationBar(findViewById(R.id.cameraFragment))
+        hideNavigationBar()
     }
 
     override fun onDestroy() {

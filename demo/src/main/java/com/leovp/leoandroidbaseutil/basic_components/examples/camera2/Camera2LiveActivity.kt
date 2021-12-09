@@ -10,7 +10,8 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.hideNavigationBar
-import com.leovp.androidbase.exts.android.requestFullScreen
+import com.leovp.androidbase.exts.android.requestFullScreenAfterVisible
+import com.leovp.androidbase.exts.android.requestFullScreenBeforeSetContentView
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -25,7 +26,7 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        requestFullScreen()
+        requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_camera2_live)
@@ -89,8 +90,9 @@ class Camera2LiveActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        hideNavigationBar()
         super.onResume()
+        requestFullScreenAfterVisible()
+        hideNavigationBar(findViewById(R.id.cameraFragment))
     }
 
     override fun onDestroy() {

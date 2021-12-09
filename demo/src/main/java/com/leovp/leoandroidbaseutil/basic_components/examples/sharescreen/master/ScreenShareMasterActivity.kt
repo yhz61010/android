@@ -425,7 +425,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
-        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot(screenRealWidth, screenRealHeight) }, 3000)
+        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot(getScreenRealWidth(), getScreenRealHeight()) }, 3000)
     }
 }
 

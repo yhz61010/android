@@ -2,7 +2,6 @@ package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.Application
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -20,6 +19,8 @@ import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.device.DeviceUtil
 import java.lang.reflect.Method
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -84,11 +85,11 @@ fun Context.getRealResolution(): Point {
     return size
 }
 
-val Activity.screenRealWidth get() = getRealResolution().x
+fun Context.getScreenRealWidth() = getRealResolution().x
 
-val Activity.screenRealHeight get() = getRealResolution().y
+fun Context.getScreenRealHeight() = getRealResolution().y
 
-val Application.screenAvailableHeight get() = getAvailableResolution().y
+fun Context.getScreenAvailableHeight() = getAvailableResolution().y
 
 val Context.statusBarHeight
     get() : Int {
@@ -207,7 +208,7 @@ fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
 val Context.screenRatio
     get(): Float {
         val p = getRealResolution()
-        return 1.0f * p.y / p.x
+        return 1.0f * max(p.x, p.y) / min(p.x, p.y)
     }
 
 val uuid: String = UUID.randomUUID().toString()

@@ -82,7 +82,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private lateinit var screenInfo: Point
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        requestFullScreen()
+        requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
         binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
@@ -168,8 +168,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     override fun onResume() {
-        hideNavigationBar()
         super.onResume()
+        requestFullScreenAfterVisible()
+        hideNavigationBar(binding.root)
     }
 
     override fun onDestroy() {

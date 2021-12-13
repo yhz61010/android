@@ -9,7 +9,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.androidbase.exts.android.getAvailableResolution
+import com.leovp.androidbase.exts.android.getRealResolution
+import com.leovp.androidbase.exts.android.navigationBarHeight
+import com.leovp.androidbase.exts.android.statusBarHeight
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.LogContext
 
 class MainActivity : BaseDemonstrationActivity() {
 
@@ -46,5 +52,7 @@ class MainActivity : BaseDemonstrationActivity() {
                 override fun onDenied(denied: MutableList<String>?, never: Boolean) {
                 }
             })
+
+        LogContext.log.e("real=${getRealResolution().toJsonString()} available=${getAvailableResolution().toJsonString()} statusbar=$statusBarHeight navigationbar=$navigationBarHeight")
     }
 }

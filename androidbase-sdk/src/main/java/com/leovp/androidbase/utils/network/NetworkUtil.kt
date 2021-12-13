@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.telephony.TelephonyManager
+import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.log_sdk.LogContext
 import java.io.BufferedReader
 import java.io.IOException
@@ -119,8 +120,7 @@ object NetworkUtil {
         val wifiScoreIn5: Int
         val rssi: Int
         if (getNetworkType(ctx) == ConnectivityManager.TYPE_WIFI) {
-            val wifiManager = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            val wi = wifiManager.connectionInfo
+            val wi = ctx.wifiManager.connectionInfo
             linkSpeed = wi.linkSpeed
             /* Rssi
              * 0 —— (-55)dBm        满格(4格)信号
@@ -160,8 +160,7 @@ object NetworkUtil {
      */
     @SuppressLint("HardwareIds", "MissingPermission")
     private fun getMacAddressBeforeAndroidM(ctx: Context): String {
-        val wifiMan = ctx.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val wifiInf = wifiMan.connectionInfo
+        val wifiInf = ctx.wifiManager.connectionInfo
         // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
         // Please check WifiInfo#DEFAULT_MAC_ADDRESS
         return if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress

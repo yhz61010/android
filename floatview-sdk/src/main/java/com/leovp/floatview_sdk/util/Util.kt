@@ -1,11 +1,11 @@
 package com.leovp.floatview_sdk.util
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Point
 import android.os.Build
 import android.provider.Settings
 import android.util.DisplayMetrics
+import android.view.WindowManager
 
 /**
  * Author: Michael Leo
@@ -15,17 +15,20 @@ import android.util.DisplayMetrics
 val Context.canDrawOverlays: Boolean
     get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
-/**
- * As of API 30(Android 11), you must use Activity context to retrieve screen real size
- */
-fun Activity.getRealResolution(): Point {
+fun Context.getRealResolution(): Point {
     val size = Point()
+    val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        this.display?.getRealSize(size)
+//        this.display?.getRealSize(size)
+        val bounds = windowManager.currentWindowMetrics.bounds
+        size.x = bounds.width()
+        size.y = bounds.height()
     } else {
-        val wm = windowManager
-        val display = wm.defaultDisplay
+        @Suppress("DEPRECATION")
+        val display = windowManager.defaultDisplay
         val displayMetrics = DisplayMetrics()
+
+        @Suppress("DEPRECATION")
         display.getRealMetrics(displayMetrics)
         size.x = displayMetrics.widthPixels
         size.y = displayMetrics.heightPixels
@@ -33,9 +36,9 @@ fun Activity.getRealResolution(): Point {
     return size
 }
 
-fun Activity.getAvailableResolution(): Point {
+fun Context.getAvailableResolution(): Point {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val wm = windowManager
+        val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val width = wm.currentWindowMetrics.bounds.width()
         val height = wm.currentWindowMetrics.bounds.height()
         Point(width, height)
@@ -55,9 +58,9 @@ fun Activity.getAvailableResolution(): Point {
     }
 }
 
-val Activity.screenRealWidth get() = getRealResolution().x
+val Context.screenRealWidth get() = getRealResolution().x
 
-val Activity.screenAvailableHeight get() = getAvailableResolution().y
+val Context.screenAvailableHeight get() = getAvailableResolution().y
 
 val Context.statusBarHeight
     get() : Int {

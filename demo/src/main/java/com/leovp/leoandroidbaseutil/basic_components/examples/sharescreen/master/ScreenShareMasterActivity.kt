@@ -156,7 +156,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 }
             }
         }
-        testTimer = Timer(true).apply { scheduleAtFixedRate(testTimerTask, 1000, 1000) }
+        testTimer = Timer(true).apply { schedule(testTimerTask, 1000, 1000) }
     }
 
     private fun createFloatView() {
@@ -219,11 +219,12 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
-                            (screenInfo.width * 0.7F / 16).toInt() * 16,
-                            (screenInfo.height * 0.7F / 16).toInt() * 16,
+                            (screenInfo.width * 0.8F / 16).toInt() * 16,
+                            (screenInfo.height * 0.8F / 16).toInt() * 16,
                             densityDpi
                         )
-//                        setting.fps = 20F
+                        setting.fps = 30F
+                        setting.bitrate = screenInfo.width * screenInfo.height * 2
 //                        setting.bitrate = setting.width * setting.height
                         // !!! Attention !!!
                         // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.

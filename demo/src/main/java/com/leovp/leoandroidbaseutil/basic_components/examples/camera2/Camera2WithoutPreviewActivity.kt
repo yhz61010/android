@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     companion object {
-        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL
+        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_HIGH
     }
 
     private lateinit var binding: ActivityCamera2WithoutPreviewBinding
@@ -105,10 +105,10 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
 //        camera2ComponentBuilder.previewInFullscreen = true
-                quality = Camera2ComponentHelper.BITRATE_LOW
+                quality = Camera2ComponentHelper.BITRATE_INSANE_HIGH
                 // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
-                cameraFps = Camera2ComponentHelper.CAMERA_FPS_LOW
-                videoFps = Camera2ComponentHelper.VIDEO_FPS_FREQUENCY_NORMAL
+                cameraFps = Camera2ComponentHelper.CAMERA_FPS_VERY_HIGH
+                videoFps = Camera2ComponentHelper.VIDEO_FPS_VERY_HIGH
                 iFrameInterval = 5
                 bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
                 build()

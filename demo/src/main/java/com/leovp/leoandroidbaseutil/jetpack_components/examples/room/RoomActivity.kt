@@ -1,5 +1,6 @@
 package com.leovp.leoandroidbaseutil.jetpack_components.examples.room
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -30,6 +31,7 @@ class RoomActivity : BaseDemonstrationActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
         val adapter = WordListAdapter(this)
         adapter.onItemClickListener = object : WordListAdapter.OnItemClickListener {
+            @SuppressLint("CheckResult")
             override fun onItemLongClick(view: View, position: Int) {
                 MaterialDialog(this@RoomActivity).show {
                     input(hint = "Input your word", prefill = view.findViewById<TextView>(R.id.textView).text.toString()) { _, text ->

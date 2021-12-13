@@ -195,7 +195,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             CPU Arch        : $cpuArch
             Supported ABIS  : ${supportedCpuArchs.contentToString()}
             Display         : $display
-            Screen          : ${screenSize.x}x${screenSize.y}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.x}x${availableSize.y})  (${availableSize.y}+$statusBarHeight+$navBarHeight=${availableSize.y + statusBarHeight + navBarHeight})
+            Screen          : ${screenSize.width}x${screenSize.height}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
             MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage: $externalStorageBytesInReadable
             Fingerprint     : ${Build.FINGERPRINT}
@@ -208,9 +208,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
                     slot1: ${getImei(ctx, 1) ?: "NA"}
             Device Features:
                     Full screen device        : ${ctx.isFullScreenDevice}
-                    Device has navigation bar : ${doesDeviceHasNavigationBar()}
-                    Navigation bar is showing : ${ctx.isNavigationBarShown} (PS: In full screen(AKA all screen) device, this value is always 'true'.)
-                    Navigation gesture enable : ${ctx.isNavigationGestureEnabled}
+                    Navigation bar is showing : ${ctx.isNavigationBarShown}
 
             Cost: ${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us 
             """.trimIndent()

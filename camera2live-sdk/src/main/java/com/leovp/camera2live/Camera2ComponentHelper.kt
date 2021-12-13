@@ -126,11 +126,11 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     // Camera2 API supported the MAX width and height
     private val cameraSupportedMaxPreviewWidth: Int by lazy {
         val screenSize = context.getAvailableResolution()
-        max(screenSize.x, screenSize.y)
+        max(screenSize.width, screenSize.height)
     }
     private val cameraSupportedMaxPreviewHeight: Int by lazy {
         val screenSize = context.getAvailableResolution()
-        min(screenSize.x, screenSize.y)
+        min(screenSize.width, screenSize.height)
     }
 
     /**

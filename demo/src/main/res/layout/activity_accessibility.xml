@@ -50,7 +50,7 @@
         app:layout_constraintStart_toEndOf="@+id/btnDemo1"
         app:layout_constraintTop_toTopOf="@+id/btnDemo1" />
 
-    <Switch
+    <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/sw1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -8,11 +8,11 @@ import android.content.ServiceConnection
 import android.content.res.Configuration
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.Point
 import android.media.MediaCodecInfo
 import android.net.Uri
 import android.os.*
 import android.provider.Settings
+import android.util.Size
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.*
@@ -79,7 +79,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private var testTimer: Timer? = null
     private var testTimerTask: TimerTask? = null
 
-    private lateinit var currentRealResolution: Point
+    private lateinit var currentRealResolution: Size
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
     private var bound: Boolean = false
@@ -219,8 +219,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
-                            (screenInfo.x * 0.7F / 16).toInt() * 16,
-                            (screenInfo.y * 0.7F / 16).toInt() * 16,
+                            (screenInfo.width * 0.7F / 16).toInt() * 16,
+                            (screenInfo.height * 0.7F / 16).toInt() * 16,
                             densityDpi
                         )
 //                        setting.fps = 20F
@@ -329,7 +329,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             }
         }
 
-        var clientScreenInfo: Point? = null
+        var clientScreenInfo: Size? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
@@ -339,8 +339,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (cmdBean.cmdId) {
                     CMD_TOUCH_EVENT -> {
                         val touchBean = cmdBean.touchBean!!
-                        touchBean.x = currentRealResolution.x / clientScreenInfo!!.x.toFloat() * touchBean.x
-                        touchBean.y = currentRealResolution.y / clientScreenInfo!!.y.toFloat() * touchBean.y
+                        touchBean.x = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * touchBean.x
+                        touchBean.y = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
                     CMD_TOUCH_DRAG -> EventBus.getDefault().post(cmdBean.touchBean!!)
@@ -362,8 +362,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         }
 
                         withContext(Dispatchers.Main) {
-                            val calX = currentRealResolution.x / clientScreenInfo!!.x.toFloat() * paintBean.x
-                            val calY = currentRealResolution.y / clientScreenInfo!!.y.toFloat() * paintBean.y
+                            val calX = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * paintBean.x
+                            val calY = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * paintBean.y
                             when (paintBean.touchType) {
                                 ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
                                     it.moveTo(calX, calY)
@@ -425,7 +425,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
-        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot(getScreenRealWidth(), getScreenRealHeight()) }, 3000)
+        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot(getScreenWidth(), getScreenRealHeight()) }, 3000)
     }
 }
 

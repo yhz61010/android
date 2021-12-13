@@ -6,11 +6,13 @@
         <entry key="aidl-client/src/main/res/layout/activity_main.xml" value="0.3541666666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_error.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
+        <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_idle.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_upload.xml" value="0.5927083333333333" />
+        <entry key="demo/src/main/res/layout/activity_accessibility.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_app_settings.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_audio.xml" value="0.67" />
         <entry key="demo/src/main/res/layout/activity_camera2_live.xml" value="0.5765625" />
@@ -18,6 +20,7 @@
         <entry key="demo/src/main/res/layout/activity_circle_progressbar.xml" value="0.67" />
         <entry key="demo/src/main/res/layout/activity_clipboard.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_device_info.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_finger_paint.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_new_word.xml" value="0.3351851851851852" />
         <entry key="demo/src/main/res/layout/activity_orientation.xml" value="0.5625" />

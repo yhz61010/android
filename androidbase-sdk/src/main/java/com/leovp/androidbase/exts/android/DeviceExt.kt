@@ -5,19 +5,18 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
-import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.util.Size
 import android.view.OrientationEventListener
 import android.view.Surface
+import android.view.WindowInsets
 import androidx.annotation.IntRange
 import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.device.DeviceUtil
-import java.lang.reflect.Method
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -45,12 +44,22 @@ val Context.isSamsung: Boolean get() = VENDOR_SAMSUNG.equals(DeviceUtil.getInsta
 val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
 val Context.density get(): Float = this.resources.displayMetrics.density
 
-fun Context.getAvailableResolution(): Point {
+/**
+ * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
+ */
+fun Context.getAvailableResolution(): Size {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val wm = windowManager
-        val width = wm.currentWindowMetrics.bounds.width()
-        val height = wm.currentWindowMetrics.bounds.height()
-        Point(width, height)
+        val metrics = windowManager.currentWindowMetrics
+        // Gets all excluding insets
+        val windowInsets = metrics.windowInsets
+        val insets = windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+
+        val insetsWidth = insets.right + insets.left
+        val insetsHeight = insets.top + insets.bottom
+
+        // Legacy size that Display#getSize reports
+        val bounds = metrics.bounds
+        Size(bounds.width() - insetsWidth, bounds.height() - insetsHeight)
     } else {
 //            val display = wm.defaultDisplay
 //            val size = Point()
@@ -61,35 +70,32 @@ fun Context.getAvailableResolution(): Point {
 //            val displayMetrics = DisplayMetrics()
 //            display.getMetrics(displayMetrics)
 //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
-
         val displayMetrics = resources.displayMetrics
-        return runCatching { Point(displayMetrics.widthPixels, displayMetrics.heightPixels) }.getOrDefault(Point())
+        return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
     }
 }
+
+fun Context.getRealResolution(): Size {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//        this.display?.getRealSize(size)
+        val bounds = windowManager.currentWindowMetrics.bounds
+        Size(bounds.width(), bounds.height())
+    } else {
+        val displayMetrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+        Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+    }
+}
+
+fun Context.getScreenWidth() = getRealResolution().width
+
+fun Context.getScreenRealHeight() = getRealResolution().height
 
 /**
- * As of API 30(Android 11), you must use Activity context to retrieve screen real size
+ * This height includes the height of status bar but excludes the height of navigation bar.
  */
-fun Context.getRealResolution(): Point {
-    val size = Point()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        this.display?.getRealSize(size)
-    } else {
-        val wm = windowManager
-        val display = wm.defaultDisplay
-        val displayMetrics = DisplayMetrics()
-        display.getRealMetrics(displayMetrics)
-        size.x = displayMetrics.widthPixels
-        size.y = displayMetrics.heightPixels
-    }
-    return size
-}
-
-fun Context.getScreenRealWidth() = getRealResolution().x
-
-fun Context.getScreenRealHeight() = getRealResolution().y
-
-fun Context.getScreenAvailableHeight() = getAvailableResolution().y
+fun Context.getScreenAvailableHeight() = getAvailableResolution().height
 
 val Context.statusBarHeight
     get() : Int {
@@ -119,16 +125,16 @@ val Context.isFullScreenDevice
  */
 //    fun getTitleHeight(activity: Activity) = activity.window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
 
-val Context.isNavigationGestureEnabled
-    @SuppressLint("ObsoleteSdkInt")
-    get(): Boolean {
-        val value = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            Settings.System.getInt(contentResolver, getNavigationBarName(), 0)
-        } else {
-            Settings.Global.getInt(contentResolver, getNavigationBarName(), 0)
-        }
-        return value != 0
-    }
+//val Context.isNavigationGestureEnabled
+//    @SuppressLint("ObsoleteSdkInt")
+//    get(): Boolean {
+//        val value = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+//            Settings.System.getInt(contentResolver, getNavigationBarName(), 0)
+//        } else {
+//            Settings.Global.getInt(contentResolver, getNavigationBarName(), 0)
+//        }
+//        return value != 0
+//    }
 
 private fun Context.getNavigationBarName(): String {
     val brand = Build.BRAND
@@ -143,50 +149,76 @@ private fun Context.getNavigationBarName(): String {
 }
 
 /**
- * In full screen(AKA all screen) device, this method will return `true`.
+ *
  */
 val Context.isNavigationBarShown
     get() : Boolean {
-//        val view = activity.findViewById<View>(android.R.id.navigationBarBackground) ?: return false
-//        val visible = view.visibility
-//        return !(visible == View.GONE || visible == View.INVISIBLE)
-        val resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android")
-        return if (resourceId > 0) {
-            resources.getBoolean(resourceId)
-        } else false
+        return getScreenRealHeight() - getScreenAvailableHeight() > 0
+////        val view = activity.findViewById<View>(android.R.id.navigationBarBackground) ?: return false
+////        val visible = view.visibility
+////        return !(visible == View.GONE || visible == View.INVISIBLE)
+//
+//        // In full screen(AKA all screen) device, this method will return `true`.
+//        val resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android")
+//        return if (resourceId > 0) {
+//            resources.getBoolean(resourceId)
+//        } else false
     }
 
-@SuppressLint("PrivateApi")
-fun doesDeviceHasNavigationBar(): Boolean {
-    return runCatching {
-        // IWindowManager windowManagerService = WindowManagerGlobal.getWindowManagerService();
-        val windowManagerGlobalClass = Class.forName("android.view.WindowManagerGlobal")
-        val getWmServiceMethod: Method = windowManagerGlobalClass.getDeclaredMethod("getWindowManagerService")
-        getWmServiceMethod.isAccessible = true
-        // getWindowManagerService is a static method, so invoke with null
-        val iWindowManager: Any = getWmServiceMethod.invoke(null)!!
+//@SuppressLint("PrivateApi", "DiscouragedPrivateApi")
+//fun doesDeviceHasNavigationBar(): Boolean {
+//    return runCatching {
+//        // IWindowManager windowManagerService = WindowManagerGlobal.getWindowManagerService();
+//        val windowManagerGlobalClass = Class.forName("android.view.WindowManagerGlobal")
+//        val getWmServiceMethod: Method = windowManagerGlobalClass.getDeclaredMethod("getWindowManagerService")
+//        getWmServiceMethod.isAccessible = true
+//        // getWindowManagerService is a static method, so invoke with null
+//        val iWindowManager: Any = getWmServiceMethod.invoke(null)!!
+//
+//        val iWindowManagerClass: Class<*> = iWindowManager.javaClass
+//        val hasNavBarMethod: Method = iWindowManagerClass.getDeclaredMethod("hasNavigationBar")
+//        hasNavBarMethod.isAccessible = true
+//        hasNavBarMethod.invoke(iWindowManager) as Boolean
+//    }.getOrDefault(false)
+//}
 
-        val iWindowManagerClass: Class<*> = iWindowManager.javaClass
-        val hasNavBarMethod: Method = iWindowManagerClass.getDeclaredMethod("hasNavigationBar")
-        hasNavBarMethod.isAccessible = true
-        hasNavBarMethod.invoke(iWindowManager) as Boolean
-    }.getOrDefault(false)
-}
-
+/**
+ * In some devices(Like Google Pixel), although I've selected [Gesture navigation],
+ * the real height of navigation bar is still the same as the height of [2/3-button navigation].
+ * In order to get the exactly height of navigation bar, I can not use the value which get from `navigation_bar_height`.
+ *
+ * ```
+ * ⎸             ⎸
+ * ⎸             ⎸ ⎽⎽
+ * ⎸     ⎻       ⎸ ⎽⎽   The height of navigation bar in [Gesture navigation] mode in some devices.
+ *
+ *
+ * ⎸             ⎸ ⎺↓⎺
+ * ⎸             ⎸        The height of navigation bar in [Gesture navigation] mode in some devices.
+ * ⎸     ⎻       ⎸ ⎽↑⎽
+ *
+ *
+ * ⎸             ⎸ ⎺↓⎺
+ * ⎸ ◀︎  ●   ◼   ⎸        The height of navigation bar in [2/3-button navigation] mode in some devices.
+ * ⎸             ⎸ ⎽↑⎽
+ * ```
+ */
 val Context.navigationBarHeight
     get() : Int {
-        var result = 0
-        val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = this.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
+//        var result = 0
+//        val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+//        if (resourceId > 0) {
+//            result = this.resources.getDimensionPixelSize(resourceId)
+//        }
+//        return result
+
+        return getScreenRealHeight() - getScreenAvailableHeight()
     }
 
 fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
     val screenSize = act.getRealResolution()
-    val screenWidth = screenSize.x
-    val screenHeight = screenSize.y
+    val screenWidth = screenSize.width
+    val screenHeight = screenSize.height
     val left: Int
     val top: Int
     val right: Int
@@ -208,7 +240,7 @@ fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
 val Context.screenRatio
     get(): Float {
         val p = getRealResolution()
-        return 1.0f * max(p.x, p.y) / min(p.x, p.y)
+        return 1.0f * max(p.width, p.height) / min(p.width, p.height)
     }
 
 val uuid: String = UUID.randomUUID().toString()

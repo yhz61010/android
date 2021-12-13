@@ -277,7 +277,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 20
+    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 30
 
     // ============================================
     private var webSocketClient: WebSocketClient? = null
@@ -443,9 +443,21 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                         foundCsd.set(true)
                         queue.offer(dataArray)
                         LogContext.log.w(ITAG, "csd=${dataArray.toHexStringLE()}")
-                        val vps = H265Util.getVps(dataArray)
-                        val sps = H264Util.getSps(dataArray)
-                        val pps = H264Util.getPps(dataArray)
+                        val vps: ByteArray?
+                        val sps: ByteArray?
+                        val pps: ByteArray?
+                        when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
+                            ScreenRecordMediaCodecStrategy.EncodeType.H264 -> {
+                                vps = null
+                                sps = H264Util.getSps(dataArray)
+                                pps = H264Util.getPps(dataArray)
+                            }
+                            ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
+                                vps = H265Util.getVps(dataArray)
+                                sps = H265Util.getSps(dataArray)
+                                pps = H265Util.getPps(dataArray)
+                            }
+                        }
                         LogContext.log.w(ITAG, "initDecoder with vps=${vps?.toHexStringLE()} sps=${sps?.toHexStringLE()} pps=${pps?.toHexStringLE()}")
                         if (sps != null && pps != null) {
                             initDecoder(vps, sps, pps)

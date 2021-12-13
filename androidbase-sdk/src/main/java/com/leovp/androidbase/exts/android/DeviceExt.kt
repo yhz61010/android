@@ -149,7 +149,9 @@ private fun Context.getNavigationBarName(): String {
 }
 
 /**
- *
+ * So far, the only valid way to check whether the navigation bar is shown is using the difference between screen real height
+ * and available height.
+ * This is the only way that I've known works.
  */
 val Context.isNavigationBarShown
     get() : Boolean {

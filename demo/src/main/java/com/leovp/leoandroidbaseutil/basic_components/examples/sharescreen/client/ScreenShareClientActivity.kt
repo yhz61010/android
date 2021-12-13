@@ -4,12 +4,12 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Size
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
@@ -79,7 +79,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var sps: ByteArray? = null
     private var pps: ByteArray? = null
 
-    private lateinit var screenInfo: Point
+    private lateinit var screenInfo: Size
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
@@ -145,7 +145,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val ratio = screenInfo.x * 1.0F / screenInfo.y
+        val ratio = screenInfo.width * 1.0F / screenInfo.height
 //        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
         val newWidth: Int
         val newHeight: Int
@@ -155,13 +155,13 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 //            layoutParams.height = 600
 //            binding.surfaceView.layoutParams = layoutParams
 
-            newWidth = (screenInfo.x * ratio).toInt()
-            newHeight = screenInfo.x
+            newWidth = (screenInfo.width * ratio).toInt()
+            newHeight = screenInfo.width
             // If remote screen is still in portrait, do like this to preserve the video dimension.
             LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
         } else {
-            newWidth = screenInfo.x
-            newHeight = screenInfo.y
+            newWidth = screenInfo.width
+            newHeight = screenInfo.height
             LogContext.log.w("Running in PORTRAIT ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
         }
         binding.surfaceView.holder.setFixedSize(newWidth, newHeight)
@@ -196,7 +196,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
-            }, screenInfo.x, screenInfo.y
+            }, screenInfo.width, screenInfo.height
         )
 //        val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
 //        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
@@ -320,7 +320,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             return netty.executeCommand(command, "Acquire I Frame", "TriggerIFrame")
         }
 
-        fun sendDeviceScreenInfoToServer(point: Point): Boolean {
+        fun sendDeviceScreenInfoToServer(point: Size): Boolean {
             val paintArray = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point, null).toJsonString().encodeToByteArray()
 
             val cId = CMD_DEVICE_SCREEN_INFO.asByteAndForceToBytes()
@@ -400,7 +400,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     }
 
     @Keep
-    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Point?, val touchBean: TouchBean?)
+    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Size?, val touchBean: TouchBean?)
 
     @Keep
     data class PaintBean(

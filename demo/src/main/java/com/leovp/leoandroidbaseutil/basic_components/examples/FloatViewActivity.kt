@@ -108,7 +108,7 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             })
             .show()
 
-        binding.rgSticky.setOnCheckedChangeListener { group, checkedId ->
+        binding.rgSticky.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.rbStickyNone -> FloatView.setStickyEdge(StickyEdge.NONE, "f1")
                 R.id.rbStickyLeft -> FloatView.setStickyEdge(StickyEdge.LEFT, "f1")
@@ -118,7 +118,7 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             }
         }
 
-        binding.rgAutoDock.setOnCheckedChangeListener { group, checkedId ->
+        binding.rgAutoDock.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.rbAutoDockNone -> FloatView.setAutoDock(AutoDock.NONE, "f2")
                 R.id.rbAutoDockLeft -> FloatView.setAutoDock(AutoDock.LEFT, "f2")
@@ -131,14 +131,14 @@ class FloatViewActivity : BaseDemonstrationActivity() {
             }
         }
 
-        binding.rgEnableDrag.setOnCheckedChangeListener { group, checkedId ->
+        binding.rgEnableDrag.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.rbEnableDrag -> FloatView.setEnableDrag(true, "f1")
                 R.id.rbDisableDrag -> FloatView.setEnableDrag(false, "f1")
             }
         }
 
-        binding.rgTouchable.setOnCheckedChangeListener { group, checkedId ->
+        binding.rgTouchable.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.rbTouchable -> {
                     FloatView.setTouchable(true, "floatView_touchable")

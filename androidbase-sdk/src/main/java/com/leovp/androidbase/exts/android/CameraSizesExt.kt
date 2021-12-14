@@ -16,7 +16,7 @@
 
 package com.leovp.androidbase.exts.android
 
-import android.graphics.Point
+import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
@@ -36,10 +36,9 @@ class SmartSize(width: Int, height: Int) {
 val SIZE_1080P: SmartSize = SmartSize(1920, 1080)
 
 /** Returns a [SmartSize] object for the given [Display] */
-fun getDisplaySmartSize(display: Display): SmartSize {
-    val outPoint = Point()
-    display.getRealSize(outPoint)
-    return SmartSize(outPoint.x, outPoint.y)
+fun getDisplaySmartSize(ctx: Context): SmartSize {
+    val outSize = ctx.getRealResolution()
+    return SmartSize(outSize.width, outSize.height)
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
@@ -91,11 +90,11 @@ fun <T> getPreviewOutputSize(
 }
 
 fun <T> getPreviewOutputSize(
-    display: Display,
+    ctx: Context,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
     format: Int? = null
 ): Size {
-    val screenSize = getDisplaySmartSize(display)
+    val screenSize = getDisplaySmartSize(ctx)
     return getPreviewOutputSize(Size(screenSize.short, screenSize.long), characteristics, targetClass, format)
 }

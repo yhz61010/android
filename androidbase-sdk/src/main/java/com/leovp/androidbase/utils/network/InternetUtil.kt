@@ -15,7 +15,7 @@ object InternetUtil {
     fun getIpsByName(host: String?): List<String> {
         return try {
             val ipAddressArr: ArrayList<String> = ArrayList()
-            InetAddress.getAllByName(host?.trim())?.forEach { inetAddr -> ipAddressArr.add(inetAddr.hostAddress) }
+            InetAddress.getAllByName(host?.trim())?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
             ipAddressArr
         } catch (e: Exception) {
             LogContext.log.e(TAG, "getIpsByName error=${e.message}")

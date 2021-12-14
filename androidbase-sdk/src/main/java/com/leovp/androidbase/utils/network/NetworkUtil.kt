@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.telephony.TelephonyManager
+import com.leovp.androidbase.exts.android.connectivityManager
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.log_sdk.LogContext
 import java.io.BufferedReader
@@ -45,7 +46,7 @@ object NetworkUtil {
      * ```
      */
     @SuppressLint("MissingPermission")
-    fun getNetworkInfo(ctx: Context): NetworkInfo? = (ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).activeNetworkInfo
+    fun getNetworkInfo(ctx: Context): NetworkInfo? = ctx.connectivityManager.activeNetworkInfo
 
     /**
      * Returns the latency to a given server in milliseconds by issuing a ping command.

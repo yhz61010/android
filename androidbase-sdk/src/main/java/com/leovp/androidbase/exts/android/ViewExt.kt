@@ -6,6 +6,9 @@ import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 /**
  * Author: Michael Leo
@@ -13,13 +16,13 @@ import androidx.appcompat.app.AlertDialog
  */
 
 /** Combination of all flags required to put activity into immersive mode */
-const val FLAGS_FULLSCREEN =
-    View.SYSTEM_UI_FLAG_LOW_PROFILE or
-            View.SYSTEM_UI_FLAG_FULLSCREEN or
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//const val FLAGS_FULLSCREEN =
+//    View.SYSTEM_UI_FLAG_LOW_PROFILE or
+//            View.SYSTEM_UI_FLAG_FULLSCREEN or
+//            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+//            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+//            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 
 /** Milliseconds used for UI animations */
 const val ANIMATION_FAST_MILLIS = 50L
@@ -83,20 +86,41 @@ fun View.simulateClick(interval: Long = ANIMATION_FAST_MILLIS) {
 
 /** Same as [AlertDialog.show] but setting immersive mode in the dialog's window */
 fun AlertDialog.showImmersive() {
+    val win = window ?: return
     // Set the dialog to not focusable
-    window?.setFlags(
+    win.setFlags(
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
     )
 
+
     // Make sure that the dialog's window is in full screen
-    window?.decorView?.systemUiVisibility = FLAGS_FULLSCREEN
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        // https://stackoverflow.com/a/64828028
+        WindowCompat.setDecorFitsSystemWindows(win, false)
+        WindowInsetsControllerCompat(win, win.decorView).let { controller ->
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+            controller.hide(WindowInsetsCompat.Type.navigationBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    } else {
+        // https://blog.csdn.net/c15522627353/article/details/52452490
+        // https://blog.csdn.net/lyabc123456/article/details/88683425
+        // Always hide virtual navigation
+        @Suppress("DEPRECATION")
+        win.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+    }
 
     // Show the dialog while still in immersive mode
     show()
 
     // Set the dialog to focusable again
-    window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+    win.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
 }
 
 val Context.canDrawOverlays: Boolean

@@ -35,7 +35,7 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
             return
         }
 
-        //We listen to two intents.  The new outgoing call only tells us of an outgoing call.  We use it to get the number.
+        // We listen to two intents. The new outgoing call only tells us of an outgoing call. We use it to get the number.
         if (intent.action == Intent.ACTION_NEW_OUTGOING_CALL) {
             savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER)
         } else {

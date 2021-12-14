@@ -15,7 +15,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Process
 import android.util.TypedValue
-import android.view.inputmethod.InputMethodManager
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.log_sdk.LogContext
 import java.io.File
@@ -191,15 +190,15 @@ fun closeAndroidPDialog() {
 
 // ============================================================================
 
-fun openSoftKeyboard(imm: InputMethodManager) {
+fun Activity.openSoftKeyboard() {
 //    val imm = app.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
+//    imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
+    inputMethodManager.showSoftInput(window.decorView, 0)
 }
 
 fun Activity.closeSoftKeyboard() {
     val view = this.window.peekDecorView()
     if (view != null) {
-        val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
     }
 }

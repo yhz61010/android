@@ -53,7 +53,7 @@ class H265UtilTest {
         Assert.assertEquals(H265Util.NALU_TYPE_PPS, naluPps)
 
         val naluIdr = H265Util.getNaluType(idrByteArray)
-        Assert.assertEquals(H265Util.NALU_TYPE_IDR, naluIdr)
+        Assert.assertEquals(H265Util.NALU_TYPE_IDR_W_RADL, naluIdr)
 
         val naluIdrNLP = H265Util.getNaluType(idrNLPByteArray)
         Assert.assertEquals(H265Util.NALU_TYPE_IDR_N_LP, naluIdrNLP)

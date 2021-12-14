@@ -7,6 +7,33 @@ import com.leovp.min_base_sdk.toHexString
 
 
 /**
+ * NALU类型，将其转为二进制数据后，解读顺序为从左往右，如下:
+ *
+ * +---------------+
+ * |0|1|2|3|4|5|6|7|
+ * +-+-+-+-+-+-+-+-+
+ * |F|NRI| Type    |
+ * +---------------+
+ *
+ *（1）第1位禁止位，值为1表示语法出错
+ *（2）第2~3位为参考级别。重要级别，0b11(3)表示非常重要。
+ *（3）第4~8为是nal单元类型
+ * 示例1： 0x67(0110 0111)(103)
+ * 从左往右4-8位为0 0111，转为十进制7，7对应序列参数集 NALU_TYPE_SPS(序列参数集)(Sequence parameter set)
+ *
+ * 示例2： 0x68(0110 1000)(104)
+ * 从左往右4-8位为0 1000，转为十进制8，8对应序列参数集 NALU_TYPE_PPS(图像参数集)(Picture parameter set)
+ *
+ * 示例3： 0x65(0110 0101)(101)
+ * 从左往右4-8位为0 0101，转为十进制5，5对应 NALU_TYPE_IDR 图像中的片(I帧)
+ *
+ * 示例4： 0x41(0100 0001)(65)
+ * 从左往右4-8位为0 0001，转为十进制1，1对应非 NALU_TYPE_IDR 图像中的片(P帧 or B帧)
+ *
+ * NALU类型 & 0001 1111(0x1F)(31) = 5 即 NALU类型 & 31(十进制) = 5
+ *
+ * https://blog.csdn.net/tantion/article/details/82703228
+ *
  * Author: Michael Leo
  * Date: 19-10-29 下午2:54
  */
@@ -133,31 +160,6 @@ object H264Util {
             LogContext.log.d(TAG, "Not valid H264 data.")
             -1
         } else {
-            // https://blog.csdn.net/tantion/article/details/82703228
-            // NALU类型，将其转为二进制数据后，解读顺序为从左往右，如下:
-            //
-            // +---------------+
-            // |0|1|2|3|4|5|6|7|
-            // +-+-+-+-+-+-+-+-+
-            // |F|NRI| Type    |
-            // +---------------+
-            //
-            //（1）第1位禁止位，值为1表示语法出错
-            //（2）第2~3位为参考级别。重要级别，0b11(3)表示非常重要。
-            //（3）第4~8为是nal单元类型
-            // 示例1： 0x67(0110 0111)(103)
-            // 从左往右4-8位为0 0111，转为十进制7，7对应序列参数集 NALU_TYPE_SPS(序列参数集)(Sequence parameter set)
-            //
-            // 示例2： 0x68(0110 1000)(104)
-            // 从左往右4-8位为0 1000，转为十进制8，8对应序列参数集 NALU_TYPE_PPS(图像参数集)(Picture parameter set)
-            //
-            // 示例3： 0x65(0110 0101)(101)
-            // 从左往右4-8位为0 0101，转为十进制5，5对应 NALU_TYPE_IDR 图像中的片(I帧)
-            //
-            // 示例4： 0x41(0100 0001)(65)
-            // 从左往右4-8位为0 0001，转为十进制1，1对应非 NALU_TYPE_IDR 图像中的片(P帧)
-            //
-            // NALU类型 & 0001 1111(0x1F)(31) = 5 即 NALU类型 & 31(十进制) = 5
             val nalu = data[4]
             nalu.toInt() and 0x1F
         }
@@ -166,17 +168,17 @@ object H264Util {
     fun getNaluType(naluByte: Byte): Int = naluByte.toInt() and 0x1F
 
     @Suppress("unused")
-    fun getNaluTypeInStr(naluType: Int): String {
+    fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
             NALU_TYPE_SPS -> "SPS"
             NALU_TYPE_PPS -> "PPS"
             NALU_TYPE_IDR -> "I"
-            NALU_TYPE_NONE_IDR -> "P"
+            NALU_TYPE_NONE_IDR -> "B/P"
             else -> "Unknown"
         }
     }
 
-    fun getNaluTypeInStr(data: ByteArray): String = getNaluTypeInStr(getNaluType(data))
+    fun getNaluTypeName(data: ByteArray): String = getNaluTypeName(getNaluType(data))
 
     fun getAvcCodec(encoder: Boolean = true): List<MediaCodecInfo> = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
 }

@@ -68,7 +68,7 @@ import com.leovp.min_base_sdk.toHexString
  * 00 00 00 01 28 01  nal_unit_type 值为 20，IDR_N_LP 属于 IDR picture
  *                    nal_unit_type 值为 21, CRA_NUT 属于 RAP picture
  *
- * 00 00 00 01 02 01  nal_unit_type 值为  1，P 语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
+ * 00 00 00 01 02 01  nal_unit_type 值为 1，P 语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
  * ```
  *
  * According to some articles, NALU type from 0~9 indicates P frame(NOT verified), 16~23 indicates I frame(verified).
@@ -151,8 +151,7 @@ object H265Util {
     const val NALU_TYPE_IDR_W_RADL = 19 // 0x13
     const val NALU_TYPE_IDR_N_LP = 20 // 0x14
     const val NALU_TYPE_CRA_NUT = 21 // 0x15
-
-    const val NALU_TYPE_P = 1 // 0x02
+    // 22(RSV_IRAP_VCL22) and 23(RSV_IRAP_VCL23) Reserved IRAP VCL NAL unit types
 
     fun isIdrFrame(data: ByteArray): Boolean {
         return (16..23).contains(getNaluType(data))

@@ -55,14 +55,37 @@ import com.leovp.min_base_sdk.toHexString
  * NAL unit header and in the NAL unit payload data.
  *
  * ```hexadecimal
- * 00 00 00 01 40 01  nal_unit_type 值为 32， VPS 语义为视频参数集
- * 00 00 00 01 42 01  nal_unit_type 值为 33， SPS 语义为序列参数集
- * 00 00 00 01 44 01  nal_unit_type 值为 34， PPS 语义为图像参数集
- * 00 00 00 01 4E 01  nal_unit_type 值为 39， SEI 语义为补充增强信息
- * 00 00 00 01 26 01  nal_unit_type 值为 19， IDR 语义为可能有 RADL 图像的 IDR 图像的 SS(Slice Segment) 编码数据
- * 00 00 00 01 28 01  nal_unit_type 值为 20， IDR_N_LP
- * 00 00 00 01 02 01  nal_unit_type 值为  1， P   语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
+ * 00 00 00 01 40 01  nal_unit_type 值为 32，VPS 语义为视频参数集 (Video Parameter Set)
+ * 00 00 00 01 42 01  nal_unit_type 值为 33，SPS 语义为序列参数集 (Sequence Parameter Set)
+ * 00 00 00 01 44 01  nal_unit_type 值为 34，PPS 语义为图像参数集 (Picture Parameter Set)
+ * 00 00 00 01 4E 01  nal_unit_type 值为 39，SEI 语义为补充增强信息 (Supplemental Enhancement Information)
+ *
+ * NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
+ *                    nal_unit_type 值为 16, BLA_W_LP 属于 IRAP picture (Check comments below)
+ *                    nal_unit_type 值为 17, BLA_W_RADL 属于 IRAP picture (Check comments below)
+ *                    nal_unit_type 值为 18, BLA_N_LP 属于 IRAP picture (Check comments below)
+ * 00 00 00 01 26 01  nal_unit_type 值为 19，IDR_W_RADL 属于 IDR picture 语义为可能有 RADL 图像的 IDR 图像的 SS(Slice Segment) 编码数据
+ * 00 00 00 01 28 01  nal_unit_type 值为 20，IDR_N_LP 属于 IDR picture
+ *                    nal_unit_type 值为 21, CRA_NUT 属于 RAP picture
+ *
+ * 00 00 00 01 02 01  nal_unit_type 值为  1，P 语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
  * ```
+ *
+ * According to some articles, NALU type from 0~9 indicates P frame(NOT verified), 16~23 indicates I frame(verified).
+ *
+ * BLA access unit: An access unit in which the coded picture is a BLA picture.
+ * BLA picture: An IRAP picture for which each VCL NAL unit has nal_unit_type equal to BLA_W_LP, BLA_W_RADL, or BLA_N_LP.
+ *
+ * Informative note: An IRAP access unit may be an IDR access unit, a BLA access unit, or a CRA access unit.
+ *
+ * CRA access unit: An access unit in which the coded picture is a CRA picture.
+ * CRA picture: A RAP picture for which each VCL NAL unit has nal_unit_type equal to CRA_NUT.
+ * IDR access unit: An access unit in which the coded picture is an IDR picture.
+ * IDR picture: A RAP picture for which each VCL NAL unit has nal_unit_type equal to IDR_W_RADL or IDR_N_LP.
+ * IRAP access unit: An access unit in which the coded picture is an IRAP picture.
+ * IRAP picture: A coded picture for which each VCL NAL unit has nal_unit_type in the range of BLA_W_LP (16) to RSV_IRAP_VCL23 (23), inclusive.
+ * [Reference](https://datatracker.ietf.org/doc/html/rfc7798#page-16)
+ *
  *
  * Example:
  * 0x40 0x01 = 0b 0100 0000 0000 0001
@@ -97,7 +120,7 @@ import com.leovp.min_base_sdk.toHexString
  * LayerId=0
  * TID=1
  *
- * According to some articles(Not verified), NALU type from 0~9 indicates P frame, 16~21 indicates I frame.
+ * https://blog.csdn.net/DittyChen/article/details/87798547
  *
  * Author: Michael Leo
  * Date: 2021/5/13 3:21 PM
@@ -110,12 +133,22 @@ object H265Util {
     const val NALU_TYPE_SPS = 33 // 0x21
     const val NALU_TYPE_PPS = 34 // 0x22
     const val NALU_TYPE_SEI = 39 // 0x27
-    const val NALU_TYPE_IDR = 19 // 0x13
+
+    const val NALU_TYPE_BLA_W_LP = 16 // 0x10
+    const val NALU_TYPE_BLA_W_RADL = 17 // 0x11
+    const val NALU_TYPE_BLA_N_LP = 18 // 0x12
+    const val NALU_TYPE_IDR_W_RADL = 19 // 0x13
     const val NALU_TYPE_IDR_N_LP = 20 // 0x14
+    const val NALU_TYPE_CRA_NUT = 21 // 0x15
+
+    const val NALU_TYPE_P = 1 // 0x02
 
     fun isIdrFrame(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_IDR // 19
-                || getNaluType(data) == NALU_TYPE_IDR_N_LP // 20
+        return (16..23).contains(getNaluType(data))
+    }
+
+    fun isPFrame(data: ByteArray): Boolean {
+        return (0..9).contains(getNaluType(data))
     }
 
     fun isVps(data: ByteArray): Boolean {
@@ -128,6 +161,10 @@ object H265Util {
 
     fun isPps(data: ByteArray): Boolean {
         return getNaluType(data) == NALU_TYPE_PPS // 34
+    }
+
+    fun isSei(data: ByteArray): Boolean {
+        return getNaluType(data) == NALU_TYPE_SEI // 39
     }
 
     /**
@@ -279,19 +316,32 @@ object H265Util {
     fun getNaluType(naluByte: Byte) = (naluByte.toInt() and 0x7E) shr 1
 
     @Suppress("unused")
-    fun getNaluTypeInStr(naluType: Int): String {
+    fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_VPS -> "VPS"
-            NALU_TYPE_SPS -> "SPS"
-            NALU_TYPE_PPS -> "PPS"
-            NALU_TYPE_IDR -> "I"
-            NALU_TYPE_IDR_N_LP -> "IDR_N_LP"
-            NALU_TYPE_SEI -> "SEI"
+            NALU_TYPE_VPS -> "VPS" // 32
+            NALU_TYPE_SPS -> "SPS" // 33
+            NALU_TYPE_PPS -> "PPS" // 34
+            NALU_TYPE_SEI -> "SEI" // 39
+
+            // NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
+            NALU_TYPE_BLA_W_LP -> "BLA_W_LP" // 16
+            NALU_TYPE_BLA_W_RADL -> "BLA_W_RADL" // 17
+            NALU_TYPE_BLA_N_LP -> "BLA_N_LP" // 18
+            NALU_TYPE_IDR_W_RADL -> "IDR_W_RADL" // 19
+            NALU_TYPE_IDR_N_LP -> "IDR_N_LP" // 20
+            NALU_TYPE_CRA_NUT -> "CRA_NUT" // 21
+
             else -> "Unknown"
         }
     }
 
-    fun getNaluTypeInStr(data: ByteArray): String = getNaluTypeInStr(getNaluType(data))
+    fun getNaluTypeName(data: ByteArray): String = getNaluTypeName(getNaluType(data))
+
+    fun getNaluTypeSimpleName(data: ByteArray): String {
+        if (isIdrFrame(data)) return "I"
+        if (isPFrame(data)) return "P"
+        return getNaluTypeName(data)
+    }
 
     fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

@@ -129,6 +129,17 @@ object H265Util {
     private const val TAG = "H265Util"
     private const val DEBUG = false
 
+    const val NALU_TRAIL_N = 0
+    const val NALU_TRAIL_R = 1
+    const val NALU_TSA_N = 2
+    const val NALU_TSA_R = 3
+    const val NALU_STSA_N = 4
+    const val NALU_STSA_R = 5
+    const val NALU_RADL_N = 6
+    const val NALU_RADL_R = 7
+    const val NALU_RASL_N = 8
+    const val NALU_RASL_R = 9
+
     const val NALU_TYPE_VPS = 32 // 0x20
     const val NALU_TYPE_SPS = 33 // 0x21
     const val NALU_TYPE_PPS = 34 // 0x22
@@ -324,12 +335,23 @@ object H265Util {
             NALU_TYPE_SEI -> "SEI" // 39
 
             // NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
-            NALU_TYPE_BLA_W_LP -> "BLA_W_LP" // 16
-            NALU_TYPE_BLA_W_RADL -> "BLA_W_RADL" // 17
-            NALU_TYPE_BLA_N_LP -> "BLA_N_LP" // 18
+            NALU_TYPE_BLA_W_LP -> "I_BLA_W_LP" // 16
+            NALU_TYPE_BLA_W_RADL -> "I_BLA_W_RADL" // 17
+            NALU_TYPE_BLA_N_LP -> "I_BLA_N_LP" // 18
             NALU_TYPE_IDR_W_RADL -> "IDR_W_RADL" // 19
             NALU_TYPE_IDR_N_LP -> "IDR_N_LP" // 20
-            NALU_TYPE_CRA_NUT -> "CRA_NUT" // 21
+            NALU_TYPE_CRA_NUT -> "I_CRA_NUT" // 21
+
+            NALU_TRAIL_N -> "P_TRAIL_N" // 0
+            NALU_TRAIL_R -> "P_TRAIL_R" // 1
+            NALU_TSA_N -> "P_TSA_N" // 2
+            NALU_TSA_R -> "P_TSA_R" // 3
+            NALU_STSA_N -> "P_STSA_N" // 4
+            NALU_STSA_R -> "P_STSA_R" // 5
+            NALU_RADL_N -> "P_RADL_N" // 6
+            NALU_RADL_R -> "P_RADL_R" // 7
+            NALU_RASL_N -> "P_RASL_N" // 8
+            NALU_RASL_R -> "P_RASL_R" // 9
 
             else -> "Unknown"
         }

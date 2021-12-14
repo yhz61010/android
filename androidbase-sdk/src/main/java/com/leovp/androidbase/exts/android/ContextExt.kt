@@ -76,6 +76,7 @@ val Context.versionCode
             PackageManager.GET_CONFIGURATIONS
         ).longVersionCode
     } else {
+        @Suppress("DEPRECATION")
         this.packageManager.getPackageInfo(
             this.packageName,
             PackageManager.GET_CONFIGURATIONS

@@ -6,7 +6,7 @@ buildscript {
     ext.gradle_plugin_version = '7.0.3'
     ext.sonarqube_version = '3.3'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '3.0.4'
+    ext.leoVersion = '3.0.5'
 
     repositories {
         google()

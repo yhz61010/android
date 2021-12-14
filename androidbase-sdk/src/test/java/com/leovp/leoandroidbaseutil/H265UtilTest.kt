@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
+import kotlin.system.measureNanoTime
 
 /**
  * Author: Michael Leo
@@ -59,8 +60,17 @@ class H265UtilTest {
         val naluIdrNLP = H265Util.getNaluType(idrNLPByteArray)
         Assert.assertEquals(H265Util.NALU_TYPE_IDR_N_LP, naluIdrNLP)
 
-        val naluP = H265Util.getNaluType(pByteArray)
-        Assert.assertEquals(H265Util.NALU_TRAIL_R, naluP)
+        var cost = measureNanoTime {
+            H265Util.getNaluType(pByteArray)
+        }
+        println("getNaluType cost=${cost / 1000}us")
+
+        cost = measureNanoTime {
+            H265Util.getNaluTypeName(pByteArray)
+        }
+        println("getNaluTypeName cost=${cost / 1000}us")
+
+        Assert.assertEquals(H265Util.NALU_TRAIL_R, H265Util.getNaluType(pByteArray))
         Assert.assertEquals("P_TRAIL_R", H265Util.getNaluTypeName(pByteArray))
 
         val csdByteArray = byteArrayOf(

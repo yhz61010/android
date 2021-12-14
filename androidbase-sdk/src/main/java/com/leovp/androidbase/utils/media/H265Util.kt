@@ -316,7 +316,7 @@ object H265Util {
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
-            LogContext.log.d(TAG, "Not valid H265 data.")
+            if (DEBUG) LogContext.log.d(TAG, "Not valid H265 data.")
             -1
         } else {
             val nalu = data[4].toInt()

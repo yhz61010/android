@@ -26,6 +26,7 @@ object VibrationUtil {
                 )
             )
         } else {
+            @Suppress("DEPRECATION")
             (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(milliseconds)
         }
     }

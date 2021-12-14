@@ -27,6 +27,7 @@ class H265UtilTest {
         val ppsByteArray = byteArrayOf(0, 0, 0, 1, 0x44, 1, 0xC0.toByte(), 0x66, 0x3C, 0xE, 0xC6.toByte(), 0x40)
         val idrByteArray = byteArrayOf(0, 0, 0, 1, 0x26, 1, 2, 3, 4, 5)
         val idrNLPByteArray = byteArrayOf(0, 0, 0, 1, 0x28, 1, 2, 3, 4, 5)
+        val pByteArray = byteArrayOf(0, 0, 0, 1, 2, 1, 2, 3, 4, 5)
 
         var isVps = H265Util.isVps(vspByteArray)
         Assert.assertEquals(true, isVps)
@@ -57,6 +58,10 @@ class H265UtilTest {
 
         val naluIdrNLP = H265Util.getNaluType(idrNLPByteArray)
         Assert.assertEquals(H265Util.NALU_TYPE_IDR_N_LP, naluIdrNLP)
+
+        val naluP = H265Util.getNaluType(pByteArray)
+        Assert.assertEquals(H265Util.NALU_TRAIL_R, naluP)
+        Assert.assertEquals("P_TRAIL_R", H265Util.getNaluTypeName(pByteArray))
 
         val csdByteArray = byteArrayOf(
             0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,

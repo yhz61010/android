@@ -35,8 +35,7 @@ class AndroidPNotchScreen : INotchScreen {
             if (windowInsets != null) {
                 val cutout = windowInsets.displayCutout
                 if (cutout != null) {
-                    val rects = cutout.boundingRects
-                    callback.onResult(rects)
+                    callback.onResult(cutout.boundingRects)
                     return@Runnable
                 }
             }

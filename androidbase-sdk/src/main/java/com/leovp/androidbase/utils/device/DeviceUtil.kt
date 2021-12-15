@@ -176,7 +176,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
      */
     fun getDeviceInfo(): String {
         return runCatching {
-            val st = SystemClock.elapsedRealtimeNanos()
+            val st = SystemClock.elapsedRealtime()
             val memInfo = getMemInfoInBytes()
             val screenSize = ctx.getRealResolution()
             val availableSize = ctx.getAvailableResolution()
@@ -217,7 +217,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
                     Full screen device        : ${ctx.isFullScreenDevice}
                     Navigation bar is showing : ${ctx.isNavigationBarShown}
 
-            Cost: ${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us 
+            Cost: ${SystemClock.elapsedRealtime() - st}ms 
             """.trimIndent()
         }.getOrElse {
             it.printStackTrace()

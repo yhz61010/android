@@ -48,14 +48,21 @@ class DeviceUtil private constructor(private val ctx: Context) {
             ""
         )
     val supportedCpuArchs: Array<String> = Build.SUPPORTED_ABIS
-    val cpuArch: String = runCatching {
-        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
-            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
-            ""
-        )
-    }.getOrDefault(
-        ""
-    )
+    val cpuArch: String = when {
+        Build.SUPPORTED_ABIS.contains("arm64-v8a") -> "AArch64"
+        Build.SUPPORTED_ABIS.contains("armeabi-v7a") -> "ARMv7"
+        Build.SUPPORTED_ABIS.contains("x86_64") -> "x86_64"
+        Build.SUPPORTED_ABIS.contains("x86") -> "x86"
+        else -> "NA"
+    }
+//        runCatching {
+//        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
+//            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
+//            ""
+//        )
+//    }.getOrDefault(
+//        ""
+//    )
 
     fun getSerialNumber(): String {
         var serialNo = DeviceProp.getSystemProperty("ro.serialno")
@@ -180,7 +187,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             App version     : ${ctx.versionName}(${ctx.versionCode})
             Device locale   : ${LangUtil.getDeviceLanguageCountryCode()}
             Default locale  : ${LangUtil.getDefaultLanguageCountryCode()}
-            Network Type    : ${NetworkUtil.getNetworkTypeName(ctx)} | ${NetworkUtil.getNetworkSubTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
+            Network Type    : ${NetworkUtil.getNetworkTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
             Manufacturer    : $manufacturer
             Brand           : $brand
             Board           : $board

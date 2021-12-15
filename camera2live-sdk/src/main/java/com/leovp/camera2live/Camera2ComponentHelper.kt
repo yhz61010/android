@@ -767,6 +767,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             context.display?.rotation ?: -1
                         } else {
+                            @Suppress("DEPRECATION")
                             context.windowManager.defaultDisplay.rotation
                         }
                         val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!

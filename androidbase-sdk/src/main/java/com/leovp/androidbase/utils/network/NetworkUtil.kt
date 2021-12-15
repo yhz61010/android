@@ -3,10 +3,11 @@ package com.leovp.androidbase.utils.network
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
-import android.net.wifi.WifiManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.telephony.TelephonyManager
 import com.leovp.androidbase.exts.android.connectivityManager
+import com.leovp.androidbase.exts.android.telephonyManager
 import com.leovp.androidbase.exts.android.wifiManager
 import com.leovp.log_sdk.LogContext
 import java.io.BufferedReader
@@ -27,6 +28,11 @@ import java.util.*
 object NetworkUtil {
     private const val TAG = "NetworkUtil"
 
+    const val TYPE_WIFI = "WIFI"
+    const val TYPE_CELLULAR = "Cellular"
+    const val TYPE_ETHERNET = "Ethernet"
+    const val TYPE_VPN = "VPN"
+
     const val NETWORK_PING_DELAY_NORMAL = 80
     const val NETWORK_PING_DELAY_HIGH = 130
     const val NETWORK_PING_DELAY_VERY_HIGH = 200
@@ -34,19 +40,95 @@ object NetworkUtil {
     const val NETWORK_SIGNAL_STRENGTH_BAD = 2
     const val NETWORK_SIGNAL_STRENGTH_VERY_BAD = 1
 
-    fun isOnline(ctx: Context) = getNetworkInfo(ctx)?.isConnected ?: false
-    fun isOffline(ctx: Context) = !isOnline(ctx)
-
-    fun isWifiActive(ctx: Context): Boolean = getNetworkType(ctx) == ConnectivityManager.TYPE_WIFI
+    private const val MIN_RSSI = -100
+    private const val MAX_RSSI = -55
 
     /**
-     * **Need following permission:**
+     * Need following permission:
      * ```xml
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
     @SuppressLint("MissingPermission")
-    fun getNetworkInfo(ctx: Context): NetworkInfo? = ctx.connectivityManager.activeNetworkInfo
+    fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) || isVpnActive(ctx)
+
+    fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
+    fun isWifiActive(ctx: Context): Boolean {
+        val cm = ctx.connectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = cm.activeNetwork ?: return false
+            val nc = cm.getNetworkCapabilities(nw) ?: return false
+            nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+        } else {
+            @Suppress("DEPRECATION")
+            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_WIFI
+        }
+    }
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
+    fun isEthernetActive(ctx: Context): Boolean {
+        val cm = ctx.connectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = cm.activeNetwork ?: return false
+            val nc = cm.getNetworkCapabilities(nw) ?: return false
+            nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        } else {
+            @Suppress("DEPRECATION")
+            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_ETHERNET
+        }
+    }
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
+    fun isCellularActive(ctx: Context): Boolean {
+        val cm = ctx.connectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = cm.activeNetwork ?: return false
+            val nc = cm.getNetworkCapabilities(nw) ?: return false
+            nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+        } else {
+            @Suppress("DEPRECATION")
+            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_MOBILE
+        }
+    }
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
+    fun isVpnActive(ctx: Context): Boolean {
+        val cm = ctx.connectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = cm.activeNetwork ?: return false
+            val nc = cm.getNetworkCapabilities(nw) ?: return false
+            nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        } else {
+            @Suppress("DEPRECATION")
+            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_VPN
+        }
+    }
 
     /**
      * Returns the latency to a given server in milliseconds by issuing a ping command.
@@ -91,18 +173,31 @@ object NetworkUtil {
         }
     }
 
-    fun getNetworkType(ctx: Context): Int = getNetworkInfo(ctx)?.type ?: -1
+    fun getNetworkTypeName(ctx: Context): String? {
+        if (isWifiActive(ctx)) return TYPE_WIFI
+        if (isCellularActive(ctx)) return TYPE_CELLULAR
+        if (isEthernetActive(ctx)) return TYPE_ETHERNET
+        if (isVpnActive(ctx)) return TYPE_VPN
+        return null
+    }
 
-    fun getNetworkTypeName(ctx: Context): String? = getNetworkInfo(ctx)?.typeName
-
-    fun getNetworkSubType(ctx: Context): Int = getNetworkInfo(ctx)?.subtype ?: -1
-
-    fun getNetworkSubTypeName(ctx: Context): String? = getNetworkInfo(ctx)?.subtypeName
-
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+     * ```
+     */
+    @SuppressLint("MissingPermission")
     fun getNetworkGeneration(ctx: Context): String? {
-        val ni: NetworkInfo? = getNetworkInfo(ctx)
-        return if (ni?.type == ConnectivityManager.TYPE_MOBILE) {
-            getNetworkGeneration(ni.subtype)
+        return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
+            return when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
+//                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> TODO("Adopt me")
+                else -> {
+                    @Suppress("DEPRECATION")
+                    getNetworkGeneration(ctx.connectivityManager.activeNetworkInfo?.subtype)
+                }
+            }
         } else {
             null
         }
@@ -120,7 +215,7 @@ object NetworkUtil {
         val wifiScore: Int
         val wifiScoreIn5: Int
         val rssi: Int
-        if (getNetworkType(ctx) == ConnectivityManager.TYPE_WIFI) {
+        if (isWifiActive(ctx)) {
             val wi = ctx.wifiManager.connectionInfo
             linkSpeed = wi.linkSpeed
             /* Rssi
@@ -128,9 +223,10 @@ object NetworkUtil {
              * (-55) —— (-70)dBm    3格信号
              * (-70) —— (-85)dBm    2格信号
              * (-85) —— (-100)dBm   1格信号
-             */rssi = wi.rssi
-            wifiScore = WifiManager.calculateSignalLevel(rssi, 100)
-            wifiScoreIn5 = WifiManager.calculateSignalLevel(rssi, 5)
+             */
+            rssi = wi.rssi
+            wifiScore = calculateSignalLevel(rssi, 100)
+            wifiScoreIn5 = calculateSignalLevel(rssi, 5)
         } else {
             return null
         }
@@ -207,7 +303,7 @@ object NetworkUtil {
             for (ni: NetworkInterface in NetworkInterface.getNetworkInterfaces()) {
                 for (addr in ni.inetAddresses) {
                     if (!addr.isLoopbackAddress && !addr.isLinkLocalAddress && addr.isSiteLocalAddress) {
-                        ifconfig.add(addr.hostAddress)
+                        addr.hostAddress?.let { address -> ifconfig.add(address) }
                     }
                 }
             }
@@ -215,7 +311,7 @@ object NetworkUtil {
         return ifconfig
     }
 
-    private fun getNetworkGeneration(networkType: Int): String? {
+    private fun getNetworkGeneration(networkType: Int?): String? {
         return when (networkType) {
             TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_EDGE,
             TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_IDEN, TelephonyManager.NETWORK_TYPE_GSM -> "2G"
@@ -227,6 +323,18 @@ object NetworkUtil {
             TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
             TelephonyManager.NETWORK_TYPE_NR -> "5G"
             else -> null
+        }
+    }
+
+    private fun calculateSignalLevel(rssi: Int, numLevels: Int): Int {
+        return when {
+            rssi <= MIN_RSSI -> 0
+            rssi >= MAX_RSSI -> numLevels - 1
+            else -> {
+                val inputRange = (MAX_RSSI - MIN_RSSI).toFloat()
+                val outputRange = (numLevels - 1).toFloat()
+                ((rssi - MIN_RSSI).toFloat() * outputRange / inputRange).toInt()
+            }
         }
     }
 }

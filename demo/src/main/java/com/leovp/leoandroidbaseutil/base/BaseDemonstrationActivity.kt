@@ -6,10 +6,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.MotionEvent
+import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.leovp.androidbase.exts.android.closeSoftKeyboard
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.androidbase.utils.ui.BetterActivityResult
@@ -72,5 +75,25 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         LogContext.log.i("onDestroy()")
         LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
         super.onDestroy()
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val v = currentFocus
+        val ret = super.dispatchTouchEvent(event)
+        try {
+            if (v is EditText) {
+                val focusView = currentFocus!!
+                val focusViewLocationOnScreen = IntArray(2)
+                focusView.getLocationOnScreen(focusViewLocationOnScreen)
+                val x = event.rawX + focusView.left - focusViewLocationOnScreen[0]
+                val y = event.rawY + focusView.top - focusViewLocationOnScreen[1]
+                if (event.action == MotionEvent.ACTION_DOWN && (x < focusView.left || x > focusView.right || y < focusView.top || y > focusView.bottom)) {
+                    closeSoftKeyboard()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return ret
     }
 }

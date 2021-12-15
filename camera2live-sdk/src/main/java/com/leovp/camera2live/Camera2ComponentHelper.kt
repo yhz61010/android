@@ -215,10 +215,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 if (outputYuvForDebug) {
                     val videoYuvFile = File(baseOutputFolderForDebug, "camera.yuv")
                     videoYuvOsForDebug = BufferedOutputStream(FileOutputStream(videoYuvFile))
+                    LogContext.log.d(TAG, "videoYuvFile=$videoYuvFile")
                 }
                 if (!outputYuvForDebug && outputH264ForDebug) {
                     val videoH264File = File(baseOutputFolderForDebug, "camera.h264")
                     videoH264OsForDebug = BufferedOutputStream(FileOutputStream(videoH264File))
+                    LogContext.log.d(TAG, "videoH264File=$videoH264File")
                 }
             }
         } catch (e: Exception) {

@@ -2,6 +2,7 @@ package com.leovp.http_sdk.okhttp
 
 
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ILog
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol
@@ -28,10 +29,11 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          *
          *
          * Example:
-         * <pre>`--> POST /greeting http/1.1 (3-byte body)
+         * <pre>
+         * --> POST /greeting http/1.1 (3-byte body)
          *
          * <-- 200 OK (22ms, 6-byte body)
-        `</pre> *
+         * </pre>
          */
         @Suppress("unused")
         BASIC,
@@ -41,7 +43,8 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          *
          *
          * Example:
-         * <pre>`--> POST /greeting http/1.1
+         * <pre>
+         * --> POST /greeting http/1.1
          * Host: example.com
          * Content-Type: plain/text
          * Content-Length: 3
@@ -51,7 +54,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          * Content-Type: plain/text
          * Content-Length: 6
          * <-- END HTTP
-        `</pre> *
+         * </pre>
          */
         HEADERS,
 
@@ -60,7 +63,8 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          *
          *
          * Example:
-         * <pre>`--> POST /greeting http/1.1
+         * <pre>
+         * --> POST /greeting http/1.1
          * Host: example.com
          * Content-Type: plain/text
          * Content-Length: 3
@@ -74,21 +78,21 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          *
          * Hello!
          * <-- END HTTP
-        `</pre> *
+         * </pre>
          */
         BODY
     }
 
     interface Logger {
-        fun log(message: String?)
+        fun log(message: String?, outputType: Int = -1)
 
         companion object {
             /**
              * A [Logger] defaults output appropriate for the current platform.
              */
             val DEFAULT: Logger = object : Logger {
-                override fun log(message: String?) {
-                    LogContext.log.w(TAG, message)
+                override fun log(message: String?, outputType: Int) {
+                    LogContext.log.w(TAG, message, outputType = outputType)
                 }
             }
         }
@@ -144,7 +148,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                         ignoreCase = true
                     )
                 ) {
-                    logger.log("$name: ${headers.value(i)}")
+                    logger.log("$name: ${headers.value(i)}", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 }
                 i++
             }
@@ -196,7 +200,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             val count = headers.size
             var hasInlineFile = false
             while (i < count) {
-                logger.log("${headers.name(i)}: ${headers.value(i)}")
+                logger.log("${headers.name(i)}: ${headers.value(i)}", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 if ("Content-Disposition".contentEquals(headers.name(i)) && headers.value(i).startsWith("inline; filename")) {
                     hasInlineFile = true
                 }

@@ -142,6 +142,6 @@ interface ILog {
         private const val MAX_LENGTH = 2000
         const val OUTPUT_TYPE_SYSTEM = 0x20211009
         const val OUTPUT_TYPE_CLIENT_COMMAND = OUTPUT_TYPE_SYSTEM + 1
-        const val OUTPUT_TYPE_HTTP_HEADER_COOKIE = OUTPUT_TYPE_SYSTEM + 1
+        const val OUTPUT_TYPE_HTTP_HEADER_COOKIE = OUTPUT_TYPE_SYSTEM + 2
     }
 }

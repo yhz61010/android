@@ -304,7 +304,7 @@ abstract class BaseNettyClient protected constructor(
                     } else {
                         LogContext.log.i(tag, "=====> WebSocket Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
-                        connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Websocket Connect failed")
+                        connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "WebSocket Connect failed", it.cause())
                         cont.resume(connectStatus.get())
                         // Do NOT know how to reproduce this case
 //                        LogContext.log.e(tag, "=====> CHK1 <=====")

@@ -39,6 +39,10 @@ annotation class ExcludeDeserialize
 
 private const val TAG = "JsonExt"
 
+/**
+ * The usage of annotations `Exclude`, `ExcludeSerialize` and `ExcludeDeserialize`,
+ * please check `JsonUnitTest.kt` file.
+ */
 private val gson
     get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
         override fun shouldSkipField(f: FieldAttributes) =

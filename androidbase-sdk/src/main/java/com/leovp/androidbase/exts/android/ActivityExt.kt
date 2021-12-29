@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.exts.android
 
 import android.app.Activity
@@ -20,18 +22,44 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean {
 // ============================================================================
 
 /** Launch a Activity */
-fun Context.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+fun Activity.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
     this.startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity */
-fun Context.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+fun Activity.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity */
-fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+fun Activity.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(Class.forName(clsStr), extras, flags, options)
+
+/** Launch a Activity */
+inline fun <reified T : Activity> Activity.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+    startActivity(T::class.java, extras, flags, options)
+}
+
+// --------------------
+
+/** Launch a Activity in Fragment */
+fun Fragment.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+    val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
+    startActivity(if (extras == null) intent else extras(intent), options)
+}
+
+/** Launch a Activity in Fragment */
+fun Fragment.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+    startActivity(kcls.java, extras, flags, options)
+
+/** Launch a Activity in Fragment */
+fun Fragment.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+    startActivity(Class.forName(clsStr), extras, flags, options)
+
+/** Launch a Activity in Fragment */
+inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+    startActivity(T::class.java, extras, flags, options)
+}
 
 // -----
 
@@ -99,22 +127,6 @@ fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? 
 //)
 //fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
-
-// --------------------
-
-/** Launch a Activity in Fragment */
-fun Fragment.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
-    val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
-    this.startActivity(if (extras == null) intent else extras(intent), options)
-}
-
-/** Launch a Activity in Fragment */
-fun Fragment.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-    this.startActivity(kcls.java, extras, flags, options)
-
-/** Launch a Activity in Fragment */
-fun Fragment.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-    this.startActivity(Class.forName(clsStr), extras, flags, options)
 
 // -----
 

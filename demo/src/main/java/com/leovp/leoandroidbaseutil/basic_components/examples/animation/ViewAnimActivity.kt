@@ -2,10 +2,10 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.animation
 
 import android.os.Bundle
 import android.view.animation.*
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityViewAnimBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
 
 
 class ViewAnimActivity : BaseDemonstrationActivity() {

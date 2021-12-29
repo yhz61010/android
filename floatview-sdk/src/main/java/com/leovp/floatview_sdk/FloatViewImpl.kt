@@ -13,9 +13,9 @@ import androidx.core.view.children
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.DefaultConfig
 import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.floatview_sdk.util.screenAvailableHeight
-import com.leovp.floatview_sdk.util.screenRealWidth
-import com.leovp.floatview_sdk.util.statusBarHeight
+import com.leovp.lib_common_android.exts.getScreenAvailableHeight
+import com.leovp.lib_common_android.exts.getScreenWidth
+import com.leovp.lib_common_android.exts.statusBarHeight
 import kotlin.math.abs
 
 /**
@@ -137,22 +137,22 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 AutoDock.TOP -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                 AutoDock.BOTTOM -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                 AutoDock.LEFT_RIGHT -> {
-                    if (floatViewCenterX <= context.screenRealWidth / 2) {
+                    if (floatViewCenterX <= context.getScreenWidth() / 2) {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                     }
                 }
                 AutoDock.TOP_BOTTOM -> {
-                    if (floatViewCenterY <= context.screenAvailableHeight / 2) {
+                    if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
                 AutoDock.FULL -> {
-                    if (floatViewCenterX <= context.screenRealWidth / 2) { // On left screen
-                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top left
+                    if (floatViewCenterX <= context.getScreenWidth() / 2) { // On left screen
+                        if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) { // On top screen // Top left
                             if (left <= top - drawHeightOffset) { // Animate to left
                                 animateDirectionForDockFull = AutoDock.LEFT
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
@@ -161,7 +161,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             }
                         } else { // On bottom screen // Bottom left
-                            if (left <= context.screenAvailableHeight - getFloatViewBottomLeftPos().y) { // Animate to left
+                            if (left <= context.getScreenAvailableHeight() - getFloatViewBottomLeftPos().y) { // Animate to left
                                 animateDirectionForDockFull = AutoDock.LEFT
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                             } else { // Animate to bottom
@@ -170,8 +170,8 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                             }
                         }
                     } else { // On right screen
-                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - drawHeightOffset <= context.screenRealWidth - getFloatViewTopRightPos().x) { // Animate to top
+                        if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) { // On top screen // Top right
+                            if (getFloatViewTopRightPos().y - drawHeightOffset <= context.getScreenWidth() - getFloatViewTopRightPos().x) { // Animate to top
                                 animateDirectionForDockFull = AutoDock.TOP
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             } else { // Animate to right
@@ -179,7 +179,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                             }
                         } else { // On bottom screen // Bottom right
-                            if (context.screenAvailableHeight - getFloatViewBottomRightPos().y <= context.screenRealWidth - getFloatViewBottomRightPos().x) { // Animate to bottom
+                            if (context.getScreenAvailableHeight() - getFloatViewBottomRightPos().y <= context.getScreenWidth() - getFloatViewBottomRightPos().x) { // Animate to bottom
                                 animateDirectionForDockFull = AutoDock.BOTTOM
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                             } else { // Animate to right
@@ -260,20 +260,20 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private fun adjustPosX(x: Int, minValue: Int): Int {
         if (x < minValue || x <= 0) return minValue
-        return if ((x + (config.customView?.width ?: 0) + minValue) >= context.screenRealWidth) context.screenRealWidth - (config.customView?.width ?: 0) - minValue else x
+        return if ((x + (config.customView?.width ?: 0) + minValue) >= context.getScreenWidth()) context.getScreenWidth() - (config.customView?.width ?: 0) - minValue else x
     }
 
     private fun adjustPosY(y: Int, minValue: Int): Int {
         if (y <= minValue + drawHeightOffset) return minValue + drawHeightOffset
-        return if ((y + (config.customView?.height ?: 0) + minValue) >= context.screenAvailableHeight)
-            context.screenAvailableHeight - (config.customView?.height ?: 0) - minValue
+        return if ((y + (config.customView?.height ?: 0) + minValue) >= context.getScreenAvailableHeight())
+            context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - minValue
         else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
-    private fun getFloatViewRightMaxMargin(): Int = context.screenRealWidth - (config.customView?.width ?: 0) - config.edgeMargin
+    private fun getFloatViewRightMaxMargin(): Int = context.getScreenWidth() - (config.customView?.width ?: 0) - config.edgeMargin
     private fun getFloatViewTopMinMargin(): Int = drawHeightOffset + config.edgeMargin
-    private fun getFloatViewBottomMaxMargin(): Int = context.screenAvailableHeight - (config.customView?.height ?: 0) - config.edgeMargin
+    private fun getFloatViewBottomMaxMargin(): Int = context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
     private fun getFloatViewTopRightPos(): Point = Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)

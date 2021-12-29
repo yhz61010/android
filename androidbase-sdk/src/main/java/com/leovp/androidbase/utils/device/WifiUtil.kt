@@ -8,9 +8,9 @@ import android.net.NetworkInfo
 import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiNetworkSpecifier
-import com.leovp.androidbase.SingletonHolder
-import com.leovp.androidbase.exts.android.connectivityManager
-import com.leovp.androidbase.exts.android.wifiManager
+import com.leovp.lib_common_android.exts.connectivityManager
+import com.leovp.lib_common_android.exts.wifiManager
+import com.leovp.lib_common_kotlin.utils.SingletonHolder
 
 
 /**

@@ -7,8 +7,8 @@ import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.buildConfigInDebug
 import com.leovp.androidbase.utils.pref.LPref
 import com.leovp.androidbase.utils.pref.PrefContext
-import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.androidbase.utils.ui.ForegroundComponent
+import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
 import io.reactivex.plugins.RxJavaPlugins
@@ -45,13 +45,13 @@ class CustomApplication : MultiDexApplication(), DIAware {
     }
 
     override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(LangUtil.setLocale(base))
+        super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
         Reflection.unseal(base)
         MultiDex.install(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        LangUtil.setLocale(this)
+        LangUtil.getInstance(this).setLocale(this)
     }
 }

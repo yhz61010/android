@@ -6,12 +6,12 @@ import android.os.Looper
 import android.os.SystemClock
 import android.view.View
 import android.widget.ArrayAdapter
-import com.leovp.androidbase.exts.android.id
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityAccessibilityBinding
+import com.leovp.lib_common_android.exts.id
 import org.greenrobot.eventbus.EventBus
 
 class AccessibilityActivity : BaseDemonstrationActivity() {

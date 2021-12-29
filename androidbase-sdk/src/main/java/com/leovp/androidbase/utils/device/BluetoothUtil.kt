@@ -8,7 +8,7 @@ import android.bluetooth.le.*
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.SingletonHolder
+import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.log_sdk.LogContext
 import java.lang.reflect.Field
 import java.lang.reflect.Method

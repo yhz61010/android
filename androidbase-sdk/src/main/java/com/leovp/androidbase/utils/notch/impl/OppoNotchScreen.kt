@@ -5,10 +5,10 @@ import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.text.TextUtils
-import com.leovp.androidbase.exts.android.isPortrait
-import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
+import com.leovp.lib_common_android.exts.isPortrait
+import com.leovp.lib_common_android.utils.DeviceProp
 import java.util.*
 
 @TargetApi(Build.VERSION_CODES.O)

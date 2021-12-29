@@ -12,8 +12,8 @@ import android.os.HandlerThread
 import android.util.Size
 import android.view.Surface
 import androidx.annotation.RequiresApi
+import com.leovp.lib_image.compressBitmap
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.compressBitmap
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
@@ -259,7 +259,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
+                // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
                 @Suppress("unchecked", "InlinedApi")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }

@@ -11,10 +11,10 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
+import com.leovp.lib_bytes.toHexStringLE
+import com.leovp.lib_exception.exception
+import com.leovp.lib_image.createBitmap
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.createBitmap
-import com.leovp.min_base_sdk.exception
-import com.leovp.min_base_sdk.toHexStringLE
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.nio.ByteBuffer
@@ -155,7 +155,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             // Set the encoder priority to realtime.
             setInteger(MediaFormat.KEY_PRIORITY, 0x00)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+. However just been opened as of Android 10.
+                // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
                 @Suppress("unchecked")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }

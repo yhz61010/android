@@ -6,7 +6,7 @@ buildscript {
     ext.gradle_plugin_version = '7.0.4'
     ext.sonarqube_version = '3.3'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '3.1.2'
+    ext.leoVersion = '4.0.0'
 
     repositories {
         google()
@@ -59,6 +59,7 @@ ext {
     swiperefreshlayoutVersion = '1.1.0'
     recyclerviewVersion = '1.2.1'
     materialVersion = '1.4.0'
+    localbroadcastVersion = '1.0.0'
     cardviewVersion = '1.0.0'
     constraintlayoutVersion = '2.1.2'
     multidexVersion = '2.0.1'

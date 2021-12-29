@@ -3,11 +3,11 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.network.NetworkUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivitySocketServerBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler

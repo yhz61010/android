@@ -19,8 +19,6 @@ import com.leovp.androidbase.exts.*
 import com.leovp.androidbase.exts.android.*
 import com.leovp.androidbase.exts.kotlin.*
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.network.NetworkUtil
-import com.leovp.androidbase.utils.system.API
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
@@ -28,11 +26,14 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareMasterBinding
+import com.leovp.lib_bytes.asByteAndForceToBytes
+import com.leovp.lib_bytes.toBytesLE
+import com.leovp.lib_common_android.exts.*
+import com.leovp.lib_common_android.utils.API
+import com.leovp.lib_common_android.utils.NetworkUtil
+import com.leovp.lib_exception.exception
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.min_base_sdk.asByteAndForceToBytes
-import com.leovp.min_base_sdk.exception
-import com.leovp.min_base_sdk.toBytesLE
 import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy

@@ -26,7 +26,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
-import com.leovp.androidbase.exts.android.getAvailableResolution
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -36,8 +35,9 @@ import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.camera2live.view.CameraSurfaceView
+import com.leovp.lib_common_android.exts.getAvailableResolution
+import com.leovp.lib_exception.fail
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

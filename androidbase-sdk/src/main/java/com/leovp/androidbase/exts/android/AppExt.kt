@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Process
 import android.util.TypedValue
 import com.leovp.androidbase.utils.file.FileDocumentUtil
+import com.leovp.lib_common_android.exts.inputMethodManager
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import kotlin.system.exitProcess

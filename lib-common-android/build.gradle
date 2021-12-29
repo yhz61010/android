@@ -1,0 +1,54 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+apply plugin: "org.sonarqube"
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility "$rootProject.ext.java_version"
+        targetCompatibility "$rootProject.ext.java_version"
+    }
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
+}
+
+dependencies {
+    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
+    api project(':lib-common-kotlin')
+    api project(':lib-exception')
+    api "androidx.localbroadcastmanager:localbroadcastmanager:$rootProject.ext.localbroadcastVersion"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'lib-common-android'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

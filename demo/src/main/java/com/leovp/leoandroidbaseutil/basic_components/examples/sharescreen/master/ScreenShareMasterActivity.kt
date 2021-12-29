@@ -337,7 +337,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
                 val stringData = data as String
-                val cmdBean = stringData.toObject(ScreenShareClientActivity.CmdBean::class.java)!!
+                val cmdBean: ScreenShareClientActivity.CmdBean = stringData.toObject()!!
                 when (cmdBean.cmdId) {
                     CMD_TOUCH_EVENT -> {
                         val touchBean = cmdBean.touchBean!!

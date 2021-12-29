@@ -1,10 +1,10 @@
 package com.leovp.androidbase.utils.pref
 
 import android.content.Context
-import com.leovp.androidbase.exts.android.sharedPrefs
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.utils.pref.base.IPref
+import com.leovp.lib_common_android.exts.sharedPrefs
 
 /**
  * Author: Michael Leo

@@ -2,7 +2,7 @@ package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.utils.system.API
+import com.leovp.lib_common_android.utils.API
 import java.security.SecureRandom
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory

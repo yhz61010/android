@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
@@ -23,6 +22,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceAdapter
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceModel
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothScanBinding
+import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.log_sdk.LogContext
 import java.util.*
 

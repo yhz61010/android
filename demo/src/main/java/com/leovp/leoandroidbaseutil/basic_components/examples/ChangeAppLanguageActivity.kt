@@ -6,13 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityChangeAppLanguageBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LogContext
 
 /**
@@ -22,6 +22,8 @@ import com.leovp.log_sdk.LogContext
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  */
 class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
+    private val langUtil: LangUtil by lazy { LangUtil.getInstance(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityChangeAppLanguageBinding.inflate(layoutInflater).apply { setContentView(root) }
@@ -29,8 +31,8 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
         LogContext.log.w("itemList=${itemList.toJsonString()}")
         val itemCodeList = resources.getStringArray(R.array.lang_code_list)
 
-        LogContext.log.i("Default language: ${LangUtil.getDefaultDisplayLanguage()}[${LangUtil.getDefaultLanguageCountryCode()}][${LangUtil.getDefaultLanguageFullCode()}]")
-        LogContext.log.i("Device locale: ${LangUtil.getDeviceLocale()}[${LangUtil.getDeviceLanguageCountryCode()}]")
+        LogContext.log.i("Default language: ${langUtil.getDefaultDisplayLanguage()}[${langUtil.getDefaultLanguageCountryCode()}][${langUtil.getDefaultLanguageFullCode()}]")
+        LogContext.log.i("Device locale: ${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]")
         LogContext.log.i("========================================================")
 
         binding.btnSelectLang.setOnSingleClickListener {
@@ -38,7 +40,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setTitle(R.string.select_lang)
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
-                    LangUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, LangUtil.getLocale(langCode)!!, refreshUI = true)
+                    langUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, langUtil.getLocale(langCode)!!, refreshUI = true)
                     dlg.dismiss()
                 }
                 .show()
@@ -52,7 +54,7 @@ class ChangeAppTestService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(LangUtil.setLocale(base))
+        super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
     }
 
     override fun onCreate() {

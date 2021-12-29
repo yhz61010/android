@@ -14,8 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.system.LangUtil
 import com.leovp.androidbase.utils.ui.BetterActivityResult
+import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LogContext
 
 /**
@@ -32,7 +32,7 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
     }
 
     override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(LangUtil.setLocale(base))
+        super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
             toast("Result in BaseActivity: ${result.resultCode}")
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
-        val lang = LangUtil.getAppLanguage(this)
+        val lang = LangUtil.getInstance(this).getAppLanguage()
         LogContext.log.i("Pref lang=$lang")
     }
 

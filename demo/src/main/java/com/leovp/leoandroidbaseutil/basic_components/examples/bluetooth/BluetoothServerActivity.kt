@@ -5,12 +5,12 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothServerBinding
+import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.log_sdk.LogContext
 import java.util.*
 

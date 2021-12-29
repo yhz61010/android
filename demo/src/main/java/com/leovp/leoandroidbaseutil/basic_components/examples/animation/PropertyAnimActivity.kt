@@ -4,9 +4,9 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.animation.AccelerateInterpolator
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityPropertyAnimBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import kotlin.random.Random
 
 /**

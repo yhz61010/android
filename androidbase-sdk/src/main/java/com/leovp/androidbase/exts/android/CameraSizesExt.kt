@@ -21,6 +21,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
 import android.view.Display
+import com.leovp.lib_common_android.exts.getRealResolution
 import kotlin.math.max
 import kotlin.math.min
 

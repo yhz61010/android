@@ -64,7 +64,7 @@ class MMKVPref(ctx: Context) : IPref {
 
     override fun getString(key: String, default: String?): String? = mmkv.decodeString(key, default)
 
-    override fun <T> getObject(key: String, clazz: Class<T>) = getString(key, null)?.toObject(clazz)
+    override fun <T> getObject(key: String, clazz: Class<T>): T? = getString(key, null)?.toObject(clazz)
 
     override fun getStringSet(key: String, default: Set<String>?): Set<String>? = mmkv.decodeStringSet(key, default)
 }

@@ -14,8 +14,8 @@ class AnimationActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAnimationBinding.inflate(layoutInflater).apply { setContentView(root) }
 
-        binding.btnDrawableAnim.setOnSingleClickListener { startActivity(DrawableAnimActivity::class) }
-        binding.btnViewAnim.setOnSingleClickListener { startActivity(ViewAnimActivity::class) }
-        binding.btnPropAnim.setOnSingleClickListener { startActivity(PropertyAnimActivity::class) }
+        binding.btnDrawableAnim.setOnSingleClickListener { startActivity<DrawableAnimActivity>() }
+        binding.btnViewAnim.setOnSingleClickListener { startActivity<ViewAnimActivity>() }
+        binding.btnPropAnim.setOnSingleClickListener { startActivity<PropertyAnimActivity>() }
     }
 }

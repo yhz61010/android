@@ -79,9 +79,9 @@ dependencies {
 
     api project(':log-sdk')
     api project(':lib-bytes')
-//    api project(':lib-exception')
     api project(':lib-image')
 //    api project(':lib-network')
+//    api project(':lib-exception')
     api project(':lib-common-android') // 'lib-common-kotlin' has already included in this library.
 //    api project(':lib-common-kotlin')
 

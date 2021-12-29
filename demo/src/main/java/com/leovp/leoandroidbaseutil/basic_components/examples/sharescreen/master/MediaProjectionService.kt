@@ -15,10 +15,10 @@ import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
+import com.leovp.lib_image.compressBitmap
+import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.min_base_sdk.compressBitmap
-import com.leovp.min_base_sdk.writeToFile
 import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor

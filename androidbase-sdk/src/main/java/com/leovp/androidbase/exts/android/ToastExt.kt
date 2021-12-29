@@ -16,7 +16,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.HtmlCompat
 import com.leovp.androidbase.R
-import com.leovp.androidbase.utils.system.API
+import com.leovp.lib_common_android.utils.API
 
 /**
  * Author: Michael Leo

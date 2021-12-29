@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import androidx.annotation.Keep
+import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.log_sdk.LogContext
 import java.util.concurrent.TimeUnit
 

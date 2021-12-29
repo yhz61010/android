@@ -6,11 +6,11 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.view.Window
-import com.leovp.androidbase.exts.android.calculateNotchRect
-import com.leovp.androidbase.exts.android.getDimenInPixel
-import com.leovp.androidbase.utils.device.DeviceProp
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
+import com.leovp.lib_common_android.exts.calculateNotchRect
+import com.leovp.lib_common_android.exts.getDimenInPixel
+import com.leovp.lib_common_android.utils.DeviceProp
 import java.util.*
 
 @TargetApi(Build.VERSION_CODES.O)

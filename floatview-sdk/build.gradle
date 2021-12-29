@@ -33,6 +33,8 @@ android {
 
 dependencies {
     implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api project(':lib-common-kotlin')
+    api project(':lib-common-android')
 }
 
 afterEvaluate {

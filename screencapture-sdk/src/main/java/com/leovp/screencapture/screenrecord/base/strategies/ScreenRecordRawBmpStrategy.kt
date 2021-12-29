@@ -10,8 +10,8 @@ import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
+import com.leovp.lib_image.createBitmap
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.createBitmap
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.util.*

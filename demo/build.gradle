@@ -221,6 +221,15 @@ dependencies {
     implementation project(':floatview-sdk')
     implementation project(':circle-progressbar-sdk')
 
+    implementation project(':lib-network')
+    implementation project(':lib-exception')
+    // The flollowing libraries have already included in 'androidbase-sdk' library.
+//    implementation project(':log-sdk')
+//    implementation project(':lib-bytes')
+//    implementation project(':lib-image')
+//    implementation project(':lib-common-android')
+//    implementation project(':lib-common-kotlin')
+
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
     implementation "com.sun.mail:android-mail:$javaMailVersion"

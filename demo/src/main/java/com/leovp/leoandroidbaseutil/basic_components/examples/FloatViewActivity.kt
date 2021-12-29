@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview_sdk.FloatView
@@ -14,6 +13,7 @@ import com.leovp.floatview_sdk.base.StickyEdge
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityFloatViewBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.LogContext
 import java.util.*
 

@@ -2,12 +2,12 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circle_progressbar.CircleProgressbar
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCircleProgressbarBinding
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import kotlin.concurrent.thread
 
 /**

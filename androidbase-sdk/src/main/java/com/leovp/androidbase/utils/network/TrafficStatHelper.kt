@@ -3,7 +3,7 @@ package com.leovp.androidbase.utils.network
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.TrafficStats
-import com.leovp.androidbase.SingletonHolder
+import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import java.io.RandomAccessFile
 
 /**

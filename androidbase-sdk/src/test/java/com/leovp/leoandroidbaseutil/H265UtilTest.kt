@@ -2,7 +2,7 @@ package com.leovp.leoandroidbaseutil
 
 import android.util.Log
 import com.leovp.androidbase.utils.media.H265Util
-import com.leovp.min_base_sdk.toHexStringLE
+import com.leovp.lib_bytes.toHexStringLE
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

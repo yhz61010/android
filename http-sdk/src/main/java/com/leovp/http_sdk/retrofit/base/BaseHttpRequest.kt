@@ -1,8 +1,8 @@
 package com.leovp.http_sdk.retrofit.base
 
 import com.leovp.http_sdk.okhttp.HttpLoggingInterceptor
+import com.leovp.lib_network.SslUtils
 import com.leovp.log_sdk.LogContext
-import com.leovp.min_base_sdk.SslUtils
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request

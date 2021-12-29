@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    api project(':min-base-sdk')
+    api project(':lib-network')
     api project(':log-sdk')
 
     api group: 'com.squareup.okhttp3', name: 'okhttp', version: "$rootProject.ext.okhttpVersion"

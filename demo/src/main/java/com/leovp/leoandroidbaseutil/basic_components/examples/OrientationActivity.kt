@@ -7,9 +7,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.widget.TextView
-import com.leovp.androidbase.exts.android.*
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
 
 class OrientationActivity : BaseDemonstrationActivity() {

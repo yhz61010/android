@@ -16,8 +16,14 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/floatview-sdk/LeoAndroidBaseUtil.floatview-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/floatview-sdk/LeoAndroidBaseUtil.floatview-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/http-sdk/LeoAndroidBaseUtil.http-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/http-sdk/LeoAndroidBaseUtil.http-sdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-bytes/LeoAndroidBaseUtil.lib-bytes.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-bytes/LeoAndroidBaseUtil.lib-bytes.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-common-android/LeoAndroidBaseUtil.lib-common-android.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-common-android/LeoAndroidBaseUtil.lib-common-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-common-kotlin/LeoAndroidBaseUtil.lib-common-kotlin.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-common-kotlin/LeoAndroidBaseUtil.lib-common-kotlin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-compress/LeoAndroidBaseUtil.lib-compress.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-compress/LeoAndroidBaseUtil.lib-compress.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-exception/LeoAndroidBaseUtil.lib-exception.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-exception/LeoAndroidBaseUtil.lib-exception.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-image/LeoAndroidBaseUtil.lib-image.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-image/LeoAndroidBaseUtil.lib-image.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-network/LeoAndroidBaseUtil.lib-network.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-network/LeoAndroidBaseUtil.lib-network.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-sdk/LeoAndroidBaseUtil.log-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/log-sdk/LeoAndroidBaseUtil.log-sdk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/min-base-sdk/LeoAndroidBaseUtil.min-base-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/min-base-sdk/LeoAndroidBaseUtil.min-base-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/screencapture-sdk/LeoAndroidBaseUtil.screencapture-sdk.iml" />
     </modules>
   </component>

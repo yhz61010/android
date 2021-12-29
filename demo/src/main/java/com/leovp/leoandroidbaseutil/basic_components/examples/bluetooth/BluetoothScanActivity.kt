@@ -88,7 +88,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     bluetooth.cancelDiscovery()
-                    startActivity(BluetoothClientActivity::class, { intent -> intent.putExtra("device", item.device) })
+                    startActivity<BluetoothClientActivity>({ intent -> intent.putExtra("device", item.device) })
                 }
             }
         }

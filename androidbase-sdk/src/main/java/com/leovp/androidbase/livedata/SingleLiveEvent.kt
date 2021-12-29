@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * explicit call to setValue() or call().
  *
  * Note that only one observer is going to be notified of changes.
+ *
+ * @see [SingleLiveEvent](https://github.com/android/architecture-samples/blob/dev-todo-mvvm-live/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/SingleLiveEvent.java)
  */
 class SingleLiveEvent<T> : MutableLiveData<T>() {
     private val pending = AtomicBoolean(false)

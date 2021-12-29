@@ -40,7 +40,8 @@ dependencies {
 
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api project(':log-sdk')
-    api project(':min-base-sdk')
+    api project(':lib-bytes')
+    api project(':lib-network')
 
     // No need to use this library when adding pipeline however we indeed need its library.
     // So what's the magic?

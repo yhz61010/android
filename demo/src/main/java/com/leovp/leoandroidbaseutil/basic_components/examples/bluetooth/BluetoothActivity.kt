@@ -5,12 +5,12 @@ import android.view.View
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.bluetoothManager
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothBinding
+import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.log_sdk.LogContext
 
 /**

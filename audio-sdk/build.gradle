@@ -47,7 +47,8 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api "androidx.annotation:annotation:$annotationVersion"
     api project(':log-sdk')
-    api project(':min-base-sdk')
+    api project(':lib-bytes')
+    api project(':lib-compress')
 }
 
 afterEvaluate {

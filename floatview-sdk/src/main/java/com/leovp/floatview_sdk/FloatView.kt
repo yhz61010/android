@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.floatview_sdk
 
 import android.app.Activity
@@ -9,7 +11,7 @@ import androidx.annotation.LayoutRes
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.DefaultConfig
 import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.floatview_sdk.util.canDrawOverlays
+import com.leovp.lib_common_android.exts.canDrawOverlays
 
 
 /**
@@ -26,7 +28,6 @@ import com.leovp.floatview_sdk.util.canDrawOverlays
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-@Suppress("unused")
 class FloatView private constructor(private val context: Activity) {
 
     companion object {

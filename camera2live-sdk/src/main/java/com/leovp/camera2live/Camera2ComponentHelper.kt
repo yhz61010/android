@@ -21,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.Keep
+import androidx.annotation.RequiresPermission
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -456,6 +457,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
      * - Starts the preview by dispatching a repeating capture request
      * - Sets up the still image capture listeners
      */
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
         LogContext.log.i(TAG, "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <=====")
         this@Camera2ComponentHelper.previewWidth = previewWidth
@@ -477,7 +479,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     private suspend fun openCamera(
         manager: CameraManager,
         cameraId: String,
@@ -861,6 +863,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun switchFlash() = if (torchOn) turnOffFlash() else turnOnFlash()
 
     // ===========================================================
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchCamera() {
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
@@ -872,7 +875,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         }
     }
 
-    @Suppress("unchecked")
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchToBackCamera() {
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
@@ -881,7 +884,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         switchCamera(CameraMetadata.LENS_FACING_BACK)
     }
 
-    @Suppress("unchecked")
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchToFrontCamera() {
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
@@ -890,7 +893,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         switchCamera(CameraMetadata.LENS_FACING_FRONT)
     }
 
-    @Suppress("unchecked")
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchCamera(lensFacing: Int) {
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")

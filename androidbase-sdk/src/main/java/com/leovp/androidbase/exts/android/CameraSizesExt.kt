@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 /*
  * Copyright 2020 The Android Open Source Project
  *
@@ -60,7 +62,7 @@ fun getDisplaySmartSize(designSize: Size): SmartSize {
  * - [android.view.SurfaceHolder] - Recommended for low-power camera preview with {@link android.view.SurfaceView}
  * - [android.graphics.SurfaceTexture] - Recommended for OpenGL-accelerated preview processing or compositing with
  * - [android.view.TextureView]
- * @param format an image format from either [ImageFormat] or [PixelFormat]
+ * @param format an image format from either `ImageFormat` or `PixelFormat`
  */
 fun <T> getPreviewOutputSize(
     designSize: Size,
@@ -83,10 +85,10 @@ fun <T> getPreviewOutputSize(
 
     // Then, get the largest output size that is smaller or equal than our max size
     val alphaSize = validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }
-    if (alphaSize.long < maxSize.short) {
-        return validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short * 1.5F }.size
+    return if (alphaSize.long < maxSize.short) {
+        validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short * 1.5F }.size
     } else {
-        return alphaSize.size
+        alphaSize.size
     }
 }
 

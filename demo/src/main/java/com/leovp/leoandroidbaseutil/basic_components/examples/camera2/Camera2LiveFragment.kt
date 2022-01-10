@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
+import androidx.annotation.RequiresPermission
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.CameraUtil
@@ -36,15 +37,17 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
             }"
         )
 
-        CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { it ->
+        CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach {
             LogContext.log.w(TAG, "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
         }
     }
 
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         cameraView.holder?.addCallback(object : SurfaceHolder.Callback {
+            @RequiresPermission(android.Manifest.permission.CAMERA)
             override fun surfaceCreated(holder: SurfaceHolder) {
 //                camera2Helper.encoderType = if (
 //                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")

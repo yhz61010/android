@@ -1,6 +1,5 @@
 package com.leovp.androidbase.utils.device
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -8,6 +7,7 @@ import android.net.NetworkInfo
 import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiNetworkSpecifier
+import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_android.exts.connectivityManager
 import com.leovp.lib_common_android.exts.wifiManager
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
@@ -29,7 +29,7 @@ class WifiUtil private constructor(private val ctx: Context) {
      *
      * @param enc Only available below API 29(API < 29)(Android Q/Android 10)
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_WIFI_STATE])
     fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WEP) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             val wifiNetworkSpecifier = WifiNetworkSpecifier.Builder()
@@ -83,7 +83,6 @@ class WifiUtil private constructor(private val ctx: Context) {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
     fun getCurrentSsid(): String? {
         var ssid: String? = null
         val networkInfo: NetworkInfo? = ctx.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)

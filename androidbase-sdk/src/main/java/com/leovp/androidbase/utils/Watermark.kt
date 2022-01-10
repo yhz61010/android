@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils
 
 import android.app.Activity
+import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.view.ViewGroup
@@ -126,7 +127,7 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             val height = bounds.bottom
             val diagonal = sqrt(width * width + height * height.toDouble()).toInt()
             paint.color = textColor
-            paint.textSize = sp2px(textSize).toFloat()
+            paint.textSize = Resources.getSystem().sp2px(textSize)
             paint.isAntiAlias = true
             val fontMetrics = paint.fontMetrics
             val textHeight = fontMetrics.descent - fontMetrics.ascent

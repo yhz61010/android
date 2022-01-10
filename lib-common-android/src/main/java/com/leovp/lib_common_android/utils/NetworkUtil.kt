@@ -2,12 +2,14 @@
 
 package com.leovp.lib_common_android.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.telephony.TelephonyManager
+import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_android.exts.connectivityManager
 import com.leovp.lib_common_android.exts.telephonyManager
 import com.leovp.lib_common_android.exts.wifiManager
@@ -50,9 +52,10 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) || isVpnActive(ctx)
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
 
     /**
@@ -61,7 +64,7 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isWifiActive(ctx: Context): Boolean {
         val cm = ctx.connectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -80,7 +83,7 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isEthernetActive(ctx: Context): Boolean {
         val cm = ctx.connectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -99,7 +102,7 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isCellularActive(ctx: Context): Boolean {
         val cm = ctx.connectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -118,7 +121,7 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isVpnActive(ctx: Context): Boolean {
         val cm = ctx.connectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -139,6 +142,7 @@ object NetworkUtil {
      * @return Return the latency which getting from ping command. Return -2 which indicates network is offline.
      * Return -1 indicates get ping error.
      */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getLatency(ctx: Context, ipAddress: String, numberOfPackages: Int): Double {
         if (isOffline(ctx)) {
             return (-2).toDouble()
@@ -174,6 +178,7 @@ object NetworkUtil {
         }
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getNetworkTypeName(ctx: Context): String? {
         if (isWifiActive(ctx)) return TYPE_WIFI
         if (isCellularActive(ctx)) return TYPE_CELLULAR
@@ -185,10 +190,11 @@ object NetworkUtil {
     /**
      * Need following permission:
      * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * <uses-permission android:name="android.permission.READ_PHONE_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_PHONE_STATE])
     fun getNetworkGeneration(ctx: Context): String? {
         return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
             return when {
@@ -210,7 +216,7 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
      * ```
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getWifiNetworkStats(ctx: Context): IntArray? {
         val linkSpeed: Int
         val wifiScore: Int
@@ -254,9 +260,12 @@ object NetworkUtil {
      * Need following permission
      * ```xml
      * <uses-permission name="android.permission.ACCESS_WIFI_STATE" />
+     * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+     * <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />
      * ```
      */
     @SuppressLint("HardwareIds", "MissingPermission")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION])
     private fun getMacAddressBeforeAndroidM(ctx: Context): String {
         val wifiInf = ctx.wifiManager.connectionInfo
         // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
@@ -264,6 +273,14 @@ object NetworkUtil {
         return if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress
     }
 
+    /**
+     * Need following permission
+     * ```xml
+     * <uses-permission name="android.permission.ACCESS_WIFI_STATE" />
+     * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+     * ```
+     */
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION])
     fun getMacAddress(ctx: Context): String {
         return runCatching {
             var address = getMacAddressBeforeAndroidM(ctx)

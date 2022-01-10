@@ -12,24 +12,24 @@ import com.google.android.material.snackbar.Snackbar
 /**
  * Example:
  * ```
- * yourView.snack(R.string.your_string) {
+ * view.snack(R.string.your_string) {
  *     action("Undo" /* or use string resource id */, Color.RED) { adapter.undo() }
  * }
  * ```
  */
-fun View.snack(@StringRes messageRes: Int, length: Int = Snackbar.LENGTH_LONG, f: Snackbar.() -> Unit) {
+inline fun View.snack(@StringRes messageRes: Int, length: Int = Snackbar.LENGTH_LONG, crossinline f: Snackbar.() -> Unit) {
     snack(resources.getString(messageRes), length, f)
 }
 
 /**
  * Example:
  * ```
- * yourView.snack("Undo last delete?") {
+ * view.snack("Undo last delete?") {
  *     action("Undo" /* or use string resource id */, Color.RED) { adapter.undo() }
  * }
  * ```
  */
-fun View.snack(message: String, length: Int = Snackbar.LENGTH_LONG, f: Snackbar.() -> Unit) {
+inline fun View.snack(message: String, length: Int = Snackbar.LENGTH_LONG, crossinline f: Snackbar.() -> Unit) {
     val snack = Snackbar.make(this, message, length)
     snack.f()
     snack.show()

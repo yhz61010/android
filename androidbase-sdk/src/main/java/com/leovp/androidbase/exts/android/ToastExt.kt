@@ -96,7 +96,7 @@ private fun showToast(ctx: Context?, msg: String?, longDuration: Boolean = false
         toast = Toast(ctx).apply {
             @Suppress("DEPRECATION")
             this.view = view
-            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, dp2px(ctx, 50F))
+            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, ctx.resources.dp2px(50F))
             this.duration = duration
             show()
         }

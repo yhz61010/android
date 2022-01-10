@@ -1,8 +1,8 @@
-package com.leovp.leoandroidbaseutil
+package com.leovp.lib_bytes
 
 import android.util.Log
-import com.leovp.min_base_sdk.compress
-import com.leovp.min_base_sdk.decompress
+import com.leovp.lib_compress.compress
+import com.leovp.lib_compress.decompress
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -22,7 +22,7 @@ class FlaterUnitTest {
     @Test
     fun testString() {
         val string = "Welcome to Leo's World"
-        val stringArray = string.encodeToByteArray()
+        val stringArray: ByteArray = string.encodeToByteArray()
         val compressedData = stringArray.compress()
 
         val decompressedData = compressedData.decompress()

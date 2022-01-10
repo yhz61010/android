@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.device
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothAdapter.LeScanCallback
@@ -8,6 +9,7 @@ import android.bluetooth.le.*
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.log_sdk.LogContext
 import java.lang.reflect.Field
@@ -141,7 +143,6 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     // Bluetooth Low Energy
     fun isSupportBle(pm: PackageManager): Boolean = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
-    @SuppressLint("MissingPermission")
     var isEnabled: Boolean = bluetoothAdapter.isEnabled
         private set
 
@@ -150,9 +151,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun enable(): Boolean = bluetoothAdapter.enable()
 
     /**
@@ -160,9 +163,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun disable(): Boolean = bluetoothAdapter.disable()
 
     /**
@@ -170,9 +175,15 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN]
+    )
     fun scan(scanDeviceCallback: ScanDeviceCallback) {
         this.scanDeviceCallback = scanDeviceCallback
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -187,9 +198,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun stopScan() {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
@@ -204,9 +217,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun startDiscovery(): Boolean = bluetoothAdapter.startDiscovery()
 
     /**
@@ -214,17 +229,25 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun cancelDiscovery(): Boolean = bluetoothAdapter.cancelDiscovery()
 
     /**
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE]
+    )
     fun startAdvertising(name: String, callback: AdvertiseCallback) {
         val settings = AdvertiseSettings.Builder()
             .setConnectable(true)
@@ -246,7 +269,8 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     fun stopAdvertising(callback: AdvertiseCallback) {
         val bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
         bluetoothLeAdvertiser.stopAdvertising(callback)
@@ -255,6 +279,8 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
      */
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun release() {
         cancelDiscovery()
         stopScan()
@@ -263,9 +289,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
      * permission
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("InlinedApi", "MissingPermission")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_CONNECT])
     var boundedDevices: Set<BluetoothDevice> = bluetoothAdapter.bondedDevices
         private set
 }

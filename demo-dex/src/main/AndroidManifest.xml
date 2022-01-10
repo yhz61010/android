@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?><!-- not a real Android application, it is run by app_process manually -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.leovp.demo_dex">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+</manifest>

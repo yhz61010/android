@@ -13,6 +13,7 @@
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_idle.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_upload.xml" value="0.5927083333333333" />
         <entry key="demo/src/main/res/layout/activity_accessibility.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_aidl.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_app_settings.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_audio.xml" value="0.67" />
         <entry key="demo/src/main/res/layout/activity_camera2_live.xml" value="0.5765625" />

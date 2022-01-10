@@ -1,6 +1,5 @@
 package com.leovp.camera2live.view
 
-import android.annotation.SuppressLint
 import android.hardware.camera2.CameraMetadata
 import android.media.MediaActionSound
 import android.os.Bundle
@@ -10,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.ToggleButton
+import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.utils.media.DeviceSound
@@ -59,7 +59,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         return binding.root
     }
 
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (!enableRecordFeature) {

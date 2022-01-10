@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
@@ -17,6 +19,7 @@ import android.os.Process
 import android.util.TypedValue
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.lib_common_android.exts.inputMethodManager
+import com.leovp.lib_exception.fail
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import kotlin.system.exitProcess
@@ -27,18 +30,32 @@ import kotlin.system.exitProcess
  */
 
 // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
-fun dp2px(ctx: Context, dipValue: Float) = (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
+// (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
+/**
+ * Can I use [Resources.getSystem()] to get [Resources]?
+ *
+ * @return The return type is either `Int` or `Float`
+ */
+inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T = px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
 
-fun px2dp(ctx: Context, pxValue: Float) = (pxValue / ctx.resources.displayMetrics.density + 0.5f).toInt()
-
-fun sp2px(spValue: Float, ctx: Context? = null): Int {
-    return if (ctx == null) {
-        val fontScale: Float = Resources.getSystem().displayMetrics.scaledDensity
-        (spValue * fontScale + 0.5f).toInt()
-    } else {
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, spValue, ctx.resources.displayMetrics).toInt()
+/**
+ * @return The return type is either `Int` or `Float`
+ */
+inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
+    val result: Float = pxValue * 1.0f / displayMetrics.density + 0.5f
+    return when (T::class) {
+        Float::class -> result as T
+        Int::class -> result.toInt() as T
+        else -> fail("Type not supported")
     }
 }
+
+/**
+ * Can I use [Resources.getSystem()] to get [Resources]?
+ *
+ * @return The return type is either `Int` or `Float`
+ */
+inline fun <reified T : Number> Resources.sp2px(spValue: Float): T = px(TypedValue.COMPLEX_UNIT_SP, spValue)
 
 /**
  * Converts an unpacked complex data value holding a dimension to its final floating point value.
@@ -48,9 +65,20 @@ fun sp2px(spValue: Float, ctx: Context? = null): Int {
  * TypedValue.COMPLEX_UNIT_PT:  pt -> px
  * TypedValue.COMPLEX_UNIT_MM:  mm -> px
  * TypedValue.COMPLEX_UNIT_IN:  inch -> px
+ *
+ * Can I use [Resources.getSystem()] to get [Resources]?
+ *
+ * @return The return type is either `Int` or `Float`
  */
 @JvmOverloads
-fun px(ctx: Context, value: Float, unit: Int = TypedValue.COMPLEX_UNIT_DIP): Int = TypedValue.applyDimension(unit, value, ctx.resources.displayMetrics).toInt()
+inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT_DIP, value: Float): T {
+    val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
+    return when (T::class) {
+        Float::class -> result as T
+        Int::class -> result.toInt() as T
+        else -> fail("Type not supported")
+    }
+}
 
 /**
  * Get meta data in Activity or Application.<br></br>
@@ -113,11 +141,11 @@ fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
 }
 
 // https://stackoverflow.com/questions/4604239/install-application-programmatically-on-android
-fun installApk(ctx: Context, file: File) {
+fun Context.installApk(file: File) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val downloadedApkUri = FileDocumentUtil.getFileUri(ctx, file)
+            val downloadedApkUri = FileDocumentUtil.getFileUri(this, file)
             intent.setDataAndType(downloadedApkUri, "application/vnd.android.package-archive")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -125,16 +153,16 @@ fun installApk(ctx: Context, file: File) {
             intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        ctx.startActivity(intent)
+        startActivity(intent)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 }
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-fun exitApp(am: ActivityManager) {
+fun ActivityManager.exitApp() {
     try {
-        for (appTask in am.appTasks) {
+        for (appTask in this.appTasks) {
             appTask.finishAndRemoveTask()
         }
         exitProcess(0)
@@ -143,16 +171,16 @@ fun exitApp(am: ActivityManager) {
     }
 }
 
-fun startApp(ctx: Context, targetPackageName: String) {
-    ctx.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
+fun Context.startApp(targetPackageName: String) {
+    this.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
         it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-        ctx.startActivity(it)
+        this.startActivity(it)
     }
 }
 
-fun restartApp(ctx: Context, targetIntent: Intent) {
+fun Context.restartApp(targetIntent: Intent) {
     targetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-    ctx.startActivity(targetIntent)
+    this.startActivity(targetIntent)
     Process.killProcess(Process.myPid())
 //        Runtime.getRuntime().exit(0)
 }

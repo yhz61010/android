@@ -2,7 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.utils.file.FileUtil
+import com.leovp.androidbase.exts.android.createFile
+import com.leovp.androidbase.exts.android.toFile
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.log_sdk.LogContext
@@ -102,8 +103,8 @@ class JavaMailActivity : BaseDemonstrationActivity() {
     fun onSendAttachmentEmailClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ioScope.launch {
             LogContext.log.i(ITAG, "Sending attachment mail...")
-            val attachment = FileUtil.createFile(this@JavaMailActivity, "music.mp3")
-            FileUtil.copyInputStreamToFile(resources.openRawResource(R.raw.music), attachment.absolutePath)
+            val attachment = this@JavaMailActivity.createFile("music.mp3")
+            resources.openRawResource(R.raw.music).toFile(attachment.absolutePath)
             val session: Session = getSession(EMAIL_SMTP_PROTOCOL, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, FROM, FROM_PWD, EMAIL_SMTP_SSL)
 
             val text = MimeBodyPart()

@@ -10,8 +10,8 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
+import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.utils.file.FileDocumentUtil
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.log_sdk.LogContext
 import java.util.*
 
@@ -36,7 +36,7 @@ object CameraUtil {
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         return runCatching {
 //            if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
-            val imageFile = FileUtil.createImageFile(ctx, "jpg")
+            val imageFile = ctx.createImageFile("jpg")
             LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
@@ -77,7 +77,7 @@ object CameraUtil {
             cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             //start the activity - we handle returning in onActivityResult
 //             startActivityForResult(cropIntent, PIC_CROP);
-            val croppedImageFile = FileUtil.createImageFile(ctx, "jpg")
+            val croppedImageFile = ctx.createImageFile("jpg")
             LogContext.log.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
             //            boolean deleteFlag = imageFile.delete();
 //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);

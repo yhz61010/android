@@ -4,8 +4,8 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
@@ -39,7 +39,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         val pcmData = inputStream.readBytes()
         inputStream.close()
 
-        val outFile = FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).absolutePath
+        val outFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
         val os = BufferedOutputStream(FileOutputStream(outFile))
 
         thread {
@@ -64,7 +64,7 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
         thread {
 //            val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
-            val inFile = FileUtil.createFile(this, OUTPUT_IMA_FILE_NAME).absolutePath
+            val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
             val inputStream = FileInputStream(inFile)
             val musicBytes = inputStream.readBytes()
             inputStream.close()

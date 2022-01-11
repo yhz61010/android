@@ -189,13 +189,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         this.vps = vps
         this.sps = sps
         this.pps = pps
-        decoder = MediaCodec.createDecoderByType(
-            when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
-                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
-                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
-            }
-        )
-//        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
+
         val screenInfo = getAvailableResolution()
         val format = MediaFormat.createVideoFormat(
             when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
@@ -203,17 +197,29 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
             }, screenInfo.width, screenInfo.height
         )
-//        val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
-//        val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
 
-        when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
+        //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
+        decoder = when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
             ScreenRecordMediaCodecStrategy.EncodeType.H264 -> {
+                // val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
+                // val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
+
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
             }
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+
+//                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+//                    LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
+//                    MediaCodec.createByCodecName("c2.android.hevc.decoder")
+//                } else {
+//                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+//                }
+
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
             }
         }
 
@@ -556,33 +562,33 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     private var touchUpRawY = 0F
     private var touchUpStartTime = 0L
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (binding.finger.inEditMode) {
-            return super.dispatchTouchEvent(ev)
+            return super.dispatchTouchEvent(event)
         }
 
-        when (ev.action) {
+        when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                touchDownRawX = ev.rawX
-                touchDownRawY = ev.rawY
+                touchDownRawX = event.rawX
+                touchDownRawY = event.rawY
                 touchDownStartTime = SystemClock.currentThreadTimeMillis()
             }
             MotionEvent.ACTION_MOVE -> Unit
             MotionEvent.ACTION_UP -> {
-                touchUpRawX = ev.rawX
-                touchUpRawY = ev.rawY
+                touchUpRawX = event.rawX
+                touchUpRawY = event.rawY
                 touchUpStartTime = SystemClock.currentThreadTimeMillis()
 
                 if (abs(touchUpRawX - touchDownRawX) <= CLICK_THRESHOLD && abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD) {
                     LogContext.log.w("Accept as click")
                     webSocketClientHandler?.sendTouchData(TouchType.DOWN, touchUpRawX, touchDownRawY)
-                    return super.dispatchTouchEvent(ev)
+                    return super.dispatchTouchEvent(event)
                 }
             }
         }
 
         LogContext.log.w("Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) duration=${touchUpStartTime - touchDownStartTime}ms")
         webSocketClientHandler?.sendDragData(touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY, touchUpStartTime - touchDownStartTime)
-        return super.dispatchTouchEvent(ev)
+        return super.dispatchTouchEvent(event)
     }
 }

@@ -6,8 +6,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import com.leovp.androidbase.exts.android.getBaseDirString
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareSetting
 import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Binding
@@ -55,7 +55,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityScreenshotRecordH264Binding.inflate(layoutInflater).apply { setContentView(root) }
 
-        val file = FileUtil.getBaseDirString(this, "output")
+        val file = getBaseDirString("output")
         val dstFile = File(
             file, "screen" + when (VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"

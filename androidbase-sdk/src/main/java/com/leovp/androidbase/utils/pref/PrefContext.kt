@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.pref
 
 import com.leovp.androidbase.utils.pref.base.IPref

@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.androidbase.utils.cipher
 
 import android.util.Base64
@@ -52,8 +54,7 @@ object RSAUtil {
     // The RSA key MUST BE 2048 bits or higher.
     fun encrypt(priKey: String, plainText: String): String? {
         return try {
-            val data =
-                PKCS8EncodedKeySpec(Base64.decode(priKey.toByteArray(), Base64.NO_WRAP))
+            val data = PKCS8EncodedKeySpec(Base64.decode(priKey.toByteArray(), Base64.NO_WRAP))
             val factory = KeyFactory.getInstance(CIPHER_ALGORITHM)
             val key = factory.generatePrivate(data)
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)

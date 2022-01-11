@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.androidbase.utils.media
 
 import android.media.MediaCodecInfo
@@ -150,8 +152,7 @@ object H265Util {
     const val NALU_TYPE_BLA_N_LP = 18 // 0x12
     const val NALU_TYPE_IDR_W_RADL = 19 // 0x13
     const val NALU_TYPE_IDR_N_LP = 20 // 0x14
-    const val NALU_TYPE_CRA_NUT = 21 // 0x15
-    // 22(RSV_IRAP_VCL22) and 23(RSV_IRAP_VCL23) Reserved IRAP VCL NAL unit types
+    const val NALU_TYPE_CRA_NUT = 21 // 0x15 // 22(RSV_IRAP_VCL22) and 23(RSV_IRAP_VCL23) Reserved IRAP VCL NAL unit types
 
     fun isIdrFrame(data: ByteArray): Boolean {
         return (16..23).contains(getNaluType(data))
@@ -191,8 +192,7 @@ object H265Util {
         val isVps = isVps(data)
         return if (!isVps) {
             null
-        } else try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+        } else try { // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
@@ -229,8 +229,7 @@ object H265Util {
         }
         return if (!isVps(data)) {
             null
-        } else try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+        } else try { // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
@@ -273,8 +272,7 @@ object H265Util {
         }
         return if (!isVps(data)) {
             null
-        } else try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+        } else try { // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
@@ -310,8 +308,7 @@ object H265Util {
 
         if (DEBUG) {
             LogContext.log.d(
-                TAG,
-                "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
+                    TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
@@ -328,31 +325,31 @@ object H265Util {
     @Suppress("unused")
     fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_VPS -> "VPS" // 32
-            NALU_TYPE_SPS -> "SPS" // 33
-            NALU_TYPE_PPS -> "PPS" // 34
-            NALU_TYPE_SEI -> "SEI" // 39
+            NALU_TYPE_VPS        -> "VPS" // 32
+            NALU_TYPE_SPS        -> "SPS" // 33
+            NALU_TYPE_PPS        -> "PPS" // 34
+            NALU_TYPE_SEI        -> "SEI" // 39
 
             // NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
-            NALU_TYPE_BLA_W_LP -> "I_BLA_W_LP" // 16
+            NALU_TYPE_BLA_W_LP   -> "I_BLA_W_LP" // 16
             NALU_TYPE_BLA_W_RADL -> "I_BLA_W_RADL" // 17
-            NALU_TYPE_BLA_N_LP -> "I_BLA_N_LP" // 18
+            NALU_TYPE_BLA_N_LP   -> "I_BLA_N_LP" // 18
             NALU_TYPE_IDR_W_RADL -> "IDR_W_RADL" // 19
-            NALU_TYPE_IDR_N_LP -> "IDR_N_LP" // 20
-            NALU_TYPE_CRA_NUT -> "I_CRA_NUT" // 21
+            NALU_TYPE_IDR_N_LP   -> "IDR_N_LP" // 20
+            NALU_TYPE_CRA_NUT    -> "I_CRA_NUT" // 21
 
-            NALU_TRAIL_N -> "P_TRAIL_N" // 0
-            NALU_TRAIL_R -> "P_TRAIL_R" // 1
-            NALU_TSA_N -> "P_TSA_N" // 2
-            NALU_TSA_R -> "P_TSA_R" // 3
-            NALU_STSA_N -> "P_STSA_N" // 4
-            NALU_STSA_R -> "P_STSA_R" // 5
-            NALU_RADL_N -> "P_RADL_N" // 6
-            NALU_RADL_R -> "P_RADL_R" // 7
-            NALU_RASL_N -> "P_RASL_N" // 8
-            NALU_RASL_R -> "P_RASL_R" // 9
+            NALU_TRAIL_N         -> "P_TRAIL_N" // 0
+            NALU_TRAIL_R         -> "P_TRAIL_R" // 1
+            NALU_TSA_N           -> "P_TSA_N" // 2
+            NALU_TSA_R           -> "P_TSA_R" // 3
+            NALU_STSA_N          -> "P_STSA_N" // 4
+            NALU_STSA_R          -> "P_STSA_R" // 5
+            NALU_RADL_N          -> "P_RADL_N" // 6
+            NALU_RADL_R          -> "P_RADL_R" // 7
+            NALU_RASL_N          -> "P_RASL_N" // 8
+            NALU_RASL_R          -> "P_RASL_R" // 9
 
-            else -> "Unknown"
+            else                 -> "Unknown"
         }
     }
 

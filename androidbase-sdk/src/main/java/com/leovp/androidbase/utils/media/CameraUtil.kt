@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.media
 
 import android.annotation.TargetApi
@@ -34,55 +36,46 @@ object CameraUtil {
 
     fun takePhoto(ctx: Activity): Uri? {
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        return runCatching {
-//            if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
+        return runCatching { //            if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
             val imageFile = ctx.createImageFile("jpg")
-            LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}")
-            //            boolean deleteFlag = imageFile.delete();
-//            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
-            val imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // Above Android 7.0, we need convert File to Uri through FileProvider.
+            LogContext.log.i(TAG, "takePhoto Image saved path=${imageFile.absolutePath}") //            boolean deleteFlag = imageFile.delete();
+            //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
+            val imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // Above Android 7.0, we need convert File to Uri through FileProvider.
                 FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", imageFile)
-            } else {
-                // Below Android 7.0. Directly using Uri to convert File to Uri.
+            } else { // Below Android 7.0. Directly using Uri to convert File to Uri.
                 Uri.fromFile(imageFile)
             }
             takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
             ctx.startActivityForResult(takePhotoIntent, REQUEST_CODE_OPEN_CAMERA)
-            imageUri
-//            }
+            imageUri //            }
         }.getOrDefault(null)
     }
 
     fun performCrop(ctx: Activity, srcImageUri: Uri?): Uri? {
         var croppedImageUri: Uri? = null
-        try {
-            //call the standard crop action intent (the user device may not support it)
+        try { //call the standard crop action intent (the user device may not support it)
             val cropIntent = Intent("com.android.camera.action.CROP")
 
 
             //indicate image type and Uri
-            cropIntent.setDataAndType(srcImageUri, "image/*")
-            //set crop properties
-//            cropIntent.putExtra("crop", "true");
-//            //indicate aspect of desired crop
-//            cropIntent.putExtra("aspectX", 1);
-//            cropIntent.putExtra("aspectY", 1);
-//            //indicate output X and Y
-//            cropIntent.putExtra("outputX", 256);
-//            cropIntent.putExtra("outputY", 256);
-//            //retrieve data on return
-//            cropIntent.putExtra("return-data", true);
+            cropIntent.setDataAndType(srcImageUri, "image/*") //set crop properties
+            //            cropIntent.putExtra("crop", "true");
+            //            //indicate aspect of desired crop
+            //            cropIntent.putExtra("aspectX", 1);
+            //            cropIntent.putExtra("aspectY", 1);
+            //            //indicate output X and Y
+            //            cropIntent.putExtra("outputX", 256);
+            //            cropIntent.putExtra("outputY", 256);
+            //            //retrieve data on return
+            //            cropIntent.putExtra("return-data", true);
             // You must grant read uri permission. Or else app will be crashed.
-            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            //start the activity - we handle returning in onActivityResult
-//             startActivityForResult(cropIntent, PIC_CROP);
+            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) //start the activity - we handle returning in onActivityResult
+            //             startActivityForResult(cropIntent, PIC_CROP);
             val croppedImageFile = ctx.createImageFile("jpg")
-            LogContext.log.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}")
-            //            boolean deleteFlag = imageFile.delete();
-//            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
+            LogContext.log.w(TAG, "Cropped image saved path=${croppedImageFile.absolutePath}") //            boolean deleteFlag = imageFile.delete();
+            //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
 
-            // Only Uri.fromeFile can be used for cropping output Uri.
+            // Only Uri#fromeFile can be used for cropping output Uri.
             // You CAN NOT use FileProvider.getUriForFile
             croppedImageUri = Uri.fromFile(croppedImageFile)
             cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, croppedImageUri)
@@ -109,10 +102,12 @@ object CameraUtil {
     @TargetApi(19)
     fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
         val selectedImage: MutableList<String> = ArrayList()
-        data?.data?.let { url -> FileDocumentUtil.getFileRealPath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) } }
-        data?.clipData?.let {
+        data?.data?.let { url ->
+            FileDocumentUtil.getFileRealPath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) }
+        }
+        data?.clipData?.let { it ->
             for (i in 0 until it.itemCount) {
-                FileDocumentUtil.getFileRealPath(ctx, it.getItemAt(i).uri)?.let { selectedImage.add(it) }
+                FileDocumentUtil.getFileRealPath(ctx, it.getItemAt(i).uri)?.let { realPath -> selectedImage.add(realPath) }
             }
         }
         return selectedImage

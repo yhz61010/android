@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.notch
 
 import android.app.Activity
@@ -44,7 +46,6 @@ import com.leovp.lib_common_kotlin.utils.SingletonHolder
  * Author: Michael Leo
  * Date: 20-11-26 下午7:39
  */
-@Suppress("unused")
 class NotchScreenManager private constructor(private val activity: Activity) {
     companion object : SingletonHolder<NotchScreenManager, Activity>(::NotchScreenManager)
 
@@ -78,8 +79,8 @@ class NotchScreenManager private constructor(private val activity: Activity) {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             when {
                 activity.isHuaWei -> notchScreen = HuaweiNotchScreen()
-                activity.isOppo -> notchScreen = OppoNotchScreen()
-                activity.isVivo -> notchScreen = HuaweiNotchScreen()
+                activity.isOppo   -> notchScreen = OppoNotchScreen()
+                activity.isVivo   -> notchScreen = HuaweiNotchScreen()
                 activity.isXiaoMi -> notchScreen = MiNotchScreen()
             }
         }

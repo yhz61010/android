@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.network
 
 import com.leovp.androidbase.iters.EventCallBack
@@ -23,7 +25,6 @@ object InternetUtil {
         }
     }
 
-    @Suppress("unused")
     fun getIpsByName(host: String?, callback: EventCallBack) {
         thread { callback.onCallback(getIpsByName(host)) }
     }

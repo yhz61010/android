@@ -1,10 +1,11 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.notch
 
 import android.app.Activity
 import android.graphics.Rect
 import androidx.annotation.Keep
 
-@Suppress("unused")
 interface INotchScreen {
     fun hasNotch(activity: Activity): Boolean
     fun setDisplayInNotch(activity: Activity)

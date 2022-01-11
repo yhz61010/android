@@ -5,6 +5,7 @@ import android.media.MediaCodecInfo
 import android.os.Bundle
 import android.util.Size
 import android.view.SurfaceHolder
+import androidx.annotation.RequiresPermission
 import androidx.lifecycle.lifecycleScope
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
@@ -29,6 +30,7 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     private lateinit var camera2Helper: Camera2ComponentHelper
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
 
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater).apply { setContentView(root) }
@@ -62,7 +64,7 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
                 }
             })
 
-//            encoderType = if (
+            //            encoderType = if (
 //                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
 //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
 //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
@@ -72,11 +74,8 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(
-                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
-                characteristics,
-                SurfaceHolder::class.java
-            )
-            // To ensure that size is set, initialize camera in the view's thread
+                    Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/, characteristics, SurfaceHolder::class.java
+            ) // To ensure that size is set, initialize camera in the view's thread
             runCatching {
                 LogContext.log.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
                 initializeCamera(previewSize.width, previewSize.height)
@@ -91,6 +90,7 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
         }
     }
 
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onStop() {
         stopRecord()
         super.onStop()
@@ -127,6 +127,7 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
         }
     }
 
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     private fun stopRecord() {
         if (::camera2Helper.isInitialized) {
             camera2Helper.run {

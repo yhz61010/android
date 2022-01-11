@@ -1,6 +1,10 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils
 
 /**
+ * Used for Java. In Kotlin, you can merge bytes by plus operator.
+ *
  * Author: Michael Leo
  * Date: 20-5-21 下午4:32
  */

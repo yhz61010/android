@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.leovp.androidbase.utils.media
 
 import android.media.MediaCodecInfo
@@ -48,7 +50,7 @@ object H264Util {
     // NALU_TYPE_IDR and NALU_TYPE_SPS frame are considered as Key frame
     fun isKeyFrame(data: ByteArray): Boolean {
         return isIdrFrame(data) || isSps(
-            data
+                data
         )
     }
 
@@ -66,15 +68,13 @@ object H264Util {
         return getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65)
     }
 
-    fun isSps(data: ByteArray): Boolean {
-        // 5bits, 7.3.1 NAL unit syntax,
+    fun isSps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
         return getNaluType(data) == NALU_TYPE_SPS // 7 0x67(103)
     }
 
-    fun isPps(data: ByteArray): Boolean {
-        // 5bits, 7.3.1 NAL unit syntax,
+    fun isPps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
         return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104)
@@ -90,8 +90,7 @@ object H264Util {
         val isSps = isSps(data)
         return if (!isSps) {
             null
-        } else try {
-            // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+        } else try { // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
@@ -120,8 +119,7 @@ object H264Util {
         }
         return if (!isSps(data)) {
             null
-        } else try {
-            // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
+        } else try { // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
             // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,10,56,8B,4,B0,7C,F1
             var startIndex = -1
             for (i in 5 until data.size) {
@@ -151,8 +149,7 @@ object H264Util {
 
         if (DEBUG) {
             LogContext.log.d(
-                TAG,
-                "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
+                    TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
@@ -169,11 +166,11 @@ object H264Util {
     @Suppress("unused")
     fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_SPS -> "SPS"
-            NALU_TYPE_PPS -> "PPS"
-            NALU_TYPE_IDR -> "I"
+            NALU_TYPE_SPS      -> "SPS"
+            NALU_TYPE_PPS      -> "PPS"
+            NALU_TYPE_IDR      -> "I"
             NALU_TYPE_NONE_IDR -> "B/P"
-            else -> "Unknown"
+            else               -> "Unknown"
         }
     }
 

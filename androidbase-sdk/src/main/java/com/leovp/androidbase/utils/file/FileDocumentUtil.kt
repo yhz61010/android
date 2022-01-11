@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate", "WeakerAccess")
+
 package com.leovp.androidbase.utils.file
 
 import android.annotation.SuppressLint
@@ -25,7 +27,6 @@ import kotlin.math.min
  *
  * [Check this post](https://stackoverflow.com/a/50664805)
  */
-@Suppress("unused", "WeakerAccess")
 object FileDocumentUtil {
     /**
      * Usage:
@@ -45,14 +46,11 @@ object FileDocumentUtil {
     fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(context, "${context.applicationContext.packageName}.fileprovider", file)
 
     @SuppressLint("NewApi", "ObsoleteSdkInt")
-    fun getFileRealPath(context: Context, uri: Uri): String? {
-        // check here to KITKAT or new version
+    fun getFileRealPath(context: Context, uri: Uri): String? { // check here to KITKAT or new version
         val aboveKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
         var selection: String? = null
-        var selectionArgs: Array<String>? = null
-        // DocumentProvider
-        if (aboveKitKat) {
-            // ExternalStorageProvider
+        var selectionArgs: Array<String>? = null // DocumentProvider
+        if (aboveKitKat) { // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray()
@@ -87,15 +85,13 @@ object FileDocumentUtil {
                             return id.replaceFirst("raw:".toRegex(), "")
                         }
                         val contentUriPrefixesToTry = arrayOf(
-                            "content://downloads/public_downloads",
-                            "content://downloads/my_downloads"
+                                "content://downloads/public_downloads", "content://downloads/my_downloads"
                         )
                         for (contentUriPrefix in contentUriPrefixesToTry) {
                             return try {
                                 val contentUri = ContentUris.withAppendedId(Uri.parse(contentUriPrefix), java.lang.Long.valueOf(id))
                                 getDataColumn(context, contentUri, null, null)
-                            } catch (e: NumberFormatException) {
-                                //In Android 8 and Android P the id is not a number
+                            } catch (e: NumberFormatException) { //In Android 8 and Android P the id is not a number
                                 uri.path!!.replaceFirst("^/document/raw:".toRegex(), "").replaceFirst("^raw:".toRegex(), "")
                             }
                         }
@@ -107,7 +103,7 @@ object FileDocumentUtil {
                     }
                     try {
                         val contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
+                                Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
                         )
                         return getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
@@ -131,8 +127,7 @@ object FileDocumentUtil {
                 selection = "_id=?"
                 selectionArgs = arrayOf(split[1])
                 return getDataColumn(
-                    context, contentUri, selection,
-                    selectionArgs
+                        context, contentUri, selection, selectionArgs
                 )
             }
             if (isGoogleDriveUri(uri)) {
@@ -148,10 +143,8 @@ object FileDocumentUtil {
                 if (isGoogleDriveUri(uri)) {
                     return getDriveFilePath(context, uri)
                 }
-                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    // return getFilePathFromURI(context,uri);
-                    copyFileToInternalStorage(context, uri, "userfiles")
-                    // return getRealPathFromURI(context,uri);
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // return getFilePathFromURI(context,uri);
+                    copyFileToInternalStorage(context, uri, "userfiles") // return getRealPathFromURI(context,uri);
                 } else {
                     getDataColumn(context, uri, null, null)
                 }
@@ -172,13 +165,7 @@ object FileDocumentUtil {
 
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(
-            ContentResolver.SCHEME_ANDROID_RESOURCE
-                    + "://"
-                    + context.resources.getResourcePackageName(resId)
-                    + "/"
-                    + context.resources.getResourceTypeName(resId)
-                    + "/"
-                    + context.resources.getResourceEntryName(resId)
+                ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.resources.getResourcePackageName(resId) + "/" + context.resources.getResourceTypeName(resId) + "/" + context.resources.getResourceEntryName(resId)
         )
     }
 
@@ -215,8 +202,7 @@ object FileDocumentUtil {
     }
 
     private fun getDriveFilePath(context: Context, uri: Uri): String {
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            /*
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->/*
          * Get the column indexes of the data in the Cursor,
          *     * move to the first row in the Cursor, get the data,
          *     * and display cursor.
@@ -258,9 +244,8 @@ object FileDocumentUtil {
      */
     private fun copyFileToInternalStorage(context: Context, uri: Uri, newDirName: String): String {
         context.contentResolver.query(
-            uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null
-        )?.use { cursor ->
-            /*
+                uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null
+        )?.use { cursor ->/*
              * Get the column indexes of the data in the Cursor,
              *     * move to the first row in the Cursor, get the data,
              *     * and display it.
@@ -351,7 +336,7 @@ object FileDocumentUtil {
         return null
     }
 
-//    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getDataColumn(ctx, uri, selection, null)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+    //    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getDataColumn(ctx, uri, selection, null)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
 //    private fun getImagePath(ctx: Context, uri: Uri, selection: String?): String? {
 //        ctx.contentResolver.query(uri, null, selection, null, null)?.use {
 //            if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
@@ -361,7 +346,7 @@ object FileDocumentUtil {
 
     // =================================================================
 
-//    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getPath(ctx, uri)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
+    //    @Deprecated("Using FileDocumentUtils#getPath() instead", ReplaceWith("getPath(ctx, uri)", "com.leovp.androidbase.utils.file.FileDocumentUtils"))
 //    fun getRealPath(ctx: Context, uri: Uri): String? {
 //        var imagePath: String? = null
 //        if (DocumentsContract.isDocumentUri(ctx, uri)) {

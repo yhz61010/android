@@ -4,7 +4,6 @@ package com.leovp.androidbase.exts.android
 
 import android.content.Context
 import androidx.annotation.RawRes
-import com.leovp.androidbase.utils.file.FileUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -26,13 +25,13 @@ fun Context.saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileN
     if (!file.exists()) {
         file.mkdirs()
     }
-    FileUtil.copyInputStreamToFile(inputStream, storagePath + File.separator + outFileName, force = force)
+    inputStream.toFile(storagePath + File.separator + outFileName, force = force)
     return storagePath + File.separatorChar + outFileName
 }
 
 fun Context.saveAssetToFile(assetFileName: String, storagePath: String, outFileName: String, force: Boolean = false): Boolean {
     return runCatching {
-        FileUtil.copyInputStreamToFile(assets.open(assetFileName), File(storagePath, outFileName).absolutePath, force = force)
+        assets.open(assetFileName).toFile(File(storagePath, outFileName).absolutePath, force = force)
         true
     }.getOrElse {
         it.printStackTrace()

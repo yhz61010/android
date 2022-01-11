@@ -177,8 +177,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
         }
         val startNs = System.nanoTime()
-        val response: Response
-        response = try {
+        val response: Response = try {
             chain.proceed(request)
         } catch (e: Exception) {
             logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")

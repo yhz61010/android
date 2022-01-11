@@ -133,6 +133,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             if (isChecked) {
                 ScreenCapture.requestPermission(this@ScreenShareMasterActivity)
             } else {
+                FloatView.clear()
                 stopServer()
                 mediaProjectService?.stopScreenShare()
             }
@@ -246,6 +247,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
+        FloatView.clear()
         stopServer()
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {
@@ -403,7 +405,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         private fun lostClientDisconnection() {
             this@ScreenShareMasterActivity.clientChannel = null
-            runOnUiThread { binding.toggleButton.isChecked = false }
+            runOnUiThread {
+                binding.toggleButton.isChecked = false
+                FloatView.clear()
+            }
             stopServer()
         }
     }
@@ -419,7 +424,6 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun stopServer() {
-        FloatView.clear()
         clientChannel = null
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }

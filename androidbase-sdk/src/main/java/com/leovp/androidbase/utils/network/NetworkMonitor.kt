@@ -1,9 +1,11 @@
 package com.leovp.androidbase.utils.network
 
+import android.Manifest
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import androidx.annotation.Keep
+import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.log_sdk.LogContext
 import java.util.concurrent.TimeUnit
@@ -31,12 +33,15 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
     private var trafficStat: TrafficStatHelper? = null
     private val monitorThread = HandlerThread("monitor-thread").apply { start() }
     private val monitorHandler = Handler(monitorThread.looper)
+
     private val pingRunnable: Runnable = object : Runnable {
         private var pingCountdown: Long = 0
         private var strengthCountdown: Long = 0
         private val MAX_COUNT: Long = 10
         private var showPingLatencyStatus: Int = -1
         private var showWifiSignalStatus: Int = -1
+
+        @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
         override fun run() {
             try {
                 showPingLatencyStatus = -1
@@ -61,8 +66,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
                             strengthCountdown = MAX_COUNT
                         }
                     }
-                }
-                // Sometimes, the ping value will be extremely high(like, 319041664, 385195024). For this abnormal case, we just ignore it.
+                } // Sometimes, the ping value will be extremely high(like, 319041664, 385195024). For this abnormal case, we just ignore it.
                 if (ping < 60000) {
                     if (ping >= NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH && pingCountdown < 1) {
                         showPingLatencyStatus = NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH
@@ -71,8 +75,7 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
                         showPingLatencyStatus = NetworkUtil.NETWORK_PING_DELAY_HIGH
                         pingCountdown = MAX_COUNT
                     }
-                } else {
-                    // DO NOT show abnormal ping value when its value is greater equal than 60000
+                } else { // DO NOT show abnormal ping value when its value is greater equal than 60000
                     ping = -3
                 }
 
@@ -84,17 +87,17 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, f: (Netwo
                 }
 
                 f.invoke(
-                    NetworkMonitorResult(
-                        downloadSpeed,
-                        uploadSpeed,
-                        ping,
-                        showPingLatencyStatus,
-                        networkStats?.get(0) ?: -1,
-                        networkStats?.get(1) ?: -1,
-                        networkStats?.get(2) ?: -1,
-                        networkStats?.get(3) ?: -1,
-                        showWifiSignalStatus
-                    )
+                        NetworkMonitorResult(
+                                downloadSpeed,
+                                uploadSpeed,
+                                ping,
+                                showPingLatencyStatus,
+                                networkStats?.get(0) ?: -1,
+                                networkStats?.get(1) ?: -1,
+                                networkStats?.get(2) ?: -1,
+                                networkStats?.get(3) ?: -1,
+                                showWifiSignalStatus
+                        )
                 )
                 monitorHandler.postDelayed(this, TimeUnit.SECONDS.toMillis(freq.toLong()))
             } catch (e: Exception) {

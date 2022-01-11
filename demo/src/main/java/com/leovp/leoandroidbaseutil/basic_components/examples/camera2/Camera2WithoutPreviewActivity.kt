@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     companion object {
-        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_HIGH
+        private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }
 
     private lateinit var binding: ActivityCamera2WithoutPreviewBinding

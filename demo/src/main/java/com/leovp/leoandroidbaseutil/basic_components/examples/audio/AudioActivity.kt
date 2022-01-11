@@ -6,8 +6,8 @@ import android.view.View
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.audio.aac.AacFilePlayer
@@ -41,8 +41,8 @@ class AudioActivity : BaseDemonstrationActivity() {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    private val pcmFile by lazy { FileUtil.createFile(this, "audio.pcm") }
-    private val aacFile by lazy { FileUtil.createFile(this, "audio.aac") }
+    private val pcmFile by lazy { this.createFile("audio.pcm") }
+    private val aacFile by lazy { this.createFile("audio.aac") }
     private var pcmOs: BufferedOutputStream? = null
     private var aacOs: BufferedOutputStream? = null
 

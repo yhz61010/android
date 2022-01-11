@@ -27,8 +27,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
+import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.camera2live.base.DataProcessContext
@@ -929,7 +929,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                     // So I can not mirror image in the general way like this below:
                     //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                     try {
-                        val output = FileUtil.createImageFile(context, "jpg")
+                        val output = context.createImageFile("jpg")
                         FileOutputStream(output).use { it.write(result.imageBytes) }
                         cont.resume(output)
                     } catch (exc: IOException) {

@@ -13,6 +13,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import androidx.core.content.FileProvider
+import com.leovp.androidbase.exts.android.fileExists
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.io.FileOutputStream
@@ -193,7 +194,7 @@ object FileDocumentUtil {
         // so no "primary" type, but let the check here for other devices
         if ("primary".equals(type, ignoreCase = true)) {
             fullPath = Environment.getExternalStorageDirectory().toString() + relativePath
-            if (FileUtil.fileExists(fullPath)) {
+            if (fileExists(fullPath)) {
                 return fullPath
             }
         }
@@ -204,11 +205,11 @@ object FileDocumentUtil {
         // instead, for each possible path, check if file exists
         // we'll start with secondary storage as this could be our (physically) removable sd card
         fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
-        if (FileUtil.fileExists(fullPath)) {
+        if (fileExists(fullPath)) {
             return fullPath
         }
         fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
-        return if (FileUtil.fileExists(fullPath)) {
+        return if (fileExists(fullPath)) {
             fullPath
         } else fullPath
     }

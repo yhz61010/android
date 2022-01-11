@@ -10,9 +10,9 @@ import android.media.projection.MediaProjectionManager
 import android.os.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.leovp.androidbase.exts.android.getBaseDirString
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.file.FileUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.lib_image.compressBitmap
@@ -265,7 +265,7 @@ class MediaProjectionService : Service() {
         screenProcessor?.takeScreenshot(width, height) { bmp ->
             val compressedBmp = bmp.compressBitmap()
             bmp.recycle()
-            val jpegFile = File(FileUtil.getBaseDirString(this@MediaProjectionService, "screenshot"), "screenshot.jpg")
+            val jpegFile = File(this@MediaProjectionService.getBaseDirString("screenshot"), "screenshot.jpg")
             compressedBmp.writeToFile(jpegFile)
             compressedBmp.recycle()
             LogContext.log.w("onScreenshot[${jpegFile.length()}]")

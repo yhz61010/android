@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.notch.impl
 
 import android.annotation.SuppressLint
@@ -30,8 +32,7 @@ class VivoNotchScreen : INotchScreen {
 
     companion object {
         val isNotch: Boolean
-            @SuppressLint("PrivateApi")
-            get() {
+            @SuppressLint("PrivateApi") get() {
                 val mask = 0x00000020
                 return runCatching {
                     val cls = Class.forName("android.util.FtFeature")

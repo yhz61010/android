@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.androidbase.utils.system
 
 import android.accessibilityservice.AccessibilityService
@@ -22,7 +24,7 @@ import java.lang.ref.WeakReference
  */
 object AccessibilityUtil {
     private lateinit var weakService: WeakReference<AccessibilityService>
-    private const val TAG = "acce"
+    private const val TAG = "Acce"
 
     /**
      * This method must be called in your AccessibilityService's onAccessibilityEvent method.
@@ -91,11 +93,10 @@ object AccessibilityUtil {
         return weakService.get()?.rootInActiveWindow?.findAccessibilityNodeInfosByText(text)
     }
 
-    private fun performClick(nodesInfo: List<AccessibilityNodeInfo>?): Boolean {
-        // As of API level 24
-//        nodesInfo?.forEach { node ->
-//            if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
-//        }
+    private fun performClick(nodesInfo: List<AccessibilityNodeInfo>?): Boolean { // As of API level 24
+        //        nodesInfo?.forEach { node ->
+        //            if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+        //        }
         nodesInfo?.let { list ->
             for (node in list) {
                 if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
@@ -131,7 +132,7 @@ object AccessibilityUtil {
     }
 
     /**
-     * @param resourceId Resource id is "foo.bar:id/baz"
+     * @param editTextResourceId Resource id is "foo.bar:id/baz"
      */
     fun setTextById(text: String, editTextResourceId: String): Boolean {
         val editText: AccessibilityNodeInfo? = findNodesById(editTextResourceId)?.firstOrNull()

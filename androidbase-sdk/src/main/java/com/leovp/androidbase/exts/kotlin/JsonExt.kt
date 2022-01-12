@@ -2,6 +2,7 @@ package com.leovp.androidbase.exts.kotlin
 
 import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 
@@ -40,15 +41,15 @@ annotation class ExcludeDeserialize
  * The usage of annotations `Exclude`, `ExcludeSerialize` and `ExcludeDeserialize`,
  * please check `JsonUnitTest.kt` file.
  */
-val gson
+val gson: Gson
     get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
         override fun shouldSkipField(f: FieldAttributes) =
-            (f.annotations.find { it is Exclude } as? Exclude)?.serialize == true || f.annotations.find { it is ExcludeSerialize } != null
+                (f.annotations.find { it is Exclude } as? Exclude)?.serialize == true || f.annotations.find { it is ExcludeSerialize } != null
 
         override fun shouldSkipClass(clazz: Class<*>?) = false
     }).addDeserializationExclusionStrategy(object : ExclusionStrategy {
         override fun shouldSkipField(f: FieldAttributes) =
-            (f.annotations.find { it is Exclude } as? Exclude)?.deserialize == true || f.annotations.find { it is ExcludeDeserialize } != null
+                (f.annotations.find { it is Exclude } as? Exclude)?.deserialize == true || f.annotations.find { it is ExcludeDeserialize } != null
 
         override fun shouldSkipClass(clazz: Class<*>?) = false
     }).create()

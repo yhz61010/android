@@ -6,6 +6,7 @@
         <entry key="aidl-client/src/main/res/layout/activity_main.xml" value="0.3541666666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_error.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
+        <entry key="androidbase-sdk/src/main/res/layout/toast_tools_layout.xml" value="0.42314814814814816" />
         <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />

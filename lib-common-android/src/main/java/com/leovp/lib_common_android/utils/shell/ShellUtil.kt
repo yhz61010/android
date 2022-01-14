@@ -2,8 +2,6 @@
 
 package com.leovp.lib_common_android.utils.shell
 
-import android.annotation.TargetApi
-import android.os.Build
 import androidx.annotation.Keep
 import java.io.*
 import java.nio.charset.StandardCharsets
@@ -24,7 +22,7 @@ object ShellUtil {
     private val LINE_SEP = System.getProperty("line.separator")!!
 
     /**
-     * check whether has root permission
+     * Check whether has root permission.
      *
      * @return root for true otherwise false
      */
@@ -36,7 +34,6 @@ object ShellUtil {
         return execCmd(listOf(command), isRoot, isNeedResultMsg)
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     fun execCmd(commands: List<String>, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
         var result = -1
         if (commands.isEmpty()) {
@@ -107,7 +104,7 @@ object ShellUtil {
     // ========================================================================
     fun getProcessesList(isRoot: Boolean = false): List<LinuxProcess> {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
-        val reader = BufferedReader(StringReader(processesListString), 256 shl 1024)
+        val reader = BufferedReader(StringReader(processesListString), 256 shl 10)
         val processes: MutableList<LinuxProcess> = ArrayList()
         try {
             var info: LinuxProcess
@@ -144,7 +141,7 @@ object ShellUtil {
     }
 
     /**
-     * Look for all processes by process name
+     * Look for all processes by process name.
      *
      * @param isRoot Run as root
      * @param name   Specific process named

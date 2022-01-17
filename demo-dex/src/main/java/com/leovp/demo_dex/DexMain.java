@@ -19,6 +19,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * Usage:
+ * ```shell
+ * $ adb push dexdemo.dex /data/local/tmp
+ * $ adb exec-out CLASSPATH=/data/local/tmp/dexdemo.dex app_process / com.leovp.demo_dex.DexMain
+ * ```
+ * <p>
  * Author: Michael Leo
  * Date: 2021/12/16 10:25
  */

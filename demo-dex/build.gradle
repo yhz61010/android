@@ -18,8 +18,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             applicationVariants.all { variant ->
                 variant.outputs.each{ output ->
-                    def formattedDate = new Date().format('yyyyMMdd')
-                    output.outputFileName = "dexdemo-" + formattedDate
+//                    def formattedDate = new Date().format('yyyyMMdd')
+                    output.outputFileName = "dexdemo.dex"
                 }
             }
         }

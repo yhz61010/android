@@ -41,7 +41,6 @@
       <option name="XML_ALIGN_ATTRIBUTES" value="true" />
     </XML>
     <codeStyleSettings language="JAVA">
-      <option name="ALIGN_GROUP_FIELD_DECLARATIONS" value="true" />
       <option name="WRAP_ON_TYPING" value="0" />
     </codeStyleSettings>
     <codeStyleSettings language="XML">

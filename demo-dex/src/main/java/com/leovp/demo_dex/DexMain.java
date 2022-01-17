@@ -2,12 +2,18 @@ package com.leovp.demo_dex;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.wifi.WifiInfo;
 import android.os.Looper;
+import android.os.SystemClock;
+import android.view.Surface;
 
 import com.leovp.demo_dex.utils.DexHelper;
+import com.leovp.demo_dex.utils.ScreenshotUtil;
 import com.leovp.demo_dex.utils.Util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -43,6 +49,22 @@ public final class DexMain {
             WifiInfo wifiInfo = dexHelper.getWifiInfo();
             String ssid = wifiInfo == null ? "NA" : wifiInfo.getSSID().replaceAll("\"", "");
             println("isWifiActive=" + isWifiActive + " ssid=" + ssid);
+
+            println("Prepare to take screenshot...");
+            long st = SystemClock.elapsedRealtime();
+            Bitmap screenshot = ScreenshotUtil.screenshot(1440, 2960, Surface.ROTATION_0);
+            println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
+
+            if (screenshot != null) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                screenshot.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+                byte[] bitmapBytes = baos.toByteArray();
+
+                FileOutputStream fos = new FileOutputStream("/sdcard/screenshot.jpg");
+                fos.write(bitmapBytes);
+                fos.flush();
+                fos.close();
+            }
 
             println("Exit");
         } catch (Exception e) {

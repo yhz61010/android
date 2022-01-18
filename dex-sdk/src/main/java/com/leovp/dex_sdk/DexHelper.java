@@ -10,9 +10,10 @@ import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.IInterface;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
+
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -45,7 +46,7 @@ public class DexHelper {
             context = getContext();
             getServiceMethod = Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String.class);
         } catch (Exception e) {
-            Log.e(TAG, "DexHelper() constructor exception.", e);
+            CmnUtil.println(TAG, "DexHelper() constructor exception.", e);
         }
     }
 
@@ -72,14 +73,14 @@ public class DexHelper {
                     field.setAccessible(true);
                     field.set(context, "shell");
                 } catch (Exception e) {
-                    Log.e(TAG, "getContext()-1 exception.", e);
+                    CmnUtil.println(TAG, "getContext()-1 exception.", e);
                 }
             }
 
             this.context = (Context) getSystemContextMethod.invoke(activityThread);
             return this.context;
         } catch (Exception e) {
-            Log.e(TAG, "getContext()-2 exception.", e);
+            CmnUtil.println(TAG, "getContext()-2 exception.", e);
             return null;
         }
     }
@@ -119,7 +120,7 @@ public class DexHelper {
                 connectivityManager = (ConnectivityManager) constructor.newInstance(connectivityManagerService);
             }
         } catch (Exception e) {
-            Log.e(TAG, "getConnectivityManager() exception.", e);
+            CmnUtil.println(TAG, "getConnectivityManager() exception.", e);
         }
         return connectivityManager;
     }
@@ -142,7 +143,7 @@ public class DexHelper {
                     // As of Android, we have to set package name to "shell" just same as UID.
                     return (WifiInfo) method.invoke(getWifiManagerService(), "shell", "shell");
                 } catch (Exception eee) {
-                    Log.e(TAG, "getWifiInfo() exception.", eee);
+                    CmnUtil.println(TAG, "getWifiInfo() exception.", eee);
                 }
             }
         }
@@ -162,7 +163,7 @@ public class DexHelper {
                 return ni.getType() == ConnectivityManager.TYPE_WIFI;
             }
         } catch (Exception e) {
-            Log.e(TAG, "isWifiActive() exception.", e);
+            CmnUtil.println(TAG, "isWifiActive() exception.", e);
             return false;
         }
     }

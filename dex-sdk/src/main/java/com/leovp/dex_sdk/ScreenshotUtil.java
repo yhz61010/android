@@ -5,9 +5,10 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
+
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -80,7 +81,7 @@ public class ScreenshotUtil {
                 bitmap = (Bitmap) declaredMethod.invoke(null, new Object[]{width, height});
             }
         } catch (Exception e) {
-            Log.e(TAG, "screenshot error", e);
+            CmnUtil.println(TAG, "screenshot error", e);
         }
         return bitmap;
     }
@@ -107,7 +108,7 @@ public class ScreenshotUtil {
 
             return (IBinder) method.invoke(null);
         } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-            Log.e(TAG, "getBuiltInDisplay() error.", e);
+            CmnUtil.println(TAG, "getBuiltInDisplay() error.", e);
             return null;
         }
     }

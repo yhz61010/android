@@ -13,10 +13,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 
+import com.leovp.dex_sdk.util.CmnUtil;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class CustomConnectivityManager {
+    private static final String TAG = "ConnMgr";
 
     public void registerNetworkCallback(NetworkRequest request, NetworkCallback networkCallback) {
         registerNetworkCallback(request, networkCallback, getDefaultHandler());
@@ -31,7 +34,7 @@ public class CustomConnectivityManager {
             Field field = requestClass.getField("networkCapabilities");
             nc = (NetworkCapabilities) field.get(request);
         } catch (Exception e) {
-            e.printStackTrace();
+            CmnUtil.println(TAG, "registerNetworkCallback() error.", e);
         }
 
         sendRequestForNetwork(nc, networkCallback, 0, LISTEN, TYPE_NONE, cbHandler);
@@ -61,14 +64,14 @@ public class CustomConnectivityManager {
                 request = mService.requestNetwork(need, messenger, timeoutMs, binder, legacyType);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            CmnUtil.println(TAG, "sendRequestForNetwork() error.", e);
         }
         return request;
     }
 
     private final IConnectivityManager mService;
     final Handler handler = new Handler(msg -> {
-        System.out.println(msg.what);
+        CmnUtil.println(TAG, msg.what);
         return false;
     });
 

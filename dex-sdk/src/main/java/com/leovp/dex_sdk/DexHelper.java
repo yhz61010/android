@@ -20,6 +20,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
+ * // Some devices internally create a Handler when creating an input Surface, causing an exception:
+ * //   "Can't create handler inside thread that has not called Looper.prepare()"
+ * // <https://github.com/Genymobile/scrcpy/issues/240>
+ * //
+ * // Use Looper.prepareMainLooper() instead of Looper.prepare() to avoid a NullPointerException:
+ * //   "Attempt to read from field 'android.os.MessageQueue android.os.Looper.mQueue'
+ * //    on a null object reference"
+ * // <https://github.com/Genymobile/scrcpy/issues/921>
+ * <p>
+ * <p>
  * Author: Michael Leo
  * Date: 2022/1/6 13:31
  */

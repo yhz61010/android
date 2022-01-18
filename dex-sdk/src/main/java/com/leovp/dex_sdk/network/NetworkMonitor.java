@@ -16,9 +16,9 @@ import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Looper;
-import android.util.Log;
 
 import com.leovp.dex_sdk.DexHelper;
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -55,8 +55,7 @@ public class NetworkMonitor {
             }
 
         } catch (Exception e) {
-            System.out.println("Init services error>>>>>>>>>>");
-            e.printStackTrace();
+            CmnUtil.println("Init NetworkMonitor() error.", e);
         }
     }
 
@@ -68,14 +67,14 @@ public class NetworkMonitor {
                 @Override
                 public void onAvailable(Network network) {
                     super.onAvailable(network);
-                    Log.e("Leo", "=> onAvailable <=");
+                    CmnUtil.println("=====> onAvailable <=====");
                     networkAvail(network);
                 }
 
                 @Override
                 public void onLost(Network network) {
                     super.onLost(network);
-                    Log.e("Leo", "=> onLost <=");
+                    CmnUtil.println("=====> onLost <=====");
                     networkLost(network);
                 }
 
@@ -92,17 +91,16 @@ public class NetworkMonitor {
     }
 
     private void networkLost(Network network) {
-        Log.e("Leo", ">>> Lost <<<");
         String networkType = "unknown";
         if (networks.containsKey(network.toString())) {
             networkType = networks.get(network.toString());
             networks.remove(network.toString());
         }
-        Log.e("Leo", "networkType=" + networkType);
+        CmnUtil.println("networkType=" + networkType);
     }
 
     private void networkAvail(Network network) {
-        Log.e("Leo", ">>> networkAvail <<< ");
+        CmnUtil.println(">>> networkAvail <<<");
 //        WifiInfo wifiInfo = DexHelper.getInstance().getWifiInfo();
 //        String networkType = getType(network);
     }
@@ -139,7 +137,7 @@ public class NetworkMonitor {
             return transport;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            CmnUtil.println("getType() error.", e);
         }
         return null;
     }

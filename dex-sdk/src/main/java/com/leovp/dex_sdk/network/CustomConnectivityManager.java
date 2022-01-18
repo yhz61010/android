@@ -1,4 +1,4 @@
-package com.leovp.demo_dex.network;
+package com.leovp.dex_sdk.network;
 
 import android.net.IConnectivityManager;
 import android.net.LinkProperties;

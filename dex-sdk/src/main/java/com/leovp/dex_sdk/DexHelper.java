@@ -1,4 +1,4 @@
-package com.leovp.demo_dex.utils;
+package com.leovp.dex_sdk;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -36,7 +36,6 @@ public class DexHelper {
     private Context context;
     private Method getServiceMethod;
 
-    private Object connectivityManagerService;
     private ConnectivityManager connectivityManager;
 
     private Object wifiManagerService;
@@ -107,7 +106,7 @@ public class DexHelper {
     synchronized public ConnectivityManager getConnectivityManager() {
         try {
             if (connectivityManager != null) return connectivityManager;
-            connectivityManagerService = getService("connectivity", "android.net.IConnectivityManager");
+            Object connectivityManagerService = getService("connectivity", "android.net.IConnectivityManager");
 
             Class<?> c = Class.forName("android.net.IConnectivityManager");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

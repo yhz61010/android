@@ -1,4 +1,4 @@
-package com.leovp.demo_dex.network;
+package com.leovp.dex_sdk.network;
 
 import static android.net.NetworkCapabilities.TRANSPORT_BLUETOOTH;
 import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
@@ -6,6 +6,7 @@ import static android.net.NetworkCapabilities.TRANSPORT_ETHERNET;
 import static android.net.NetworkCapabilities.TRANSPORT_VPN;
 import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.IConnectivityManager;
@@ -17,7 +18,7 @@ import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 
-import com.leovp.demo_dex.utils.DexHelper;
+import com.leovp.dex_sdk.DexHelper;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -31,6 +32,7 @@ public class NetworkMonitor {
     private Context context;
     private HashMap<String, String> networks;
 
+    @SuppressLint({"DiscouragedPrivateApi", "PrivateApi"})
     public NetworkMonitor() {
         Looper.prepare();
         try {
@@ -41,13 +43,13 @@ public class NetworkMonitor {
             wifiManagerService = DexHelper.getInstance().getService("wifi", "android.net.wifi.IWifiManager");
             connectivityManagerService = DexHelper.getInstance().getService("connectivity", "android.net.IConnectivityManager");
 
-            Class c = Class.forName("android.net.IConnectivityManager");
+            Class<?> c = Class.forName("android.net.IConnectivityManager");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Constructor constructor = ConnectivityManager.class.getDeclaredConstructor(Context.class, c);
+                Constructor<?> constructor = ConnectivityManager.class.getDeclaredConstructor(Context.class, c);
                 constructor.setAccessible(true);
                 connectivityManager = (ConnectivityManager) constructor.newInstance(context, connectivityManagerService);
             } else {
-                Constructor constructor = ConnectivityManager.class.getDeclaredConstructor(c);
+                Constructor<?> constructor = ConnectivityManager.class.getDeclaredConstructor(c);
                 constructor.setAccessible(true);
                 connectivityManager = (ConnectivityManager) constructor.newInstance(connectivityManagerService);
             }
@@ -109,9 +111,10 @@ public class NetworkMonitor {
         try {
             NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
 
-            Method getTransportTypes = NetworkCapabilities.class.getDeclaredMethod("getTransportTypes", new Class[]{});
+            Method getTransportTypes = NetworkCapabilities.class.getDeclaredMethod("getTransportTypes");
             getTransportTypes.setAccessible(true);
             Object object = getTransportTypes.invoke(networkCapabilities);
+            assert object != null;
             int types = ((int[]) object)[0];
             String transport = "";
             switch (types) {

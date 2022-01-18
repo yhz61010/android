@@ -8,9 +8,9 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Surface;
 
-import com.leovp.demo_dex.utils.DexHelper;
-import com.leovp.demo_dex.utils.ScreenshotUtil;
-import com.leovp.demo_dex.utils.Util;
+import com.leovp.dex_sdk.DexHelper;
+import com.leovp.dex_sdk.ScreenshotUtil;
+import com.leovp.dex_sdk.network.IpUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -47,7 +47,7 @@ public final class DexMain {
             assert context != null;
             println(context.toString());
 
-            List<String> ipList = Util.getInstance().getIp();
+            List<String> ipList = IpUtil.getIp();
             String ip = ipList.isEmpty() ? "" : ipList.get(0);
             println("ip=" + ip);
 

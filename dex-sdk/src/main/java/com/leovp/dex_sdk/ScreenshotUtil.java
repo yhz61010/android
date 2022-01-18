@@ -1,4 +1,4 @@
-package com.leovp.demo_dex.utils;
+package com.leovp.dex_sdk;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
@@ -107,7 +107,7 @@ public class ScreenshotUtil {
 
             return (IBinder) method.invoke(null);
         } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-            System.err.println("Failed to invoke method " + e);
+            Log.e(TAG, "getBuiltInDisplay() error.", e);
             return null;
         }
     }

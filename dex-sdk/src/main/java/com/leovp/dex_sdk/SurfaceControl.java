@@ -18,8 +18,8 @@ import java.lang.reflect.Method;
  * Author: Michael Leo
  * Date: 2022/1/17 14:43
  */
-public class ScreenshotUtil {
-    private static final String TAG = "ScreenshotUtil";
+public final class SurfaceControl {
+    private static final String TAG = "SurfaceControl";
 
     private static final Class<?> SURFACE_CONTROL_CLASS;
     private static Method getBuiltInDisplayMethod;
@@ -76,7 +76,7 @@ public class ScreenshotUtil {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) { // Android 9, 10, 11
                 declaredMethod = SURFACE_CONTROL_CLASS.getDeclaredMethod("screenshot", Rect.class, Integer.TYPE, Integer.TYPE, Integer.TYPE);
                 bitmap = (Bitmap) declaredMethod.invoke(null, new Rect(), width, height, rotation);
-            } else {
+            } else { // Android 8 or lower
                 declaredMethod = SURFACE_CONTROL_CLASS.getDeclaredMethod("screenshot", Integer.TYPE, Integer.TYPE);
                 bitmap = (Bitmap) declaredMethod.invoke(null, new Object[]{width, height});
             }

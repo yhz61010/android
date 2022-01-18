@@ -2,13 +2,15 @@ package com.leovp.demo_dex;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.net.wifi.WifiInfo;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Surface;
 
 import com.leovp.dex_sdk.DexHelper;
-import com.leovp.dex_sdk.ScreenshotUtil;
+import com.leovp.dex_sdk.DisplayUtil;
+import com.leovp.dex_sdk.SurfaceControl;
 import com.leovp.dex_sdk.network.IpUtil;
 import com.leovp.dex_sdk.util.CmnUtil;
 
@@ -51,7 +53,7 @@ public final class DexMain {
 
             CmnUtil.println("Prepare to take screenshot...");
             long st = SystemClock.elapsedRealtime();
-            Bitmap screenshot = ScreenshotUtil.screenshot(1440, 2960, Surface.ROTATION_0);
+            Bitmap screenshot = SurfaceControl.screenshot(1440, 2960, Surface.ROTATION_0);
             CmnUtil.println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
 
             if (screenshot != null) {
@@ -65,9 +67,17 @@ public final class DexMain {
                 fos.close();
             }
 
+            DisplayUtil displayUtil = new DisplayUtil();
+            Point displaySize = displayUtil.getCurrentDisplaySize();
+            CmnUtil.println("width=" + displaySize.x + " height=" + displaySize.y);
+
+            int rotation = displayUtil.getScreenRotation();
+            CmnUtil.println("rotation=" + rotation);
+
+
             CmnUtil.println("Exit");
         } catch (Exception e) {
-            e.printStackTrace();
+            CmnUtil.println("DexMain error.", e);
         }
     }
 }

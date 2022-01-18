@@ -95,6 +95,14 @@ public class DexHelper {
         }
     }
 
+    public Object getServiceObject(String service) {
+        try {
+            return getServiceMethod.invoke(null, service);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+
     @Nullable
     synchronized public Object getWifiManagerService() {
         if (wifiManagerService == null) {

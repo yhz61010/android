@@ -26,3 +26,4 @@ include ':lib-common-kotlin'
 
 //include ':webrtc-sdk'
 //include ':x264'
+include ':dex-sdk'

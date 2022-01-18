@@ -1,4 +1,6 @@
-package com.leovp.demo_dex.utils;
+package com.leovp.dex_sdk.network;
+
+import android.util.Log;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -8,19 +10,12 @@ import java.util.List;
 
 /**
  * Author: Michael Leo
- * Date: 2022/1/6 13:47
+ * Date: 2022/1/18 10:07
  */
-public class Util {
-    private static final Util ourInstance = new Util();
+public class IpUtil {
+    private static final String TAG = "IpUtil";
 
-    public static Util getInstance() {
-        return ourInstance;
-    }
-
-    private Util() {
-    }
-
-    public List<String> getIp() {
+    public static List<String> getIp() {
         final List<String> ifconfig = new ArrayList<>();
         try {
             for (Enumeration<NetworkInterface> niList = NetworkInterface.getNetworkInterfaces(); niList.hasMoreElements(); ) {
@@ -36,7 +31,7 @@ public class Util {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "getIp() error.", e);
         }
         return ifconfig;
     }

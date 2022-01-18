@@ -1,6 +1,6 @@
 package com.leovp.dex_sdk.network;
 
-import android.util.Log;
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,7 +31,7 @@ public class IpUtil {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "getIp() error.", e);
+            CmnUtil.println(TAG, "getIp() error.", e);
         }
         return ifconfig;
     }

@@ -1,6 +1,5 @@
 package com.leovp.demo_dex;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.wifi.WifiInfo;
@@ -11,11 +10,10 @@ import android.view.Surface;
 import com.leovp.dex_sdk.DexHelper;
 import com.leovp.dex_sdk.ScreenshotUtil;
 import com.leovp.dex_sdk.network.IpUtil;
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -29,37 +27,32 @@ import java.util.List;
  * Date: 2021/12/16 10:25
  */
 public final class DexMain {
-    //    private static final String TAG = "leo-dex";
-    @SuppressLint("SimpleDateFormat")
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
     private DexMain() {
-
     }
 
     public static void main(String[] args) {
         try {
-            println("=====> Enter: " + getCurrentDateTime() + " <=====");
+            CmnUtil.println("=====> Enter: " + CmnUtil.getCurrentDateTime() + " <=====");
             Looper.prepare();
             final DexHelper dexHelper = DexHelper.getInstance();
 
             Context context = dexHelper.getContext();
             assert context != null;
-            println(context.toString());
+            CmnUtil.println(context.toString());
 
             List<String> ipList = IpUtil.getIp();
             String ip = ipList.isEmpty() ? "" : ipList.get(0);
-            println("ip=" + ip);
+            CmnUtil.println("ip=" + ip);
 
             boolean isWifiActive = dexHelper.isWifiActive();
             WifiInfo wifiInfo = dexHelper.getWifiInfo();
             String ssid = wifiInfo == null ? "NA" : wifiInfo.getSSID().replaceAll("\"", "");
-            println("isWifiActive=" + isWifiActive + " ssid=" + ssid);
+            CmnUtil.println("isWifiActive=" + isWifiActive + " ssid=" + ssid);
 
-            println("Prepare to take screenshot...");
+            CmnUtil.println("Prepare to take screenshot...");
             long st = SystemClock.elapsedRealtime();
             Bitmap screenshot = ScreenshotUtil.screenshot(1440, 2960, Surface.ROTATION_0);
-            println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
+            CmnUtil.println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
 
             if (screenshot != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -72,17 +65,9 @@ public final class DexMain {
                 fos.close();
             }
 
-            println("Exit");
+            CmnUtil.println("Exit");
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static void println(String msg) {
-        System.out.println(msg);
-    }
-
-    public static String getCurrentDateTime() {
-        return SDF.format(new Date());
     }
 }

@@ -7,9 +7,7 @@ $ adb exec-out CLASSPATH=/data/local/tmp/dexdemo.dex app_process / com.leovp.dem
 ```
 
 # How to view screenshot on browser?
-1. Install APK.
-2. Run automation3.py
-
+1. Install APK & dex then run automation3.py:
 ```shell
 $ cd /<path>/LeoAndroidBaseUtilProject-Kotlin
 $ ./gradlew clean installDebug

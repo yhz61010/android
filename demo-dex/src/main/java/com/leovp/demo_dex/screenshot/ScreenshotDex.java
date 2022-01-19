@@ -22,6 +22,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.leovp.dex_sdk.DisplayUtil;
 import com.leovp.dex_sdk.SurfaceControl;
+import com.leovp.dex_sdk.util.CmnUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,11 +32,13 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
+ * https://github.com/rayworks/DroidCast
+ * <p>
  * Author: Michael Leo
  * Date: 2022/1/19 09:01
  */
 public class ScreenshotDex {
-    private static final String TAG = ScreenshotDex.class.getName();
+    private static final String TAG = "ScreenshotDex";
 
     private static final String IMAGE_JPEG = "image/jpeg";
     private static final String IMAGE_WEBP = "image/webp";
@@ -43,34 +46,25 @@ public class ScreenshotDex {
     private static final String WIDTH = "width";
     private static final String HEIGHT = "height";
     private static final String FORMAT = "format";
-    private static final int SCREENSHOT_DELAY_MILLIS = 1500;
 
     private static Looper looper;
     private static int width = 0;
     private static int height = 0;
 
-    private static int port = 53516;
+    private static int httpPort = 53516;
 
     private static DisplayUtil displayUtil;
     private static Handler handler;
 
     public static void main(String[] args) {
+        CmnUtil.println(TAG, ">>> main entry - Start");
+
         resolveArgs(args);
 
-        AsyncHttpServer httpServer =
-                new AsyncHttpServer() {
-                    @Override
-                    protected boolean onRequest(
-                            AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
-                        return super.onRequest(request, response);
-                    }
-                };
+        AsyncHttpServer httpServer = new AsyncHttpServer();
 
         Looper.prepare();
-
         looper = Looper.myLooper();
-        System.out.println(">>> main entry");
-
         handler = new Handler(looper);
 
         displayUtil = new DisplayUtil();
@@ -78,24 +72,21 @@ public class ScreenshotDex {
         AsyncServer server = new AsyncServer();
         httpServer.get("/screenshot", new AnyRequestCallback());
 
-        httpServer.websocket(
-                "/src",
-                (webSocket, request) -> {
-                    Pair<Integer, Integer> pair = getDimension();
-                    displayUtil.setRotateListener(rotate -> {
-                        System.out.println(">>> rotate to " + rotate);
+        httpServer.websocket("/src", (webSocket, request) -> {
+            Pair<Integer, Integer> pair = getDimension();
+            displayUtil.setRotateListener(rotate -> {
+                CmnUtil.println(TAG, ">>> rotate to " + rotate);
 
-                        // delay for the new rotated screen
-                        handler.post(
-                                () -> {
-                                    Pair<Integer, Integer> dimen = getDimension();
-                                    sendScreenshotData(webSocket, dimen.first, dimen.second);
-                                });
-                    });
-                    sendScreenshotData(webSocket, pair.first, pair.second);
+                // delay for the new rotated screen
+                handler.post(() -> {
+                    Pair<Integer, Integer> dimen = getDimension();
+                    sendScreenshotData(webSocket, dimen.first, dimen.second);
                 });
+            });
+            sendScreenshotData(webSocket, pair.first, pair.second);
+        });
 
-        httpServer.listen(server, port);
+        httpServer.listen(server, httpPort);
 
         Looper.loop();
     }
@@ -106,8 +97,8 @@ public class ScreenshotDex {
 
             if ("--port".equals(params[0])) {
                 try {
-                    port = Integer.parseInt(params[1]);
-                    System.out.println(TAG + " | Port set to " + port);
+                    httpPort = Integer.parseInt(params[1]);
+                    CmnUtil.println(TAG, TAG + " | Port set to " + httpPort);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
@@ -206,7 +197,7 @@ public class ScreenshotDex {
 
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        System.out.println("Bitmap final dimens : " + width + "|" + height);
+        CmnUtil.println(TAG, "Bitmap final dimens : " + width + "x" + height);
         if (resolver != null) {
             resolver.onResolveDimension(width, height, screenRotation);
         }

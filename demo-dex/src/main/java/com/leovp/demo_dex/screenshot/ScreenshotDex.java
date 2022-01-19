@@ -72,7 +72,11 @@ public class ScreenshotDex {
                 Pair<Integer, Integer> dimen = getDimension();
                 sendScreenshotData(webSocket, dimen.first, dimen.second);
             });
-            sendScreenshotData(webSocket, pair.first, pair.second);
+            new Thread(() -> {
+                while (true) {
+                    sendScreenshotData(webSocket, pair.first, pair.second);
+                }
+            }).start();
         });
 
         httpServer.listen(httpPort);
@@ -101,8 +105,8 @@ public class ScreenshotDex {
         int width = 1080;
         int height = 1920;
         if (displaySize != null) {
-            width = displaySize.x;
-            height = displaySize.y;
+            width = (int) (displaySize.x * 0.5f);
+            height = (int) (displaySize.y * 0.5f);
         }
         return new Pair<>(width, height);
     }
@@ -189,7 +193,7 @@ public class ScreenshotDex {
         }
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        bitmap.compress(compressFormat, 100, bout);
+        bitmap.compress(compressFormat, 80, bout);
         bout.flush();
 
         // "Make sure to call Bitmap.recycle() as soon as possible, once its content is not

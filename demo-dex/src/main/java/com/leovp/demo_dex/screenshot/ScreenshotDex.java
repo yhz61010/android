@@ -38,6 +38,9 @@ import java.util.Locale;
 public class ScreenshotDex {
     private static final String TAG = "ScreenshotDex";
 
+    private static final int IMAGE_QUALITY = 80;
+    private static final float IMAGE_SCALE = 0.6F;
+
     private static final String IMAGE_JPEG = "image/jpeg";
     private static final String IMAGE_WEBP = "image/webp";
     private static final String IMAGE_PNG = "image/png";
@@ -105,8 +108,8 @@ public class ScreenshotDex {
         int width = 1080;
         int height = 1920;
         if (displaySize != null) {
-            width = (int) (displaySize.x * 0.5f);
-            height = (int) (displaySize.y * 0.5f);
+            width = (int) (displaySize.x * IMAGE_SCALE);
+            height = (int) (displaySize.y * IMAGE_SCALE);
         }
         return new Pair<>(width, height);
     }
@@ -185,6 +188,7 @@ public class ScreenshotDex {
             }
         }
 
+        assert bitmap != null;
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         CmnUtil.println(TAG, "Bitmap final dimens : " + width + "x" + height);
@@ -193,7 +197,7 @@ public class ScreenshotDex {
         }
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        bitmap.compress(compressFormat, 80, bout);
+        bitmap.compress(compressFormat, IMAGE_QUALITY, bout);
         bout.flush();
 
         // "Make sure to call Bitmap.recycle() as soon as possible, once its content is not

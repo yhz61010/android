@@ -3,7 +3,6 @@ package com.leovp.demo_dex.screenshot;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Build;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.text.TextUtils;
@@ -13,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 
-import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.WebSocket;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -47,29 +45,22 @@ public class ScreenshotDex {
     private static final String HEIGHT = "height";
     private static final String FORMAT = "format";
 
-    private static Looper looper;
     private static int width = 0;
     private static int height = 0;
 
     private static int httpPort = 53516;
 
     private static DisplayUtil displayUtil;
-    private static Handler handler;
 
     public static void main(String[] args) {
-        CmnUtil.println(TAG, ">>> main entry - Start");
+        CmnUtil.println(TAG, ">>> main entry - Begin");
 
         resolveArgs(args);
 
-        AsyncHttpServer httpServer = new AsyncHttpServer();
-
         Looper.prepare();
-        looper = Looper.myLooper();
-        handler = new Handler(looper);
-
         displayUtil = new DisplayUtil();
 
-        AsyncServer server = new AsyncServer();
+        AsyncHttpServer httpServer = new AsyncHttpServer();
         httpServer.get("/screenshot", new AnyRequestCallback());
 
         httpServer.websocket("/src", (webSocket, request) -> {
@@ -78,16 +69,13 @@ public class ScreenshotDex {
                 CmnUtil.println(TAG, ">>> rotate to " + rotate);
 
                 // delay for the new rotated screen
-                handler.post(() -> {
-                    Pair<Integer, Integer> dimen = getDimension();
-                    sendScreenshotData(webSocket, dimen.first, dimen.second);
-                });
+                Pair<Integer, Integer> dimen = getDimension();
+                sendScreenshotData(webSocket, dimen.first, dimen.second);
             });
             sendScreenshotData(webSocket, pair.first, pair.second);
         });
 
-        httpServer.listen(server, httpPort);
-
+        httpServer.listen(httpPort);
         Looper.loop();
     }
 
@@ -157,11 +145,10 @@ public class ScreenshotDex {
         Bitmap bitmap = SurfaceControl.screenshot(destWidth, destHeight, Surface.ROTATION_0);
 
         if (bitmap == null) {
-            System.out.printf(
-                    Locale.ENGLISH,
+            CmnUtil.println(TAG, String.format(Locale.ENGLISH,
                     ">>> failed to generate image with resolution %d:%d%n",
                     ScreenshotDex.width,
-                    ScreenshotDex.height);
+                    ScreenshotDex.height));
 
             destWidth /= 2;
             destHeight /= 2;
@@ -169,13 +156,12 @@ public class ScreenshotDex {
             bitmap = SurfaceControl.screenshot(destWidth, destHeight, Surface.ROTATION_0);
         }
 
-        System.out.printf(
-                Locale.ENGLISH,
+        CmnUtil.println(TAG, String.format(Locale.ENGLISH,
                 "Bitmap generated with resolution %d:%d, process id %d | thread id %d%n",
                 destWidth,
                 destHeight,
                 Process.myPid(),
-                Process.myTid());
+                Process.myTid()));
 
         int screenRotation = displayUtil.getScreenRotation();
 

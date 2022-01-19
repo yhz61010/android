@@ -20,7 +20,7 @@ $ python scripts/automation3.py
 # How to view live screen on browser?
 
 1. Follow the above steps.
-2. Open the `/<path>/LeoAndroidBaseUtilProject-Kotlin/demo-dex/web/image.html`.
+2. Open the `/<path>/LeoAndroidBaseUtilProject-Kotlin/demo-dex/web/image.html` file.
 
 # Others
 

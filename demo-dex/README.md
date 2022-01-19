@@ -15,7 +15,7 @@ $ cd demo-dex
 $ python scripts/automation3.py
 ```
 
-3. After running script, the screenshot will be shown in browser.
+2. After running script, the screenshot will be shown in browser.
 
 # How to view live screen on browser?
 

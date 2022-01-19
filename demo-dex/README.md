@@ -13,6 +13,7 @@ $ adb exec-out CLASSPATH=/data/local/tmp/dexdemo.dex app_process / com.leovp.dem
 2. Run automation3.py
 
 ```shell
+$ ./gradlew clean
 $ cd demo-dex
 $ python scripts/automation3.py
 ```

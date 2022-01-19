@@ -69,9 +69,13 @@ public final class DexMain {
             CmnUtil.println("rotation=" + rotation);
 
             CmnUtil.println("Prepare to take screenshot...");
-            long st = SystemClock.elapsedRealtime();
-            Bitmap screenshot = SurfaceControl.screenshot(displaySize.x, displaySize.y, rotation);
-            CmnUtil.println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
+            Bitmap screenshot = null;
+            long st;
+            for (int i = 0; i < 1; i++) {
+                st = SystemClock.elapsedRealtime();
+                screenshot = SurfaceControl.screenshot(displaySize.x, displaySize.y, rotation);
+                CmnUtil.println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
+            }
 
             if (screenshot != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();

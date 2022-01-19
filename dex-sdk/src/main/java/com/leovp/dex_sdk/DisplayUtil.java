@@ -39,9 +39,7 @@ public final class DisplayUtil {
     public Point getCurrentDisplaySize() {
         Point out = new Point();
         try {
-            // void getDisplaySize(out Point size)
-            iWindowManager.getClass().getMethod("getBaseDisplaySize", Integer.TYPE, Point.class)
-                    .invoke(iWindowManager, Display.DEFAULT_DISPLAY, out);
+            iWindowManager.getInitialDisplaySize(Display.DEFAULT_DISPLAY, out);
             return out;
         } catch (Exception e) {
             CmnUtil.println(TAG, "getCurrentDisplaySize() error.", e);
@@ -103,7 +101,7 @@ public final class DisplayUtil {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    interface RotateListener {
+    public interface RotateListener {
         void onRotate(int rotate);
     }
 }

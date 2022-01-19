@@ -17,6 +17,12 @@ $ cd demo-dex
 $ python scripts/automation3.py
 ```
 
+Check more information for `automation3.py`
+
+```shell
+$ python scripts/automation3.py -h
+```
+
 3. After running script, the screenshot will be shown in browser.
 
 # Reference

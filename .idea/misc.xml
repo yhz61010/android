@@ -13,6 +13,7 @@
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_idle.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_upload.xml" value="0.5927083333333333" />
+        <entry key="demo-dex/src/main/res/layout/activity_main.xml" value="0.34739583333333335" />
         <entry key="demo/src/main/res/layout/activity_accessibility.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_aidl.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_app_settings.xml" value="0.5765625" />

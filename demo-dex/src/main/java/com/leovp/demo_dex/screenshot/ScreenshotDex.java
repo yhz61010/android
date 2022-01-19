@@ -69,7 +69,7 @@ public class ScreenshotDex {
         Looper.prepare();
 
         looper = Looper.myLooper();
-        System.out.println(">>> DroidCast main entry");
+        System.out.println(">>> main entry");
 
         handler = new Handler(looper);
 

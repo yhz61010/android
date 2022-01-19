@@ -10,7 +10,7 @@ $ adb exec-out CLASSPATH=/data/local/tmp/dexdemo.dex app_process / com.leovp.dem
 1. Install APK & dex then run automation3.py:
 ```shell
 $ cd /<path>/LeoAndroidBaseUtilProject-Kotlin
-$ ./gradlew clean installDebug
+$ ./gradlew demo-dex:clean demo-dex:installDebug
 $ cd demo-dex
 $ python scripts/automation3.py
 ```

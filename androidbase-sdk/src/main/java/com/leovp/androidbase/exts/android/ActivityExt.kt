@@ -22,21 +22,21 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean {
 // ============================================================================
 
 /** Launch a Activity */
-fun Activity.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+fun Context.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
     this.startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity */
-fun Activity.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-    startActivity(kcls.java, extras, flags, options)
+fun Context.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+        startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity */
-fun Activity.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-    startActivity(Class.forName(clsStr), extras, flags, options)
+fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+        startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity */
-inline fun <reified T : Activity> Activity.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+inline fun <reified T : Context> Context.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     startActivity(T::class.java, extras, flags, options)
 }
 

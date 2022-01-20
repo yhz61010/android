@@ -14,7 +14,7 @@ interface ReadSocketDataListener<in T> {
 
 enum class ClientConnectStatus {
     /**
-     * This is the connection default status after initializing netty client.
+     * It's the default status after initializing netty client object.
      *
      * Only you release socket, it will be in this status.
      * In this status, you can not reconnect again. You must create netty client again.
@@ -26,7 +26,7 @@ enum class ClientConnectStatus {
     /**
      * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
      *
-     * **Attention:** [FAILED] and listeners will **NOT** trigger [DISCONNECTED] listener.
+     * **Attention:** [FAILED] listener will **NOT** trigger [DISCONNECTED] listener.
      */
     DISCONNECTED,
 
@@ -68,9 +68,9 @@ enum class ClientConnectStatus {
 
 enum class ServerConnectStatus {
     /**
-     * This is the connection default status after initializing netty client.
+     * It's the default status after initializing netty server object.
      *
-     * Only you release socket, it will be in this status.
+     * Only you stop socket, it will be in this status.
      * In this status, you can not reconnect again. You must create netty client again.
      */
     UNINITIALIZED,

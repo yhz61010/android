@@ -143,7 +143,7 @@ abstract class BaseNettyServer protected constructor(
     fun stopServer(): Boolean {
         LogContext.log.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
         if (!::serverChannel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
-            LogContext.log.w(tag, "Already release or not initialized")
+            LogContext.log.w(tag, "Already released or not initialized")
             return false
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)

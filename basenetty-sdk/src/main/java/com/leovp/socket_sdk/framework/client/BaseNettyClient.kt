@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.socket_sdk.framework.client
 
 import com.leovp.lib_bytes.toHexString
@@ -46,14 +48,14 @@ import kotlin.coroutines.resume
 /**
  * A thread-safe class
  *
- * For none-ssl websocket or trust all certificates websocket, you can create just one socket object,
+ * For none-ssl WebSocket or trust all certificates WebSocket, you can create just one socket object,
  * then disconnect it and connect it again for many times as you wish.
  *
  * However, for self-signed certificate, once you disconnect the socket,
  * you must recreate the socket object again then connect it or else you can **NOT** connect it any more.
  *
  * Example:
- * For none-ssl websocket or trust all certificates:
+ * For none-ssl WebSocket or trust all certificates:
  * create socket ──> connect() ──> disconnectManually()
  *                       ↑                   ↓
  *                       └───────────────────┘
@@ -68,34 +70,32 @@ import kotlin.coroutines.resume
  * Date: 20-5-13 下午4:39
  */
 abstract class BaseNettyClient protected constructor(
-    private val host: String,
-    private val port: Int,
-    val connectionListener: ClientConnectListener<BaseNettyClient>,
-    private val retryStrategy: RetryStrategy = ConstantRetry(),
-    private val headers: Map<String, String>? = null,
-    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+        private val host: String,
+        private val port: Int,
+        val connectionListener: ClientConnectListener<BaseNettyClient>,
+        private val retryStrategy: RetryStrategy = ConstantRetry(),
+        private val headers: Map<String, String>? = null,
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
 ) : BaseNetty() {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }
 
     protected constructor(
-        webSocketUri: URI,
-        connectionListener: ClientConnectListener<BaseNettyClient>,
-        certInputStream: InputStream,
-        retryStrategy: RetryStrategy = ConstantRetry(),
-        headers: Map<String, String>? = null,
-        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+            webSocketUri: URI,
+            connectionListener: ClientConnectListener<BaseNettyClient>,
+            certInputStream: InputStream,
+            retryStrategy: RetryStrategy = ConstantRetry(),
+            headers: Map<String, String>? = null,
+            timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
-        webSocketUri.host,
-        if (webSocketUri.port == -1) {
-            when {
-                "ws".equals(webSocketUri.scheme, true) -> 80
-                "wss".equals(webSocketUri.scheme, true) -> 443
-                else -> -1
-            }
-        } else webSocketUri.port,
-        connectionListener, retryStrategy, headers, timeout
+            webSocketUri.host, if (webSocketUri.port == -1) {
+        when {
+            "ws".equals(webSocketUri.scheme, true)  -> 80
+            "wss".equals(webSocketUri.scheme, true) -> 443
+            else                                    -> -1
+        }
+    } else webSocketUri.port, connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
@@ -103,22 +103,20 @@ abstract class BaseNettyClient protected constructor(
     }
 
     protected constructor(
-        webSocketUri: URI,
-        connectionListener: ClientConnectListener<BaseNettyClient>,
-        trustAllServers: Boolean,
-        retryStrategy: RetryStrategy = ConstantRetry(),
-        headers: Map<String, String>? = null,
-        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+            webSocketUri: URI,
+            connectionListener: ClientConnectListener<BaseNettyClient>,
+            trustAllServers: Boolean,
+            retryStrategy: RetryStrategy = ConstantRetry(),
+            headers: Map<String, String>? = null,
+            timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
-        webSocketUri.host,
-        if (webSocketUri.port == -1) {
-            when {
-                "ws".equals(webSocketUri.scheme, true) -> 80
-                "wss".equals(webSocketUri.scheme, true) -> 443
-                else -> -1
-            }
-        } else webSocketUri.port,
-        connectionListener, retryStrategy, headers, timeout
+            webSocketUri.host, if (webSocketUri.port == -1) {
+        when {
+            "ws".equals(webSocketUri.scheme, true)  -> 80
+            "wss".equals(webSocketUri.scheme, true) -> 443
+            else                                    -> -1
+        }
+    } else webSocketUri.port, connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.trustAllServers = trustAllServers
@@ -156,8 +154,7 @@ abstract class BaseNettyClient protected constructor(
             while (certificateInputStream!!.read(buffer).also { len = it } > -1) {
                 baos.write(buffer, 0, len)
             }
-            baos.flush()
-            // DO NOT close certificateInputStream stream or else we can not clone it anymore
+            baos.flush() // DO NOT close certificateInputStream stream or else we can not clone it anymore
             ByteArrayInputStream(baos.toByteArray())
         } catch (e: Exception) {
             e.printStackTrace()
@@ -171,12 +168,7 @@ abstract class BaseNettyClient protected constructor(
     internal val isWebSocket: Boolean by lazy { webSocketUri != null }
 
     private val workerGroup = NioEventLoopGroup()
-    private val bootstrap = Bootstrap()
-        .group(workerGroup)
-        .channel(NioSocketChannel::class.java)
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.SO_KEEPALIVE, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)
+    private val bootstrap = Bootstrap().group(workerGroup).channel(NioSocketChannel::class.java).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)
     private lateinit var channel: Channel
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultInboundHandler: BaseClientChannelInboundHandler<*>? = null
@@ -216,7 +208,7 @@ abstract class BaseNettyClient protected constructor(
 
                                     val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
 
-//                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
+                                    //                                val sslEngine = sslContextPair.first.createSSLEngine(host, port).apply {
 //                                    useClientMode = true
 //                                }
 //                                addFirst("ssl", SslHandler(sslEngine))
@@ -224,7 +216,7 @@ abstract class BaseNettyClient protected constructor(
                                     val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
                                     addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
 
-//                                val sslEngine = SSLContext.getDefault().createSSLEngine().apply { useClientMode = true }
+                                    //                                val sslEngine = SSLContext.getDefault().createSSLEngine().apply { useClientMode = true }
 //                                addFirst("ssl", SslHandler(sslEngine))
                                 }
                             }
@@ -258,28 +250,26 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.i(tag, "===== connect() current state=${connectStatus.get().name} =====")
         synchronized(this) {
             when (connectStatus.get()) {
-                ClientConnectStatus.CONNECTING,
-                ClientConnectStatus.CONNECTED -> {
+                ClientConnectStatus.CONNECTING, ClientConnectStatus.CONNECTED -> {
                     LogContext.log.w(tag, "===== Connecting or already connected =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                ClientConnectStatus.RELEASING -> {
+                ClientConnectStatus.RELEASING                                 -> {
                     LogContext.log.w(tag, "===== Releasing now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                ClientConnectStatus.DISCONNECTING -> {
+                ClientConnectStatus.DISCONNECTING                             -> {
                     LogContext.log.w(tag, "===== Disconnecting now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                else -> LogContext.log.i(tag, "===== Prepare to connect to server =====")
+                else                                                          -> LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
             connectStatus.set(ClientConnectStatus.CONNECTING)
         }
-        try {
-            // You call connect() with sync() method like this bellow:
+        try { // You call connect() with sync() method like this bellow:
             // bootstrap.connect(host, port).sync()
             // you must handle exception by yourself, because of you want to
             // process connection synchronously. And the connection listener will be ignored regardless of whether you add it.
@@ -305,14 +295,12 @@ abstract class BaseNettyClient protected constructor(
                         LogContext.log.i(tag, "=====> WebSocket Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "WebSocket Connect failed", it.cause())
-                        cont.resume(connectStatus.get())
-                        // Do NOT know how to reproduce this case
+                        cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
 //                        LogContext.log.e(tag, "=====> CHK1 <=====")
                         doRetry()
                     }
                 }
-            } else {
-                // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
+            } else { // If I use asynchronous way to do connect, it will cause multiple connections if you click Connect and Disconnect repeatedly in a very quick way.
                 // There must be a way to solve the problem. Unfortunately, I don't know how to do that now.
 //            bootstrap.connect(host, port).addListener(connectFutureListener)
                 f.addListener {
@@ -325,16 +313,14 @@ abstract class BaseNettyClient protected constructor(
                         LogContext.log.i(tag, "=====> Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect failed")
-                        cont.resume(connectStatus.get())
-                        // Do NOT know how to reproduce this case
+                        cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
 //                        LogContext.log.e(tag, "=====> CHK2 <=====")
                         doRetry()
                     }
                 }
             }
         } catch (e: RejectedExecutionException) {
-            LogContext.log.e(tag, "===== RejectedExecutionException. Netty client had already been released. You must re-initialize it again.: ${e.message} =====")
-            // If connection has been connected before, [channelInactive] will be called, so the status and
+            LogContext.log.e(tag, "===== RejectedExecutionException. Netty client had already been released. You must re-initialize it again.: ${e.message} =====") // If connection has been connected before, [channelInactive] will be called, so the status and
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.
             // So we handle it here.
@@ -345,19 +331,17 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
 //            connectStatus.set(ClientConnectStatus.FAILED)
 //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-            cont.resume(ClientConnectStatus.FAILED)
-            // This exception will trigger handlerRemoved(), so we retry at that time.
+            cont.resume(ClientConnectStatus.FAILED) // This exception will trigger handlerRemoved(), so we retry at that time.
 
-//            LogContext.log.e(tag, "=====> CHK3 <=====")
+            //            LogContext.log.e(tag, "=====> CHK3 <=====")
 //            doRetry()
         } catch (e: Exception) {
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
 //            connectStatus.set(ClientConnectStatus.FAILED)
 //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
-            cont.resume(ClientConnectStatus.FAILED)
-            // This exception will trigger handlerRemoved(), so we retry at that time.
+            cont.resume(ClientConnectStatus.FAILED) // This exception will trigger handlerRemoved(), so we retry at that time.
 
-//            LogContext.log.e(tag, "=====> CHK4 <=====")
+            //            LogContext.log.e(tag, "=====> CHK4 <=====")
 //            doRetry()
         }
     }
@@ -392,8 +376,7 @@ abstract class BaseNettyClient protected constructor(
 
         stopRetryHandler()
         defaultInboundHandler?.release()
-        runCatching {
-            // Add sync() here to make sure the listener of channel disconnect method will be triggered here.
+        runCatching { // Add sync() here to make sure the listener of channel disconnect method will be triggered here.
             if (::channel.isInitialized) channel.disconnect().sync().addListener { f ->
                 if (f.isSuccess) {
                     LogContext.log.w(tag, "===== disconnectManually() done =====")
@@ -424,14 +407,11 @@ abstract class BaseNettyClient protected constructor(
             stopRetryHandler()
             connectStatus.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(
-                this@BaseNettyClient,
-                ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
-                "Exceed max retry times."
+                    this@BaseNettyClient, ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES, "Exceed max retry times."
             )
         } else {
             LogContext.log.w(
-                tag,
-                "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectStatus.get().name}"
+                    tag, "Reconnect($retryTimes) in ${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | current state=${connectStatus.get().name}"
             )
 //            retryHandler.postDelayed({ connect() }, retryStrategy.getDelayInMillSec(retryTimes.get()))
             retryScope.launch {
@@ -463,7 +443,7 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
         synchronized(this) {
             if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() || ClientConnectStatus.RELEASING == connectStatus.get()) {
-                LogContext.log.w(tag, "Releasing now or already release or not initialized")
+                LogContext.log.w(tag, "Releasing now or already released or not initialized")
                 cont.resume(false)
                 return@suspendCancellableCoroutine
             }
@@ -547,13 +527,7 @@ abstract class BaseNettyClient protected constructor(
      * @param isPing Only works in WebSocket mode
      */
     private fun executeUnifiedCommand(
-        cmdTypeAndId: String,
-        cmdDesc: String?,
-        cmd: Any?,
-        isPing: Boolean,
-        showContent: Boolean,
-        showLog: Boolean = true,
-        byteOrder: ByteOrder
+            cmdTypeAndId: String, cmdDesc: String?, cmd: Any?, isPing: Boolean, showContent: Boolean, showLog: Boolean = true, byteOrder: ByteOrder
     ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
@@ -563,7 +537,7 @@ abstract class BaseNettyClient protected constructor(
         val bytesCmd: ByteBuf?
         val isStringCmd: Boolean
         when (cmd) {
-            is String -> {
+            is String    -> {
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
@@ -583,7 +557,7 @@ abstract class BaseNettyClient protected constructor(
                     } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
-            else -> throw IllegalArgumentException("Command must be either String or ByteArray")
+            else         -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
         if (::channel.isInitialized) {
@@ -602,26 +576,14 @@ abstract class BaseNettyClient protected constructor(
 
     @JvmOverloads
     fun executeCommand(
-        cmd: Any?,
-        cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
-        showContent: Boolean = true,
-        showLog: Boolean = true,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
-    ) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+            cmd: Any?, cmdDesc: String? = null, cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true, byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
-        cmd: Any?,
-        cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
-        showContent: Boolean = true,
-        showLog: Boolean = true,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
-    ) =
-        executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+            cmd: Any?, cmdDesc: String? = null, cmdTypeAndId: String = tag, showContent: Boolean = true, showLog: Boolean = true, byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     // ================================================
 }

@@ -20,7 +20,7 @@ inline fun <reified T> Any.isInstanceOf(): Boolean = this is T
 
 inline fun <reified T, reified U> haveSameType(first: T, second: U) = first is U && second is T
 
-inline val <reified T> T.clazz get() = T::class.java
+inline val <reified T> T.clazz: Class<T> get() = T::class.java
 
 /** Convert Boolean to Int */
 val Boolean.toInt get() = if (this) 1 else 0

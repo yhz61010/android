@@ -1,5 +1,42 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+// 获取当前分支的提交总次数
+static def gitCommitCount() {
+//    def cmd = 'git rev-list HEAD --first-parent --count'
+    def cmd = 'git rev-list HEAD --count'
+    cmd.execute().text.trim().toInteger()
+}
+
+// 使用commit的哈希值作为版本号也是可以的，获取最新的一次提交的哈希值的前七个字符
+// $ git rev-list HEAD --abbrev-commit --max-count=1
+// a935b078
+
+/*
+ * 获取最新的一个tag信息
+ * $ git describe --tags
+ * 4.0.4-9-ga935b078
+ * 说明：
+ * 4.0.4        : tag名
+ * 9            : 打tag之后又有四次提交
+ * ga935b078    ：开头 g 为 git 的缩写，在多种管理工具并存的环境中很有用处
+ * a935b078     ：当前分支最新的 commitID 前几位
+ */
+static def gitVersionTag() {
+    def cmd = 'git describe --tags'
+    def version = cmd.execute().text.trim()
+
+    def pattern = "-(\\d+)-g"
+    def matcher = version =~ pattern
+
+    if (matcher) {
+        version = version.substring(0, matcher.start()) + "." + matcher[0][1]
+    } else {
+        version = version + ".0"
+    }
+
+    return version
+}
+
 buildscript {
     ext.kotlin_version = '1.6.10'
     ext.coroutines_version = '1.6.0'

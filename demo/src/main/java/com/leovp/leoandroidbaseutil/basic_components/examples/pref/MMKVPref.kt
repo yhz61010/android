@@ -1,9 +1,7 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.pref
 
 import android.content.Context
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.exts.kotlin.toObject
-import com.leovp.androidbase.utils.pref.base.IPref
+import com.leovp.androidbase.utils.pref.base.AbsPref
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.tencent.mmkv.MMKV
@@ -12,7 +10,7 @@ import com.tencent.mmkv.MMKV
  * Author: Michael Leo
  * Date: 20-12-10 下午1:47
  */
-class MMKVPref(ctx: Context) : IPref {
+class MMKVPref(ctx: Context) : AbsPref() {
     init {
         val mmkvRootDir: String = MMKV.initialize(ctx)
         LogContext.log.i(ITAG, "mmkvRootDir=$mmkvRootDir")
@@ -31,12 +29,12 @@ class MMKVPref(ctx: Context) : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: Float) {
+    override fun put(key: String, v: Boolean) {
         mmkv.encode(key, v)
     }
 
     @Synchronized
-    override fun put(key: String, v: Boolean) {
+    override fun put(key: String, v: Float) {
         mmkv.encode(key, v)
     }
 
@@ -46,10 +44,6 @@ class MMKVPref(ctx: Context) : IPref {
     }
 
     @Synchronized
-    override fun putObject(key: String, v: Any?) {
-        mmkv.encode(key, v?.toJsonString())
-    }
-
     override fun putSet(key: String, v: Set<String>?) {
         mmkv.encode(key, v)
     }
@@ -63,8 +57,6 @@ class MMKVPref(ctx: Context) : IPref {
     override fun getFloat(key: String, default: Float) = mmkv.decodeFloat(key, default)
 
     override fun getString(key: String, default: String?): String? = mmkv.decodeString(key, default)
-
-    override fun <T> getObject(key: String, clazz: Class<T>): T? = getString(key, null)?.toObject(clazz)
 
     override fun getStringSet(key: String, default: Set<String>?): Set<String>? = mmkv.decodeStringSet(key, default)
 }

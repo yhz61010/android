@@ -3,6 +3,9 @@
 [![AGP](https://img.shields.io/badge/AGP-7.0.4-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-7.3.3-green)](https://gradle.org)
 
+
+[![codebeat badge](https://codebeat.co/badges/e657f36f-48ab-466c-9dae-36da4241b675)](https://codebeat.co/projects/github-com-yhz61010-leoandroidbaseutilproject-kotlin-master)
+
 # Known Issues
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~
 ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~

@@ -1,16 +1,14 @@
 package com.leovp.androidbase.utils.pref
 
 import android.content.Context
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.exts.kotlin.toObject
-import com.leovp.androidbase.utils.pref.base.IPref
+import com.leovp.androidbase.utils.pref.base.AbsPref
 import com.leovp.lib_common_android.exts.sharedPrefs
 
 /**
  * Author: Michael Leo
  * Date: 20-12-10 上午10:01
  */
-class LPref(ctx: Context, name: String = ctx.packageName) : IPref {
+class LPref(ctx: Context, name: String = ctx.packageName) : AbsPref() {
     private val pref = ctx.sharedPrefs(name)
 
     @Synchronized
@@ -30,14 +28,6 @@ class LPref(ctx: Context, name: String = ctx.packageName) : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: Float) {
-        pref.edit().apply {
-            putFloat(key, v)
-            apply()
-        }
-    }
-
-    @Synchronized
     override fun put(key: String, v: Boolean) {
         pref.edit().apply {
             putBoolean(key, v)
@@ -46,17 +36,17 @@ class LPref(ctx: Context, name: String = ctx.packageName) : IPref {
     }
 
     @Synchronized
-    override fun put(key: String, v: String?) {
+    override fun put(key: String, v: Float) {
         pref.edit().apply {
-            putString(key, v)
+            putFloat(key, v)
             apply()
         }
     }
 
     @Synchronized
-    override fun putObject(key: String, v: Any?) {
+    override fun put(key: String, v: String?) {
         pref.edit().apply {
-            putString(key, v?.toJsonString())
+            putString(key, v)
             apply()
         }
     }
@@ -78,8 +68,6 @@ class LPref(ctx: Context, name: String = ctx.packageName) : IPref {
     override fun getFloat(key: String, default: Float) = pref.getFloat(key, default)
 
     override fun getString(key: String, default: String?): String? = pref.getString(key, default)
-
-    override fun <T> getObject(key: String, clazz: Class<T>): T? = getString(key, null)?.toObject(clazz)
 
     override fun getStringSet(key: String, default: Set<String>?): Set<String>? = pref.getStringSet(key, default)
 }

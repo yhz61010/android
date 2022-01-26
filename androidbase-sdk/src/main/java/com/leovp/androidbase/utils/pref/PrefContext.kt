@@ -2,7 +2,7 @@
 
 package com.leovp.androidbase.utils.pref
 
-import com.leovp.androidbase.utils.pref.base.IPref
+import com.leovp.androidbase.utils.pref.base.AbsPref
 
 /**
  * ```kotlin
@@ -16,10 +16,10 @@ import com.leovp.androidbase.utils.pref.base.IPref
  * Date: 20-12-10 上午10:01
  */
 object PrefContext {
-    lateinit var pref: IPref
+    lateinit var pref: AbsPref
         private set
 
-    fun setPrefImp(pref: IPref) {
+    fun setPrefImp(pref: AbsPref) {
         this.pref = pref
     }
 

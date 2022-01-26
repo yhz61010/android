@@ -58,10 +58,8 @@ interface ILog {
         }
     }
 
-    fun e(message: String?, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, message, null, fullOutput, outputType)
-    fun e(throwable: Throwable?, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, "", throwable, fullOutput, outputType)
-    fun e(tag: String, throwable: Throwable?, fullOutput: Boolean = false, outputType: Int = -1) = e(tag, "", throwable, fullOutput, outputType)
-    fun e(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
+    fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, message, throwable, fullOutput, outputType)
+    fun e(tag: String, message: String? = null, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) {
         if (enableLog) {
             if (fullOutput) splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
             else printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)

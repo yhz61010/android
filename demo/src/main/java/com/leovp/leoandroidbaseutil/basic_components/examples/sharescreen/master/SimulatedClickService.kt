@@ -91,6 +91,7 @@ class SimulatedClickService : AccessibilityService() {
     }
 
     // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
+    @Suppress("unused")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun doRightThenDownDrag() {
         val dragRightPath = Path().apply {
@@ -106,7 +107,7 @@ class SimulatedClickService : AccessibilityService() {
             lineTo(400f, 400f)
         }
         val dragDownDuration = 500L
-        val rightThenDownDrag = GestureDescription.StrokeDescription(
+        GestureDescription.StrokeDescription(
             dragRightPath,
             0L,
             dragRightDuration,

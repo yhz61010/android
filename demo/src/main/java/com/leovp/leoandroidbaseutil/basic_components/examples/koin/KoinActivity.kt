@@ -1,16 +1,16 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.koin
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityKoinBinding
 import com.leovp.log_sdk.LogContext
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 
-class KoinActivity : AppCompatActivity() {
+class KoinActivity : BaseDemonstrationActivity() {
     private lateinit var binding: ActivityKoinBinding
 
     private val firstPresenter: MySimplePresenter by inject()
@@ -47,7 +47,6 @@ class Car(val engine: Engine, val wheels: List<Wheel>) {
 
     fun drive() {
         LogContext.log.i("Drive mode")
-        val wheel0 = wheels[0]
         for (wheel in wheels) {
             wheel.turn()
         }

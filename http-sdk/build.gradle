@@ -36,7 +36,7 @@ dependencies {
     api project(':log-sdk')
 
     api group: 'com.squareup.okhttp3', name: 'okhttp', version: "$rootProject.ext.okhttpVersion"
-    api group: 'io.reactivex.rxjava2', name: 'rxjava', version: "$rootProject.ext.rxjava2RxjavaVersion"
+//    api group: 'io.reactivex.rxjava2', name: 'rxjava', version: "$rootProject.ext.rxjava2RxjavaVersion"
     api group: 'io.reactivex.rxjava2', name: 'rxandroid', version: "$rootProject.ext.rxjava2RxAndroidVersion"
     api group: 'com.squareup.retrofit2', name: 'retrofit', version: "$rootProject.ext.retrofit2Version"
     api "com.squareup.retrofit2:converter-scalars:$rootProject.ext.retrofit2Version"

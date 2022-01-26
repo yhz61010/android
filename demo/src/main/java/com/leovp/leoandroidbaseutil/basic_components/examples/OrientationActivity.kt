@@ -53,6 +53,7 @@ class OrientationActivity : BaseDemonstrationActivity() {
                 return
             }
 //            if (currentScreenOrientation == newOrientation) return
+            @Suppress("DEPRECATION")
             val currentScreenRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
             tvRotationInDisplay.text = currentScreenRotation.toString()
 

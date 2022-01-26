@@ -5,6 +5,7 @@
 
 
 [![codebeat badge](https://codebeat.co/badges/e657f36f-48ab-466c-9dae-36da4241b675)](https://codebeat.co/projects/github-com-yhz61010-leoandroidbaseutilproject-kotlin-master)
+[![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin/badge)](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin)
 
 # Known Issues
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~

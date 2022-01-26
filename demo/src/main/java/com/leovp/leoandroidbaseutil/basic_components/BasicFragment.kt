@@ -24,6 +24,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.Bluetoot
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.cipher.AudioCipherActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.koin.KoinActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
@@ -43,11 +44,7 @@ import kotlin.concurrent.thread
 
 class BasicFragment : Fragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_basic, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? = inflater.inflate(R.layout.fragment_basic, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -93,6 +90,7 @@ class BasicFragment : Fragment() {
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
             Pair("App Settings", AppSettingsActivity::class.java),
             Pair("Orientation", OrientationActivity::class.java),
+            Pair("Koin", KoinActivity::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
@@ -111,18 +109,18 @@ class BasicFragment : Fragment() {
         }
         view.findViewById<RecyclerView>(R.id.recyclerView).run {
             setHasFixedSize(true)
-//            layoutManager = LinearLayoutManager(requireActivity())
+            // layoutManager = LinearLayoutManager(requireActivity())
             adapter = colorBaseAdapter
         }
     }
 
     override fun onDestroy() {
-//        CustomApplication.instance.closeDebugOutputFile()
+        // CustomApplication.instance.closeDebugOutputFile()
         LogContext.log.i(ITAG, "onDestroy()")
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
-//        AppUtil.exitApp(this)
+        // AppUtil.exitApp(this)
     }
 
     companion object {

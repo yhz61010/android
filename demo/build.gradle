@@ -238,11 +238,14 @@ dependencies {
     implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
     implementation "com.tencent:mmkv-static:$mmkvVersion"
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
-    implementation "org.kodein.di:kodein-di-framework-android-x:$rootProject.ext.kodeinVersion"
     implementation "org.greenrobot:eventbus:$eventbusVersion"
     implementation "io.karn:notify:$karnNotifyVersion"
     implementation "com.daimajia.androidanimations:library:${viewanimatorVersion}@aar"
     implementation "com.github.getActivity:XXPermissions:$xxPermissionVersion"
+    // Koin main features for Android
+    implementation "io.insert-koin:koin-android:$rootProject.ext.koinVersion"
+    // Java Compatibility
+//    implementation "io.insert-koin:koin-android-compat:$rootProject.ext.koinVersion"
 
     // As of bson4jackson 2.13.0, you need add fasterxml jackson manually.
     implementation "de.undercouch:bson4jackson:$bsonVersion"

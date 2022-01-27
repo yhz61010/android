@@ -8,6 +8,7 @@ import com.leovp.circle_progressbar.CircleProgressbar
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCircleProgressbarBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.log_sdk.LogContext
 import kotlin.concurrent.thread
 
 /**
@@ -49,18 +50,22 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
 
         binding.vDownload.addOnClickListener(object : CircleProgressbar.OnClickListener {
             override fun onIdleButtonClick(view: View) {
+                LogContext.log.i("onIdleButtonClick")
                 toast("onIdleButtonClick")
             }
 
             override fun onCancelButtonClick(view: View) {
+                LogContext.log.i("onCancelButtonClick")
                 toast("onCancelButtonClick")
             }
 
             override fun onFinishButtonClick(view: View) {
+                LogContext.log.i("onFinishButtonClick")
                 toast("onFinishButtonClick")
             }
 
             override fun onErrorButtonClick(view: View) {
+                LogContext.log.i("onErrorButtonClick")
                 TODO("onErrorButtonClick")
             }
         })

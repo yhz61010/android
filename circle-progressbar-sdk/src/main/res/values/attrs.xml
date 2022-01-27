@@ -12,6 +12,9 @@
         <attr name="progressIndeterminateSweepAngle" format="integer" />
         <attr name="enableClickListener" format="boolean" />
 
+        <attr name="progressWidth" format="dimension" />
+        <attr name="progressMargin" format="dimension" />
+
         <!-- If you enable showing progress text, the cancelable and cancelIcon related attributes will be ignored. -->
         <attr name="showProgressText" format="boolean" />
         <attr name="progressTextColor" format="color" />
@@ -19,8 +22,7 @@
 
         <attr name="currentProgress" format="integer" />
         <attr name="maxProgress" format="integer" />
-        <attr name="progressWidth" format="dimension" />
-        <attr name="progressMargin" format="dimension" />
+
         <attr name="progressDeterminateColor" format="color" />
         <attr name="progressIndeterminateColor" format="color" />
 
@@ -31,6 +33,7 @@
         <attr name="determinateBackgroundColor" format="color" />
 
         <attr name="idleIconDrawable" format="reference" />
+        <attr name="idleIconTint" format="color" />
         <attr name="idleIconWidth" format="dimension" />
         <attr name="idleIconHeight" format="dimension" />
         <attr name="idleBackgroundDrawable" format="reference" />
@@ -42,12 +45,14 @@
         <attr name="cancelIconHeight" format="dimension" />
 
         <attr name="finishIconDrawable" format="reference" />
+        <attr name="finishIconTint" format="color" />
         <attr name="finishIconWidth" format="dimension" />
         <attr name="finishIconHeight" format="dimension" />
         <attr name="finishBackgroundDrawable" format="reference" />
         <attr name="finishBackgroundColor" format="color" />
 
         <attr name="errorIconDrawable" format="reference" />
+        <attr name="errorIconTintColor" format="color" />
         <attr name="errorIconWidth" format="dimension" />
         <attr name="errorIconHeight" format="dimension" />
         <attr name="errorBackgroundDrawable" format="reference" />

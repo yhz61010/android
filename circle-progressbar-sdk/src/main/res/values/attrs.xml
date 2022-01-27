@@ -33,7 +33,7 @@
         <attr name="determinateBackgroundColor" format="color" />
 
         <attr name="idleIconDrawable" format="reference" />
-        <attr name="idleIconTint" format="color" />
+        <attr name="idleIconTintColor" format="color" />
         <attr name="idleIconWidth" format="dimension" />
         <attr name="idleIconHeight" format="dimension" />
         <attr name="idleBackgroundDrawable" format="reference" />
@@ -45,7 +45,7 @@
         <attr name="cancelIconHeight" format="dimension" />
 
         <attr name="finishIconDrawable" format="reference" />
-        <attr name="finishIconTint" format="color" />
+        <attr name="finishIconTintColor" format="color" />
         <attr name="finishIconWidth" format="dimension" />
         <attr name="finishIconHeight" format="dimension" />
         <attr name="finishBackgroundDrawable" format="reference" />

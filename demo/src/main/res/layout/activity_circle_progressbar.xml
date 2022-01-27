@@ -6,8 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".basic_components.examples.CircleProgressbarActivity">
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vDownload"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vDownload"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
@@ -15,12 +14,12 @@
         app:determinateBackgroundColor="@color/cardview_dark_background"
         app:finishBackgroundColor="@color/cardview_dark_background"
         app:idleBackgroundColor="@color/cardview_dark_background"
+        app:idleIconTint="#ff0000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:showProgressText="true" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vUpload"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vUpload"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginTop="8dp"
@@ -32,10 +31,10 @@
         app:idleIconDrawable="@drawable/ic_default_upload"
         app:layout_constraintStart_toStartOf="@+id/vDownload"
         app:layout_constraintTop_toBottomOf="@+id/textView27"
-        app:progressDeterminateColor="@color/white" />
+        app:progressDeterminateColor="@color/white"
+        app:progressMargin="6dp" />
 
-    <Button
-        android:id="@+id/btnDownload"
+    <Button android:id="@+id/btnDownload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -44,8 +43,7 @@
         app:layout_constraintStart_toEndOf="@+id/vDownload"
         app:layout_constraintTop_toTopOf="@+id/vDownload" />
 
-    <Button
-        android:id="@+id/btnUpload"
+    <Button android:id="@+id/btnUpload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Upload"
@@ -53,8 +51,7 @@
         app:layout_constraintStart_toStartOf="@+id/btnDownload"
         app:layout_constraintTop_toTopOf="@+id/vUpload" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomIdle"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomIdle"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
@@ -65,32 +62,31 @@
         app:layout_constraintStart_toStartOf="@+id/vUpload"
         app:layout_constraintTop_toBottomOf="@+id/vUpload" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomFinish"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomFinish"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
         app:finishBackgroundColor="@color/purple_200"
+        app:finishIconTint="#00ff00"
         app:finishIconHeight="34dp"
         app:finishIconWidth="34dp"
         app:layout_constraintStart_toEndOf="@+id/vCustomIdle"
         app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
         app:state="FINISHED" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomError"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomError"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
         app:errorBackgroundColor="@color/purple_500"
+        app:errorIconTintColor="#ffff00"
         app:errorIconHeight="24dp"
         app:errorIconWidth="24dp"
         app:layout_constraintStart_toEndOf="@+id/vCustomFinish"
         app:layout_constraintTop_toTopOf="@+id/vCustomIdle"
         app:state="ERROR" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomInd"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomInd"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
@@ -100,21 +96,20 @@
         app:progressIndeterminateColor="@color/design_default_color_secondary"
         app:state="INDETERMINATE" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomInd2"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomInd2"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
-        app:currentProgress="45"
+        app:cancelable="false"
         app:indeterminateBackgroundColor="@color/purple_200"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd"
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
-        app:progressIndeterminateSweepAngle="1"
+        app:progressIndeterminateSweepAngle="25"
+        app:progressMargin="8dp"
         app:state="INDETERMINATE" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomDe"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomDe"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
@@ -122,11 +117,10 @@
         app:determinateBackgroundColor="@color/purple_700"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd2"
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
-        app:progressDeterminateColor="@color/white"
+        app:progressDeterminateColor="#ffff00"
         app:state="DETERMINATE" />
 
-    <com.leovp.circle_progressbar.CircleProgressbar
-        android:id="@+id/vCustomDe2"
+    <com.leovp.circle_progressbar.CircleProgressbar android:id="@+id/vCustomDe2"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
@@ -135,11 +129,12 @@
         app:layout_constraintStart_toEndOf="@+id/vCustomDe"
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
+        app:progressMargin="4dp"
+        app:progressWidth="1dp"
         app:showProgressText="true"
         app:state="DETERMINATE" />
 
-    <TextView
-        android:id="@+id/textView26"
+    <TextView android:id="@+id/textView26"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -147,8 +142,7 @@
         app:layout_constraintStart_toStartOf="@+id/vCustomInd"
         app:layout_constraintTop_toBottomOf="@+id/vCustomInd" />
 
-    <TextView
-        android:id="@+id/textView27"
+    <TextView android:id="@+id/textView27"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

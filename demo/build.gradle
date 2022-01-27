@@ -151,7 +151,7 @@ android {
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
-        disable 'MissingTranslation'
+        disable 'MissingTranslation','RtlHardcoded','RtlCompat', 'RtlEnabled'
     }
 
     applicationVariants.all { variant ->

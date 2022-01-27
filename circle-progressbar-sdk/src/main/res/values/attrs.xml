@@ -41,6 +41,7 @@
 
         <!-- The cancel background color/drawable is just same as indeterminate/determinate background color/drawable. -->
         <attr name="cancelIconDrawable" format="reference" />
+        <attr name="cancelIconTintColor" format="color" />
         <attr name="cancelIconWidth" format="dimension" />
         <attr name="cancelIconHeight" format="dimension" />
 

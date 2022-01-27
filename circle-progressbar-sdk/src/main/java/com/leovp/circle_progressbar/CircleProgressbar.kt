@@ -52,9 +52,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _maxProgress = 100
     private var _currProgress = 0
     private var _idleBgColor = DEF_BG_COLOR
-    private var _idleIconTint = DEF_ICON_TINT
+    private var _idleIconTintColor = DEF_ICON_TINT
     private var _finishBgColor = DEF_BG_COLOR
-    private var _finishIconTint = DEF_ICON_TINT
+    private var _finishIconTintColor = DEF_ICON_TINT
     private var _errorBgColor = DEF_BG_COLOR
     private var _errorIconTintColor = DEF_ICON_TINT
     private var _indeterminateBgColor = DEF_BG_COLOR
@@ -162,9 +162,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (indeterminateResId != -1) _indeterminateBgDrawable = context.getDrawable(indeterminateResId)
         if (determinateResId != -1) _determinateBgDrawable = context.getDrawable(determinateResId)
         _idleBgColor = attrs.getColor(R.styleable.CircleProgressbar_idleBackgroundColor, DEF_BG_COLOR)
-        _idleIconTint = attrs.getColor(R.styleable.CircleProgressbar_idleIconTint, DEF_ICON_TINT)
+        _idleIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_idleIconTintColor, DEF_ICON_TINT)
         _finishBgColor = attrs.getColor(R.styleable.CircleProgressbar_finishBackgroundColor, DEF_BG_COLOR)
-        _finishIconTint = attrs.getColor(R.styleable.CircleProgressbar_finishIconTint, DEF_ICON_TINT)
+        _finishIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_finishIconTintColor, DEF_ICON_TINT)
         _errorBgColor = attrs.getColor(R.styleable.CircleProgressbar_errorBackgroundColor, DEF_BG_COLOR)
         _errorIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_errorIconTintColor, DEF_ICON_TINT)
         _indeterminateBgColor = attrs.getColor(R.styleable.CircleProgressbar_indeterminateBackgroundColor, DEF_BG_COLOR)
@@ -268,10 +268,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _idleBgColor = idleBgColor
             invalidate()
         }
-    var idleIconTint: Int
-        get() = _idleIconTint
-        set(idleIconTint) {
-            _idleIconTint = idleIconTint
+    var idleIconTintColor: Int
+        get() = _idleIconTintColor
+        set(idleIconTintColor) {
+            _idleIconTintColor = idleIconTintColor
             invalidate()
         }
     var finishBgColor: Int
@@ -280,10 +280,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _finishBgColor = finishBgColor
             invalidate()
         }
-    var finishIconTint: Int
-        get() = _finishIconTint
-        set(finishIconTint) {
-            _finishIconTint = finishIconTint
+    var finishIconTintColor: Int
+        get() = _finishIconTintColor
+        set(finishIconTintColor) {
+            _finishIconTintColor = finishIconTintColor
             invalidate()
         }
     var errorBgColor: Int
@@ -468,7 +468,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _bgPaint.color = _idleBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
-        _idleIcon.setTint(_idleIconTint)
+        _idleIcon.setTint(_idleIconTintColor)
         drawDrawableInCenter(_idleIcon, canvas, _idleIconWidth, _idleIconHeight)
     }
 
@@ -481,7 +481,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _bgPaint.color = _finishBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
-        _finishIcon.setTint(_finishIconTint)
+        _finishIcon.setTint(_finishIconTintColor)
         drawDrawableInCenter(_finishIcon, canvas, _finishIconWidth, _finishIconHeight)
     }
 
@@ -565,13 +565,13 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         bundle.putInt(INSTANCE_IDLE_WIDTH, idleIconWidth)
         bundle.putInt(INSTANCE_IDLE_HEIGHT, idleIconHeight)
         bundle.putInt(INSTANCE_IDLE_BG_COLOR, idleBgColor)
-        bundle.putInt(INSTANCE_IDLE_ICON_TINT, idleIconTint)
+        bundle.putInt(INSTANCE_IDLE_ICON_TINT, idleIconTintColor)
         bundle.putInt(INSTANCE_CANCEL_WIDTH, cancelIconWidth)
         bundle.putInt(INSTANCE_CANCEL_HEIGHT, cancelIconHeight)
         bundle.putInt(INSTANCE_FINISH_WIDTH, finishIconWidth)
         bundle.putInt(INSTANCE_FINISH_HEIGHT, finishIconHeight)
         bundle.putInt(INSTANCE_FINISH_BG_COLOR, finishBgColor)
-        bundle.putInt(INSTANCE_FINISH_ICON_TINT, finishIconTint)
+        bundle.putInt(INSTANCE_FINISH_ICON_TINT, finishIconTintColor)
         bundle.putInt(INSTANCE_ERROR_WIDTH, errorIconWidth)
         bundle.putInt(INSTANCE_ERROR_HEIGHT, errorIconHeight)
         bundle.putInt(INSTANCE_ERROR_BG_COLOR, errorBgColor)
@@ -597,13 +597,13 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _idleIconWidth = state.getInt(INSTANCE_IDLE_WIDTH)
             _idleIconHeight = state.getInt(INSTANCE_IDLE_HEIGHT)
             _idleBgColor = state.getInt(INSTANCE_IDLE_BG_COLOR)
-            _idleIconTint = state.getInt(INSTANCE_IDLE_ICON_TINT)
+            _idleIconTintColor = state.getInt(INSTANCE_IDLE_ICON_TINT)
             _cancelIconWidth = state.getInt(INSTANCE_CANCEL_WIDTH)
             _cancelIconHeight = state.getInt(INSTANCE_CANCEL_HEIGHT)
             _finishIconWidth = state.getInt(INSTANCE_FINISH_WIDTH)
             _finishIconHeight = state.getInt(INSTANCE_FINISH_HEIGHT)
             _finishBgColor = state.getInt(INSTANCE_FINISH_BG_COLOR)
-            _finishIconTint = state.getInt(INSTANCE_FINISH_ICON_TINT)
+            _finishIconTintColor = state.getInt(INSTANCE_FINISH_ICON_TINT)
             _errorIconWidth = state.getInt(INSTANCE_ERROR_WIDTH)
             _errorIconHeight = state.getInt(INSTANCE_ERROR_HEIGHT)
             _errorBgColor = state.getInt(INSTANCE_ERROR_BG_COLOR)

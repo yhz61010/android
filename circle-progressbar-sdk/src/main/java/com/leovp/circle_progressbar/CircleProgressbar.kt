@@ -68,8 +68,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private lateinit var _indeterminateAnimator: ValueAnimator
     private var _currIndeterminateBarPos = 0
     private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_WIDTH
-    private var _progressDeterminateColor = DEF_DETERMINATE_COLOR
-    private var _progressIndeterminateColor = DEF_INDETERMINATE_COLOR
+    private var _progressColor = DEF_PROGRESS_COLOR
     private var _progressMargin = DEF_PROGRESS_MARGIN
     private val _bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val _bgRect = RectF()
@@ -102,8 +101,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _cancelable = attr.getBoolean(R.styleable.CircleProgressbar_cancelable, DEF_CANCELABLE)
             _enableClickListener = attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener, DEF_ENABLE_CLICK_LISTENER)
             _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_WIDTH)
-            _progressDeterminateColor = attr.getColor(R.styleable.CircleProgressbar_progressDeterminateColor, DEF_DETERMINATE_COLOR)
-            _progressIndeterminateColor = attr.getColor(R.styleable.CircleProgressbar_progressIndeterminateColor, DEF_INDETERMINATE_COLOR)
+            _progressColor = attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
             _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, DEF_PROGRESS_WIDTH).toFloat()
             _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, DEF_PROGRESS_MARGIN)
             _currProgress = attr.getInteger(R.styleable.CircleProgressbar_currentProgress, 0)
@@ -347,16 +345,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _determinateBgDrawable = determinateBgDrawable
             invalidate()
         }
-    var progressDeterminateColor: Int
-        get() = _progressDeterminateColor
-        set(progressDeterminateColor) {
-            _progressDeterminateColor = progressDeterminateColor
-            invalidate()
-        }
-    var progressIndeterminateColor: Int
-        get() = _progressIndeterminateColor
-        set(progressIndeterminateColor) {
-            _progressIndeterminateColor = progressIndeterminateColor
+    var progressColor: Int
+        get() = _progressColor
+        set(progressColor) {
+            _progressColor = progressColor
             invalidate()
         }
     var progressMargin: Int
@@ -532,7 +524,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             drawDrawableInCenter(_cancelIcon, canvas, _cancelIconWidth, _cancelIconHeight)
         }
         setProgressRectBounds()
-        _progressPaint.color = _progressIndeterminateColor
+        _progressPaint.color = _progressColor
         canvas.drawArc(_progressRect, _currIndeterminateBarPos.toFloat(), _progressIndeterminateSweepAngle.toFloat(), false, _progressPaint)
     }
 
@@ -552,7 +544,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             drawDrawableInCenter(_cancelIcon, canvas, _cancelIconWidth, _cancelIconHeight)
         }
         setProgressRectBounds()
-        _progressPaint.color = _progressDeterminateColor
+        _progressPaint.color = _progressColor
         canvas.drawArc(_progressRect, BASE_START_ANGLE.toFloat(), getDegrees(), false, _progressPaint)
         if (_showProgressText) setProgressText(canvas)
     }
@@ -599,8 +591,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         bundle.putInt(INSTANCE_CANCEL_ICON_TINT, cancelIconTintColor)
         bundle.putInt(INSTANCE_INDETERMINATE_BG_COLOR, indeterminateBgColor)
         bundle.putInt(INSTANCE_DETERMINATE_BG_COLOR, determinateBgColor)
-        bundle.putInt(INSTANCE_PROGRESS_DETERMINATE_COLOR, progressDeterminateColor)
-        bundle.putInt(INSTANCE_PROGRESS_INDETERMINATE_COLOR, progressIndeterminateColor)
+        bundle.putInt(INSTANCE_PROGRESS_COLOR, progressColor)
         bundle.putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
         bundle.putBoolean(INSTANCE_SHOW_PROGRESS_TEXT, showProgressText)
         bundle.putInt(INSTANCE_PROGRESS_TEXT_COLOR, progressTextColor)
@@ -632,8 +623,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _cancelIconTintColor = state.getInt(INSTANCE_CANCEL_ICON_TINT)
             _indeterminateBgColor = state.getInt(INSTANCE_INDETERMINATE_BG_COLOR)
             _determinateBgColor = state.getInt(INSTANCE_DETERMINATE_BG_COLOR)
-            _progressDeterminateColor = state.getInt(INSTANCE_PROGRESS_DETERMINATE_COLOR)
-            _progressIndeterminateColor = state.getInt(INSTANCE_PROGRESS_INDETERMINATE_COLOR)
+            _progressColor = state.getInt(INSTANCE_PROGRESS_COLOR)
             _progressMargin = state.getInt(INSTANCE_PROGRESS_MARGIN)
             _showProgressText = state.getBoolean(INSTANCE_SHOW_PROGRESS_TEXT)
             _progressTextColor = state.getInt(INSTANCE_PROGRESS_TEXT_COLOR)
@@ -731,8 +721,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val INSTANCE_CANCEL_ICON_TINT = "cancel_icon_tint"
         private const val INSTANCE_INDETERMINATE_BG_COLOR = "indeterminate_bg_color"
         private const val INSTANCE_DETERMINATE_BG_COLOR = "determinate_bg_color"
-        private const val INSTANCE_PROGRESS_DETERMINATE_COLOR = "prog_det_color"
-        private const val INSTANCE_PROGRESS_INDETERMINATE_COLOR = "prog_indet_color"
+        private const val INSTANCE_PROGRESS_COLOR = "prog_color"
         private const val INSTANCE_PROGRESS_MARGIN = "prog_margin"
         private const val INSTANCE_SHOW_PROGRESS_TEXT = "show_prog_text"
         private const val INSTANCE_PROGRESS_TEXT_COLOR = "prog_text_color"
@@ -742,8 +731,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val DEF_ICON_TINT = Color.WHITE
         private const val DEF_CANCELABLE = true
         private const val DEF_ENABLE_CLICK_LISTENER = true
-        private const val DEF_DETERMINATE_COLOR = Color.GREEN
-        private const val DEF_INDETERMINATE_COLOR = Color.WHITE
+        private const val DEF_PROGRESS_COLOR = Color.GREEN
         private const val DEF_PROGRESS_WIDTH = 8
         private const val DEF_PROGRESS_MARGIN = 5
         private const val DEF_PROGRESS_INDETERMINATE_WIDTH = 90

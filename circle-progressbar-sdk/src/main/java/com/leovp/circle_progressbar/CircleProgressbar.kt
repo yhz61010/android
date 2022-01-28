@@ -492,14 +492,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawIndeterminateState(canvas: Canvas) {
-        if (this._defaultBgDrawable != null) {
-            this._defaultBgDrawable?.run {
+        if (_defaultBgDrawable != null) {
+            _defaultBgDrawable?.run {
                 setBounds(0, 0, width, height)
                 draw(canvas)
             }
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = this._defaultBgColor
+            _bgPaint.color = _defaultBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
         if (_cancelable) {
@@ -512,14 +512,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawDeterminateState(canvas: Canvas) {
-        if (this._defaultBgDrawable != null) {
-            this._defaultBgDrawable?.run {
+        if (_defaultBgDrawable != null) {
+            _defaultBgDrawable?.run {
                 setBounds(0, 0, width, height)
                 draw(canvas)
             }
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = this._defaultBgColor
+            _bgPaint.color = _defaultBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
         if (!_showProgressText && _cancelable) {

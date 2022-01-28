@@ -24,7 +24,9 @@
         <attr name="progressTextColor" format="color" />
         <attr name="progressTextSize" format="dimension" />
 
+        <!-- It's used for Indeterminate State and Determinate State. -->
         <attr name="backgroundDrawable" format="reference" />
+        <!-- It's used for Indeterminate State and Determinate State. -->
         <attr name="backgroundColor" format="color" />
 
         <attr name="idleIconDrawable" format="reference" />
@@ -33,12 +35,6 @@
         <attr name="idleIconHeight" format="dimension" />
         <attr name="idleBackgroundDrawable" format="reference" />
         <attr name="idleBackgroundColor" format="color" />
-
-        <!-- The cancel background color/drawable is just same as indeterminate/determinate background color/drawable. -->
-        <attr name="cancelIconDrawable" format="reference" />
-        <attr name="cancelIconTintColor" format="color" />
-        <attr name="cancelIconWidth" format="dimension" />
-        <attr name="cancelIconHeight" format="dimension" />
 
         <attr name="finishIconDrawable" format="reference" />
         <attr name="finishIconTintColor" format="color" />
@@ -53,5 +49,11 @@
         <attr name="errorIconHeight" format="dimension" />
         <attr name="errorBackgroundDrawable" format="reference" />
         <attr name="errorBackgroundColor" format="color" />
+
+        <!-- The cancel background color/drawable is just same as indeterminate/determinate background color/drawable(backgroundDrawable/backgroundColor). -->
+        <attr name="cancelIconDrawable" format="reference" />
+        <attr name="cancelIconTintColor" format="color" />
+        <attr name="cancelIconWidth" format="dimension" />
+        <attr name="cancelIconHeight" format="dimension" />
     </declare-styleable>
 </resources>

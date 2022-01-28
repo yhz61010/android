@@ -35,40 +35,50 @@ import kotlin.math.min
 @Suppress("unused", "WeakerAccess")
 class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private var _idleIcon: Drawable
-    private var _cancelIcon: Drawable
-    private var _finishIcon: Drawable
-    private var _errorIcon: Drawable
-    private var _cancelable = DEF_CANCELABLE
-    private var _enableClickListener = DEF_ENABLE_CLICK_LISTENER
     private var _idleIconWidth = 0
     private var _idleIconHeight = 0
+
+    private var _cancelIcon: Drawable
     private var _cancelIconWidth = 0
     private var _cancelIconHeight = 0
+
+    private var _finishIcon: Drawable
     private var _finishIconWidth = 0
     private var _finishIconHeight = 0
+
+    private var _errorIcon: Drawable
     private var _errorIconWidth = 0
     private var _errorIconHeight = 0
+
+    private var _cancelable = DEF_CANCELABLE
+    private var _enableClickListener = DEF_ENABLE_CLICK_LISTENER
+
     var currState = STATE_IDLE
         private set
+
     private var _maxProgress = 100
     private var _currProgress = 0
-    private var _idleBgColor = DEF_BG_COLOR
-    private var _idleIconTintColor = DEF_ICON_TINT
-    private var _finishBgColor = DEF_BG_COLOR
-    private var _finishIconTintColor = DEF_ICON_TINT
-    private var _errorBgColor = DEF_BG_COLOR
-    private var _errorIconTintColor = DEF_ICON_TINT
-    private var _defaultBgColor = DEF_BG_COLOR
-    private var _idleBgDrawable: Drawable? = null
-    private var _finishBgDrawable: Drawable? = null
-    private var _errorBgDrawable: Drawable? = null
-    private var _cancelIconTintColor = DEF_ICON_TINT
-    private var _defaultBgDrawable: Drawable? = null
-    private lateinit var _indeterminateAnimator: ValueAnimator
+
     private var _currIndeterminateBarPos = 0
     private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_WIDTH
     private var _progressColor = DEF_PROGRESS_COLOR
     private var _progressMargin = DEF_PROGRESS_MARGIN
+
+    private var _idleBgColor = DEF_BG_COLOR
+    private var _idleBgDrawable: Drawable? = null
+    private var _idleIconTintColor = DEF_ICON_TINT
+    private var _finishBgColor = DEF_BG_COLOR
+    private var _finishBgDrawable: Drawable? = null
+    private var _finishIconTintColor = DEF_ICON_TINT
+    private var _errorBgColor = DEF_BG_COLOR
+    private var _errorBgDrawable: Drawable? = null
+    private var _errorIconTintColor = DEF_ICON_TINT
+
+    private var _cancelIconTintColor = DEF_ICON_TINT
+    private var _defaultBgColor = DEF_BG_COLOR
+    private var _defaultBgDrawable: Drawable? = null
+
+    private lateinit var _indeterminateAnimator: ValueAnimator
     private val _bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val _bgRect = RectF()
     private val _progressPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -299,12 +309,6 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _cancelIconTintColor = cancelIconTintColor
             invalidate()
         }
-    var defaultBackgroundColor: Int
-        get() = _defaultBgColor
-        set(defaultBackgroundColor) {
-            _defaultBgColor = defaultBackgroundColor
-            invalidate()
-        }
     var idleBgDrawable: Drawable?
         get() = _idleBgDrawable
         set(idleBgDrawable) {
@@ -323,6 +327,20 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _errorBgDrawable = errorBgDrawable
             invalidate()
         }
+
+    /**
+     * It's used for Indeterminate State and Determinate State.
+     */
+    var defaultBackgroundColor: Int
+        get() = _defaultBgColor
+        set(defaultBackgroundColor) {
+            _defaultBgColor = defaultBackgroundColor
+            invalidate()
+        }
+
+    /**
+     * It's used for Indeterminate State and Determinate State.
+     */
     var defaultBackgroundDrawable: Drawable?
         get() = _defaultBgDrawable
         set(defaultBackgroundDrawable) {

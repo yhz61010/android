@@ -45,32 +45,25 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
         }
 
         binding.vCustomInd.setOnClickListener {
-            toast("You've clicked me!")
-            LogContext.log.w("You've clicked me!")
+            toast("Default OnClickListener")
+            LogContext.log.w("Default OnClickListener")
         }
+        binding.vCustomInd.setOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
+            override fun onCancelButtonClick(view: View) {
+                toast("Custom click listener Cancel.")
+                LogContext.log.w("Custom click listener Cancel.")
+            }
+        })
 
         // This click listener will not be triggered. Because `enableClickListener` in xml has been set to `false`.
-        binding.vCustomIdle.setOnClickListener(object : CircleProgressbar.OnClickListener {
+        binding.vCustomIdle.setOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 toast("Click Upload Idle.")
                 LogContext.log.w("Click Upload Idle.")
             }
-
-            override fun onCancelButtonClick(view: View) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onFinishButtonClick(view: View) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onErrorButtonClick(view: View) {
-                TODO("Not yet implemented")
-            }
-
         })
 
-        binding.vDownload.addOnClickListener(object : CircleProgressbar.OnClickListener {
+        binding.vDownload.addOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 LogContext.log.i("onIdleButtonClick")
                 toast("onIdleButtonClick")
@@ -84,11 +77,6 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
             override fun onFinishButtonClick(view: View) {
                 LogContext.log.i("onFinishButtonClick")
                 toast("onFinishButtonClick")
-            }
-
-            override fun onErrorButtonClick(view: View) {
-                LogContext.log.i("onErrorButtonClick")
-                TODO("onErrorButtonClick")
             }
         })
 

@@ -22,8 +22,7 @@
         <attr name="currentProgress" format="integer" />
         <attr name="maxProgress" format="integer" />
 
-        <attr name="progressDeterminateColor" format="color" />
-        <attr name="progressIndeterminateColor" format="color" />
+        <attr name="progressColor" format="color" />
         <attr name="progressIndeterminateSweepAngle" format="integer" />
 
         <attr name="indeterminateBackgroundDrawable" format="reference" />

@@ -32,9 +32,7 @@
         app:idleBackgroundColor="@color/design_default_color_secondary"
         app:idleIconDrawable="@drawable/ic_default_upload"
         app:layout_constraintStart_toStartOf="@+id/vDownload"
-        app:layout_constraintTop_toBottomOf="@+id/textView27"
-        app:progressDeterminateColor="@color/white"
-        app:progressMargin="6dp" />
+        app:layout_constraintTop_toBottomOf="@+id/textView27" app:progressColor="@color/white" app:progressMargin="6dp" />
 
     <Button
         android:id="@+id/btnDownload"
@@ -101,7 +99,7 @@
         app:indeterminateBackgroundColor="@color/purple_500"
         app:layout_constraintStart_toStartOf="@+id/vCustomIdle"
         app:layout_constraintTop_toBottomOf="@+id/vCustomIdle"
-        app:progressIndeterminateColor="@color/design_default_color_secondary"
+        app:progressColor="@color/design_default_color_secondary"
         app:state="INDETERMINATE" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
@@ -113,7 +111,7 @@
         app:indeterminateBackgroundColor="@color/purple_200"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd"
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
-        app:progressDeterminateColor="@color/white"
+        app:progressColor="@color/white"
         app:progressIndeterminateSweepAngle="25"
         app:progressMargin="8dp" />
 
@@ -122,10 +120,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp" app:cancelIconTintColor="#00ffff" app:currentProgress="25" app:determinateBackgroundColor="@color/purple_700"
-        app:layout_constraintStart_toEndOf="@+id/vCustomInd2"
-        app:layout_constraintTop_toTopOf="@+id/vCustomInd"
-        app:progressDeterminateColor="#ffff00"
-        app:state="DETERMINATE" />
+        app:layout_constraintStart_toEndOf="@+id/vCustomInd2" app:layout_constraintTop_toTopOf="@+id/vCustomInd" app:progressColor="#ffff00" app:state="DETERMINATE" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
         android:id="@+id/vCustomDe2"
@@ -134,10 +129,7 @@
         android:layout_marginStart="16dp"
         app:currentProgress="45"
         app:determinateBackgroundColor="@color/design_default_color_primary"
-        app:layout_constraintStart_toEndOf="@+id/vCustomDe"
-        app:layout_constraintTop_toTopOf="@+id/vCustomInd"
-        app:progressDeterminateColor="@color/white"
-        app:progressMargin="4dp"
+        app:layout_constraintStart_toEndOf="@+id/vCustomDe" app:layout_constraintTop_toTopOf="@+id/vCustomInd" app:progressColor="@color/white" app:progressMargin="4dp"
         app:progressWidth="1dp"
         app:showProgressText="true"
         app:state="DETERMINATE" />

@@ -55,6 +55,8 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
             }
         })
 
+        binding.vCustomInd2.setIndeterminate()
+
         // This click listener will not be triggered. Because `enableClickListener` in xml has been set to `false`.
         binding.vCustomIdle.setOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {

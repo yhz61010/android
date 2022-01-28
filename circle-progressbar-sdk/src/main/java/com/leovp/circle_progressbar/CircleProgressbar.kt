@@ -674,6 +674,13 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         drawable.draw(canvas)
     }
 
+    open class DefaultOnClickListener : OnClickListener {
+        override fun onIdleButtonClick(view: View) {}
+        override fun onCancelButtonClick(view: View) {}
+        override fun onFinishButtonClick(view: View) {}
+        override fun onErrorButtonClick(view: View) {}
+    }
+
     interface OnClickListener {
         fun onIdleButtonClick(view: View)
         fun onCancelButtonClick(view: View)

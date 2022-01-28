@@ -115,17 +115,13 @@
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="@color/white"
         app:progressIndeterminateSweepAngle="25"
-        app:progressMargin="8dp"
-        app:state="INDETERMINATE" />
+        app:progressMargin="8dp" />
 
     <com.leovp.circle_progressbar.CircleProgressbar
         android:id="@+id/vCustomDe"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        app:cancelIconTintColor="#00ffff"
-        app:currentProgress="45"
-        app:determinateBackgroundColor="@color/purple_700"
+        android:layout_marginStart="16dp" app:cancelIconTintColor="#00ffff" app:currentProgress="25" app:determinateBackgroundColor="@color/purple_700"
         app:layout_constraintStart_toEndOf="@+id/vCustomInd2"
         app:layout_constraintTop_toTopOf="@+id/vCustomInd"
         app:progressDeterminateColor="#ffff00"

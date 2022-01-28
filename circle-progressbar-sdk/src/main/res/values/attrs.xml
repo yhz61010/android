@@ -9,7 +9,6 @@
             <enum name="ERROR" value="5" />
         </attr>
         <attr name="cancelable" format="boolean" />
-        <attr name="progressIndeterminateSweepAngle" format="integer" />
         <attr name="enableClickListener" format="boolean" />
 
         <attr name="progressWidth" format="dimension" />
@@ -25,6 +24,7 @@
 
         <attr name="progressDeterminateColor" format="color" />
         <attr name="progressIndeterminateColor" format="color" />
+        <attr name="progressIndeterminateSweepAngle" format="integer" />
 
         <attr name="indeterminateBackgroundDrawable" format="reference" />
         <attr name="indeterminateBackgroundColor" format="color" />

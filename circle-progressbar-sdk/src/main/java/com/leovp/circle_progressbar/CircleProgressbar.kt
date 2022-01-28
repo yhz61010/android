@@ -57,14 +57,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _finishIconTintColor = DEF_ICON_TINT
     private var _errorBgColor = DEF_BG_COLOR
     private var _errorIconTintColor = DEF_ICON_TINT
-    private var _indeterminateBgColor = DEF_BG_COLOR
-    private var _determinateBgColor = DEF_BG_COLOR
+    private var _defaultBgColor = DEF_BG_COLOR
     private var _idleBgDrawable: Drawable? = null
     private var _finishBgDrawable: Drawable? = null
     private var _errorBgDrawable: Drawable? = null
     private var _cancelIconTintColor = DEF_ICON_TINT
-    private var _indeterminateBgDrawable: Drawable? = null
-    private var _determinateBgDrawable: Drawable? = null
+    private var _defaultBgDrawable: Drawable? = null
     private lateinit var _indeterminateAnimator: ValueAnimator
     private var _currIndeterminateBarPos = 0
     private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_WIDTH
@@ -152,13 +150,11 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         val idleResId = attrs.getResourceId(R.styleable.CircleProgressbar_idleBackgroundDrawable, -1)
         val finishResId = attrs.getResourceId(R.styleable.CircleProgressbar_finishBackgroundDrawable, -1)
         val errorResId = attrs.getResourceId(R.styleable.CircleProgressbar_errorBackgroundDrawable, -1)
-        val indeterminateResId = attrs.getResourceId(R.styleable.CircleProgressbar_indeterminateBackgroundDrawable, -1)
-        val determinateResId = attrs.getResourceId(R.styleable.CircleProgressbar_determinateBackgroundDrawable, -1)
+        val bgResId = attrs.getResourceId(R.styleable.CircleProgressbar_backgroundDrawable, -1)
         if (idleResId != -1) _idleBgDrawable = context.getDrawable(idleResId)
         if (finishResId != -1) _finishBgDrawable = context.getDrawable(finishResId)
         if (errorResId != -1) _errorBgDrawable = context.getDrawable(errorResId)
-        if (indeterminateResId != -1) _indeterminateBgDrawable = context.getDrawable(indeterminateResId)
-        if (determinateResId != -1) _determinateBgDrawable = context.getDrawable(determinateResId)
+        if (bgResId != -1) _defaultBgDrawable = context.getDrawable(bgResId)
         _idleBgColor = attrs.getColor(R.styleable.CircleProgressbar_idleBackgroundColor, DEF_BG_COLOR)
         _idleIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_idleIconTintColor, DEF_ICON_TINT)
         _finishBgColor = attrs.getColor(R.styleable.CircleProgressbar_finishBackgroundColor, DEF_BG_COLOR)
@@ -166,8 +162,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         _errorBgColor = attrs.getColor(R.styleable.CircleProgressbar_errorBackgroundColor, DEF_BG_COLOR)
         _errorIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_errorIconTintColor, DEF_ICON_TINT)
         _cancelIconTintColor = attrs.getColor(R.styleable.CircleProgressbar_cancelIconTintColor, DEF_ICON_TINT)
-        _indeterminateBgColor = attrs.getColor(R.styleable.CircleProgressbar_indeterminateBackgroundColor, DEF_BG_COLOR)
-        _determinateBgColor = attrs.getColor(R.styleable.CircleProgressbar_determinateBackgroundColor, DEF_BG_COLOR)
+        _defaultBgColor = attrs.getColor(R.styleable.CircleProgressbar_backgroundColor, DEF_BG_COLOR)
     }
 
     var maxProgress: Int
@@ -303,16 +298,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _cancelIconTintColor = cancelIconTintColor
             invalidate()
         }
-    var indeterminateBgColor: Int
-        get() = _indeterminateBgColor
-        set(indeterminateBgColor) {
-            _indeterminateBgColor = indeterminateBgColor
-            invalidate()
-        }
-    var determinateBgColor: Int
-        get() = _determinateBgColor
-        set(determinateBgColor) {
-            _determinateBgColor = determinateBgColor
+    var defaultBackgroundColor: Int
+        get() = _defaultBgColor
+        set(defaultBackgroundColor) {
+            _defaultBgColor = defaultBackgroundColor
             invalidate()
         }
     var idleBgDrawable: Drawable?
@@ -333,16 +322,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _errorBgDrawable = errorBgDrawable
             invalidate()
         }
-    var indeterminateBgDrawable: Drawable?
-        get() = _indeterminateBgDrawable
-        set(indeterminateBgDrawable) {
-            _indeterminateBgDrawable = indeterminateBgDrawable
-            invalidate()
-        }
-    var determinateBgDrawable: Drawable?
-        get() = _determinateBgDrawable
-        set(determinateBgDrawable) {
-            _determinateBgDrawable = determinateBgDrawable
+    var defaultBackgroundDrawable: Drawable?
+        get() = _defaultBgDrawable
+        set(defaultBackgroundDrawable) {
+            _defaultBgDrawable = defaultBackgroundDrawable
             invalidate()
         }
     var progressColor: Int
@@ -509,14 +492,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawIndeterminateState(canvas: Canvas) {
-        if (_indeterminateBgDrawable != null) {
-            _indeterminateBgDrawable?.run {
+        if (this._defaultBgDrawable != null) {
+            this._defaultBgDrawable?.run {
                 setBounds(0, 0, width, height)
                 draw(canvas)
             }
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _indeterminateBgColor
+            _bgPaint.color = this._defaultBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
         if (_cancelable) {
@@ -529,14 +512,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawDeterminateState(canvas: Canvas) {
-        if (_determinateBgDrawable != null) {
-            _determinateBgDrawable?.run {
+        if (this._defaultBgDrawable != null) {
+            this._defaultBgDrawable?.run {
                 setBounds(0, 0, width, height)
                 draw(canvas)
             }
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _determinateBgColor
+            _bgPaint.color = this._defaultBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
         if (!_showProgressText && _cancelable) {
@@ -589,8 +572,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         bundle.putInt(INSTANCE_ERROR_BG_COLOR, errorBgColor)
         bundle.putInt(INSTANCE_ERROR_ICON_TINT, errorIconTintColor)
         bundle.putInt(INSTANCE_CANCEL_ICON_TINT, cancelIconTintColor)
-        bundle.putInt(INSTANCE_INDETERMINATE_BG_COLOR, indeterminateBgColor)
-        bundle.putInt(INSTANCE_DETERMINATE_BG_COLOR, determinateBgColor)
+        bundle.putInt(INSTANCE_BG_COLOR, defaultBackgroundColor)
         bundle.putInt(INSTANCE_PROGRESS_COLOR, progressColor)
         bundle.putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
         bundle.putBoolean(INSTANCE_SHOW_PROGRESS_TEXT, showProgressText)
@@ -621,8 +603,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _errorBgColor = state.getInt(INSTANCE_ERROR_BG_COLOR)
             _errorIconTintColor = state.getInt(INSTANCE_ERROR_ICON_TINT)
             _cancelIconTintColor = state.getInt(INSTANCE_CANCEL_ICON_TINT)
-            _indeterminateBgColor = state.getInt(INSTANCE_INDETERMINATE_BG_COLOR)
-            _determinateBgColor = state.getInt(INSTANCE_DETERMINATE_BG_COLOR)
+            _defaultBgColor = state.getInt(INSTANCE_BG_COLOR)
             _progressColor = state.getInt(INSTANCE_PROGRESS_COLOR)
             _progressMargin = state.getInt(INSTANCE_PROGRESS_MARGIN)
             _showProgressText = state.getBoolean(INSTANCE_SHOW_PROGRESS_TEXT)
@@ -719,8 +700,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val INSTANCE_ERROR_BG_COLOR = "error_bg_color"
         private const val INSTANCE_ERROR_ICON_TINT = "error_icon_tint"
         private const val INSTANCE_CANCEL_ICON_TINT = "cancel_icon_tint"
-        private const val INSTANCE_INDETERMINATE_BG_COLOR = "indeterminate_bg_color"
-        private const val INSTANCE_DETERMINATE_BG_COLOR = "determinate_bg_color"
+        private const val INSTANCE_BG_COLOR = "def_bg_color"
         private const val INSTANCE_PROGRESS_COLOR = "prog_color"
         private const val INSTANCE_PROGRESS_MARGIN = "prog_margin"
         private const val INSTANCE_SHOW_PROGRESS_TEXT = "show_prog_text"

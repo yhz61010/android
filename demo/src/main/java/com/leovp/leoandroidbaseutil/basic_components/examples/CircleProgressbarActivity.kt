@@ -46,7 +46,29 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
 
         binding.vCustomInd.setOnClickListener {
             toast("You've clicked me!")
+            LogContext.log.w("You've clicked me!")
         }
+
+        // This click listener will not be triggered. Because `enableClickListener` in xml has been set to `false`.
+        binding.vCustomIdle.setOnClickListener(object : CircleProgressbar.OnClickListener {
+            override fun onIdleButtonClick(view: View) {
+                toast("Click Upload Idle.")
+                LogContext.log.w("Click Upload Idle.")
+            }
+
+            override fun onCancelButtonClick(view: View) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onFinishButtonClick(view: View) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onErrorButtonClick(view: View) {
+                TODO("Not yet implemented")
+            }
+
+        })
 
         binding.vDownload.addOnClickListener(object : CircleProgressbar.OnClickListener {
             override fun onIdleButtonClick(view: View) {
@@ -73,14 +95,15 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
         binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar.OnStateChangedListener {
             override fun onStateChanged(newState: Int) {
                 val stateName = when (newState) {
-                    CircleProgressbar.STATE_IDLE -> "Idle"
+                    CircleProgressbar.STATE_IDLE          -> "Idle"
                     CircleProgressbar.STATE_INDETERMINATE -> "Indeterminate"
-                    CircleProgressbar.STATE_DETERMINATE -> "Determinate"
-                    CircleProgressbar.STATE_FINISHED -> "Finish"
-                    CircleProgressbar.STATE_ERROR -> "Error"
-                    else -> "Unknown"
+                    CircleProgressbar.STATE_DETERMINATE   -> "Determinate"
+                    CircleProgressbar.STATE_FINISHED      -> "Finish"
+                    CircleProgressbar.STATE_ERROR         -> "Error"
+                    else                                  -> "Unknown"
                 }
                 toast("Current state=$stateName")
+                LogContext.log.w("Current state=$stateName")
             }
         })
     }

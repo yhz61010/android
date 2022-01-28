@@ -399,9 +399,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     fun setIndeterminate() {
         _currIndeterminateBarPos = BASE_START_ANGLE
         currState = STATE_INDETERMINATE
+        _indeterminateAnimator.start()
         callStateChangedListener(currState)
         invalidate()
-        _indeterminateAnimator.start()
     }
 
     fun setDeterminate() {

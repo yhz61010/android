@@ -32,7 +32,7 @@ import kotlin.math.min
  * You can use this view to make a download or upload button, you might also use this for another purpose.
  */
 @Suppress("unused", "WeakerAccess")
-class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs), View.OnClickListener {
+class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private var _idleIcon: Drawable
     private var _cancelIcon: Drawable
     private var _finishIcon: Drawable
@@ -84,7 +84,6 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _progressTextSize = sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat(), context)
 
     init {
-        super.setOnClickListener(this)
         initIndeterminateAnimator()
         _progressPaint.style = Paint.Style.STROKE
         _progressPaint.isDither = true
@@ -446,16 +445,27 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         for (listener in _onStateChangedListeners) listener.onStateChanged(newState)
     }
 
+    // https://stackoverflow.com/a/50343572
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return _enableClickListener && performClick()
+        if (!_enableClickListener) return true
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> return true
+            MotionEvent.ACTION_UP   -> {
+                performClick()
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
+    // https://stackoverflow.com/a/50343572
     override fun performClick(): Boolean {
-        super.performClick()
+        super.performClick() // View.setOnClickListener will be called here.
+        onCustomClick(this)
         return true
     }
 
-    override fun onClick(v: View) {
+    private fun onCustomClick(v: View) {
         if (!_cancelable && (currState == STATE_INDETERMINATE || currState == STATE_DETERMINATE)) return
         when (currState) {
             STATE_IDLE                             -> for (listener in _clickListeners) listener.onIdleButtonClick(v)

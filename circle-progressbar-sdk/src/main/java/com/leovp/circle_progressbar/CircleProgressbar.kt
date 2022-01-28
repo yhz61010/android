@@ -15,6 +15,7 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
+import androidx.annotation.ColorInt
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -450,53 +451,23 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    private fun drawIdleState(canvas: Canvas) {
-        if (_idleBgDrawable != null) {
-            _idleBgDrawable?.run {
-                setBounds(0, 0, width, height)
-                draw(canvas)
-            }
+    private fun drawState(canvas: Canvas, drawable: Drawable?, @ColorInt bgColor: Int, icon: Drawable, @ColorInt tint: Int, iconWidth: Int, iconHeight: Int) {
+        if (drawable != null) {
+            drawable.setBounds(0, 0, width, height)
+            drawable.draw(canvas)
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _idleBgColor
+            _bgPaint.color = bgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
-        _idleIcon.setTint(_idleIconTintColor)
-        drawDrawableInCenter(_idleIcon, canvas, _idleIconWidth, _idleIconHeight)
-    }
-
-    private fun drawFinishState(canvas: Canvas) {
-        if (_finishBgDrawable != null) {
-            _finishBgDrawable!!.setBounds(0, 0, width, height)
-            _finishBgDrawable!!.draw(canvas)
-        } else {
-            _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _finishBgColor
-            canvas.drawOval(_bgRect, _bgPaint)
-        }
-        _finishIcon.setTint(_finishIconTintColor)
-        drawDrawableInCenter(_finishIcon, canvas, _finishIconWidth, _finishIconHeight)
-    }
-
-    private fun drawErrorState(canvas: Canvas) {
-        if (_errorBgDrawable != null) {
-            _errorBgDrawable!!.setBounds(0, 0, width, height)
-            _errorBgDrawable!!.draw(canvas)
-        } else {
-            _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _errorBgColor
-            canvas.drawOval(_bgRect, _bgPaint)
-        }
-        _errorIcon.setTint(_errorIconTintColor)
-        drawDrawableInCenter(_errorIcon, canvas, _errorIconWidth, _errorIconHeight)
+        icon.setTint(tint)
+        drawDrawableInCenter(icon, canvas, iconWidth, iconHeight)
     }
 
     private fun drawIndeterminateState(canvas: Canvas) {
         if (_defaultBgDrawable != null) {
-            _defaultBgDrawable?.run {
-                setBounds(0, 0, width, height)
-                draw(canvas)
-            }
+            _defaultBgDrawable?.setBounds(0, 0, width, height)
+            _defaultBgDrawable?.draw(canvas)
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
             _bgPaint.color = _defaultBgColor
@@ -513,10 +484,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     private fun drawDeterminateState(canvas: Canvas) {
         if (_defaultBgDrawable != null) {
-            _defaultBgDrawable?.run {
-                setBounds(0, 0, width, height)
-                draw(canvas)
-            }
+            _defaultBgDrawable?.setBounds(0, 0, width, height)
+            _defaultBgDrawable?.draw(canvas)
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
             _bgPaint.color = _defaultBgColor
@@ -541,11 +510,11 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     override fun onDraw(canvas: Canvas) {
         when (currState) {
-            STATE_IDLE          -> drawIdleState(canvas)
+            STATE_IDLE          -> drawState(canvas, _idleBgDrawable, _idleBgColor, _idleIcon, _idleIconTintColor, _idleIconWidth, _idleIconHeight)
             STATE_INDETERMINATE -> drawIndeterminateState(canvas)
             STATE_DETERMINATE   -> drawDeterminateState(canvas)
-            STATE_FINISHED      -> drawFinishState(canvas)
-            STATE_ERROR         -> drawErrorState(canvas)
+            STATE_FINISHED      -> drawState(canvas, _finishBgDrawable, _finishBgColor, _finishIcon, _finishIconTintColor, _finishIconWidth, _finishIconHeight)
+            STATE_ERROR         -> drawState(canvas, _errorBgDrawable, _errorBgColor, _errorIcon, _errorIconTintColor, _errorIconWidth, _errorIconHeight)
         }
     }
 

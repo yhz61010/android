@@ -55,5 +55,7 @@
         <attr name="cancelIconTintColor" format="color" />
         <attr name="cancelIconWidth" format="dimension" />
         <attr name="cancelIconHeight" format="dimension" />
+        <attr name="cancelBackgroundDrawable" format="reference" />
+        <attr name="cancelBackgroundColor" format="color" />
     </declare-styleable>
 </resources>

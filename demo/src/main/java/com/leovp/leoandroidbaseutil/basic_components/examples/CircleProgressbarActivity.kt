@@ -5,6 +5,7 @@ import android.view.View
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circle_progressbar.CircleProgressbar
+import com.leovp.circle_progressbar.base.DefaultOnClickListener
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCircleProgressbarBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
@@ -48,7 +49,7 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
             toast("Default OnClickListener")
             LogContext.log.w("Default OnClickListener")
         }
-        binding.vCustomInd.setOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
+        binding.vCustomInd.setOnClickListener(object : DefaultOnClickListener() {
             override fun onCancelButtonClick(view: View) {
                 toast("Custom click listener Cancel.")
                 LogContext.log.w("Custom click listener Cancel.")
@@ -58,14 +59,14 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
         binding.vCustomInd2.setIndeterminate()
 
         // This click listener will not be triggered. Because `enableClickListener` in xml has been set to `false`.
-        binding.vCustomIdle.setOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
+        binding.vCustomIdle.setOnClickListener(object : DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 toast("Click Upload Idle.")
                 LogContext.log.w("Click Upload Idle.")
             }
         })
 
-        binding.vDownload.addOnClickListener(object : CircleProgressbar.DefaultOnClickListener() {
+        binding.vDownload.addOnClickListener(object : DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 LogContext.log.i("onIdleButtonClick")
                 toast("onIdleButtonClick")

@@ -49,7 +49,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _cancelable = DEF_CANCELABLE
     private var _enableClickListener = DEF_ENABLE_CLICK_LISTENER
 
-    var currState = STATE_IDLE
+    var currState = State.Type.STATE_IDLE
         private set
 
     private var _maxProgress = 100
@@ -93,7 +93,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             if (bgResId != -1) _defaultBgDrawable = context.getDrawable(bgResId)
             _defaultBgColor = attr.getColor(R.styleable.CircleProgressbar_backgroundColor, State.DEF_BG_COLOR)
 
-            currState = attr.getInt(R.styleable.CircleProgressbar_state, STATE_IDLE)
+            currState = State.Type.getState(attr.getInt(R.styleable.CircleProgressbar_state, State.Type.STATE_IDLE.value))
             _cancelable = attr.getBoolean(R.styleable.CircleProgressbar_cancelable, DEF_CANCELABLE)
             _enableClickListener = attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener, DEF_ENABLE_CLICK_LISTENER)
             _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_WIDTH)
@@ -120,7 +120,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
         attr?.recycle()
 
-        if (currState == STATE_INDETERMINATE) setIndeterminate()
+        if (currState == State.Type.STATE_INDETERMINATE) setIndeterminate()
     }
 
     var maxProgress: Int
@@ -132,7 +132,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     var currentProgress: Int
         get() = _currProgress
         set(progress) {
-            if (currState != STATE_DETERMINATE) return
+            if (currState != State.Type.STATE_DETERMINATE) return
             _currProgress = min(progress, _maxProgress)
             invalidate()
         }
@@ -192,7 +192,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
     fun setIdle() {
-        currState = STATE_IDLE
+        currState = State.Type.STATE_IDLE
         callStateChangedListener(currState)
         invalidate()
     }
@@ -200,7 +200,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     fun setIndeterminate() {
         _indeterminateAnimator.end()
         _currIndeterminateBarPos = BASE_START_ANGLE
-        currState = STATE_INDETERMINATE
+        currState = State.Type.STATE_INDETERMINATE
         _indeterminateAnimator.start()
         callStateChangedListener(currState)
         invalidate()
@@ -209,21 +209,21 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     fun setDeterminate() {
         _indeterminateAnimator.end()
         _currProgress = 0
-        currState = STATE_DETERMINATE
+        currState = State.Type.STATE_DETERMINATE
         callStateChangedListener(currState)
         invalidate()
     }
 
     fun setFinish() {
         _currProgress = 0
-        currState = STATE_FINISHED
+        currState = State.Type.STATE_FINISHED
         callStateChangedListener(currState)
         invalidate()
     }
 
     fun setError() {
         _currProgress = 0
-        currState = STATE_ERROR
+        currState = State.Type.STATE_ERROR
         callStateChangedListener(currState)
         invalidate()
     }
@@ -232,6 +232,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     fun removeOnClickListener(listener: OnClickListener): Boolean = _clickListeners.remove(listener)
 
+    /**
+     * If you also set `View#setOnClickListener`,
+     * that listener will be triggered first then your custom `setOnClickListener` will be triggered after that.
+     */
     fun setOnClickListener(listener: OnClickListener) {
         removeAllOnClickListeners()
         addOnClickListener(listener)
@@ -243,7 +247,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     fun removeOnStateChangedListener(listener: OnStateChangedListener): Boolean = _onStateChangedListeners.remove(listener)
 
-    private fun callStateChangedListener(newState: Int) {
+    private fun callStateChangedListener(newState: State.Type) {
         for (listener in _onStateChangedListeners) listener.onStateChanged(newState)
     }
 
@@ -268,12 +272,13 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun onCustomClick(v: View) {
-        if (!_cancelable && (currState == STATE_INDETERMINATE || currState == STATE_DETERMINATE)) return
+        if (!_cancelable && (currState == State.Type.STATE_INDETERMINATE || currState == State.Type.STATE_DETERMINATE)) return
         when (currState) {
-            STATE_IDLE                             -> for (listener in _clickListeners) listener.onIdleButtonClick(v)
-            STATE_INDETERMINATE, STATE_DETERMINATE -> for (listener in _clickListeners) listener.onCancelButtonClick(v)
-            STATE_FINISHED                         -> for (listener in _clickListeners) listener.onFinishButtonClick(v)
-            STATE_ERROR                            -> for (listener in _clickListeners) listener.onErrorButtonClick(v)
+            State.Type.STATE_IDLE                                        -> for (listener in _clickListeners) listener.onIdleButtonClick(v)
+            State.Type.STATE_INDETERMINATE, State.Type.STATE_DETERMINATE -> for (listener in _clickListeners) listener.onCancelButtonClick(v)
+            State.Type.STATE_FINISHED                                    -> for (listener in _clickListeners) listener.onFinishButtonClick(v)
+            State.Type.STATE_ERROR                                       -> for (listener in _clickListeners) listener.onErrorButtonClick(v)
+            else                                                         -> Unit
         }
     }
 
@@ -292,7 +297,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
-        if (STATE_INDETERMINATE != currState && STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
+        if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
 
         if (_defaultBgDrawable != null) {
             _defaultBgDrawable?.setBounds(0, 0, width, height)
@@ -321,11 +326,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     override fun onDraw(canvas: Canvas) {
         when (currState) {
-            STATE_IDLE          -> drawStaticState(canvas, idleItem)
-            STATE_INDETERMINATE -> drawActionState(canvas, false, _currIndeterminateBarPos.toFloat(), _progressIndeterminateSweepAngle.toFloat())
-            STATE_DETERMINATE   -> drawActionState(canvas, _showProgressText, BASE_START_ANGLE.toFloat(), getDegrees())
-            STATE_FINISHED      -> drawStaticState(canvas, finishItem)
-            STATE_ERROR         -> drawStaticState(canvas, errorItem)
+            State.Type.STATE_IDLE          -> drawStaticState(canvas, idleItem)
+            State.Type.STATE_INDETERMINATE -> drawActionState(canvas, false, _currIndeterminateBarPos.toFloat(), _progressIndeterminateSweepAngle.toFloat())
+            State.Type.STATE_DETERMINATE   -> drawActionState(canvas, _showProgressText, BASE_START_ANGLE.toFloat(), getDegrees())
+            State.Type.STATE_FINISHED      -> drawStaticState(canvas, finishItem)
+            State.Type.STATE_ERROR         -> drawStaticState(canvas, errorItem)
+            else                           -> Unit
         }
     }
 
@@ -334,7 +340,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             putParcelable(INSTANCE_STATE, super.onSaveInstanceState())
             putInt(INSTANCE_MAX_PROGRESS, maxProgress)
             putInt(INSTANCE_CURRENT_PROGRESS, currentProgress)
-            putInt(INSTANCE_CURRENT_STATE, currState)
+            putSerializable(INSTANCE_CURRENT_STATE, currState)
             putBoolean(INSTANCE_CANCELABLE, isCancelable)
             putBoolean(INSTANCE_ENABLE_CLICK, _enableClickListener)
             putSerializable(INSTANCE_IDLE_ITEM, idleItem)
@@ -354,7 +360,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (state is Bundle) {
             _maxProgress = state.getInt(INSTANCE_MAX_PROGRESS)
             _currProgress = state.getInt(INSTANCE_CURRENT_PROGRESS)
-            currState = state.getInt(INSTANCE_CURRENT_STATE)
+            currState = state.getSerializable(INSTANCE_CURRENT_STATE) as State.Type
             _cancelable = state.getBoolean(INSTANCE_CANCELABLE)
             _enableClickListener = state.getBoolean(INSTANCE_ENABLE_CLICK)
 
@@ -370,7 +376,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _progressTextColor = state.getInt(INSTANCE_PROGRESS_TEXT_COLOR)
             _progressTextSize = state.getInt(INSTANCE_PROGRESS_TEXT_SIZE)
             super.onRestoreInstanceState(state.getParcelable(INSTANCE_STATE))
-            if (currState == STATE_INDETERMINATE) _indeterminateAnimator.start()
+            if (currState == State.Type.STATE_INDETERMINATE) _indeterminateAnimator.start()
             return
         }
         super.onRestoreInstanceState(state)
@@ -413,17 +419,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     interface OnStateChangedListener {
-        fun onStateChanged(newState: Int)
+        fun onStateChanged(newState: State.Type)
     }
 
     companion object {
-        const val STATE_IDLE = 1
-        const val STATE_INDETERMINATE = 2
-        const val STATE_DETERMINATE = 3
-        const val STATE_FINISHED = 4
-        const val STATE_ERROR = 5
-        const val STATE_CANCEL = 6
-
         private const val INSTANCE_IDLE_ITEM = "idle_item"
         private const val INSTANCE_FINISH_ITEM = "idle_finish"
         private const val INSTANCE_ERROR_ITEM = "idle_error"

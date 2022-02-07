@@ -4,6 +4,7 @@ package com.leovp.circle_progressbar
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.Resources
 import android.content.res.TypedArray
 import android.graphics.*
 import android.graphics.drawable.Drawable
@@ -19,6 +20,7 @@ import com.leovp.circle_progressbar.state.CancelState
 import com.leovp.circle_progressbar.state.ErrorState
 import com.leovp.circle_progressbar.state.FinishState
 import com.leovp.circle_progressbar.state.IdleState
+import com.leovp.circle_progressbar.util.dp2px
 import com.leovp.circle_progressbar.util.sp2px
 import kotlin.math.abs
 import kotlin.math.min
@@ -59,7 +61,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _currIndeterminateBarPos = 0
     private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_WIDTH
     private var _progressColor = DEF_PROGRESS_COLOR
-    private var _progressMargin = DEF_PROGRESS_MARGIN
+    private var _progressMargin: Int = Resources.getSystem().dp2px(DEF_PROGRESS_MARGIN_IN_DP)
 
     private var _defaultBgColor = State.DEF_BG_COLOR
     private var _defaultBgDrawable: Drawable? = null
@@ -99,8 +101,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _enableClickListener = attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener, DEF_ENABLE_CLICK_LISTENER)
             _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_WIDTH)
             _progressColor = attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
-            _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, DEF_PROGRESS_WIDTH).toFloat()
-            _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, DEF_PROGRESS_MARGIN)
+            _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)).toFloat()
+            _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
             _currProgress = attr.getInteger(R.styleable.CircleProgressbar_currentProgress, 0)
             _maxProgress = attr.getInteger(R.styleable.CircleProgressbar_maxProgress, 100)
 
@@ -108,7 +110,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _progressTextColor = attr.getColor(R.styleable.CircleProgressbar_progressTextColor, DEF_PROGRESS_TEXT_COLOR)
             _progressTextSize = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressTextSize, resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat()))
         } else {
-            _progressPaint.strokeWidth = DEF_PROGRESS_WIDTH.toFloat()
+            _progressPaint.strokeWidth = resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)
 
             //            _progressTextPaint.color = DEF_PROGRESS_TEXT_COLOR
             //            _progressTextPaint.textSize = DEF_PROGRESS_TEXT_SIZE.toFloat()
@@ -344,7 +346,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             putSerializable(INSTANCE_IDLE_ITEM, idleItem)
             putSerializable(INSTANCE_FINISH_ITEM, finishItem)
             putSerializable(INSTANCE_ERROR_ITEM, errorItem)
-            putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
+            if (::cancelItem.isInitialized) putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
             putInt(INSTANCE_BG_COLOR, defaultBackgroundColor)
             putInt(INSTANCE_PROGRESS_COLOR, progressColor)
             putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
@@ -441,8 +443,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val DEF_CANCELABLE = true
         private const val DEF_ENABLE_CLICK_LISTENER = true
         private const val DEF_PROGRESS_COLOR = Color.WHITE
-        private const val DEF_PROGRESS_WIDTH = 8
-        private const val DEF_PROGRESS_MARGIN = 5
+        private const val DEF_PROGRESS_WIDTH_IN_DP = 3f
+        private const val DEF_PROGRESS_MARGIN_IN_DP = 2f
         private const val DEF_PROGRESS_INDETERMINATE_WIDTH = 90
         private const val DEF_SHOW_PROGRESS_TEXT = false
         private const val DEF_PROGRESS_TEXT_SIZE_IN_SP = 14

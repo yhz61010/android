@@ -13,6 +13,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
+import androidx.annotation.ColorInt
 import com.leovp.circle_progressbar.base.State
 import com.leovp.circle_progressbar.state.CancelState
 import com.leovp.circle_progressbar.state.ErrorState
@@ -282,16 +283,20 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    private fun drawStaticState(canvas: Canvas, state: State) {
-        val bgDrawable: Drawable? = if (_defaultBgDrawable != state.backgroundDrawable) state.backgroundDrawable else _defaultBgDrawable
+    private fun setBgDrawable(canvas: Canvas, bgDrawable: Drawable?, @ColorInt bgColor: Int) {
         if (bgDrawable != null) {
             bgDrawable.setBounds(0, 0, width, height)
             bgDrawable.draw(canvas)
         } else {
             _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = if (_defaultBgColor != state.backgroundColor) state.backgroundColor else _defaultBgColor
+            _bgPaint.color = bgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
+    }
+
+    private fun drawStaticState(canvas: Canvas, state: State) {
+        val bgDrawable: Drawable? = if (_defaultBgDrawable != state.backgroundDrawable) state.backgroundDrawable else _defaultBgDrawable
+        setBgDrawable(canvas, bgDrawable, if (_defaultBgColor != state.backgroundColor) state.backgroundColor else _defaultBgColor)
         state.getIcon().setTint(state.iconTint)
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
@@ -299,14 +304,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
         if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
 
-        if (_defaultBgDrawable != null) {
-            _defaultBgDrawable?.setBounds(0, 0, width, height)
-            _defaultBgDrawable?.draw(canvas)
-        } else {
-            _bgRect.set(0f, 0f, width.toFloat(), height.toFloat())
-            _bgPaint.color = _defaultBgColor
-            canvas.drawOval(_bgRect, _bgPaint)
-        }
+        setBgDrawable(canvas, _defaultBgDrawable, _defaultBgColor)
         if (!showProgressText && _cancelable && ::cancelItem.isInitialized) {
             cancelItem.getIcon().setTint(cancelItem.iconTint)
             drawDrawableInCenter(cancelItem.getIcon(), canvas, cancelItem.width, cancelItem.height)

@@ -55,7 +55,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _currProgress = 0
 
     private var _currIndeterminateBarPos = 0
-    private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_WIDTH
+    private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE
     private var _progressColor = DEF_PROGRESS_COLOR
     private var _progressMargin: Int = Resources.getSystem().dp2px(DEF_PROGRESS_MARGIN_IN_DP)
 
@@ -95,7 +95,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             currState = State.Type.getState(attr.getInt(R.styleable.CircleProgressbar_state, State.Type.STATE_IDLE.value))
             _cancelable = attr.getBoolean(R.styleable.CircleProgressbar_cancelable, DEF_CANCELABLE)
             _enableClickListener = attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener, DEF_ENABLE_CLICK_LISTENER)
-            _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_WIDTH)
+            _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE)
             _progressColor = attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
             _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)).toFloat()
             _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
@@ -442,7 +442,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val DEF_PROGRESS_COLOR = Color.WHITE
         private const val DEF_PROGRESS_WIDTH_IN_DP = 3f
         private const val DEF_PROGRESS_MARGIN_IN_DP = 2f
-        private const val DEF_PROGRESS_INDETERMINATE_WIDTH = 90
+        private const val DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE = 90
         private const val DEF_SHOW_PROGRESS_TEXT = false
         private const val DEF_PROGRESS_TEXT_SIZE_IN_SP = 14
         private const val DEF_PROGRESS_TEXT_COLOR = Color.WHITE

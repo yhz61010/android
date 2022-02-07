@@ -59,7 +59,7 @@ abstract class AbsPref {
      * - Boolean
      * - Float
      */
-    inline fun <reified T> getObject(key: String, default: T): T {
+    inline fun <reified T> get(key: String, default: T): T {
         return when (default) {
             is Int     -> internalGetInt(key, default) as T
             is Long    -> internalGetLong(key, default) as T

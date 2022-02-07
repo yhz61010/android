@@ -24,9 +24,7 @@
         <attr name="progressTextColor" format="color" />
         <attr name="progressTextSize" format="dimension" />
 
-        <!-- It's used for Indeterminate State and Determinate State. -->
         <attr name="backgroundDrawable" format="reference" />
-        <!-- It's used for Indeterminate State and Determinate State. -->
         <attr name="backgroundColor" format="color" />
 
         <attr name="idleIconDrawable" format="reference" />

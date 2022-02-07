@@ -99,7 +99,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _progressColor = attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
             _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)).toFloat()
             _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
-            _currProgress = attr.getInteger(R.styleable.CircleProgressbar_currentProgress, 0)
+            _currProgress = attr.getInteger(R.styleable.CircleProgressbar_progress, 0)
             _maxProgress = attr.getInteger(R.styleable.CircleProgressbar_maxProgress, 100)
 
             _showProgressText = attr.getBoolean(R.styleable.CircleProgressbar_showProgressText, DEF_SHOW_PROGRESS_TEXT)

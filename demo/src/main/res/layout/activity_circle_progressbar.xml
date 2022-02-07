@@ -244,6 +244,7 @@
                 app:cancelIconHeight="36dp"
                 app:cancelIconTintColor="#ffff00"
                 app:cancelIconWidth="36dp"
+                app:progressAnimDuration="1500"
                 app:progressColor="#FB3D5D"
                 app:progressIndeterminateSweepAngle="40"
                 app:progressMargin="5dp"
@@ -361,6 +362,7 @@
                 app:backgroundColor="@color/purple_200"
                 app:cancelable="false"
                 app:progressColor="@color/white"
+                app:progressAnimDuration="1400"
                 app:progressIndeterminateSweepAngle="45"
                 app:progressMargin="8dp" />
 

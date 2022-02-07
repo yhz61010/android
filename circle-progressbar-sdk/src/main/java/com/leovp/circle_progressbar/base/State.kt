@@ -9,22 +9,21 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
 import com.leovp.circle_progressbar.util.dp2px
-import java.io.Serializable
 
 /**
  * Author: Michael Leo
  * Date: 2022/1/28 15:06
  */
-abstract class State(private val view: View) : Serializable {
+abstract class State(private val view: View) {
     abstract fun state(): Type
 
-    protected var _icon: Drawable? = null
+    protected var internalIcon: Drawable? = null
         set(value) {
             field = value
             view.invalidate()
         }
 
-    fun getIcon(): Drawable = _icon!!
+    fun getIcon(): Drawable = internalIcon!!
 
     var width: Int = Resources.getSystem().dp2px(48f)
         set(value) {

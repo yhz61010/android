@@ -244,12 +244,15 @@
                 android:id="@+id/vUpload"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                app:backgroundColor="@color/design_default_color_secondary"
-                app:errorBackgroundColor="@color/design_default_color_secondary"
+                app:backgroundColor="@color/purple_200"
+                app:errorBackgroundColor="#ff0000"
+                app:errorIconTintColor="#ffff00"
                 app:finishBackgroundColor="@color/design_default_color_secondary"
                 app:finishIconDrawable="@drawable/ic_default_finish"
-                app:idleBackgroundColor="@color/design_default_color_secondary"
+                app:idleBackgroundColor="@color/purple_700"
                 app:idleIconDrawable="@drawable/ic_default_upload"
+                app:cancelBackgroundColor="#63EEFB"
+                app:cancelIconTintColor="#ffff00"
                 app:progressColor="@color/white"
                 app:progressMargin="6dp" />
 

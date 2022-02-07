@@ -19,7 +19,7 @@ class ErrorState(view: View) : State(view) {
     override fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?) {
         if (attrs != null && attr != null) {
             val iconResId = attr.getResourceId(R.styleable.CircleProgressbar_errorIconDrawable, R.drawable.ic_default_error)
-            _icon = context.getDrawable(iconResId)!!
+            internalIcon = context.getDrawable(iconResId)!!
             iconTint = attr.getColor(R.styleable.CircleProgressbar_errorIconTintColor, DEF_ICON_TINT)
             width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_errorIconWidth, getIcon().minimumWidth)
             height = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_errorIconHeight, getIcon().minimumHeight)
@@ -28,7 +28,7 @@ class ErrorState(view: View) : State(view) {
             backgroundDrawable = if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
             backgroundColor = attr.getColor(R.styleable.CircleProgressbar_errorBackgroundColor, defColor)
         } else {
-            _icon = context.getDrawable(R.drawable.ic_default_error)!!
+            internalIcon = context.getDrawable(R.drawable.ic_default_error)!!
             width = getIcon().minimumWidth
             height = getIcon().minimumHeight
         }

@@ -19,7 +19,7 @@ class FinishState(view: View) : State(view) {
     override fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?) {
         if (attrs != null && attr != null) {
             val iconResId = attr.getResourceId(R.styleable.CircleProgressbar_finishIconDrawable, R.drawable.ic_default_finish)
-            _icon = context.getDrawable(iconResId)!!
+            internalIcon = context.getDrawable(iconResId)!!
             iconTint = attr.getColor(R.styleable.CircleProgressbar_finishIconTintColor, DEF_ICON_TINT)
             width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_finishIconWidth, getIcon().minimumWidth)
             height = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_finishIconHeight, getIcon().minimumHeight)
@@ -28,7 +28,7 @@ class FinishState(view: View) : State(view) {
             backgroundDrawable = if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
             backgroundColor = attr.getColor(R.styleable.CircleProgressbar_finishBackgroundColor, defColor)
         } else {
-            _icon = context.getDrawable(R.drawable.ic_default_finish)!!
+            internalIcon = context.getDrawable(R.drawable.ic_default_finish)!!
             width = getIcon().minimumWidth
             height = getIcon().minimumHeight
         }

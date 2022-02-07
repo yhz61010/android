@@ -43,11 +43,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     var idleItem: IdleState
     var finishItem: FinishState
     var errorItem: ErrorState
-
-    /**
-     * Only available when `cancelable` attribute is `true`.
-     */
-    lateinit var cancelItem: CancelState
+    var cancelItem: CancelState
 
     private var _cancelable = DEF_CANCELABLE
     private var _enableClickListener = DEF_ENABLE_CLICK_LISTENER
@@ -119,7 +115,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         idleItem = IdleState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
         finishItem = FinishState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
         errorItem = ErrorState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
-        if (_cancelable) cancelItem = CancelState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
+        cancelItem = CancelState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
 
         attr?.recycle()
 
@@ -307,7 +303,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
 
         setBgDrawable(canvas, _defaultBgDrawable, _defaultBgColor)
-        if (!showProgressText && _cancelable && ::cancelItem.isInitialized) {
+        if (!showProgressText && _cancelable) {
             cancelItem.getIcon().setTint(cancelItem.iconTint)
             drawDrawableInCenter(cancelItem.getIcon(), canvas, cancelItem.width, cancelItem.height)
         }
@@ -338,15 +334,15 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     override fun onSaveInstanceState(): Parcelable {
         return Bundle().apply {
             putParcelable(INSTANCE_STATE, super.onSaveInstanceState())
+            //            putSerializable(INSTANCE_IDLE_ITEM, idleItem)
+            //            putSerializable(INSTANCE_FINISH_ITEM, finishItem)
+            //            putSerializable(INSTANCE_ERROR_ITEM, errorItem)
+            //            putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
             putInt(INSTANCE_MAX_PROGRESS, maxProgress)
             putInt(INSTANCE_CURRENT_PROGRESS, currentProgress)
             putSerializable(INSTANCE_CURRENT_STATE, currState)
             putBoolean(INSTANCE_CANCELABLE, isCancelable)
             putBoolean(INSTANCE_ENABLE_CLICK, _enableClickListener)
-            putSerializable(INSTANCE_IDLE_ITEM, idleItem)
-            putSerializable(INSTANCE_FINISH_ITEM, finishItem)
-            putSerializable(INSTANCE_ERROR_ITEM, errorItem)
-            if (::cancelItem.isInitialized) putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
             putInt(INSTANCE_BG_COLOR, defaultBackgroundColor)
             putInt(INSTANCE_PROGRESS_COLOR, progressColor)
             putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
@@ -363,12 +359,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             currState = state.getSerializable(INSTANCE_CURRENT_STATE) as State.Type
             _cancelable = state.getBoolean(INSTANCE_CANCELABLE)
             _enableClickListener = state.getBoolean(INSTANCE_ENABLE_CLICK)
-
-            idleItem = state.getSerializable(INSTANCE_IDLE_ITEM) as IdleState
-            finishItem = state.getSerializable(INSTANCE_FINISH_ITEM) as FinishState
-            errorItem = state.getSerializable(INSTANCE_ERROR_ITEM) as ErrorState
-            cancelItem = state.getSerializable(INSTANCE_CANCEL_ITEM) as CancelState
-
+            //            idleItem = state.getSerializable(INSTANCE_IDLE_ITEM) as IdleState
+            //            finishItem = state.getSerializable(INSTANCE_FINISH_ITEM) as FinishState
+            //            errorItem = state.getSerializable(INSTANCE_ERROR_ITEM) as ErrorState
+            //            cancelItem = state.getSerializable(INSTANCE_CANCEL_ITEM) as CancelState
             _defaultBgColor = state.getInt(INSTANCE_BG_COLOR)
             _progressColor = state.getInt(INSTANCE_PROGRESS_COLOR)
             _progressMargin = state.getInt(INSTANCE_PROGRESS_MARGIN)
@@ -423,10 +417,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     companion object {
-        private const val INSTANCE_IDLE_ITEM = "idle_item"
-        private const val INSTANCE_FINISH_ITEM = "idle_finish"
-        private const val INSTANCE_ERROR_ITEM = "idle_error"
-        private const val INSTANCE_CANCEL_ITEM = "idle_cancel"
+        //        private const val INSTANCE_IDLE_ITEM = "idle_item"
+        //        private const val INSTANCE_FINISH_ITEM = "idle_finish"
+        //        private const val INSTANCE_ERROR_ITEM = "idle_error"
+        //        private const val INSTANCE_CANCEL_ITEM = "idle_cancel"
         private const val INSTANCE_STATE = "saved_instance"
         private const val INSTANCE_MAX_PROGRESS = "max_progress"
         private const val INSTANCE_CURRENT_PROGRESS = "current_progress"

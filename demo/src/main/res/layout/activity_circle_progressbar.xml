@@ -11,7 +11,6 @@
         android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
 
         <TextView
-            android:id="@+id/textView31"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -43,7 +42,6 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/textView32"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -74,6 +72,39 @@
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="@color/purple_500" app:state="ERROR" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Set background colors for different states."
+            app:layout_constraintStart_toStartOf="@+id/circleProgressbar"
+            app:layout_constraintTop_toBottomOf="@+id/circleProgressbar" />
+
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:orientation="horizontal">
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp" android:layout_height="48dp" app:backgroundColor="#F8C4B1" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#F8B1D0"
+                app:currentProgress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="#D0B1F8" app:state="INDETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="#B1BDF8" app:state="FINISHED" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="#B1D6F8" app:state="ERROR" />
         </LinearLayout>
 
         <LinearLayout

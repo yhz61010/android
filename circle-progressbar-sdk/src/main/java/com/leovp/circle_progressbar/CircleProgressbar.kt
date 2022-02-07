@@ -443,12 +443,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val BASE_START_ANGLE = -90
         private const val DEF_CANCELABLE = true
         private const val DEF_ENABLE_CLICK_LISTENER = true
-        private const val DEF_PROGRESS_COLOR = Color.GREEN
+        private const val DEF_PROGRESS_COLOR = Color.WHITE
         private const val DEF_PROGRESS_WIDTH = 8
         private const val DEF_PROGRESS_MARGIN = 5
         private const val DEF_PROGRESS_INDETERMINATE_WIDTH = 90
         private const val DEF_SHOW_PROGRESS_TEXT = false
         private const val DEF_PROGRESS_TEXT_SIZE_IN_SP = 14
-        private const val DEF_PROGRESS_TEXT_COLOR = Color.GREEN
+        private const val DEF_PROGRESS_TEXT_COLOR = Color.WHITE
     }
 }

@@ -61,7 +61,7 @@ abstract class State(private val view: View) : Serializable {
     abstract fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?)
 
     companion object {
-        const val DEF_BG_COLOR = 0x4c000000
+        val DEF_BG_COLOR = Color.parseColor("#018786")
         const val DEF_ICON_TINT = Color.WHITE
     }
 }

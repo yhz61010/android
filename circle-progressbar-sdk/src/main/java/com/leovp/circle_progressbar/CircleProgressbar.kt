@@ -54,6 +54,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _maxProgress = 100
     private var _currProgress = 0
 
+    private var _progressAnimDuration: Long = DEF_PROGRESS_ANIM_DURATION
     private var _currIndeterminateBarPos = 0
     private var _progressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE
     private var _progressColor = DEF_PROGRESS_COLOR
@@ -76,7 +77,6 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private var _progressTextSize: Int = resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat())
 
     init {
-        initIndeterminateAnimator()
         _progressPaint.style = Paint.Style.STROKE
         _progressPaint.isDither = true
         _progressPaint.strokeJoin = Paint.Join.ROUND
@@ -101,6 +101,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
             _currProgress = attr.getInteger(R.styleable.CircleProgressbar_progress, 0)
             _maxProgress = attr.getInteger(R.styleable.CircleProgressbar_maxProgress, 100)
+            _progressAnimDuration = attr.getInteger(R.styleable.CircleProgressbar_progressAnimDuration, 1000).toLong()
 
             _showProgressText = attr.getBoolean(R.styleable.CircleProgressbar_showProgressText, DEF_SHOW_PROGRESS_TEXT)
             _progressTextColor = attr.getColor(R.styleable.CircleProgressbar_progressTextColor, DEF_PROGRESS_TEXT_COLOR)
@@ -119,6 +120,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
         attr?.recycle()
 
+        initIndeterminateAnimator()
         if (currState == State.Type.STATE_INDETERMINATE) setIndeterminate()
     }
 
@@ -133,6 +135,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         set(progress) {
             if (currState != State.Type.STATE_DETERMINATE) return
             _currProgress = min(progress, _maxProgress)
+            invalidate()
+        }
+    var progressAnimDuration: Long
+        get() = _progressAnimDuration
+        set(progressAnimDuration) {
+            _progressAnimDuration = progressAnimDuration
             invalidate()
         }
     var isCancelable: Boolean
@@ -388,7 +396,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun initIndeterminateAnimator() {
         _indeterminateAnimator = ValueAnimator.ofInt(0, 360).apply {
             interpolator = LinearInterpolator()
-            duration = 1000
+            duration = _progressAnimDuration
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.RESTART
             addUpdateListener { animation ->
@@ -440,6 +448,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         private const val DEF_CANCELABLE = true
         private const val DEF_ENABLE_CLICK_LISTENER = true
         private const val DEF_PROGRESS_COLOR = Color.WHITE
+        private const val DEF_PROGRESS_ANIM_DURATION: Long = 1000
         private const val DEF_PROGRESS_WIDTH_IN_DP = 3f
         private const val DEF_PROGRESS_MARGIN_IN_DP = 2f
         private const val DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE = 90

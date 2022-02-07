@@ -15,6 +15,7 @@
         <attr name="progressMargin" format="dimension" />
         <attr name="progressColor" format="color" />
         <attr name="progressIndeterminateSweepAngle" format="integer" />
+        <attr name="progressAnimDuration" format="integer" />
 
         <attr name="progress" format="integer" />
         <attr name="maxProgress" format="integer" />

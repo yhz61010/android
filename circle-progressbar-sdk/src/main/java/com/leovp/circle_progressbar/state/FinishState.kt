@@ -6,7 +6,6 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
-import com.leovp.circle_progressbar.CircleProgressbar
 import com.leovp.circle_progressbar.R
 import com.leovp.circle_progressbar.base.State
 
@@ -15,7 +14,7 @@ import com.leovp.circle_progressbar.base.State
  * Date: 2022/1/28 16:33
  */
 class FinishState(view: View) : State(view) {
-    override fun state(): Int = CircleProgressbar.STATE_FINISHED
+    override fun state(): Type = Type.STATE_FINISHED
 
     override fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?) {
         if (attrs != null && attr != null) {

@@ -6,6 +6,7 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circle_progressbar.CircleProgressbar
 import com.leovp.circle_progressbar.base.DefaultOnClickListener
+import com.leovp.circle_progressbar.base.State
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCircleProgressbarBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
@@ -84,14 +85,14 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
         })
 
         binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar.OnStateChangedListener {
-            override fun onStateChanged(newState: Int) {
+            override fun onStateChanged(newState: State.Type) {
                 val stateName = when (newState) {
-                    CircleProgressbar.STATE_IDLE          -> "Idle"
-                    CircleProgressbar.STATE_INDETERMINATE -> "Indeterminate"
-                    CircleProgressbar.STATE_DETERMINATE   -> "Determinate"
-                    CircleProgressbar.STATE_FINISHED      -> "Finish"
-                    CircleProgressbar.STATE_ERROR         -> "Error"
-                    else                                  -> "Unknown"
+                    State.Type.STATE_IDLE          -> "Idle"
+                    State.Type.STATE_INDETERMINATE -> "Indeterminate"
+                    State.Type.STATE_DETERMINATE   -> "Determinate"
+                    State.Type.STATE_FINISHED      -> "Finish"
+                    State.Type.STATE_ERROR         -> "Error"
+                    else                           -> "Unknown"
                 }
                 toast("Current state=$stateName")
                 LogContext.log.w("Current state=$stateName")

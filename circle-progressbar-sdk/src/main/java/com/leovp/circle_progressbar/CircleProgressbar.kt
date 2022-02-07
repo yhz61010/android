@@ -292,7 +292,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
-        if (STATE_INDETERMINATE != currState && STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal circle progress state.")
+        if (STATE_INDETERMINATE != currState && STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
 
         if (_defaultBgDrawable != null) {
             _defaultBgDrawable?.setBounds(0, 0, width, height)
@@ -302,7 +302,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _bgPaint.color = _defaultBgColor
             canvas.drawOval(_bgRect, _bgPaint)
         }
-        if (!showProgressText && _cancelable) {
+        if (!showProgressText && _cancelable && ::cancelItem.isInitialized) {
             cancelItem.getIcon().setTint(cancelItem.iconTint)
             drawDrawableInCenter(cancelItem.getIcon(), canvas, cancelItem.width, cancelItem.height)
         }

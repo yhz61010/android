@@ -148,8 +148,7 @@
                 app:cancelIconWidth="36dp"
                 app:progressColor="#D4F2FF"
                 app:progressMargin="5dp"
-                app:progressWidth="2dp"
-                app:state="INDETERMINATE" />
+                app:progressWidth="2dp" app:progressIndeterminateSweepAngle="40" app:state="INDETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp"
@@ -248,10 +247,7 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="16dp"
                 app:backgroundColor="@color/purple_200"
-                app:cancelable="false"
-                app:progressColor="@color/white"
-                app:progressIndeterminateSweepAngle="25"
-                app:progressMargin="8dp" />
+                app:cancelable="false" app:progressColor="@color/white" app:progressIndeterminateSweepAngle="45" app:progressMargin="8dp" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:id="@+id/vCustomDe"

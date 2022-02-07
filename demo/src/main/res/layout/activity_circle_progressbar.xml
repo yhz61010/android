@@ -27,7 +27,12 @@
                 android:id="@+id/circleProgressbar2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginStart="8dp" app:progress="30" app:state="DETERMINATE" />
+                android:layout_marginStart="8dp"
+                app:progress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:progress="30" app:showProgressText="true" app:state="DETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar3" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:state="INDETERMINATE" />
@@ -55,7 +60,19 @@
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginStart="8dp" app:backgroundColor="@color/purple_500" app:progress="30" app:state="DETERMINATE" />
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:progress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:progress="30"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="@color/purple_500" app:state="INDETERMINATE" />
@@ -82,6 +99,15 @@
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="#F8B1D0" app:progress="30" app:state="DETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#F8B1D0"
+                app:progress="30"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" app:backgroundColor="#D0B1F8" app:state="INDETERMINATE" />
@@ -126,6 +152,22 @@
                 app:progressColor="#CEDB3A"
                 app:progressMargin="5dp"
                 app:progressWidth="2dp"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circle_progressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:cancelBackgroundColor="#C1D022"
+                app:cancelIconHeight="36dp"
+                app:cancelIconWidth="36dp"
+                app:progress="30"
+                app:progressColor="#3122D0"
+                app:progressMargin="5dp"
+                app:progressWidth="2dp"
+                app:showProgressText="true"
+                app:progressTextColor="@color/purple_500"
+                app:progressTextSize="12sp"
                 app:state="DETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
@@ -249,14 +291,20 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="16dp"
-                app:backgroundColor="@color/purple_700" app:cancelIconTintColor="#00ffff" app:progress="25" app:progressColor="#ffff00"
+                app:backgroundColor="@color/purple_700"
+                app:cancelIconTintColor="#00ffff"
+                app:progress="25"
+                app:progressColor="#ffff00"
                 app:state="DETERMINATE" />
 
             <com.leovp.circle_progressbar.CircleProgressbar
                 android:id="@+id/vCustomDe2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginStart="16dp" app:backgroundColor="@color/design_default_color_primary" app:progress="45" app:progressColor="@color/white"
+                android:layout_marginStart="16dp"
+                app:backgroundColor="@color/design_default_color_primary"
+                app:progress="45"
+                app:progressColor="@color/white"
                 app:progressMargin="4dp"
                 app:progressWidth="1dp"
                 app:showProgressText="true"

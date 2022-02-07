@@ -16,7 +16,7 @@ import java.io.Serializable
  * Date: 2022/1/28 15:06
  */
 abstract class State(private val view: View) : Serializable {
-    abstract fun state(): Int
+    abstract fun state(): Type
 
     protected var _icon: Drawable? = null
         set(value) {
@@ -63,5 +63,18 @@ abstract class State(private val view: View) : Serializable {
     companion object {
         val DEF_BG_COLOR = Color.parseColor("#018786")
         const val DEF_ICON_TINT = Color.WHITE
+    }
+
+    enum class Type(val value: Int) {
+        STATE_IDLE(1),
+        STATE_INDETERMINATE(2),
+        STATE_DETERMINATE(3),
+        STATE_FINISHED(4),
+        STATE_ERROR(5),
+        STATE_CANCEL(6);
+
+        companion object {
+            fun getState(value: Int) = values().first { it.value == value }
+        }
     }
 }

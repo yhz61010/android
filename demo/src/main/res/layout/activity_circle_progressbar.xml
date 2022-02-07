@@ -143,9 +143,7 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:cancelBackgroundColor="#63EEFB"
-                app:cancelIconHeight="36dp"
-                app:cancelIconTintColor="#49F582"
-                app:cancelIconWidth="36dp"
+                app:cancelIconHeight="36dp" app:cancelIconTintColor="#ffff00" app:cancelIconWidth="36dp"
                 app:progressColor="#D4F2FF"
                 app:progressMargin="5dp"
                 app:progressWidth="2dp" app:progressIndeterminateSweepAngle="40" app:state="INDETERMINATE" />

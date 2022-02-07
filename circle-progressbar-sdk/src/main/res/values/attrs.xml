@@ -16,7 +16,7 @@
         <attr name="progressColor" format="color" />
         <attr name="progressIndeterminateSweepAngle" format="integer" />
 
-        <attr name="currentProgress" format="integer" />
+        <attr name="progress" format="integer" />
         <attr name="maxProgress" format="integer" />
 
         <!-- If you enable showing progress text, the cancelable and cancelIcon related attributes will be ignored. -->

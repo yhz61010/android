@@ -1,4 +1,4 @@
-package com.leovp.leoandroidbaseutil
+package com.leovp.androidbase
 
 import android.util.Log
 import com.leovp.androidbase.exts.kotlin.toJsonString

@@ -79,6 +79,13 @@ android {
         jvmTarget = "$rootProject.ext.java_version"
     }
 
+    testOptions {
+        unitTests {
+            returnDefaultValues = true
+            includeAndroidResources = true
+        }
+    }
+
     packagingOptions {
         // This line is for room
         exclude 'META-INF/atomicfu.kotlin_module'
@@ -209,8 +216,14 @@ dependencies {
     // ===== Room - End
 
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    testImplementation "androidx.test:core-ktx:$testCoreKtx"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidTestRunnerVersion"
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidTestExtJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
+    testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powermockVersion"
+    testImplementation "org.powermock:powermock-core:$rootProject.ext.powermockVersion"
+    testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
     implementation project(':androidbase-sdk')
     implementation project(':http-sdk')
@@ -241,7 +254,8 @@ dependencies {
     implementation "com.sun.mail:android-activation:$javaMailVersion"
 
     implementation "com.tencent.mars:mars-xlog:$rootProject.ext.marsXlogVersion"
-    implementation "com.tencent:mmkv-static:$mmkvVersion"
+//    implementation "com.tencent:mmkv-static:$mmkvVersion"
+    implementation "com.tencent:mmkv:$mmkvVersion"
     implementation "com.afollestad.material-dialogs:input:$materialDialogVersion"
     implementation "org.greenrobot:eventbus:$eventbusVersion"
     implementation "io.karn:notify:$karnNotifyVersion"

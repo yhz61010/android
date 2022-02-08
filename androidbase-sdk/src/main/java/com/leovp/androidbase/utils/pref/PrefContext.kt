@@ -8,7 +8,7 @@ import com.leovp.androidbase.utils.pref.base.AbsPref
  * ```kotlin
  * // You'd better initialize IPref in `Application`
  * PrefContext.setPrefImp(LPref())
- * // Or define your custom Preference which implements `IPref`
+ * // Or define your custom Preference which extends `AbsPref`
  * PrefContext.setPrefImp(MMKVPref())
  * ```
  *

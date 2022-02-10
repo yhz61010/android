@@ -207,6 +207,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
 
                 MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                // Hardware decoder             latency: 100ms(60ms ~ 120ms)
+                // c2.android.avc.decoder       latency: 130ms(100ms ~ 200ms)
+                // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
+                //                MediaCodec.createByCodecName("OMX.google.h264.decoder")
             }
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
@@ -219,6 +223,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 //                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
 //                }
 
+                // Hardware decoder             latency: 100ms
                 MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
             }
         }
@@ -288,7 +293,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         }
     }
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 30
+    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 120
 
     // ============================================
     private var webSocketClient: WebSocketClient? = null

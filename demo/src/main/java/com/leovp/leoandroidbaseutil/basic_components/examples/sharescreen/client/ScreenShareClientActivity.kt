@@ -21,6 +21,7 @@ import com.leovp.androidbase.exts.android.requestFullScreenBeforeSetContentView
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
+import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.drawonscreen.FingerPaintView
@@ -206,26 +207,28 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
 
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-
-                // Hardware decoder             latency: 100ms(60ms ~ 120ms)
-                // c2.android.avc.decoder       latency: 130ms(100ms ~ 200ms)
-                // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
-                // MediaCodec.createByCodecName("OMX.google.h264.decoder")
+                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+                    LogContext.log.w(ITAG, "Use decoder: c2.android.avc.decoder")
+                    // c2.android.avc.decoder       latency: 170ms(130ms ~ 200ms)
+                    // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
+                    MediaCodec.createByCodecName("c2.android.avc.decoder")
+                } else {
+                    // Hardware decoder             latency: 100ms(60ms ~ 120ms)
+                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                }
             }
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
-                // Hardware decoder             latency: 100ms
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-
-                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
-                //     LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
-                // MediaCodec.createByCodecName("c2.android.hevc.decoder")
-                // } else {
-                //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-                // }
+                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+                    LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
+                    // c2.android.hevc.decoder       latency: 60ms(0ms ~ 70ms)
+                    MediaCodec.createByCodecName("c2.android.hevc.decoder")
+                } else {
+                    // Hardware decoder             latency: 100ms
+                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                }
             }
         }
 

@@ -15,9 +15,9 @@ import android.provider.Settings
 import android.util.Size
 import android.view.View
 import androidx.annotation.Keep
-import com.leovp.androidbase.exts.*
-import com.leovp.androidbase.exts.android.*
-import com.leovp.androidbase.exts.kotlin.*
+import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
@@ -93,7 +93,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
-                        LogContext.log.i("onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs")
+                        LogContext.log.d("onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs")
                         if (clientChannel != null) {
                             runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size} presentationTimeUs=$presentationTimeUs" }
                             runCatching {
@@ -308,7 +308,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + data.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, data)
 
-            return netty.executeCommand(clientChannel, command, "sendVideoData", "$cId", showContent = false)
+            return netty.executeCommand(clientChannel, command, "sendVideoData", "$cmdId", showContent = false)
         }
 
         override fun release() {

@@ -92,7 +92,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         screenInfo = getRealResolution()
-//        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
+        //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -151,14 +151,14 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val ratio = screenInfo.width * 1.0F / screenInfo.height
-//        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
+        //        LogContext.log.w("onConfigurationChanged: ${newConfig.toJsonString()}")
         val newWidth: Int
         val newHeight: Int
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            val layoutParams = binding.surfaceView.layoutParams
-//            layoutParams.width = 800
-//            layoutParams.height = 600
-//            binding.surfaceView.layoutParams = layoutParams
+            //            val layoutParams = binding.surfaceView.layoutParams
+            //            layoutParams.width = 800
+            //            layoutParams.height = 600
+            //            binding.surfaceView.layoutParams = layoutParams
 
             newWidth = (screenInfo.width * ratio).toInt()
             newHeight = screenInfo.width
@@ -207,24 +207,25 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
 
                 MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+
                 // Hardware decoder             latency: 100ms(60ms ~ 120ms)
                 // c2.android.avc.decoder       latency: 130ms(100ms ~ 200ms)
                 // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
-                //                MediaCodec.createByCodecName("OMX.google.h264.decoder")
+                // MediaCodec.createByCodecName("OMX.google.h264.decoder")
             }
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
-//                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
-//                    LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
-//                    MediaCodec.createByCodecName("c2.android.hevc.decoder")
-//                } else {
-//                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-//                }
-
                 // Hardware decoder             latency: 100ms
                 MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+
+                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+                //     LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
+                // MediaCodec.createByCodecName("c2.android.hevc.decoder")
+                // } else {
+                //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                // }
             }
         }
 
@@ -242,7 +243,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-//                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
+                    //                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
@@ -258,21 +259,21 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-//                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
+                    //                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
                             LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexStringLE()}]")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME     -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
-                        else -> {
+                        else                                 -> {
                             // Do nothing
                         }
                     }
@@ -362,9 +363,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
             val touchBean = TouchBean(type, x, y)
             val cmdId = when (type) {
                 TouchType.RECENT -> ScreenShareMasterActivity.CMD_TOUCH_RECENT
-                TouchType.HOME -> ScreenShareMasterActivity.CMD_TOUCH_HOME
-                TouchType.BACK -> ScreenShareMasterActivity.CMD_TOUCH_BACK
-                else -> CMD_TOUCH_EVENT
+                TouchType.HOME   -> ScreenShareMasterActivity.CMD_TOUCH_HOME
+                TouchType.BACK   -> ScreenShareMasterActivity.CMD_TOUCH_BACK
+                else             -> CMD_TOUCH_EVENT
             }
             val touchArray = CmdBean(cmdId, null, null, touchBean).toJsonString().encodeToByteArray()
             val cId = cmdId.asByteAndForceToBytes()
@@ -455,7 +456,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
                 when (action) {
                     CMD_DEVICE_SCREEN_INFO -> Unit
-                    CMD_GRAPHIC_CSD -> {
+                    CMD_GRAPHIC_CSD        -> {
                         foundCsd.set(true)
                         queue.offer(dataArray)
                         LogContext.log.w(ITAG, "csd=${dataArray.toHexStringLE()}")
@@ -500,7 +501,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
 
             override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
                 LogContext.log.w(ITAG, "onFailed code: $code message: $msg")
-//                lostConnection()
+                //                lostConnection()
             }
 
             private fun lostConnection() {
@@ -579,7 +580,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 touchDownStartTime = SystemClock.currentThreadTimeMillis()
             }
             MotionEvent.ACTION_MOVE -> Unit
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP   -> {
                 touchUpRawX = event.rawX
                 touchUpRawY = event.rawY
                 touchUpStartTime = SystemClock.currentThreadTimeMillis()

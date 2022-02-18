@@ -56,7 +56,7 @@
  * or AVIOContext.
  */
 typedef struct AVIOInterruptCB {
-    int (*callback)(void *);
+    int (*callback)(void*);
     void *opaque;
 } AVIOInterruptCB;
 
@@ -460,13 +460,13 @@ void avio_free_directory_entry(AVIODirEntry **entry);
  * @return Allocated AVIOContext or NULL on failure.
  */
 AVIOContext *avio_alloc_context(
-        unsigned char *buffer,
-        int buffer_size,
-        int write_flag,
-        void *opaque,
-        int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
-        int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-        int64_t (*seek)(void *opaque, int64_t offset, int whence));
+                  unsigned char *buffer,
+                  int buffer_size,
+                  int write_flag,
+                  void *opaque,
+                  int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
+                  int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+                  int64_t (*seek)(void *opaque, int64_t offset, int whence));
 
 /**
  * Free the supplied IO context and everything associated with it.
@@ -554,20 +554,16 @@ int64_t avio_skip(AVIOContext *s, int64_t offset);
  * ftell() equivalent for AVIOContext.
  * @return position or AVERROR.
  */
-static av_always_inline int64_t
-avio_tell(AVIOContext
-*s)
+static av_always_inline int64_t avio_tell(AVIOContext *s)
 {
-return
-avio_seek(s,
-0, SEEK_CUR);
+    return avio_seek(s, 0, SEEK_CUR);
 }
 
 /**
  * Get the filesize.
  * @return filesize or AVERROR
  */
-int64_t avio_size(AVIOContext * s);
+int64_t avio_size(AVIOContext *s);
 
 /**
  * Similar to feof() but also returns nonzero on read errors.
@@ -632,15 +628,15 @@ int avio_read_partial(AVIOContext *s, unsigned char *buf, int size);
  * @note return 0 if EOF, so you cannot use it if EOF handling is
  *       necessary
  */
-int avio_r8(AVIOContext * s);
-unsigned int avio_rl16(AVIOContext * s);
+int          avio_r8  (AVIOContext *s);
+unsigned int avio_rl16(AVIOContext *s);
 unsigned int avio_rl24(AVIOContext *s);
-unsigned int avio_rl32(AVIOContext * s);
-uint64_t avio_rl64(AVIOContext * s);
-unsigned int avio_rb16(AVIOContext * s);
+unsigned int avio_rl32(AVIOContext *s);
+uint64_t     avio_rl64(AVIOContext *s);
+unsigned int avio_rb16(AVIOContext *s);
 unsigned int avio_rb24(AVIOContext *s);
-unsigned int avio_rb32(AVIOContext * s);
-uint64_t avio_rb64(AVIOContext * s);
+unsigned int avio_rb32(AVIOContext *s);
+uint64_t     avio_rb64(AVIOContext *s);
 /**
  * @}
  */
@@ -825,8 +821,7 @@ const AVClass *avio_protocol_get_class(const char *name);
  * @param h     IO context from which to call the read_pause function pointer
  * @param pause 1 for pause, 0 for resume
  */
-int avio_pause(AVIOContext * h, int
-pause);
+int     avio_pause(AVIOContext *h, int pause);
 
 /**
  * Seek to a given timestamp relative to some component stream.

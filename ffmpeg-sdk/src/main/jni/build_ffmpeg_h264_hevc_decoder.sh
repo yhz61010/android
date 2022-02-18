@@ -53,7 +53,7 @@ pushd ffmpeg-4.4
     --disable-avdevice \
     --disable-static \
     --enable-mediacodec \
-    -- enable-jni \
+    --enable-jni \
     --enable-decoder=h264,h264_mediacodec,hevc,hevc_mediacodec \
     --enable-shared \
     --enable-small \

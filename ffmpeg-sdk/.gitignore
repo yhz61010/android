@@ -83,3 +83,4 @@ lint/tmp/
 /.cxx/
 /src/main/obj/
 /src/main/jni/ffmpeg-4.4/
+/src/main/jni/prebuilt/

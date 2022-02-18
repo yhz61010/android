@@ -182,9 +182,9 @@ abstract class BaseCamera2Fragment : Fragment() {
 
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
-            observe(viewLifecycleOwner, { orientation ->
+            observe(viewLifecycleOwner) { orientation ->
                 LogContext.log.d(TAG, "Orientation changed: $orientation")
-            })
+            }
         }
     }
 

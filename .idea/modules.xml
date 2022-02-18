@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" filepath="$PROJECT_DIR$/.idea/modules/LeoAndroidBaseUtil.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/adpcm-ima-qt-codec-h264-hevc-decoder-sdk/LeoAndroidBaseUtil.adpcm-ima-qt-codec-h264-hevc-decoder-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/adpcm-ima-qt-codec-h264-hevc-decoder-sdk/LeoAndroidBaseUtil.adpcm-ima-qt-codec-h264-hevc-decoder-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/adpcm-ima-qt-codec-sdk/LeoAndroidBaseUtil.adpcm-ima-qt-codec-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/adpcm-ima-qt-codec-sdk/LeoAndroidBaseUtil.adpcm-ima-qt-codec-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/aidl-client/LeoAndroidBaseUtil.aidl-client.iml" filepath="$PROJECT_DIR$/.idea/modules/aidl-client/LeoAndroidBaseUtil.aidl-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/androidbase-sdk/LeoAndroidBaseUtil.androidbase-sdk.iml" />
@@ -17,6 +18,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ffmpeg-javacpp-sdk/LeoAndroidBaseUtil.ffmpeg-javacpp-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/ffmpeg-javacpp-sdk/LeoAndroidBaseUtil.ffmpeg-javacpp-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/ffmpeg-sdk/LeoAndroidBaseUtil.ffmpeg-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/floatview-sdk/LeoAndroidBaseUtil.floatview-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/floatview-sdk/LeoAndroidBaseUtil.floatview-sdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/h264-hevc-decoder-sdk/LeoAndroidBaseUtil.h264-hevc-decoder-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/h264-hevc-decoder-sdk/LeoAndroidBaseUtil.h264-hevc-decoder-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/http-sdk/LeoAndroidBaseUtil.http-sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/http-sdk/LeoAndroidBaseUtil.http-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-bytes/LeoAndroidBaseUtil.lib-bytes.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-bytes/LeoAndroidBaseUtil.lib-bytes.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib-common-android/LeoAndroidBaseUtil.lib-common-android.iml" filepath="$PROJECT_DIR$/.idea/modules/lib-common-android/LeoAndroidBaseUtil.lib-common-android.iml" />

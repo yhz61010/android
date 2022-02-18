@@ -75,3 +75,17 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'ffmpeg-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

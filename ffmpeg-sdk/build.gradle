@@ -56,7 +56,7 @@ android {
         pickFirst "lib/armeabi-v7a/libc++_shared.so"
         pickFirst "lib/armeabi-v7a/libadpcm-ima-qt-encoder.so"
         pickFirst "lib/armeabi-v7a/libadpcm-ima-qt-decoder.so"
-        pickFirst "lib/armeabi-v7a/libh264-decoder.so"
+        pickFirst "lib/armeabi-v7a/libh264-hevc-decoder.so"
 
         pickFirst "lib/arm64-v8a/libavutil.so"
         pickFirst "lib/arm64-v8a/libavcodec.so"
@@ -68,7 +68,7 @@ android {
         pickFirst "lib/arm64-v8a/libc++_shared.so"
         pickFirst "lib/arm64-v8a/libadpcm-ima-qt-encoder.so"
         pickFirst "lib/arm64-v8a/libadpcm-ima-qt-decoder.so"
-        pickFirst "lib/arm64-v8a/libh264-decoder.so"
+        pickFirst "lib/arm64-v8a/libh264-hevc-decoder.so"
     }
 }
 

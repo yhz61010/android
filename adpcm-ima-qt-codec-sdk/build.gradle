@@ -63,7 +63,6 @@ android {
 
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
-    implementation project(':ffmpeg-sdk')
 }
 
 afterEvaluate {

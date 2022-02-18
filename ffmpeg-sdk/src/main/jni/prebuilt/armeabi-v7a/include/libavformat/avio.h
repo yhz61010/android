@@ -57,7 +57,6 @@
  */
 typedef struct AVIOInterruptCB {
     int (*callback)(void *);
-
     void *opaque;
 } AVIOInterruptCB;
 
@@ -234,26 +233,20 @@ typedef struct AVIOContext {
     void *opaque;           /**< A private pointer, passed to the read/write/seek/...
                                  functions. */
     int (*read_packet)(void *opaque, uint8_t *buf, int buf_size);
-
     int (*write_packet)(void *opaque, uint8_t *buf, int buf_size);
-
     int64_t (*seek)(void *opaque, int64_t offset, int whence);
-
     int64_t pos;            /**< position in the file of the current buffer */
     int eof_reached;        /**< true if was unable to read due to error or eof */
     int write_flag;         /**< true if open for writing */
     int max_packet_size;
     unsigned long checksum;
     unsigned char *checksum_ptr;
-
     unsigned long (*update_checksum)(unsigned long checksum, const uint8_t *buf, unsigned int size);
-
     int error;              /**< contains the error code or 0 if no error happened */
     /**
      * Pause or resume playback for network streaming protocols - e.g. MMS.
      */
     int (*read_pause)(void *opaque, int pause);
-
     /**
      * Seek to a given timestamp in stream with the specified stream_index.
      * Needed for some network streaming protocols which don't support seeking
@@ -261,7 +254,6 @@ typedef struct AVIOContext {
      */
     int64_t (*read_seek)(void *opaque, int stream_index,
                          int64_t timestamp, int flags);
-
     /**
      * A combination of AVIO_SEEKABLE_ flags or 0 when the stream is not seekable.
      */
@@ -326,7 +318,6 @@ typedef struct AVIOContext {
      */
     int (*write_data_type)(void *opaque, uint8_t *buf, int buf_size,
                            enum AVIODataMarkerType type, int64_t time);
-
     /**
      * If set, don't call write_data_type separately for AVIO_DATA_MARKER_BOUNDARY_POINT,
      * but ignore them and treat them as AVIO_DATA_MARKER_UNKNOWN (to avoid needlessly
@@ -486,23 +477,14 @@ AVIOContext *avio_alloc_context(
 void avio_context_free(AVIOContext **s);
 
 void avio_w8(AVIOContext *s, int b);
-
 void avio_write(AVIOContext *s, const unsigned char *buf, int size);
-
 void avio_wl64(AVIOContext *s, uint64_t val);
-
 void avio_wb64(AVIOContext *s, uint64_t val);
-
 void avio_wl32(AVIOContext *s, unsigned int val);
-
 void avio_wb32(AVIOContext *s, unsigned int val);
-
 void avio_wl24(AVIOContext *s, unsigned int val);
-
 void avio_wb24(AVIOContext *s, unsigned int val);
-
 void avio_wl16(AVIOContext *s, unsigned int val);
-
 void avio_wb16(AVIOContext *s, unsigned int val);
 
 /**

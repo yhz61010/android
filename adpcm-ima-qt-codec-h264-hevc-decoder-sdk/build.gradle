@@ -65,8 +65,6 @@ android {
 
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
-    api project(':adpcm-ima-qt-codec-sdk')
-    api project(':h264-hevc-decoder-sdk')
     api "androidx.annotation:annotation:$annotationVersion"
 }
 

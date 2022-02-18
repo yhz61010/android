@@ -1,0 +1,85 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+apply plugin: "org.sonarqube"
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        consumerProguardFiles "consumer-rules.pro"
+
+        // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/libs']
+        }
+    }
+    compileOptions {
+        sourceCompatibility "$rootProject.ext.java_version"
+        targetCompatibility "$rootProject.ext.java_version"
+    }
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
+    packagingOptions {
+        pickFirst "lib/armeabi-v7a/libavutil.so"
+        pickFirst "lib/armeabi-v7a/libavcodec.so"
+        pickFirst "lib/armeabi-v7a/libswresample.so"
+        pickFirst "lib/armeabi-v7a/libavfilter.so"
+        pickFirst "lib/armeabi-v7a/libavdevice.so"
+        pickFirst "lib/armeabi-v7a/libavformat.so"
+        pickFirst "lib/armeabi-v7a/libswscale.so"
+        pickFirst "lib/armeabi-v7a/libc++_shared.so"
+        pickFirst "lib/armeabi-v7a/libadpcm-ima-qt-encoder.so"
+        pickFirst "lib/armeabi-v7a/libadpcm-ima-qt-decoder.so"
+        pickFirst "lib/armeabi-v7a/libh264-decoder.so"
+
+        pickFirst "lib/arm64-v8a/libavutil.so"
+        pickFirst "lib/arm64-v8a/libavcodec.so"
+        pickFirst "lib/arm64-v8a/libswresample.so"
+        pickFirst "lib/arm64-v8a/libavfilter.so"
+        pickFirst "lib/arm64-v8a/libavdevice.so"
+        pickFirst "lib/arm64-v8a/libavformat.so"
+        pickFirst "lib/arm64-v8a/libswscale.so"
+        pickFirst "lib/arm64-v8a/libc++_shared.so"
+        pickFirst "lib/arm64-v8a/libadpcm-ima-qt-encoder.so"
+        pickFirst "lib/arm64-v8a/libadpcm-ima-qt-decoder.so"
+        pickFirst "lib/arm64-v8a/libh264-decoder.so"
+    }
+}
+
+dependencies {
+    api fileTree(dir: "libs", include: ["*.jar"])
+    api project(':adpcm-ima-qt-codec-sdk')
+    api project(':h264-hevc-decoder-sdk')
+    api "androidx.annotation:annotation:$annotationVersion"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'adpcm-ima-qt-codec-h264-hevc-decoder-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

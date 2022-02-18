@@ -19,16 +19,16 @@ import com.leovp.log_sdk.LogContext
  *（1）第1位禁止位，值为1表示语法出错
  *（2）第2~3位为参考级别。重要级别，0b11(3)表示非常重要。
  *（3）第4~8为是nal单元类型
- * 示例1： 0x67(0110 0111)(103)
+ * 示例1： 0x67(0110 0111)(103) or 0x27(0010 0111)(39)
  * 从左往右4-8位为0 0111，转为十进制7，7对应序列参数集 NALU_TYPE_SPS(序列参数集)(Sequence parameter set)
  *
- * 示例2： 0x68(0110 1000)(104)
+ * 示例2： 0x68(0110 1000)(104) or 0x28(0010 1000)(40)
  * 从左往右4-8位为0 1000，转为十进制8，8对应序列参数集 NALU_TYPE_PPS(图像参数集)(Picture parameter set)
  *
- * 示例3： 0x65(0110 0101)(101)
+ * 示例3： 0x65(0110 0101)(101) or 0x25(0010 0101)(37)
  * 从左往右4-8位为0 0101，转为十进制5，5对应 NALU_TYPE_IDR 图像中的片(I帧)
  *
- * 示例4： 0x41(0100 0001)(65)
+ * 示例4： 0x41(0100 0001)(65) or 0x21(0010 0001)(33)
  * 从左往右4-8位为0 0001，转为十进制1，1对应非 NALU_TYPE_IDR 图像中的片(P帧 or B帧)
  *
  * NALU类型 & 0001 1111(0x1F)(31) = 5 即 NALU类型 & 31(十进制) = 5
@@ -61,23 +61,23 @@ object H264Util {
      * @return Whether this frame is key frame.
      */
     fun isIdrFrame(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101)
+        return getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101) or 0x25(37)
     }
 
     fun isNoneIdrFrame(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65)
+        return getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65) or 0x21(33)
     }
 
     fun isSps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
-        return getNaluType(data) == NALU_TYPE_SPS // 7 0x67(103)
+        return getNaluType(data) == NALU_TYPE_SPS // 7 0x67(103) or 0x27(39)
     }
 
     fun isPps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
-        return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104)
+        return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104) or 0x28(40)
     }
 
     /**

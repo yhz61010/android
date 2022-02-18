@@ -53,7 +53,7 @@ pushd ffmpeg-4.4
     --disable-static \
     --enable-mediacodec \
     --enable-jni \
-    --enable-decoder=adpcm_ima_qt,h264,h264_mediacodec,hevc,hevc_mediacodec \
+    --enable-decoder=adpcm_ima_qt,h264,hevc \
     --enable-encoder=adpcm_ima_qt \
     --enable-shared \
     --enable-small \

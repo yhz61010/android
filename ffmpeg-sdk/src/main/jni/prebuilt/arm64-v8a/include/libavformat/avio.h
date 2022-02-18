@@ -554,15 +554,20 @@ int64_t avio_skip(AVIOContext *s, int64_t offset);
  * ftell() equivalent for AVIOContext.
  * @return position or AVERROR.
  */
-static av_always_inline int64_t avio_tell(AVIOContext *s) {
-    return avio_seek(s, 0, SEEK_CUR);
+static av_always_inline int64_t
+avio_tell(AVIOContext
+*s)
+{
+return
+avio_seek(s,
+0, SEEK_CUR);
 }
 
 /**
  * Get the filesize.
  * @return filesize or AVERROR
  */
-int64_t avio_size(AVIOContext *s);
+int64_t avio_size(AVIOContext * s);
 
 /**
  * Similar to feof() but also returns nonzero on read errors.
@@ -627,23 +632,15 @@ int avio_read_partial(AVIOContext *s, unsigned char *buf, int size);
  * @note return 0 if EOF, so you cannot use it if EOF handling is
  *       necessary
  */
-int avio_r8(AVIOContext *s);
-
-unsigned int avio_rl16(AVIOContext *s);
-
+int avio_r8(AVIOContext * s);
+unsigned int avio_rl16(AVIOContext * s);
 unsigned int avio_rl24(AVIOContext *s);
-
-unsigned int avio_rl32(AVIOContext *s);
-
-uint64_t avio_rl64(AVIOContext *s);
-
-unsigned int avio_rb16(AVIOContext *s);
-
+unsigned int avio_rl32(AVIOContext * s);
+uint64_t avio_rl64(AVIOContext * s);
+unsigned int avio_rb16(AVIOContext * s);
 unsigned int avio_rb24(AVIOContext *s);
-
-unsigned int avio_rb32(AVIOContext *s);
-
-uint64_t avio_rb64(AVIOContext *s);
+unsigned int avio_rb32(AVIOContext * s);
+uint64_t avio_rb64(AVIOContext * s);
 /**
  * @}
  */
@@ -669,7 +666,6 @@ int avio_get_str(AVIOContext *pb, int maxlen, char *buf, int buflen);
  * @return number of bytes read (is always <= maxlen)
  */
 int avio_get_str16le(AVIOContext *pb, int maxlen, char *buf, int buflen);
-
 int avio_get_str16be(AVIOContext *pb, int maxlen, char *buf, int buflen);
 
 
@@ -829,7 +825,8 @@ const AVClass *avio_protocol_get_class(const char *name);
  * @param h     IO context from which to call the read_pause function pointer
  * @param pause 1 for pause, 0 for resume
  */
-int avio_pause(AVIOContext *h, int pause);
+int avio_pause(AVIOContext * h, int
+pause);
 
 /**
  * Seek to a given timestamp relative to some component stream.

@@ -543,7 +543,6 @@ typedef struct AVOutputFormat {
     int priv_data_size;
 
     int (*write_header)(struct AVFormatContext *);
-
     /**
      * Write a packet. If AVFMT_ALLOW_FLUSH is set in flags,
      * pkt can be NULL in order to flush data buffered in the muxer.
@@ -552,16 +551,13 @@ typedef struct AVOutputFormat {
      * data.
      */
     int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
-
     int (*write_trailer)(struct AVFormatContext *);
-
     /**
      * A format-specific function for interleavement.
      * If unset, packets will be interleaved by dts.
      */
     int (*interleave_packet)(struct AVFormatContext *, AVPacket *out,
                              AVPacket *in, int flush);
-
     /**
      * Test if the given codec can be stored in this container.
      *
@@ -573,7 +569,6 @@ typedef struct AVOutputFormat {
 
     void (*get_output_timestamp)(struct AVFormatContext *s, int stream,
                                  int64_t *dts, int64_t *wall);
-
     /**
      * Allows sending messages from application to device.
      */
@@ -590,27 +585,22 @@ typedef struct AVOutputFormat {
      */
     int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index,
                                AVFrame **frame, unsigned flags);
-
     /**
      * Returns device list with it properties.
      * @see avdevice_list_devices() for more details.
      */
     int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
-
 #if LIBAVFORMAT_VERSION_MAJOR < 59
-
     /**
      * Initialize device capabilities submodule.
      * @see avdevice_capabilities_create() for more details.
      */
     int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-
     /**
      * Free device capabilities submodule.
      * @see avdevice_capabilities_free() for more details.
      */
     int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-
 #endif
     enum AVCodecID data_codec; /**< default data codec */
     /**
@@ -623,7 +613,6 @@ typedef struct AVOutputFormat {
      * Any allocations made here must be freed in deinit().
      */
     int (*init)(struct AVFormatContext *);
-
     /**
      * Deinitialize format. If present, this is called whenever the muxer is being
      * destroyed, regardless of whether or not the header has been written.
@@ -633,7 +622,6 @@ typedef struct AVOutputFormat {
      * This is called if init() fails as well.
      */
     void (*deinit)(struct AVFormatContext *);
-
     /**
      * Set up any necessary bitstream filtering and extract any extra data needed
      * for the global header.
@@ -784,7 +772,6 @@ typedef struct AVInputFormat {
     int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
 
 #if LIBAVFORMAT_VERSION_MAJOR < 59
-
     /**
      * Initialize device capabilities submodule.
      * @see avdevice_capabilities_create() for more details.
@@ -796,7 +783,6 @@ typedef struct AVInputFormat {
      * @see avdevice_capabilities_free() for more details.
      */
     int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-
 #endif
 } AVInputFormat;
 /**
@@ -1136,18 +1122,13 @@ typedef struct AVStream {
  */
 attribute_deprecated
 AVRational av_stream_get_r_frame_rate(const AVStream *s);
-
 attribute_deprecated
 void av_stream_set_r_frame_rate(AVStream *s, AVRational r);
-
 #if FF_API_LAVF_FFSERVER
-
 attribute_deprecated
 char *av_stream_get_recommended_encoder_configuration(const AVStream *s);
-
 attribute_deprecated
 void av_stream_set_recommended_encoder_configuration(AVStream *s, char *configuration);
-
 #endif
 #endif
 
@@ -1817,7 +1798,6 @@ typedef struct AVFormatContext {
      */
     attribute_deprecated
     int (*open_cb)(struct AVFormatContext *s, AVIOContext **p, const char *url, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options);
-
 #endif
 
     /**
@@ -1891,55 +1871,37 @@ typedef struct AVFormatContext {
  */
 attribute_deprecated
 int av_format_get_probe_score(const AVFormatContext *s);
-
 attribute_deprecated
 AVCodec *av_format_get_video_codec(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_video_codec(AVFormatContext *s, AVCodec *c);
-
 attribute_deprecated
 AVCodec *av_format_get_audio_codec(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_audio_codec(AVFormatContext *s, AVCodec *c);
-
 attribute_deprecated
 AVCodec *av_format_get_subtitle_codec(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_subtitle_codec(AVFormatContext *s, AVCodec *c);
-
 attribute_deprecated
 AVCodec *av_format_get_data_codec(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_data_codec(AVFormatContext *s, AVCodec *c);
-
 attribute_deprecated
 int av_format_get_metadata_header_padding(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_metadata_header_padding(AVFormatContext *s, int c);
-
 attribute_deprecated
 void *av_format_get_opaque(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_opaque(AVFormatContext *s, void *opaque);
-
 attribute_deprecated
 av_format_control_message av_format_get_control_message_cb(const AVFormatContext *s);
-
 attribute_deprecated
 void av_format_set_control_message_cb(AVFormatContext *s, av_format_control_message callback);
-
 #if FF_API_OLD_OPEN_CALLBACKS
-
 attribute_deprecated AVOpenCallback av_format_get_open_cb(const AVFormatContext *s);
-
 attribute_deprecated void av_format_set_open_cb(AVFormatContext *s, AVOpenCallback callback);
-
 #endif
 #endif
 
@@ -1994,10 +1956,8 @@ void av_register_all(void);
 
 attribute_deprecated
 void av_register_input_format(AVInputFormat *format);
-
 attribute_deprecated
 void av_register_output_format(AVOutputFormat *format);
-
 #endif
 
 /**
@@ -2038,7 +1998,6 @@ AVInputFormat *av_iformat_next(const AVInputFormat *f);
  */
 attribute_deprecated
 AVOutputFormat *av_oformat_next(const AVOutputFormat *f);
-
 #endif
 
 /**
@@ -2131,11 +2090,9 @@ int av_stream_add_side_data(AVStream *st, enum AVPacketSideDataType type,
 uint8_t *av_stream_new_side_data(AVStream *stream,
 #if FF_API_BUFFER_SIZE_T
                                  enum AVPacketSideDataType type, int size);
-
 #else
 enum AVPacketSideDataType type, size_t size);
 #endif
-
 /**
  * Get side information from stream.
  *
@@ -2148,7 +2105,6 @@ enum AVPacketSideDataType type, size_t size);
 uint8_t *av_stream_get_side_data(const AVStream *stream,
 #if FF_API_BUFFER_SIZE_T
                                  enum AVPacketSideDataType type, int *size);
-
 #else
 enum AVPacketSideDataType type, size_t *size);
 #endif
@@ -2275,7 +2231,6 @@ int avformat_open_input(AVFormatContext **ps, const char *url, ff_const59 AVInpu
  */
 attribute_deprecated
 int av_demuxer_open(AVFormatContext *ic);
-
 #endif
 
 /**
@@ -2939,17 +2894,14 @@ int avformat_query_codec(const AVOutputFormat *ofmt, enum AVCodecID codec_id,
  * @return the table mapping RIFF FourCCs for video to libavcodec AVCodecID.
  */
 const struct AVCodecTag *avformat_get_riff_video_tags(void);
-
 /**
  * @return the table mapping RIFF FourCCs for audio to AVCodecID.
  */
 const struct AVCodecTag *avformat_get_riff_audio_tags(void);
-
 /**
  * @return the table mapping MOV FourCCs for video to libavcodec AVCodecID.
  */
 const struct AVCodecTag *avformat_get_mov_video_tags(void);
-
 /**
  * @return the table mapping MOV FourCCs for audio to AVCodecID.
  */
@@ -3021,7 +2973,6 @@ int avformat_queue_attached_pictures(AVFormatContext *s);
 attribute_deprecated
 int av_apply_bitstream_filters(AVCodecContext *codec, AVPacket *pkt,
                                AVBitStreamFilterContext *bsfc);
-
 #endif
 
 enum AVTimebaseSource {

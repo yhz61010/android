@@ -34,6 +34,9 @@
     <MarkdownNavigatorCodeStyleSettings>
       <option name="RIGHT_MARGIN" value="180" />
     </MarkdownNavigatorCodeStyleSettings>
+    <codeStyleSettings language="CMake">
+      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
+    </codeStyleSettings>
     <codeStyleSettings language="JAVA">
       <option name="WRAP_ON_TYPING" value="0" />
     </codeStyleSettings>

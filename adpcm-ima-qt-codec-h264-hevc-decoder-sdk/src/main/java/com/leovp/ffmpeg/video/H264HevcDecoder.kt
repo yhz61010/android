@@ -6,6 +6,7 @@ import androidx.annotation.Keep
  * Author: Michael Leo
  * Date: 2021/6/11 09:57
  */
+@Keep
 class H264HevcDecoder(vpsBytes: ByteArray?, spsBytes: ByteArray, ppsBytes: ByteArray) {
     companion object {
         init {

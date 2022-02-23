@@ -85,3 +85,4 @@ lint/tmp/
 /src/main/jni/ffmpeg-4.4/
 /src/main/jni/ffmpeg-5.0/
 /src/main/jni/prebuilt/
+/src/main/libs/

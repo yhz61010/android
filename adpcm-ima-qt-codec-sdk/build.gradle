@@ -63,6 +63,7 @@ android {
 
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
+    api "androidx.annotation:annotation:$annotationVersion"
 }
 
 afterEvaluate {

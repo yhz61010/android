@@ -53,12 +53,14 @@ pushd $FFMPEG_FOLDER
     --disable-avfilter \
     --disable-avdevice \
     --disable-static \
-    --enable-mediacodec \
     --enable-jni \
-    --enable-decoder=h264,h264_mediacodec,hevc,hevc_mediacodec \
+    --enable-decoder=h264,hevc \
     --enable-shared \
     --enable-small \
     --enable-pic
+
+#--enable-mediacodec \
+#--enable-decoder=h264,h264_mediacodec,hevc,hevc_mediacodec \
 
 #--disable-avformat \
 #    --enable-encoder=adpcm_ima_qt \

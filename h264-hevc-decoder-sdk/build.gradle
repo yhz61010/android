@@ -76,7 +76,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'h264-hevc-decoder-sdk'
-                version = "$rootProject.ext.leoVersion"
+                version = "$rootProject.ext.h264HevcDecoderSdkVersion"
             }
         }
     }

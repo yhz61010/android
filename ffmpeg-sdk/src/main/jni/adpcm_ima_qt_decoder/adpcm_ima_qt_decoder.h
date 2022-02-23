@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/channel_layout.h>
 
 #ifdef __cplusplus
 }

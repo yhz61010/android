@@ -47,13 +47,15 @@ dependencies {
 //    api "androidx.appcompat:appcompat:$appcompatVersion"
 //    api "com.google.android.material:material:$rootProject.ext.materialVersion"
 
+    // "group:name:version:classifier@extension"
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
-    api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion", classifier: 'android-arm'
-    api group: 'org.bytedeco', name: 'ffmpeg', version: "$ffmpegVersion"
+    implementation "org.bytedeco:ffmpeg:$ffmpegVersion:android-arm"
+    implementation "org.bytedeco:ffmpeg:$ffmpegVersion"
 
+    // "group:name:version:classifier@extension"
     // https://mvnrepository.com/artifact/org.bytedeco/javacpp
-    api group: 'org.bytedeco', name: 'javacpp', version: "$javacppVersion", classifier: 'android-arm'
-    api group: 'org.bytedeco', name: 'javacpp', version: "$javacppVersion"
+    implementation "org.bytedeco:javacpp:$javacppVersion:android-arm"
+    implementation "org.bytedeco:javacpp:$javacppVersion"
 
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
 //    api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion" // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg

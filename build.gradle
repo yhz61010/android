@@ -21,6 +21,7 @@ static def gitCommitCount() {
  * ga935b078    ：开头 g 为 git 的缩写，在多种管理工具并存的环境中很有用处
  * a935b078     ：当前分支最新的 commitID 前几位
  */
+
 static def gitVersionTag() {
     def cmd = 'git describe --tags'
     def version = cmd.execute().text.trim()
@@ -43,7 +44,36 @@ buildscript {
     ext.gradle_plugin_version = '7.1.1'
     ext.sonarqube_version = '3.3'
     ext.java_version = JavaVersion.VERSION_11
-    ext.leoVersion = '4.1.5'
+
+    // ===============================
+    // ===== Leo modules version =====
+    // ===============================
+    ext.androidBaseSdkVersion = '5.0.0'
+    ext.baseNettySdkVersion = '5.0.0'
+    ext.audioSdkVersion = '5.0.0'
+    ext.circleProgressbarSdkVersion = '5.0.0'
+    ext.drawOnScreenSdkVersion = '5.0.0'
+    ext.floatViewSdkVersion = '5.0.0'
+    ext.screenCaptureSdkVersion = '5.0.0'
+    ext.camera2LiveSdkVersion = '5.0.0'
+    // -----
+    ext.httpSdkVersion = '5.0.0'
+    ext.logSdkVersion = '5.0.0'
+    ext.libBytesVersion = '5.0.0'
+    ext.libCommonAndroidVersion = '5.0.0'
+    ext.libCommonKotlinVersion = '5.0.0'
+    ext.libCompressVersion = '5.0.0'
+    ext.libExceptionVersion = '5.0.0'
+    ext.libImageVersion = '5.0.0'
+    ext.libNetworkVersion = '5.0.0'
+    // -----
+    ext.adpcmImaQtCodecSdkVersion = '5.0.0'
+    ext.h264HevcDecoderSdkVersion = '5.0.0'
+    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.0.0'
+    ext.ffmpegSdkVersion = '5.0.0'
+    ext.ffmpegJavacppSdkVersion = '5.0.0'
+    ext.dexSdkVersion = '5.0.0'
+    // ==============================
 
     repositories {
         google()

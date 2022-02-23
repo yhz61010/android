@@ -1,9 +1,12 @@
 package com.leovp.ffmpeg.audio.adpcm
 
+import androidx.annotation.Keep
+
 /**
  * Author: Michael Leo
  * Date: 2021/6/11 09:57
  */
+@Keep
 class AdpcmImaQtDecoder private constructor() {
     companion object {
         init {

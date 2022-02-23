@@ -1,5 +1,6 @@
 #!/bin/bash
 
+FFMPEG_FOLDER=ffmpeg-5.0
 NDK_PATH=~/Library/Android/sdk/ndk/22.1.7171670
 # linux-x86_64
 HOST_TAG=darwin-x86_64
@@ -26,7 +27,7 @@ else
 fi
 
 # https://blog.csdn.net/yu_yuan_1314/article/details/81267442
-pushd ffmpeg-4.4
+pushd $FFMPEG_FOLDER
 ./configure \
     --prefix=$PREFIX \
     --extra-cflags="$OPTIMIZE_CFLAGS" \

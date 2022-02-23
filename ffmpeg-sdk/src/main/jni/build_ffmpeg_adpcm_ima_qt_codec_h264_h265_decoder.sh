@@ -53,13 +53,15 @@ pushd $FFMPEG_FOLDER
     --disable-avfilter \
     --disable-avdevice \
     --disable-static \
-    --enable-mediacodec \
     --enable-jni \
     --enable-decoder=adpcm_ima_qt,h264,hevc \
     --enable-encoder=adpcm_ima_qt \
     --enable-shared \
     --enable-small \
     --enable-pic
+
+#--enable-mediacodec \
+#--enable-decoder=adpcm_ima_qt,h264,h264_mediacodec,hevc,hevc_mediacodec \
 
 make clean
 make -j$(nproc)

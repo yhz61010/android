@@ -24,6 +24,8 @@
         <entry key="demo/src/main/res/layout/activity_clipboard.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_device_info.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_drawable_anim.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_ffmpeg_h265.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/activity_ffmpeg_video.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_finger_paint.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_koin.xml" value="0.2911458333333333" />

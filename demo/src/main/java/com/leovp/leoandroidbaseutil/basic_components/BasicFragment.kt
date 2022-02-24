@@ -24,6 +24,8 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.Bluetoot
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2LiveActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.camera2.Camera2WithoutPreviewActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.cipher.AudioCipherActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.FFMpegH264Activity
+import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.FFMpegH265Activity
 import com.leovp.leoandroidbaseutil.basic_components.examples.koin.KoinActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
@@ -58,6 +60,8 @@ class BasicFragment : Fragment() {
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
             Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
+            Pair("FFMPEG H264", FFMpegH264Activity::class.java),
+            Pair("FFMPEG H265", FFMpegH265Activity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
             Pair("Eventbus-bridge WebSocket Client", EventBusBridgeClientActivity::class.java),

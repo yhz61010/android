@@ -231,7 +231,12 @@ dependencies {
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
 //    implementation project(':ffmpeg-sdk')
 //    implementation project(':ffmpeg-javacpp-sdk')
-    implementation project(':adpcm-ima-qt-codec-sdk')
+
+    // You can enable only one of the following three modules.
+//    implementation project(':adpcm-ima-qt-codec-sdk')
+//    implementation project(':h264-hevc-decoder-sdk')
+    implementation project(':adpcm-ima-qt-codec-h264-hevc-decoder-sdk')
+
     implementation project(':basenetty-sdk')
     implementation project(':camera2live-sdk')
     implementation project(':screencapture-sdk')

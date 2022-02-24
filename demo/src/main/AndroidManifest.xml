@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.leovp.leoandroidbaseutil">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.leovp.leoandroidbaseutil" >
 
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -15,8 +19,12 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- Request legacy Bluetooth permissions on older devices. -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
     <!--
  Needed only if your app looks for Bluetooth devices.
          If your app doesn't use Bluetooth scan results to derive physical
@@ -30,9 +38,12 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- For get nearby devices, need location permission when above android M -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <permission android:name="remote.service.permission" android:protectionLevel="signature" />
+    <permission
+        android:name="remote.service.permission"
+        android:protectionLevel="signature" />
 
-    <application android:name=".CustomApplication"
+    <application
+        android:name=".CustomApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -41,15 +52,29 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:targetApi="n">
-        <activity android:name=".basic_components.examples.koin.KoinActivity" android:exported="false" />
-        <activity android:name=".basic_components.examples.OrientationActivity" android:exported="true" />
-        <activity android:name=".basic_components.AppSettingsActivity" android:exported="true" />
+        tools:targetApi="n" >
+        <activity
+            android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity"
+            android:exported="false" />
+        <activity
+            android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity"
+            android:exported="false" />
+        <activity
+            android:name=".basic_components.examples.koin.KoinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".basic_components.examples.OrientationActivity"
+            android:exported="true" />
+        <activity
+            android:name=".basic_components.AppSettingsActivity"
+            android:exported="true" />
         <activity android:name=".basic_components.examples.CircleProgressbarActivity" />
         <activity android:name=".basic_components.examples.FloatViewActivity" />
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
         <activity android:name=".basic_components.examples.ToastActivity" />
-        <activity android:name=".basic_components.examples.ChangeAppLanguageActivity" android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".basic_components.examples.ChangeAppLanguageActivity"
+            android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.audio.ADPCMActivity" />
         <activity android:name=".basic_components.examples.animation.PropertyAnimActivity" />
         <activity android:name=".basic_components.examples.animation.ViewAnimActivity" />
@@ -57,8 +82,12 @@
         <activity android:name=".basic_components.examples.animation.AnimationActivity" />
         <activity android:name=".basic_components.examples.provider.ProviderActivity" />
         <activity android:name=".basic_components.examples.aidl.AidlActivity" />
-        <activity android:name=".basic_components.examples.accessibility.AccessibilityActivity" android:windowSoftInputMode="stateHidden|adjustResize" />
-        <activity android:name=".basic_components.examples.wifi.WifiActivity" android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity
+            android:name=".basic_components.examples.accessibility.AccessibilityActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity
+            android:name=".basic_components.examples.wifi.WifiActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothClientActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothServerActivity" />
         <activity android:name=".basic_components.examples.bluetooth.BluetoothScanActivity" />
@@ -67,14 +96,17 @@
         <activity android:name=".basic_components.examples.cipher.AudioCipherActivity" />
         <activity android:name=".basic_components.examples.pref.PrefActivity" />
         <activity android:name=".basic_components.examples.WatermarkActivity" />
-        <activity android:name=".basic_components.examples.FingerPaintActivity"
+        <activity
+            android:name=".basic_components.examples.FingerPaintActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".basic_components.examples.camera2.Camera2WithoutPreviewActivity" />
         <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
         <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />
         <activity android:name=".jetpack_components.examples.room.RoomActivity" />
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -84,8 +116,12 @@
         <activity android:name=".basic_components.examples.KeepAliveActivity" />
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketServerActivity" />
         <activity android:name=".basic_components.examples.HttpActivity" />
-        <activity android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity" android:theme="@style/Theme.MaterialComponents.NoActionBar" />
-        <activity android:name=".basic_components.examples.media_player.PlayVideoByMediaCodecActivity" android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+        <activity
+            android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+        <activity
+            android:name=".basic_components.examples.media_player.PlayVideoByMediaCodecActivity"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />
         <activity android:name=".basic_components.examples.socket.SocketServerActivity" />
@@ -94,42 +130,62 @@
         <activity android:name=".basic_components.examples.TakeScreenshotActivity" />
         <activity android:name=".basic_components.examples.CoroutineActivity" />
         <activity android:name=".basic_components.examples.audio.AudioActivity" />
-        <activity android:name=".basic_components.examples.sharescreen.client.ScreenShareClientActivity" android:configChanges="keyboardHidden|orientation|screenSize" />
-        <activity android:name=".basic_components.examples.sharescreen.master.ScreenShareMasterActivity" android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
+            android:name=".basic_components.examples.sharescreen.client.ScreenShareClientActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
+            android:name=".basic_components.examples.sharescreen.master.ScreenShareMasterActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".basic_components.examples.SaveInstanceStateActivity" /> <!-- android:configChanges="orientation|screenSize" -->
-        <activity android:name=".basic_components.examples.camera2.Camera2LiveActivity" android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+        <activity
+            android:name=".basic_components.examples.camera2.Camera2LiveActivity"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basic_components.examples.NetworkMonitorActivity" />
         <activity android:name=".basic_components.examples.log.LogActivity" />
         <activity android:name=".basic_components.examples.DeviceInfoActivity" />
 
-        <service android:name=".basic_components.examples.aidl.LocalLogService" android:exported="true" android:permission="remote.service.permission">
+        <service
+            android:name=".basic_components.examples.aidl.LocalLogService"
+            android:exported="true"
+            android:permission="remote.service.permission" >
             <intent-filter>
 
                 <!-- The action name will be used in your AIDL client side when you bind to this service. -->
                 <action android:name="service.name" />
             </intent-filter>
         </service>
-        <service android:name=".basic_components.examples.sharescreen.master.MediaProjectionService"
+        <service
+            android:name=".basic_components.examples.sharescreen.master.MediaProjectionService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"
             tools:targetApi="q" />
-        <service android:name=".basic_components.examples.sharescreen.master.SimulatedClickService"
+        <service
+            android:name=".basic_components.examples.sharescreen.master.SimulatedClickService"
             android:enabled="true"
             android:exported="true"
             android:label="@string/accessibility_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
 
-            <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config" />
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
         </service>
-        <service android:name=".basic_components.examples.ChangeAppTestService" android:exported="false" />
+        <service
+            android:name=".basic_components.examples.ChangeAppTestService"
+            android:exported="false" />
 
-        <receiver android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver" android:enabled="true" android:exported="false" />
+        <receiver
+            android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
-        <property android:name="android.content.MEDIA_CAPABILITIES" android:resource="@xml/media_capabilities" />
+        <property
+            android:name="android.content.MEDIA_CAPABILITIES"
+            android:resource="@xml/media_capabilities" />
     </application>
 
 </manifest>

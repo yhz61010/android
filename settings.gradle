@@ -25,7 +25,7 @@ include ':lib-network'
 include ':lib-common-android'
 include ':lib-common-kotlin'
 
-//include ':ffmpeg-sdk'
 //include ':webrtc-sdk'
 //include ':x264'
 include ':dex-sdk'
+include ':ffmpeg-sdk'

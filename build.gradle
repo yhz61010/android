@@ -48,7 +48,7 @@ buildscript {
     // ===============================
     // ===== Leo modules version =====
     // ===============================
-    ext.androidBaseSdkVersion = '5.0.0'
+    ext.androidBaseSdkVersion = '5.0.5'
     ext.baseNettySdkVersion = '5.0.0'
     ext.circleProgressbarSdkVersion = '5.0.0'
     ext.floatViewSdkVersion = '5.0.0'

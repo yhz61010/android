@@ -70,7 +70,7 @@ class GLRenderer : GLSurfaceView.Renderer {
 
         // 配置OpenGL ES 环境
         program = GLProgram()
-        LogContext.log.d(TAG, "=====> LeoGLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(TAG, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.

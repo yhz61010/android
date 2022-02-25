@@ -64,12 +64,12 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
-
-    lintOptions {
-        checkReleaseBuilds false
+    lint {
         abortOnError false
-        disable 'MissingTranslation','RtlHardcoded','RtlCompat', 'RtlEnabled'
+        checkReleaseBuilds false
+        disable 'MissingTranslation', 'RtlHardcoded', 'RtlCompat', 'RtlEnabled'
     }
+
 }
 
 dependencies {

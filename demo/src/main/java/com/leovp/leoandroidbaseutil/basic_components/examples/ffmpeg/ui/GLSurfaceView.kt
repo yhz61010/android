@@ -5,6 +5,7 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.ui.opengl.GLRenderer
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.base.GraphicTouchHelper
@@ -16,17 +17,19 @@ class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSu
         private const val TAG = "GLSV"
     }
 
-    private var videoDecoder: H264HevcDecoder? = null
+    private lateinit var videoDecoder: H264HevcDecoder
 
-    fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
-        videoDecoder = H264HevcDecoder(vps, sps, pps)
+    fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
+        videoDecoder = H264HevcDecoder()
+        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
+        LogContext.log.w(TAG, "videoInfo=${videoInfo.toJsonString()}")
+        return videoInfo
     }
 
-    fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder?.decode(rawVideo)
+    fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
 
     fun releaseDecoder() {
-        videoDecoder?.release()
-        videoDecoder = null
+        videoDecoder.release()
     }
 
     fun setKeepRatio(keepRatio: Boolean) {

@@ -145,7 +145,8 @@ object H265Util {
     const val NALU_TYPE_VPS = 32 // 0x20
     const val NALU_TYPE_SPS = 33 // 0x21
     const val NALU_TYPE_PPS = 34 // 0x22
-    const val NALU_TYPE_SEI = 39 // 0x27
+    const val NALU_TYPE_PREFIX_SEI = 39 // 0x27
+    const val NALU_TYPE_SUFFIX_SEI = 40 // 0x28
 
     const val NALU_TYPE_BLA_W_LP = 16 // 0x10
     const val NALU_TYPE_BLA_W_RADL = 17 // 0x11
@@ -175,7 +176,8 @@ object H265Util {
     }
 
     fun isSei(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_SEI // 39
+        val naluType: Int = getNaluType(data)
+        return NALU_TYPE_PREFIX_SEI == naluType /* 39 */ || NALU_TYPE_SUFFIX_SEI == naluType /* 40 */
     }
 
     /**
@@ -308,7 +310,7 @@ object H265Util {
 
         if (DEBUG) {
             LogContext.log.d(
-                    TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
+                TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
@@ -328,7 +330,8 @@ object H265Util {
             NALU_TYPE_VPS        -> "VPS" // 32
             NALU_TYPE_SPS        -> "SPS" // 33
             NALU_TYPE_PPS        -> "PPS" // 34
-            NALU_TYPE_SEI        -> "SEI" // 39
+            NALU_TYPE_PREFIX_SEI -> "PREFIX_SEI" // 39
+            NALU_TYPE_SUFFIX_SEI -> "SUFFIX_SEI" // 40
 
             // NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
             NALU_TYPE_BLA_W_LP   -> "I_BLA_W_LP" // 16
@@ -358,6 +361,7 @@ object H265Util {
     fun getNaluTypeSimpleName(data: ByteArray): String {
         if (isIdrFrame(data)) return "I"
         if (isPFrame(data)) return "P"
+        if (isSei(data)) return "SEI"
         return getNaluTypeName(data)
     }
 

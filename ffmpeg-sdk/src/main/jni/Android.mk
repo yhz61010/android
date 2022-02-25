@@ -42,7 +42,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := h264-hevc-decoder
 LOCAL_SRC_FILES := $(LOCAL_PATH)/h264_hevc_decoder/h264_hevc_decoder_all_in_one_file.cpp
-LOCAL_CFLAGS    :=
+LOCAL_CFLAGS    := -Wno-unused-parameter
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
 $(LOCAL_C_INCLUDES) \
@@ -61,7 +61,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := adpcm-ima-qt-decoder
 LOCAL_SRC_FILES := $(LOCAL_PATH)/adpcm_ima_qt_decoder/adpcm_ima_qt_decoder.cpp \
 $(LOCAL_PATH)/adpcm_ima_qt_decoder/native_adpcm_ima_qt_decoder.cpp
-LOCAL_CFLAGS    :=
+LOCAL_CFLAGS    := -Wno-unused-parameter
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
 $(LOCAL_C_INCLUDES) \
@@ -80,7 +80,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := adpcm-ima-qt-encoder
 LOCAL_SRC_FILES := $(LOCAL_PATH)/adpcm_ima_qt_encoder/adpcm_ima_qt_encoder.cpp \
                    $(LOCAL_PATH)/adpcm_ima_qt_encoder/native_adpcm_ima_qt_encoder.cpp
-LOCAL_CFLAGS    :=
+LOCAL_CFLAGS    := -Wno-unused-parameter
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_C_INCLUDES) \

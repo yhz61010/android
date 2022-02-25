@@ -13,7 +13,6 @@ class H264HevcDecoder {
             System.loadLibrary("h264-hevc-decoder")
             System.loadLibrary("avcodec")
             System.loadLibrary("avutil")
-            System.loadLibrary("avformat")
         }
     }
 

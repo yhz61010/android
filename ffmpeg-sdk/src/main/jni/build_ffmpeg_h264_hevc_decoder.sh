@@ -52,6 +52,7 @@ pushd $FFMPEG_FOLDER
     --disable-swscale \
     --disable-avfilter \
     --disable-avdevice \
+    --disable-avformat \
     --disable-static \
     --enable-jni \
     --enable-decoder=h264,hevc \

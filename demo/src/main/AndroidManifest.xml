@@ -120,7 +120,7 @@
             android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity
-            android:name=".basic_components.examples.media_player.PlayVideoByMediaCodecActivity"
+            android:name=".basic_components.examples.media_player.PlayH265VideoByMediaCodecActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />

@@ -28,8 +28,8 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.FFMpegH264A
 import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.FFMpegH265Activity
 import com.leovp.leoandroidbaseutil.basic_components.examples.koin.KoinActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayH265VideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayVideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.provider.ProviderActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -58,7 +58,7 @@ class BasicFragment : Fragment() {
             Pair("Socket Client", SocketClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Play Video File by MediaCodec", PlayVideoByMediaCodecActivity::class.java),
+            Pair("Play H265 Video File by MediaCodec", PlayH265VideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("FFMPEG Raw H264", FFMpegH264Activity::class.java),
             Pair("FFMPEG Raw H265", FFMpegH265Activity::class.java),

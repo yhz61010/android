@@ -34,7 +34,7 @@ class AdpcmImaQtDecoder private constructor() {
      * @return The returned pcm data is interleaved.
      * Like this:
      * ```
-     * | L0        | L0         | R0        | R0         | L0        | L1         | L1        |R1          |
+     * | L0        | L0         | R0        | R0         | L1        | L1         | L1        |R1          |
      * | --------- | ---------- | --------- | ---------- | --------- | ---------- | --------- | ---------- |
      * | Low 8bits | High 8bits | Low 8bits | High 8bits | Low 8bits | High 8bits | Low 8bits | High 8bits |
      * ```

@@ -67,9 +67,9 @@ buildscript {
     ext.libImageVersion = '5.0.0'
     ext.libNetworkVersion = '5.0.0'
     // -----
-    ext.adpcmImaQtCodecSdkVersion = '5.0.4'
-    ext.h264HevcDecoderSdkVersion = '5.0.4'
-    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.0.4'
+    ext.adpcmImaQtCodecSdkVersion = '5.0.5'
+    ext.h264HevcDecoderSdkVersion = '5.0.5'
+    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.0.5'
 //    ext.ffmpegSdkVersion = '5.0.0'
     ext.ffmpegJavacppSdkVersion = '5.0.0'
     ext.dexSdkVersion = '5.0.1'

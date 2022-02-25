@@ -44,7 +44,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'circle-progressbar-sdk'
-                version = "$rootProject.ext.circleProgressbarSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

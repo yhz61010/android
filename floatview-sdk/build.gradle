@@ -43,7 +43,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'floatview-sdk'
-                version = "$rootProject.ext.floatViewSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

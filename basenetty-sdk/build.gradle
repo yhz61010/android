@@ -55,7 +55,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'basenetty-sdk'
-                version = "$rootProject.ext.baseNettySdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

@@ -48,7 +48,7 @@ buildscript {
     // ===============================
     // ===== Leo modules version =====
     // ===============================
-    ext.androidBaseSdkVersion = '5.0.5'
+    ext.androidBaseSdkVersion = '5.0.6'
     ext.baseNettySdkVersion = '5.0.0'
     ext.circleProgressbarSdkVersion = '5.0.0'
     ext.floatViewSdkVersion = '5.0.0'
@@ -67,9 +67,9 @@ buildscript {
     ext.libImageVersion = '5.0.0'
     ext.libNetworkVersion = '5.0.0'
     // -----
-    ext.adpcmImaQtCodecSdkVersion = '5.0.5'
-    ext.h264HevcDecoderSdkVersion = '5.0.5'
-    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.0.5'
+    ext.adpcmImaQtCodecSdkVersion = '5.0.6'
+    ext.h264HevcDecoderSdkVersion = '5.0.6'
+    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.0.6'
 //    ext.ffmpegSdkVersion = '5.0.0'
     ext.ffmpegJavacppSdkVersion = '5.0.0'
     ext.dexSdkVersion = '5.0.1'

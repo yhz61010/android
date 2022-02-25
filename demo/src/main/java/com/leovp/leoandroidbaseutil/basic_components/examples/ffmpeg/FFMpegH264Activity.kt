@@ -1,11 +1,11 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.GLSurfaceView
 
-class FFMpegH264Activity : AppCompatActivity() {
+class FFMpegH264Activity : BaseDemonstrationActivity() {
     private lateinit var glSurfaceView: GLSurfaceView
 
     override fun onCreate(savedInstanceState: Bundle?) {

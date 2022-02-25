@@ -39,7 +39,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'dex-sdk'
-                version = "$rootProject.ext.dexSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

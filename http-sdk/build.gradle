@@ -51,7 +51,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'http-sdk'
-                version = "$rootProject.ext.httpSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

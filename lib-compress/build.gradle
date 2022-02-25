@@ -46,7 +46,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'lib-compress'
-                version = "$rootProject.ext.libCompressVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

@@ -50,7 +50,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'camera2live-sdk'
-                version = "$rootProject.ext.camera2LiveSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

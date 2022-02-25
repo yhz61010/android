@@ -16,6 +16,7 @@ include ':drawOnScreen-sdk'
 include ':aidl-client'
 include ':ffmpeg-javacpp-sdk'
 include ':circle-progressbar-sdk'
+include ':dex-sdk'
 
 include ':lib-bytes'
 include ':lib-compress'
@@ -27,5 +28,4 @@ include ':lib-common-kotlin'
 
 //include ':webrtc-sdk'
 //include ':x264'
-include ':dex-sdk'
 //include ':ffmpeg-sdk'

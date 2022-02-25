@@ -57,7 +57,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'audio-sdk'
-                version = "$rootProject.ext.audioSdkVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

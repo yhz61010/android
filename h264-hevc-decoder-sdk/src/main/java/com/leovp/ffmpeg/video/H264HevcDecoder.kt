@@ -27,7 +27,7 @@ class H264HevcDecoder {
     class DecodedVideoFrame(val yuvBytes: ByteArray, val format: Int, val width: Int, val height: Int)
 
     @Keep
-    class DecodeVideoInfo(val codecId: Int, val codecName: String,
-        val pixelFormatId: Int, val pixelFormatName: String,
+    class DecodeVideoInfo(val codecId: Int, val codecName: String?,
+        val pixelFormatId: Int, val pixelFormatName: String?,
         val width: Int, val height: Int)
 }

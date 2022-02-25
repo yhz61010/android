@@ -235,15 +235,15 @@ class DecodeH265RawFile {
                             val frame = ByteArray(i - previousStart)
                             System.arraycopy(bytes, previousStart, frame, 0, frame.size)
 
-                            runCatching {
-                                runCatching {
-                                    val st1 = SystemClock.elapsedRealtime()
-                                    val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = glSurfaceView.decodeVideo(frame)
-                                    val st2 = SystemClock.elapsedRealtimeNanos()
-                                    decodeFrame?.let { glSurfaceView.render(it.yuvBytes, videoInfo.pixelFormatId) }
-                                    val st3 = SystemClock.elapsedRealtimeNanos()
-                                    LogContext.log.w(TAG, "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us]")
-                                }.onFailure { LogContext.log.e(TAG, "decode error.", it) }
+                            try {
+                                val st1 = SystemClock.elapsedRealtime()
+                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = glSurfaceView.decodeVideo(frame)
+                                val st2 = SystemClock.elapsedRealtimeNanos()
+                                decodeFrame?.let { glSurfaceView.render(it.yuvBytes, videoInfo.pixelFormatId) }
+                                val st3 = SystemClock.elapsedRealtimeNanos()
+                                LogContext.log.w(TAG, "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us]")
+                            } catch (e: Exception) {
+                                LogContext.log.e(TAG, "decode error.", e)
                             }
 
                             previousStart = i

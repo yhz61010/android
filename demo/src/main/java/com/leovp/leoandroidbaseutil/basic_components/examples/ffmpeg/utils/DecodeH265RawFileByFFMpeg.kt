@@ -150,7 +150,7 @@ class DecodeH265RawFileByFFMpeg {
     private lateinit var rf: RandomAccessFile
 
     private var currentIndex = 0L
-    private fun getRawH265(bufferSize: Int = 100_000): ByteArray? {
+    private fun getRawH265(bufferSize: Int = 1_000_000): ByteArray? {
         val bb = ByteArray(bufferSize)
         //        LogContext.log.w(TAG, "Current file pos=$currentIndex")
         rf.seek(currentIndex)
@@ -172,7 +172,7 @@ class DecodeH265RawFileByFFMpeg {
 
     private fun getNalu(): ByteArray? {
         var curIndex = 0
-        val bb = ByteArray(100000)
+        val bb = ByteArray(800_000)
         rf.read(bb, curIndex, 4)
         if (findStartCode4(bb, 0)) {
             curIndex = 4

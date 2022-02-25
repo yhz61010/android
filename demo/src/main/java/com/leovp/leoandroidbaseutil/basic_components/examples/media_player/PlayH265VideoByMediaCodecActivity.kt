@@ -16,7 +16,7 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.*
 
-class PlayVideoByMediaCodecActivity : BaseDemonstrationActivity() {
+class PlayH265VideoByMediaCodecActivity : BaseDemonstrationActivity() {
 
     private lateinit var binding: ActivityPlayVideoBinding
 

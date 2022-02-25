@@ -27,10 +27,10 @@ include $(PREBUILT_SHARED_LIBRARY)
 #LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavfilter.so
 #include $(PREBUILT_SHARED_LIBRARY)
 #
-include $(CLEAR_VARS)
-LOCAL_MODULE := libavformat
-LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavformat.so
-include $(PREBUILT_SHARED_LIBRARY)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := libavformat
+#LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavformat.so
+#include $(PREBUILT_SHARED_LIBRARY)
 #
 #include $(CLEAR_VARS)
 #LOCAL_MODULE := libswscale
@@ -50,7 +50,7 @@ $(MY_PREBUILT)/include \
 $(LOCAL_PATH)/h264_hevc_decoder
 # The following libraries will be generated in src/main/lib folder
 #LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample libswscale
-LOCAL_SHARED_LIBRARIES := libavcodec libavutil libavformat
+LOCAL_SHARED_LIBRARIES := libavcodec libavutil
 LOCAL_DISABLE_FORMAT_STRING_CHECKS := true
 LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
 include $(BUILD_SHARED_LIBRARY)

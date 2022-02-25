@@ -107,9 +107,9 @@ import java.io.RandomAccessFile
  * Author: Michael Leo
  * Date: 20-7-30 上午10:54
  */
-class DecodeH265RawFile {
+class DecodeH265RawFileByFFMpeg {
     companion object {
-        private const val TAG = "DecodeH265RawFile"
+        private const val TAG = "DecodeH265RawFileByFFMpeg"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())

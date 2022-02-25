@@ -107,8 +107,9 @@ JNIEXPORT jobject JNICALL init(JNIEnv *env, jobject obj,
     LOGE("%s", buf);
 
     // videoType=173[hevc][yuv420p] width=1920 height=800
-//    LOGE("Video meta=%s | %s:%d, [%s] width=%d height=%d", buf,
-//         avcodec_get_name(ctx->codec_id), (int) ctx->codec_id, av_get_pix_fmt_name(ctx->pix_fmt),
+//    LOGE("Video meta=%s | %s[%d], %s[%d] | width=%d height=%d", buf,
+//         avcodec_get_name(ctx->codec_id), (int) ctx->codec_id,
+//         av_get_pix_fmt_name(ctx->pix_fmt), (int) ctx->pix_fmt,
 //         ctx->width, ctx->height);
 
     jclass returnBean = env->FindClass(H264_HEVC_PACKAGE_BASE"video/H264HevcDecoder$DecodeVideoInfo");

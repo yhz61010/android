@@ -85,65 +85,63 @@ android {
             includeAndroidResources = true
         }
     }
-
     packagingOptions {
-        // This line is for room
-        exclude 'META-INF/atomicfu.kotlin_module'
-//        exclude 'META-INF/LICENSE'
-        pickFirst 'META-INF/NOTICE'
-        pickFirst 'META-INF/NOTICE.md'
-        pickFirst 'META-INF/DEPENDENCIES'
-        pickFirst 'META-INF/DEPENDENCIES.md'
-        pickFirst 'META-INF/LICENSE'
-        pickFirst 'META-INF/LICENSE.md'
-        pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
-        pickFirst 'lib/x86/libstlport_shared.so'
-        pickFirst 'lib/x86_64/libstlport_shared.so'
-        pickFirst 'lib/armeabi/libstlport_shared.so'
-        pickFirst 'lib/armeabi-v7a/libstlport_shared.so'
-        pickFirst 'lib/x86/libc++_shared.so'
-        pickFirst 'lib/x86_64/libc++_shared.so'
-        pickFirst 'lib/armeabi/libc++_shared.so'
-        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
-        // The following lines are for ffmpeg
-        pickFirst 'META-INF/native-image/linux-x86/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/linux-x86/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/linux-x86_64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/linux-x86_64/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/linux-ppc64le/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/linux-ppc64le/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/linux-arm64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/linux-arm64/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/linux-armhf/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/linux-armhf/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/android-arm/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/android-arm/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/android-arm64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/android-arm64/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/android-x86/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/android-x86/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/android-x86_64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/android-x86_64/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/macosx-x86_64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/macosx-x86_64/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/windows-x86/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/windows-x86/jnijavacpp/reflect-config.json'
-        pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json'
-        pickFirst 'META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json'
-
-        pickFirst "lib/armeabi-v7a/libavutil.so"
-        pickFirst "lib/armeabi-v7a/libavcodec.so"
-        pickFirst "lib/armeabi-v7a/libadpcm-ima-qt.so"
-        pickFirst "lib/armeabi-v7a/libc++_shared.so"
-
-        pickFirst "lib/arm64-v8a/libavutil.so"
-        pickFirst "lib/arm64-v8a/libavcodec.so"
-        pickFirst "lib/arm64-v8a/libadpcm-ima-qt.so"
-        pickFirst "lib/arm64-v8a/libc++_shared.so"
-
-        pickFirst "META-INF/INDEX.LIST"
-        pickFirst "META-INF/io.netty.versions.properties"
+        jniLibs {
+            pickFirsts += ['lib/x86/libstlport_shared.so',
+                           'lib/x86_64/libstlport_shared.so',
+                           'lib/armeabi/libstlport_shared.so',
+                           'lib/armeabi-v7a/libstlport_shared.so',
+                           'lib/x86/libc++_shared.so',
+                           'lib/x86_64/libc++_shared.so',
+                           'lib/armeabi/libc++_shared.so',
+                           'lib/armeabi-v7a/libc++_shared.so',
+                           'lib/armeabi-v7a/libavutil.so',
+                           'lib/armeabi-v7a/libavcodec.so',
+                           'lib/armeabi-v7a/libadpcm-ima-qt.so',
+                           'lib/armeabi-v7a/libc++_shared.so',
+                           'lib/arm64-v8a/libavutil.so',
+                           'lib/arm64-v8a/libavcodec.so',
+                           'lib/arm64-v8a/libadpcm-ima-qt.so',
+                           'lib/arm64-v8a/libc++_shared.so']
+        }
+        resources {
+            excludes += ['META-INF/atomicfu.kotlin_module']
+            pickFirsts += ['META-INF/NOTICE',
+                           'META-INF/NOTICE.md',
+                           'META-INF/DEPENDENCIES',
+                           'META-INF/DEPENDENCIES.md',
+                           'META-INF/LICENSE',
+                           'META-INF/LICENSE.md',
+                           'META-INF/LICENSE.txt',
+                           'META-INF/native-image/linux-x86/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/linux-x86/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/linux-x86_64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/linux-x86_64/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/linux-ppc64le/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/linux-ppc64le/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/linux-arm64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/linux-arm64/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/linux-armhf/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/linux-armhf/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/android-arm/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/android-arm/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/android-arm64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/android-arm64/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/android-x86/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/android-x86/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/android-x86_64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/android-x86_64/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/macosx-x86_64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/macosx-x86_64/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/windows-x86/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/windows-x86/jnijavacpp/reflect-config.json',
+                           'META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json',
+                           'META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json',
+                           'META-INF/INDEX.LIST',
+                           'META-INF/io.netty.versions.properties']
+        }
     }
+
 
 /*
 * DSL element 'dexOptions' is obsolete and should be removed.
@@ -155,11 +153,6 @@ android {
 //        javaMaxHeapSize "4g"
 //    }
 
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
-        disable 'MissingTranslation','RtlHardcoded','RtlCompat', 'RtlEnabled'
-    }
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -182,6 +175,11 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'MissingTranslation', 'RtlHardcoded', 'RtlCompat', 'RtlEnabled'
     }
 }
 

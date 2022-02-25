@@ -154,7 +154,7 @@ class DecodeH264RawFileByFFMpeg {
 
                             previousStart = i
                             // FIXME We'd better control the FPS by SpeedManager
-                            val sleepOffset: Long = 1000 / 24 - (st3 / 1000_000 - st1)
+                            val sleepOffset: Long = 1000 / 30 - (st3 / 1000_000 - st1)
                             Thread.sleep(if (sleepOffset < 0) 0 else sleepOffset)
                         }
                     }

@@ -41,7 +41,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'lib-exception'
-                version = "$rootProject.ext.libExceptionVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

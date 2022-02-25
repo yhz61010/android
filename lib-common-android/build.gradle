@@ -45,7 +45,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
                 artifactId = 'lib-common-android'
-                version = "$rootProject.ext.libCommonAndroidVersion"
+                version = "$rootProject.ext.leoVersion"
             }
         }
     }

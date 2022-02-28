@@ -45,7 +45,7 @@ buildscript {
     ext.sonarqube_version = '3.3'
     ext.java_version = JavaVersion.VERSION_11
 
-    ext.leoVersion = '5.0.8'
+    ext.leoVersion = '5.0.9'
 
     // ===============================
     // ===== Leo modules version =====

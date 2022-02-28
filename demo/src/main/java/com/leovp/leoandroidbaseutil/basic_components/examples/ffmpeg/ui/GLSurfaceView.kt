@@ -17,19 +17,20 @@ class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSu
         private const val TAG = "GLSV"
     }
 
-    private lateinit var videoDecoder: H264HevcDecoder
+    private var videoDecoder: H264HevcDecoder? = null
 
     fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
         videoDecoder = H264HevcDecoder()
-        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
-        LogContext.log.w(TAG, "videoInfo=${videoInfo.toJsonString()}")
+        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder!!.init(vps, sps, pps, prefixSei, suffixSei)
+        LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
 
-    fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
+    fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder?.decode(rawVideo)
 
     fun releaseDecoder() {
-        videoDecoder.release()
+        videoDecoder?.release()
+        videoDecoder = null
     }
 
     fun setKeepRatio(keepRatio: Boolean) {

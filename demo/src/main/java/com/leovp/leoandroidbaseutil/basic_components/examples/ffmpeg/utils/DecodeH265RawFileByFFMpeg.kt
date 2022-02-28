@@ -1,9 +1,10 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.utils
 
 import android.os.SystemClock
+import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.exts.kotlin.truncate
+import com.leovp.androidbase.ui.GLSurfaceView
 import com.leovp.ffmpeg.video.H264HevcDecoder
-import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.GLSurfaceView
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.*
@@ -109,7 +110,7 @@ import java.io.RandomAccessFile
  */
 class DecodeH265RawFileByFFMpeg {
     companion object {
-        private const val TAG = "DecodeH265RawFileByFFMpeg"
+        private const val TAG = "FFMpegH265"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
@@ -118,34 +119,43 @@ class DecodeH265RawFileByFFMpeg {
     private lateinit var videoInfo: H264HevcDecoder.DecodeVideoInfo
     private var csd0Size: Int = 0
 
+    private val videoDecoder = H264HevcDecoder()
+
     fun init(videoFile: String, glSurfaceView: GLSurfaceView) {
         this.glSurfaceView = glSurfaceView
-        runCatching {
-            rf = RandomAccessFile(File(videoFile), "r")
-            LogContext.log.w(TAG, "File length=${rf.length()}")
+        rf = RandomAccessFile(File(videoFile), "r")
+        LogContext.log.w(TAG, "File length=${rf.length()}")
 
-            val vps = getNalu()!!
-            val sps = getNalu()!!
-            val pps = getNalu()!!
-            val psei = getNalu()!!
-            val ssei = getNalu()!!
+        val vps = getNalu()!!
+        val sps = getNalu()!!
+        val pps = getNalu()!!
+        val psei = getNalu()!!
+        val ssei = getNalu()!!
 
-            LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
-            LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
-            LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
-            LogContext.log.w(TAG, "prefix_sei[${psei.size}]=${psei.toHexStringLE().truncate(80)}")
-            LogContext.log.w(TAG, "suffix_sei[${ssei.size}]=${ssei.toHexStringLE().truncate(80)}")
+        LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
+        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
+        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
+        LogContext.log.w(TAG, "prefix_sei[${psei.size}]=${psei.toHexStringLE().truncate(80)}")
+        LogContext.log.w(TAG, "suffix_sei[${ssei.size}]=${ssei.toHexStringLE().truncate(80)}")
 
-            val csd0 = vps + sps + pps + psei + ssei
-            LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE().truncate(180)}")
-            csd0Size = csd0.size
-            currentIndex = csd0Size.toLong()
+        val csd0 = vps + sps + pps + psei + ssei
+        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE().truncate(180)}")
+        csd0Size = csd0.size
+        currentIndex = csd0Size.toLong()
 
-            videoInfo = glSurfaceView.initDecoder(vps, sps, pps, psei, ssei)
-            glSurfaceView.setVideoDimension(videoInfo.width, videoInfo.height)
-            glSurfaceView.decodeVideo(csd0)
-        }.onFailure { it.printStackTrace() }
+
+        videoInfo = initDecoder(vps, sps, pps, psei, ssei)
+        glSurfaceView.setVideoDimension(videoInfo.width, videoInfo.height)
+        decodeVideo(csd0)
     }
+
+    private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
+        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
+        LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
+        return videoInfo
+    }
+
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -215,7 +225,7 @@ class DecodeH265RawFileByFFMpeg {
 
     fun close() {
         LogContext.log.d(TAG, "close()")
-        glSurfaceView.releaseDecoder()
+        videoDecoder.release()
         ioScope.cancel()
     }
 
@@ -237,11 +247,11 @@ class DecodeH265RawFileByFFMpeg {
 
                             try {
                                 val st1 = SystemClock.elapsedRealtime()
-                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = glSurfaceView.decodeVideo(frame)
+                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let { glSurfaceView.render(it.yuvBytes, videoInfo.pixelFormatId) }
                                 val st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.w(TAG, "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us]")
+                                LogContext.log.w(TAG, "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}")
                             } catch (e: Exception) {
                                 LogContext.log.e(TAG, "decode error.", e)
                             }

@@ -44,13 +44,17 @@ JNIEXPORT jobject JNICALL init(JNIEnv *env, jobject obj,
         vps_unit8_t_array = new uint8_t[vpsLen];
         env->GetByteArrayRegion(vpsByteArray, 0, vpsLen, reinterpret_cast<jbyte *>(vps_unit8_t_array));
 
-        prefixSeiLen = env->GetArrayLength(prefixSeiByteArray);
-        prefixSei_unit8_t_array = new uint8_t[prefixSeiLen];
-        env->GetByteArrayRegion(prefixSeiByteArray, 0, prefixSeiLen, reinterpret_cast<jbyte *>(prefixSei_unit8_t_array));
+        if (nullptr != prefixSeiByteArray) {
+            prefixSeiLen = env->GetArrayLength(prefixSeiByteArray);
+            prefixSei_unit8_t_array = new uint8_t[prefixSeiLen];
+            env->GetByteArrayRegion(prefixSeiByteArray, 0, prefixSeiLen, reinterpret_cast<jbyte *>(prefixSei_unit8_t_array));
+        }
 
-        suffixSeiLen = env->GetArrayLength(suffixSeiByteArray);
-        suffixSei_unit8_t_array = new uint8_t[suffixSeiLen];
-        env->GetByteArrayRegion(suffixSeiByteArray, 0, suffixSeiLen, reinterpret_cast<jbyte *>(suffixSei_unit8_t_array));
+        if (nullptr != suffixSeiByteArray) {
+            suffixSeiLen = env->GetArrayLength(suffixSeiByteArray);
+            suffixSei_unit8_t_array = new uint8_t[suffixSeiLen];
+            env->GetByteArrayRegion(suffixSeiByteArray, 0, suffixSeiLen, reinterpret_cast<jbyte *>(suffixSei_unit8_t_array));
+        }
     }
 
     int spsLen = env->GetArrayLength(spsByteArray);

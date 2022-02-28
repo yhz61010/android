@@ -16,7 +16,7 @@ class H264HevcDecoder {
         }
     }
 
-    external fun init(vpsBytes: ByteArray?, spsBytes: ByteArray, ppsBytes: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): DecodeVideoInfo
+    external fun init(vpsBytes: ByteArray?, spsBytes: ByteArray, ppsBytes: ByteArray, prefixSei: ByteArray? = null, suffixSei: ByteArray? = null): DecodeVideoInfo
     external fun release()
 
     //    external fun decode(rawBytes: ByteArray): ByteArray

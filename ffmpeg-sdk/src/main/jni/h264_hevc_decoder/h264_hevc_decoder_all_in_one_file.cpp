@@ -179,6 +179,8 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray videoRawBy
         av_free(image_byte_buffer);
     }
 
+    free(video_raw_unit8_t_array);
+
 //    return out_byte_array;
 
     jclass returnBean = env->FindClass(H264_HEVC_PACKAGE_BASE"video/H264HevcDecoder$DecodedVideoFrame");

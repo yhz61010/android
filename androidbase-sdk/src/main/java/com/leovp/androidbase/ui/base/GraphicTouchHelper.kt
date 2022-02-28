@@ -1,4 +1,4 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.base
+package com.leovp.androidbase.ui.base
 
 import android.os.SystemClock
 import android.util.SparseArray

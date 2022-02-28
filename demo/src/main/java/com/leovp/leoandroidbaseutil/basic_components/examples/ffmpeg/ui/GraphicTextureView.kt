@@ -16,9 +16,9 @@ import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.ui.base.GraphicTouchHelper
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
-import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.base.GraphicTouchHelper
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.log_sdk.LogContext
 import org.greenrobot.eventbus.EventBus

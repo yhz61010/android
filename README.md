@@ -12,6 +12,9 @@
 ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
 2. AudioReceiver
 In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
+3. FFMpegH264Activity & FFMpegH265Activity
+When you back to previously activity while playing video, it will crash caused by ffmpeg in following place:
+`h264_hevc_decoder_all_in_one_file.cpp` in `decode()` method, when calling `avcodec_send_packet`. 
 
 # TODO List
 ~~1. Camera2Live~~(Solved)

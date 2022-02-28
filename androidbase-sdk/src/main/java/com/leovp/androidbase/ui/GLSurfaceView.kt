@@ -1,36 +1,18 @@
-package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui
+package com.leovp.androidbase.ui
 
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
-import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.ui.base.GraphicTouchHelper
 import com.leovp.androidbase.ui.opengl.GLRenderer
-import com.leovp.ffmpeg.video.H264HevcDecoder
-import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui.base.GraphicTouchHelper
 import com.leovp.log_sdk.LogContext
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
 class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
     companion object {
         private const val TAG = "GLSV"
-    }
-
-    private var videoDecoder: H264HevcDecoder? = null
-
-    fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
-        videoDecoder = H264HevcDecoder()
-        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder!!.init(vps, sps, pps, prefixSei, suffixSei)
-        LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
-        return videoInfo
-    }
-
-    fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder?.decode(rawVideo)
-
-    fun releaseDecoder() {
-        videoDecoder?.release()
-        videoDecoder = null
     }
 
     fun setKeepRatio(keepRatio: Boolean) {

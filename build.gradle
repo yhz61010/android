@@ -153,7 +153,7 @@ ext {
     ffmpegVersion = '5.0-1.5.7'
     javacppVersion = '1.5.7'
     materialDialogVersion = '3.3.0'
-    glideVersion = '4.13.0'
+    glideVersion = '4.13.1'
     karnNotifyVersion = '1.4.0'
     viewanimatorVersion = '2.4'
     draggableViewVersion = '0.5.0'

@@ -77,7 +77,7 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
      * @param yuvData YUV 格式的数据
      * @param type YUV 数据的格式 0 -> I420  1 -> NV12  2 -> NV21
      */
-    fun render(yuvData: ByteArray?, type: Int = 0) {
+    fun render(yuvData: ByteArray?, type: GLRenderer.Yuv420Type = GLRenderer.Yuv420Type.I420) {
         if (yuvData == null) {
             return
         }

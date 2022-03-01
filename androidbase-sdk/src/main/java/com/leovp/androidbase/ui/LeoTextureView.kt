@@ -13,6 +13,7 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
@@ -58,6 +59,8 @@ class LeoTextureView @JvmOverloads constructor(
 
     private var frameCount: Long = 0
     val queue = ArrayBlockingQueue<ByteArray>(10)
+
+    var videoOutputFormatChangeEvent: VideoOutputFormatChangeEvent? = null
 
     override fun onSurfaceTextureAvailable(
         pSurfaceTexture: SurfaceTexture,
@@ -152,8 +155,7 @@ class LeoTextureView @JvmOverloads constructor(
                 LogContext.log.w(TAG, "Try to release avcDecoder")
                 hevcDecoder?.release()
             }.onFailure {
-                it.printStackTrace()
-                LogContext.log.e(TAG, "Release avcDecoder error. Known issue. msg=${it.message}")
+                LogContext.log.e(TAG, "Release avcDecoder error. Known issue. msg=${it.message}", it)
             }.also {
                 hevcDecoder = null
                 System.gc()
@@ -215,6 +217,7 @@ class LeoTextureView @JvmOverloads constructor(
                 val width = format.getInteger("width")
                 val height = format.getInteger("height")
                 LogContext.log.w(TAG, "onOutputFormatChanged() $width x $height")
+                videoOutputFormatChangeEvent?.onChanged(width, height)
             }.onFailure {
                 LogContext.log.e(TAG, "Get video dimension error.", it)
                 context.toast("Get video dimension error.", debug = true, error = true)
@@ -242,4 +245,9 @@ class LeoTextureView @JvmOverloads constructor(
     }
 
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 120
+
+    @Keep
+    interface VideoOutputFormatChangeEvent {
+        fun onChanged(videoWidth: Int, videoHeight: Int)
+    }
 }

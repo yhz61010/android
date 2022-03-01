@@ -19,6 +19,10 @@ fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): Str
     }
 }
 
+fun Context.readAssetsFileAsString(@RawRes rawId: Int): String {
+    return resources.openRawResource(rawId).use { it.readBytes().toString(StandardCharsets.UTF_8) }
+}
+
 fun Context.saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileName: String, force: Boolean = false): String {
     val inputStream: InputStream = resources.openRawResource(id)
     val file = File(storagePath)

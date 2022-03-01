@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.utils
 import android.os.SystemClock
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.exts.kotlin.truncate
-import com.leovp.androidbase.ui.GLSurfaceView
+import com.leovp.androidbase.ui.LeoGLSurfaceView
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.log_sdk.LogContext
@@ -114,14 +114,14 @@ class DecodeH265RawFileByFFMpeg {
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
-    private lateinit var glSurfaceView: GLSurfaceView
+    private lateinit var glSurfaceView: LeoGLSurfaceView
 
     private lateinit var videoInfo: H264HevcDecoder.DecodeVideoInfo
     private var csd0Size: Int = 0
 
     private val videoDecoder = H264HevcDecoder()
 
-    fun init(videoFile: String, glSurfaceView: GLSurfaceView) {
+    fun init(videoFile: String, glSurfaceView: LeoGLSurfaceView) {
         this.glSurfaceView = glSurfaceView
         rf = RandomAccessFile(File(videoFile), "r")
         LogContext.log.w(TAG, "File length=${rf.length()}")
@@ -245,20 +245,24 @@ class DecodeH265RawFileByFFMpeg {
                             val frame = ByteArray(i - previousStart)
                             System.arraycopy(bytes, previousStart, frame, 0, frame.size)
 
+                            val st1 = SystemClock.elapsedRealtime()
+                            var st3: Long
                             try {
-                                val st1 = SystemClock.elapsedRealtime()
                                 val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let { glSurfaceView.render(it.yuvBytes, videoInfo.pixelFormatId) }
-                                val st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.w(TAG, "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}")
+                                st3 = SystemClock.elapsedRealtimeNanos()
+                                LogContext.log.w(TAG,
+                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}")
                             } catch (e: Exception) {
+                                st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.e(TAG, "decode error.", e)
                             }
 
                             previousStart = i
                             // FIXME We'd better control the FPS by SpeedManager
-                            //                            Thread.sleep(16)
+                            val sleepOffset: Long = 1000 / 30 - (st3 / 1000_000 - st1)
+                            Thread.sleep(if (sleepOffset < 0) 0 else sleepOffset)
                         }
                     }
                 }

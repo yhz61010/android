@@ -1,4 +1,4 @@
-package com.leovp.androidbase.ui.base
+package com.leovp.androidbase.ui
 
 import android.os.SystemClock
 import android.util.SparseArray
@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
  * Author: Michael Leo
  * Date: 2022/2/14 17:34
  */
-class GraphicTouchHelper(private val touchListener: TouchListener) {
+class TouchHelper(private val touchListener: TouchListener) {
     companion object {
         private const val TAG = "GTH"
         private const val MAX_TOUCH_POINTS = 10

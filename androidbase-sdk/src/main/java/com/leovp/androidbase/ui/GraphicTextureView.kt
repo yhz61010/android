@@ -1,9 +1,8 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.ui
+package com.leovp.androidbase.ui
 
 import android.content.Context
-import android.graphics.Point
 import android.graphics.SurfaceTexture
 import android.media.MediaCodec
 import android.media.MediaFormat
@@ -14,14 +13,11 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
-import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.ui.base.GraphicTouchHelper
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.log_sdk.LogContext
-import org.greenrobot.eventbus.EventBus
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
@@ -39,10 +35,10 @@ class GraphicTextureView @JvmOverloads constructor(
         private const val TAG = "GTV"
     }
 
-    var touchHelper: GraphicTouchHelper? = null
+    var touchHelper: TouchHelper? = null
 
-    fun setTouchListener(listener: GraphicTouchHelper.TouchListener) {
-        touchHelper = GraphicTouchHelper(listener)
+    fun setTouchListener(listener: TouchHelper.TouchListener) {
+        touchHelper = TouchHelper(listener)
     }
 
     //    private var outYUVOutputFile: BufferedOutputStream
@@ -218,12 +214,7 @@ class GraphicTextureView @JvmOverloads constructor(
             runCatching {
                 val width = format.getInteger("width")
                 val height = format.getInteger("height")
-                //                if (width > height) {
-                //                    width -= 8
-                //                } else {
-                //                    height -= 8
-                //                }
-                EventBus.getDefault().post(VideoOutputFormatChangeEvent(Point(width, height)))
+                LogContext.log.w(TAG, "onOutputFormatChanged() $width x $height")
             }.onFailure {
                 LogContext.log.e(TAG, "Get video dimension error.", it)
                 context.toast("Get video dimension error.", debug = true, error = true)
@@ -252,6 +243,3 @@ class GraphicTextureView @JvmOverloads constructor(
 
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 120
 }
-
-@Keep
-class VideoOutputFormatChangeEvent(val videoDimen: Point)

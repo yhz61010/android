@@ -136,7 +136,7 @@ class GLProgram(context: Context) {
         checkGlError("glGenTextures")
     }
 
-    fun drawTexture(mvpMatrix: FloatArray, type: Int) {
+    fun drawTexture(mvpMatrix: FloatArray, type: GLRenderer.Yuv420Type) {
         // 激活渲染程序
         GLES20.glUseProgram(programObjId)
         checkGlError("glUseProgram")
@@ -175,11 +175,11 @@ class GLProgram(context: Context) {
         // 传纹理的像素格式给fragment shader
         val yuvType = GLES20.glGetUniformLocation(programObjId, "yuvType")
         checkGlError("glGetUniformLocation yuvType")
-        GLES20.glUniform1i(yuvType, type)
+        GLES20.glUniform1i(yuvType, type.value)
 
         // type: 0 是 I420, 1 是 NV12
         val planarCount: Int
-        if (type == 0) {
+        if (type == GLRenderer.Yuv420Type.I420) {
             // I420 有3个平面
             planarCount = 3
             sampleHandle[0] = GLES20.glGetUniformLocation(programObjId, "samplerY")
@@ -215,12 +215,12 @@ class GLProgram(context: Context) {
     }
 
     /**
-     * 将图片数据绑定到纹理目标，适用于UV分量分开存储的（I420）
-     * @param yPlane YUV数据的Y分量
-     * @param uPlane YUV数据的U分量
-     * @param vPlane YUV数据的V分量
-     * @param width YUV图片宽度
-     * @param height YUV图片高度
+     * 将图片数据绑定到纹理目标，适用于 UV 分量分开存储的（I420）
+     * @param yPlane YUV 数据的 Y 分量
+     * @param uPlane YUV 数据的 U 分量
+     * @param vPlane YUV 数据的 V 分量
+     * @param width YUV 图片宽度
+     * @param height YUV 图片高度
      */
     fun feedTextureWithImageData(yPlane: ByteBuffer, uPlane: ByteBuffer, vPlane: ByteBuffer, width: Int, height: Int) {
         //根据YUV编码的特点，获得不同平面的基址
@@ -230,11 +230,11 @@ class GLProgram(context: Context) {
     }
 
     /**
-     * 将图片数据绑定到纹理目标，适用于UV分量交叉存储的（NV12、NV21）
-     * @param yPlane YUV数据的Y分量
-     * @param uvPlane YUV数据的UV分量
-     * @param width YUV图片宽度
-     * @param height YUV图片高度
+     * 将图片数据绑定到纹理目标，适用于 UV 分量交叉存储的（NV12、NV21）
+     * @param yPlane YUV 数据的Y分量
+     * @param uvPlane YUV 数据的UV分量
+     * @param width YUV 图片宽度
+     * @param height YUV 图片高度
      */
     fun feedTextureWithImageData(yPlane: ByteBuffer, uvPlane: ByteBuffer, width: Int, height: Int) {
         //根据YUV编码的特点，获得不同平面的基址
@@ -243,10 +243,10 @@ class GLProgram(context: Context) {
     }
 
     /**
-     * 将图片数据绑定到纹理目标，适用于UV分量分开存储的（I420）
-     * @param imageData YUV数据的Y/U/V分量
-     * @param width YUV图片宽度
-     * @param height YUV图片高度
+     * 将图片数据绑定到纹理目标，适用于 UV 分量分开存储的（I420）
+     * @param imageData YUV 数据的 Y/U/V 分量
+     * @param width YUV 图片宽度
+     * @param height YUV 图片高度
      */
     private fun textureYUV(imageData: ByteBuffer, width: Int, height: Int, index: Int) {
         // 将纹理对象绑定到纹理目标
@@ -274,10 +274,10 @@ class GLProgram(context: Context) {
     }
 
     /**
-     * 将图片数据绑定到纹理目标，适用于UV分量交叉存储的（NV12、NV21）
-     * @param imageData YUV数据的UV分量
-     * @param width YUV图片宽度
-     * @param height YUV图片高度
+     * 将图片数据绑定到纹理目标，适用于 UV 分量交叉存储的（NV12、NV21）
+     * @param imageData YUV 数据的 UV 分量
+     * @param width YUV 图片宽度
+     * @param height YUV 图片高度
      */
     @Suppress("SameParameterValue")
     private fun textureNV12(imageData: ByteBuffer, width: Int, height: Int, index: Int) {

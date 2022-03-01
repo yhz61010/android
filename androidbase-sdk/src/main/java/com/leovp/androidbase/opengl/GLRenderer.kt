@@ -56,7 +56,7 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private var uv: ByteBuffer = ByteBuffer.allocate(0)
 
     // YUV数据格式 0 -> I420  1 -> NV12  2 -> NV21
-    private var type: Int = 0
+    private var yuv420Type: Yuv420Type = Yuv420Type.I420
 
     // 标识GLSurfaceView是否准备好
     private var hasVisibility = false
@@ -100,7 +100,7 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         synchronized(this) {
             if (y.capacity() > 0) {
                 y.position(0)
-                if (type == 0) {
+                if (yuv420Type == Yuv420Type.I420) {
                     u.position(0)
                     v.position(0)
                     program.feedTextureWithImageData(y, u, v, videoWidth, videoHeight)
@@ -122,7 +122,7 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
                 Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
                 try {
-                    program.drawTexture(mvpMatrix, type)
+                    program.drawTexture(mvpMatrix, yuv420Type)
                 } catch (e: Exception) {
                     LogContext.log.w(TAG, e, outputType = ILog.OUTPUT_TYPE_SYSTEM)
                 }
@@ -203,14 +203,14 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     /**
      * 预览YUV格式数据
-     * @param yuvData yuv格式的数据
-     * @param type YUV数据的格式 0 -> I420  1 -> NV12  2 -> NV21
+     * @param yuvData YUV 格式的数据
+     * @param type YUV 数据的格式 0 -> I420  1 -> NV12  2 -> NV21
      */
-    fun feedData(yuvData: ByteArray, type: Int = 0) {
+    fun feedData(yuvData: ByteArray, type: Yuv420Type = Yuv420Type.I420) {
         synchronized(this) {
             if (hasVisibility) {
-                this.type = type
-                if (type == 0) {
+                this.yuv420Type = type
+                if (type == Yuv420Type.I420) {
                     y.clear()
                     u.clear()
                     v.clear()
@@ -224,6 +224,19 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
                     uv.put(yuvData, videoWidth * videoHeight, videoWidth * videoHeight / 2)
                 }
             }
+        }
+    }
+
+    // 0 -> I420 (YUV420P)  YYYYYYYY UUVV
+    // 1 -> NV12 (YUV420SP) YYYYYYYY UVUV
+    // 2 -> NV21 (YUV420SP) YYYYYYYY VUVU
+    enum class Yuv420Type(val value: Int) {
+        I420(0),
+        NV12(1),
+        NV21(2);
+
+        companion object {
+            fun getType(value: Int) = values().first { it.value == value }
         }
     }
 }

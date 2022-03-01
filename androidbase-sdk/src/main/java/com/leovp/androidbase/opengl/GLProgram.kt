@@ -17,6 +17,12 @@ class GLProgram(context: Context) {
     companion object {
         private const val TAG = "GLProgram"
 
+        // I420, YV12
+        private const val THREE_PLANAR = 3
+
+        // NV12, NV21
+        private const val TWO_PLANAR = 2
+
         /**
          * Float 类型占 4 Byte
          */
@@ -81,7 +87,7 @@ class GLProgram(context: Context) {
 
     private var programObjId: Int
 
-    private var planarTextureHandles = IntBuffer.wrap(IntArray(3))
+    private var planarTextureHandles = IntBuffer.wrap(IntArray(THREE_PLANAR))
     private val sampleHandle = IntArray(3)
 
     // handles
@@ -131,7 +137,7 @@ class GLProgram(context: Context) {
         checkGlError("glCreateProgram")
 
         // 生成纹理句柄
-        GLES20.glGenTextures(3, planarTextureHandles)
+        GLES20.glGenTextures(THREE_PLANAR, planarTextureHandles)
 
         checkGlError("glGenTextures")
     }
@@ -181,13 +187,13 @@ class GLProgram(context: Context) {
         val planarCount: Int
         if (type == GLRenderer.Yuv420Type.I420) {
             // I420 有3个平面
-            planarCount = 3
+            planarCount = THREE_PLANAR
             sampleHandle[0] = GLES20.glGetUniformLocation(programObjId, "samplerY")
             sampleHandle[1] = GLES20.glGetUniformLocation(programObjId, "samplerU")
             sampleHandle[2] = GLES20.glGetUniformLocation(programObjId, "samplerV")
         } else {
             // NV12、NV21 有两个平面
-            planarCount = 2
+            planarCount = TWO_PLANAR
             sampleHandle[0] = GLES20.glGetUniformLocation(programObjId, "samplerY")
             sampleHandle[1] = GLES20.glGetUniformLocation(programObjId, "samplerUV")
         }

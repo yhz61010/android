@@ -86,7 +86,7 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         // Attention: "-ratio, ratio, -1f, 1f" means keep screen ratio. Width is fixed.
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f) //
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
             createBuffers(videoWidth, videoHeight, keepRatio)

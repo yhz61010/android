@@ -2,8 +2,10 @@
 
 package com.leovp.lib_common_android.utils
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.ConfigurationInfo
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
@@ -171,6 +173,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             return sb.deleteAt(sb.length - 1).toString()
         }
 
+    @SuppressLint("MissingPermission")
     fun getDeviceInfo(): String {
         return runCatching {
             val st = SystemClock.elapsedRealtime()
@@ -179,34 +182,36 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val availableSize = ctx.getAvailableResolution()
             val statusBarHeight = ctx.statusBarHeight
             val navBarHeight = ctx.navigationBarHeight
+            val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo
             """
             Device basic information:
-            App version     : ${ctx.versionName}(${ctx.versionCode})
-            Device locale   : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
-            Default locale  : ${LangUtil.getInstance(ctx).getDefaultLanguageCountryCode()}
-            Network Type    : ${NetworkUtil.getNetworkTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
-            Manufacturer    : $manufacturer
-            Brand           : $brand
-            Board           : $board
-            OsVersion       : $osVersion($osVersionSdkInt)
-            Serial Number   : ${getSerialNumber()}
-            DeviceName      : $deviceName
-            Model           : $model
-            Product         : $product
-            Host            : $host
-            Hardware        : $hardware
-            CPU             : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
-            CPU Arch        : $cpuArch
-            Supported ABIS  : ${supportedCpuArchs.contentToString()}
-            Display         : $display
-            Screen          : ${screenSize.width}x${screenSize.height}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
-            MemoryUsage     : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
-            External Storage: $externalStorageBytesInReadable
-            Fingerprint     : ${Build.FINGERPRINT}
-            Tablet          : ${ctx.isTablet()}
-            Emulator        : ${isProbablyAnEmulator()}
-            Battery Capacity: $batteryCapacity
-            MAC             : ${NetworkUtil.getMacAddress(ctx)}
+            App version      : ${ctx.versionName}(${ctx.versionCode})
+            Device locale    : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
+            Default locale   : ${LangUtil.getInstance(ctx).getDefaultLanguageCountryCode()}
+            Network Type     : ${NetworkUtil.getNetworkTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
+            Manufacturer     : $manufacturer
+            Brand            : $brand
+            Board            : $board
+            OsVersion        : $osVersion($osVersionSdkInt)
+            Serial Number    : ${getSerialNumber()}
+            DeviceName       : $deviceName
+            Model            : $model
+            Product          : $product
+            Host             : $host
+            Hardware         : $hardware
+            CPU              : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            CPU Arch         : $cpuArch
+            OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]
+            Supported ABIS   : ${supportedCpuArchs.contentToString()}
+            Display          : $display
+            Screen           : ${screenSize.width}x${screenSize.height}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
+            MemoryUsage      : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
+            External Storage : $externalStorageBytesInReadable
+            Fingerprint      : ${Build.FINGERPRINT}
+            Tablet           : ${ctx.isTablet()}
+            Emulator         : ${isProbablyAnEmulator()}
+            Battery Capacity : $batteryCapacity
+            MAC              : ${NetworkUtil.getMacAddress(ctx)}
             IMEI:
                     slot0: ${getImei(ctx, 0) ?: "NA"}
                     slot1: ${getImei(ctx, 1) ?: "NA"}

@@ -5,12 +5,11 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
-import com.leovp.androidbase.ui.base.GraphicTouchHelper
-import com.leovp.androidbase.ui.opengl.GLRenderer
+import com.leovp.androidbase.opengl.GLRenderer
 import com.leovp.log_sdk.LogContext
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
-class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
+class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
     companion object {
         private const val TAG = "GLSV"
     }
@@ -20,10 +19,10 @@ class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSu
     }
 
     // ----------------------------------------
-    var touchHelper: GraphicTouchHelper? = null
+    var touchHelper: TouchHelper? = null
 
-    fun setTouchListener(listener: GraphicTouchHelper.TouchListener) {
-        touchHelper = GraphicTouchHelper(listener)
+    fun setTouchListener(listener: TouchHelper.TouchListener) {
+        touchHelper = TouchHelper(listener)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -53,7 +52,7 @@ class GLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSu
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2)
 
-        renderer = GLRenderer()
+        renderer = GLRenderer(context)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)

@@ -59,6 +59,7 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
 
         // RENDERMODE_CONTINUOUSLY: The renderer is called continuously to re-render the scene.
         // Render the view only when there is a change in the drawing data.
+        // That means if only requestRender() is called, it will do render.
         renderMode = RENDERMODE_WHEN_DIRTY
     }
 

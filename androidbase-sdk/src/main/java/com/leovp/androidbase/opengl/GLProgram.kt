@@ -1,7 +1,9 @@
-package com.leovp.androidbase.ui.opengl
+package com.leovp.androidbase.opengl
 
+import android.content.Context
 import android.opengl.GLES20
 import com.leovp.androidbase.exts.kotlin.toJsonString
+import com.leovp.androidbase.opengl.util.loadShader
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import java.nio.ByteBuffer
@@ -11,7 +13,7 @@ import java.nio.IntBuffer
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
 // https://blog.csdn.net/sinat_23092639/article/details/103046553
-class GLProgram {
+class GLProgram(context: Context) {
     companion object {
         private const val TAG = "GLProgram"
 
@@ -94,9 +96,9 @@ class GLProgram {
 
     init {
         // 返回着色器对象：成功，非0
-        val vertexShader: Int = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
+        val vertexShader: Int = loadShader(context, GLES20.GL_VERTEX_SHADER)
         // 返回着色器对象：成功，非0
-        val fragmentShader: Int = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        val fragmentShader: Int = loadShader(context, GLES20.GL_FRAGMENT_SHADER)
         LogContext.log.i(TAG, "vertexShader=$vertexShader fragmentShader=$fragmentShader", outputType = ILog.OUTPUT_TYPE_SYSTEM)
 
         // Create empty OpenGL ES Program

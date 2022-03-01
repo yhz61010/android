@@ -1,7 +1,8 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.ui.opengl
+package com.leovp.androidbase.opengl
 
+import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
@@ -16,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10
  *
  * @see [Android OpenGL处理YUV数据（I420、NV12、NV21）](https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6)
  */
-class GLRenderer : GLSurfaceView.Renderer {
+class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     companion object {
         private const val TAG = "GLRenderer"
     }
@@ -69,7 +70,7 @@ class GLRenderer : GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
         // 配置OpenGL ES 环境
-        program = GLProgram()
+        program = GLProgram(context)
         LogContext.log.d(TAG, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 

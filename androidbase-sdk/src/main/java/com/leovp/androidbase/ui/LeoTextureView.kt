@@ -26,7 +26,7 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2021/4/28 10:30 AM
  */
-class GraphicTextureView @JvmOverloads constructor(
+class LeoTextureView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0

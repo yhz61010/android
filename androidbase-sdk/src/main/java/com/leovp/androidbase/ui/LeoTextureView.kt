@@ -13,7 +13,6 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
-import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
@@ -36,6 +35,8 @@ class LeoTextureView @JvmOverloads constructor(
         private const val TAG = "GTV"
     }
 
+    var isH265 = false
+
     var touchHelper: TouchHelper? = null
 
     fun setTouchListener(listener: TouchHelper.TouchListener) {
@@ -53,7 +54,7 @@ class LeoTextureView @JvmOverloads constructor(
     private var surface: Surface? = null
     var graphicViewDestroyListener: GraphicViewDestroyListener? = null
 
-    private var hevcDecoder: MediaCodec? = null
+    private var videoDecoder: MediaCodec? = null
     var outputFormat: MediaFormat? = null
         private set
 
@@ -122,21 +123,34 @@ class LeoTextureView @JvmOverloads constructor(
 
     // =========================================
 
-    fun initDecoder(vps: ByteArray, sps: ByteArray, pps: ByteArray, screenInfo: Size) {
+    fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, screenInfo: Size) {
+        isH265 = vps != null
         runCatching {
-            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_HEVC, screenInfo.width, screenInfo.height)
-            val csd0 = vps + sps + pps
-            LogContext.log.w(TAG, "H265 csd0[${csd0.size}]=${csd0.toHexStringLE()}")
-            format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
-            //            releaseAvcDecoder()
-            //                avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
-            hevcDecoder = if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
-                MediaCodec.createByCodecName("c2.android.hevc.decoder")
+            val format = MediaFormat.createVideoFormat(if (isH265) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC, screenInfo.width, screenInfo.height)
+            videoDecoder = if (isH265) {
+                val csd0 = vps!! + sps + pps
+                LogContext.log.w(TAG, "H265 csd0[${csd0.size}]=${csd0.toHexStringLE()}")
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+                //            releaseAvcDecoder()
+                //                avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
+                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+                    MediaCodec.createByCodecName("c2.android.hevc.decoder")
+                } else {
+                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                }
             } else {
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
+                format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
+                //            releaseAvcDecoder()
+                //                avcDecoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
+                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+                    MediaCodec.createByCodecName("c2.android.avc.decoder")
+                } else {
+                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                }
             }
 
-            hevcDecoder?.let {
+            videoDecoder?.let {
                 it.configure(format, this.surface, null, 0)
                 outputFormat = it.outputFormat // option B
                 it.setCallback(mediaCodecCallback)
@@ -150,14 +164,14 @@ class LeoTextureView @JvmOverloads constructor(
     // In most of Samsung devices, we MUST release MediaCodec before using it again.
     // Otherwise, in some cases, it will not display anything anymore.
     fun releaseDecoder() {
-        if (hevcDecoder != null) {
+        if (videoDecoder != null) {
             runCatching {
-                LogContext.log.w(TAG, "Try to release avcDecoder")
-                hevcDecoder?.release()
+                LogContext.log.w(TAG, "Try to release videoDecoder")
+                videoDecoder?.release()
             }.onFailure {
-                LogContext.log.e(TAG, "Release avcDecoder error. Known issue. msg=${it.message}", it)
+                LogContext.log.e(TAG, "Release videoDecoder error. Known issue. msg=${it.message}", it)
             }.also {
-                hevcDecoder = null
+                videoDecoder = null
                 System.gc()
                 graphicViewDestroyListener?.onDecoderRelease()
             }
@@ -188,7 +202,7 @@ class LeoTextureView @JvmOverloads constructor(
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-                    //                 if (GlobalConstants.OUTPUT_LOG) LogContext.log.i(TAG, "onOutputBufferAvailable length=${info.size}")
+                    // LogContext.log.i(TAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
                             val decodedData = ByteArray(info.size)
@@ -196,7 +210,7 @@ class LeoTextureView @JvmOverloads constructor(
                             LogContext.log.w(TAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME     -> {
-                            //                            if (GlobalConstants.OUTPUT_LOG)  if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "Found Key Frame[" + info.size + "]")
+                            // LogContext.log.d(TAG, "Found Key Frame[" + info.size + "]")
                         }
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
@@ -241,12 +255,11 @@ class LeoTextureView @JvmOverloads constructor(
 
     fun updateBitrate(bitrate: Int) {
         LogContext.log.w(TAG, "Change bitrate to $bitrate")
-        hevcDecoder?.let { VideoUtil.setBitrateDynamically(it, bitrate) }
+        videoDecoder?.let { VideoUtil.setBitrateDynamically(it, bitrate) }
     }
 
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 120
 
-    @Keep
     interface VideoOutputFormatChangeEvent {
         fun onChanged(videoWidth: Int, videoHeight: Int)
     }

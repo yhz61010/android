@@ -45,12 +45,12 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
                 NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
                 else                                         -> null
             }
-            val infoStr = String.format("↓%s↑%sP:%s\tL:%dMbps\tR:%d %d %d %s",
-                downloadSpeedStr.padEnd(10), uploadSpeedStr.padEnd(10),
+            val infoStr = String.format("↓%s\t↑%s\t%sms\t%dMbps\tR:%d %d %d%s",
+                downloadSpeedStr, uploadSpeedStr,
                 if (latencyStatus.isNullOrBlank()) "${info.ping}" else "${info.ping}($latencyStatus)",
                 info.linkSpeed,
                 info.rssi, info.wifiScoreIn5, info.wifiScore,
-                if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)")
+                if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)")
             LogContext.log.i(ITAG, infoStr)
             runOnUiThread { binding.txtNetworkStatus.text = infoStr }
             binding.scrollView2.post { binding.scrollView2.fullScroll(View.FOCUS_DOWN) }

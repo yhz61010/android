@@ -31,7 +31,7 @@ class LeoTextureView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : TextureView(context, attrs, defStyleAttr), SurfaceTextureListener {
     companion object {
-        private const val TAG = "GTV"
+        private const val TAG = "LTV"
     }
 
     var isH265 = false

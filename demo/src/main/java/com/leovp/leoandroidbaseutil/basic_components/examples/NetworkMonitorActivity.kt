@@ -35,18 +35,22 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
             val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
 
             val latencyStatus = when (info.showPingTips) {
-                NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
+                NetworkUtil.NETWORK_PING_DELAY_HIGH      -> "Latency High"
                 NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
-                else -> null
+                else                                     -> null
             }
 
             val wifiSignalStatus = when (info.showWifiSig) {
-                NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
+                NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD      -> "Signal Bad"
                 NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
-                else -> null
+                else                                         -> null
             }
-            val infoStr =
-                "S:$downloadSpeedStr/$uploadSpeedStr\t\tP:${info.ping}${if (latencyStatus.isNullOrBlank()) "" else "($latencyStatus)"}\t\tL:${info.linkSpeed}Mbps\tR:${info.rssi} ${info.wifiScoreIn5} ${info.wifiScore} ${if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)"}"
+            val infoStr = String.format("↓%s↑%sP:%s\tL:%dMbps\tR:%d %d %d %s",
+                downloadSpeedStr.padEnd(10), uploadSpeedStr.padEnd(10),
+                if (latencyStatus.isNullOrBlank()) "${info.ping}" else "${info.ping}($latencyStatus)",
+                info.linkSpeed,
+                info.rssi, info.wifiScoreIn5, info.wifiScore,
+                if (wifiSignalStatus.isNullOrBlank()) "" else "($wifiSignalStatus)")
             LogContext.log.i(ITAG, infoStr)
             runOnUiThread { binding.txtNetworkStatus.text = infoStr }
             binding.scrollView2.post { binding.scrollView2.fullScroll(View.FOCUS_DOWN) }

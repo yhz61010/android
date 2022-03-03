@@ -35,6 +35,14 @@ object CodecUtil {
     fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
     private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
 
+
+    fun isSoftwareCodec(codecName: String): Boolean {
+        return codecName.startsWith("OMX.google.", ignoreCase = true)
+                || codecName.startsWith("c2.android.", ignoreCase = true)
+                || (!codecName.startsWith("OMX.", ignoreCase = true)
+                && !codecName.startsWith("c2.", ignoreCase = true))
+    }
+
     // ==========
 
     // Find NALU prefix "00 00 00 01"

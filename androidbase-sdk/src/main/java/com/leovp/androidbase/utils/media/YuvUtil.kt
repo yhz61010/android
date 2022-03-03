@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.media.Image
+import kotlin.math.roundToInt
 
 /**
  * Author: Michael Leo
@@ -496,9 +497,9 @@ object YuvUtil {
             val u = 0xff and yuvData[frameSize + (i shr 1) * width + (j and 1.inv()) + 0].toInt()
             val v = 0xff and yuvData[frameSize + (i shr 1) * width + (j and 1.inv()) + 1].toInt()
             y = if (y < 16) 16 else y
-            var r = Math.round(1.164f * (y - 16) + 1.596f * (v - 128))
-            var g = Math.round(1.164f * (y - 16) - 0.813f * (v - 128) - 0.391f * (u - 128))
-            var b = Math.round(1.164f * (y - 16) + 2.018f * (u - 128))
+            var r = (1.164f * (y - 16) + 1.596f * (v - 128)).roundToInt()
+            var g = (1.164f * (y - 16) - 0.813f * (v - 128) - 0.391f * (u - 128)).roundToInt()
+            var b = (1.164f * (y - 16) + 2.018f * (u - 128)).roundToInt()
             r = if (r < 0) 0 else if (r > 255) 255 else r
             g = if (g < 0) 0 else if (g > 255) 255 else g
             b = if (b < 0) 0 else if (b > 255) 255 else b

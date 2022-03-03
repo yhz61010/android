@@ -50,7 +50,7 @@ object H264Util {
     // NALU_TYPE_IDR and NALU_TYPE_SPS frame are considered as Key frame
     fun isKeyFrame(data: ByteArray): Boolean {
         return isIdrFrame(data) || isSps(
-                data
+            data
         )
     }
 
@@ -90,16 +90,17 @@ object H264Util {
         val isSps = isSps(data)
         return if (!isSps) {
             null
-        } else try { // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+        } else try {
+            // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
             // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
             for (i in 5 until data.size) {
-                if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
+                if (CodecUtil.findStartCode(data, i)) {
                     val sps = ByteArray(i)
                     System.arraycopy(data, 0, sps, 0, i)
                     return sps
                 }
             }
-            null
+            data
         } catch (e: Exception) {
             LogContext.log.e(TAG, "getSps error msg=${e.message}")
             null
@@ -108,33 +109,34 @@ object H264Util {
 
     /**
      * @param data The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
-     * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,10,56,8B,4,B0,7C,F1
+     * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
     fun getPps(data: ByteArray): ByteArray? {
-        val isPps = isPps(data)
-        if (isPps) {
-            return data
-        }
-        return if (!isSps(data)) {
-            null
-        } else try { // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
-            // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,10,56,8B,4,B0,7C,F1
-            var startIndex = -1
-            for (i in 5 until data.size) {
-                if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
-                    if (startIndex < 0) {
-                        startIndex = i
-                    } else {
-                        val ppsLength = i - startIndex
-                        val pps = ByteArray(ppsLength)
-                        System.arraycopy(data, startIndex, pps, 0, ppsLength)
-                        return pps
-                    }
+        if (!CodecUtil.findStartCode(data)) return null
+        return try {
+            // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
+            // Example1: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
+            // Example2: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
+            // Example3: 0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
+            // Example4: 0,0,0,1,68,CE,6,E2
+            var startIndex = 0
+            for (i in 3 until data.size) {
+                if (CodecUtil.findStartCode(data, i)) {
+                    val ppsLength = i - startIndex
+                    val pps = ByteArray(ppsLength)
+                    System.arraycopy(data, startIndex, pps, 0, ppsLength)
+                    if (isPps(pps)) return pps else startIndex = i
                 }
             }
-            if (startIndex > -1) data.copyOfRange(startIndex, data.size) else null
+            if (startIndex > 0) {
+                val ppsLength = data.size - startIndex
+                val pps = ByteArray(ppsLength)
+                System.arraycopy(data, startIndex, pps, 0, ppsLength)
+                if (isPps(pps)) return pps
+            }
+            if (isPps(data)) data else null
         } catch (e: Exception) {
             LogContext.log.e(TAG, "getPps error msg=${e.message}")
             null
@@ -149,7 +151,7 @@ object H264Util {
 
         if (DEBUG) {
             LogContext.log.d(
-                    TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
+                TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {

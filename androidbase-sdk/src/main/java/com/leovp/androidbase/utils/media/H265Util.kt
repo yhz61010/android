@@ -180,12 +180,23 @@ object H265Util {
         return NALU_TYPE_PREFIX_SEI == naluType /* 39 */ || NALU_TYPE_SUFFIX_SEI == naluType /* 40 */
     }
 
+    fun isPrefixSei(data: ByteArray): Boolean {
+        val naluType: Int = getNaluType(data)
+        return NALU_TYPE_PREFIX_SEI == naluType /* 39 */
+    }
+
+    fun isSuffixSei(data: ByteArray): Boolean {
+        val naluType: Int = getNaluType(data)
+        return NALU_TYPE_SUFFIX_SEI == naluType /* 40 */
+    }
+
     /**
      * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
-     * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,44,1,C0,66,3C,E,C6,40,
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
      * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
@@ -198,7 +209,8 @@ object H265Util {
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
-            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
             // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             for (i in 5 until data.size) {
                 if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
@@ -219,7 +231,8 @@ object H265Util {
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
-     * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,44,1,C0,66,3C,E,C6,40,
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
      * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
@@ -235,7 +248,8 @@ object H265Util {
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
-            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
             // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             var startIndex = -1
             for (i in 5 until data.size) {
@@ -263,6 +277,7 @@ object H265Util {
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
      * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
@@ -278,7 +293,8 @@ object H265Util {
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
-            // 0,0,0,1,44,1,C0,66,3C,E,C6,40
+            // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
             // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             var startIndex = -1
             var prefixOccurTimes = 1

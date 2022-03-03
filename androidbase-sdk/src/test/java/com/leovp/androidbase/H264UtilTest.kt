@@ -20,11 +20,43 @@ class H264UtilTest {
 
     @Test
     fun h264Test() {
-        val byteArray = byteArrayOf(0, 0, 0, 1, 103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88, 0, 0, 0, 1, 104, -50, 6, -30, 0, 0, 0, 1, 101, -72, 64, 7, -65, -1)
-        val sps = H264Util.getSps(byteArray)!!
+        var byteArray = byteArrayOf(0, 0, 0, 1, 103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88, 0, 0, 0, 1, 104, -50, 6, -30, 0, 0, 0, 1, 101, -72, 64, 7, -65, -1)
+        var sps = H264Util.getSps(byteArray)
         Assert.assertEquals("[0,0,0,1,103,66,-128,31,-23,3,-64,-41,64,54,-123,9,-88]", sps.toJsonString())
-        val pps = H264Util.getPps(byteArray)!!
+        var pps = H264Util.getPps(byteArray)
         Assert.assertEquals("[0,0,0,1,104,-50,6,-30]", pps.toJsonString())
+        Assert.assertEquals("SPS", H264Util.getNaluTypeName(sps!!))
+        Assert.assertEquals("PPS", H264Util.getNaluTypeName(pps!!))
+
+        byteArray = byteArrayOf(0, 0, 0, 1, 103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88, 0, 0, 0, 1, 104, -50, 6, -30)
+        sps = H264Util.getSps(byteArray)
+        Assert.assertEquals("[0,0,0,1,103,66,-128,31,-23,3,-64,-41,64,54,-123,9,-88]", sps.toJsonString())
+        pps = H264Util.getPps(byteArray)
+        Assert.assertEquals("[0,0,0,1,104,-50,6,-30]", pps.toJsonString())
+        Assert.assertEquals("SPS", H264Util.getNaluTypeName(sps!!))
+        Assert.assertEquals("PPS", H264Util.getNaluTypeName(pps!!))
+
+        byteArray = byteArrayOf(0, 0, 0, 1, 103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88)
+        sps = H264Util.getSps(byteArray)
+        Assert.assertEquals("[0,0,0,1,103,66,-128,31,-23,3,-64,-41,64,54,-123,9,-88]", sps.toJsonString())
+        pps = H264Util.getPps(byteArray)
+        Assert.assertNull(pps)
+
+        // ================================
+
+        byteArray = byteArrayOf(0, 0, 0, 1, 104, -50, 6, -30, 0, 0, 0, 1, 101, -72, 64, 7, -65, -1)
+        sps = H264Util.getSps(byteArray)
+        Assert.assertNull(sps)
+        pps = H264Util.getPps(byteArray)
+        Assert.assertEquals("[0,0,0,1,104,-50,6,-30]", pps.toJsonString())
+
+        byteArray = byteArrayOf(0, 0, 0, 1, 104, -50, 6, -30)
+        sps = H264Util.getSps(byteArray)
+        Assert.assertNull(sps)
+        pps = H264Util.getPps(byteArray)
+        Assert.assertEquals("[0,0,0,1,104,-50,6,-30]", pps.toJsonString())
+
+        // ================================
 
         val idrBytes = byteArrayOf(0, 0, 0, 1, 0x65, 1, 2, 3, 4)
         Assert.assertEquals(true, H264Util.isIdrFrame(idrBytes))
@@ -35,8 +67,5 @@ class H264UtilTest {
         Assert.assertEquals(true, H264Util.isNoneIdrFrame(noneIdrBytes))
         Assert.assertEquals(false, H264Util.isIdrFrame(noneIdrBytes))
         Assert.assertEquals("B/P", H264Util.getNaluTypeName(noneIdrBytes))
-
-        Assert.assertEquals("SPS", H264Util.getNaluTypeName(sps))
-        Assert.assertEquals("PPS", H264Util.getNaluTypeName(pps))
     }
 }

@@ -34,4 +34,12 @@ object CodecUtil {
     fun getSupportedProfileLevelsForEncoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createEncoderByType(mime), mime)
     fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
     private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
+
+    // ==========
+
+    // Find NALU prefix "00 00 00 01"
+    fun findStartCode(data: ByteArray, offSet: Int = 0): Boolean {
+        if (offSet < 0 || data.size < 4) return false
+        return data[offSet].toInt() == 0 && data[offSet + 1].toInt() == 0 && data[offSet + 2].toInt() == 0 && data[offSet + 3].toInt() == 1
+    }
 }

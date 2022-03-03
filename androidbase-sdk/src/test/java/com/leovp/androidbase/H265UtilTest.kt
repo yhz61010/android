@@ -91,5 +91,145 @@ class H265UtilTest {
         val ppsBytes = H265Util.getPps(csdByteArray)
         println(ppsBytes?.toHexStringLE())
         Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), ppsBytes)
+
+        // ==================
+        var fullCsdByteArray = byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5)
+
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+        )
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+        )
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+        )
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+            0, 0, 0, 1, 0x28, 0x1, 0xAF.toByte(), 0x78, 0xCD.toByte(), 0x3B
+        )
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+            0, 0, 0, 1, 0x28, 0x1, 0xAF.toByte(), 0x78, 0xCD.toByte(), 0x3B
+        )
+        Assert.assertNull(null, H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+            0, 0, 0, 1, 0x28, 0x1, 0xAF.toByte(), 0x78, 0xCD.toByte(), 0x3B
+        )
+        Assert.assertNull(null, H265Util.getVps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+            0, 0, 0, 1, 0x28, 0x1, 0xAF.toByte(), 0x78, 0xCD.toByte(), 0x3B
+        )
+        Assert.assertNull(null, H265Util.getVps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5)
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10)
+        Assert.assertNull(null, H265Util.getVps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isPps(fullCsdByteArray))
+
+        // ==================
+
+        fullCsdByteArray = byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15)
+        Assert.assertNull(null, H265Util.getVps(fullCsdByteArray))
+        Assert.assertNull(null, H265Util.getSps(fullCsdByteArray))
+        Assert.assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), H265Util.getPps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isVps(fullCsdByteArray))
+        Assert.assertEquals(false, H265Util.isSps(fullCsdByteArray))
+        Assert.assertEquals(true, H265Util.isPps(fullCsdByteArray))
     }
 }

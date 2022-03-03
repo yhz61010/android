@@ -55,11 +55,16 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
             LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
         }
 
-        H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name}") }
-        H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name}") }
 
-        H264Util.getAvcCodec().forEach { LogContext.log.i(TAG, "AVC Encoder: ${it.name}") }
-        H264Util.getAvcCodec(false).forEach { LogContext.log.i(TAG, "AVC Decoder: ${it.name}") }
+        LogContext.log.i(TAG, "=====> HEVC <==============================")
+        H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+        H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+
+        LogContext.log.i(TAG, "=====> AVC <===============================")
+        H264Util.getAvcCodec().forEach { LogContext.log.i(TAG, "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+        H264Util.getAvcCodec(false).forEach { LogContext.log.i(TAG, "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+
+        LogContext.log.i(TAG, "===========================================")
     }
 
     companion object {

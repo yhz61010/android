@@ -111,7 +111,7 @@ object H264Util {
      * @param data The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
      * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
      *
-     * @return The returned sps data contains the delimiter prefix 0,0,0,1
+     * @return The returned pps data contains the delimiter prefix 0,0,0,1
      */
     fun getPps(data: ByteArray): ByteArray? {
         if (!CodecUtil.findStartCode(data)) return null

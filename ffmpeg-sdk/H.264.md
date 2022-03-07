@@ -77,7 +77,6 @@ repeated once per PPS:
 | MediaCodec   | Annex B  | Annex B  |
 | VideoToolbox | avcC     | avcC     |
 
-
 ## Reference
 - [T-REC-H.264-202108-I!!PDF-E.pdf](https://res.leovp.com/resources/documents/video/T-REC-H.264-202108-I!!PDF-E.pdf)
 - https://www.jianshu.com/p/3192162ffda1

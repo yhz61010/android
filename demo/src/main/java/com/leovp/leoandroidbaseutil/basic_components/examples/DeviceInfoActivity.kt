@@ -56,15 +56,39 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         }
 
 
+        val sb: StringBuilder = StringBuilder()
+        sb.append("=====> HEVC <==============================")
+        sb.append("\n")
         LogContext.log.i(TAG, "=====> HEVC <==============================")
-        H265Util.getHevcCodec().forEach { LogContext.log.i(TAG, "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
-        H265Util.getHevcCodec(false).forEach { LogContext.log.i(TAG, "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+        H265Util.getHevcCodec().forEach {
+            LogContext.log.i(TAG, "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            sb.append(it.name.padEnd(25))
+            sb.append("\n")
+        }
+        H265Util.getHevcCodec(false).forEach {
+            LogContext.log.i(TAG, "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            sb.append(it.name.padEnd(25))
+            sb.append("\n")
+        }
 
+        sb.append("=====> AVC <===============================")
+        sb.append("\n")
         LogContext.log.i(TAG, "=====> AVC <===============================")
-        H264Util.getAvcCodec().forEach { LogContext.log.i(TAG, "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
-        H264Util.getAvcCodec(false).forEach { LogContext.log.i(TAG, "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}") }
+        H264Util.getAvcCodec().forEach {
+            LogContext.log.i(TAG, "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            sb.append(it.name.padEnd(25))
+            sb.append("\n")
+        }
+        H264Util.getAvcCodec(false).forEach {
+            LogContext.log.i(TAG, "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            sb.append(it.name.padEnd(25))
+            sb.append("\n")
+        }
 
-        LogContext.log.i(TAG, "===========================================")
+        sb.append("===========================================")
+        sb.append("\n")
+        binding.tv3.text = sb.toString()
+        LogContext.log.e(TAG, "===========================================\n$sb")
     }
 
     companion object {

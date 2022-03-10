@@ -38,7 +38,7 @@ public final class SurfaceControl {
      *                 2: 180 degree rotation<br/>
      *                 3: 270 degree rotation
      */
-    @SuppressLint("PrivateApi")
+    @SuppressLint({"PrivateApi", "BlockedPrivateApi"})
     @Nullable
     public static Bitmap screenshot(int width, int height, int rotation) {
         Bitmap bitmap = null;

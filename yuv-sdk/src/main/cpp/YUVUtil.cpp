@@ -281,50 +281,6 @@ JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvDa
     return I420byte;
 }
 
-JNIEXPORT jbyteArray Convert_To_I420_Negative_Stride(JNIEnv *env, jobject thiz, jbyteArray nv21, jint w, jint h, int type) {
-    int nv21Len = env->GetArrayLength(nv21);
-    unsigned char *nv21Buf = new unsigned char[nv21Len];
-    env->GetByteArrayRegion(nv21, 0, nv21Len,
-                            reinterpret_cast<jbyte *>(nv21Buf));
-
-    int Ysize = w * h;
-    size_t src_size = Ysize * 1.5;
-
-    unsigned char *I420 = new unsigned char[nv21Len];
-
-    unsigned char *pDstY = I420 + (h - 1) * w;
-    unsigned char *pDstU = I420 + Ysize + (h / 2 - 1) * (w / 2);
-    unsigned char *pDstV = pDstU + (Ysize / 4);
-
-    libyuv::RotationMode mode = libyuv::kRotate270;
-
-    int retVal = libyuv::ConvertToI420(nv21Buf, src_size, pDstY, -h, pDstU, -h / 2, pDstV,
-                                       -h / 2, 0, 0, w, -h, w, h, mode, libyuv::FOURCC_NV21);
-    /*libyuv::ConvertToI420(const uint8* src_frame, size_t src_size,
-     uint8* dst_y, int dst_stride_y,
-     uint8* dst_u, int dst_stride_u,
-     uint8* dst_v, int dst_stride_v,
-     int crop_x, int crop_y,
-     int src_width, int src_height,
-     int crop_width, int crop_height,
-     enum RotationMode rotation,
-     uint32 format);*/
-
-    jbyteArray I420byte = env->NewByteArray(nv21Len);
-    env->SetByteArrayRegion(I420byte, 0, nv21Len,
-                            reinterpret_cast<jbyte *>(I420));
-
-    if (I420) {
-        delete[] I420;
-    }
-
-    if (nv21Buf) {
-        delete[] nv21Buf;
-    }
-
-    return I420byte;
-}
-
 JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height) {
     jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
     int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
@@ -357,7 +313,6 @@ JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
 
 static JNINativeMethod methods[] = {
         {"convertToI420",               "([BIIIZI)[B", (void *) Convert_To_I420},
-        {"convertToI420NegativeStride", "([BIII)[B",   (void *) Convert_To_I420_Negative_Stride},
         {"mirrorI420",                  "([BII)[B",    (void *) MirrorI420},
         {"rotateI420",                  "([BIII)[B",   (void *) RotateI420},
 };

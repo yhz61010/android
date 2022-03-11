@@ -32,7 +32,6 @@ object YUVUtil {
      * ```
      */
     external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int): ByteArray
-    external fun convertToI420NegativeStride(srcYuvByteArray: ByteArray, width: Int, height: Int, type: Int): ByteArray
 
     /**
      * @param degree    0: No rotation.

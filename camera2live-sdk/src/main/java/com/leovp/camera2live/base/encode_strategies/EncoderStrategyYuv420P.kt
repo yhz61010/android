@@ -26,7 +26,7 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
             //            YUVUtil.rotateI420(YUVUtil.mirrorI420(yuvData, width, height), width, height, 90)
 
             // Mirror(height only) first then do rotate
-            YUVUtil.convertToI420(yuvData, 1, width, height, 4)
+            YUVUtil.convertToI420(yuvData, 1, width, height, true, 270)
         }
     }
 }

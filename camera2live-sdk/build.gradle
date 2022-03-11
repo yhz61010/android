@@ -40,6 +40,7 @@ dependencies {
     api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
 
     api project(':androidbase-sdk')
+    api project(':yuv-sdk')
 }
 
 afterEvaluate {

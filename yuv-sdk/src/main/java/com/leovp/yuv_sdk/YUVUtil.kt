@@ -7,11 +7,9 @@ import androidx.annotation.Keep
  * Date: 2022/3/10 16:41
  */
 @Keep
-class YUVUtil {
-    companion object {
-        init {
-            System.loadLibrary("leo-yuv")
-        }
+object YUVUtil {
+    init {
+        System.loadLibrary("leo-yuv")
     }
 
     /**

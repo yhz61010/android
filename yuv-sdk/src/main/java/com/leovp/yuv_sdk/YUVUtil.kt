@@ -13,11 +13,13 @@ object YUVUtil {
     }
 
     /**
-     * @param type 1
+     * Mirror(height only) first then do rotate
+     *
+     * @param type 1: No rotate
      *
      */
-    external fun convertToI420(nv21ByteArray: ByteArray, width: Int, height: Int, type: Int): ByteArray
-    external fun convertToI420NegativeStride(nv21ByteArray: ByteArray, width: Int, height: Int, type: Int): ByteArray
+    external fun convertToI420(yuvByteArray: ByteArray, format: Int, width: Int, height: Int, type: Int): ByteArray
+    external fun convertToI420NegativeStride(yuvByteArray: ByteArray, width: Int, height: Int, type: Int): ByteArray
 
     external fun rotateI420(i420ByteArray: ByteArray, width: Int, height: Int, degree: Int): ByteArray
     external fun mirrorI420(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray

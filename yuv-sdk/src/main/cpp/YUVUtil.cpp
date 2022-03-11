@@ -341,38 +341,18 @@ JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return mirror_i420_array;
 }
 
-JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Bytes, int width, int height, int degree) {
-    int i420Len = env->GetArrayLength(i420Bytes);
-    uint8_t *i420ByteArray = new uint8_t[i420Len];
-    env->GetByteArrayRegion(i420Bytes, 0, i420Len, reinterpret_cast<jbyte *>(i420ByteArray));
+JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height, jint degree) {
+    jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    jbyte *dst_i420_data = (jbyte *) malloc(dst_i420_len);
 
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = (width >> 1) * (height >> 1);
+    rotateI420(src_i420_data, width, height, dst_i420_data, degree);
+    env->ReleaseByteArrayElements(i420Src, src_i420_data, 0);
 
-    uint8_t *src_i420_y_data = i420ByteArray;
-    uint8_t *src_i420_u_data = i420ByteArray + src_i420_y_size;
-    uint8_t *src_i420_v_data = i420ByteArray + src_i420_y_size + src_i420_u_size;
-
-    int dst_yuv_len = width * height * 3 / 2;
-    uint8_t *dst_i420 = new uint8_t[dst_yuv_len];
-    uint8_t *dst_i420_y_data = dst_i420;
-    uint8_t *dst_i420_u_data = dst_i420 + src_i420_y_size;
-    uint8_t *dst_i420_v_data = dst_i420 + src_i420_y_size + src_i420_u_size;
-
-    libyuv::I420Mirror((const uint8_t *) src_i420_y_data, width,
-                       (const uint8_t *) src_i420_u_data, width >> 1,
-                       (const uint8_t *) src_i420_v_data, width >> 1,
-                       (uint8_t *) dst_i420_y_data, width,
-                       (uint8_t *) dst_i420_u_data, width >> 1,
-                       (uint8_t *) dst_i420_v_data, width >> 1,
-                       width, height);
-
-    delete[] i420ByteArray;
-
-    jbyteArray mirror_i420_array = env->NewByteArray(dst_yuv_len);
-    env->SetByteArrayRegion(mirror_i420_array, 0, dst_yuv_len, reinterpret_cast<const jbyte *>(dst_i420));
-    delete dst_i420;
-    return mirror_i420_array;
+    jbyteArray rotate_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(rotate_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    free(dst_i420_data);
+    return rotate_i420_array;
 }
 
 // =============================

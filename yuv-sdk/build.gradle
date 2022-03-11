@@ -1,0 +1,99 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+apply plugin: "org.sonarqube"
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        consumerProguardFiles "consumer-rules.pro"
+
+        // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
+
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a"
+            }
+        }
+        sourceSets {
+            main {
+                jniLibs.srcDirs = ['libs']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+    compileOptions {
+        sourceCompatibility "$rootProject.ext.java_version"
+        targetCompatibility "$rootProject.ext.java_version"
+    }
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ['lib/armeabi-v7a/libavutil.so',
+                           'lib/armeabi-v7a/libavcodec.so',
+                           'lib/armeabi-v7a/libswresample.so',
+                           'lib/armeabi-v7a/libavfilter.so',
+                           'lib/armeabi-v7a/libavdevice.so',
+                           'lib/armeabi-v7a/libavformat.so',
+                           'lib/armeabi-v7a/libswscale.so',
+                           'lib/armeabi-v7a/libc++_shared.so',
+                           'lib/armeabi-v7a/libadpcm-ima-qt-encoder.so',
+                           'lib/armeabi-v7a/libadpcm-ima-qt-decoder.so',
+                           'lib/armeabi-v7a/libh264-hevc-decoder.so',
+                           'lib/armeabi-v7a/libyuv.so',
+
+                           'lib/arm64-v8a/libavutil.so',
+                           'lib/arm64-v8a/libavcodec.so',
+                           'lib/arm64-v8a/libswresample.so',
+                           'lib/arm64-v8a/libavfilter.so',
+                           'lib/arm64-v8a/libavdevice.so',
+                           'lib/arm64-v8a/libavformat.so',
+                           'lib/arm64-v8a/libswscale.so',
+                           'lib/arm64-v8a/libc++_shared.so',
+                           'lib/arm64-v8a/libadpcm-ima-qt-encoder.so',
+                           'lib/arm64-v8a/libadpcm-ima-qt-decoder.so',
+                           'lib/arm64-v8a/libh264-hevc-decoder.so',
+                           'lib/arm64-v8a/libyuv.so']
+        }
+    }
+}
+
+dependencies {
+    api fileTree(dir: "libs", include: ["*.jar"])
+    api "androidx.annotation:annotation:$annotationVersion"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'yuv-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

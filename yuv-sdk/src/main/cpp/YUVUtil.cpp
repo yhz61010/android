@@ -214,7 +214,21 @@ void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_d
 
 // --------------------
 
-// Mirror(height only) first then do rotate
+/**
+ * Mirror(height only) first then do rotate
+ *
+ * @param format The [yuvData] format.
+ *               1: I420
+ *               2: NV21
+ *               3: NV12
+ *               4: YUY2
+ *
+ * @param degree The yuv data should be rotated by degree.
+ *                 0: No rotation.
+ *                 90: Rotate 90 degrees clockwise.
+ *                180: Rotate 180 degrees.
+ *                270: Rotate 270 degrees clockwise.
+ */
 JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvData, jint format, jint w, jint h, jboolean vertically_flip, jint degree) {
     int yuvLen = env->GetArrayLength(yuvData);
     uint8_t *yuvBuf = new uint8_t[yuvLen];
@@ -295,6 +309,12 @@ JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return mirror_i420_array;
 }
 
+/**
+ * @param degree    0: No rotation.
+ *                 90: Rotate 90 degrees clockwise.
+ *                180: Rotate 180 degrees.
+ *                270: Rotate 270 degrees clockwise.
+ */
 JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height, jint degree) {
     jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
     int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;

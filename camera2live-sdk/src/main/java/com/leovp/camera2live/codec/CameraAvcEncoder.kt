@@ -102,7 +102,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
                     codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
                 } catch (e: Exception) {
-                    LogContext.log.e(TAG, "You can ignore this error safely.", e)
+                    LogContext.log.v(TAG, "You can ignore this error safely.", e)
                 }
             }
 

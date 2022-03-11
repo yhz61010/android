@@ -22,7 +22,11 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
             YUVUtil.rotateI420(yuvData, width, height, 90)
         } else {
             // LENS_FACING_FRONT
-            YuvUtil.yuvRotate90(YuvUtil.yuvFlipHorizontal(yuvData, width, height), width, height)
+            //          YuvUtil.yuvRotate90(YuvUtil.yuvFlipHorizontal(yuvData, width, height), width, height)
+            //            YUVUtil.rotateI420(YUVUtil.mirrorI420(yuvData, width, height), width, height, 90)
+
+            // Mirror(height only) first then do rotate
+            YUVUtil.convertToI420(yuvData, 1, width, height, 4)
         }
     }
 }

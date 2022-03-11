@@ -214,15 +214,16 @@ void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_d
 
 // --------------------
 
-JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray nv21, jint w, jint h, int type) {
-    int nv21Len = env->GetArrayLength(nv21);
-    uint8_t *nv21Buf = new uint8_t[nv21Len];
-    env->GetByteArrayRegion(nv21, 0, nv21Len, reinterpret_cast<jbyte *>(nv21Buf));
+// Mirror(height only) first then do rotate
+JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvData, jint format, jint w, jint h, jint type) {
+    int yuvLen = env->GetArrayLength(yuvData);
+    uint8_t *yuvBuf = new uint8_t[yuvLen];
+    env->GetByteArrayRegion(yuvData, 0, yuvLen, reinterpret_cast<jbyte *>(yuvBuf));
 
     int Ysize = w * h;
     size_t src_size = Ysize * 3 / 2;
 
-    uint8_t *I420 = new uint8_t[nv21Len];
+    uint8_t *I420 = new uint8_t[yuvLen];
 
     uint8_t *pDstY = I420;
     uint8_t *pDstU = I420 + Ysize;
@@ -230,30 +231,59 @@ JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray nv21,
 
     int retVal = 0;
 
+    uint32_t fourcc = libyuv::FOURCC_I420;
+    switch(format) {
+        case 2:
+            fourcc = libyuv::FOURCC_NV21;
+            break;
+        case 3:
+            fourcc = libyuv::FOURCC_NV12;
+            break;
+        case 4:
+            fourcc = libyuv::FOURCC_YUY2;
+            break;
+    }
+
     if (type == 1) {
         libyuv::RotationMode mode = libyuv::kRotate0;
-
-        retVal = libyuv::ConvertToI420(nv21Buf, src_size, pDstY, w, pDstU,
-                                       w / 2, pDstV, w / 2, 0, 0, w, h, w, h, mode,
-                                       libyuv::FOURCC_NV21);
+        retVal = libyuv::ConvertToI420(yuvBuf, src_size,
+                                       pDstY, w,
+                                       pDstU, w / 2,
+                                       pDstV, w / 2,
+                                       0, 0,
+                                       w, h,
+                                       w, h,
+                                       mode, fourcc);
     } else if (type == 2) {
         libyuv::RotationMode mode = libyuv::kRotate0;
-
-        retVal = libyuv::ConvertToI420(nv21Buf, src_size, pDstY, w, pDstU,
-                                       w / 2, pDstV, w / 2, 0, 0, w, -h, w, h, mode,
-                                       libyuv::FOURCC_NV21);
+        retVal = libyuv::ConvertToI420(yuvBuf, src_size,
+                                       pDstY, w,
+                                       pDstU, w / 2,
+                                       pDstV, w / 2,
+                                       0, 0,
+                                       w, -h,
+                                       w, h,
+                                       mode, fourcc);
     } else if (type == 3) {
-        libyuv::RotationMode mode = libyuv::kRotate90;
-
-        retVal = libyuv::ConvertToI420(nv21Buf, src_size, pDstY, h, pDstU,
-                                       h / 2, pDstV, h / 2, 0, 0, w, h, w, h, mode,
-                                       libyuv::FOURCC_NV21);
+        libyuv::RotationMode mode = libyuv::kRotate270;
+        retVal = libyuv::ConvertToI420(yuvBuf, src_size,
+                                       pDstY, h,
+                                       pDstU, h / 2,
+                                       pDstV, h / 2,
+                                       0, 0,
+                                       w, h,
+                                       w, h,
+                                       mode, fourcc);
     } else if (type == 4) {
-        libyuv::RotationMode mode = libyuv::kRotate90;
-
-        retVal = libyuv::ConvertToI420(nv21Buf, src_size, pDstY, h, pDstU,
-                                       h / 2, pDstV, h / 2, 0, 0, w, -h, w, h, mode,
-                                       libyuv::FOURCC_NV21);
+        libyuv::RotationMode mode = libyuv::kRotate270;
+        retVal = libyuv::ConvertToI420(yuvBuf, src_size,
+                                       pDstY, h,
+                                       pDstU, h / 2,
+                                       pDstV, h / 2,
+                                       0, 0,
+                                       w, -h,
+                                       w, h,
+                                       mode, fourcc);
     }
     /*libyuv::ConvertToI420(const uint8* src_frame, size_t src_size,
      uint8* dst_y, int dst_stride_y,
@@ -265,17 +295,15 @@ JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray nv21,
      enum RotationMode rotation,
      uint32 format);*/
 
-    printf("type = %d and post convertI420 retVal = %d", type, retVal);
-
-    jbyteArray I420byte = env->NewByteArray(nv21Len);
-    env->SetByteArrayRegion(I420byte, 0, nv21Len, reinterpret_cast<jbyte *>(I420));
+    jbyteArray I420byte = env->NewByteArray(yuvLen);
+    env->SetByteArrayRegion(I420byte, 0, yuvLen, reinterpret_cast<jbyte *>(I420));
 
     if (I420) {
         delete[] I420;
     }
 
-    if (nv21Buf) {
-        delete[] nv21Buf;
+    if (yuvBuf) {
+        delete[] yuvBuf;
     }
 
     return I420byte;
@@ -309,8 +337,6 @@ JNIEXPORT jbyteArray Convert_To_I420_Negative_Stride(JNIEnv *env, jobject thiz, 
      int crop_width, int crop_height,
      enum RotationMode rotation,
      uint32 format);*/
-
-    printf("type = %d and post convertI420 negative stride retVal = %d", type, retVal);
 
     jbyteArray I420byte = env->NewByteArray(nv21Len);
     env->SetByteArrayRegion(I420byte, 0, nv21Len,
@@ -358,10 +384,10 @@ JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"convertToI420",               "([BIII)[B", (void *) Convert_To_I420},
-        {"convertToI420NegativeStride", "([BIII)[B", (void *) Convert_To_I420_Negative_Stride},
-        {"mirrorI420",                  "([BII)[B",  (void *) MirrorI420},
-        {"rotateI420",                  "([BIII)[B", (void *) RotateI420},
+        {"convertToI420",               "([BIIII)[B", (void *) Convert_To_I420},
+        {"convertToI420NegativeStride", "([BIII)[B",  (void *) Convert_To_I420_Negative_Stride},
+        {"mirrorI420",                  "([BII)[B",   (void *) MirrorI420},
+        {"rotateI420",                  "([BIII)[B",  (void *) RotateI420},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

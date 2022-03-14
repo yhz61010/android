@@ -130,6 +130,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         camera2ComponentBuilder.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         camera2ComponentBuilder.build()
         camera2Helper.outputH264ForDebug = true
+        camera2Helper.outputYuvForDebug = false
         camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
             override fun onUpdate(h264Data: ByteArray) {
                 LogContext.log.d(TAG, "Get encoded video data length=${h264Data.size}")

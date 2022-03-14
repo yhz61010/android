@@ -13,10 +13,10 @@ object YuvUtil {
     }
 
     /**
-     * Mirror(height only) first then do rotate
+     * Mirror(height only) first then do rotate.
      *
-     * @param width The original video width
-     * @param height The original video height
+     * @param width The original video width.
+     * @param height The original video height.
      *
      * @param format The [srcYuvByteArray] format.
      * ```
@@ -37,8 +37,8 @@ object YuvUtil {
     external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int): ByteArray?
 
     /**
-     * @param width The original video width before rotation
-     * @param height The original video height before rotation
+     * @param width The original video width before rotation.
+     * @param height The original video height before rotation.
      * @param degree    0: No rotation.
      *                 90: Rotate 90 degrees clockwise.
      *                180: Rotate 180 degrees.
@@ -47,16 +47,16 @@ object YuvUtil {
     external fun rotateI420(i420ByteArray: ByteArray, width: Int, height: Int, degree: Int): ByteArray
 
     /**
-     * @param width The original video width
-     * @param height The original video height
+     * @param width The original video width.
+     * @param height The original video height.
      */
     external fun mirrorI420(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
     /**
-     * @param srcWidth The original video width
-     * @param srcHeight The original video height
-     * @param dstWidth The width after scaled
-     * @param dstHeight The height after scaled
+     * @param srcWidth The original video width.
+     * @param srcHeight The original video height.
+     * @param dstWidth The width after scaled.
+     * @param dstHeight The height after scaled.
      *
      * @param mode
      *              kFilterNone = 0,      // Point sample; Fastest.
@@ -65,4 +65,14 @@ object YuvUtil {
      *              kFilterBox = 3        // Highest quality.
      */
     external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int): ByteArray
+
+    /**
+     * @param srcWidth The original video width.
+     * @param srcHeight The original video height.
+     * @param dstWidth The width after cropped.
+     * @param dstHeight The height after cropped.
+     * @param left The left position of cropping. Must be an even number.
+     * @param top The top position of cropping. Must be an even number.
+     **/
+    external fun cropI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, left: Int, top: Int): ByteArray?
 }

@@ -20,7 +20,7 @@ void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
 
 void scaleI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode);
 
-void cropI420(jbyte *src_i420_data, jint src_length, jint width, jint height, jbyte *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top);
+void cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top);
 
 void nv21ToI420(jbyte *src_nv21_data, jint width, jint height, jbyte *src_i420_data);
 

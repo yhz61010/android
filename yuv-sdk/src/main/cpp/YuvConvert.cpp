@@ -82,19 +82,19 @@ void scaleI420(const uint8_t *src_i420_data, jint width, jint height,
                       (libyuv::FilterMode) mode);
 }
 
-void cropI420(jbyte *src_i420_data, jint src_length, jint width, jint height,
-              jbyte *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top) {
+void cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint height,
+              uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top) {
     jint dst_i420_y_size = dst_width * dst_height;
     jint dst_i420_u_size = (dst_width >> 1) * (dst_height >> 1);
 
-    jbyte *dst_i420_y_data = dst_i420_data;
-    jbyte *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
-    jbyte *dst_i420_v_data = dst_i420_data + dst_i420_y_size + dst_i420_u_size;
+    uint8_t *dst_i420_y_data = dst_i420_data;
+    uint8_t *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
+    uint8_t *dst_i420_v_data = dst_i420_data + dst_i420_y_size + dst_i420_u_size;
 
-    libyuv::ConvertToI420((const uint8_t *) src_i420_data, src_length,
-                          (uint8_t *) dst_i420_y_data, dst_width,
-                          (uint8_t *) dst_i420_u_data, dst_width >> 1,
-                          (uint8_t *) dst_i420_v_data, dst_width >> 1,
+    libyuv::ConvertToI420(src_i420_data, src_length,
+                          dst_i420_y_data, dst_width,
+                          dst_i420_u_data, dst_width >> 1,
+                          dst_i420_v_data, dst_width >> 1,
                           left, top,
                           width, height,
                           dst_width, dst_height,

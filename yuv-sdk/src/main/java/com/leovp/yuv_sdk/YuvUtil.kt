@@ -75,4 +75,6 @@ object YuvUtil {
      * @param top The top position of cropping. Must be an even number.
      **/
     external fun cropI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, left: Int, top: Int): ByteArray?
+
+    external fun i420ToNv21(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 }

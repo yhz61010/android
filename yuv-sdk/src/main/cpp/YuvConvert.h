@@ -1,5 +1,5 @@
-#ifndef LEOANDROIDBASEUTIL_YUVBASE_H
-#define LEOANDROIDBASEUTIL_YUVBASE_H
+#ifndef LEOANDROIDBASEUTIL_YUVCONVERT_H
+#define LEOANDROIDBASEUTIL_YUVCONVERT_H
 
 #include <jni.h>
 #include <string>
@@ -30,4 +30,4 @@ void nv12ToI420(jbyte *Src_data, jint src_width, jint src_height, jbyte *Dst_dat
 
 void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_data);
 
-#endif //LEOANDROIDBASEUTIL_YUVBASE_H
+#endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

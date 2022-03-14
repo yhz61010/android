@@ -4,7 +4,6 @@ import android.hardware.camera2.CameraMetadata
 import android.media.Image
 import com.leovp.androidbase.utils.media.YuvUtil
 import com.leovp.camera2live.base.iters.IDataProcessStrategy
-import com.leovp.yuv_sdk.YUVUtil
 
 /**
  * Author: Michael Leo
@@ -22,16 +21,16 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
 
             // If you uncomment these two lines, you need also to modify [CameraAvcEncoder] at line 46,
             // modify the width and height to `width / 2`, `height / 2`
-            //  val scaleI420 = YUVUtil.scaleI420(yuvData, width, height, width / 2, height / 2, 0)
-            //  YUVUtil.rotateI420(scaleI420, width / 2, height / 2, 90)
-            YUVUtil.rotateI420(yuvData, width, height, 90)
+            // val scaleI420 = com.leovp.yuv_sdk.YuvUtil.scaleI420(yuvData, width, height, width / 2, height / 2, 0)
+            // com.leovp.yuv_sdk.YuvUtil.rotateI420(scaleI420, width / 2, height / 2, 90)
+            com.leovp.yuv_sdk.YuvUtil.rotateI420(yuvData, width, height, 90)
         } else {
             // LENS_FACING_FRONT
-            //          YuvUtil.yuvRotate90(YuvUtil.yuvFlipHorizontal(yuvData, width, height), width, height)
-            //            YUVUtil.rotateI420(YUVUtil.mirrorI420(yuvData, width, height), width, height, 90)
+            // YuvUtil.yuvRotate90(YuvUtil.yuvFlipHorizontal(yuvData, width, height), width, height)
+            // com.leovp.yuv_sdk.YuvUtil.rotateI420(YUVUtil.mirrorI420(yuvData, width, height), width, height, 90)
 
             // Mirror(height only) first then do rotate
-            YUVUtil.convertToI420(yuvData, 1, width, height, true, 270)!!
+            com.leovp.yuv_sdk.YuvUtil.convertToI420(yuvData, 1, width, height, true, 270)!!
         }
     }
 }

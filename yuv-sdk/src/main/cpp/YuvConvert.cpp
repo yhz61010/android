@@ -1,5 +1,40 @@
 #include "YuvConvert.h"
 
+void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree) {
+    jint src_i420_y_size = width * height;
+    jint src_i420_u_size = src_i420_y_size >> 2;
+
+    uint8_t *dst_i420_y_data = dst_i420_data;
+    uint8_t *dst_i420_u_data = dst_i420_data + src_i420_y_size;
+    uint8_t *dst_i420_v_data = dst_i420_data + src_i420_y_size + src_i420_u_size;
+
+    uint32_t fourcc = libyuv::FOURCC_I420;
+    switch (format) {
+        case 2:
+            fourcc = libyuv::FOURCC_NV21;
+            break;
+        case 3:
+            fourcc = libyuv::FOURCC_NV12;
+            break;
+        case 4:
+            fourcc = libyuv::FOURCC_YUY2;
+            break;
+    }
+
+    int verticalFlip = 1;
+    if (JNI_TRUE == vertically_flip) verticalFlip = -1;
+    int base_dst_stride_dimension = width;
+    if (90 == degree || 270 == degree) base_dst_stride_dimension = height;
+    libyuv::ConvertToI420(src_yuv_data, src_length,
+                          dst_i420_y_data, base_dst_stride_dimension,
+                          dst_i420_u_data, base_dst_stride_dimension / 2,
+                          dst_i420_v_data, base_dst_stride_dimension / 2,
+                          0, 0,
+                          width, verticalFlip * height,
+                          width, height,
+                          (libyuv::RotationMode) degree, fourcc);
+}
+
 void mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data) {
     jint src_i420_y_size = width * height;
     jint src_i420_u_size = src_i420_y_size >> 2;
@@ -34,12 +69,12 @@ void flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, u
     uint8_t *dst_i420_v_data = dst_i420_data + src_i420_y_size + src_i420_u_size;
 
     libyuv::I420Copy(src_i420_y_data, width,
-                       src_i420_u_data, width >> 1,
-                       src_i420_v_data, width >> 1,
-                       dst_i420_y_data, width,
-                       dst_i420_u_data, width >> 1,
-                       dst_i420_v_data, width >> 1,
-                       width, -height);
+                     src_i420_u_data, width >> 1,
+                     src_i420_v_data, width >> 1,
+                     dst_i420_y_data, width,
+                     dst_i420_u_data, width >> 1,
+                     dst_i420_v_data, width >> 1,
+                     width, -height);
 }
 
 void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {

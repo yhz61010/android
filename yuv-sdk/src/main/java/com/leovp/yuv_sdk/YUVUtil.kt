@@ -41,4 +41,13 @@ object YUVUtil {
      */
     external fun rotateI420(i420ByteArray: ByteArray, width: Int, height: Int, degree: Int): ByteArray
     external fun mirrorI420(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    /**
+     * @param mode
+     *              kFilterNone = 0,      // Point sample; Fastest.
+     *              kFilterLinear = 1,    // Filter horizontally only.
+     *              kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
+     *              kFilterBox = 3        // Highest quality.
+     */
+    external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int): ByteArray
 }

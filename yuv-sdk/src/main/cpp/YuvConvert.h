@@ -24,7 +24,7 @@ void cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint he
 
 void nv21ToI420(jbyte *src_nv21_data, jint width, jint height, jbyte *src_i420_data);
 
-void i420ToNv21(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv21_data);
+void i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *src_nv21_data);
 
 void nv12ToI420(jbyte *Src_data, jint src_width, jint src_height, jbyte *Dst_data);
 

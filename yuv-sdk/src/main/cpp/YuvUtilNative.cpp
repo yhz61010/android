@@ -173,6 +173,23 @@ JNIEXPORT jbyteArray CropI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jin
     return crop_i420_array;
 }
 
+JNIEXPORT jbyteArray I420ToNV21(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height) {
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
+
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    i420ToNv21(src_i420_data, width, height, dst_i420_data);
+    delete[] src_i420_data;
+
+    jbyteArray mirror_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(mirror_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return mirror_i420_array;
+}
+
 // =============================
 
 static JNINativeMethod methods[] = {
@@ -181,6 +198,7 @@ static JNINativeMethod methods[] = {
         {"rotateI420",    "([BIII)[B",   (void *) RotateI420},
         {"scaleI420",     "([BIIIII)[B", (void *) ScaleI420},
         {"cropI420",      "([BIIIIII)[B",(void *) CropI420},
+        {"i420ToNv21",    "([BII)[B",    (void *) I420ToNV21},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

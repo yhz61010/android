@@ -207,6 +207,40 @@ JNIEXPORT jbyteArray I420ToNV12(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return nv12_array;
 }
 
+JNIEXPORT jbyteArray NV21ToI420(JNIEnv *env, jobject thiz, jbyteArray nv21Src, jint width, jint height) {
+    int src_nv21_len = env->GetArrayLength(nv21Src);
+    uint8_t *src_nv21_data = new uint8_t[src_nv21_len];
+    env->GetByteArrayRegion(nv21Src, 0, src_nv21_len, reinterpret_cast<jbyte *>(src_nv21_data));
+
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    nv21ToI420(src_nv21_data, width, height, dst_i420_data);
+    delete[] src_nv21_data;
+
+    jbyteArray i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return i420_array;
+}
+
+JNIEXPORT jbyteArray NV12ToI420(JNIEnv *env, jobject thiz, jbyteArray nv12Src, jint width, jint height) {
+    int src_nv12_len = env->GetArrayLength(nv12Src);
+    uint8_t *src_nv12_data = new uint8_t[src_nv12_len];
+    env->GetByteArrayRegion(nv12Src, 0, src_nv12_len, reinterpret_cast<jbyte *>(src_nv12_data));
+
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    nv12ToI420(src_nv12_data, width, height, dst_i420_data);
+    delete[] src_nv12_data;
+
+    jbyteArray i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return i420_array;
+}
+
 // =============================
 
 static JNINativeMethod methods[] = {
@@ -217,6 +251,8 @@ static JNINativeMethod methods[] = {
         {"cropI420",      "([BIIIIII)[B",(void *) CropI420},
         {"i420ToNv21",    "([BII)[B",    (void *) I420ToNV21},
         {"i420ToNv12",    "([BII)[B",    (void *) I420ToNV12},
+        {"nv21ToI420",    "([BII)[B",    (void *) NV21ToI420},
+        {"nv12ToI420",    "([BII)[B",    (void *) NV12ToI420},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

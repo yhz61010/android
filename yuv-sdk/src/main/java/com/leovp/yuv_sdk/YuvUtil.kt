@@ -79,4 +79,8 @@ object YuvUtil {
     external fun i420ToNv21(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
     external fun i420ToNv12(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    external fun nv21ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 }

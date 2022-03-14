@@ -68,28 +68,28 @@ void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
     }
 }
 
-void scaleI420(jbyte *src_i420_data, jint width, jint height, jbyte *dst_i420_data, jint dst_width,
-               jint dst_height, jint mode) {
+void scaleI420(const uint8_t *src_i420_data, jint width, jint height,
+               uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode) {
 
     jint src_i420_y_size = width * height;
     jint src_i420_u_size = (width >> 1) * (height >> 1);
-    jbyte *src_i420_y_data = src_i420_data;
-    jbyte *src_i420_u_data = src_i420_data + src_i420_y_size;
-    jbyte *src_i420_v_data = src_i420_data + src_i420_y_size + src_i420_u_size;
+    const uint8_t *src_i420_y_data = src_i420_data;
+    const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
+    const uint8_t *src_i420_v_data = src_i420_data + src_i420_y_size + src_i420_u_size;
 
     jint dst_i420_y_size = dst_width * dst_height;
     jint dst_i420_u_size = (dst_width >> 1) * (dst_height >> 1);
-    jbyte *dst_i420_y_data = dst_i420_data;
-    jbyte *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
-    jbyte *dst_i420_v_data = dst_i420_data + dst_i420_y_size + dst_i420_u_size;
+    uint8_t *dst_i420_y_data = dst_i420_data;
+    uint8_t *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
+    uint8_t *dst_i420_v_data = dst_i420_data + dst_i420_y_size + dst_i420_u_size;
 
-    libyuv::I420Scale((const uint8_t *) src_i420_y_data, width,
-                      (const uint8_t *) src_i420_u_data, width >> 1,
-                      (const uint8_t *) src_i420_v_data, width >> 1,
+    libyuv::I420Scale(src_i420_y_data, width,
+                      src_i420_u_data, width >> 1,
+                      src_i420_v_data, width >> 1,
                       width, height,
-                      (uint8_t *) dst_i420_y_data, dst_width,
-                      (uint8_t *) dst_i420_u_data, dst_width >> 1,
-                      (uint8_t *) dst_i420_v_data, dst_width >> 1,
+                      dst_i420_y_data, dst_width,
+                      dst_i420_u_data, dst_width >> 1,
+                      dst_i420_v_data, dst_width >> 1,
                       dst_width, dst_height,
                       (libyuv::FilterMode) mode);
 }
@@ -190,6 +190,7 @@ void nv12ToI420(jbyte *Src_data, jint src_width, jint src_height, jbyte *Dst_dat
                        (uint8_t *) V_data_Dst, Dst_Stride_V,
                        src_width, src_height);
 }
+
 // i420 --> nv12
 void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_data) {
     jint src_y_size = width * height;
@@ -324,12 +325,36 @@ JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return rotate_i420_array;
 }
 
+/**
+ * @param mode
+ *              kFilterNone = 0,      // Point sample; Fastest.
+ *              kFilterLinear = 1,    // Filter horizontally only.
+ *              kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
+ *              kFilterBox = 3        // Highest quality.
+ */
+JNIEXPORT jbyteArray ScaleI420(JNIEnv *env, jobject thiz,
+                               jbyteArray i420Src, jint width, jint height,
+                               jint dstWidth, jint dstHeight, jint mode) {
+    jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
+    int dst_i420_len = sizeof(jbyte) * dstWidth * dstHeight * 3 / 2;
+    jbyte *dst_i420_data = (jbyte *) malloc(dst_i420_len);
+
+    scaleI420((const uint8_t *) src_i420_data, width, height, (uint8_t *) dst_i420_data, dstWidth, dstHeight, mode);
+    env->ReleaseByteArrayElements(i420Src, src_i420_data, 0);
+
+    jbyteArray scale_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(scale_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    free(dst_i420_data);
+    return scale_i420_array;
+}
+
 // =============================
 
 static JNINativeMethod methods[] = {
         {"convertToI420", "([BIIIZI)[B", (void *) Convert_To_I420},
         {"mirrorI420",    "([BII)[B",    (void *) MirrorI420},
         {"rotateI420",    "([BIII)[B",   (void *) RotateI420},
+        {"scaleI420",    "([BIIIII)[B",  (void *) ScaleI420},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

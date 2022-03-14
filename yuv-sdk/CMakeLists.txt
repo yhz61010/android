@@ -6,8 +6,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wa
 
 add_library(leo-yuv
             SHARED
-            src/main/cpp/YUVUtil.cpp
-            src/main/cpp/YUVBase.cpp)
+            src/main/cpp/YuvUtilNative.cpp
+            src/main/cpp/YuvConvert.cpp)
 
 add_library(yuv
             SHARED

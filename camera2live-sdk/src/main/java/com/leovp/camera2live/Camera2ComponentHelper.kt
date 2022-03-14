@@ -628,10 +628,21 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 }
             }
             if (outputYuvForDebug) {
-                val yuvData = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
-                // yuvData = com.leovp.yuv_sdk.YuvUtil.scaleI420(yuvData, image.width, image.height, image.width / 2, image.height / 2, 0)
-                // yuvData = com.leovp.yuv_sdk.YuvUtil.cropI420(yuvData, image.width, image.height, 400, 400, 100, 100)!!
-                videoYuvOsForDebug?.write(yuvData)
+                val i420Data = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
+                val convertedYUVData = i420Data
+
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2, image.height / 2, 0)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.cropI420(i420Data, image.width, image.height, 400, 400, 100, 100)!!
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)
+
+                // val nv21Data = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv21ToI420(nv21Data, image.width, image.height)
+
+                //                val nv12 = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)
+                //                val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv12ToI420(nv12, image.width, image.height)
+
+                videoYuvOsForDebug?.write(convertedYUVData)
                 image.close()
                 return@setOnImageAvailableListener
             }

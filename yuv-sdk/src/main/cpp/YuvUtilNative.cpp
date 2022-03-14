@@ -100,6 +100,23 @@ JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return mirror_i420_array;
 }
 
+JNIEXPORT jbyteArray FlipVerticallyI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height) {
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
+
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    flipVerticallyI420(src_i420_data, width, height, dst_i420_data);
+    delete[] src_i420_data;
+
+    jbyteArray vertically_flip_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(vertically_flip_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return vertically_flip_i420_array;
+}
+
 /**
  * @param degree    0: No rotation.
  *                 90: Rotate 90 degrees clockwise.
@@ -244,15 +261,16 @@ JNIEXPORT jbyteArray NV12ToI420(JNIEnv *env, jobject thiz, jbyteArray nv12Src, j
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"convertToI420", "([BIIIZI)[B", (void *) Convert_To_I420},
-        {"mirrorI420",    "([BII)[B",    (void *) MirrorI420},
-        {"rotateI420",    "([BIII)[B",   (void *) RotateI420},
-        {"scaleI420",     "([BIIIII)[B", (void *) ScaleI420},
-        {"cropI420",      "([BIIIIII)[B",(void *) CropI420},
-        {"i420ToNv21",    "([BII)[B",    (void *) I420ToNV21},
-        {"i420ToNv12",    "([BII)[B",    (void *) I420ToNV12},
-        {"nv21ToI420",    "([BII)[B",    (void *) NV21ToI420},
-        {"nv12ToI420",    "([BII)[B",    (void *) NV12ToI420},
+        {"convertToI420",         "([BIIIZI)[B", (void *) Convert_To_I420},
+        {"mirrorI420",            "([BII)[B",    (void *) MirrorI420},
+        {"flipVerticallyI420",    "([BII)[B",    (void *) FlipVerticallyI420},
+        {"rotateI420",            "([BIII)[B",   (void *) RotateI420},
+        {"scaleI420",             "([BIIIII)[B", (void *) ScaleI420},
+        {"cropI420",              "([BIIIIII)[B",(void *) CropI420},
+        {"i420ToNv21",            "([BII)[B",    (void *) I420ToNV21},
+        {"i420ToNv12",            "([BII)[B",    (void *) I420ToNV12},
+        {"nv21ToI420",            "([BII)[B",    (void *) NV21ToI420},
+        {"nv12ToI420",            "([BII)[B",    (void *) NV12ToI420},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

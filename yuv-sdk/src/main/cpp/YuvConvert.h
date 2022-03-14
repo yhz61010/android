@@ -16,6 +16,8 @@ extern "C" {
 
 void mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
 
+void flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
+
 void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
 
 void scaleI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode);

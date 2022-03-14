@@ -99,25 +99,6 @@ void cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint he
                           libyuv::kRotate0, libyuv::FOURCC_I420);
 }
 
-void nv21ToI420(jbyte *src_nv21_data, jint width, jint height, jbyte *src_i420_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
-
-    jbyte *src_nv21_y_data = src_nv21_data;
-    jbyte *src_nv21_vu_data = src_nv21_data + src_y_size;
-
-    jbyte *src_i420_y_data = src_i420_data;
-    jbyte *src_i420_u_data = src_i420_data + src_y_size;
-    jbyte *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
-
-    libyuv::NV21ToI420((const uint8_t *) src_nv21_y_data, width,
-                       (const uint8_t *) src_nv21_vu_data, width,
-                       (uint8_t *) src_i420_y_data, width,
-                       (uint8_t *) src_i420_u_data, width >> 1,
-                       (uint8_t *) src_i420_v_data, width >> 1,
-                       width, height);
-}
-
 void i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *src_nv21_data) {
     jint src_y_size = width * height;
     jint src_u_size = (width >> 1) * (height >> 1);
@@ -134,6 +115,44 @@ void i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
                        src_i420_v_data, width >> 1,
                        src_nv21_y_data, width,
                        src_nv21_uv_data, width,
+                       width, height);
+}
+
+void i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *src_nv12_data) {
+    jint src_y_size = width * height;
+    jint src_u_size = (width >> 1) * (height >> 1);
+
+    uint8_t *src_nv12_y_data = src_nv12_data;
+    uint8_t *src_nv12_uv_data = src_nv12_data + src_y_size;
+
+    const uint8_t *src_i420_y_data = src_i420_data;
+    const uint8_t *src_i420_u_data = src_i420_data + src_y_size;
+    const uint8_t *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
+
+    libyuv::I420ToNV12(src_i420_y_data, width,
+                       src_i420_u_data, width >> 1,
+                       src_i420_v_data, width >> 1,
+                       src_nv12_y_data, width,
+                       src_nv12_uv_data, width,
+                       width, height);
+}
+
+void nv21ToI420(jbyte *src_nv21_data, jint width, jint height, jbyte *src_i420_data) {
+    jint src_y_size = width * height;
+    jint src_u_size = (width >> 1) * (height >> 1);
+
+    jbyte *src_nv21_y_data = src_nv21_data;
+    jbyte *src_nv21_vu_data = src_nv21_data + src_y_size;
+
+    jbyte *src_i420_y_data = src_i420_data;
+    jbyte *src_i420_u_data = src_i420_data + src_y_size;
+    jbyte *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
+
+    libyuv::NV21ToI420((const uint8_t *) src_nv21_y_data, width,
+                       (const uint8_t *) src_nv21_vu_data, width,
+                       (uint8_t *) src_i420_y_data, width,
+                       (uint8_t *) src_i420_u_data, width >> 1,
+                       (uint8_t *) src_i420_v_data, width >> 1,
                        width, height);
 }
 
@@ -168,24 +187,4 @@ void nv12ToI420(jbyte *Src_data, jint src_width, jint src_height, jbyte *Dst_dat
                        (uint8_t *) U_data_Dst, Dst_Stride_U,
                        (uint8_t *) V_data_Dst, Dst_Stride_V,
                        src_width, src_height);
-}
-
-void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
-
-    jbyte *src_nv12_y_data = src_nv12_data;
-    jbyte *src_nv12_uv_data = src_nv12_data + src_y_size;
-
-    jbyte *src_i420_y_data = src_i420_data;
-    jbyte *src_i420_u_data = src_i420_data + src_y_size;
-    jbyte *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
-
-    libyuv::I420ToNV12(
-            (const uint8_t *) src_i420_y_data, width,
-            (const uint8_t *) src_i420_u_data, width >> 1,
-            (const uint8_t *) src_i420_v_data, width >> 1,
-            (uint8_t *) src_nv12_y_data, width,
-            (uint8_t *) src_nv12_uv_data, width,
-            width, height);
 }

@@ -14,6 +14,8 @@ extern "C" {
 }
 #endif
 
+void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree);
+
 void mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
 
 void flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);

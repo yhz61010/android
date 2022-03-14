@@ -31,7 +31,7 @@ object YUVUtil {
      *                270: Rotate 270 degrees clockwise.
      * ```
      */
-    external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int): ByteArray
+    external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int): ByteArray?
 
     /**
      * @param degree    0: No rotation.

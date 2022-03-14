@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "logger.h"
-#include "YUVBase.h"
+#include "YuvConvert.h"
 
 #define YUV_PACKAGE_BASE "com/leovp/yuv_sdk/"
 
@@ -123,6 +123,23 @@ JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
     return rotate_i420_array;
 }
 
+JNIEXPORT jbyteArray CropI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height, jint degree) {
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
+
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    rotateI420(src_i420_data, width, height, dst_i420_data, degree);
+    delete[] src_i420_data;
+
+    jbyteArray rotate_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(rotate_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return rotate_i420_array;
+}
+
 /**
  * @param mode
  *              kFilterNone = 0,      // Point sample; Fastest.
@@ -166,7 +183,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return JNI_ERR;
     }
 
-    jclass clz = env->FindClass(YUV_PACKAGE_BASE"YUVUtil");
+    jclass clz = env->FindClass(YUV_PACKAGE_BASE"YuvUtil");
     if (clz == nullptr) {
         LOGE("JNI_OnLoad FindClass error.");
         return JNI_ERR;

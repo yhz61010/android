@@ -59,6 +59,8 @@ object YuvUtil {
      */
     external fun mirrorI420(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
+    external fun flipVerticallyI420(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
     /**
      * @param srcWidth The original video width.
      * @param srcHeight The original video height.

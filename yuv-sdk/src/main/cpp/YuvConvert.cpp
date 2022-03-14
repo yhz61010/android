@@ -21,6 +21,27 @@ void mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
                        width, height);
 }
 
+void flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data) {
+    jint src_i420_y_size = width * height;
+    jint src_i420_u_size = src_i420_y_size >> 2;
+
+    const uint8_t *src_i420_y_data = src_i420_data;
+    const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
+    const uint8_t *src_i420_v_data = src_i420_data + src_i420_y_size + src_i420_u_size;
+
+    uint8_t *dst_i420_y_data = dst_i420_data;
+    uint8_t *dst_i420_u_data = dst_i420_data + src_i420_y_size;
+    uint8_t *dst_i420_v_data = dst_i420_data + src_i420_y_size + src_i420_u_size;
+
+    libyuv::I420Copy(src_i420_y_data, width,
+                       src_i420_u_data, width >> 1,
+                       src_i420_v_data, width >> 1,
+                       dst_i420_y_data, width,
+                       dst_i420_u_data, width >> 1,
+                       dst_i420_v_data, width >> 1,
+                       width, -height);
+}
+
 void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {
     jint src_i420_y_size = width * height;
     jint src_i420_u_size = (width >> 1) * (height >> 1);

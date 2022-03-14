@@ -31,6 +31,7 @@ import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
+import com.leovp.androidbase.utils.media.YuvUtil
 import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
@@ -181,15 +182,15 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
         }
-//        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
-//                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
-//        ) {
-//            LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
-//            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
-//        } else {
-//            LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
-//            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
-//        }
+        //        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
+        //                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
+        //        ) {
+        //            LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
+        //            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
+        //        } else {
+        //            LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
+        //            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
+        //        }
 
         cameraEncoder.setDataUpdateCallback(object :
             CallbackListener {
@@ -206,8 +207,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun initDebugOutput() {
         try {
             if (outputH264ForDebug || outputYuvForDebug) {
-                baseOutputFolderForDebug =
-                    context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
+                baseOutputFolderForDebug = context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
                 val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
@@ -263,14 +263,14 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
         LogContext.log.w(TAG, "deviceRotation: $deviceRotation")                   // deviceRotation: 0
         LogContext.log.w(TAG, "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
         when (deviceRotation) {
-            Surface.ROTATION_0, Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+            Surface.ROTATION_0, Surface.ROTATION_180  -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
                 LogContext.log.w(TAG, "swapDimension set true")
                 swapDimension = true
             }
             Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
                 swapDimension = true
             }
-            else -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
+            else                                      -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
         }
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
@@ -412,17 +412,17 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     private fun setImageReaderForPhoto(previewWidth: Int, previewHeight: Int) {
         /** [characteristics] is initialized in [initializeParameters] */
         // Initialize an image reader which will be used to capture still photos
-//        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
-//            .maxBy { it.height * it.width }!!
+        //        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
+        //            .maxBy { it.height * it.width }!!
         imageReader = ImageReader.newInstance(previewWidth, previewHeight, ImageFormat.JPEG, IMAGE_BUFFER_SIZE)
     }
 
     suspend fun setPreviewRepeatingRequest() {
         LogContext.log.i(TAG, "setPreviewRepeatingRequest()")
-//        session.stopRepeating()
-//        stopRepeating()
+        //        session.stopRepeating()
+        //        stopRepeating()
         // There is no need to call session.close() method. Please check its comment
-//        if (::session.isInitialized) session.close()
+        //        if (::session.isInitialized) session.close()
         val targets = mutableListOf(imageReader.surface)
         cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
 
@@ -431,20 +431,20 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
         // Capture request holds references to target surfaces
         capturePreviewRequestBuilder =
-            session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                cameraView?.let {
-                    // Add the preview surface target
-                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-                }
-                // Auto focus
-                set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                // Auto exposure. The flash will be open automatically in dark.
-                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
-                // AWB
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                    cameraView?.let {
+                        // Add the preview surface target
+                        addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                    }
+                    // Auto focus
+                    set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                    // Auto exposure. The flash will be open automatically in dark.
+                    set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
+                    // AWB
+                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
 
-            }
+                }
         // This will keep sending the capture request as frequently as possible until the
         // session is torn down or session.stopRepeating() is called
         session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
@@ -491,7 +491,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             override fun onDisconnected(device: CameraDevice) {
                 LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
                 // TODO In some cases, call this method will cause crash
-//                context.requireActivity().finish()
+                //                context.requireActivity().finish()
             }
 
             override fun onClosed(camera: CameraDevice) {
@@ -501,12 +501,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
             override fun onError(device: CameraDevice, error: Int) {
                 val msg = when (error) {
-                    ERROR_CAMERA_DEVICE -> "Fatal (device)"
-                    ERROR_CAMERA_DISABLED -> "Device policy"
-                    ERROR_CAMERA_IN_USE -> "Camera in use"
-                    ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                    ERROR_CAMERA_DEVICE      -> "Fatal (device)"
+                    ERROR_CAMERA_DISABLED    -> "Device policy"
+                    ERROR_CAMERA_IN_USE      -> "Camera in use"
+                    ERROR_CAMERA_SERVICE     -> "Fatal (service)"
                     ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                    else -> "Unknown"
+                    else                     -> "Unknown"
                 }
                 device.close()
                 val exc = IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
@@ -608,7 +608,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
     private fun setRecordRepeatingRequest() {
         imageReader.setOnImageAvailableListener({ reader ->
-//            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+            //            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
             val image: Image? = reader.acquireLatestImage()
             if (image == null) {
                 LogContext.log.w(TAG, "Recording: image is null")
@@ -628,17 +628,21 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 }
             }
             if (outputYuvForDebug) {
+                val yuvData = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
+                //                yuvData = YUVUtil.scaleI420(yuvData, image.width, image.height, image.width / 2, image.height / 2, 0)
+                videoYuvOsForDebug?.write(yuvData)
+                image.close()
                 return@setOnImageAvailableListener
             }
-            cameraHandler.post {
-                runCatching {
-                    val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
-                    val rotatedYuv420Data = dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
-                    cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
-                }.onFailure { it.printStackTrace() }.also {
-                    image.close()
-                }
+            //            cameraHandler.post {
+            runCatching {
+                val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+                val rotatedYuv420Data = dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
+                cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
+            }.onFailure { it.printStackTrace() }.also {
+                image.close()
             }
+            //            }
         }, cameraHandler)
 
         val targets = mutableListOf(imageReader.surface)
@@ -660,8 +664,8 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                     // Auto focus
                     set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
                     // AWB
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-//        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
 
                 }.build(), null, cameraHandler
             )
@@ -778,7 +782,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                         // Compute EXIF orientation metadata
                         // TODO Maybe you want to use rotation in someday
                         val rotation = 0
-//                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
+                        //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                         val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
                         LogContext.log.d(
@@ -913,7 +917,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun setLensSwitchListener(listener: LensSwitchListener) {
         lensSwitchListener = listener
     }
-// ===========================================================
+    // ===========================================================
 
     /**
      * **Attention:** This method is Debug ONLY
@@ -940,20 +944,20 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             }
 
             // When the format is RAW we use the DngCreator utility library
-//            ImageFormat.RAW_SENSOR -> {
-//                val dngCreator = DngCreator(characteristics, result.metadata)
-//                try {
-//                    val output = createFile(context.requireContext(), "dng")
-//                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
-//                    cont.resume(output)
-//                } catch (exc: IOException) {
-//                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
-//                    cont.resumeWithException(exc)
-//                }
-//            }
+            //            ImageFormat.RAW_SENSOR -> {
+            //                val dngCreator = DngCreator(characteristics, result.metadata)
+            //                try {
+            //                    val output = createFile(context.requireContext(), "dng")
+            //                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+            //                    cont.resume(output)
+            //                } catch (exc: IOException) {
+            //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
+            //                    cont.resumeWithException(exc)
+            //                }
+            //            }
 
             // No other formats are supported by this sample
-            else -> {
+            else                                     -> {
                 val exc = RuntimeException("Unknown image format: ${result.format}")
                 LogContext.log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
@@ -971,7 +975,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
 
         try {
             // There is no need to call session.close() method. Please check its comment
-//            if (::session.isInitialized) session.close()
+            //            if (::session.isInitialized) session.close()
             if (::camera.isInitialized) camera.close()
             if (::imageReader.isInitialized) imageReader.close()
 

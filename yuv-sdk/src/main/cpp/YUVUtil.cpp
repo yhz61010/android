@@ -70,7 +70,6 @@ void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
 
 void scaleI420(const uint8_t *src_i420_data, jint width, jint height,
                uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode) {
-
     jint src_i420_y_size = width * height;
     jint src_i420_u_size = (width >> 1) * (height >> 1);
     const uint8_t *src_i420_y_data = src_i420_data;
@@ -146,7 +145,6 @@ void i420ToNv21(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv21_d
     jbyte *src_i420_y_data = src_i420_data;
     jbyte *src_i420_u_data = src_i420_data + src_y_size;
     jbyte *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
-
 
     libyuv::I420ToNV21(
             (const uint8_t *) src_i420_y_data, width,
@@ -229,18 +227,18 @@ void i420ToNv12(jbyte *src_i420_data, jint width, jint height, jbyte *src_nv12_d
  *                180: Rotate 180 degrees.
  *                270: Rotate 270 degrees clockwise.
  */
-JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvData, jint format, jint w, jint h, jboolean vertically_flip, jint degree) {
-    int yuvLen = env->GetArrayLength(yuvData);
-    uint8_t *yuvBuf = new uint8_t[yuvLen];
-    env->GetByteArrayRegion(yuvData, 0, yuvLen, reinterpret_cast<jbyte *>(yuvBuf));
+JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvSrc, jint format, jint w, jint h, jboolean vertically_flip, jint degree) {
+    int yuv_len = env->GetArrayLength(yuvSrc);
+    uint8_t *src_yuv_data = new uint8_t[yuv_len];
+    env->GetByteArrayRegion(yuvSrc, 0, yuv_len, reinterpret_cast<jbyte *>(src_yuv_data));
 
     int Ysize = w * h;
     size_t src_size = Ysize * 3 / 2;
 
-    uint8_t *I420 = new uint8_t[yuvLen];
+    uint8_t *i420_data = new uint8_t[yuv_len];
 
-    uint8_t *pDstY = I420;
-    uint8_t *pDstU = I420 + Ysize;
+    uint8_t *pDstY = i420_data;
+    uint8_t *pDstU = i420_data + Ysize;
     uint8_t *pDstV = pDstU + (Ysize / 4);
 
     uint32_t fourcc = libyuv::FOURCC_I420;
@@ -260,7 +258,7 @@ JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvDa
     if (JNI_TRUE == vertically_flip) verticalFlip = -1;
     int base_dst_stride_dimension = w;
     if (90 == degree || 270 == degree) base_dst_stride_dimension = h;
-    int retVal = libyuv::ConvertToI420(yuvBuf, src_size,
+    int retVal = libyuv::ConvertToI420(src_yuv_data, src_size,
                                        pDstY, base_dst_stride_dimension,
                                        pDstU, base_dst_stride_dimension / 2,
                                        pDstV, base_dst_stride_dimension / 2,
@@ -282,26 +280,29 @@ JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvDa
      enum RotationMode rotation,
      uint32 format);*/
 
-    jbyteArray I420byte = env->NewByteArray(yuvLen);
-    env->SetByteArrayRegion(I420byte, 0, yuvLen, reinterpret_cast<jbyte *>(I420));
+    jbyteArray dst_i420_data = env->NewByteArray(yuv_len);
+    env->SetByteArrayRegion(dst_i420_data, 0, yuv_len, reinterpret_cast<jbyte *>(i420_data));
 
-    delete[] I420;
-    delete[] yuvBuf;
+    delete[] i420_data;
+    delete[] src_yuv_data;
 
-    return I420byte;
+    return dst_i420_data;
 }
 
 JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height) {
-    jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
-    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
-    jbyte *dst_i420_data = (jbyte *) malloc(dst_i420_len);
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
 
-    mirrorI420((uint8_t *) src_i420_data, width, height, (uint8_t *) dst_i420_data);
-    env->ReleaseByteArrayElements(i420Src, src_i420_data, 0);
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    mirrorI420(src_i420_data, width, height, dst_i420_data);
+    delete[] src_i420_data;
 
     jbyteArray mirror_i420_array = env->NewByteArray(dst_i420_len);
     env->SetByteArrayRegion(mirror_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
-    free(dst_i420_data);
+    delete[]  dst_i420_data;
     return mirror_i420_array;
 }
 
@@ -312,16 +313,19 @@ JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
  *                270: Rotate 270 degrees clockwise.
  */
 JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height, jint degree) {
-    jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
-    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
-    jbyte *dst_i420_data = (jbyte *) malloc(dst_i420_len);
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
 
-    rotateI420((uint8_t *) src_i420_data, width, height, (uint8_t *) dst_i420_data, degree);
-    env->ReleaseByteArrayElements(i420Src, src_i420_data, 0);
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    rotateI420(src_i420_data, width, height, dst_i420_data, degree);
+    delete[] src_i420_data;
 
     jbyteArray rotate_i420_array = env->NewByteArray(dst_i420_len);
     env->SetByteArrayRegion(rotate_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
-    free(dst_i420_data);
+    delete[]  dst_i420_data;
     return rotate_i420_array;
 }
 
@@ -335,16 +339,19 @@ JNIEXPORT jbyteArray RotateI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, j
 JNIEXPORT jbyteArray ScaleI420(JNIEnv *env, jobject thiz,
                                jbyteArray i420Src, jint width, jint height,
                                jint dstWidth, jint dstHeight, jint mode) {
-    jbyte *src_i420_data = env->GetByteArrayElements(i420Src, nullptr);
-    int dst_i420_len = sizeof(jbyte) * dstWidth * dstHeight * 3 / 2;
-    jbyte *dst_i420_data = (jbyte *) malloc(dst_i420_len);
+    int src_i420_len = env->GetArrayLength(i420Src);
+    uint8_t *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
 
-    scaleI420((const uint8_t *) src_i420_data, width, height, (uint8_t *) dst_i420_data, dstWidth, dstHeight, mode);
-    env->ReleaseByteArrayElements(i420Src, src_i420_data, 0);
+    int dst_i420_len = sizeof(jbyte) * dstWidth * dstHeight * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
+
+    scaleI420(src_i420_data, width, height, dst_i420_data, dstWidth, dstHeight, mode);
+    delete[] src_i420_data;
 
     jbyteArray scale_i420_array = env->NewByteArray(dst_i420_len);
     env->SetByteArrayRegion(scale_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
-    free(dst_i420_data);
+    delete[] dst_i420_data;
     return scale_i420_array;
 }
 
@@ -354,7 +361,7 @@ static JNINativeMethod methods[] = {
         {"convertToI420", "([BIIIZI)[B", (void *) Convert_To_I420},
         {"mirrorI420",    "([BII)[B",    (void *) MirrorI420},
         {"rotateI420",    "([BIII)[B",   (void *) RotateI420},
-        {"scaleI420",    "([BIIIII)[B",  (void *) ScaleI420},
+        {"scaleI420",     "([BIIIII)[B", (void *) ScaleI420},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

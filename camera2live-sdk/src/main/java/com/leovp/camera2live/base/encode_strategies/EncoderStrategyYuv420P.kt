@@ -19,6 +19,11 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
             // LENS_FACING_BACK
             // YuvUtil.yuvRotate90(yuvData, width, height)
+
+            // If you uncomment these two lines, you need also to modify [CameraAvcEncoder] at line 46,
+            // modify the width and height to `width / 2`, `height / 2`
+            //  val scaleI420 = YUVUtil.scaleI420(yuvData, width, height, width / 2, height / 2, 0)
+            //  YUVUtil.rotateI420(scaleI420, width / 2, height / 2, 90)
             YUVUtil.rotateI420(yuvData, width, height, 90)
         } else {
             // LENS_FACING_FRONT

@@ -58,11 +58,11 @@ class CameraAvcEncoder @JvmOverloads constructor(
             // 2/65536(0x10000)             76K/s
             // 1/65536(0x10000)             76K/s
             val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
-//                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
+                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
                 .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
-//                .maxByOrNull { it.profile }
+            //                .maxByOrNull { it.profile }
             val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
             val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
 
@@ -73,7 +73,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             }
-//            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
+            //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
                 // AVCLevel51
@@ -116,18 +116,18 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     it.get(encodedBytes)
 
                     when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
                             csd = encodedBytes.copyOf()
                             LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexStringLE()}]")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME     -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
-                        else -> {
+                        else                                 -> {
                             // Do nothing
                         }
                     }
@@ -148,7 +148,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
             }
         }
 
-//        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
         h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
             it.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             outputFormat = it.outputFormat // option B

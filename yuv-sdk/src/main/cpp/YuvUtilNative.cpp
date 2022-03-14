@@ -21,66 +21,21 @@
  *                180: Rotate 180 degrees.
  *                270: Rotate 270 degrees clockwise.
  */
-JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvSrc, jint format, jint w, jint h, jboolean vertically_flip, jint degree) {
-    int yuv_len = env->GetArrayLength(yuvSrc);
-    uint8_t *src_yuv_data = new uint8_t[yuv_len];
-    env->GetByteArrayRegion(yuvSrc, 0, yuv_len, reinterpret_cast<jbyte *>(src_yuv_data));
+JNIEXPORT jbyteArray Convert_To_I420(JNIEnv *env, jobject thiz, jbyteArray yuvSrc, jint format, jint width, jint height, jboolean vertically_flip, jint degree) {
+    int src_yuv_len = env->GetArrayLength(yuvSrc);
+    uint8_t *src_i420_data = new uint8_t[src_yuv_len];
+    env->GetByteArrayRegion(yuvSrc, 0, src_yuv_len, reinterpret_cast<jbyte *>(src_i420_data));
 
-    int Ysize = w * h;
-    size_t src_size = Ysize * 3 / 2;
+    int dst_i420_len = sizeof(jbyte) * width * height * 3 / 2;
+    uint8_t *dst_i420_data = new uint8_t[dst_i420_len];
 
-    uint8_t *i420_data = new uint8_t[yuv_len];
+    convertToI420(src_i420_data, src_yuv_len, format, width, height, dst_i420_data, vertically_flip, degree);
+    delete[] src_i420_data;
 
-    uint8_t *pDstY = i420_data;
-    uint8_t *pDstU = i420_data + Ysize;
-    uint8_t *pDstV = pDstU + (Ysize / 4);
-
-    uint32_t fourcc = libyuv::FOURCC_I420;
-    switch (format) {
-        case 2:
-            fourcc = libyuv::FOURCC_NV21;
-            break;
-        case 3:
-            fourcc = libyuv::FOURCC_NV12;
-            break;
-        case 4:
-            fourcc = libyuv::FOURCC_YUY2;
-            break;
-    }
-
-    int verticalFlip = 1;
-    if (JNI_TRUE == vertically_flip) verticalFlip = -1;
-    int base_dst_stride_dimension = w;
-    if (90 == degree || 270 == degree) base_dst_stride_dimension = h;
-    int retVal = libyuv::ConvertToI420(src_yuv_data, src_size,
-                                       pDstY, base_dst_stride_dimension,
-                                       pDstU, base_dst_stride_dimension / 2,
-                                       pDstV, base_dst_stride_dimension / 2,
-                                       0, 0,
-                                       w, verticalFlip * h,
-                                       w, h,
-                                       (libyuv::RotationMode) degree, fourcc);
-    if (retVal < 0) {
-        return nullptr;
-    }
-
-    /*libyuv::ConvertToI420(const uint8* src_frame, size_t src_size,
-     uint8* dst_y, int dst_stride_y,
-     uint8* dst_u, int dst_stride_u,
-     uint8* dst_v, int dst_stride_v,
-     int crop_x, int crop_y,
-     int src_width, int src_height,
-     int crop_width, int crop_height,
-     enum RotationMode rotation,
-     uint32 format);*/
-
-    jbyteArray dst_i420_data = env->NewByteArray(yuv_len);
-    env->SetByteArrayRegion(dst_i420_data, 0, yuv_len, reinterpret_cast<jbyte *>(i420_data));
-
-    delete[] i420_data;
-    delete[] src_yuv_data;
-
-    return dst_i420_data;
+    jbyteArray dst_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(dst_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return dst_i420_array;
 }
 
 JNIEXPORT jbyteArray MirrorI420(JNIEnv *env, jobject thiz, jbyteArray i420Src, jint width, jint height) {

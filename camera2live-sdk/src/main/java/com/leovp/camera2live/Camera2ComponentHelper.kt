@@ -629,7 +629,8 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
             }
             if (outputYuvForDebug) {
                 val yuvData = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
-                //                yuvData = YUVUtil.scaleI420(yuvData, image.width, image.height, image.width / 2, image.height / 2, 0)
+                // yuvData = com.leovp.yuv_sdk.YuvUtil.scaleI420(yuvData, image.width, image.height, image.width / 2, image.height / 2, 0)
+                // yuvData = com.leovp.yuv_sdk.YuvUtil.cropI420(yuvData, image.width, image.height, 400, 400, 100, 100)!!
                 videoYuvOsForDebug?.write(yuvData)
                 image.close()
                 return@setOnImageAvailableListener

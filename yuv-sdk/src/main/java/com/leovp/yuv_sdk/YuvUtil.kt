@@ -13,7 +13,9 @@ object YuvUtil {
     }
 
     /**
-     * Mirror(height only) first then do rotate.
+     * Convert specified YUV data to I420 with vertically flipping and rotating at the same time.
+     *
+     * Vertically flip yuv data first then do rotate.
      *
      * @param width The original video width.
      * @param height The original video height.

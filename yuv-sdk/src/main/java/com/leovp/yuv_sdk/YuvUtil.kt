@@ -12,6 +12,11 @@ object YuvUtil {
         System.loadLibrary("leo-yuv")
     }
 
+    const val I420 = 1
+    const val NV21 = 2
+    const val NV12 = 3
+    const val YUY2 = 4
+
     /**
      * Convert specified YUV data to I420 with vertically flipping and rotating at the same time.
      *

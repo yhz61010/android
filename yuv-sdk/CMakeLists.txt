@@ -6,7 +6,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wa
 
 add_library(leo-yuv
             SHARED
-            src/main/cpp/YUVUtil.cpp)
+            src/main/cpp/YUVUtil.cpp
+            src/main/cpp/YUVBase.cpp)
 
 add_library(yuv
             SHARED
@@ -14,13 +15,12 @@ add_library(yuv
 
 set_target_properties(yuv
                       PROPERTIES IMPORTED_LOCATION
-                      ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libyuv.so
-                      )
+                      ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libyuv.so)
 
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
 
 target_link_libraries(leo-yuv
                       yuv
                       android
-#                      jnigraphics
+                      # jnigraphics
                       log)

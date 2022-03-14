@@ -7,7 +7,7 @@
 #define YUV_PACKAGE_BASE "com/leovp/yuv_sdk/"
 
 /**
- * Mirror(height only) first then do rotate
+ * Vertically flip yuv data first then do rotate.
  *
  * @param format The [yuvData] format.
  *               1: I420

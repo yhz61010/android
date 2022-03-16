@@ -13,20 +13,26 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
     override fun doProcess(image: Image, lensFacing: Int, cameraSensorOrientation: Int): ByteArray {
         val width = image.width
         val height = image.height
-        // Get NV12(YUV420SP) data YYYYYYYYUVUV
-        val imageBytes = YuvUtil.getBytesFromImage(image)
+
+        // val imageBytes = YuvUtil.getBytesFromImage(image)
+
+        // Get NV21(YUV420SP) data YYYYYYYYVUVU
+        val nv21Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_NV21)
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
-            YuvUtil.rotateYUV420Degree90(imageBytes, width, height)
+            // YuvUtil.rotateYUV420Degree90(imageBytes, width, height)
+
+            val i420Bytes = com.leovp.yuv_sdk.YuvUtil.convertToI420(nv21Bytes, com.leovp.yuv_sdk.YuvUtil.NV21, width, height, false, 90)!!
+            com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Bytes, height, width)
         } else {
             // Front lens
             return when (cameraSensorOrientation) {
-                90 -> {
+                90   -> {
                     // Nexus phone(like Nexus 6 and Nexus 6P), the front lens cameraSensorOrientation is 90 not 270 degrees
                     // Tested on Nexus 6 and Nexus 6P
-                    YuvUtil.mirrorNv21(imageBytes, width, height)
-                    YuvUtil.rotateYUV420Degree270(imageBytes, width, height)
+                    YuvUtil.mirrorNv21(nv21Bytes, width, height)
+                    YuvUtil.rotateYUV420Degree270(nv21Bytes, width, height)
                 }
-                else /* 270 */ -> YuvUtil.rotateYUVDegree270AndMirror(imageBytes, width, height)
+                else -> /* 270 */ YuvUtil.rotateYUVDegree270AndMirror(nv21Bytes, width, height)
             }
         }
     }

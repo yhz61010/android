@@ -14,25 +14,38 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
         val width = image.width
         val height = image.height
 
+        // Step 1
         // val imageBytes = YuvUtil.getBytesFromImage(image)
 
+        // or Step 1
         // Get NV21(YUV420SP) data YYYYYYYYVUVU
-        val nv21Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_NV21)
+        // val nv21Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_NV21)
+
+        // or Step 1
+        // Get I420(YUV420P) data YYYYYYYYUUVV
+        val i420Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
+
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
+            // Step 2
             // YuvUtil.rotateYUV420Degree90(imageBytes, width, height)
 
-            val i420Bytes = com.leovp.yuv_sdk.YuvUtil.convertToI420(nv21Bytes, com.leovp.yuv_sdk.YuvUtil.NV21, width, height, false, 90)!!
-            com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Bytes, height, width)
+            // or Step 2
+            // val rotateI420 = com.leovp.yuv_sdk.YuvUtil.convertToI420(nv21Bytes, com.leovp.yuv_sdk.YuvUtil.NV21, width, height, false, 90)!!
+            // com.leovp.yuv_sdk.YuvUtil.i420ToNv12(rotateI420, height, width)
+
+            // or Step 2
+            val rotateI420 = com.leovp.yuv_sdk.YuvUtil.rotateI420(i420Bytes, width, height, 90)
+            com.leovp.yuv_sdk.YuvUtil.i420ToNv12(rotateI420, height, width)
         } else {
             // Front lens
             return when (cameraSensorOrientation) {
                 90   -> {
                     // Nexus phone(like Nexus 6 and Nexus 6P), the front lens cameraSensorOrientation is 90 not 270 degrees
                     // Tested on Nexus 6 and Nexus 6P
-                    YuvUtil.mirrorNv21(nv21Bytes, width, height)
-                    YuvUtil.rotateYUV420Degree270(nv21Bytes, width, height)
+                    YuvUtil.mirrorNv21(i420Bytes, width, height)
+                    YuvUtil.rotateYUV420Degree270(i420Bytes, width, height)
                 }
-                else -> /* 270 */ YuvUtil.rotateYUVDegree270AndMirror(nv21Bytes, width, height)
+                else -> /* 270 */ YuvUtil.rotateYUVDegree270AndMirror(i420Bytes, width, height)
             }
         }
     }

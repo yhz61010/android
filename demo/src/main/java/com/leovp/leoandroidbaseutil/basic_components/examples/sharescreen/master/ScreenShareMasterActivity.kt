@@ -222,9 +222,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
                             // Round the value to the nearest multiple of 16.
-                            (screenInfo.width * 0.8F + 8).toInt() and 15.inv(),
+                            (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
                             // Round the value to the nearest multiple of 16.
-                            (screenInfo.height * 0.8F + 8).toInt() and 15.inv(),
+                            (screenInfo.height * 0.8F + 8).toInt() and 0xF.inv(),
                             densityDpi
                         )
                         setting.fps = 30F

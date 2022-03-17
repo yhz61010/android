@@ -86,6 +86,31 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
 
 ------
 
+## Pixel
+
+------
+
+### Google Pixel 3XL(Pixel 3XL)(Android 12)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_FULL(1)
+#### H.264 Encoder
+`c2.qti.avc.encoder`
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [7, 30], [15, 30], [30, 30], [15, 60], [60, 60]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [7, 30], [15, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032x3024, 4000x3000, 3840x2160, 4000x2000, 3264x2448, 3200x2400, 2688x1512, 2592x1944, 2560x1280, 2048x1536, 1920x1440, 1920x1080, 1600x1200, 1920x960, 1280x960, 1280x768, 1280x720, 1024x768, 800x400, 800x600, 800x480, 720x480, 640x400, 640x480, 640x360, 352x288, 320x240, 176x144, 160x120]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3200x2400, 2688x1512, 2592x1944, 2560x1280, 2048x1536, 1920x1440, 1920x1080, 1600x1200, 1920x960, 1280x960, 1280x768, 1280x720, 1024x768, 800x400, 800x600, 800x480, 720x480, 640x400, 640x480, 640x360, 352x288, 320x240, 176x144, 160x120]`
+
+------
+
 ## MeiZu
 
 ------

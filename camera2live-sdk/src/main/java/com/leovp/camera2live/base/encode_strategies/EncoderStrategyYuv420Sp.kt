@@ -14,26 +14,26 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
         val width = image.width
         val height = image.height
 
-        // Step 1
+        // Step 1.1
         // val imageBytes = YuvUtil.getBytesFromImage(image)
 
-        // or Step 1
-        // Get NV21(YUV420SP) data YYYYYYYYVUVU
+        // or Step 1.2
+        // Get NV21(YUV420SP) data YYYYYYYY VUVU
         // val nv21Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_NV21)
 
-        // or Step 1
-        // Get I420(YUV420P) data YYYYYYYYUUVV
+        // or Step 1.3
+        // Get I420(YUV420P) data YYYYYYYY UUVV
         val i420Bytes = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
 
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
-            // Step 2
+            // Step 2.1
             // YuvUtil.rotateYUV420Degree90(imageBytes, width, height)
 
-            // or Step 2
+            // or Step 2.2
             // val rotateI420 = com.leovp.yuv_sdk.YuvUtil.convertToI420(nv21Bytes, com.leovp.yuv_sdk.YuvUtil.NV21, width, height, false, 90)!!
-            // com.leovp.yuv_sdk.YuvUtil.i420ToNv12(rotateI420, height, width)
+            // com.leovp.yuv_sdk.YuvUtil.i420ToNv21(rotateI420, height, width)
 
-            // or Step 2
+            // or Step 2.3
             val rotateI420 = com.leovp.yuv_sdk.YuvUtil.rotateI420(i420Bytes, width, height, 90)
             com.leovp.yuv_sdk.YuvUtil.i420ToNv12(rotateI420, height, width)
         } else {

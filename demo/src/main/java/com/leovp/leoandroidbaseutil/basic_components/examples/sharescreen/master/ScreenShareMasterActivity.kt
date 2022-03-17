@@ -150,7 +150,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             override fun run() {
                 runCatching {
                     val currentScreenRotation = if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
-//                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
+                    //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation
                         runOnUiThread { (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)?.changeOrientation() }
@@ -221,25 +221,27 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         )
                         val screenInfo = getAvailableResolution()
                         val setting = ScreenShareSetting(
-                            (screenInfo.width * 0.8F / 16).toInt() * 16,
-                            (screenInfo.height * 0.8F / 16).toInt() * 16,
+                            // Round the value to the nearest multiple of 16.
+                            (screenInfo.width * 0.8F + 8).toInt() and 15.inv(),
+                            // Round the value to the nearest multiple of 16.
+                            (screenInfo.height * 0.8F + 8).toInt() and 15.inv(),
                             densityDpi
                         )
                         setting.fps = 30F
                         setting.bitrate = screenInfo.width * screenInfo.height * 2
-//                        setting.bitrate = setting.width * setting.height
+                        // setting.bitrate = setting.width * setting.height
                         // !!! Attention !!!
                         // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
-//                        setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-//                        setting.keyFrameRate = 2
-//                        setting.iFrameInterval = 3
+                        // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+                        // setting.keyFrameRate = 2
+                        // setting.iFrameInterval = 3
                         mediaProjectService?.startScreenShare(setting)
                     }
-                    ScreenCapture.SCREEN_CAPTURE_RESULT_DENY -> {
+                    ScreenCapture.SCREEN_CAPTURE_RESULT_DENY  -> {
                         LogContext.log.w(ITAG, "Permission denied!")
                         toast("Permission denied!", error = true)
                     }
-                    else -> LogContext.log.d(ITAG, "Not screen capture request")
+                    else                                      -> LogContext.log.d(ITAG, "Not screen capture request")
                 }
             }
         })
@@ -275,14 +277,14 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     @ChannelHandler.Sharable
     class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
-//            val receivedString: String?
-//            val frame = msg as WebSocketFrame
-//            receivedString = when (frame) {
-//                is TextWebSocketFrame -> frame.text()
-//                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
-//                else -> null
-//            }
-//            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
+            //            val receivedString: String?
+            //            val frame = msg as WebSocketFrame
+            //            receivedString = when (frame) {
+            //                is TextWebSocketFrame -> frame.text()
+            //                is PongWebSocketFrame -> frame.content().toString(Charset.forName("UTF-8"))
+            //                else -> null
+            //            }
+            //            netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
 
             val receivedByteBuf = (msg as WebSocketFrame).content().retain()
             // Data Length
@@ -341,19 +343,19 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 val stringData = data as String
                 val cmdBean: ScreenShareClientActivity.CmdBean = stringData.toObject()!!
                 when (cmdBean.cmdId) {
-                    CMD_TOUCH_EVENT -> {
+                    CMD_TOUCH_EVENT        -> {
                         val touchBean = cmdBean.touchBean!!
                         touchBean.x = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * touchBean.x
                         touchBean.y = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
-                    CMD_TOUCH_DRAG -> EventBus.getDefault().post(cmdBean.touchBean!!)
-                    CMD_TOUCH_BACK -> AccessibilityUtil.clickBackKey()
-                    CMD_TOUCH_HOME -> AccessibilityUtil.clickHomeKey()
-                    CMD_TOUCH_RECENT -> AccessibilityUtil.clickRecentKey()
-                    CMD_TRIGGER_I_FRAME -> mediaProjectService?.triggerIFrame()
+                    CMD_TOUCH_DRAG         -> EventBus.getDefault().post(cmdBean.touchBean!!)
+                    CMD_TOUCH_BACK         -> AccessibilityUtil.clickBackKey()
+                    CMD_TOUCH_HOME         -> AccessibilityUtil.clickHomeKey()
+                    CMD_TOUCH_RECENT       -> AccessibilityUtil.clickRecentKey()
+                    CMD_TRIGGER_I_FRAME    -> mediaProjectService?.triggerIFrame()
                     CMD_DEVICE_SCREEN_INFO -> clientScreenInfo = cmdBean.deviceInfo
-                    CMD_PAINT_EVENT -> {
+                    CMD_PAINT_EVENT        -> {
                         val paintBean = cmdBean.paintBean!!
                         val pathPaint = Paint().apply {
                             isAntiAlias = true
@@ -369,22 +371,22 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                             val calX = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * paintBean.x
                             val calY = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * paintBean.y
                             when (paintBean.touchType) {
-                                ScreenShareClientActivity.TouchType.DOWN -> userPath.add(Path().also {
+                                ScreenShareClientActivity.TouchType.DOWN  -> userPath.add(Path().also {
                                     it.moveTo(calX, calY)
                                 } to Paint(pathPaint))
-                                ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
-                                ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
+                                ScreenShareClientActivity.TouchType.MOVE  -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
+                                ScreenShareClientActivity.TouchType.UP    -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
                                 ScreenShareClientActivity.TouchType.CLEAR -> {
                                     userPath.clear()
                                     fingerPaintView?.clear()
                                     return@withContext
                                 }
-                                ScreenShareClientActivity.TouchType.UNDO -> {
+                                ScreenShareClientActivity.TouchType.UNDO  -> {
                                     fingerPaintView?.undo()
                                     userPath = fingerPaintView?.getPaths()!!
                                     return@withContext
                                 }
-                                else -> throw IllegalArgumentException("Unknown touch type[${paintBean.touchType}]")
+                                else                                      -> throw IllegalArgumentException("Unknown touch type[${paintBean.touchType}]")
                             }
                             fingerPaintView?.drawUserPath(userPath)
                         }

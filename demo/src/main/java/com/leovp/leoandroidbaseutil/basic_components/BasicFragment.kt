@@ -16,6 +16,7 @@ import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.basic_components.examples.*
 import com.leovp.leoandroidbaseutil.basic_components.examples.accessibility.AccessibilityActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.adb.AdbCommunication
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.AidlActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.animation.AnimationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.audio.ADPCMActivity
@@ -95,6 +96,7 @@ class BasicFragment : Fragment() {
             Pair("App Settings", AppSettingsActivity::class.java),
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
+            Pair("Adb Communication", AdbCommunication::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)

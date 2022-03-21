@@ -9,7 +9,7 @@ import java.io.InputStream
  * ```
  * adb forward tcp:8888 localabstract:local_name
  * ```
- * Note that: the `local_name` must be the same value in `LocalServerSocket` constructor.
+ * Note that: the `local_name` must be the same value in `LocalServerSocket#startServer(name)` variable.
  *
  * Author: Michael Leo
  *

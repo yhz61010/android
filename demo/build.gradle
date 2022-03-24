@@ -250,7 +250,6 @@ dependencies {
 //    implementation project(':lib-image')
 //    implementation project(':lib-common-android')
 //    implementation project(':lib-common-kotlin')
-    implementation project(':yuv-sdk')
 
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"

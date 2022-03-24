@@ -24,39 +24,11 @@ object YuvUtil {
         return false
     }
 
-    fun cropYUV420(data: ByteArray, imageW: Int, imageH: Int, newImageH: Int): ByteArray {
-        var i: Int
-        var j: Int
-        val tmp: Int
-        val yuv = ByteArray(imageW * newImageH * 3 / 2)
-        val cropH: Int = (imageH - newImageH) / 2
-        var count = 0
-        j = cropH
-        while (j < cropH + newImageH) {
-            i = 0
-            while (i < imageW) {
-                yuv[count++] = data[j * imageW + i]
-                i++
-            }
-            j++
-        }
-
-        //Cr Cb
-        tmp = imageH + cropH / 2
-        j = tmp
-        while (j < tmp + newImageH / 2) {
-            i = 0
-            while (i < imageW) {
-                yuv[count++] = data[j * imageW + i]
-                i++
-            }
-            j++
-        }
-        return yuv
-    }
-
-    // byte[] data = getYuvDataFromImage(image, COLOR_FormatI420);
-    // Return data in YYYYYYYYUUVV(I420/YU12)
+    /**
+     * @return Return data in
+     *             `I420/YU12` format `YYYYYYYY UUVV` or
+     *             `NV21` format `YYYYYYYY VUVU`
+     */
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
         require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
         if (!isImageFormatSupported(image)) {
@@ -149,6 +121,37 @@ object YuvUtil {
     }
 
     // -----------------------------------------------
+
+    fun cropYUV420(data: ByteArray, imageW: Int, imageH: Int, newImageH: Int): ByteArray {
+        var i: Int
+        var j: Int
+        val tmp: Int
+        val yuv = ByteArray(imageW * newImageH * 3 / 2)
+        val cropH: Int = (imageH - newImageH) / 2
+        var count = 0
+        j = cropH
+        while (j < cropH + newImageH) {
+            i = 0
+            while (i < imageW) {
+                yuv[count++] = data[j * imageW + i]
+                i++
+            }
+            j++
+        }
+
+        //Cr Cb
+        tmp = imageH + cropH / 2
+        j = tmp
+        while (j < tmp + newImageH / 2) {
+            i = 0
+            while (i < imageW) {
+                yuv[count++] = data[j * imageW + i]
+                i++
+            }
+            j++
+        }
+        return yuv
+    }
 
     // The input imageBytes is in YYYYYYYYUVUV(NV12)
     // Return data in YYYYYYYYUVUV(NV12)

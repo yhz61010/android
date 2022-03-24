@@ -46,14 +46,15 @@ h264_mp4toannexb: Convert an H.264 bitstream from length prefixed mode to start 
 
 ### Download
 Download `libyuv` sources and move all files into `jni` folder.
-or use the downloaded sources `libyuv-20220320.tar.gz`(Downloaded date: 2022/03/20)
+or use the downloaded sources `libyuv-20220324.tar.gz`
+(This is the original official version just excludes `.git` folder. Downloaded date: 2022/03/24)
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
 $ mkdir -p libyuv/jni
 $ cd libyuv/jni
 $ git clone https://chromium.googlesource.com/libyuv/libyuv .
 # or unzip `libyuv-20220320.tar.gz` file
-$ tar xvzf ../../yuv-sdk/libyuv-20220320.tar.gz --strip-components 1
+$ tar xvzf ../../yuv-sdk/libyuv-20220324.tar.gz --strip-components 1
 ```
 
 ### Modify `./libyuv/jni/Android.mk` file
@@ -64,7 +65,7 @@ Add the following line before ```LOCAL_CPP_EXTENSION := .cc```
 LIBYUV_DISABLE_JPEG := "yes"
 ```
 
-Replace the following lines(from lines 85 to 86)
+Replace the following lines(from lines 86 to 87)
 ```
 LOCAL_STATIC_LIBRARIES := libyuv_static
 LOCAL_SHARED_LIBRARIES := libjpeg

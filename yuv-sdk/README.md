@@ -86,7 +86,8 @@ $ ndk-build
 You'll get the `so` files in the generated folder `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
 
 ## How to compile `yuv-sdk`
-You have three ways to compile `yuv-sdk` module:
+First, copy `include` folder from `libyuv/jni` to `yuv-sdk/main/cpp`.
+Then, you have three ways to compile `yuv-sdk` module:
 - Compile with `gradlew` command.
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/

@@ -1,7 +1,6 @@
 #include <jni.h>
 #include <string.h>
 #include <stdlib.h>
-#include "logger.h"
 #include "YuvConvert.h"
 
 #define YUV_PACKAGE_BASE "com/leovp/yuv_sdk/"
@@ -232,18 +231,15 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
 
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-        LOGE("JNI_OnLoad GetEnv error.");
         return JNI_ERR;
     }
 
     jclass clz = env->FindClass(YUV_PACKAGE_BASE"YuvUtil");
     if (clz == nullptr) {
-        LOGE("JNI_OnLoad FindClass error.");
         return JNI_ERR;
     }
 
     if (env->RegisterNatives(clz, methods, sizeof(methods) / sizeof(methods[0]))) {
-        LOGE("JNI_OnLoad RegisterNatives error.");
         return JNI_ERR;
     }
 

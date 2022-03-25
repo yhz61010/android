@@ -73,7 +73,7 @@ object YuvUtil {
      *              kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
      *              kFilterBox = 3        // Highest quality.
      */
-    external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int): ByteArray
+    external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = 0): ByteArray
 
     /**
      * @param srcWidth The original video width.

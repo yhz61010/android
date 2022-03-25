@@ -4,6 +4,9 @@
 3. How to compile `libyuv`
 4. How to compile `yuv-sdk`
 
+**Attention:**
+The base `libyuv.so` does not include the `JPEG` related library.
+
 ## Play raw H.264
 ```shell
 # Show available pixel formats.

@@ -8,7 +8,7 @@ void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, ji
     uint8_t *dst_i420_u_data = dst_i420_data + src_i420_y_size;
     uint8_t *dst_i420_v_data = dst_i420_data + src_i420_y_size + src_i420_u_size;
 
-    uint32_t fourcc = libyuv::FOURCC_I420;
+    uint32_t fourcc;
     switch (format) {
         case 2:
             fourcc = libyuv::FOURCC_NV21;
@@ -19,6 +19,8 @@ void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, ji
         case 4:
             fourcc = libyuv::FOURCC_YUY2;
             break;
+        default:
+            fourcc = libyuv::FOURCC_I420;
     }
 
     int verticalFlip = 1;

@@ -243,31 +243,48 @@ void nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *
 
 void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {
     // NV12 video size
-    jint NV12_Y_Size = width * height;
+    jint nv12_y_size = width * height;
 
     // YUV420 video size
-    jint I420_Y_Size = width * height;
-    jint I420_U_Size = (width >> 1) * (height >> 1);
+    jint i420_y_size = width * height;
+    jint i420_u_size = (width >> 1) * (height >> 1);
 
     // src: buffer address of Y channel and UV channel
-    const uint8_t *Y_data_Src = src_nv12_data;
-    const uint8_t *UV_data_Src = src_nv12_data + NV12_Y_Size;
+    const uint8_t *src_y_data = src_nv12_data;
+    const uint8_t *src_uv_data = src_nv12_data + nv12_y_size;
     jint src_stride_y = width;
     jint src_stride_uv = width;
 
     //dst: buffer address of Y channel、U channel and V channel
-    uint8_t *Y_data_Dst = dst_i420_data;
-    uint8_t *U_data_Dst = dst_i420_data + I420_Y_Size;
-    uint8_t *V_data_Dst = dst_i420_data + I420_Y_Size + I420_U_Size;
-    jint Dst_Stride_Y = width;
-    jint Dst_Stride_U = width >> 1;
-    jint Dst_Stride_V = Dst_Stride_U;
+    uint8_t *dst_y_data = dst_i420_data;
+    uint8_t *dst_u_data = dst_i420_data + i420_y_size;
+    uint8_t *dst_v_data = dst_i420_data + i420_y_size + i420_u_size;
+    jint dst_y_stride = width;
+    jint dst_u_stride = width >> 1;
+    jint dst_v_stride = dst_u_stride;
 
-    libyuv::NV12ToI420Rotate(Y_data_Src, src_stride_y,
-                       UV_data_Src, src_stride_uv,
-                       Y_data_Dst, Dst_Stride_Y,
-                       U_data_Dst, Dst_Stride_U,
-                       V_data_Dst, Dst_Stride_V,
-                       width, height,
-                       (libyuv::RotationMode) degree);
+    libyuv::NV12ToI420Rotate(src_y_data, src_stride_y,
+                             src_uv_data, src_stride_uv,
+                             dst_y_data, dst_y_stride,
+                             dst_u_data, dst_u_stride,
+                             dst_v_data, dst_v_stride,
+                             width, height,
+                             (libyuv::RotationMode) degree);
+}
+
+void mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data) {
+    // NV12 video size
+    jint nv12_y_size = width * height;
+
+    const uint8_t *src_y_data = src_nv12_data;
+    const uint8_t *src_uv_data = src_nv12_data + nv12_y_size;
+
+    uint8_t *dst_nv12_y_data = dst_nv12_data;
+    uint8_t *dst_nv12_uv_data = dst_nv12_data + nv12_y_size;
+
+    libyuv::NV12Mirror(src_y_data, width,
+                       src_uv_data, width,
+                       dst_nv12_y_data, width,
+                       dst_nv12_uv_data, width,
+                       width, height);
 }

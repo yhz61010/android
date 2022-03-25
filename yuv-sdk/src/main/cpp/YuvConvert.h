@@ -40,4 +40,6 @@ void mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *
 
 void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode);
 
+void nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data);
+
 #endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

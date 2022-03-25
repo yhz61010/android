@@ -309,3 +309,19 @@ void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height,
                       dst_width, dst_height,
                       (libyuv::FilterMode) mode);
 }
+
+void nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data) {
+    jint src_y_size = width * height;
+
+    const uint8_t *src_nv21_y_data = src_nv21_data;
+    const uint8_t *src_nv21_vu_data = src_nv21_data + src_y_size;
+
+    uint8_t *dst_nv12_y_data = dst_nv12_data;
+    uint8_t *dst_nv12_uv_data = dst_nv12_data + src_y_size;
+
+    libyuv::NV21ToNV12(src_nv21_y_data, width,
+                       src_nv21_vu_data, width,
+                       dst_nv12_y_data, width,
+                       dst_nv12_uv_data, width,
+                       width, height);
+}

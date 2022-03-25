@@ -135,4 +135,6 @@ object YuvUtil {
      *              kFilterBox = 3       // Highest quality.
      */
     external fun scaleNv12(nv12ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
+
+    external fun nv21ToNv12(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 }

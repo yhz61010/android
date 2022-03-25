@@ -28,6 +28,13 @@ object YuvUtil {
     const val SCALE_FILTER_BOX = 3      // Highest quality.
 
     /**
+     * @param pixelStrideUV How can I get this parameter automatically?
+     *                      1: I420
+     *                      2: NV21/NV12
+     */
+    external fun android420ToI420(srcYuvByteArray: ByteArray, pixelStrideUV: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int = Rotate_0): ByteArray?
+
+    /**
      * Convert specified YUV data to I420 with vertically flipping and rotating at the same time.
      *
      * Vertically flip yuv data first then do rotate.

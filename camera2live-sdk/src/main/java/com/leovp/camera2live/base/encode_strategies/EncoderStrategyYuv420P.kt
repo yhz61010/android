@@ -13,7 +13,7 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
     override fun doProcess(image: Image, lensFacing: Int, cameraSensorOrientation: Int): ByteArray {
         val width = image.width
         val height = image.height
-        // Get I420/YU12(YUV420P) data YYYYYYYYUUVV
+        // Get I420(YU12)|(YUV420P) data YYYYYYYY UUVV
         val yuvData = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
         return if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
             // LENS_FACING_BACK
@@ -31,6 +31,7 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
 
             // Mirror(height only) first then do rotate
             com.leovp.yuv_sdk.YuvUtil.convertToI420(yuvData, com.leovp.yuv_sdk.YuvUtil.I420, width, height, true, com.leovp.yuv_sdk.YuvUtil.Rotate_270)!!
+            // com.leovp.yuv_sdk.YuvUtil.android420ToI420(yuvData, 1, width, height, true, com.leovp.yuv_sdk.YuvUtil.Rotate_270)!!
         }
     }
 }

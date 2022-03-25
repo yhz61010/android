@@ -1,5 +1,32 @@
 #include "YuvConvert.h"
 
+void android420ToI420(const uint8_t *src_android420_data, jint src_pixel_stride_uv, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree) {
+    jint src_i420_y_size = width * height;
+    jint src_i420_u_size = src_i420_y_size >> 2;
+
+    const uint8_t *src_i420_y_data = src_android420_data;
+    const uint8_t *src_i420_u_data = src_android420_data + src_i420_y_size;
+    const uint8_t *src_i420_v_data = src_android420_data + src_i420_y_size + src_i420_u_size;
+
+    uint8_t *dst_i420_y_data = dst_i420_data;
+    uint8_t *dst_i420_u_data = dst_i420_data + src_i420_y_size;
+    uint8_t *dst_i420_v_data = dst_i420_data + src_i420_y_size + src_i420_u_size;
+
+    int verticalFlip = 1;
+    if (JNI_TRUE == vertically_flip) verticalFlip = -1;
+    int base_dst_stride_dimension = width;
+    if (90 == degree || 270 == degree) base_dst_stride_dimension = height;
+    libyuv::Android420ToI420Rotate(src_i420_y_data, width,
+                                   src_i420_u_data, width >> 1,
+                                   src_i420_v_data, width >> 1,
+                                   src_pixel_stride_uv,
+                                   dst_i420_y_data, base_dst_stride_dimension,
+                                   dst_i420_u_data, base_dst_stride_dimension >> 1,
+                                   dst_i420_v_data, base_dst_stride_dimension >> 1,
+                                   width, verticalFlip * height,
+                                   (libyuv::RotationMode) degree);
+}
+
 void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree) {
     jint src_i420_y_size = width * height;
     jint src_i420_u_size = src_i420_y_size >> 2;
@@ -29,8 +56,8 @@ void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, ji
     if (90 == degree || 270 == degree) base_dst_stride_dimension = height;
     libyuv::ConvertToI420(src_yuv_data, src_length,
                           dst_i420_y_data, base_dst_stride_dimension,
-                          dst_i420_u_data, base_dst_stride_dimension / 2,
-                          dst_i420_v_data, base_dst_stride_dimension / 2,
+                          dst_i420_u_data, base_dst_stride_dimension >> 1,
+                          dst_i420_v_data, base_dst_stride_dimension >> 1,
                           0, 0,
                           width, verticalFlip * height,
                           width, height,

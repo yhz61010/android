@@ -5,6 +5,24 @@
 
 #define YUV_PACKAGE_BASE "com/leovp/yuv_sdk/"
 
+JNIEXPORT jbyteArray Android420_To_I420(JNIEnv *env, __attribute__((unused)) jobject thiz,
+                                        jbyteArray src_android420, jint src_pixel_stride_uv, jint width, jint height, jboolean vertically_flip, jint degree) {
+    int src_android420_len = env->GetArrayLength(src_android420);
+    auto *src_android420_data = new uint8_t[src_android420_len];
+    env->GetByteArrayRegion(src_android420, 0, src_android420_len, reinterpret_cast<jbyte *>(src_android420_data));
+
+    int dst_i420_len = (int) sizeof(uint8_t) * width * height * 3 / 2;
+    auto *dst_i420_data = new uint8_t[dst_i420_len];
+
+    android420ToI420(src_android420_data, src_pixel_stride_uv, width, height, dst_i420_data, vertically_flip, degree);
+    delete[] src_android420_data;
+
+    jbyteArray dst_i420_array = env->NewByteArray(dst_i420_len);
+    env->SetByteArrayRegion(dst_i420_array, 0, dst_i420_len, reinterpret_cast<const jbyte *>(dst_i420_data));
+    delete[]  dst_i420_data;
+    return dst_i420_array;
+}
+
 /**
  * Vertically flip yuv data first then do rotate.
  *
@@ -225,6 +243,7 @@ JNIEXPORT jbyteArray NV12ToI420(JNIEnv *env, __attribute__((unused)) jobject thi
 // =============================
 
 static JNINativeMethod methods[] = {
+        {"android420ToI420",   "([BIIIZI)[B",  (void *) Android420_To_I420},
         {"convertToI420",      "([BIIIZI)[B",  (void *) Convert_To_I420},
         {"mirrorI420",         "([BII)[B",     (void *) MirrorI420},
         {"flipVerticallyI420", "([BII)[B",     (void *) FlipVerticallyI420},

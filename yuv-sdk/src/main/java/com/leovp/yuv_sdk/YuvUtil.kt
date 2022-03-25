@@ -111,4 +111,12 @@ object YuvUtil {
     external fun nv21ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
     external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int, degree: Int = Rotate_0): ByteArray
+
+    // --------------------
+
+    /**
+     * @param width The original video width.
+     * @param height The original video height.
+     */
+    external fun mirrorNv12(nv12ByteArray: ByteArray, width: Int, height: Int): ByteArray
 }

@@ -51,7 +51,7 @@ object YuvUtil {
      *                270: Rotate 270 degrees clockwise.
      * ```
      */
-    external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int): ByteArray?
+    external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int = Rotate_0): ByteArray?
 
     /**
      * @param width The original video width before rotation.
@@ -101,5 +101,5 @@ object YuvUtil {
 
     external fun nv21ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
-    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
+    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int, degree: Int = Rotate_0): ByteArray
 }

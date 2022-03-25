@@ -214,7 +214,7 @@ void nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *
                        width, height);
 }
 
-void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data) {
+void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {
     // NV12 video size
     jint NV12_Y_Size = width * height;
 
@@ -236,10 +236,11 @@ void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *
     jint Dst_Stride_U = width >> 1;
     jint Dst_Stride_V = Dst_Stride_U;
 
-    libyuv::NV12ToI420(Y_data_Src, src_stride_y,
+    libyuv::NV12ToI420Rotate(Y_data_Src, src_stride_y,
                        UV_data_Src, src_stride_uv,
                        Y_data_Dst, Dst_Stride_Y,
                        U_data_Dst, Dst_Stride_U,
                        V_data_Dst, Dst_Stride_V,
-                       width, height);
+                       width, height,
+                       (libyuv::RotationMode) degree);
 }

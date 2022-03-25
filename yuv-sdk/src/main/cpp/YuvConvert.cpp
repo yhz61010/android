@@ -274,17 +274,38 @@ void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *
 
 void mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data) {
     // NV12 video size
-    jint nv12_y_size = width * height;
+    jint src_nv12_y_size = width * height;
 
     const uint8_t *src_y_data = src_nv12_data;
-    const uint8_t *src_uv_data = src_nv12_data + nv12_y_size;
+    const uint8_t *src_uv_data = src_nv12_data + src_nv12_y_size;
 
     uint8_t *dst_nv12_y_data = dst_nv12_data;
-    uint8_t *dst_nv12_uv_data = dst_nv12_data + nv12_y_size;
+    uint8_t *dst_nv12_uv_data = dst_nv12_data + src_nv12_y_size;
 
     libyuv::NV12Mirror(src_y_data, width,
                        src_uv_data, width,
                        dst_nv12_y_data, width,
                        dst_nv12_uv_data, width,
                        width, height);
+}
+
+void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height,
+               uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode) {
+    // NV12 video size
+    jint src_nv12_y_size = width * height;
+
+    const uint8_t *src_y_data = src_nv12_data;
+    const uint8_t *src_uv_data = src_nv12_data + src_nv12_y_size;
+
+    jint dst_nv12_y_size = dst_width * dst_height;
+    uint8_t *dst_nv12_y_data = dst_nv12_data;
+    uint8_t *dst_nv12_uv_data = dst_nv12_data + dst_nv12_y_size;
+
+    libyuv::NV12Scale(src_y_data, width,
+                      src_uv_data, width,
+                      width, height,
+                      dst_nv12_y_data, dst_width,
+                      dst_nv12_uv_data, dst_width,
+                      dst_width, dst_height,
+                      (libyuv::FilterMode) mode);
 }

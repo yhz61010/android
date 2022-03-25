@@ -54,7 +54,7 @@ object YuvUtil {
      *
      * @param degree The yuv data should be rotated by degree.
      * ```
-     *                 0: No rotation.
+     *                  0: No rotation.
      *                 90: Rotate 90 degrees clockwise.
      *                180: Rotate 180 degrees.
      *                270: Rotate 270 degrees clockwise.
@@ -65,7 +65,9 @@ object YuvUtil {
     /**
      * @param width The original video width before rotation.
      * @param height The original video height before rotation.
-     * @param degree    0: No rotation.
+     * @param degree The yuv data should be rotated by degree.
+     * ```
+     *                  0: No rotation.
      *                 90: Rotate 90 degrees clockwise.
      *                180: Rotate 180 degrees.
      *                270: Rotate 270 degrees clockwise.
@@ -87,10 +89,10 @@ object YuvUtil {
      * @param dstHeight The height after scaled.
      *
      * @param mode
-     *              kFilterNone = 0,      // Point sample; Fastest.
-     *              kFilterLinear = 1,    // Filter horizontally only.
-     *              kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
-     *              kFilterBox = 3        // Highest quality.
+     *              kFilterNone = 0,     // Point sample; Fastest.
+     *              kFilterLinear = 1,   // Filter horizontally only.
+     *              kFilterBilinear = 2, // Faster than box, but lower quality scaling down.
+     *              kFilterBox = 3       // Highest quality.
      */
     external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
 
@@ -119,4 +121,18 @@ object YuvUtil {
      * @param height The original video height.
      */
     external fun mirrorNv12(nv12ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    /**
+     * @param srcWidth The original video width.
+     * @param srcHeight The original video height.
+     * @param dstWidth The width after scaled. Make sure it's the multiple of 8.
+     * @param dstHeight The height after scaled. Make sure it's the multiple of 8.
+     *
+     * @param mode
+     *              kFilterNone = 0,     // Point sample; Fastest.
+     *              kFilterLinear = 1,   // Filter horizontally only.
+     *              kFilterBilinear = 2, // Faster than box, but lower quality scaling down.
+     *              kFilterBox = 3       // Highest quality.
+     */
+    external fun scaleNv12(nv12ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
 }

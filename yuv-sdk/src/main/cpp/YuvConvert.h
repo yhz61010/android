@@ -38,4 +38,6 @@ void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *
 
 void mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data);
 
+void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode);
+
 #endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

@@ -142,9 +142,9 @@ JNIEXPORT jbyteArray ScaleI420(JNIEnv *env, __attribute__((unused)) jobject thiz
     return scale_i420_array;
 }
 
-JNIEXPORT jbyteArray
-CropI420(JNIEnv *env, __attribute__((unused)) jobject thiz,
-         jbyteArray i420Src, jint width, jint height, jint dst_width, jint dst_height, jint left, jint top) {
+JNIEXPORT jbyteArray CropI420(JNIEnv *env, __attribute__((unused)) jobject thiz,
+                              jbyteArray i420Src, jint width, jint height,
+                              jint dst_width, jint dst_height, jint left, jint top) {
     if (left + dst_width > width || top + dst_height > height) {
         return nullptr;
     }
@@ -258,6 +258,37 @@ JNIEXPORT jbyteArray MirrorNV12(JNIEnv *env, __attribute__((unused)) jobject thi
     return mirror_nv12_array;
 }
 
+/**
+ * @param mode
+ *              kFilterNone = 0,      // Point sample; Fastest.
+ *              kFilterLinear = 1,    // Filter horizontally only.
+ *              kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
+ *              kFilterBox = 3        // Highest quality.
+ */
+JNIEXPORT jbyteArray ScaleNV12(JNIEnv *env, __attribute__((unused)) jobject thiz,
+                               jbyteArray nv12Src, jint width, jint height,
+                               jint dst_width, jint dst_height, jint mode) {
+    if (dst_width % 8 != 0 || dst_height % 8 != 0) {
+        jclass jcls = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(jcls, "Both dst_width and dst_height must be multiple of 8.");
+    }
+
+    int src_nv12_len = env->GetArrayLength(nv12Src);
+    auto *src_nv12_data = new uint8_t[src_nv12_len];
+    env->GetByteArrayRegion(nv12Src, 0, src_nv12_len, reinterpret_cast<jbyte *>(src_nv12_data));
+
+    int dst_nv12_len = (int) sizeof(uint8_t) * dst_width * dst_height * 3 / 2;
+    auto *dst_nv12_data = new uint8_t[dst_nv12_len];
+
+    scaleNV12(src_nv12_data, width, height, dst_nv12_data, dst_width, dst_height, mode);
+    delete[] src_nv12_data;
+
+    jbyteArray scale_nv12_array = env->NewByteArray(dst_nv12_len);
+    env->SetByteArrayRegion(scale_nv12_array, 0, dst_nv12_len, reinterpret_cast<const jbyte *>(dst_nv12_data));
+    delete[] dst_nv12_data;
+    return scale_nv12_array;
+}
+
 // =============================
 
 static JNINativeMethod methods[] = {
@@ -273,6 +304,7 @@ static JNINativeMethod methods[] = {
         {"nv21ToI420",         "([BII)[B",     (void *) NV21ToI420},
         {"nv12ToI420",         "([BIII)[B",    (void *) NV12ToI420},
         {"mirrorNv12",         "([BII)[B",     (void *) MirrorNV12},
+        {"scaleNv12",          "([BIIIII)[B",  (void *) ScaleNV12},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {

@@ -32,6 +32,6 @@ void i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *
 
 void nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_i420_data);
 
-void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data);
+void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
 
 #endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

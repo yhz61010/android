@@ -631,7 +631,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
                 val i420Data = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
                 val convertedYUVData = i420Data
 
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2, image.height / 2, 0)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2, image.height / 2, com.leovp.yuv_sdk.YuvUtil.SCALE_FILTER_NONE)
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.cropI420(i420Data, image.width, image.height, 400, 400, 100, 100)!!
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)

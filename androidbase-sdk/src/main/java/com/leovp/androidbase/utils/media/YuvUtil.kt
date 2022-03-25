@@ -26,7 +26,7 @@ object YuvUtil {
 
     /**
      * @return Return data in
-     *             `I420/YU12` format `YYYYYYYY UUVV` or
+     *             `I420(YU12)` format `YYYYYYYY UUVV` or
      *             `NV21` format `YYYYYYYY VUVU`
      */
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {

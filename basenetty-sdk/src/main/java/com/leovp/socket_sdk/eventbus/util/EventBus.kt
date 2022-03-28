@@ -11,23 +11,23 @@ import java.util.concurrent.ConcurrentMap
  * Date: 2021/7/26 14:07
  */
 object EventBus {
-//    private const val TAG = "eb"
+    //    private const val TAG = "eb"
 
     private val handlers: ConcurrentMap<String, MutableList<EventBusHandler>> = ConcurrentHashMap()
     private val replyHandlers: ConcurrentMap<String, EventBusHandler> = ConcurrentHashMap()
 
-    /** same as [request] */
+    /** same as `request` */
     fun send(address: String, message: Any? = null, headers: Map<String, Any>? = null, handler: EventBusHandler? = null): Map<String, Any> {
-        return constructData(EventBusAttributes.TYPE_SEND, address, message, headers, handler)
+        return constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
     }
 
     fun publish(address: String, message: Any? = null, headers: Map<String, Any>? = null): Map<String, Any> {
         return constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
     }
 
-    /** same as [consumer] */
-    fun register(address: String, headers: Map<String, Any>? = null, handler: EventBusHandler): Map<String, Any> {
-        return constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, handler)
+    /** same as `consumer` */
+    fun register(address: String, headers: Map<String, Any>? = null, customFields: Map<String, Any?>? = null, handler: EventBusHandler): Map<String, Any> {
+        return constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
     }
 
     fun unregister(address: String, headers: Map<String, Any>? = null): Map<String, Any> {
@@ -64,28 +64,29 @@ object EventBus {
     private fun addHandler(address: String, handler: EventBusHandler) {
         val handlerList: MutableList<EventBusHandler>? = handlers[address]
         if (handlerList == null) {
-//            LogContext.log.i(TAG, "[$address] Add handler to EventBus.")
+            //            LogContext.log.i(TAG, "[$address] Add handler to EventBus.")
             handlers[address] = mutableListOf<EventBusHandler>().apply { add(handler) }
         } else {
             if (handlers.containsKey(address)) {
                 handlers[address] = handlerList.apply { add(handler) }
-//                LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler size: ${handlers.size}")
+                //                LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler size: ${handlers.size}")
             }
         }
     }
 
     private fun addReplyHandler(address: String, handler: EventBusHandler) {
         if (!replyHandlers.containsKey(address)) {
-//            LogContext.log.i(TAG, "[$address] Add reply handler to EventBus.")
+            //            LogContext.log.i(TAG, "[$address] Add reply handler to EventBus.")
             replyHandlers[address] = handler
-//            LogContext.log.i(TAG, "[$address] Reply handler added.")
+            //            LogContext.log.i(TAG, "[$address] Reply handler added.")
         }
     }
 
     // =============================================
 
-    private fun constructData(type: String, address: String, message: Any? = null, headers: Map<String, Any>? = null, handler: EventBusHandler? = null): Map<String, Any> {
-//        LogContext.log.i("constructData", "[$type][$address]")
+    private fun constructData(type: String, address: String, message: Any? = null, headers: Map<String, Any>? = null,
+        customFields: Map<String, Any?>? = null, handler: EventBusHandler? = null): Map<String, Any> {
+        //        LogContext.log.i("constructData", "[$type][$address]")
 
         val eventBusObj = mutableMapOf<String, Any>()
         eventBusObj[EventBusAttributes.TYPE] = type
@@ -94,18 +95,23 @@ object EventBus {
         message?.let { eventBusObj[EventBusAttributes.BODY] = it }
 
         when (type) {
-            EventBusAttributes.TYPE_SEND -> {
+            EventBusAttributes.TYPE_SEND     -> {
                 handler?.let {
                     val replyAddress = UUID.randomUUID().toString()
-//                    LogContext.log.i("serializeData", "replyAddress=$replyAddress")
+                    //                    LogContext.log.i("serializeData", "replyAddress=$replyAddress")
                     eventBusObj[EventBusAttributes.REPLY_ADDRESS] = replyAddress
                     addReplyHandler(replyAddress, it)
                 }
             }
             EventBusAttributes.TYPE_REGISTER -> {
+                customFields?.let { map ->
+                    for ((key, value) in map) {
+                        if (null != value) eventBusObj[key] = value
+                    }
+                }
                 handler?.let { addHandler(address, it) }
             }
-            else -> Unit
+            else                             -> Unit
         }
         return eventBusObj
     }

@@ -325,3 +325,22 @@ void nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *
                        dst_nv12_uv_data, width,
                        width, height);
 }
+
+// --------------------
+
+void i420ToRgb24(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_rgb24_data, jint dst_rgb24_data_len) {
+    jint src_y_size = width * height;
+    jint src_u_size = (width >> 1) * (height >> 1);
+
+    const uint8_t *src_i420_y_data = src_i420_data;
+    const uint8_t *src_i420_u_data = src_i420_data + src_y_size;
+    const uint8_t *src_i420_v_data = src_i420_data + src_y_size + src_u_size;
+
+//    printf("i420ToRgb24 width=%d height=%d dst_rgb24_data_len=%d", width, height, dst_rgb24_data_len);
+
+    libyuv::I420ToRGB24(src_i420_y_data, width,
+                        src_i420_u_data, width >> 1,
+                        src_i420_v_data, width >> 1,
+                        dst_rgb24_data, dst_rgb24_data_len,
+                        width, height);
+}

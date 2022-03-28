@@ -42,4 +42,8 @@ void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *d
 
 void nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data);
 
+// --------------------
+
+void i420ToRgb24(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_rgb24_data, jint dst_rgb24_data_len);
+
 #endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

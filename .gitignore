@@ -82,3 +82,10 @@ lint/tmp/
 /screencapture-sdk/src/main/libs/armeabi-v7a/
 /.idea/copyright/profiles_settings.xml
 /libyuv/
+/libjpeg-turbo-main/source/
+/libjpeg-turbo-main/libs/arm64-v8a/lib/pkgconfig/
+/libjpeg-turbo-main/libs/arm64-v8a/lib/cmake/
+/libjpeg-turbo-main/libs/arm64-v8a/share/
+/libjpeg-turbo-main/libs/armeabi-v7a/share/
+/libjpeg-turbo-main/libs/armeabi-v7a/lib/pkgconfig/
+/libjpeg-turbo-main/libs/armeabi-v7a/lib/cmake/

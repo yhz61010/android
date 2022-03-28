@@ -137,4 +137,11 @@ object YuvUtil {
     external fun scaleNv12(nv12ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
 
     external fun nv21ToNv12(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    /**
+     * **NOT** work now.
+     *
+     * The `libyuv` doesn't include the jpeg library. So it doesn't work now.
+     */
+    external fun i420ToRgb24(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 }

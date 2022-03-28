@@ -307,6 +307,26 @@ JNIEXPORT jbyteArray NV21ToNV12(JNIEnv *env, __attribute__((unused)) jobject thi
     return dst_nv12_array;
 }
 
+// --------------------
+
+JNIEXPORT jbyteArray I420ToRGB24(JNIEnv *env, __attribute__((unused)) jobject thiz,
+                                jbyteArray i420Src, jint width, jint height) {
+    int src_i420_len = env->GetArrayLength(i420Src);
+    auto *src_i420_data = new uint8_t[src_i420_len];
+    env->GetByteArrayRegion(i420Src, 0, src_i420_len, reinterpret_cast<jbyte *>(src_i420_data));
+
+    int dst_rgb24_len = (int) sizeof(uint8_t) * width * height * 3;
+    auto *dst_rgb24_data = new uint8_t[dst_rgb24_len];
+
+    i420ToRgb24(src_i420_data, width, height, dst_rgb24_data, dst_rgb24_len);
+    delete[] src_i420_data;
+
+    jbyteArray dst_rgb24_array = env->NewByteArray(dst_rgb24_len);
+    env->SetByteArrayRegion(dst_rgb24_array, 0, dst_rgb24_len, reinterpret_cast<const jbyte *>(dst_rgb24_data));
+    delete[]  dst_rgb24_data;
+    return dst_rgb24_array;
+}
+
 // =============================
 
 static JNINativeMethod methods[] = {
@@ -324,6 +344,7 @@ static JNINativeMethod methods[] = {
         {"mirrorNv12",         "([BII)[B",     (void *) MirrorNV12},
         {"scaleNv12",          "([BIIIII)[B",  (void *) ScaleNV12},
         {"nv21ToNv12",         "([BII)[B",     (void *) NV21ToNV12},
+        {"i420ToRgb24",        "([BII)[B",     (void *) I420ToRGB24},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {

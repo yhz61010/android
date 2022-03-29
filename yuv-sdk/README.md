@@ -56,7 +56,7 @@ $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
 $ mkdir -p libyuv/jni
 $ cd libyuv/jni
 $ git clone https://chromium.googlesource.com/libyuv/libyuv .
-# or unzip `libyuv-20220320.tar.gz` file
+# or unzip `libyuv-20220324.tar.gz` file
 $ tar xvzf ../../yuv-sdk/libyuv-20220324.tar.gz --strip-components 1
 ```
 

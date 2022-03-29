@@ -6,6 +6,7 @@ import com.leovp.lib_bytes.toHexString
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.lib_network.SslUtils
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ILog
 import com.leovp.log_sdk.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
 import com.leovp.socket_sdk.framework.base.BaseNetty
 import com.leovp.socket_sdk.framework.base.ClientConnectStatus
@@ -134,7 +135,7 @@ abstract class BaseNettyClient protected constructor(
         this.headers?.let {
             if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v")
+                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 headers.add(k, v)
             }
         }

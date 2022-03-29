@@ -100,4 +100,4 @@ $ ./gradlew yuv-sdk:assemble
 Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> yuv-sdk -> build -> assemble **.
 - Compile from `Build` menu.
 Select `yuv-sdk` module then click from menu **Build -> Make Module 'LeoAndroidBaseUtil.yuv-sdk'**.
-ONLY **debug** aar will be generated. 
+You can select the compile option from `Build Variants` menu. 

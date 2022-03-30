@@ -247,7 +247,7 @@ val Context.screenRatio
         return 1.0f * max(p.width, p.height) / min(p.width, p.height)
     }
 
-val uuid: String = UUID.randomUUID().toString()
+fun getUuid(): String = UUID.randomUUID().toString()
 
 fun getImei(ctx: Context): String? {
     val imei0 = getImei(ctx, 0)

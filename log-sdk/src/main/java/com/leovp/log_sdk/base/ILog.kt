@@ -3,9 +3,9 @@ package com.leovp.log_sdk.base
 import android.util.Log
 
 /**
- * Inherit this class and just implement [printXXXLog] methods.
+ * Inherit this class and just implement `printXXXLog` methods.
  *
- * The [outputType] parameter in [printXXXLog] methods is just the handy parameter for you to identify the log output type.
+ * The `outputType` parameter in `printXXXLog` methods is just the handy parameter for you to identify the log output type.
  * So that you can control how to output the log. For example, just output some logs on console or send some logs to server.
  *
  * Author: Michael Leo

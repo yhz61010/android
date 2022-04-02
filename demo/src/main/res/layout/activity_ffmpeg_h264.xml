@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".basic_components.examples.ffmpeg.FFMpegH264Activity">
 
-    <com.leovp.androidbase.ui.LeoGLSurfaceView
+    <com.leovp.opengl_sdk.ui.LeoGLSurfaceView
         android:id="@+id/glSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

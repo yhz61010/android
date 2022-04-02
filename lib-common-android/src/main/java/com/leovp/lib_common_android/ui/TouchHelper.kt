@@ -1,9 +1,8 @@
-package com.leovp.androidbase.ui
+package com.leovp.lib_common_android.ui
 
 import android.os.SystemClock
 import android.util.SparseArray
 import android.view.MotionEvent
-import com.leovp.log_sdk.LogContext
 import kotlin.math.roundToInt
 
 /**
@@ -12,7 +11,6 @@ import kotlin.math.roundToInt
  */
 class TouchHelper(private val touchListener: TouchListener) {
     companion object {
-        private const val TAG = "GTH"
         private const val MAX_TOUCH_POINTS = 10
     }
 
@@ -37,7 +35,6 @@ class TouchHelper(private val touchListener: TouchListener) {
             MotionEvent.ACTION_MOVE                                  -> processTouchMove(event)
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP     -> processTouchUp(event)
             MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE    -> {
-                LogContext.log.w(TAG, "Action Cancel/Outside. Treat it as Up Event.")
                 processCancelTouch(event)
             }
         }

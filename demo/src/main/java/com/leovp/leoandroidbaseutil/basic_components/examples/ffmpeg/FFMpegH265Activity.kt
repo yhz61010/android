@@ -2,10 +2,10 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg
 
 import android.os.Bundle
 import com.leovp.androidbase.exts.android.saveRawResourceToFile
-import com.leovp.androidbase.ui.LeoGLSurfaceView
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.utils.DecodeH265RawFileByFFMpeg
+import com.leovp.opengl_sdk.ui.LeoGLSurfaceView
 
 class FFMpegH265Activity : BaseDemonstrationActivity() {
     private lateinit var glSurfaceView: LeoGLSurfaceView

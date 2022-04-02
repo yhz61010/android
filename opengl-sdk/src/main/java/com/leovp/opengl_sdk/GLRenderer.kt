@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.opengl
+package com.leovp.opengl_sdk
 
 import android.content.Context
 import android.opengl.GLES20

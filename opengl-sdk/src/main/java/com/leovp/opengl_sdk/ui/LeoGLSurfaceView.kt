@@ -1,12 +1,13 @@
-package com.leovp.androidbase.ui
+package com.leovp.opengl_sdk.ui
 
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
-import com.leovp.androidbase.opengl.GLRenderer
+import com.leovp.lib_common_android.ui.TouchHelper
 import com.leovp.log_sdk.LogContext
+import com.leovp.opengl_sdk.GLRenderer
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
 class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {

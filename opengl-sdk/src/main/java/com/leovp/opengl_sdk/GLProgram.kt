@@ -1,11 +1,10 @@
-package com.leovp.androidbase.opengl
+package com.leovp.opengl_sdk
 
 import android.content.Context
 import android.opengl.GLES20
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.opengl.util.loadShader
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
+import com.leovp.opengl_sdk.util.loadShader
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -96,7 +95,7 @@ class GLProgram(context: Context) {
     private var mvpMatrixHandle: Int = -1
 
     // vertices buffer
-    // OpenGL的世界坐标系是 [-1, -1, 1, 1]，纹理的坐标系为 [0, 0, 1, 1]
+    // OpenGL的世界坐标系范围是 [-1, -1, 1, 1]，纹理的坐标系范围是 [0, 0, 1, 1]
     private var vertexBuffer: FloatBuffer? = null
     private var coordBuffer: FloatBuffer? = null
 
@@ -340,7 +339,7 @@ class GLProgram(context: Context) {
                 }
             }
         }
-        LogContext.log.d(TAG, "createBuffers vertex_buffer=${vertexBuffer?.toJsonString()} coord_buffer=${coordBuffer?.toJsonString()}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(TAG, "createBuffers vertex_buffer=$vertexBuffer coord_buffer=$coordBuffer", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 
     /**

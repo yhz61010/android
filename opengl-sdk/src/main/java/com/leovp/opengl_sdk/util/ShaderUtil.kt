@@ -1,10 +1,9 @@
-package com.leovp.androidbase.opengl.util
+package com.leovp.opengl_sdk.util
 
 import android.content.Context
 import android.opengl.GLES20
-import com.leovp.androidbase.R
-import com.leovp.androidbase.exts.android.readAssetsFileAsString
 import com.leovp.lib_exception.fail
+import com.leovp.opengl_sdk.R
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
 // https://blog.csdn.net/sinat_23092639/article/details/103046553

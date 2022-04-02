@@ -26,16 +26,16 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private lateinit var program: GLProgram
 
-    // GLSurfaceView宽度
+    // GLSurfaceView 宽度
     private var screenWidth: Int = 0
 
-    // GLSurfaceView高度
+    // GLSurfaceView 高度
     private var screenHeight: Int = 0
 
-    // 预览YUV数据宽度
+    // 预览 YUV 数据宽度
     private var videoWidth: Int = 0
 
-    // 预览YUV数据高度
+    // 预览 YUV 数据高度
     private var videoHeight: Int = 0
 
     // mvpMatrix is an abbreviation for "Model View Projection Matrix"
@@ -58,7 +58,7 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     // YUV数据格式 0 -> I420  1 -> NV12  2 -> NV21
     private var yuv420Type: Yuv420Type = Yuv420Type.I420
 
-    // 标识GLSurfaceView是否准备好
+    // 标识 GLSurfaceView 是否准备好
     private var hasVisibility = false
 
     //  Called once to set up the view's OpenGL ES environment.
@@ -140,7 +140,6 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
             // 调整比例
             createBuffers(width, height, keepRatio)
 
-            // 初始化容器
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width
                 this.videoHeight = height
@@ -202,15 +201,15 @@ class GLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     }
 
     /**
-     * 预览YUV格式数据
+     * 预览 YUV 格式数据
      * @param yuvData YUV 格式的数据
-     * @param type YUV 数据的格式 0 -> I420  1 -> NV12  2 -> NV21
+     * @param format YUV 数据的格式 0 -> I420  1 -> NV12  2 -> NV21
      */
-    fun feedData(yuvData: ByteArray, type: Yuv420Type = Yuv420Type.I420) {
+    fun feedData(yuvData: ByteArray, format: Yuv420Type = Yuv420Type.I420) {
         synchronized(this) {
             if (hasVisibility) {
-                this.yuv420Type = type
-                if (type == Yuv420Type.I420) {
+                this.yuv420Type = format
+                if (format == Yuv420Type.I420) {
                     y.clear()
                     u.clear()
                     v.clear()

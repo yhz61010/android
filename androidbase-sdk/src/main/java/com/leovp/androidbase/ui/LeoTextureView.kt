@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.lib_bytes.toHexStringLE
+import com.leovp.lib_common_android.ui.TouchHelper
 import com.leovp.log_sdk.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue

@@ -18,6 +18,7 @@ include ':ffmpeg-javacpp-sdk'
 include ':circle-progressbar-sdk'
 include ':dex-sdk'
 include ':yuv-sdk'
+include ':opengl-sdk'
 
 include ':lib-bytes'
 include ':lib-compress'

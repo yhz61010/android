@@ -241,6 +241,7 @@ dependencies {
     implementation project(':drawOnScreen-sdk')
     implementation project(':floatview-sdk')
     implementation project(':circle-progressbar-sdk')
+    implementation project(':opengl-sdk')
 
     implementation project(':lib-network')
     implementation project(':lib-exception')

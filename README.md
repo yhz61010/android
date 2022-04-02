@@ -1,7 +1,7 @@
 [![Leo Version](https://jitpack.io/v/yhz61010/LeoAndroidBaseUtilProject-Kotlin.svg)](https://jitpack.io/#yhz61010/LeoAndroidBaseUtilProject-Kotlin)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.6.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-7.1.2-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-7.4.1-green)](https://gradle.org)
+[![Gradle](https://img.shields.io/badge/Gradle-7.4.2-green)](https://gradle.org)
 
 
 [![codebeat badge](https://codebeat.co/badges/e657f36f-48ab-466c-9dae-36da4241b675)](https://codebeat.co/projects/github-com-yhz61010-leoandroidbaseutilproject-kotlin-master)

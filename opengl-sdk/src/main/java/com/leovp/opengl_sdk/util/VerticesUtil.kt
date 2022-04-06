@@ -1,6 +1,6 @@
 package com.leovp.opengl_sdk.util
 
-object VerticesRotationUtil {
+object VerticesUtil {
     enum class Rotation {
         NORMAL, ROTATION_90, ROTATION_180, ROTATION_270;
 
@@ -42,18 +42,18 @@ object VerticesRotationUtil {
         }
     }
 
-    fun flip(verticesArray: FloatArray, isVertical: Boolean = false, isHorizontal: Boolean = false): FloatArray {
+    fun flip(verticesArray: FloatArray, isHorizontal: Boolean = false, isVertical: Boolean = false): FloatArray {
         var temp = floatArrayOf(
             verticesArray[0], verticesArray[1],
             verticesArray[2], verticesArray[3],
             verticesArray[4], verticesArray[5],
             verticesArray[6], verticesArray[7])
-        temp = if (isVertical) floatArrayOf(
+        temp = if (isHorizontal) floatArrayOf(
             temp[2], temp[3],
             temp[0], temp[1],
             temp[6], temp[7],
             temp[4], temp[5]) else temp
-        temp = if (isHorizontal) floatArrayOf(
+        temp = if (isVertical) floatArrayOf(
             temp[6], temp[7],
             temp[4], temp[5],
             temp[2], temp[3],

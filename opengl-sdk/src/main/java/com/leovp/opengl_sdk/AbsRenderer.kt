@@ -102,6 +102,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
         /**
          * OpenGL 的世界坐标系是 `[-1, -1, 1, 1]`
          *
+         * 顺序：ABCD
+         *
          * 与 Android 中的 Canvas 或者屏幕坐标体系不同，GL 的坐标起始位置在屏幕中心，
          * (0,0) 作为中心点，X 坐标从左到右，Y 坐标从下到上，在 `[-1,1]` 之间取值，再映射到屏幕上。
          *
@@ -125,16 +127,18 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
         /**
          * 纹理的坐标系。取值范围在 `[0,0]` 到 `[1,1]` 内。
          *
+         * 顺序：ABCD
+         *
          * 两个维度分别是 S、T，所以一般称为 ST 纹理坐标。而有些时候也叫UV坐标。
          * 纹理坐标方向性在 Android 上与我们平时熟悉的 Bitmap、canvas 等一致，都是顶点在左上角。
          *
          * ```
-         * C(0,0)────s──→D(1,0)
-         *   │  ┌───────┐
-         *   t  │texture│
-         *   │  │       │
-         *   ↓  └───────┘
-         * A(0,1)        B(1,1)
+         * C(0,0)────s──→D(1,0)       C(0,1)        D(1,1)
+         *   │  ┌───────┐               ↑  ┌───────┐
+         *   t  │texture│               t  │texture│
+         *   │  │       │               │  │       │
+         *   ↓  └───────┘               │  └───────┘
+         * A(0,1)        B(1,1)       A(0,0)────s──→B(1,0)
          * ```
          */
         val TEX_COORD = floatArrayOf(

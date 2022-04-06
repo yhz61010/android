@@ -66,14 +66,14 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         LogContext.log.w(tag, "=====> GLRenderer onSurfaceCreated()", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         // Set the background frame color
-        // 设置刷新屏幕时候使用的颜色值,顺序是RGBA，值的范围从0~1。
+        // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。
         // 这里不会立刻刷新，只有在 GLES20.glClear 调用时使用该颜色值才刷新。
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
         makeAndUseProgram(context.readAssetsFileAsString(R.raw.vertex_shader), context.readAssetsFileAsString(R.raw.fragment_shader))
 
         // 生成纹理句柄
-        GLES20.glGenTextures(THREE_PLANAR, planarTextureHandles)
+        GLES20.glGenTextures(THREE_PLANAR, planarTextureIntBuffer)
         checkGlError("glGenTextures")
         LogContext.log.d(tag, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
@@ -108,10 +108,10 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
                 if (yuv420Type == Yuv420Type.I420) {
                     u.position(0)
                     v.position(0)
-                    feedTextureWithImageData(y, u, v, videoWidth, videoHeight, planarTextureHandles)
+                    feedTextureWithImageData(y, u, v, videoWidth, videoHeight, planarTextureIntBuffer)
                 } else {
                     uv.position(0)
-                    feedTextureWithImageData(y, uv, videoWidth, videoHeight, planarTextureHandles)
+                    feedTextureWithImageData(y, uv, videoWidth, videoHeight, planarTextureIntBuffer)
                 }
                 // Redraw background color
                 // 使用 glClearColor 设置的颜色，刷新 Surface
@@ -202,8 +202,8 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
 
     // ====================
 
-    private var planarTextureHandles = IntBuffer.wrap(IntArray(THREE_PLANAR))
-    private val sampleHandle = IntArray(3)
+    private var planarTextureIntBuffer = IntBuffer.wrap(IntArray(THREE_PLANAR))
+    private val sampleIntArray = IntArray(3)
 
     // handles
     private var aPositionLocation = -1
@@ -253,20 +253,20 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
         if (type == Yuv420Type.I420) {
             // I420 有3个平面
             planarCount = THREE_PLANAR
-            sampleHandle[0] = getUniform("samplerY")
-            sampleHandle[1] = getUniform("samplerU")
-            sampleHandle[2] = getUniform("samplerV")
+            sampleIntArray[0] = getUniform("samplerY")
+            sampleIntArray[1] = getUniform("samplerU")
+            sampleIntArray[2] = getUniform("samplerV")
         } else {
             // NV12，NV21 有两个平面
             planarCount = TWO_PLANAR
-            sampleHandle[0] = getUniform("samplerY")
-            sampleHandle[1] = getUniform("samplerUV")
+            sampleIntArray[0] = getUniform("samplerY")
+            sampleIntArray[1] = getUniform("samplerUV")
         }
         (0 until planarCount).forEach { i ->
             // 激活每一层纹理，绑定到创建的纹理
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + i)
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, planarTextureHandles[i])
-            GLES20.glUniform1i(sampleHandle[i], i)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, planarTextureIntBuffer[i])
+            GLES20.glUniform1i(sampleIntArray[i], i)
         }
 
         // 调用这个函数后，vertex shader 先在每个顶点执行一次，之后 fragment shader 在每个像素执行一次，

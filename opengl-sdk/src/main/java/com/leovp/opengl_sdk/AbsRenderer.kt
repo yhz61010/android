@@ -18,25 +18,17 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     abstract fun getTagName(): String
     val tag: String by lazy { getTagName() }
 
+    @Suppress("WeakerAccess")
     protected var programObjId: Int = 0
+
+    @Suppress("WeakerAccess")
     protected var outputWidth: Int = 0
+
+    @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
 
     protected var pointCoord: FloatBuffer = BufferUtil.createFloatBuffers(POINT_COORD)
     protected var texVertices: FloatBuffer = BufferUtil.createFloatBuffers(TEX_VERTEX)
-
-    protected fun getUniform(name: String): Int {
-        return GLES20.glGetUniformLocation(programObjId, name)
-    }
-
-    protected fun getAttrib(name: String): Int {
-        return GLES20.glGetAttribLocation(programObjId, name)
-    }
-
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-        outputWidth = width
-        outputHeight = height
-    }
 
     /**
      * The step of make program.
@@ -54,11 +46,25 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
         makeAndUseProgram(vertexShaderId, fragmentShaderId)
     }
 
+    @Suppress("WeakerAccess")
     protected fun makeAndUseProgram(vertexShaderId: Int, fragmentShaderId: Int) {
         LogContext.log.i(tag, "vertexShader=$vertexShaderId fragmentShader=$fragmentShaderId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         programObjId = com.leovp.opengl_sdk.util.makeProgram(vertexShaderId, fragmentShaderId)
         GLES20.glUseProgram(programObjId)
         checkGlError("glUseProgram")
+    }
+
+    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+        outputWidth = width
+        outputHeight = height
+    }
+
+    protected fun getUniform(name: String): Int {
+        return GLES20.glGetUniformLocation(programObjId, name)
+    }
+
+    protected fun getAttrib(name: String): Int {
+        return GLES20.glGetAttribLocation(programObjId, name)
     }
 
     companion object {

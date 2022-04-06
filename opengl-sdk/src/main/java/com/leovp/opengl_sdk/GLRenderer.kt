@@ -3,8 +3,9 @@
 package com.leovp.opengl_sdk
 
 import android.content.Context
+import android.graphics.SurfaceTexture
 import android.opengl.GLES20
-import android.opengl.Matrix
+import android.os.SystemClock
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.BufferUtil
@@ -21,7 +22,7 @@ import javax.microedition.khronos.opengles.GL10
  *
  * @see [Android OpenGL处理YUV数据（I420、NV12、NV21）](https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6)
  */
-class GLRenderer(private val context: Context) : AbsRenderer() {
+class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.OnFrameAvailableListener {
     override fun getTagName() = "GLRenderer"
 
     var keepRatio: Boolean = true
@@ -85,15 +86,15 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
 
         screenWidth = width
         screenHeight = height
-        val ratio: Float = width.toFloat() / height.toFloat()
+        //        val ratio: Float = width.toFloat() / height.toFloat()
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         // Attention: "-ratio, ratio, -1f, 1f" means keep screen ratio. Width is fixed.
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
+        //        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            squareVertices = BufferUtil.createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
+            pointCoord = BufferUtil.createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)
@@ -143,7 +144,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         LogContext.log.i(tag, "setVideoDimension width=$width x $width screen=$screenWidth x $screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
-            squareVertices = BufferUtil.createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
+            pointCoord = BufferUtil.createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width
@@ -205,8 +206,8 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
     private val sampleHandle = IntArray(3)
 
     // handles
-    private var positionHandle = -1
-    private var coordHandle = -1
+    private var aPositionLocation = -1
+    private var aTexCoordLocation = -1
     private var mvpMatrixHandle: Int = -1
 
     private fun drawTexture(mvpMatrix: FloatArray, type: Yuv420Type) {
@@ -217,7 +218,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
          *
          * OpenGL的世界坐标系是 [-1, -1, 1, 1]，纹理的坐标系为 [0, 0, 1, 1]
          */
-        positionHandle = getAttrib("a_Position").also {
+        aPositionLocation = getAttrib("a_Position").also {
             // Parameters:
             //   indx: 顶点着色器中 a_Position 变量的引用。
             //   size: 表示数组中 size 个数字表示一个顶点。
@@ -225,14 +226,14 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
             //   normalized: 表示是否进行归一化。
             //   stride: 表示stride（跨距），在数组表示多种属性的时候使用到。数组中每个顶点相关属性占的Byte值。
             //   ptr: 表示所传入的顶点数组地址
-            GLES20.glVertexAttribPointer(it, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, squareVertices)
+            GLES20.glVertexAttribPointer(it, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, pointCoord)
             // 通知 GL 程序使用指定的顶点属性索引
             GLES20.glEnableVertexAttribArray(it)
         }
 
         // 传纹理坐标给 fragment shader
-        coordHandle = getAttrib("a_TexCoord").also {
-            GLES20.glVertexAttribPointer(it, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, coordVertices)
+        aTexCoordLocation = getAttrib("a_TexCoord").also {
+            GLES20.glVertexAttribPointer(it, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, texVertices)
             GLES20.glEnableVertexAttribArray(it)
         }
 
@@ -277,10 +278,14 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
         // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, SQUARE_VERTICES.size / POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, POINT_COORD.size / POSITION_COMPONENT_COUNT)
         GLES20.glFinish()
 
-        GLES20.glDisableVertexAttribArray(positionHandle)
-        GLES20.glDisableVertexAttribArray(coordHandle)
+        GLES20.glDisableVertexAttribArray(aPositionLocation)
+        GLES20.glDisableVertexAttribArray(aTexCoordLocation)
+    }
+
+    override fun onFrameAvailable(surfaceTexture: SurfaceTexture) {
+        LogContext.log.d(tag, "onFrameAvailable() ${SystemClock.elapsedRealtime()}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 }

@@ -42,7 +42,7 @@ object BufferUtil {
     fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
         LogContext.log.d(TAG, "createBuffers($width, $height, $keepRatio) screen=$screenWidth x $screenHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (!keepRatio) {
-            return createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+            return createFloatBuffers(AbsRenderer.POINT_COORD)
         }
 
         return if (screenWidth > 0 && screenHeight > 0) {
@@ -50,7 +50,7 @@ object BufferUtil {
             val specificRatio = height.toFloat() / width.toFloat()
             when {
                 screenRatio == specificRatio -> {
-                    createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+                    createFloatBuffers(AbsRenderer.POINT_COORD)
                 }
                 screenRatio < specificRatio  -> {
                     val widthScale = screenRatio / specificRatio
@@ -76,7 +76,7 @@ object BufferUtil {
                 }
             }
         } else {
-            BufferUtil.createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+            BufferUtil.createFloatBuffers(AbsRenderer.POINT_COORD)
         }
     }
 }

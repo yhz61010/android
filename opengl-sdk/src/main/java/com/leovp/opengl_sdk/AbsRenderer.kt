@@ -22,8 +22,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     protected var outputWidth: Int = 0
     protected var outputHeight: Int = 0
 
-    protected var squareVertices: FloatBuffer = BufferUtil.createFloatBuffers(SQUARE_VERTICES)
-    protected var coordVertices: FloatBuffer = BufferUtil.createFloatBuffers(TEX_COORD)
+    protected var pointCoord: FloatBuffer = BufferUtil.createFloatBuffers(POINT_COORD)
+    protected var texVertices: FloatBuffer = BufferUtil.createFloatBuffers(TEX_VERTEX)
 
     protected fun getUniform(name: String): Int {
         return GLES20.glGetUniformLocation(programObjId, name)
@@ -95,7 +95,7 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * (-1,-1)        (1,-1)
          * ```
          */
-        val SQUARE_VERTICES = floatArrayOf(
+        val POINT_COORD = floatArrayOf(
             -1.0f, -1.0f, // lb
             1.0f, -1.0f,  // rb
             -1.0f, 1.0f,  // lt
@@ -117,7 +117,7 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * (0,1)        (1,1)
          * ```
          */
-        val TEX_COORD = floatArrayOf(
+        val TEX_VERTEX = floatArrayOf(
             0.0f, 1.0f, // lb
             1.0f, 1.0f, // rb
             0.0f, 0.0f, // lt

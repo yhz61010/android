@@ -66,7 +66,7 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
     }
 
     /**
-     * 设置渲染的YUV数据的宽高
+     * 设置渲染的 YUV 数据的宽高
      * @param videoWidth 宽度
      * @param videoHeight 高度
      */
@@ -85,9 +85,9 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
             return
         }
         renderer.feedData(yuvData, type)
-        // 请求渲染新的YUV数据
+        // 请求渲染新的 YUV 数据
         // 由于是请求异步线程进行渲染，所以不是同步方法，调用后不会立刻就进行渲染。
-        // 渲染会回调到Renderer接口的onDrawFrame方法。
+        // 渲染会回调到 Renderer 接口的 onDrawFrame 方法。
         requestRender()
     }
 }

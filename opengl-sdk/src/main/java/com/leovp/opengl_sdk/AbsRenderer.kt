@@ -68,6 +68,47 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
         return GLES20.glGetAttribLocation(programObjId, name)
     }
 
+    /**
+     * 调整渲染纹理的缩放比例
+     * @param width YUV数据宽度
+     * @param height YUV数据高度
+     */
+    protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatArray {
+        val floatArray: FloatArray =
+                if (!keepRatio) {
+                    VerticesUtil.VERTICES_COORD
+                } else {
+                    if (screenWidth > 0 && screenHeight > 0) {
+                        val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
+                        val specificRatio = height.toFloat() / width.toFloat()
+                        when {
+                            screenRatio == specificRatio -> VerticesUtil.VERTICES_COORD
+                            screenRatio < specificRatio  -> {
+                                val widthScale = screenRatio / specificRatio
+                                floatArrayOf(
+                                    -widthScale, -1.0f,
+                                    widthScale, -1.0f,
+                                    -widthScale, 1.0f,
+                                    widthScale, 1.0f
+                                )
+                            }
+                            else                         -> {
+                                val heightScale = specificRatio / screenRatio
+                                floatArrayOf(
+                                    -1.0f, -heightScale,
+                                    1.0f, -heightScale,
+                                    -1.0f, heightScale,
+                                    1.0f, heightScale
+                                )
+                            }
+                        }
+                    } else {
+                        VerticesUtil.VERTICES_COORD
+                    }
+                }
+        return floatArray
+    }
+
     // 0 -> I420 (YUV420P)  YYYYYYYY UUVV
     // 1 -> NV12 (YUV420SP) YYYYYYYY UVUV
     // 2 -> NV21 (YUV420SP) YYYYYYYY VUVU

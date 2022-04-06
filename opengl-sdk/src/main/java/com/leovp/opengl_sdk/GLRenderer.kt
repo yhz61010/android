@@ -258,7 +258,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
         // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, POINT_COORD.size / POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTICES_COORD.size / POSITION_COMPONENT_COUNT)
         GLES20.glFinish()
 
         GLES20.glDisableVertexAttribArray(aPositionLocation)

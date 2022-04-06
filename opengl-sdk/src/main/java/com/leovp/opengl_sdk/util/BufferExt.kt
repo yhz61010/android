@@ -37,7 +37,7 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
  */
 fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
     if (!keepRatio) {
-        return createFloatBuffers(AbsRenderer.POINT_COORD)
+        return createFloatBuffers(AbsRenderer.VERTICES_COORD)
     }
 
     return if (screenWidth > 0 && screenHeight > 0) {
@@ -45,7 +45,7 @@ fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth:
         val specificRatio = height.toFloat() / width.toFloat()
         when {
             screenRatio == specificRatio -> {
-                createFloatBuffers(AbsRenderer.POINT_COORD)
+                createFloatBuffers(AbsRenderer.VERTICES_COORD)
             }
             screenRatio < specificRatio  -> {
                 val widthScale = screenRatio / specificRatio
@@ -71,6 +71,6 @@ fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth:
             }
         }
     } else {
-        createFloatBuffers(AbsRenderer.POINT_COORD)
+        createFloatBuffers(AbsRenderer.VERTICES_COORD)
     }
 }

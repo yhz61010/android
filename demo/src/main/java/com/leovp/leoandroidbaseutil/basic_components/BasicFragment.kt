@@ -31,6 +31,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.koin.KoinActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.log.LogActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayH265VideoByMediaCodecActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.OpenGLES20Activity
 import com.leovp.leoandroidbaseutil.basic_components.examples.pref.PrefActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.provider.ProviderActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
@@ -97,6 +98,7 @@ class BasicFragment : Fragment() {
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
+            Pair("OpenGL ES 2.0", OpenGLES20Activity::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)

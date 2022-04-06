@@ -1,6 +1,5 @@
 package com.leovp.opengl_sdk.util
 
-import com.leovp.opengl_sdk.AbsRenderer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -38,13 +37,13 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
 fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
     val floatArray: FloatArray =
             if (!keepRatio) {
-                AbsRenderer.VERTICES_COORD
+                VerticesUtil.VERTICES_COORD
             } else {
                 if (screenWidth > 0 && screenHeight > 0) {
                     val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
                     val specificRatio = height.toFloat() / width.toFloat()
                     when {
-                        screenRatio == specificRatio -> AbsRenderer.VERTICES_COORD
+                        screenRatio == specificRatio -> VerticesUtil.VERTICES_COORD
                         screenRatio < specificRatio  -> {
                             val widthScale = screenRatio / specificRatio
                             floatArrayOf(
@@ -65,7 +64,7 @@ fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth:
                         }
                     }
                 } else {
-                    AbsRenderer.VERTICES_COORD
+                    VerticesUtil.VERTICES_COORD
                 }
             }
     return createFloatBuffers(floatArray)

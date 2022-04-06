@@ -6,10 +6,7 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.util.checkGlError
-import com.leovp.opengl_sdk.util.createFloatBuffers
-import com.leovp.opengl_sdk.util.feedTextureWithImageData
-import com.leovp.opengl_sdk.util.readAssetsFileAsString
+import com.leovp.opengl_sdk.util.*
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
 import javax.microedition.khronos.egl.EGLConfig
@@ -258,7 +255,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
         // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTICES_COORD.size / POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VerticesUtil.VERTICES_COORD.size / POSITION_COMPONENT_COUNT)
         GLES20.glFinish()
 
         GLES20.glDisableVertexAttribArray(aPositionLocation)

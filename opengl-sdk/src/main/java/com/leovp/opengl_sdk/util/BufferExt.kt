@@ -36,41 +36,37 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
  * @param height YUV数据高度
  */
 fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
-    if (!keepRatio) {
-        return createFloatBuffers(AbsRenderer.VERTICES_COORD)
-    }
-
-    return if (screenWidth > 0 && screenHeight > 0) {
-        val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
-        val specificRatio = height.toFloat() / width.toFloat()
-        when {
-            screenRatio == specificRatio -> {
-                createFloatBuffers(AbsRenderer.VERTICES_COORD)
+    val floatArray: FloatArray =
+            if (!keepRatio) {
+                AbsRenderer.VERTICES_COORD
+            } else {
+                if (screenWidth > 0 && screenHeight > 0) {
+                    val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
+                    val specificRatio = height.toFloat() / width.toFloat()
+                    when {
+                        screenRatio == specificRatio -> AbsRenderer.VERTICES_COORD
+                        screenRatio < specificRatio  -> {
+                            val widthScale = screenRatio / specificRatio
+                            floatArrayOf(
+                                -widthScale, -1.0f,
+                                widthScale, -1.0f,
+                                -widthScale, 1.0f,
+                                widthScale, 1.0f
+                            )
+                        }
+                        else                         -> {
+                            val heightScale = specificRatio / screenRatio
+                            floatArrayOf(
+                                -1.0f, -heightScale,
+                                1.0f, -heightScale,
+                                -1.0f, heightScale,
+                                1.0f, heightScale
+                            )
+                        }
+                    }
+                } else {
+                    AbsRenderer.VERTICES_COORD
+                }
             }
-            screenRatio < specificRatio  -> {
-                val widthScale = screenRatio / specificRatio
-                createFloatBuffers(
-                    floatArrayOf(
-                        -widthScale, -1.0f,
-                        widthScale, -1.0f,
-                        -widthScale, 1.0f,
-                        widthScale, 1.0f
-                    )
-                )
-            }
-            else                         -> {
-                val heightScale = specificRatio / screenRatio
-                createFloatBuffers(
-                    floatArrayOf(
-                        -1.0f, -heightScale,
-                        1.0f, -heightScale,
-                        -1.0f, heightScale,
-                        1.0f, heightScale
-                    )
-                )
-            }
-        }
-    } else {
-        createFloatBuffers(AbsRenderer.VERTICES_COORD)
-    }
+    return createFloatBuffers(floatArray)
 }

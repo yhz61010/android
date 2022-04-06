@@ -6,6 +6,7 @@ import com.leovp.androidbase.exts.kotlin.truncate
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.log_sdk.LogContext
+import com.leovp.opengl_sdk.AbsRenderer
 import com.leovp.opengl_sdk.ui.LeoGLSurfaceView
 import kotlinx.coroutines.*
 import java.io.File
@@ -154,7 +155,7 @@ class DecodeH264RawFileByFFMpeg {
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =
-                                            if (videoInfo.pixelFormatId < 0) com.leovp.opengl_sdk.GLRenderer.Yuv420Type.I420 else com.leovp.opengl_sdk.GLRenderer.Yuv420Type.getType(
+                                            if (videoInfo.pixelFormatId < 0) AbsRenderer.Yuv420Type.I420 else AbsRenderer.Yuv420Type.getType(
                                                 videoInfo.pixelFormatId)
                                     glSurfaceView.render(it.yuvBytes, yuv420Type)
                                 }

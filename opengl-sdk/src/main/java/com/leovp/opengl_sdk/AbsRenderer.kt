@@ -27,8 +27,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
 
-    protected var pointCoord: FloatBuffer = createFloatBuffers(POINT_COORD)
-    protected var texVertices: FloatBuffer = createFloatBuffers(TEX_VERTEX)
+    protected var pointCoord: FloatBuffer = createFloatBuffers(VERTICES_COORD)
+    protected var texVertices: FloatBuffer = createFloatBuffers(TEX_COORD)
 
     /**
      * The step of make program.
@@ -106,16 +106,16 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * (0,0) 作为中心点，X 坐标从左到右，Y 坐标从下到上，在 `[-1,1]` 之间取值，再映射到屏幕上。
          *
          * ```
-         * (-1,1)         (1,1)
+         * C(-1,1)        D(1,1)
          *       ┌────────┐
          *       │    ↑   │
          *       │ ───┼──→│ center (0,0)
          *       │    │   │
          *       └────────┘
-         * (-1,-1)        (1,-1)
+         * A(-1,-1)       B(1,-1)
          * ```
          */
-        val POINT_COORD = floatArrayOf(
+        val VERTICES_COORD = floatArrayOf(
             -1.0f, -1.0f, // lb
             1.0f, -1.0f,  // rb
             -1.0f, 1.0f,  // lt
@@ -129,15 +129,15 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * 纹理坐标方向性在 Android 上与我们平时熟悉的 Bitmap、canvas 等一致，都是顶点在左上角。
          *
          * ```
-         * (0,0)────s──→(1,0)
+         * C(0,0)────s──→D(1,0)
          *   │  ┌───────┐
          *   t  │texture│
          *   │  │       │
          *   ↓  └───────┘
-         * (0,1)        (1,1)
+         * A(0,1)        B(1,1)
          * ```
          */
-        val TEX_VERTEX = floatArrayOf(
+        val TEX_COORD = floatArrayOf(
             0.0f, 1.0f, // lb
             1.0f, 1.0f, // rb
             0.0f, 0.0f, // lt

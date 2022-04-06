@@ -4,6 +4,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
+import com.leovp.opengl_sdk.util.VerticesUtil
 import com.leovp.opengl_sdk.util.checkGlError
 import com.leovp.opengl_sdk.util.compileShader
 import com.leovp.opengl_sdk.util.createFloatBuffers
@@ -27,8 +28,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
 
-    protected var pointCoord: FloatBuffer = createFloatBuffers(VERTICES_COORD)
-    protected var texVertices: FloatBuffer = createFloatBuffers(TEX_COORD)
+    protected var pointCoord: FloatBuffer = createFloatBuffers(VerticesUtil.VERTICES_COORD)
+    protected var texVertices: FloatBuffer = createFloatBuffers(VerticesUtil.TEX_COORD)
 
     /**
      * The step of make program.
@@ -98,54 +99,5 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * 数据数组中每个顶点起始数据的间距：数组中每个顶点相关属性占的Byte值
          */
         const val STRIDE = POSITION_COMPONENT_COUNT * Float.SIZE_BYTES
-
-        /**
-         * OpenGL 的世界坐标系是 `[-1, -1, 1, 1]`
-         *
-         * 顺序：ABCD
-         *
-         * 与 Android 中的 Canvas 或者屏幕坐标体系不同，GL 的坐标起始位置在屏幕中心，
-         * (0,0) 作为中心点，X 坐标从左到右，Y 坐标从下到上，在 `[-1,1]` 之间取值，再映射到屏幕上。
-         *
-         * ```
-         * C(-1,1)        D(1,1)
-         *       ┌────────┐
-         *       │    ↑   │
-         *       │ ───┼──→│ center (0,0)
-         *       │    │   │
-         *       └────────┘
-         * A(-1,-1)       B(1,-1)
-         * ```
-         */
-        val VERTICES_COORD = floatArrayOf(
-            -1.0f, -1.0f, // lb
-            1.0f, -1.0f,  // rb
-            -1.0f, 1.0f,  // lt
-            1.0f, 1.0f    // rt
-        )
-
-        /**
-         * 纹理的坐标系。取值范围在 `[0,0]` 到 `[1,1]` 内。
-         *
-         * 顺序：ABCD
-         *
-         * 两个维度分别是 S、T，所以一般称为 ST 纹理坐标。而有些时候也叫UV坐标。
-         * 纹理坐标方向性在 Android 上与我们平时熟悉的 Bitmap、canvas 等一致，都是顶点在左上角。
-         *
-         * ```
-         * C(0,0)────s──→D(1,0)       C(0,1)        D(1,1)
-         *   │  ┌───────┐               ↑  ┌───────┐
-         *   t  │texture│               t  │texture│
-         *   │  │       │               │  │       │
-         *   ↓  └───────┘               │  └───────┘
-         * A(0,1)        B(1,1)       A(0,0)────s──→B(1,0)
-         * ```
-         */
-        val TEX_COORD = floatArrayOf(
-            0.0f, 1.0f, // lb
-            1.0f, 1.0f, // rb
-            0.0f, 0.0f, // lt
-            1.0f, 0.0f  // rt
-        )
     }
 }

@@ -3,9 +3,7 @@
 package com.leovp.opengl_sdk
 
 import android.content.Context
-import android.graphics.SurfaceTexture
 import android.opengl.GLES20
-import android.os.SystemClock
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.checkGlError
@@ -22,7 +20,7 @@ import javax.microedition.khronos.opengles.GL10
  *
  * @see [Android OpenGL处理YUV数据（I420、NV12、NV21）](https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6)
  */
-class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.OnFrameAvailableListener {
+class GLRenderer(private val context: Context) : AbsRenderer() {
     override fun getTagName() = "GLRenderer"
 
     var keepRatio: Boolean = true
@@ -188,10 +186,9 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
     private var planarTextureIntBuffer = IntBuffer.wrap(IntArray(THREE_PLANAR))
     private val sampleIntArray = IntArray(3)
 
-    // handles
     private var aPositionLocation = -1
     private var aTexCoordLocation = -1
-    private var mvpMatrixHandle: Int = -1
+    private var uMPVMatrix: Int = -1
 
     private fun drawTexture(mvpMatrix: FloatArray, type: Yuv420Type) {
         /*
@@ -220,11 +217,11 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
             GLES20.glEnableVertexAttribArray(it)
         }
 
-        // get handle to shape's transformation matrix
-        mvpMatrixHandle = getUniform("uMVPMatrix")
+        // Get handle to shape's transformation matrix
+        uMPVMatrix = getUniform("uMVPMatrix")
 
         // Pass the projection and view transformation to the shader
-        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
+        GLES20.glUniformMatrix4fv(uMPVMatrix, 1, false, mvpMatrix, 0)
 
         // 传纹理的像素格式给 fragment shader
         val yuvType = getUniform("yuvType")
@@ -266,9 +263,5 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
 
         GLES20.glDisableVertexAttribArray(aPositionLocation)
         GLES20.glDisableVertexAttribArray(aTexCoordLocation)
-    }
-
-    override fun onFrameAvailable(surfaceTexture: SurfaceTexture) {
-        LogContext.log.d(tag, "onFrameAvailable() ${SystemClock.elapsedRealtime()}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 }

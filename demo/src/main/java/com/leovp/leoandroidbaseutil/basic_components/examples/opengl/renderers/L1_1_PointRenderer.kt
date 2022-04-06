@@ -84,7 +84,7 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
         // 步骤2：编译片段着色器
         val fragmentShader = compileShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER)
 
-        // 步骤3：将顶点着色器、片段着色器进行链接，组装成一个OpenGL程序
+        // 步骤3：将顶点着色器、片段着色器进行链接，组装成一个 OpenGL 程序
         programObjId = linkProgram(vertexShader, fragmentShader)
 
         validateProgram(programObjId)
@@ -100,6 +100,7 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
 
         // 将缓冲区的指针移动到头部，保证数据是从最开始处读取
         vertexData.position(0)
+
         // 步骤7：关联顶点坐标属性和缓存数据
         // 1. 位置索引；
         // 2. 每个顶点属性需要关联的分量个数(必须为1、2、3或者4。初始值为4。)；
@@ -123,9 +124,10 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
         // 步骤1：使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
-        // 步骤2：更新u_Color的值，即更新画笔颜色
+        // 步骤2：更新 u_Color 的值，即更新画笔颜色
         GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f)
+
         // 步骤3：使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1)
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 }

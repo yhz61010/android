@@ -242,7 +242,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
 
-        // 传纹理的像素格式给fragment shader
+        // 传纹理的像素格式给 fragment shader
         val yuvType = getUniform("yuvType")
         checkGlError("glGetUniformLocation yuvType")
         GLES20.glUniform1i(yuvType, type.value)
@@ -256,7 +256,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
             sampleHandle[1] = getUniform("samplerU")
             sampleHandle[2] = getUniform("samplerV")
         } else {
-            // NV12、NV21 有两个平面
+            // NV12，NV21 有两个平面
             planarCount = TWO_PLANAR
             sampleHandle[0] = getUniform("samplerY")
             sampleHandle[1] = getUniform("samplerUV")

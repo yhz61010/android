@@ -5,6 +5,8 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
+import com.leovp.lib_common_android.exts.getScreenAvailableHeight
+import com.leovp.lib_common_android.exts.getScreenWidth
 import com.leovp.lib_common_android.ui.TouchHelper
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.GLRenderer
@@ -39,7 +41,6 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
         LogContext.log.w(TAG, "Adjust GLSurfaceView dimension to $width x $height")
         val params: ViewGroup.LayoutParams = layoutParams
         // Changes the height and width to the specified *pixels*
-        // Changes the height and width to the specified *pixels*
         params.width = width
         params.height = height
         layoutParams = params
@@ -71,7 +72,7 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
      */
     fun setVideoDimension(videoWidth: Int, videoHeight: Int) {
         LogContext.log.d(TAG, "setVideoDimension: $videoWidth*$videoHeight")
-        renderer.setVideoDimension(videoWidth, videoHeight)
+        renderer.setVideoDimension(videoWidth, videoHeight, context.getScreenWidth(), context.getScreenAvailableHeight())
     }
 
     /**

@@ -4,9 +4,9 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.util.BufferUtil
 import com.leovp.opengl_sdk.util.checkGlError
 import com.leovp.opengl_sdk.util.compileShader
+import com.leovp.opengl_sdk.util.createFloatBuffers
 import java.nio.FloatBuffer
 import javax.microedition.khronos.opengles.GL10
 
@@ -27,8 +27,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
 
-    protected var pointCoord: FloatBuffer = BufferUtil.createFloatBuffers(POINT_COORD)
-    protected var texVertices: FloatBuffer = BufferUtil.createFloatBuffers(TEX_VERTEX)
+    protected var pointCoord: FloatBuffer = createFloatBuffers(POINT_COORD)
+    protected var texVertices: FloatBuffer = createFloatBuffers(TEX_VERTEX)
 
     /**
      * The step of make program.
@@ -65,6 +65,20 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
 
     protected fun getAttrib(name: String): Int {
         return GLES20.glGetAttribLocation(programObjId, name)
+    }
+
+    // 0 -> I420 (YUV420P)  YYYYYYYY UUVV
+    // 1 -> NV12 (YUV420SP) YYYYYYYY UVUV
+    // 2 -> NV21 (YUV420SP) YYYYYYYY VUVU
+    @Suppress("unused")
+    enum class Yuv420Type(val value: Int) {
+        I420(0),
+        NV12(1),
+        NV21(2);
+
+        companion object {
+            fun getType(value: Int) = values().first { it.value == value }
+        }
     }
 
     companion object {

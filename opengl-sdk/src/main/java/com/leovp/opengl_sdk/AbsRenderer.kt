@@ -23,7 +23,7 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     protected var outputHeight: Int = 0
 
     protected var squareVertices: FloatBuffer = BufferUtil.createFloatBuffers(SQUARE_VERTICES)
-    protected var coordVertices: FloatBuffer = BufferUtil.createFloatBuffers(COORD_VERTICES)
+    protected var coordVertices: FloatBuffer = BufferUtil.createFloatBuffers(TEX_COORD)
 
     protected fun getUniform(name: String): Int {
         return GLES20.glGetUniformLocation(programObjId, name)
@@ -82,7 +82,7 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
         /**
          * OpenGL 的世界坐标系是 `[-1, -1, 1, 1]`
          *
-         * 与 Android 中的 Canvas 或者屏幕坐标体系不同，GL的坐标起始位置在屏幕中心，
+         * 与 Android 中的 Canvas 或者屏幕坐标体系不同，GL 的坐标起始位置在屏幕中心，
          * (0,0) 作为中心点，X 坐标从左到右，Y 坐标从下到上，在 `[-1,1]` 之间取值，再映射到屏幕上。
          *
          * ```
@@ -117,7 +117,7 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * (0,1)        (1,1)
          * ```
          */
-        val COORD_VERTICES = floatArrayOf(
+        val TEX_COORD = floatArrayOf(
             0.0f, 1.0f, // lb
             1.0f, 1.0f, // rb
             0.0f, 0.0f, // lt

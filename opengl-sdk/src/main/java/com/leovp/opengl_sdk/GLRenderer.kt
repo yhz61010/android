@@ -75,7 +75,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
     }
 
     private fun createCustomFloatBuffer(videoWidth: Int, videoHeight: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
-        return createFloatBuffers(createFloatArray(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight))
+        return createFloatBuffers(createKeepRatioFloatArray(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight))
     }
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.

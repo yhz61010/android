@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate", "WeakerAccess")
+
 package com.leovp.opengl_sdk.util
 
 object VerticesUtil {

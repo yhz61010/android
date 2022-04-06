@@ -48,6 +48,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".basic_components.examples.opengl.OpenGLESPlaygroundActivity"
+            android:exported="false" />
+        <activity android:name=".basic_components.examples.opengl.OpenGLES20Activity"
+            android:exported="false" />
         <activity android:name=".basic_components.examples.adb.AdbCommunication"
             android:exported="false" />
         <activity android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity"

@@ -32,6 +32,8 @@
         <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_koin.xml" value="0.2911458333333333" />
         <entry key="demo/src/main/res/layout/activity_new_word.xml" value="0.3351851851851852" />
+        <entry key="demo/src/main/res/layout/activity_open_gles20.xml" value="0.5770833333333333" />
+        <entry key="demo/src/main/res/layout/activity_open_glesplayground.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_orientation.xml" value="0.5625" />
         <entry key="demo/src/main/res/layout/activity_play_video.xml" value="0.340625" />
         <entry key="demo/src/main/res/layout/activity_pref.xml" value="0.67" />

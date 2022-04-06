@@ -93,7 +93,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
+            squareVertices = BufferUtil.createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)
@@ -120,10 +120,10 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
                 //                Matrix.rotateM(viewMatrix, 0, -90f, 1f, 0f, 0f)
 
                 // Set the camera position (View matrix)
-                Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 1f, 0.0f, 0.0f)
+                //                Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 1f, 0.0f, 0.0f)
 
                 // Calculate the projection and view transformation
-                Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+                //                Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
                 try {
                     drawTexture(mvpMatrix, yuv420Type)
@@ -143,7 +143,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         LogContext.log.i(tag, "setVideoDimension width=$width x $width screen=$screenWidth x $screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
-            createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
+            squareVertices = BufferUtil.createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width
@@ -282,49 +282,5 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
 
         GLES20.glDisableVertexAttribArray(positionHandle)
         GLES20.glDisableVertexAttribArray(coordHandle)
-    }
-
-    /**
-     * 调整渲染纹理的缩放比例
-     * @param width YUV数据宽度
-     * @param height YUV数据高度
-     */
-    private fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int) {
-        LogContext.log.d(tag, "createBuffers($width, $height, $keepRatio) screen=$screenWidth x $screenHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
-        if (!keepRatio) {
-            squareVertices = BufferUtil.createFloatBuffers(SQUARE_VERTICES)
-        }
-
-        if (screenWidth > 0 && screenHeight > 0) {
-            val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
-            val specificRatio = height.toFloat() / width.toFloat()
-            when {
-                screenRatio == specificRatio -> {
-                    squareVertices = BufferUtil.createFloatBuffers(SQUARE_VERTICES)
-                }
-                screenRatio < specificRatio  -> {
-                    val widthScale = screenRatio / specificRatio
-                    squareVertices = BufferUtil.createFloatBuffers(
-                        floatArrayOf(
-                            -widthScale, -1.0f,
-                            widthScale, -1.0f,
-                            -widthScale, 1.0f,
-                            widthScale, 1.0f
-                        )
-                    )
-                }
-                else                         -> {
-                    val heightScale = specificRatio / screenRatio
-                    squareVertices = BufferUtil.createFloatBuffers(
-                        floatArrayOf(
-                            -1.0f, -heightScale,
-                            1.0f, -heightScale,
-                            -1.0f, heightScale,
-                            1.0f, heightScale
-                        )
-                    )
-                }
-            }
-        }
     }
 }

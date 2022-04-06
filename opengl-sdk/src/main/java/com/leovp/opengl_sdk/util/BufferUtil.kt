@@ -1,5 +1,8 @@
 package com.leovp.opengl_sdk.util
 
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ILog
+import com.leovp.opengl_sdk.AbsRenderer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -9,6 +12,8 @@ import java.nio.FloatBuffer
  * Date: 2022/4/2 18:08
  */
 object BufferUtil {
+    private const val TAG = "BufferUtil"
+
     /**
      * 创建一个 FloatBuffer 缓冲区，用于保存顶点/屏幕顶点和纹理顶点
      *
@@ -27,5 +32,51 @@ object BufferUtil {
                 //                position(0)
                 rewind()
             }
+    }
+
+    /**
+     * 调整渲染纹理的缩放比例
+     * @param width YUV数据宽度
+     * @param height YUV数据高度
+     */
+    fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
+        LogContext.log.d(TAG, "createBuffers($width, $height, $keepRatio) screen=$screenWidth x $screenHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        if (!keepRatio) {
+            return createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+        }
+
+        return if (screenWidth > 0 && screenHeight > 0) {
+            val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
+            val specificRatio = height.toFloat() / width.toFloat()
+            when {
+                screenRatio == specificRatio -> {
+                    createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+                }
+                screenRatio < specificRatio  -> {
+                    val widthScale = screenRatio / specificRatio
+                    createFloatBuffers(
+                        floatArrayOf(
+                            -widthScale, -1.0f,
+                            widthScale, -1.0f,
+                            -widthScale, 1.0f,
+                            widthScale, 1.0f
+                        )
+                    )
+                }
+                else                         -> {
+                    val heightScale = specificRatio / screenRatio
+                    createFloatBuffers(
+                        floatArrayOf(
+                            -1.0f, -heightScale,
+                            1.0f, -heightScale,
+                            -1.0f, heightScale,
+                            1.0f, heightScale
+                        )
+                    )
+                }
+            }
+        } else {
+            BufferUtil.createFloatBuffers(AbsRenderer.SQUARE_VERTICES)
+        }
     }
 }

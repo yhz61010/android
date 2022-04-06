@@ -1,7 +1,5 @@
 package com.leovp.opengl_sdk.util
 
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.AbsRenderer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -11,7 +9,6 @@ import java.nio.FloatBuffer
  * Author: Michael Leo
  * Date: 2022/4/2 18:08
  */
-private const val TAG = "BufferUtil"
 
 /**
  * 创建一个 FloatBuffer 缓冲区，用于保存顶点/屏幕顶点和纹理顶点
@@ -39,7 +36,6 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
  * @param height YUV数据高度
  */
 fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
-    LogContext.log.d(TAG, "createBuffers($width, $height, $keepRatio) screen=$screenWidth x $screenHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     if (!keepRatio) {
         return createFloatBuffers(AbsRenderer.POINT_COORD)
     }

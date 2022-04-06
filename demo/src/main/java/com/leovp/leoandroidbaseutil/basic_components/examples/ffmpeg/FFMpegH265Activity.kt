@@ -16,6 +16,7 @@ class FFMpegH265Activity : BaseDemonstrationActivity() {
         setContentView(R.layout.activity_ffmpeg_h265)
 
         glSurfaceView = findViewById(R.id.glSurfaceView)
+        glSurfaceView.setKeepRatio(true)
         //        glSurfaceView.updateDimension(getScreenWidth(), getScreenAvailableHeight())
         val rawFileFullPath = saveRawResourceToFile(R.raw.tears_400_x265_raw, getExternalFilesDir(null)!!.absolutePath, "h265.h265")
         decodeObjByFFMpeg.init(rawFileFullPath, glSurfaceView)

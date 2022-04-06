@@ -1,11 +1,8 @@
 package com.leovp.opengl_sdk.util
 
-import android.content.Context
 import android.opengl.GLES20
-import com.leovp.lib_exception.fail
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.R
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
 
@@ -151,17 +148,6 @@ fun compileShader(type: Int, shaderCode: String): Int {
     return shaderId
 }
 
-fun compileDefaultShader(ctx: Context, shaderType: Int): Int {
-    val shaderCode: String = when (shaderType) {
-        // 顶点着色器
-        GLES20.GL_VERTEX_SHADER   -> ctx.readAssetsFileAsString(R.raw.vertex_shader)
-        // 片段着色器
-        GLES20.GL_FRAGMENT_SHADER -> ctx.readAssetsFileAsString(R.raw.fragment_shader)
-        else                      -> fail("Invalid shader. Shader type=$shaderType")
-    }
-    return compileShader(shaderType, shaderCode)
-}
-
 /**
  * The step of make program.
  *
@@ -170,6 +156,7 @@ fun compileDefaultShader(ctx: Context, shaderType: Int): Int {
  * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
  * 步骤4: 通知 OpenGL ES 开始使用该程序
  */
+@Suppress("unused")
 fun makeProgram(vertexShaderCode: String, fragmentShaderCode: String): Int {
     val vertexShaderId = compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
     val fragmentShaderId = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)

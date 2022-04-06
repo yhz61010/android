@@ -34,7 +34,7 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
  * @param width YUV数据宽度
  * @param height YUV数据高度
  */
-fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
+fun createFloatArray(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatArray {
     val floatArray: FloatArray =
             if (!keepRatio) {
                 VerticesUtil.VERTICES_COORD
@@ -67,5 +67,5 @@ fun createFloatBuffers(width: Int, height: Int, keepRatio: Boolean, screenWidth:
                     VerticesUtil.VERTICES_COORD
                 }
             }
-    return createFloatBuffers(floatArray)
+    return floatArray
 }

@@ -8,6 +8,7 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.*
 import java.nio.ByteBuffer
+import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -73,6 +74,10 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         LogContext.log.d(tag, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 
+    private fun createCustomFloatBuffer(videoWidth: Int, videoHeight: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
+        return createFloatBuffers(createFloatArray(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight))
+    }
+
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         LogContext.log.w(tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
@@ -89,7 +94,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         //        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            pointCoord = createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
+            pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)
@@ -135,7 +140,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         LogContext.log.i(tag, "setVideoDimension width=$width x $width screen=$screenWidth x $screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
-            pointCoord = createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
+            pointCoord = createCustomFloatBuffer(width, height, keepRatio, screenWidth, screenAvailableHeight)
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width

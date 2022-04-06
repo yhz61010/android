@@ -3,6 +3,7 @@ package com.leovp.opengl_sdk.util
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.nio.ShortBuffer
 
 /**
  * Author: Michael Leo
@@ -21,6 +22,21 @@ fun createFloatBuffers(array: FloatArray): FloatBuffer {
 
         // Create a floating point buffer from the ByteBuffer
         .asFloatBuffer().apply {
+            // Add the coordinates to the FloatBuffer
+            put(array)
+            // Set the buffer to read the first coordinate
+            //                position(0)
+            rewind()
+        }
+}
+
+fun createShortBuffer(array: ShortArray): ShortBuffer {
+    return ByteBuffer.allocateDirect(array.size * Short.SIZE_BYTES)
+        // Use the device hardware's native byte order
+        .order(ByteOrder.nativeOrder())
+
+        // Create a short point buffer from the ByteBuffer
+        .asShortBuffer().apply {
             // Add the coordinates to the FloatBuffer
             put(array)
             // Set the buffer to read the first coordinate

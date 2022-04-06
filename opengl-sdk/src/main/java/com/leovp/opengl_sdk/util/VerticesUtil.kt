@@ -74,19 +74,20 @@ object VerticesUtil {
         return when (rotation) {
             Rotation.ROTATION_90  -> floatArrayOf(
                 verticesArray[2], verticesArray[3],
-                verticesArray[4], verticesArray[5],
                 verticesArray[6], verticesArray[7],
-                verticesArray[0], verticesArray[1])
+                verticesArray[0], verticesArray[1],
+                verticesArray[4], verticesArray[5],
+            )
             Rotation.ROTATION_180 -> floatArrayOf(
+                verticesArray[6], verticesArray[7],
                 verticesArray[4], verticesArray[5],
-                verticesArray[6], verticesArray[7],
-                verticesArray[0], verticesArray[1],
-                verticesArray[2], verticesArray[3])
-            Rotation.ROTATION_270 -> floatArrayOf(
-                verticesArray[6], verticesArray[7],
-                verticesArray[0], verticesArray[1],
                 verticesArray[2], verticesArray[3],
-                verticesArray[4], verticesArray[5])
+                verticesArray[0], verticesArray[1])
+            Rotation.ROTATION_270 -> floatArrayOf(
+                verticesArray[4], verticesArray[5],
+                verticesArray[0], verticesArray[1],
+                verticesArray[6], verticesArray[7],
+                verticesArray[2], verticesArray[3])
             else                  -> verticesArray
         }
     }

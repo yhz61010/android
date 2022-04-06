@@ -8,8 +8,8 @@ import android.opengl.GLES20
 import android.os.SystemClock
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.util.BufferUtil
 import com.leovp.opengl_sdk.util.checkGlError
+import com.leovp.opengl_sdk.util.createFloatBuffers
 import com.leovp.opengl_sdk.util.feedTextureWithImageData
 import com.leovp.opengl_sdk.util.readAssetsFileAsString
 import java.nio.ByteBuffer
@@ -94,7 +94,7 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
         //        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            pointCoord = BufferUtil.createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
+            pointCoord = createFloatBuffers(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)
@@ -126,11 +126,7 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
                 // Calculate the projection and view transformation
                 //                Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
-                try {
-                    drawTexture(mvpMatrix, yuv420Type)
-                } catch (e: Exception) {
-                    LogContext.log.e(tag, e, outputType = ILog.OUTPUT_TYPE_SYSTEM)
-                }
+                runCatching { drawTexture(mvpMatrix, yuv420Type) }.onFailure { LogContext.log.e(tag, it, outputType = ILog.OUTPUT_TYPE_SYSTEM) }
             }
         }
     }
@@ -144,7 +140,7 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
         LogContext.log.i(tag, "setVideoDimension width=$width x $width screen=$screenWidth x $screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
-            pointCoord = BufferUtil.createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
+            pointCoord = createFloatBuffers(width, height, keepRatio, screenWidth, screenAvailableHeight)
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width
@@ -184,19 +180,6 @@ class GLRenderer(private val context: Context) : AbsRenderer(), SurfaceTexture.O
                     uv.put(yuvData, videoWidth * videoHeight, videoWidth * videoHeight / 2)
                 }
             }
-        }
-    }
-
-    // 0 -> I420 (YUV420P)  YYYYYYYY UUVV
-    // 1 -> NV12 (YUV420SP) YYYYYYYY UVUV
-    // 2 -> NV21 (YUV420SP) YYYYYYYY VUVU
-    enum class Yuv420Type(val value: Int) {
-        I420(0),
-        NV12(1),
-        NV21(2);
-
-        companion object {
-            fun getType(value: Int) = values().first { it.value == value }
         }
     }
 

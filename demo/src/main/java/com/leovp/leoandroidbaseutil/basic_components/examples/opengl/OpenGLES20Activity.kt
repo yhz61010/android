@@ -8,10 +8,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L1_1_BasicSkeletonRenderer
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L1_2_PointRenderer
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L2_1_BasicShapeRenderer
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L2_2_PolygonRenderer
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.*
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGles20Binding
 import java.io.Serializable
 
@@ -31,6 +28,7 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
         Item("Point 绘制", L1_2_PointRenderer::class.java),
         Item("基础图形绘制 - 点，线，三角形", L2_1_BasicShapeRenderer::class.java),
         Item("基础图形绘制 - 多边形", L2_2_PolygonRenderer::class.java),
+        Item("正交投影 - 多边形", L3_1_OrthoPolygonRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

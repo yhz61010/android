@@ -19,7 +19,7 @@
 
 uniform mat4 uMVPMatrix;
 attribute vec4 a_Position;// 输入的顶点坐标，会在程序指定将数据输入到该字段
-attribute vec2 a_TexCoord;// 输入的纹理坐标(2个分量，S 和 T 坐标)，会在程序指定将数据输入到该字段
+attribute vec2 a_TexCoord;// 输入的纹理坐标(2 个分量，S 和 T 坐标)，会在程序指定将数据输入到该字段
 varying vec2 v_TexCoord;// 输出的纹理坐标，输入到片段着色器
 void main() {
     v_TexCoord = a_TexCoord;

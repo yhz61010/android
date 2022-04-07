@@ -112,12 +112,6 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
-        super.onSurfaceChanged(gl, width, height)
-        // Set the OpenGL viewport to fill the entire surface.
-        GLES20.glViewport(0, 0, width, height)
-    }
-
     override fun onDrawFrame(glUnused: GL10) {
         // 步骤1：使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)

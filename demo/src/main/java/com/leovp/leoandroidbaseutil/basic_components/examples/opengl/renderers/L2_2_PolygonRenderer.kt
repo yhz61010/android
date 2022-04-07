@@ -36,7 +36,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
                 uniform vec4 u_Color;
                 void main()
                 {
-                   gl_FragColor = u_Color;
+                    gl_FragColor = u_Color;
                 }
         """
 

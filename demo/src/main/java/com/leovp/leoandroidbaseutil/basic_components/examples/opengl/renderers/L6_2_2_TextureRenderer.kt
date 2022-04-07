@@ -157,12 +157,20 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         textureBeanBeauty = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 加载纹理坐标
+        // 1. 位置索引；
+        // 2. 每个顶点属性需要关联的分量个数(必须为1、2、3或者4。初始值为4。)；
+        // 3. 数据类型；
+        // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
+        // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
+        // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(texCoordLocationFireL, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, textureBufferFireL)
+        // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
         GLES20.glVertexAttribPointer(texCoordLocationBeauty, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, textureBufferBeauty)
+        // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
     }
 
@@ -178,9 +186,17 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         drawFireL()
         drawBeauty()
 
-        GLES20.glEnableVertexAttribArray(aPositionLocation)
+        // 关联顶点坐标属性和缓存数据
+        // 1. 位置索引；
+        // 2. 每个顶点属性需要关联的分量个数(必须为1、2、3或者4。初始值为4。)；
+        // 3. 数据类型；
+        // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
+        // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
+        // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexBufferFireL)
+        // 通知 GL 程序使用指定的顶点属性索引
+        GLES20.glEnableVertexAttribArray(aPositionLocation)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 

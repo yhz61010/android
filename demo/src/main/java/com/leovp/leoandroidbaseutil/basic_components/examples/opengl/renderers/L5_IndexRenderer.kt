@@ -82,7 +82,7 @@ class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRende
     private var uColorLocation: Int = 0
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
@@ -108,7 +108,7 @@ class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         projectionMatrixHelper.enable(width, height)
     }
 
-    override fun onDrawFrame(glUnused: GL10) {
+    override fun onDrawFrame(unused: GL10) {
         // 使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUniform4f(uColorLocation, 0.0f, 1.0f, 1.0f, 1.0f)

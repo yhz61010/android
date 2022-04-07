@@ -94,7 +94,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
@@ -130,7 +130,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         projectionMatrixHelper.enable(width, height)
     }
 
-    override fun onDrawFrame(glUnused: GL10) {
+    override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT)
         // 纹理单元：在 OpenGL 中，纹理不是直接绘制到片段着色器上，而是通过纹理单元去保存纹理
 

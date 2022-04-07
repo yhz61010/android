@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
  * Point 绘制
  */
 class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L1_2_PointRenderer"
+    override fun getTagName(): String = L1_2_PointRenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */

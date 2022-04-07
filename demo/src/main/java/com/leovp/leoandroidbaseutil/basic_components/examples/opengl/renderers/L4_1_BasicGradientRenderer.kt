@@ -4,7 +4,7 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
-import com.leovp.opengl_sdk.util.createFloatBuffers
+import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -69,8 +69,8 @@ class L4_1_BasicGradientRenderer(@Suppress("unused") private val ctx: Context) :
      * 顶点坐标数据缓冲区
      * 分配一个块 Native 内存，用于与 GL 通讯传递。(我们通常用的数据存在于 Dalvik 的内存中，1.无法访问硬件；2.会被垃圾回收)
      */
-    private val vertexData: FloatBuffer = createFloatBuffers(POINT_DATA)
-    private val colorData: FloatBuffer = createFloatBuffers(COLOR_DATA)
+    private val vertexData: FloatBuffer = createFloatBuffer(POINT_DATA)
+    private val colorData: FloatBuffer = createFloatBuffer(COLOR_DATA)
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 

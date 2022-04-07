@@ -122,8 +122,8 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     private var aPositionLocation: Int = 0
 
     init {
-        val vertexToTextureBeuaty = vertexToTextureBeauty(POINT_DATA_BEAUTY)
-        textureBufferBeauty = createFloatBuffer(vertexToTextureBeuaty)
+        val vertexToTextureBeauty = vertexToTextureBeauty(POINT_DATA_BEAUTY)
+        textureBufferBeauty = createFloatBuffer(vertexToTextureBeauty)
     }
 
     private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {

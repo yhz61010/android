@@ -18,7 +18,7 @@ class L1_1_PointRenderer(@Suppress("unused") private val ctx: Context) : AbsRend
     override fun getTagName(): String = "L1_1_PointRenderer"
 
     private companion object {
-        //关键字 概念：
+        // 关键字 概念：
         // 1. uniform 由外部程序传递给 shader，就像是C语言里面的常量，shader 只能用，不能改；
         // 2. attribute 是只能在 vertex shader 中使用的变量；
         // 3. varying 变量是 vertex shader 和 fragment shader 之间做数据传递用的。

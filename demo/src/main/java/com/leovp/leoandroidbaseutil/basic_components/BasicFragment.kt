@@ -66,6 +66,7 @@ class BasicFragment : Fragment() {
             Pair("FFMPEG Raw H265", FFMpegH265Activity::class.java),
             Pair("Camera2Live", Camera2LiveActivity::class.java),
             Pair("Camera2 No Preview", Camera2WithoutPreviewActivity::class.java),
+            Pair("OpenGL ES 2.0", OpenGLES20Activity::class.java),
             Pair("Eventbus-bridge WebSocket Client", EventBusBridgeClientActivity::class.java),
             Pair("Device Info", DeviceInfoActivity::class.java),
             Pair("TakeScreenshot", TakeScreenshotActivity::class.java),
@@ -98,7 +99,6 @@ class BasicFragment : Fragment() {
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
-            Pair("OpenGL ES 2.0", OpenGLES20Activity::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)

@@ -15,7 +15,7 @@ import javax.microedition.khronos.opengles.GL10
  * 基础框架
  */
 class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L1_1_BasicRenderer"
+    override fun getTagName(): String = L1_1_BasicSkeletonRenderer::class.java.simpleName
 
     private companion object {
         // 关键字 概念：

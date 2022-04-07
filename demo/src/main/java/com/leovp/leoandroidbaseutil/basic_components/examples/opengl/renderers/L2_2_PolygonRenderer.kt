@@ -13,7 +13,7 @@ import kotlin.math.sin
 /**
  * 基础图形绘制 - 多边形
  */
-class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = "L2_2_PolygonRenderer"
 
     private companion object {
@@ -49,6 +49,9 @@ class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         private const val START_POINT_RADIAN: Float = (2 * Math.PI / 4).toFloat()
     }
 
+    open val vertexShader: String
+        get() = VERTEX_SHADER
+
     /** 多边形的顶点数，即边数 */
     private var polygonVertexCount = 3
 
@@ -71,7 +74,7 @@ class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
-        programObjId = makeAndUseProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        programObjId = makeAndUseProgram(vertexShader, FRAGMENT_SHADER)
 
         uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
         aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")

@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
  * Author: Michael Leo
  * Date: 2022/4/2 14:19
  */
-abstract class AbsRenderer : GLSurfaceView.Renderer {
+abstract class BaseRenderer : GLSurfaceView.Renderer {
     abstract fun getTagName(): String
     val tag: String by lazy { getTagName() }
 
@@ -122,6 +122,8 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
             fun getType(value: Int) = values().first { it.value == value }
         }
     }
+
+    open fun onClick() {}
 
     companion object {
         // I420, YV12

@@ -9,24 +9,21 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * Point 绘制
+ * 基础图形绘制 - 点，线，三角形
  */
-class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L1_2_PointRenderer"
+class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+    override fun getTagName(): String = "L2_1_BasicShapeRenderer"
 
     private companion object {
         /**
          * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
          */
         private const val VERTEX_SHADER = """
-                // vec4：4 个分量的向量：x、y、z、w。从外部传递进来的每个顶点的颜色值
                 attribute vec4 a_Position;
                 void main()
                 {
-                    // gl_Position：GL中默认定义的输出变量，决定了当前顶点的最终位置
                     gl_Position = a_Position;
-                    // gl_PointSize：GL中默认定义的输出变量，决定了当前顶点的大小
-                    gl_PointSize = 40.0;
+                    gl_PointSize = 30.0;
                 }
         """
 
@@ -35,34 +32,28 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
          * uniform：可用于顶点和片段着色器，一般用于对于物体中所有顶点或者所有的片段都相同的量。比如光源位置、统一变换矩阵、颜色等。
          */
         private const val FRAGMENT_SHADER = """
-                // 定义所有浮点数据类型的默认精度；有 lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用 highp。(顶点着色器默认 highp)
                 precision mediump float;
-                // vec4：4 个分量的向量：x、y、z、w
                 uniform vec4 u_Color;
                 void main()
                 {
-                   // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
                    gl_FragColor = u_Color;
                 }
         """
 
         /**
          * 顶点数据数组
-         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）
-         * 该数组表示 1 个顶点数据，也就是 1 个点的坐标。
+         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）。 该数组表示 1 个顶点数据，也就是 1 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(
-            0f, 0f,
-            -.5f, -.5f,
-            .5f, .5f,
-            -.5f, .5f,
-            .5f, -.5f
+            0f, .5f,
+            -.5f, 0f,
+            0f, -.5f,
+            .5f, 0f
         )
     }
 
     /**
      * 顶点坐标数据缓冲区
-     *
      * 分配一个块 Native 内存，用于与 GL 通讯传递。(我们通常用的数据存在于 Dalvik 的内存中，1.无法访问硬件；2.会被垃圾回收)
      */
     private val vertexData: FloatBuffer = createFloatBuffers(POINT_DATA)
@@ -72,7 +63,10 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
      */
     private var uColorLocation: Int = 0
 
-    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
+    private var drawCount: Int = 0
+    private val MAX_DRAW_COUNT = POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
+
+    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
@@ -99,11 +93,36 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
     }
 
     override fun onDrawFrame(glUnused: GL10) {
-        // 步骤1：使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        // 步骤2：更新 u_Color 的值，即更新画笔颜色
+        drawCount++
+
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        drawPoint()
+        drawLine()
+        drawTriangle()
+        if (drawCount >= MAX_DRAW_COUNT) drawCount = 0
+    }
+
+    private fun drawPoint() {
+        // 更新 u_Color 的值，即更新画笔颜色
         GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f)
-        // 步骤3：使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        // 使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, drawCount)
+    }
+
+    private fun drawLine() {
+        // GL_LINES：每 2 个点构成一条线段
+        // GL_LINE_LOOP：按顺序将所有的点连接起来，包括首位相连
+        // GL_LINE_STRIP：按顺序将所有的点连接起来，不包括首位相连
+        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, drawCount)
+    }
+
+    private fun drawTriangle() {
+        // GL_TRIANGLES：每 3 个点构成一个三角形
+        // GL_TRIANGLE_STRIP：相邻 3 个点构成一个三角形,不包括首位两个点
+        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
+        GLES20.glUniform4f(uColorLocation, 0.0f, 1.0f, 1.0f, 1.0f)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, drawCount)
     }
 }

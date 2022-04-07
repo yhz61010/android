@@ -15,7 +15,7 @@ import javax.microedition.khronos.opengles.GL10
  * 索引绘制
  */
 class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L5_IndexRenderer"
+    override fun getTagName(): String = L5_IndexRenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */

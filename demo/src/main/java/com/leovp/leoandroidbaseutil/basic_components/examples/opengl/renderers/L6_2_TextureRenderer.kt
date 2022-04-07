@@ -12,10 +12,10 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * 纹理绘制
+ * 纹理渲染 - 单个纹理单元
  */
-class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = L6_1_TextureRenderer::class.java.simpleName
+class L6_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+    override fun getTagName(): String = L6_2_TextureRenderer::class.java.simpleName
 
     companion object {
         private const val VERTEX_SHADER = """
@@ -55,11 +55,17 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * A(-1,-1)       D(1,-1)
          * ```
          */
-        private val POINT_DATA = floatArrayOf(
-            -1f, -1f,
-            -1f, 1f,
-            1f, 1f,
-            1f, -1f)
+        private val POINT_DATA_FIRE_L = floatArrayOf(
+            -0.5f * 2, -0.5f * 2,
+            -0.5f * 2, 0.5f * 2,
+            0.5f * 2, 0.5f * 2,
+            0.5f * 2, -0.5f * 2)
+
+        private val POINT_DATA_BEAUTY = floatArrayOf(
+            -0.5f, -0.5f,
+            -0.5f, 0.5f,
+            0.5f, 0.5f,
+            0.5f, -0.5f)
 
         /**
          * 纹理坐标
@@ -85,37 +91,31 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         private const val TEX_VERTEX_COMPONENT_COUNT = 2
     }
 
-    private val vertexData: FloatBuffer = createFloatBuffer(POINT_DATA)
+    private val vertexDataFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
+    private val vertexDataBeauty: FloatBuffer = createFloatBuffer(POINT_DATA_BEAUTY)
 
     private var uTextureUnitLocation: Int = 0
     private val texVertexBuffer: FloatBuffer = createFloatBuffer(TEX_VERTEX)
 
     /** 纹理数据 */
-    private lateinit var textureBean: TextureHelper.TextureBean
+    private lateinit var textureBeanFireL: TextureHelper.TextureBean
+    private lateinit var textureBeanBeauty: TextureHelper.TextureBean
 
+    private var aPositionLocation: Int = 0
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
     override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
-        val aPositionLocation = getAttrib("a_Position")
+        aPositionLocation = getAttrib("a_Position")
         projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
         // 纹理坐标索引
         val aTexCoordLocation = getAttrib("a_TexCoord")
         uTextureUnitLocation = getUniform("u_TextureUnit")
         // 纹理数据
-        textureBean = TextureHelper.loadTexture(ctx, R.drawable.img_fire_l)
-
-        // 关联顶点坐标属性和缓存数据
-        // 1. 位置索引；
-        // 2. 每个顶点属性需要关联的分量个数(必须为1、2、3或者4。初始值为4。)；
-        // 3. 数据类型；
-        // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
-        // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
-        // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData)
-        GLES20.glEnableVertexAttribArray(aPositionLocation)
+        textureBeanFireL = TextureHelper.loadTexture(ctx, R.drawable.img_fire_l)
+        textureBeanBeauty = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 加载纹理坐标
         GLES20.glVertexAttribPointer(aTexCoordLocation, TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
@@ -135,16 +135,33 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT)
         // 纹理单元：在 OpenGL 中，纹理不是直接绘制到片段着色器上，而是通过纹理单元去保存纹理
 
+        drawFireL()
+        drawBeauty()
+    }
+
+    private fun drawFireL() {
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexDataFireL)
+        GLES20.glEnableVertexAttribArray(aPositionLocation)
+
         // 设置当前活动的纹理单元为纹理单元 0
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-
         // 将纹理 ID 绑定到当前活动的纹理单元上
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBean.textureId)
-
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
-
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+    }
+
+    private fun drawBeauty() {
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexDataBeauty)
+        GLES20.glEnableVertexAttribArray(aPositionLocation)
+
+        // 绑定新的纹理 ID 到已激活的纹理单元上
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
+        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 }

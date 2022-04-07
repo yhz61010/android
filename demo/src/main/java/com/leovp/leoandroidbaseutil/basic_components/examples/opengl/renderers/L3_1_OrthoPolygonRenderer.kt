@@ -10,7 +10,7 @@ import javax.microedition.khronos.opengles.GL10
  * 正交投影 - 多边形
  */
 class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : L2_2_PolygonRenderer(ctx) {
-    override fun getTagName(): String = "L3_1_OrthoPolygonRenderer"
+    override fun getTagName(): String = L3_1_OrthoPolygonRenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */

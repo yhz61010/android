@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
  * 基础图形绘制 - 点，线，三角形
  */
 class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L2_1_BasicShapeRenderer"
+    override fun getTagName(): String = L2_1_BasicShapeRenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */

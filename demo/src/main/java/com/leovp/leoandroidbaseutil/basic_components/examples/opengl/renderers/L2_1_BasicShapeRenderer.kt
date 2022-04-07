@@ -3,6 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.BaseRenderer
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig

@@ -58,10 +58,10 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
          * ```
          */
         private val POINT_DATA_FIRE_L = floatArrayOf(
-            -0.5f * 2, -0.5f * 2,
-            -0.5f * 2, 0.5f * 2,
-            0.5f * 2, 0.5f * 2,
-            0.5f * 2, -0.5f * 2)
+            -1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, -1.0f)
 
         private val POINT_DATA_BEAUTY = floatArrayOf(
             -0.5f, -0.5f,

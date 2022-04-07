@@ -81,12 +81,6 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
          * A(-1,-1)       D(1,-1)
          * ```
          */
-        private val POINT_DATA_FIRE_L = floatArrayOf(
-            -1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, -1.0f)
-
         private val POINT_DATA_BEAUTY = floatArrayOf(
             -0.2f, -0.2f,
             -0.2f, 0.2f,
@@ -114,7 +108,11 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             1f, 1f)
     }
 
-    private val vertexBufferFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
+    private val vertexBufferFireL: FloatBuffer = createFloatBuffer(floatArrayOf(
+        -1.0f, -1.0f,
+        -1.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, -1.0f))
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
     private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTextureBeauty(POINT_DATA_BEAUTY))
     private var textureLocationFireL: Int = 0

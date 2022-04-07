@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * 基础概念 + 点 的绘制
  */
-class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
+class L1_1_PointRenderer(@Suppress("unused") private val ctx: Context) : AbsRenderer() {
     override fun getTagName(): String = "L1_1_PointRenderer"
 
     private companion object {
@@ -27,7 +27,8 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
          * 顶点着色器：之后定义的每个都会传1次给顶点着色器
          */
         private val VERTEX_SHADER = """
-                // vec4：4个分量的向量：x、y、z、w
+                // a_Position：从外部传递进来的每个顶点的颜色值
+                // vec4：4 个分量的向量：x、y、z、w
                 attribute vec4 a_Position;
                 void main()
                 {
@@ -40,10 +41,12 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
 
         /**
          * 片段着色器
+         * uniform：可用于顶点和片段着色器，一般用于对于物体中所有顶点或者所有的片段都相同的量。比如光源位置、统一变换矩阵、颜色等。
          */
         private val FRAGMENT_SHADER = """
-                // 定义所有浮点数据类型的默认精度；有lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用highp。(顶点着色器默认highp)
+                // 定义所有浮点数据类型的默认精度；有 lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用 highp。(顶点着色器默认 highp)
                 precision mediump float;
+                // vec4：4 个分量的向量：x、y、z、w
                 uniform vec4 u_Color;
                 void main()
                 {
@@ -54,15 +57,22 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
 
         /**
          * 顶点数据数组
-         * 点的 x,y 坐标（x，y 各占 1 个分量）
+         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）
+         * 该数组表示 5 个顶点数据，也就是 5 个点的坐标。
          */
-        private val POINT_DATA = floatArrayOf(0f, 0f)
+        private val POINT_DATA = floatArrayOf(
+            0f, 0f,
+            -.5f, -.5f,
+            .5f, .5f,
+            -.5f, .5f,
+            .5f, -.5f
+        )
     }
 
     /**
      * 顶点坐标数据缓冲区
      *
-     * 分配一个块Native内存，用于与 GL 通讯传递。(我们通常用的数据存在于Dalvik的内存中，1.无法访问硬件；2.会被垃圾回收)
+     * 分配一个块 Native 内存，用于与 GL 通讯传递。(我们通常用的数据存在于 Dalvik 的内存中，1.无法访问硬件；2.会被垃圾回收)
      */
     private val vertexData: FloatBuffer = createFloatBuffers(POINT_DATA)
 
@@ -70,11 +80,6 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
      * 颜色uniform在OpenGL程序中的索引
      */
     private var uColorLocation: Int = 0
-
-    /**
-     * 顶点坐标在OpenGL程序中的索引
-     */
-    private var aPositionLocation: Int = 0
 
     override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
@@ -95,11 +100,13 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
         // 步骤5：获取颜色Uniform在OpenGL程序中的索引
         uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
 
-        // 步骤6：获取顶点坐标属性在OpenGL程序中的索引
-        aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        // 步骤6：获取顶点坐标属性在 OpenGL 程序中的索引
+        // 顶点坐标在 OpenGL 程序中的索引
+        val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
 
         // 将缓冲区的指针移动到头部，保证数据是从最开始处读取
-        vertexData.position(0)
+        // In [createFloatBuffers] method, it makes sure to achieve this.
+        // vertexData.position(0)
 
         // 步骤7：关联顶点坐标属性和缓存数据
         // 1. 位置索引；
@@ -108,8 +115,7 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT,
-            false, 0, vertexData)
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData)
 
         // 步骤8：通知 GL 程序使用指定的顶点属性索引
         GLES20.glEnableVertexAttribArray(aPositionLocation)
@@ -125,7 +131,7 @@ class L1_1_PointRenderer(private val ctx: Context) : AbsRenderer() {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // 步骤2：更新 u_Color 的值，即更新画笔颜色
-        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f)
+        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f)
 
         // 步骤3：使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)

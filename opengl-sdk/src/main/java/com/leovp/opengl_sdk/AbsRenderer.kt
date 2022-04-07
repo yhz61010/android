@@ -4,10 +4,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.util.VerticesUtil
-import com.leovp.opengl_sdk.util.checkGlError
-import com.leovp.opengl_sdk.util.compileShader
-import com.leovp.opengl_sdk.util.createFloatBuffers
+import com.leovp.opengl_sdk.util.*
 import java.nio.FloatBuffer
 import javax.microedition.khronos.opengles.GL10
 
@@ -39,20 +36,21 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
      * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
      * 步骤4: 通知 OpenGL ES 开始使用该程序
      */
-    protected fun makeAndUseProgram(vertexShader: String, fragmentShader: String) {
+    protected fun makeAndUseProgram(vertexShader: String, fragmentShader: String): Int {
         // 返回着色器对象：成功，非0
         val vertexShaderId: Int = compileShader(GLES20.GL_VERTEX_SHADER, vertexShader)
         // 返回着色器对象：成功，非0
         val fragmentShaderId: Int = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
-        makeAndUseProgram(vertexShaderId, fragmentShaderId)
+        return makeAndUseProgram(vertexShaderId, fragmentShaderId)
     }
 
     @Suppress("WeakerAccess")
-    protected fun makeAndUseProgram(vertexShaderId: Int, fragmentShaderId: Int) {
+    protected fun makeAndUseProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
         LogContext.log.i(tag, "vertexShader=$vertexShaderId fragmentShader=$fragmentShaderId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
-        programObjId = com.leovp.opengl_sdk.util.makeProgram(vertexShaderId, fragmentShaderId)
+        val programObjId = makeProgram(vertexShaderId, fragmentShaderId)
         GLES20.glUseProgram(programObjId)
         checkGlError("glUseProgram")
+        return programObjId
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -61,17 +59,19 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
     }
 
     protected fun getUniform(name: String): Int {
+        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid.")
         return GLES20.glGetUniformLocation(programObjId, name)
     }
 
     protected fun getAttrib(name: String): Int {
+        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid.")
         return GLES20.glGetAttribLocation(programObjId, name)
     }
 
     /**
      * 调整渲染纹理的缩放比例
-     * @param width YUV数据宽度
-     * @param height YUV数据高度
+     * @param width YUV 数据宽度
+     * @param height YUV 数据高度
      */
     protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatArray {
         val floatArray: FloatArray =
@@ -136,6 +136,11 @@ abstract class AbsRenderer : GLSurfaceView.Renderer {
          * 例如，若只有 x、y，则该值为 2
          */
         const val TWO_DIMENSIONS_POSITION_COMPONENT_COUNT = 2
+
+        /**
+         * RGB 颜色占用的向量个数
+         */
+        const val RGB_COLOR_COMPONENT_COUNT = 3
 
         /**
          * 数据数组中每个顶点起始数据的间距：数组中每个顶点相关属性占的 Byte 值

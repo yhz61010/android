@@ -18,7 +18,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
     override fun getTagName(): String = "L6_1_TextureRenderer"
 
     companion object {
-        private val VERTEX_SHADER = """
+        private const val VERTEX_SHADER = """
                 uniform mat4 u_Matrix;
                 attribute vec4 a_Position;
                 // 纹理坐标：2个分量，S 和 T 坐标
@@ -30,7 +30,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
                 }
                 """
 
-        private val FRAGMENT_SHADER = """
+        private const val FRAGMENT_SHADER = """
                 precision mediump float;
                 varying vec2 v_TexCoord;
                 // sampler2D：二维纹理数据的数组
@@ -40,19 +40,46 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
                 }
                 """
 
+        /**
+         * 顶点坐标与纹理坐标对应即可。
+         * 通过修改顶点坐标，即可控制图像的大小。
+         *
+         * 顺序： ABCD
+         * ```
+         * B(-1,1)        C(1,1)
+         *       ┌────────┐
+         *       │    ↑   │
+         *       │ ───┼──→│ center (0,0)
+         *       │    │   │
+         *       └────────┘
+         * A(-1,-1)       D(1,-1)
+         * ```
+         */
         private val POINT_DATA = floatArrayOf(
             -1f, -1f,
             -1f, 1f,
             1f, 1f,
             1f, -1f)
 
-        /** 纹理坐标 */
+        /**
+         * 纹理坐标
+         * 顶点坐标与纹理坐标对应即可。
+         * 顺序： ABCD
+         *
+         * ```
+         * B(0,0)────s──→C(1,0)
+         *   │  ┌───────┐
+         *   t  │texture│
+         *   │  │       │
+         *   ↓  └───────┘
+         * A(0,1)        D(1,1)
+         * ```
+         */
         private val TEX_VERTEX = floatArrayOf(
             0f, 1f,
             0f, 0f,
             1f, 0f,
-            1f, 1f
-        )
+            1f, 1f)
 
         /** 纹理坐标中每个点占的向量个数 */
         private const val TEX_VERTEX_COMPONENT_COUNT = 2

@@ -66,7 +66,7 @@ class GLRenderer(private val context: Context) : AbsRenderer() {
         // 这里不会立刻刷新，只有在 GLES20.glClear 调用时使用该颜色值才刷新。
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        makeAndUseProgram(context.readAssetsFileAsString(R.raw.vertex_shader), context.readAssetsFileAsString(R.raw.fragment_shader))
+        programObjId = makeAndUseProgram(context.readAssetsFileAsString(R.raw.vertex_shader), context.readAssetsFileAsString(R.raw.fragment_shader))
 
         // 生成纹理句柄
         GLES20.glGenTextures(THREE_PLANAR, planarTextureIntBuffer)

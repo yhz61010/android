@@ -13,7 +13,7 @@ import javax.microedition.khronos.opengles.GL10
  * 渐变色
  */
 class L4_1_BasicGradientRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L4_1_BasicGradientRenderer"
+    override fun getTagName(): String = L4_1_BasicGradientRenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */

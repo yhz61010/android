@@ -15,7 +15,7 @@ import java.nio.ShortBuffer
  *
  * OpenGL的世界坐标系是 [-1, -1, 1, 1]，纹理的坐标系为 [0, 0, 1, 1]
  */
-fun createFloatBuffers(array: FloatArray): FloatBuffer {
+fun createFloatBuffer(array: FloatArray): FloatBuffer {
     return ByteBuffer.allocateDirect(array.size * Float.SIZE_BYTES)
         // Use the device hardware's native byte order
         .order(ByteOrder.nativeOrder())

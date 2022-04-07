@@ -25,8 +25,8 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
     @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
 
-    protected var pointCoord: FloatBuffer = createFloatBuffers(VerticesUtil.VERTICES_COORD)
-    protected var texVertices: FloatBuffer = createFloatBuffers(VerticesUtil.TEX_COORD)
+    protected var pointCoord: FloatBuffer = createFloatBuffer(VerticesUtil.VERTICES_COORD)
+    protected var texVertices: FloatBuffer = createFloatBuffer(VerticesUtil.TEX_COORD)
 
     /**
      * The step of make program.

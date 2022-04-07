@@ -198,6 +198,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         drawFireL()
         drawBeauty()
 
+        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 

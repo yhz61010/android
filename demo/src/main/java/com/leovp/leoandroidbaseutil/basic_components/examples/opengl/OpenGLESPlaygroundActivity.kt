@@ -30,4 +30,14 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        glSurfaceView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        glSurfaceView.onPause()
+    }
 }

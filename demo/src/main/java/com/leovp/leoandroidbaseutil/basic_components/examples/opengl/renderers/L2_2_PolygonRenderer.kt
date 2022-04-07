@@ -75,7 +75,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
-        programObjId = makeAndUseProgram(vertexShader, FRAGMENT_SHADER)
+        makeProgram(vertexShader, FRAGMENT_SHADER)
 
         uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
         aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")

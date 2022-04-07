@@ -149,40 +149,6 @@ fun compileShader(type: Int, shaderCode: String): Int {
 }
 
 /**
- * The step of make program.
- *
- * 步骤1: 编译顶点着色器
- * 步骤2: 编译片段着色器
- * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
- * 步骤4: 通知 OpenGL ES 开始使用该程序
- *
- * @return OpenGL ES Program ID
- */
-@Suppress("unused")
-fun makeProgram(vertexShaderCode: String, fragmentShaderCode: String): Int {
-    val vertexShaderId = compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-    val fragmentShaderId = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
-    return makeProgram(vertexShaderId, fragmentShaderId)
-}
-
-/**
- * The step of make program.
- *
- * 步骤1: 编译顶点着色器
- * 步骤2: 编译片段着色器
- * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
- * 步骤4: 通知 OpenGL ES 开始使用该程序
- *
- * @return OpenGL ES Program ID
- */
-fun makeProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
-    val programObjId = linkProgram(vertexShaderId, fragmentShaderId)
-    LogContext.log.i(TAG, "programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
-    if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
-    return programObjId
-}
-
-/**
  * @return OpenGL ES Program ID
  */
 fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {

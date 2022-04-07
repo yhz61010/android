@@ -54,7 +54,7 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
 
         /**
          * 顶点数据数组
-         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）
+         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）。
          * 该数组表示 1 个顶点数据，也就是 1 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(0f, 0f)

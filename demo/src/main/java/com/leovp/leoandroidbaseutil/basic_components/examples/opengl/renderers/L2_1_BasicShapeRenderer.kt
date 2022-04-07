@@ -40,7 +40,8 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
         /**
          * 顶点数据数组
-         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）。 该数组表示 1 个顶点数据，也就是 1 个点的坐标。
+         * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）。
+         * 该数组表示 4 个顶点数据，也就是 4 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(
             0f, .5f,
@@ -68,7 +69,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
-        programObjId = makeAndUseProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
         uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
         val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
@@ -118,8 +119,9 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
     }
 
     private fun drawTriangle() {
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLES：每 3 个点构成一个三角形
-        // GL_TRIANGLE_STRIP：相邻 3 个点构成一个三角形,不包括首位两个点
+        // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 0.0f, 1.0f)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, drawCount)

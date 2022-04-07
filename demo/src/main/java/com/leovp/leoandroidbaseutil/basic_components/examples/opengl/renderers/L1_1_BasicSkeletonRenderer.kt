@@ -47,8 +47,8 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
                 uniform vec4 u_Color;
                 void main()
                 {
-                   // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
-                   gl_FragColor = u_Color;
+                    // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
+                    gl_FragColor = u_Color;
                 }
         """
 

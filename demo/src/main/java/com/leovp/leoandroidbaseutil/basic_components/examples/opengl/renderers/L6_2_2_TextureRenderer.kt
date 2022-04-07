@@ -123,6 +123,10 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
 
     private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
         return floatArrayOf(
+            // -0.4f, 1.4f,
+            // -0.4f, -0.4f,
+            // 1.4f, -0.4f,
+            // 1.4f, 1.4f
             -(vertex[2] + 1.0f) / 2.0f, 2 - (vertex[3] + 1.0f) / 2.0f,
             -(vertex[0] + 1.0f) / 2.0f, -(vertex[1] + 1.0f) / 2.0f,
             2 - (vertex[6] + 1.0f) / 2.0f, -(vertex[7] + 1.0f) / 2.0f,

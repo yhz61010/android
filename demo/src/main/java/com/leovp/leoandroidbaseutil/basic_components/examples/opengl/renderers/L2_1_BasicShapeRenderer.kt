@@ -64,7 +64,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
     private var uColorLocation: Int = 0
 
     private var drawCount: Int = 0
-    private val MAX_DRAW_COUNT = POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
+    private val maxDrawCount = POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
@@ -97,10 +97,11 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         drawCount++
 
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
-        drawPoint()
-        drawLine()
+        // Drawing sequence priority. The latter the higher.
         drawTriangle()
-        if (drawCount >= MAX_DRAW_COUNT) drawCount = 0
+        drawLine()
+        drawPoint()
+        if (drawCount >= maxDrawCount) drawCount = 0
     }
 
     private fun drawPoint() {

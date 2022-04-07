@@ -13,9 +13,7 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
     override fun getTagName(): String = "L3_1_OrthoPolygonRenderer"
 
     private companion object {
-        /**
-         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
-         */
+        /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
                 // mat4：4×4 的矩阵
                 uniform mat4 u_Matrix;
@@ -34,9 +32,7 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
 
     private var uMatrixLocation: Int = 0
 
-    /**
-     * 矩阵数组
-     */
+    /** 矩阵数组 */
     private val projectionMatrix = floatArrayOf(
         1f, 0f, 0f, 0f,
         0f, 1f, 0f, 0f,
@@ -69,7 +65,7 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
             // 竖屏 or 正方形
             Matrix.orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f)
         }
-        // 更新u_Matrix的值，即更新矩阵数组
+        // 更新 u_Matrix 的值，即更新矩阵数组
         GLES20.glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0)
     }
 }

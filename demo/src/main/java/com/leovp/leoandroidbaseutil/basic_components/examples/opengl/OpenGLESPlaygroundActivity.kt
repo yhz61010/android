@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.opengl_sdk.BaseRenderer
 
 class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
     private lateinit var glSurfaceView: GLSurfaceView
@@ -18,7 +19,15 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
 
         glSurfaceView.setEGLContextClientVersion(2)
         glSurfaceView.setEGLConfigChooser(false)
-        glSurfaceView.setRenderer(OpenGLES20Activity.getRenderer(item.clazz, this))
+        val render: GLSurfaceView.Renderer = OpenGLES20Activity.getRenderer(item.clazz, this)!!
+        glSurfaceView.setRenderer(render)
         glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+
+        glSurfaceView.setOnClickListener {
+            glSurfaceView.requestRender()
+            if (render is BaseRenderer) {
+                render.onClick()
+            }
+        }
     }
 }

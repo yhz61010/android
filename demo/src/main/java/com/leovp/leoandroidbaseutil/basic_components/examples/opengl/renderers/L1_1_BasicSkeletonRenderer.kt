@@ -2,7 +2,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 
 import android.content.Context
 import android.opengl.GLES20
-import com.leovp.opengl_sdk.AbsRenderer
+import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.util.compileShader
 import com.leovp.opengl_sdk.util.createFloatBuffers
 import com.leovp.opengl_sdk.util.linkProgram
@@ -12,19 +12,19 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * 基础概念 + 点 的绘制
+ * 基础框架
  */
-class L1_1_BasicRenderer(@Suppress("unused") private val ctx: Context) : AbsRenderer() {
+class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = "L1_1_BasicRenderer"
 
     private companion object {
         // 关键字 概念：
-        // 1. uniform 由外部程序传递给 shader，就像是C语言里面的常量，shader 只能用，不能改；
+        // 1. uniform 由外部程序传递给 shader，就像是 C 语言里面的常量，shader 只能用，不能改；
         // 2. attribute 是只能在 vertex shader 中使用的变量；
         // 3. varying 变量是 vertex shader 和 fragment shader 之间做数据传递用的。
         // 更多说明：http://blog.csdn.net/jackers679/article/details/6848085
         /**
-         * 顶点着色器：之后定义的每个都会传1次给顶点着色器
+         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
          */
         private const val VERTEX_SHADER = """
                 // vec4：4 个分量的向量：x、y、z、w。从外部传递进来的每个顶点的颜色值
@@ -70,7 +70,7 @@ class L1_1_BasicRenderer(@Suppress("unused") private val ctx: Context) : AbsRend
     private val vertexData: FloatBuffer = createFloatBuffers(POINT_DATA)
 
     /**
-     * 颜色uniform在OpenGL程序中的索引
+     * 颜色 uniform 在 OpenGL 程序中的索引
      */
     private var uColorLocation: Int = 0
 
@@ -115,6 +115,7 @@ class L1_1_BasicRenderer(@Suppress("unused") private val ctx: Context) : AbsRend
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+        super.onSurfaceChanged(unused, width, height)
         // Set the OpenGL viewport to fill the entire surface.
         GLES20.glViewport(0, 0, width, height)
     }

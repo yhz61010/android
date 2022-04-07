@@ -8,8 +8,9 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L1_1_BasicRenderer
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L1_1_BasicSkeletonRenderer
 import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L1_2_PointRenderer
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L2_1_BasicShapeRenderer
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGles20Binding
 import java.io.Serializable
 
@@ -25,8 +26,9 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
     }
 
     private val items = arrayOf(
-        Item("基础框架", L1_1_BasicRenderer::class.java),
+        Item("基础框架", L1_1_BasicSkeletonRenderer::class.java),
         Item("Point 绘制", L1_2_PointRenderer::class.java),
+        Item("基础图形绘制 - 点，线，三角形", L2_1_BasicShapeRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

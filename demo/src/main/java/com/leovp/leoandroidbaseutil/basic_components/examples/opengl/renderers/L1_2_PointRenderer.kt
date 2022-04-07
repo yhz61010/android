@@ -15,9 +15,7 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
     override fun getTagName(): String = "L1_2_PointRenderer"
 
     private companion object {
-        /**
-         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
-         */
+        /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
                 // vec4：4 个分量的向量：x、y、z、w。从外部传递进来的每个顶点的颜色值
                 attribute vec4 a_Position;

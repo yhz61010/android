@@ -17,9 +17,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
     override fun getTagName(): String = "L2_2_PolygonRenderer"
 
     private companion object {
-        /**
-         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
-         */
+        /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
                 attribute vec4 a_Position;
                 void main()

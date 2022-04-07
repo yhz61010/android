@@ -24,7 +24,7 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
                 {
                     // 矩阵与向量相乘得到最终的位置
                     gl_Position = u_Matrix * a_Position;
-                    gl_PointSize = 0.0;
+                    gl_PointSize = 10.0;
                 }
         """
     }

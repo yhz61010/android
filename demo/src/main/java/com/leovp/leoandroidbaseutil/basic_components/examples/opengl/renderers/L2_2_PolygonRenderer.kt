@@ -7,6 +7,8 @@ import com.leovp.opengl_sdk.util.createFloatBuffers
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * 基础图形绘制 - 多边形
@@ -98,22 +100,22 @@ class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseR
     }
 
     private fun updateVertexData() {
-        // 边数+中心点+闭合点；一个点包含x、y两个向量
+        // 边数+中心点+闭合点；一个点包含 x、y 两个向量
         pointData = FloatArray((polygonVertexCount + 2) * 2)
 
         // 组成多边形的每个三角形的中心点角的弧度
-        val radian = (2 * Math.PI / polygonVertexCount).toFloat()
+        val radian: Float = (2 * Math.PI / polygonVertexCount).toFloat()
         // 中心点
         pointData[0] = 0f
         pointData[1] = 0f
         // 多边形的顶点数据
         for (i in 0 until polygonVertexCount) {
-            pointData[2 * i + 2] = (RADIUS * Math.cos((radian * i + START_POINT_RADIAN).toDouble())).toFloat()
-            pointData[2 * i + 1 + 2] = (RADIUS * Math.sin((radian * i + START_POINT_RADIAN).toDouble())).toFloat()
+            pointData[2 * i + 2] = RADIUS * cos((radian * i + START_POINT_RADIAN))
+            pointData[2 * i + 2 + 1] = RADIUS * sin((radian * i + START_POINT_RADIAN))
         }
         // 闭合点：与多边形的第一个顶点重叠
-        pointData[polygonVertexCount * 2 + 2] = (RADIUS * Math.cos(START_POINT_RADIAN.toDouble())).toFloat()
-        pointData[polygonVertexCount * 2 + 3] = (RADIUS * Math.sin(START_POINT_RADIAN.toDouble())).toFloat()
+        pointData[polygonVertexCount * 2 + 2] = RADIUS * cos(START_POINT_RADIAN)
+        pointData[polygonVertexCount * 2 + 3] = RADIUS * sin(START_POINT_RADIAN)
 
         vertexData = createFloatBuffers(pointData)
         vertexData!!.position(0)

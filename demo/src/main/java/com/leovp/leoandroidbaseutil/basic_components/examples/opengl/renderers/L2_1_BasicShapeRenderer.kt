@@ -86,8 +86,8 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-        super.onSurfaceChanged(unused, width, height)
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        super.onSurfaceChanged(gl, width, height)
         // Set the OpenGL viewport to fill the entire surface.
         GLES20.glViewport(0, 0, width, height)
     }
@@ -105,7 +105,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private fun drawPoint() {
         // 更新 u_Color 的值，即更新画笔颜色
-        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 0.0f, 1.0f)
         // 使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, drawCount)
     }
@@ -114,7 +114,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         // GL_LINES：每 2 个点构成一条线段
         // GL_LINE_LOOP：按顺序将所有的点连接起来，包括首位相连
         // GL_LINE_STRIP：按顺序将所有的点连接起来，不包括首位相连
-        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, drawCount)
     }
 
@@ -122,7 +122,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         // GL_TRIANGLES：每 3 个点构成一个三角形
         // GL_TRIANGLE_STRIP：相邻 3 个点构成一个三角形,不包括首位两个点
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
-        GLES20.glUniform4f(uColorLocation, 0.0f, 1.0f, 1.0f, 1.0f)
+        GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 0.0f, 1.0f)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, drawCount)
     }
 }

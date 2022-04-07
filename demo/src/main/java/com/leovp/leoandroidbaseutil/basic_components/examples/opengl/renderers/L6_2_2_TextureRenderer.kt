@@ -4,6 +4,8 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.opengl_sdk.BaseRenderer
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.TextureHelper
 import com.leovp.opengl_sdk.util.createFloatBuffer
@@ -12,31 +14,56 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * 纹理渲染 - 单个纹理单元
+ * 纹理渲染 - 多个纹理单元
  */
-class L6_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = L6_2_TextureRenderer::class.java.simpleName
+class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+    override fun getTagName(): String = L6_2_2_TextureRenderer::class.java.simpleName
 
     companion object {
         private const val VERTEX_SHADER = """
                 uniform mat4 u_Matrix;
                 attribute vec4 a_Position;
+                
                 // 纹理坐标：2个分量，S 和 T 坐标
                 attribute vec2 a_TexCoord;
                 varying vec2 v_TexCoord;
+                
+                attribute vec2 a_TexCoord2;
+                varying vec2 v_TexCoord2;
+                
                 void main() {
                     v_TexCoord = a_TexCoord;
+                    v_TexCoord2 = a_TexCoord2;
                     gl_Position = u_Matrix * a_Position;
                 }
                 """
 
         private const val FRAGMENT_SHADER = """
                 precision mediump float;
+                
                 varying vec2 v_TexCoord;
+                varying vec2 v_TexCoord2;
+                
                 // sampler2D：二维纹理数据的数组
-                uniform sampler2D u_TextureUnit;
+                uniform sampler2D u_TextureUnit1;
+                uniform sampler2D u_TextureUnit2;
+                uniform sampler2D u_TextureUnit3;
+
+                bool isOutRect(vec2 coord) {
+                    return coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0;
+                }
+
                 void main() {
-                    gl_FragColor = texture2D(u_TextureUnit, v_TexCoord);
+                    vec4 texture1 = texture2D(u_TextureUnit1, v_TexCoord);
+                    vec4 texture2 = texture2D(u_TextureUnit2, v_TexCoord2);
+                    bool isOut2 = isOutRect(v_TexCoord2);
+    
+                    if (isOut2) {
+                        // 贴纸范围外,绘制背景
+                        gl_FragColor = texture1;
+                    } else {
+                        gl_FragColor = texture2;
+                    }
                 }
                 """
 
@@ -56,16 +83,16 @@ class L6_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * ```
          */
         private val POINT_DATA_FIRE_L = floatArrayOf(
-            -0.5f * 2, -0.5f * 2,
-            -0.5f * 2, 0.5f * 2,
-            0.5f * 2, 0.5f * 2,
-            0.5f * 2, -0.5f * 2)
+            -1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, -1.0f)
 
         private val POINT_DATA_BEAUTY = floatArrayOf(
-            -0.5f, -0.5f,
-            -0.5f, 0.5f,
-            0.5f, 0.5f,
-            0.5f, -0.5f)
+            -0.2f, -0.2f,
+            -0.2f, 0.2f,
+            0.2f, 0.2f,
+            0.2f, -0.2f)
 
         /**
          * 纹理坐标
@@ -81,49 +108,52 @@ class L6_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * A(0,1)        D(1,1)
          * ```
          */
-        private val TEX_VERTEX = floatArrayOf(
+        private val TEX_COORD = floatArrayOf(
             0f, 1f,
             0f, 0f,
             1f, 0f,
             1f, 1f)
-
-        /** 纹理坐标中每个点占的向量个数 */
-        private const val TEX_VERTEX_COMPONENT_COUNT = 2
     }
 
-    private val vertexDataFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
-    private val vertexDataBeauty: FloatBuffer = createFloatBuffer(POINT_DATA_BEAUTY)
-
-    private var uTextureUnitLocation: Int = 0
-    private val texVertexBuffer: FloatBuffer = createFloatBuffer(TEX_VERTEX)
+    private val vertexBuffer: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
+    private val textureBufferFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
+    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(POINT_DATA_BEAUTY)
+    private var textureLocation1: Int = 0
+    private var textureLocation2: Int = 0
+    private var textureLocation3: Int = 0
+    private var aPositionLocation: Int = 0
 
     /** 纹理数据 */
     private lateinit var textureBeanFireL: TextureHelper.TextureBean
     private lateinit var textureBeanBeauty: TextureHelper.TextureBean
 
-    private var aPositionLocation: Int = 0
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
     override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
 
         aPositionLocation = getAttrib("a_Position")
-        projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
-        // 纹理坐标索引
-        val aTexCoordLocation = getAttrib("a_TexCoord")
-        uTextureUnitLocation = getUniform("u_TextureUnit")
+
+        val texCoordLocationFireL = getAttrib("a_TexCoord")
+        val texCoordLocationBeauty = getAttrib("a_TexCoord2")
+        textureLocation1 = getUniform("u_TextureUnit1")
+        textureLocation2 = getUniform("u_TextureUnit2")
+        textureLocation3 = getUniform("u_TextureUnit3")
+
         // 纹理数据
         textureBeanFireL = TextureHelper.loadTexture(ctx, R.drawable.img_fire_l)
         textureBeanBeauty = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
-        GLES20.glEnableVertexAttribArray(aTexCoordLocation)
+        GLES20.glVertexAttribPointer(texCoordLocationFireL, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, textureBufferFireL)
+        GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
-        // 开启纹理透明混合，这样才能绘制透明图片
-        GLES20.glEnable(GL10.GL_BLEND)
-        GLES20.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA)
+        GLES20.glVertexAttribPointer(texCoordLocationBeauty, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, textureBufferBeauty)
+        GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
@@ -137,31 +167,23 @@ class L6_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
 
         drawFireL()
         drawBeauty()
+
+        GLES20.glEnableVertexAttribArray(aPositionLocation)
+        vertexBuffer.position(0)
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexBuffer)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 
     private fun drawFireL() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataFireL)
-        GLES20.glEnableVertexAttribArray(aPositionLocation)
-
-        // 设置当前活动的纹理单元为纹理单元 0
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        // 将纹理 ID 绑定到当前活动的纹理单元上
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
-        // 将纹理单元传递片段着色器的 u_TextureUnit
-        GLES20.glUniform1i(uTextureUnitLocation, 0)
-        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glUniform1i(textureLocation1, 0)
     }
 
     private fun drawBeauty() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataBeauty)
-        GLES20.glEnableVertexAttribArray(aPositionLocation)
-
-        // 绑定新的纹理 ID 到已激活的纹理单元上
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
-        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glUniform1i(textureLocation2, 1)
     }
 }

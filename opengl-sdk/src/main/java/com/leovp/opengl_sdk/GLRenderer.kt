@@ -7,6 +7,8 @@ import android.opengl.GLES20
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.*
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_STRIDE_IN_FLOAT
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer

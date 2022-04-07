@@ -34,7 +34,8 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
         Item("L4_2_渐变色 - 优化数据传递", L4_2_BetterGradientRenderer::class.java),
         Item("L5_索引绘制", L5_IndexRenderer::class.java),
         Item("L6_1_纹理渲染", L6_1_TextureRenderer::class.java),
-        Item("L6_2_纹理渲染 - 单个纹理单元", L6_2_TextureRenderer::class.java),
+        Item("L6_2_1_纹理渲染 - 单个纹理单元", L6_2_1_TextureRenderer::class.java),
+        Item("L6_2_2_纹理渲染 - 多个纹理单元", L6_2_2_TextureRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

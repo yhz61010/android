@@ -10,7 +10,7 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * 渐变色
+ * 渐变色 - 优化数据传递
  */
 class L4_2_BetterGradientRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = "L4_2_BetterGradientRenderer"
@@ -99,8 +99,6 @@ class L4_2_BetterGradientRenderer(@Suppress("unused") private val ctx: Context) 
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         super.onSurfaceChanged(gl, width, height)
-        // Set the OpenGL viewport to fill the entire surface.
-        GLES20.glViewport(0, 0, width, height)
         projectionMatrixHelper.enable(width, height)
     }
 

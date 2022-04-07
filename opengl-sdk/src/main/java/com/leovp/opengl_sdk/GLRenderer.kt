@@ -79,9 +79,9 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
     }
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         LogContext.log.w(tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
-        super.onSurfaceChanged(unused, width, height)
+        super.onSurfaceChanged(gl, width, height)
         GLES20.glViewport(0, 0, width, height)
 
         screenWidth = width

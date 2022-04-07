@@ -92,8 +92,8 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-        super.onSurfaceChanged(unused, width, height)
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        super.onSurfaceChanged(gl, width, height)
         // Set the OpenGL viewport to fill the entire surface.
         GLES20.glViewport(0, 0, width, height)
     }

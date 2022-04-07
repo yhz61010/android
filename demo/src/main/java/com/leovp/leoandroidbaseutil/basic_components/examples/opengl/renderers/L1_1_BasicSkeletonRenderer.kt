@@ -114,8 +114,8 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-        super.onSurfaceChanged(unused, width, height)
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        super.onSurfaceChanged(gl, width, height)
         // Set the OpenGL viewport to fill the entire surface.
         GLES20.glViewport(0, 0, width, height)
     }

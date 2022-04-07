@@ -53,7 +53,7 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
         return programObjId
     }
 
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         outputWidth = width
         outputHeight = height
     }

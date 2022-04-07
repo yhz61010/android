@@ -115,11 +115,25 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     }
 
     private val vertexBuffer: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
-    private val textureBufferFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
-    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(POINT_DATA_BEAUTY)
+    private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
+    private val textureBufferBeauty: FloatBuffer
     private var textureLocationFireL: Int = 0
     private var textureLocationBeauty: Int = 0
     private var aPositionLocation: Int = 0
+
+    init {
+        val vertexToTextureBeuaty = vertexToTextureBeauty(POINT_DATA_BEAUTY)
+        textureBufferBeauty = createFloatBuffer(vertexToTextureBeuaty)
+    }
+
+    private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
+        return floatArrayOf(
+            -(vertex[2] + 1.0f) / 2.0f, 2 - (vertex[3] + 1.0f) / 2.0f,
+            -(vertex[0] + 1.0f) / 2.0f, -(vertex[1] + 1.0f) / 2.0f,
+            2 - (vertex[6] + 1.0f) / 2.0f, -(vertex[7] + 1.0f) / 2.0f,
+            2 - (vertex[4] + 1.0f) / 2.0f, 2 - (vertex[5] + 1.0f) / 2.0f
+        )
+    }
 
     /** 纹理数据 */
     private lateinit var textureBeanFireL: TextureHelper.TextureBean
@@ -128,7 +142,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
+        GLES20.glClearColor(210f / 255, 216f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
         projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
 
@@ -166,21 +180,26 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         drawBeauty()
 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
-        vertexBuffer.position(0)
         GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexBuffer)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 
     private fun drawFireL() {
+        // 设置当前活动的纹理单元为纹理单元 0
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        // 将纹理 ID 绑定到当前活动的纹理单元上
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
+        // 将纹理单元传递片段着色器的 u_TextureUnit1
         GLES20.glUniform1i(textureLocationFireL, 0)
     }
 
     private fun drawBeauty() {
+        // 设置当前活动的纹理单元为纹理单元 1
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+        // 将纹理 ID 绑定到当前活动的纹理单元上
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
+        // 将纹理单元传递片段着色器的 u_TextureUnit2
         GLES20.glUniform1i(textureLocationBeauty, 1)
     }
 }

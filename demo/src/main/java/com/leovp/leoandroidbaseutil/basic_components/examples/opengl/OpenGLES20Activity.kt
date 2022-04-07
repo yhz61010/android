@@ -25,7 +25,7 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
 
     private val items = arrayOf(
         Item("L1_1_基础框架", L1_1_BasicSkeletonRenderer::class.java),
-        Item("L1_2_Point 绘制", L1_2_PointRenderer::class.java),
+        Item("L1_2_点绘制", L1_2_PointRenderer::class.java),
         Item("L2_1_基础图形绘制 - 点，线，三角形", L2_1_BasicShapeRenderer::class.java),
         Item("L2_2_基础图形绘制 - 多边形", L2_2_PolygonRenderer::class.java),
         Item("L3_1_正交投影 - 多边形", L3_1_OrthoPolygonRenderer::class.java),

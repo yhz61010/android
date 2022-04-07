@@ -37,7 +37,11 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
     /**
      * 矩阵数组
      */
-    private val mProjectionMatrix = floatArrayOf(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f)
+    private val projectionMatrix = floatArrayOf(
+        1f, 0f, 0f, 0f,
+        0f, 1f, 0f, 0f,
+        0f, 0f, 1f, 0f,
+        0f, 0f, 0f, 1f)
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         super.onSurfaceCreated(unused, config)
@@ -60,12 +64,12 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         // 8. far   ：z 的最大值
         if (width > height) {
             // 横屏
-            Matrix.orthoM(mProjectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, -1f, 1f)
+            Matrix.orthoM(projectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, -1f, 1f)
         } else {
             // 竖屏 or 正方形
-            Matrix.orthoM(mProjectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f)
+            Matrix.orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f)
         }
         // 更新u_Matrix的值，即更新矩阵数组
-        GLES20.glUniformMatrix4fv(uMatrixLocation, 1, false, mProjectionMatrix, 0)
+        GLES20.glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0)
     }
 }

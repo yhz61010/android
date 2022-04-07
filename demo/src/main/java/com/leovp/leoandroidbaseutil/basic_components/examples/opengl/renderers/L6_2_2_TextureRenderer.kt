@@ -114,17 +114,12 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             1f, 1f)
     }
 
-    private val vertexBuffer: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
+    private val vertexBufferFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
-    private val textureBufferBeauty: FloatBuffer
+    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTextureBeauty(POINT_DATA_BEAUTY))
     private var textureLocationFireL: Int = 0
     private var textureLocationBeauty: Int = 0
     private var aPositionLocation: Int = 0
-
-    init {
-        val vertexToTextureBeauty = vertexToTextureBeauty(POINT_DATA_BEAUTY)
-        textureBufferBeauty = createFloatBuffer(vertexToTextureBeauty)
-    }
 
     private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
         return floatArrayOf(
@@ -181,7 +176,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
         GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBuffer)
+            GLES20.GL_FLOAT, false, 0, vertexBufferFireL)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
 

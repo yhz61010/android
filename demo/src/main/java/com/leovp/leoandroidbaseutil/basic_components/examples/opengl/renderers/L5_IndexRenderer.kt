@@ -3,25 +3,28 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.BaseRenderer
+import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.createFloatBuffers
+import com.leovp.opengl_sdk.util.createShortBuffer
 import java.nio.FloatBuffer
+import java.nio.ShortBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * 基础图形绘制 - 点，线，三角形
+ * 索引绘制
  */
-class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
-    override fun getTagName(): String = "L2_1_BasicShapeRenderer"
+class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+    override fun getTagName(): String = "L5_IndexRenderer"
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
+                uniform mat4 u_Matrix;
                 attribute vec4 a_Position;
                 void main()
                 {
-                    gl_Position = a_Position;
-                    gl_PointSize = 30.0;
+                    gl_Position = u_Matrix * a_Position;
                 }
         """
 
@@ -30,10 +33,12 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
          * uniform：可用于顶点和片段着色器，一般用于对于物体中所有顶点或者所有的片段都相同的量。比如光源位置、统一变换矩阵、颜色等。
          */
         private const val FRAGMENT_SHADER = """
+                // 定义所有浮点数据类型的默认精度；有 lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用 highp。(顶点着色器默认 highp)
                 precision mediump float;
                 uniform vec4 u_Color;
                 void main()
                 {
+                    // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
                     gl_FragColor = u_Color;
                 }
         """
@@ -41,38 +46,50 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         /**
          * 顶点数据数组
          * 点的 x,y 坐标（x，y 各占 1 个分量，也就是说每个点占用 2 个分量）。
-         * 该数组表示 4 个顶点数据，也就是 4 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(
-            0f, .5f,
-            -.5f, 0f,
-            0f, -.5f,
-            .5f, 0f
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.5f, 0.5f,
+            -0.5f, 0.5f,
+            0f, -1.0f,
+            0f, 1.0f
         )
+
+        /**
+         * 数组绘制的索引：当前是绘制三角形，所以是 3 个元素构成一个绘制顺序
+         */
+        private val VERTEX_INDEX = shortArrayOf(
+            0, 1, 2,
+            0, 2, 3,
+            0, 4, 1,
+            3, 2, 5)
     }
 
     /**
      * 顶点坐标数据缓冲区
+     *
      * 分配一个块 Native 内存，用于与 GL 通讯传递。(我们通常用的数据存在于 Dalvik 的内存中，1.无法访问硬件；2.会被垃圾回收)
      */
     private val vertexData: FloatBuffer = createFloatBuffers(POINT_DATA)
 
     /**
-     * 颜色 uniform 在 OpenGL 程序中的索引
+     * 顶点索引数据缓冲区：ShortBuff，占 2 位的Byte
      */
+    private val vertexIndexBuffer: ShortBuffer = createShortBuffer(VERTEX_INDEX)
+
     private var uColorLocation: Int = 0
+    private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    private var drawCount: Int = 0
-    private val maxDrawCount = POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
-
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
-        uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
-        val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        uColorLocation = getUniform("u_Color")
+        val aPositionLocation = getAttrib("a_Position")
+        projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；
@@ -85,39 +102,23 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        super.onSurfaceChanged(gl, width, height)
+        projectionMatrixHelper.enable(width, height)
+    }
+
     override fun onDrawFrame(glUnused: GL10) {
+        // 使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        drawCount++
+        GLES20.glUniform4f(uColorLocation, 0.0f, 1.0f, 1.0f, 1.0f)
 
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
-        // Drawing sequence priority. The latter the higher.
-        drawTriangle()
-        drawLine()
-        drawPoint()
-        if (drawCount >= maxDrawCount) drawCount = 0
-    }
-
-    private fun drawPoint() {
-        // 更新 u_Color 的值，即更新画笔颜色
-        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 0.0f, 1.0f)
-        // 使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, drawCount)
-    }
-
-    private fun drawLine() {
-        // GL_LINES：每 2 个点构成一条线段
-        // GL_LINE_LOOP：按顺序将所有的点连接起来，包括首位相连
-        // GL_LINE_STRIP：按顺序将所有的点连接起来，不包括首位相连
-        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f)
-        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, drawCount)
-    }
-
-    private fun drawTriangle() {
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
-        // GL_TRIANGLES：每 3 个点构成一个三角形
-        // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
-        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
-        GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 0.0f, 1.0f)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, drawCount)
+        // 绘制相对复杂的图形时，若顶点有较多重复时，对比数据占用空间而言，glDrawElements 会比 glDrawArrays 小很多，也会更高效。
+        // 因为在有重复顶点的情况下，glDrawArrays 方式需要的 3 个顶点位置是用 Float 型的，占 3*4 的 Byte 值，
+        // 而 glDrawElements 需要 3 个 Short 型的，占 3*2 Byte值。
+        // 1. 图形绘制方式
+        // 2. 绘制的顶点数
+        // 3. 索引的数据格式
+        // 4. 索引的数据 Buffer
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, VERTEX_INDEX.size, GLES20.GL_UNSIGNED_SHORT, vertexIndexBuffer)
     }
 }

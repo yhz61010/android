@@ -86,7 +86,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onDrawFrame(glUnused: GL10) {
+    override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         drawCount++
 

@@ -47,7 +47,6 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
                 // sampler2D：二维纹理数据的数组
                 uniform sampler2D u_TextureUnit1;
                 uniform sampler2D u_TextureUnit2;
-                uniform sampler2D u_TextureUnit3;
 
                 bool isOutRect(vec2 coord) {
                     return coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0;
@@ -118,9 +117,8 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     private val vertexBuffer: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
     private val textureBufferBeauty: FloatBuffer = createFloatBuffer(POINT_DATA_BEAUTY)
-    private var textureLocation1: Int = 0
-    private var textureLocation2: Int = 0
-    private var textureLocation3: Int = 0
+    private var textureLocationFireL: Int = 0
+    private var textureLocationBeauty: Int = 0
     private var aPositionLocation: Int = 0
 
     /** 纹理数据 */
@@ -129,7 +127,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
         projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
@@ -138,9 +136,8 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
 
         val texCoordLocationFireL = getAttrib("a_TexCoord")
         val texCoordLocationBeauty = getAttrib("a_TexCoord2")
-        textureLocation1 = getUniform("u_TextureUnit1")
-        textureLocation2 = getUniform("u_TextureUnit2")
-        textureLocation3 = getUniform("u_TextureUnit3")
+        textureLocationFireL = getUniform("u_TextureUnit1")
+        textureLocationBeauty = getUniform("u_TextureUnit2")
 
         // 纹理数据
         textureBeanFireL = TextureHelper.loadTexture(ctx, R.drawable.img_fire_l)
@@ -161,7 +158,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         projectionMatrixHelper.enable(width, height)
     }
 
-    override fun onDrawFrame(glUnused: GL10) {
+    override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT)
         // 纹理单元：在 OpenGL 中，纹理不是直接绘制到片段着色器上，而是通过纹理单元去保存纹理
 
@@ -178,12 +175,12 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     private fun drawFireL() {
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
-        GLES20.glUniform1i(textureLocation1, 0)
+        GLES20.glUniform1i(textureLocationFireL, 0)
     }
 
     private fun drawBeauty() {
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
-        GLES20.glUniform1i(textureLocation2, 1)
+        GLES20.glUniform1i(textureLocationBeauty, 1)
     }
 }

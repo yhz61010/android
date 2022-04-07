@@ -25,7 +25,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
                 void main()
                 {
                     gl_Position = a_Position;
-                    gl_PointSize = 10.0;
+                    gl_PointSize = 5.0;
                 }
         """
 
@@ -52,8 +52,11 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
     open val vertexShader: String
         get() = VERTEX_SHADER
 
-    /** 多边形的顶点数，即边数 */
-    private var polygonVertexCount = 3
+    /**
+     * 多边形的顶点数，即边数。不含中心点和闭合点。
+     * 实际边数为该值 + 1。
+     */
+    private var polygonVertexCount = 2
 
     /** 绘制所需要的顶点数 */
     private lateinit var pointData: FloatArray
@@ -121,7 +124,6 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         pointData[polygonVertexCount * 2 + 3] = RADIUS * sin(START_POINT_RADIAN)
 
         vertexData = createFloatBuffers(pointData)
-        vertexData!!.position(0)
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；

@@ -15,9 +15,7 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
     override fun getTagName(): String = "L2_1_BasicShapeRenderer"
 
     private companion object {
-        /**
-         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
-         */
+        /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
                 attribute vec4 a_Position;
                 void main()

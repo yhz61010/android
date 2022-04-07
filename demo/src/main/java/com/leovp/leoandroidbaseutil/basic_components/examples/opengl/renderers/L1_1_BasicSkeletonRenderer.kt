@@ -23,9 +23,7 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
         // 2. attribute 是只能在 vertex shader 中使用的变量；
         // 3. varying 变量是 vertex shader 和 fragment shader 之间做数据传递用的。
         // 更多说明：http://blog.csdn.net/jackers679/article/details/6848085
-        /**
-         * 顶点着色器：之后定义的每个都会传 1 次给顶点着色器
-         */
+        /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
         private const val VERTEX_SHADER = """
                 // vec4：4 个分量的向量：x、y、z、w。从外部传递进来的每个顶点的颜色值
                 attribute vec4 a_Position;

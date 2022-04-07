@@ -3,7 +3,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.BaseRenderer
-import com.leovp.opengl_sdk.util.createFloatBuffers
+import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -115,7 +115,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         pointData[polygonVertexCount * 2 + 2] = RADIUS * cos(START_POINT_RADIAN)
         pointData[polygonVertexCount * 2 + 3] = RADIUS * sin(START_POINT_RADIAN)
 
-        vertexData = createFloatBuffers(pointData)
+        vertexData = createFloatBuffer(pointData)
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；

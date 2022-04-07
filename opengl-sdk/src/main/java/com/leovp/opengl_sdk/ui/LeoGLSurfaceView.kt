@@ -9,7 +9,7 @@ import com.leovp.lib_common_android.exts.getScreenAvailableHeight
 import com.leovp.lib_common_android.exts.getScreenWidth
 import com.leovp.lib_common_android.ui.TouchHelper
 import com.leovp.log_sdk.LogContext
-import com.leovp.opengl_sdk.AbsRenderer
+import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.GLRenderer
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
@@ -81,7 +81,7 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
      * @param yuvData YUV 格式的数据
      * @param type YUV 数据的格式 0 -> I420  1 -> NV12  2 -> NV21
      */
-    fun render(yuvData: ByteArray?, type: AbsRenderer.Yuv420Type = AbsRenderer.Yuv420Type.I420) {
+    fun render(yuvData: ByteArray?, type: BaseRenderer.Yuv420Type = BaseRenderer.Yuv420Type.I420) {
         if (yuvData == null) {
             return
         }

@@ -35,22 +35,33 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
      * 步骤2: 编译片段着色器
      * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
      * 步骤4: 通知 OpenGL ES 开始使用该程序
+     *
+     * @return OpenGL ES Program ID
      */
-    protected fun makeAndUseProgram(vertexShader: String, fragmentShader: String): Int {
-        // 返回着色器对象：成功，非0
-        val vertexShaderId: Int = compileShader(GLES20.GL_VERTEX_SHADER, vertexShader)
-        // 返回着色器对象：成功，非0
-        val fragmentShaderId: Int = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
-        return makeAndUseProgram(vertexShaderId, fragmentShaderId)
+    @Suppress("unused")
+    fun makeProgram(vertexShaderCode: String, fragmentShaderCode: String) {
+        val vertexShaderId = compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
+        val fragmentShaderId = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        makeProgram(vertexShaderId, fragmentShaderId)
     }
 
-    @Suppress("WeakerAccess")
-    protected fun makeAndUseProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
-        LogContext.log.i(tag, "vertexShader=$vertexShaderId fragmentShader=$fragmentShaderId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
-        val programObjId = makeProgram(vertexShaderId, fragmentShaderId)
+    /**
+     * The step of make program.
+     *
+     * 步骤1: 编译顶点着色器
+     * 步骤2: 编译片段着色器
+     * 步骤3: 将顶点着色器、片段着色器进行链接，组装成一个 OpenGL ES 程序
+     * 步骤4: 通知 OpenGL ES 开始使用该程序
+     *
+     * @return OpenGL ES Program ID
+     */
+    fun makeProgram(vertexShaderId: Int, fragmentShaderId: Int) {
+        programObjId = linkProgram(vertexShaderId, fragmentShaderId)
+        LogContext.log.i(tag, "programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
+
         GLES20.glUseProgram(programObjId)
         checkGlError("glUseProgram")
-        return programObjId
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {

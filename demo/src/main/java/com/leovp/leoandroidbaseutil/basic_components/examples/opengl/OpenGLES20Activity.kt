@@ -30,6 +30,7 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
         Item("L2_2_基础图形绘制 - 多边形", L2_2_PolygonRenderer::class.java),
         Item("L3_1_正交投影 - 多边形", L3_1_OrthoPolygonRenderer::class.java),
         Item("L3_2_正交投影 - 多边形(封装版)", L3_2_RefactorOrthoPolygonRenderer::class.java),
+        Item("L4_1_渐变色", L4_1_GradientRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

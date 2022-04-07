@@ -66,7 +66,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 这里不会立刻刷新，只有在 GLES20.glClear 调用时使用该颜色值才刷新。
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        programObjId = makeAndUseProgram(context.readAssetsFileAsString(R.raw.vertex_shader), context.readAssetsFileAsString(R.raw.fragment_shader))
+        makeProgram(context.readAssetsFileAsString(R.raw.vertex_shader), context.readAssetsFileAsString(R.raw.fragment_shader))
 
         // 生成纹理句柄
         GLES20.glGenTextures(THREE_PLANAR, planarTextureIntBuffer)
@@ -259,6 +259,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 第 3 个参数：从顶点数组读取的数据长度
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
         GLES20.glFinish()

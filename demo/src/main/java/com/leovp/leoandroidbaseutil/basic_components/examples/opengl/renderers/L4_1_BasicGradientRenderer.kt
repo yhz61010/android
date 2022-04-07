@@ -99,8 +99,6 @@ class L4_1_BasicGradientRenderer(@Suppress("unused") private val ctx: Context) :
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         super.onSurfaceChanged(gl, width, height)
-        // Set the OpenGL viewport to fill the entire surface.
-        GLES20.glViewport(0, 0, width, height)
         projectionMatrixHelper.enable(width, height)
     }
 

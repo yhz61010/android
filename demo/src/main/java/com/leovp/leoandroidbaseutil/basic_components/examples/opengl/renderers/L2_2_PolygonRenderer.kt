@@ -83,12 +83,6 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }
 
-    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
-        super.onSurfaceChanged(gl, width, height)
-        // Set the OpenGL viewport to fill the entire surface.
-        GLES20.glViewport(0, 0, width, height)
-    }
-
     override fun onDrawFrame(glUnused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 

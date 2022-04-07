@@ -67,6 +67,9 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         outputWidth = width
         outputHeight = height
+
+        // Set the OpenGL viewport to fill the entire surface.
+        GLES20.glViewport(0, 0, width, height)
     }
 
     protected fun getUniform(name: String): Int {

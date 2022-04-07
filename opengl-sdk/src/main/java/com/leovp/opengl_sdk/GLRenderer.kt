@@ -23,12 +23,6 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     var keepRatio: Boolean = true
 
-    // GLSurfaceView 宽度
-    private var screenWidth: Int = 0
-
-    // GLSurfaceView 高度
-    private var screenHeight: Int = 0
-
     // 预览 YUV 数据宽度
     private var videoWidth: Int = 0
 
@@ -82,19 +76,16 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         LogContext.log.w(tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         super.onSurfaceChanged(gl, width, height)
-        GLES20.glViewport(0, 0, width, height)
 
-        screenWidth = width
-        screenHeight = height
-        //        val ratio: Float = width.toFloat() / height.toFloat()
+        // val ratio: Float = width.toFloat() / height.toFloat()
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         // Attention: "-ratio, ratio, -1f, 1f" means keep screen ratio. Width is fixed.
-        //        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
+        // Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight)
+            pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, outputWidth, outputHeight)
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)

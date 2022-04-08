@@ -149,6 +149,7 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }
@@ -160,6 +161,7 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
 
         // 绑定新的纹理 ID 到已激活的纹理单元上
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }

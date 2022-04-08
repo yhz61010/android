@@ -143,6 +143,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
 
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }

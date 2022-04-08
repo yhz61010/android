@@ -120,19 +120,12 @@ class L6_2_3_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             0f, 0f,
             1f, 0f,
             1f, 1f)
-
-        private val TEX_COORD_BEAUTY = floatArrayOf(
-            0f, 1f,
-            0f, 0f,
-            1f, 0f,
-            1f, 1f)
     }
 
     private val vertexBufferFireL: FloatBuffer = createFloatBuffer(VERTEX_DATA_FIRE_L)
-    private val vertexBufferBeauty: FloatBuffer = createFloatBuffer(VERTEX_DATA_BEAUTY)
 
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD_FIRE_L)
-    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(TEX_COORD_BEAUTY)
+    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTexture(VERTEX_DATA_BEAUTY))
 
     private var textureLocationFireL: Int = 0
     private var textureLocationBeauty: Int = 0
@@ -145,6 +138,15 @@ class L6_2_3_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     private lateinit var textureBeanMask: TextureHelper.TextureBean
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
+
+    private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
+        return floatArrayOf(
+            -(vertex[2] + 1.0f) / 2.0f, 2 - (vertex[3] + 1.0f) / 2.0f,
+            -(vertex[0] + 1.0f) / 2.0f, -(vertex[1] + 1.0f) / 2.0f,
+            2 - (vertex[6] + 1.0f) / 2.0f, -(vertex[7] + 1.0f) / 2.0f,
+            2 - (vertex[4] + 1.0f) / 2.0f, 2 - (vertex[5] + 1.0f) / 2.0f
+        )
+    }
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 216f / 255, 209f / 255, 1f)

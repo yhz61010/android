@@ -196,6 +196,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         drawFireL()
         drawBeauty()
 
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
     }

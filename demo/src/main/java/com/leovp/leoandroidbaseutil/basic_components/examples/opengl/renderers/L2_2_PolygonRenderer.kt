@@ -143,7 +143,7 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
 
     private fun drawShape() {
         GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 0.0f, 1.0f)
-        // GL_TRIANGLE_FAN：以一个点为三角形公共顶点，组成一系列相邻的三角形。
+        // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, polygonVertexCount + 2)
     }
 

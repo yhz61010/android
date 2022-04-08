@@ -58,10 +58,10 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * ```
          */
         private val POINT_DATA = floatArrayOf(
-            -1f, -1f,
-            -1f, 1f,
-            1f, 1f,
-            1f, -1f)
+            -0.5f, -0.5f,
+            -0.5f, 0.5f,
+            0.5f, 0.5f,
+            0.5f, -0.5f)
 
         /**
          * 纹理坐标

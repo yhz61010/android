@@ -14,6 +14,8 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * 索引绘制
+ *
+ * 索引就是让不同的顶点按照规定的顺序来绘制，这样就不会导致各种三角形的错乱。
  */
 class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = L5_IndexRenderer::class.java.simpleName

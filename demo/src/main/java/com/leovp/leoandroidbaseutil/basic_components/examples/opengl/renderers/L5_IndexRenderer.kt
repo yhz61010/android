@@ -113,6 +113,7 @@ class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUniform4f(uColorLocation, 0.0f, 1.0f, 1.0f, 1.0f)
 
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // 绘制相对复杂的图形时，若顶点有较多重复时，对比数据占用空间而言，glDrawElements 会比 glDrawArrays 小很多，也会更高效。
         // 因为在有重复顶点的情况下，glDrawArrays 方式需要的 3 个顶点位置是用 Float 型的，占 3*4 的 Byte 值，
         // 而 glDrawElements 需要 3 个 Short 型的，占 3*2 Byte值。

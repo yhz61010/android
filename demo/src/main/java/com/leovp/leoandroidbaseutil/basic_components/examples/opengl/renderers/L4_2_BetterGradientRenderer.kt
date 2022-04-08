@@ -107,7 +107,7 @@ class L4_2_BetterGradientRenderer(@Suppress("unused") private val ctx: Context) 
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
-        // GL_TRIANGLE_STRIP: 相邻3个点构成一个三角形,不包括首位两个点。例如：ABC、BCD、CDE、DEF
+        // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, POINT_DATA.size / (TWO_DIMENSIONS_POSITION_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT))
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / (TWO_DIMENSIONS_POSITION_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT))
     }

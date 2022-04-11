@@ -72,8 +72,8 @@ class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
-        uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
-        val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        uColorLocation = getUniform("u_Color")
+        val aPositionLocation = getAttrib("a_Position")
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；

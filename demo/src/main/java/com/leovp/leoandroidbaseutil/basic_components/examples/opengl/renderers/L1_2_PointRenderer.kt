@@ -88,7 +88,7 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
 
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
-        val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        val aPositionLocation = getAttrib("a_Position")
         val aColorLocation = getAttrib("a_Color")
 
         // 关联顶点坐标属性和缓存数据

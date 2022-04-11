@@ -8,6 +8,7 @@ import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_C
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.TextureHelper
+import com.leovp.opengl_sdk.util.VerticesUtil
 import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
@@ -57,11 +58,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * A(-1,-1)       D(1,-1)
          * ```
          */
-        private val POINT_DATA = floatArrayOf(
-            -0.5f, -0.5f,
-            -0.5f, 0.5f,
-            0.5f, 0.5f,
-            0.5f, -0.5f)
+        private val POINT_DATA = VerticesUtil.VERTICES_COORD_CW
 
         /**
          * 纹理坐标
@@ -77,11 +74,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * A(0,1)        D(1,1)
          * ```
          */
-        private val TEX_VERTEX = floatArrayOf(
-            0f, 1f,
-            0f, 0f,
-            1f, 0f,
-            1f, 1f)
+        private val TEX_VERTEX = VerticesUtil.TEX_COORD_CW
     }
 
     private val vertexData: FloatBuffer = createFloatBuffer(POINT_DATA)

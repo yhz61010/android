@@ -1,10 +1,12 @@
 package com.leovp.opengl_sdk
 
+import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.*
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.opengles.GL10
 
@@ -57,7 +59,7 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
      */
     fun makeProgram(vertexShaderId: Int, fragmentShaderId: Int) {
         programObjId = linkProgram(vertexShaderId, fragmentShaderId)
-        LogContext.log.i(tag, "programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.i(tag, "makeProgram() programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
 
         GLES20.glUseProgram(programObjId)
@@ -73,12 +75,12 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
     }
 
     protected fun getUniform(name: String): Int {
-        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid.")
+        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid. Make sure to call makeProgram() first.")
         return GLES20.glGetUniformLocation(programObjId, name)
     }
 
     protected fun getAttrib(name: String): Int {
-        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid.")
+        if (programObjId < 1) throw IllegalArgumentException("Program ID=$programObjId is not valid. Make sure to call makeProgram() first.")
         return GLES20.glGetAttribLocation(programObjId, name)
     }
 
@@ -137,8 +139,6 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
         }
     }
 
-    open fun onClick() {}
-
     companion object {
         // I420, YV12
         const val THREE_PLANAR = 3
@@ -146,4 +146,20 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
         // NV12, NV21
         const val TWO_PLANAR = 2
     }
+
+    @Synchronized
+    protected fun readFramePixelBuffer(x: Int = 0, y: Int = 0, width: Int = outputWidth, height: Int = outputHeight): ByteBuffer {
+        return ByteBuffer.allocate(width * height * 4).also {
+            GLES20.glReadPixels(x, y, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, it)
+        }
+    }
+
+    @Synchronized
+    protected fun readFrameBitmap(width: Int = outputWidth, height: Int = outputHeight): Bitmap {
+        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bmp ->
+            bmp.copyPixelsFromBuffer(readFramePixelBuffer(width = width, height = height))
+        }
+    }
+
+    open fun onClick() {}
 }

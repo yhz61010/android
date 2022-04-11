@@ -95,6 +95,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+        // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(210f / 255, 255f / 255, 209f / 255, 1f)
         makeProgram(VERTEX_SHADER, FRAGMENT_SHADER)
 
@@ -104,7 +105,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         val aTexCoordLocation = getAttrib("a_TexCoord")
         uTextureUnitLocation = getUniform("u_TextureUnit")
         // 纹理数据
-        textureBean = TextureHelper.loadTexture(ctx, R.drawable.img_fire_l)
+        textureBean = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；

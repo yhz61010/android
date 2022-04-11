@@ -23,7 +23,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         private const val VERTEX_SHADER = """
                 uniform mat4 u_Matrix;
                 attribute vec4 a_Position;
-                // 纹理坐标：2个分量，S 和 T 坐标
+                // 纹理坐标：2 个分量，S 和 T 坐标
                 attribute vec2 a_TexCoord;
                 varying vec2 v_TexCoord;
                 void main() {

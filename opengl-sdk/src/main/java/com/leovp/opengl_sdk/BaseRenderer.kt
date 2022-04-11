@@ -30,6 +30,8 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
     protected var pointCoord: FloatBuffer = createFloatBuffer(VerticesUtil.VERTICES_COORD)
     protected var texVertices: FloatBuffer = createFloatBuffer(VerticesUtil.TEX_COORD)
 
+    var rendererCallback: RendererCallback? = null
+
     /**
      * The step of make program.
      *
@@ -139,6 +141,11 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
         }
     }
 
+    /** 渲染完毕的回调 */
+    interface RendererCallback {
+        fun onRenderDone(buffer: ByteBuffer, width: Int, height: Int)
+    }
+
     companion object {
         // I420, YV12
         const val THREE_PLANAR = 3
@@ -148,17 +155,21 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
     }
 
     @Synchronized
-    protected fun readFramePixelBuffer(x: Int = 0, y: Int = 0, width: Int = outputWidth, height: Int = outputHeight): ByteBuffer {
-        return ByteBuffer.allocate(width * height * 4).also {
+    protected fun readFramePixelBuffer(x: Int = 0, y: Int = 0, width: Int = outputWidth, height: Int = outputHeight) {
+        val buffer = ByteBuffer.allocate(width * height * Float.SIZE_BYTES).also {
             GLES20.glReadPixels(x, y, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, it)
         }
+        rendererCallback?.onRenderDone(buffer, width, height)
     }
 
     @Synchronized
     protected fun readFrameBitmap(width: Int = outputWidth, height: Int = outputHeight): Bitmap {
-        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bmp ->
-            bmp.copyPixelsFromBuffer(readFramePixelBuffer(width = width, height = height))
-        }
+        val buffer = ByteBuffer.allocate(width * height * 4)
+        GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer)
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        bitmap.copyPixelsFromBuffer(buffer)
+        return bitmap
     }
 
     open fun onClick() {}

@@ -90,11 +90,11 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
         GLES20.glUseProgram(programObjId)
 
         // 步骤5：获取颜色 Uniform 在 OpenGL 程序中的索引
-        uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
+        uColorLocation = getUniform("u_Color")
 
         // 步骤6：获取顶点坐标属性在 OpenGL 程序中的索引
         // 顶点坐标在 OpenGL 程序中的索引
-        val aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        val aPositionLocation = getAttrib("a_Position")
 
         // 将缓冲区的指针移动到头部，保证数据是从最开始处读取
         // In [createFloatBuffers] method, it makes sure to achieve this.

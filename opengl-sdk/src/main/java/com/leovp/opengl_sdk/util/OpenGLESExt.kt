@@ -100,8 +100,8 @@ fun feedTextureWithImageData(yPlane: ByteBuffer, uvPlane: ByteBuffer, width: Int
 
 /**
  * 编译着色器程序
- * @param type GLES20.GL_VERTEX_SHADER   -> vertex shader
- *             GLES20.GL_FRAGMENT_SHADER -> fragment shader
+ * @param type GLES20.GL_VERTEX_SHADER(0X8B31=35633)   -> vertex shader
+ *             GLES20.GL_FRAGMENT_SHADER(0X8B30=35632) -> fragment shader
  * @param shaderCode 着色器程序代码
  *
  * https://www.jianshu.com/p/a772bfc2276b
@@ -136,7 +136,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
 
     // 6.验证编译状态
     if (compileStatus[0] != GLES20.GL_TRUE) { // Failed
-        LogContext.log.e(TAG, "Compilation of shader failed.", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "Compilation of shader[$type] failed.", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         // 如果编译失败，则删除创建的着色器对象
         GLES20.glDeleteShader(shaderId)
 
@@ -155,7 +155,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
     // 1. 创建一个 OpenGL ES 程序对象
     // Create empty OpenGL ES Program
     val programObjId = GLES20.glCreateProgram()
-    LogContext.log.i(TAG, "programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+    LogContext.log.i(TAG, "linkProgram() programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
 
     // 2. 检查创建状态
     checkGlError("glCreateProgram")
@@ -182,7 +182,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
 
     // 6. 验证链接状态
     if (linkStatus[0] != GLES20.GL_TRUE) {
-        LogContext.log.w(TAG, "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)} linkStatus=${linkStatus[0]}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         // 链接失败则删除程序对象
         GLES20.glDeleteProgram(programObjId)
 

@@ -78,8 +78,8 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
 
         makeProgram(vertexShader, FRAGMENT_SHADER)
 
-        uColorLocation = GLES20.glGetUniformLocation(programObjId, "u_Color")
-        aPositionLocation = GLES20.glGetAttribLocation(programObjId, "a_Position")
+        uColorLocation = getUniform("u_Color")
+        aPositionLocation = getAttrib("a_Position")
 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }

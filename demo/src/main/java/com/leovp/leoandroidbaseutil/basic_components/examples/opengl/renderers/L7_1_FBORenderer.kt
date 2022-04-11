@@ -125,9 +125,9 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         // 使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT or GL10.GL_DEPTH_BUFFER_BIT)
 
-        // 1. 创建FrameBuffer、纹理对象
+        // 1. 创建 FrameBuffer、纹理对象
         createEnv()
-        // 2. 配置FrameBuffer相关的绘制存储信息，并且绑定到当前的绘制环境上
+        // 2. 配置 FrameBuffer 相关的绘制存储信息，并且绑定到当前的绘制环境上
         bindFrameBufferInfo()
         // 3. 更新视图区域
         GLES20.glViewport(0, 0, textureBean.width, textureBean.height)
@@ -135,21 +135,21 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         drawTexture()
         // 5. 读取当前画面上的像素信息
         readFramePixelBuffer(0, 0, textureBean.width, textureBean.height)
-        // 6. 解绑FrameBuffer
+        // 6. 解绑 FrameBuffer
         unbindFrameBufferInfo()
-        // 7. 删除FrameBuffer、纹理对象
+        // 7. 删除 FrameBuffer，纹理对象
         deleteEnv()
     }
 
     private fun createEnv() {
-        // 1. 创建FrameBuffer
+        // 1. 创建 FrameBuffer
         GLES20.glGenFramebuffers(1, frameBuffer, 0)
 
         // 2.1 生成纹理对象
         GLES20.glGenTextures(1, texture, 0)
         // 2.2 绑定纹理对象
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture[0])
-        // 2.3 设置纹理对象的相关信息：颜色模式、大小
+        // 2.3 设置纹理对象的相关信息：颜色模式，大小
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, textureBean.width, textureBean.height,
             0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null)
         // 2.4 纹理过滤参数设置

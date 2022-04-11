@@ -1,13 +1,9 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.Matrix
-import com.leovp.androidbase.exts.android.createTmpFile
-import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
-import com.leovp.lib_image.writeToFile
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
@@ -83,7 +79,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
     private val frameBuffer = IntArray(1)
     private val texture = IntArray(1)
 
-    private var isCurrentFrameRead = false
+    var isCurrentFrameRead = false
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
@@ -122,8 +118,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
     }
 
     override fun onDrawFrame(unused: GL10) {
-        if (isCurrentFrameRead) return
-        isCurrentFrameRead = true
+        if (!isCurrentFrameRead) return
 
         // 使用 glClearColor 设置的颜色，刷新 Surface
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT or GL10.GL_DEPTH_BUFFER_BIT)
@@ -137,12 +132,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         // 4. 绘制图片
         drawTexture()
         // 5. 读取当前画面上的像素信息
-        val bitmap = readFrameBitmap(textureBean.width, textureBean.height)
-        val outBmpFile = ctx.createTmpFile(".png")
-        bitmap.writeToFile(outBmpFile, imgType = Bitmap.CompressFormat.PNG)
-        bitmap.recycle()
-        ctx.toast("The generated bitmap has been written to ${outBmpFile.absolutePath}")
-
+        readFramePixelBuffer(0, 0, textureBean.width, textureBean.height)
         // 6. 解绑FrameBuffer
         unbindFrameBufferInfo()
         // 7. 删除FrameBuffer、纹理对象

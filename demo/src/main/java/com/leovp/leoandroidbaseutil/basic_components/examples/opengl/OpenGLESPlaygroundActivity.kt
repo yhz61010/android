@@ -5,7 +5,7 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.leovp.androidbase.exts.android.createTmpFile
+import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L7_1_FBORenderer
@@ -54,7 +54,7 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
                 bitmap.copyPixelsFromBuffer(buffer)
                 buffer.clear()
                 thread {
-                    val outBmpFile = createTmpFile(".png")
+                    val outBmpFile = createFile("FBO.png")
                     bitmap.writeToFile(outBmpFile, imgType = Bitmap.CompressFormat.PNG)
                     toast("The generated bitmap has been written to ${outBmpFile.absolutePath}")
 

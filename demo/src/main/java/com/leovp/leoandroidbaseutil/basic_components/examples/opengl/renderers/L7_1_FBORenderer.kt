@@ -109,7 +109,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         // 纹理数据
         textureBean = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
-        // 由于Android屏幕上绘制的起始点在左上角，而GL纹理坐标是在左下角，所以需要进行水平翻转，即Y轴翻转
+        // 由于 Android 屏幕上绘制的起始点在左上角，而 GL 纹理坐标是在左下角，所以需要进行水平翻转，即 Y 轴翻转
         Matrix.scaleM(projectionMatrix, 0, 1f, -1f, 1f)
 
         // 开启纹理透明混合，这样才能绘制透明图片

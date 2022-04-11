@@ -26,6 +26,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
         private const val VERTEX_SHADER = """
                 uniform mat4 u_Matrix;
                 attribute vec4 a_Position;
+                // 纹理坐标：2 个分量，S 和 T 坐标
                 attribute vec2 a_TexCoord;
                 varying vec2 v_TexCoord;
                 void main()
@@ -43,11 +44,12 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRende
                 // 定义所有浮点数据类型的默认精度；有 lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用 highp。(顶点着色器默认 highp)
                 precision mediump float;
                 varying vec2 v_TexCoord;
+                // sampler2D：二维纹理数据的数组
                 uniform sampler2D u_TextureUnit;
                 void main()
                 {
                     vec4 pic = texture2D(u_TextureUnit, v_TexCoord);
-                    float gray = (pic.r + pic.g + pic.b) / 3.0f;
+                    float gray = (pic.r + pic.g + pic.b) / 3.;
                     // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
                     gl_FragColor = vec4(gray, gray, gray, pic.a);
                 }

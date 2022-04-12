@@ -16,12 +16,12 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * FrameBuffer 离屏渲染
+ * FrameBuffer 离屏渲染 - RenderBuffer
  *
  * 点击屏幕，显示图像
  */
-class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRenderer(ctx) {
-    override fun getTagName(): String = L7_1_FBORenderer::class.java.simpleName
+class L7_2_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRenderer(ctx) {
+    override fun getTagName(): String = L7_2_FBORenderer::class.java.simpleName
 
     private companion object {
         /** 顶点着色器：之后定义的每个都会传 1 次给顶点着色器 */
@@ -50,10 +50,8 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
                 uniform sampler2D u_TextureUnit;
                 void main()
                 {
-                    vec4 pic = texture2D(u_TextureUnit, v_TexCoord);
-                    float gray = (pic.r + pic.g + pic.b) / 3.;
                     // gl_FragColor：GL 中默认定义的输出变量，决定了当前片段的最终颜色
-                    gl_FragColor = vec4(gray, gray, gray, pic.a);
+                    gl_FragColor = texture2D(u_TextureUnit, v_TexCoord);
                 }
         """
 
@@ -81,6 +79,7 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
     private lateinit var textureBean: TextureHelper.TextureBean
 
     private val frameBuffer = IntArray(1)
+    private val renderBuffer = IntArray(1)
     private val texture = IntArray(1)
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
@@ -137,36 +136,53 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
         readFramePixelBuffer(0, 0, textureBean.width, textureBean.height)
         // 6. 解绑 FrameBuffer
         unbindFrameBufferInfo()
-        // 7. 删除 FrameBuffer，纹理对象
+        // 7. 删除 FrameBuffer，RenderBuffer，纹理对象
         deleteEnv()
     }
 
     private fun createEnv() {
-        // 1. 创建 FrameBuffer
-        GLES20.glGenFramebuffers(1, frameBuffer, 0)
+        // 一：RenderBuffer
+        // 1. 创建 RenderBuffer
+        GLES20.glGenRenderbuffers(1, renderBuffer, 0)
+        // 2. 绑定 RenderBuffer
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderBuffer[0])
+        // 3. 将 RenderBuffer 设置为深度类型，并设置大小
+        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16,
+            textureBean.width, textureBean.height)
+        // 4. 设置当前的 RenderBuffer 来存储 FrameBuffer 的深度信息
+        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
+            GLES20.GL_RENDERBUFFER, renderBuffer[0])
+        // 5. 解绑 RenderBuffer
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0)
 
-        // 2.1 生成纹理对象
+        // 二：FrameBuffer
+        // 1. 创建FrameBuffer
+        GLES20.glGenFramebuffers(1, frameBuffer, 0)
+        // 2. 生成纹理对象
         GLES20.glGenTextures(1, texture, 0)
-        // 2.2 绑定纹理对象
+        // 3. 绑定纹理对象
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture[0])
-        // 2.3 设置纹理对象的相关信息：颜色模式，大小
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, textureBean.width, textureBean.height,
+        // 4. 设置纹理对象的相关信息：颜色模式、大小
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA,
+            textureBean.width, textureBean.height,
             0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null)
-        // 2.4 纹理过滤参数设置
+
+        // 纹理过滤参数设置
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST.toFloat())
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE.toFloat())
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE.toFloat())
-        // 2.5 解绑当前纹理，避免后续无关的操作影响了纹理内容
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
     private fun bindFrameBufferInfo() {
-        // 1. 绑定 FrameBuffer 到当前的绘制环境上
+        // 绑定 FrameBuffer
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0])
-        // 2. 将纹理对象挂载到 FrameBuffer 上，存储颜色信息
+        // 将纹理对象挂载到 FrameBuffer 上，存储颜色信息
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
             GLES20.GL_TEXTURE_2D, texture[0], 0)
+        // 将 RenderBuffer 挂载到 FrameBuffer 上，存储深度信息
+        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
+            GLES20.GL_RENDERBUFFER, renderBuffer[0])
     }
 
     private fun drawTexture() {
@@ -196,7 +212,8 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
     }
 
     private fun deleteEnv() {
-        GLES20.glDeleteFramebuffers(1, frameBuffer, 0)
         GLES20.glDeleteTextures(1, texture, 0)
+        GLES20.glDeleteRenderbuffers(1, renderBuffer, 0)
+        GLES20.glDeleteFramebuffers(1, frameBuffer, 0)
     }
 }

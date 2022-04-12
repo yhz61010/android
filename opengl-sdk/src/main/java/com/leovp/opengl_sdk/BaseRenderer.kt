@@ -88,8 +88,8 @@ abstract class BaseRenderer : GLSurfaceView.Renderer {
 
     /**
      * 调整渲染纹理的缩放比例
-     * @param width YUV 数据宽度
-     * @param height YUV 数据高度
+     * @param width 图像宽度
+     * @param height 图像高度
      */
     protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatArray {
         val floatArray: FloatArray =

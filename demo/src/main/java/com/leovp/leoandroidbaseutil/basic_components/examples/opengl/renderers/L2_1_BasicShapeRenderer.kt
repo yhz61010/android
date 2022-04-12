@@ -11,6 +11,8 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * 基础图形绘制 - 点，线，三角形
+ *
+ * 点击屏幕查看效果
  */
 class L2_1_BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = L2_1_BasicShapeRenderer::class.java.simpleName

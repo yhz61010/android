@@ -17,6 +17,8 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * FrameBuffer 离屏渲染
+ *
+ * 点击屏幕，显示图像
  */
 class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = L7_1_FBORenderer::class.java.simpleName

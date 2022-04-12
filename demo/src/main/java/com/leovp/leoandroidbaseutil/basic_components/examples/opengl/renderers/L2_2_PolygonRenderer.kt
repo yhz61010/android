@@ -13,6 +13,8 @@ import kotlin.math.sin
 
 /**
  * 基础图形绘制 - 多边形
+ *
+ * 点击屏幕查看效果
  */
 open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
     override fun getTagName(): String = L2_2_PolygonRenderer::class.java.simpleName

@@ -3,10 +3,12 @@ package com.leovp.opengl_sdk.filter
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.AbsBaseOpenGLES
-import com.leovp.opengl_sdk.R
-import com.leovp.opengl_sdk.util.*
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
+import com.leovp.opengl_sdk.util.TextureHelper
+import com.leovp.opengl_sdk.util.VerticesUtil
+import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.opengles.GL10
 
@@ -14,10 +16,31 @@ import javax.microedition.khronos.opengles.GL10
  * 基础滤镜
  */
 open class BaseFilter(val ctx: Context,
-    private val vertexShader: String = ctx.readAssetsFileAsString(R.raw.base_vertex_shader),
-    private val fragmentShader: String = ctx.readAssetsFileAsString(R.raw.base_fragment_shader)) : AbsBaseOpenGLES() {
+    private val vertexShader: String = VERTEX_SHADER,
+    private val fragmentShader: String = FRAGMENT_SHADER) : AbsBaseOpenGLES() {
 
     override fun getTagName() = "BaseFilter"
+
+    companion object {
+        const val VERTEX_SHADER = """
+                uniform mat4 u_Matrix;
+                attribute vec4 a_Position;
+                attribute vec2 a_TexCoord;
+                varying vec2 v_TexCoord;
+                void main() {
+                    v_TexCoord = a_TexCoord;
+                    gl_Position = u_Matrix * a_Position;
+                }
+                """
+        const val FRAGMENT_SHADER = """
+                precision mediump float;
+                varying vec2 v_TexCoord;
+                uniform sampler2D u_TextureUnit;
+                void main() {
+                    gl_FragColor = texture2D(u_TextureUnit, v_TexCoord);
+                }
+                """
+    }
 
     private val vertexData: FloatBuffer = createFloatBuffer(VerticesUtil.VERTICES_COORD_CW)
 

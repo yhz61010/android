@@ -39,6 +39,7 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
         Item("L6_2_3_纹理渲染 - 蒙版遮罩", L6_2_3_TextureRenderer::class.java),
         Item("L7_1_FrameBuffer 离屏渲染", L7_1_FBORenderer::class.java),
         Item("L7_2_FrameBuffer 离屏渲染 - RenderBuffer", L7_2_FBORenderer::class.java),
+        Item("L8_1_滤镜渲染", L8_1_FilterRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

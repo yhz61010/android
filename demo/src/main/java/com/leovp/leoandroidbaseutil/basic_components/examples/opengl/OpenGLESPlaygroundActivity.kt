@@ -8,6 +8,7 @@ import android.widget.ImageView
 import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L8_1_FilterRenderer
 import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.base_L7.L7_BaseRenderer
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGlesplaygroundBinding
 import com.leovp.lib_image.writeToFile
@@ -29,17 +30,20 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
         binding.glSurfaceView.setEGLConfigChooser(false)
         val renderer: GLSurfaceView.Renderer = OpenGLES20Activity.getRenderer(item.clazz, this)!!
         binding.glSurfaceView.setRenderer(renderer)
-        binding.glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        binding.glSurfaceView.renderMode = when (renderer) {
+            is L8_1_FilterRenderer -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            else                   -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        }
+
+        when (renderer) {
+            is L7_BaseRenderer -> readCurrentFrame(renderer)
+        }
 
         binding.glSurfaceView.setOnClickListener {
             binding.glSurfaceView.requestRender()
             if (renderer is BaseRenderer) {
                 renderer.onClick()
             }
-        }
-
-        when (renderer) {
-            is L7_BaseRenderer  -> readCurrentFrame(renderer)
         }
     }
 

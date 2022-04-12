@@ -36,6 +36,9 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
 
+    private var pointCoord: FloatBuffer = createFloatBuffer(VerticesUtil.VERTICES_COORD)
+    private val texVertices: FloatBuffer = createFloatBuffer(VerticesUtil.TEX_COORD)
+
     // y分量数据
     private var y: ByteBuffer = ByteBuffer.allocate(0)
 

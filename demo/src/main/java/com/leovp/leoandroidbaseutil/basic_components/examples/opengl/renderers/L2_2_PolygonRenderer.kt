@@ -2,7 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 
 import android.content.Context
 import android.opengl.GLES20
-import com.leovp.opengl_sdk.BaseRenderer
+import android.opengl.GLSurfaceView
+import com.leovp.opengl_sdk.AbsBaseOpenGLES
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
@@ -16,7 +17,7 @@ import kotlin.math.sin
  *
  * 点击屏幕查看效果
  */
-open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
     override fun getTagName(): String = L2_2_PolygonRenderer::class.java.simpleName
 
     private companion object {
@@ -74,16 +75,20 @@ open class L2_2_PolygonRenderer(@Suppress("unused") private val ctx: Context) : 
     /** 颜色 uniform 在 OpenGL 程序中的索引 */
     private var uColorLocation: Int = 0
 
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
-
         makeProgram(vertexShader, FRAGMENT_SHADER)
 
         uColorLocation = getUniform("u_Color")
         aPositionLocation = getAttrib("a_Position")
 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
+    }
+
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        // Set the OpenGL viewport to fill the entire surface.
+        GLES20.glViewport(0, 0, width, height)
     }
 
     override fun onDrawFrame(unused: GL10) {

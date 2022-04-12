@@ -246,7 +246,6 @@ class LeoTextureView @JvmOverloads constructor(
         LogContext.log.w(TAG, "Adjust TextureView dimension to $width x $height")
         val params: ViewGroup.LayoutParams = layoutParams
         // Changes the height and width to the specified *pixels*
-        // Changes the height and width to the specified *pixels*
         params.width = width
         params.height = height
         layoutParams = params

@@ -3,8 +3,10 @@ package com.leovp.opengl_sdk
 import android.opengl.GLES20
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
-import com.leovp.opengl_sdk.util.*
-import java.nio.FloatBuffer
+import com.leovp.opengl_sdk.util.checkGlError
+import com.leovp.opengl_sdk.util.compileShader
+import com.leovp.opengl_sdk.util.linkProgram
+import com.leovp.opengl_sdk.util.validateProgram
 
 /**
  * Author: Michael Leo
@@ -22,9 +24,6 @@ abstract class AbsBaseOpenGLES {
 
     @Suppress("WeakerAccess")
     protected var outputHeight: Int = 0
-
-    protected var pointCoord: FloatBuffer = createFloatBuffer(VerticesUtil.VERTICES_COORD)
-    protected var texVertices: FloatBuffer = createFloatBuffer(VerticesUtil.TEX_COORD)
 
     /**
      * The step of make program.

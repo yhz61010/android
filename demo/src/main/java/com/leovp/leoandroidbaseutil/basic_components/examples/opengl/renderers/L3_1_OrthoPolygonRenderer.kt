@@ -8,6 +8,8 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * 正交投影 - 多边形
+ *
+ * 点击屏幕查看效果
  */
 class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : L2_2_PolygonRenderer(ctx) {
     override fun getTagName(): String = L3_1_OrthoPolygonRenderer::class.java.simpleName

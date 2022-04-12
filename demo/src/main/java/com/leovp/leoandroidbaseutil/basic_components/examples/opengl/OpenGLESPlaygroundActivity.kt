@@ -8,7 +8,7 @@ import android.widget.ImageView
 import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
-import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.L7_1_FBORenderer
+import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.base_L7.L7_BaseRenderer
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGlesplaygroundBinding
 import com.leovp.lib_image.writeToFile
 import com.leovp.opengl_sdk.BaseRenderer
@@ -39,11 +39,11 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
         }
 
         when (renderer) {
-            is L7_1_FBORenderer -> readCurrentFrame(renderer)
+            is L7_BaseRenderer  -> readCurrentFrame(renderer)
         }
     }
 
-    private fun readCurrentFrame(renderer: L7_1_FBORenderer) {
+    private fun readCurrentFrame(renderer: L7_BaseRenderer) {
         val imageView = ImageView(this)
         val params = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         binding.rootView.addView(imageView, params)

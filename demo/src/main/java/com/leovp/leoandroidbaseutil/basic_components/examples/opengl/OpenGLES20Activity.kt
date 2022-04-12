@@ -40,6 +40,7 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
         Item("L7_1_FrameBuffer 离屏渲染", L7_1_FBORenderer::class.java),
         Item("L7_2_FrameBuffer 离屏渲染 - RenderBuffer", L7_2_FBORenderer::class.java),
         Item("L8_1_滤镜渲染", L8_1_FilterRenderer::class.java),
+        Item("L11_动态改变顶点位置 & 颜色", L11_DynamicPointRenderer::class.java),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

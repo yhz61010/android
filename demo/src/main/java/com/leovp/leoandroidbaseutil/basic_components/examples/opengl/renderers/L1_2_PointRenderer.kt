@@ -82,7 +82,7 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
 
     private val colorData: FloatBuffer = createFloatBuffer(COLOR_DATA)
 
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+    override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
 

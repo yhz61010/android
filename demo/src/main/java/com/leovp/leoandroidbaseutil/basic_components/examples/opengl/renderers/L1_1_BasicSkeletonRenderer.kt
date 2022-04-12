@@ -2,7 +2,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 
 import android.content.Context
 import android.opengl.GLES20
-import com.leovp.opengl_sdk.BaseRenderer
+import android.opengl.GLSurfaceView
+import com.leovp.opengl_sdk.AbsBaseOpenGLES
 import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.compileShader
 import com.leovp.opengl_sdk.util.createFloatBuffer
@@ -15,7 +16,7 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * 基础框架
  */
-class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) : BaseRenderer() {
+class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
     override fun getTagName(): String = L1_1_BasicSkeletonRenderer::class.java.simpleName
 
     private companion object {
@@ -111,6 +112,11 @@ class L1_1_BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) :
 
         // 步骤8：通知 GL 程序使用指定的顶点属性索引
         GLES20.glEnableVertexAttribArray(aPositionLocation)
+    }
+
+    override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        // Set the OpenGL viewport to fill the entire surface.
+        GLES20.glViewport(0, 0, width, height)
     }
 
     override fun onDrawFrame(unused: GL10) {

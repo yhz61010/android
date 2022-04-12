@@ -33,8 +33,8 @@ class L3_2_RefactorOrthoPolygonRenderer(@Suppress("unused") private val ctx: Con
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        super.onSurfaceCreated(unused, config)
+    override fun onSurfaceCreated(glUnused: GL10, config: EGLConfig) {
+        super.onSurfaceCreated(glUnused, config)
         projectionMatrixHelper = ProjectionMatrixHelper(programObjId, "u_Matrix")
     }
 

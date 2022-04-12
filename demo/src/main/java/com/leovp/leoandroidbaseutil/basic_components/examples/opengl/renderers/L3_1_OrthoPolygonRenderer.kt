@@ -41,8 +41,8 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         0f, 0f, 1f, 0f,
         0f, 0f, 0f, 1f)
 
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        super.onSurfaceCreated(unused, config)
+    override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
+        super.onSurfaceCreated(gl, config)
         uMatrixLocation = getUniform("u_Matrix")
     }
 

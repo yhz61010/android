@@ -114,7 +114,10 @@ class L12_1_BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
             GLES20.GL_FLOAT, false, 0, vertexBuffer)
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
+        // GLES20.GL_TRIANGLE_STRIP
+        // GLES20.GL_TRIANGLES
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, pointData.size / THREE_DIMEN_POS_COMPONENT_COUNT)
         GLES20.glDisableVertexAttribArray(aPositionLocation)
+
     }
 }

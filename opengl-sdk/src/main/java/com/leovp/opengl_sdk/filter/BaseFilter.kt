@@ -3,8 +3,8 @@ package com.leovp.opengl_sdk.filter
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.AbsBaseOpenGLES
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.TextureHelper
 import com.leovp.opengl_sdk.util.VerticesUtil
@@ -61,12 +61,12 @@ open class BaseFilter(val ctx: Context,
         val aTexCoordLocation = getAttrib("a_TexCoord")
         uTextureUnitLocation = getUniform("u_TextureUnit")
 
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexData)
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, texVertexBuffer)
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 
@@ -93,7 +93,7 @@ open class BaseFilter(val ctx: Context,
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT)
     }
 
     fun onDestroy() {

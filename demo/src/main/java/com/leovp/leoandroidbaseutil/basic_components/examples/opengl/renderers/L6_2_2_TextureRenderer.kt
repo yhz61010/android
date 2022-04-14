@@ -4,8 +4,8 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.opengl_sdk.BaseRenderer
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.TextureHelper
 import com.leovp.opengl_sdk.util.createFloatBuffer
@@ -161,12 +161,12 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(texCoordLocationFireL, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(texCoordLocationFireL, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, textureBufferFireL)
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
-        GLES20.glVertexAttribPointer(texCoordLocationBeauty, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(texCoordLocationBeauty, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, textureBufferBeauty)
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
@@ -178,7 +178,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexBufferFireL)
         // 通知 GL 程序使用指定的顶点属性索引
         GLES20.glEnableVertexAttribArray(aPositionLocation)
@@ -200,7 +200,7 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT)
     }
 
     private fun drawFireL() {

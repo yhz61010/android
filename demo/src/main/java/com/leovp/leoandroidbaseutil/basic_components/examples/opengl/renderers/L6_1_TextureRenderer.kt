@@ -98,7 +98,7 @@ class L6_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         val aTexCoordLocation = getAttrib("a_TexCoord")
         uTextureUnitLocation = getUniform("u_TextureUnit")
         // 纹理数据
-        textureBean = TextureHelper.loadTexture(ctx, R.drawable.beauty)
+        textureBean = TextureHelper.loadTexture(ctx, R.drawable.coser)
 
         // 关联顶点坐标属性和缓存数据
         // 1. 位置索引；

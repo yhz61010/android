@@ -4,8 +4,8 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.opengl_sdk.BaseRenderer
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.ProjectionMatrixHelper
 import com.leovp.opengl_sdk.util.TextureHelper
 import com.leovp.opengl_sdk.util.createFloatBuffer
@@ -117,7 +117,7 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         textureBeanBeauty = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMENSIONS_TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
+        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 
         // 开启纹理透明混合，这样才能绘制透明图片
@@ -139,7 +139,7 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     }
 
     private fun drawFireL() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexDataFireL)
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
@@ -151,11 +151,11 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         GLES20.glUniform1i(uTextureUnitLocation, 0)
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMEN_POS_COMPONENT_COUNT)
     }
 
     private fun drawBeauty() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT,
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
             GLES20.GL_FLOAT, false, 0, vertexDataBeauty)
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
@@ -165,6 +165,6 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT)
     }
 }

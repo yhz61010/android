@@ -7,8 +7,8 @@ import android.opengl.GLES20
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog
 import com.leovp.opengl_sdk.util.*
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_STRIDE_IN_FLOAT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_STRIDE_IN_FLOAT
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -204,14 +204,14 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
             //   normalized: 表示是否进行归一化。
             //   stride: 表示stride（跨距），在数组表示多种属性的时候使用到。数组中每个顶点相关属性占的Byte值。
             //   ptr: 表示所传入的顶点数组地址
-            GLES20.glVertexAttribPointer(it, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMENSIONS_STRIDE_IN_FLOAT, pointCoord)
+            GLES20.glVertexAttribPointer(it, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMEN_STRIDE_IN_FLOAT, pointCoord)
             // 通知 GL 程序使用指定的顶点属性索引
             GLES20.glEnableVertexAttribArray(it)
         }
 
         // 传纹理坐标给 fragment shader
         aTexCoordLocation = getAttrib("a_TexCoord").also {
-            GLES20.glVertexAttribPointer(it, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMENSIONS_STRIDE_IN_FLOAT, texVertices)
+            GLES20.glVertexAttribPointer(it, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMEN_STRIDE_IN_FLOAT, texVertices)
             GLES20.glEnableVertexAttribArray(it)
         }
 
@@ -257,7 +257,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT)
         GLES20.glFinish()
 
         GLES20.glDisableVertexAttribArray(aPositionLocation)

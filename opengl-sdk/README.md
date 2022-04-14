@@ -51,7 +51,7 @@ EDF - v4, v3, v5    n=3: T=[n+1, n  , n+2]=[v4, v3, v5]
 
 需要注意上述示例中的顶点顺序，这个顺序是为了保证所有的三角形都是按照相同的方向绘制的，使这个三角形串能够正确形成表面的一部分。对于某些操作，维持方向是很重要的，比如剔除。
 
-| <img src="http://lib.leovp.com/resources/Triangle_Strip_In_OpenGL_Vertice4.svg" alt="Triangle Strip In OpenGL - Vertice4" style="zoom:200%;" /> | <img src="http://lib.leovp.com/resources/opengl/Triangles_Strip_In_OpenGL.svg" alt="Triangles Strip In OpenGL - Vertice5" style="zoom: 200%;" /> |
+| <img src="http://lib.leovp.com/resources/opengl/Triangle_Strip_In_OpenGL_Vertice4.svg" alt="Triangle Strip In OpenGL - Vertice4" style="zoom:200%;" /> | <img src="http://lib.leovp.com/resources/opengl/Triangles_Strip_In_OpenGL.svg" alt="Triangles Strip In OpenGL - Vertice5" style="zoom: 200%;" /> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 

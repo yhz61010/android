@@ -4,7 +4,7 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.util.GLConstants.RGB_COLOR_COMPONENT_COUNT
-import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMENSIONS_POSITION_COMPONENT_COUNT
+import com.leovp.opengl_sdk.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.createFloatBuffer
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
@@ -98,7 +98,7 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMENSIONS_POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData)
+        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData)
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         GLES20.glVertexAttribPointer(aColorLocation, RGB_COLOR_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, colorData)
@@ -110,6 +110,6 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // 使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMENSIONS_POSITION_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMEN_POS_COMPONENT_COUNT)
     }
 }

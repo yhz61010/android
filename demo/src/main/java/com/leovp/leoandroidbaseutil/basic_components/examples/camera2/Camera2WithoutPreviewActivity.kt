@@ -10,9 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.camera2live.Camera2ComponentHelper
+import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCamera2WithoutPreviewBinding
 import com.leovp.log_sdk.LogContext
@@ -65,16 +65,16 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
             })
 
             //            encoderType = if (
-//                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-//                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-//                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-//            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
-//            else DataProcessFactory.ENCODER_TYPE_NORMAL
-//            encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
+            //                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+            //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+            //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+            //            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
+            //            else DataProcessFactory.ENCODER_TYPE_NORMAL
+            //            encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(
-                    Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/, characteristics, SurfaceHolder::class.java
+                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/, characteristics, SurfaceHolder::class.java
             ) // To ensure that size is set, initialize camera in the view's thread
             runCatching {
                 LogContext.log.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")
@@ -104,7 +104,7 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     private fun doStartRecord() {
         lifecycleScope.launch(Dispatchers.IO) {
             camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height).run {
-//        camera2ComponentBuilder.previewInFullscreen = true
+                //        camera2ComponentBuilder.previewInFullscreen = true
                 quality = Camera2ComponentHelper.BITRATE_INSANE_HIGH
                 // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
                 cameraFps = Camera2ComponentHelper.CAMERA_FPS_VERY_HIGH

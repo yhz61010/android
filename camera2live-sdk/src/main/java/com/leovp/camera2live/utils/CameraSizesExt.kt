@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.leovp.androidbase.exts.android
+package com.leovp.camera2live.utils
 
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics

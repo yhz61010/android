@@ -28,7 +28,6 @@ import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
 import com.leovp.androidbase.exts.android.createImageFile
-import com.leovp.androidbase.exts.android.getPreviewOutputSize
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -36,6 +35,7 @@ import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
+import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_exception.fail
@@ -1031,25 +1031,6 @@ class Camera2ComponentHelper(private val context: FragmentActivity, private var 
     fun release() {
         closeCamera()
         stopCameraThread()
-    }
-
-    private fun mirrorImage(imageBytes: ByteArray, w: Int, h: Int) {
-        var temp: Byte
-        var a: Int
-        var b: Int
-        var i = 0
-        while (i < h) {
-            a = i * w
-            b = (i + 1) * w - 1
-            while (a < b) {
-                temp = imageBytes[a]
-                imageBytes[a] = imageBytes[b]
-                imageBytes[b] = temp
-                a++
-                b--
-            }
-            i++
-        }
     }
 
     @Keep

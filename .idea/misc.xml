@@ -31,6 +31,8 @@
         <entry key="demo/src/main/res/layout/activity_finger_paint.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_float_view.xml" value="0.35185185185185186" />
         <entry key="demo/src/main/res/layout/activity_koin.xml" value="0.2911458333333333" />
+        <entry key="demo/src/main/res/layout/activity_main.xml" value="0.225" />
+        <entry key="demo/src/main/res/layout/activity_navigation_main.xml" value="0.4853932584269663" />
         <entry key="demo/src/main/res/layout/activity_new_word.xml" value="0.3351851851851852" />
         <entry key="demo/src/main/res/layout/activity_open_gles20.xml" value="0.5770833333333333" />
         <entry key="demo/src/main/res/layout/activity_open_glesplayground.xml" value="0.5911458333333334" />
@@ -43,6 +45,12 @@
         <entry key="demo/src/main/res/layout/activity_socket_server.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_toast.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_websocket_server.xml" value="0.5" />
+        <entry key="demo/src/main/res/layout/fragment_basic.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/fragment_for_nav_first.xml" value="0.30385852090032156" />
+        <entry key="demo/src/main/res/layout/fragment_for_nav_forth.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/fragment_for_nav_second.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/fragment_for_nav_third.xml" value="0.5765625" />
+        <entry key="demo/src/main/res/layout/fragment_jetpack.xml" value="0.5765625" />
       </map>
     </option>
   </component>

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.NavigationMainActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.RecyclerviewActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.RoomActivity
 import com.leovp.log_sdk.LogContext
@@ -50,7 +51,8 @@ class JetpackFragment : Fragment() {
     companion object {
         private val featureList = arrayOf(
             Pair("Room", RoomActivity::class.java),
-            Pair("Recyclerview", RecyclerviewActivity::class.java)
+            Pair("Recyclerview", RecyclerviewActivity::class.java),
+            Pair("Navigation", NavigationMainActivity::class.java),
         )
 
         val colors = arrayOf(

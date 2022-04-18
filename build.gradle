@@ -157,7 +157,7 @@ ext {
     karnNotifyVersion = '1.4.0'
     viewanimatorVersion = '2.4'
     draggableViewVersion = '0.5.0'
-    xxPermissionVersion = '13.2'
+    xxPermissionVersion = '13.5'
     mmkvVersion = '1.2.13'
     javaMailVersion = '1.6.7'
     jzlibVersion = '1.1.3'

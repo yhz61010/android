@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_demo"
+    app:startDestination="@id/fragmentForNavFirst">
+
+    <fragment android:id="@+id/fragmentForNavFirst"
+        android:name="com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.fragments.FragmentForNavFirst"
+        android:label="fragment_for_nav_first"
+        tools:layout="@layout/fragment_for_nav_first" >
+        <action android:id="@+id/action_fragmentForNavFirst_to_fragmentForNavSecond"
+            app:destination="@id/fragmentForNavSecond" />
+        <action android:id="@+id/action_fragmentForNavFirst_to_fragmentForNavThird"
+            app:destination="@id/fragmentForNavThird" />
+    </fragment>
+    <fragment android:id="@+id/fragmentForNavSecond"
+        android:name="com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.fragments.FragmentForNavSecond"
+        android:label="fragment_for_nav_second"
+        tools:layout="@layout/fragment_for_nav_second" >
+        <action android:id="@+id/action_fragmentForNavSecond_to_fragmentForNavForth"
+            app:destination="@id/fragmentForNavForth" />
+        <argument
+            android:name="param1"
+            app:argType="string"/>
+        <argument
+            android:name="param2"
+            app:argType="string"/>
+        <argument
+            android:name="param_default"
+            app:argType="string"
+            android:defaultValue="DEFAULT"/>
+    </fragment>
+    <fragment android:id="@+id/fragmentForNavThird"
+        android:name="com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.fragments.FragmentForNavThird"
+        android:label="fragment_for_nav_third"
+        tools:layout="@layout/fragment_for_nav_third" />
+    <fragment android:id="@+id/fragmentForNavForth"
+        android:name="com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.fragments.FragmentForNavForth"
+        android:label="fragment_for_nav_forth"
+        tools:layout="@layout/fragment_for_nav_forth" />
+</navigation>

@@ -33,12 +33,12 @@ const val ANIMATION_SLOW_MILLIS = 100L
 /**
  * You should use this click listener to replace with `setOnClickListener` to avoid duplicated click on view
  */
-fun View.setOnSingleClickListener(interval: Long = OnSingleClickListener.INTERVAL_TIME, action: () -> Unit) {
+fun View.setOnSingleClickListener(interval: Long = OnSingleClickListener.INTERVAL_TIME, action: (view: View) -> Unit) {
     val actionListener = OnSingleClickListener(interval, action)
 
     // This is the only place in the project where we should actually use setOnClickListener
     setOnClickListener {
-        actionListener.doClick()
+        actionListener.doClick(this)
     }
 }
 
@@ -47,7 +47,7 @@ fun View.removeOnSingleClickListener() {
     isClickable = false
 }
 
-internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME, private val action: () -> Unit) {
+internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME, private val action: (view: View) -> Unit) {
     companion object {
         const val INTERVAL_TIME: Long = 500
     }
@@ -65,9 +65,9 @@ internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME,
         return false
     }
 
-    fun doClick() {
+    fun doClick(view: View) {
         if (!isDuplicatedClick()) {
-            action.invoke()
+            action.invoke(view)
         }
     }
 }

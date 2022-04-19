@@ -535,7 +535,7 @@ abstract class BaseNettyClient protected constructor(
      * @param isPing Only works in WebSocket mode
      */
     private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String?, cmd: Any?, isPing: Boolean,
-        showContent: Boolean, showLog: Boolean = true, byteOrder: ByteOrder): Boolean {
+        showContent: Boolean, showLog: Boolean = true, fullOutput: Boolean = false, byteOrder: ByteOrder): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
@@ -549,7 +549,7 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd")
+                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd", fullOutput = fullOutput)
                     else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
                 }
             }
@@ -560,7 +560,7 @@ abstract class BaseNettyClient protected constructor(
                 if (showLog) {
                     if (showContent) {
                         val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
-                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]")
+                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]", fullOutput = fullOutput)
                     } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }

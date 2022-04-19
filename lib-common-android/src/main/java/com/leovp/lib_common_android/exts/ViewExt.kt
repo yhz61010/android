@@ -84,14 +84,14 @@ internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME,
  * Simulate a button click, including a small delay while it is being pressed to trigger the
  * appropriate animations.
  */
-fun View.simulateClick(interval: Long = ANIMATION_FAST_MILLIS) {
+fun View.simulateClick(reactivateDelay: Long = ANIMATION_FAST_MILLIS) {
     performClick()
     isPressed = true
     invalidate()
     postDelayed({
         invalidate()
         isPressed = false
-    }, interval)
+    }, reactivateDelay)
 }
 
 /** Same as [AlertDialog.show] but setting immersive mode in the dialog's window */

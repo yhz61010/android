@@ -3,7 +3,6 @@
 package com.leovp.androidbase.exts.android
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
@@ -45,8 +44,8 @@ inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
     val result: Float = pxValue * 1.0f / displayMetrics.density + 0.5f
     return when (T::class) {
         Float::class -> result as T
-        Int::class -> result.toInt() as T
-        else -> fail("Type not supported")
+        Int::class   -> result.toInt() as T
+        else         -> fail("Type not supported")
     }
 }
 
@@ -75,8 +74,8 @@ inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT
     val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
     return when (T::class) {
         Float::class -> result as T
-        Int::class -> result.toInt() as T
-        else -> fail("Type not supported")
+        Int::class   -> result.toInt() as T
+        else         -> fail("Type not supported")
     }
 }
 
@@ -115,7 +114,7 @@ fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
         }
         if (ctx is Application) {
             val info =
-                ctx.getPackageManager().getApplicationInfo(ctx.getPackageName(), PackageManager.GET_META_DATA)
+                    ctx.getPackageManager().getApplicationInfo(ctx.getPackageName(), PackageManager.GET_META_DATA)
             metaData = info.metaData.getString(key)
             return metaData
         }
@@ -159,7 +158,6 @@ fun Context.installApk(file: File) {
     }
 }
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 fun ActivityManager.exitApp() {
     try {
         for (appTask in this.appTasks) {
@@ -182,7 +180,7 @@ fun Context.restartApp(targetIntent: Intent) {
     targetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
     this.startActivity(targetIntent)
     Process.killProcess(Process.myPid())
-//        Runtime.getRuntime().exit(0)
+    //        Runtime.getRuntime().exit(0)
 }
 
 /**
@@ -220,8 +218,8 @@ fun closeAndroidPDialog() {
 // ============================================================================
 
 fun Activity.openSoftKeyboard() {
-//    val imm = app.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-//    imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
+    //    val imm = app.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    //    imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
     inputMethodManager.showSoftInput(window.decorView, 0)
 }
 

@@ -245,6 +245,7 @@ dependencies {
     implementation project(':floatview-sdk')
     implementation project(':circle-progressbar-sdk')
     implementation project(':opengl-sdk')
+    implementation project(':camerax-sdk')
 
     implementation project(':lib-network')
     implementation project(':lib-exception')

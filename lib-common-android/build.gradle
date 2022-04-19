@@ -30,8 +30,9 @@ android {
 }
 
 dependencies {
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    api "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
+    implementation "androidx.appcompat:appcompat:$appcompatVersion"
+    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    implementation "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
     api project(':lib-common-kotlin')
     api project(':lib-exception')
     api "androidx.localbroadcastmanager:localbroadcastmanager:$rootProject.ext.localbroadcastVersion"

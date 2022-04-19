@@ -75,3 +75,5 @@ fun Bitmap.writeToFile(outputFile: File, quality: Int = 100, imgType: Bitmap.Com
         outputStream.flush()
     }
 }
+
+fun File?.getBitmap(): Bitmap? = if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)

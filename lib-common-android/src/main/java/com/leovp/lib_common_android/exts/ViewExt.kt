@@ -2,7 +2,6 @@
 
 package com.leovp.lib_common_android.exts
 
-import android.app.AlertDialog
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
@@ -10,6 +9,7 @@ import android.view.DisplayCutout
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -125,7 +125,6 @@ fun AlertDialog.showImmersive() {
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
     )
-
 
     // Make sure that the dialog's window is in full screen
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

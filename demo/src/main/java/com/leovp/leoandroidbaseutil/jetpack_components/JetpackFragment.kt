@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.android.startActivity
+import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.NavigationMainActivity
@@ -34,18 +35,18 @@ class JetpackFragment : Fragment() {
         }
         view.findViewById<RecyclerView>(R.id.recyclerView).run {
             setHasFixedSize(true)
-//            layoutManager = LinearLayoutManager(requireActivity())
+            //            layoutManager = LinearLayoutManager(requireActivity())
             adapter = colorBaseAdapter
         }
     }
 
     override fun onDestroy() {
-//        CustomApplication.instance.closeDebugOutputFile()
+        //        CustomApplication.instance.closeDebugOutputFile()
         LogContext.log.i(ITAG, "onDestroy()")
         super.onDestroy()
         // In some cases, if you use saved some parameters in Application, when app exits,
         // the parameters may not be released. So we need to call AppUtil.exitApp(ctx)
-//        AppUtil.exitApp(this)
+        //        AppUtil.exitApp(this)
     }
 
     companion object {
@@ -53,6 +54,7 @@ class JetpackFragment : Fragment() {
             Pair("Room", RoomActivity::class.java),
             Pair("Recyclerview", RecyclerviewActivity::class.java),
             Pair("Navigation", NavigationMainActivity::class.java),
+            Pair("CameraX", CameraXActivity::class.java),
         )
 
         val colors = arrayOf(

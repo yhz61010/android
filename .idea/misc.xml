@@ -8,6 +8,15 @@
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/layout/toast_tools_layout.xml" value="0.42314814814814816" />
         <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
+        <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
+        <entry key="camerax-sdk/src/main/res/layout-land/camera_ui_container.xml" value="0.178125" />
+        <entry key="camerax-sdk/src/main/res/layout/activity_camerax_main.xml" value="0.5765625" />
+        <entry key="camerax-sdk/src/main/res/layout/activity_main.xml" value="0.31666666666666665" />
+        <entry key="camerax-sdk/src/main/res/layout/camera_ui_container.xml" value="0.31666666666666665" />
+        <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
+        <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5765625" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />

@@ -1,16 +1,15 @@
 package com.leovp.androidbase.utils.notch.impl
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import com.leovp.lib_common_android.exts.calculateNotchRect
-import java.util.*
 
-@TargetApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 @Suppress("unused")
 class HuaweiNotchScreen : INotchScreen {
     override fun hasNotch(activity: Activity): Boolean {
@@ -41,9 +40,9 @@ class HuaweiNotchScreen : INotchScreen {
             val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")
             val getNotchSize = hwNotchSizeUtil.getMethod("getNotchSize")
             val ret = getNotchSize.invoke(hwNotchSizeUtil) as IntArray
-            val rects = ArrayList<Rect>()
-            rects.add(calculateNotchRect(activity, ret[0], ret[1]))
-            callback.onResult(rects)
+            val rectList = ArrayList<Rect>()
+            rectList.add(calculateNotchRect(activity, ret[0], ret[1]))
+            callback.onResult(rectList)
         }.onFailure {
             callback.onResult(null)
         }

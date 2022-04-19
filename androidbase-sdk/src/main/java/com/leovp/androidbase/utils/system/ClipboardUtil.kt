@@ -1,11 +1,11 @@
 package com.leovp.androidbase.utils.system
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
+import androidx.annotation.RequiresApi
 
 /**
  * Author: Michael Leo
@@ -20,7 +20,7 @@ object ClipboardUtil {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.Q)
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun getTextFromClipboardForAndroidQ(activity: Activity, f: (String) -> Unit) {
         val runnable = Runnable {
             try {

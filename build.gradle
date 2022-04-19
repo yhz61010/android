@@ -139,7 +139,7 @@ ext {
     multidexVersion = '2.0.1'
     preferenceVersion = '1.2.0'
     roomVersion = '2.4.2'
-    cameraVersion = '1.0.2'
+    cameraVersion = '1.1.0-beta03'
     exifinterfaceVersion = '1.3.3'
     windowVersion = '1.0.0'
 

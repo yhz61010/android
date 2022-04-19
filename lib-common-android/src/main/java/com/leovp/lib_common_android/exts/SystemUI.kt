@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.lib_common_android.exts
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -31,7 +31,7 @@ import androidx.core.view.WindowInsetsControllerCompat
  *     // Call [requestFullScreenAfterVisible] method after activity is visual.
  *     requestFullScreenAfterVisible()
  *     // Generally, call this method in `onResume` to let navigation bar always hide.
- *     hideNavigationBar(this)
+ *     hideNavigationBar()
  * }
  * ```
  */
@@ -54,7 +54,7 @@ fun Activity.requestFullScreenBeforeSetContentView() {
  *     // Call [requestFullScreenAfterVisible] method after activity is visual.
  *     requestFullScreenAfterVisible()
  *     // Generally, call this method in `onResume` to let navigation bar always hide.
- *     hideNavigationBar(this)
+ *     hideNavigationBar()
  * }
  * ```
  */
@@ -77,7 +77,7 @@ fun Activity.requestFullScreenAfterVisible() {
  *     // Call [requestFullScreenAfterVisible] method after activity is visual.
  *     window.requestFullScreenAfterVisible()
  *     // Generally, call this method in `onResume` to let navigation bar always hide.
- *     hideNavigationBar(this)
+ *     hideNavigationBar()
  * }
  * ```
  */
@@ -100,7 +100,7 @@ fun Window.requestFullScreenAfterVisible() {
  *  override fun onResume() {
  *     super.onResume()
  *     // Generally, call this method in `onResume` to let navigation bar always hide.
- *     hideNavigationBar(this)
+ *     hideNavigationBar()
  * }
  * ```
  */
@@ -117,7 +117,7 @@ fun Activity.hideNavigationBar(rootView: View = window.decorView) {
  *  override fun onResume() {
  *     super.onResume()
  *     // Generally, call this method in `onResume` to let navigation bar always hide.
- *     window.hideNavigationBar(this)
+ *     window.hideNavigationBar()
  * }
  * ```
  */

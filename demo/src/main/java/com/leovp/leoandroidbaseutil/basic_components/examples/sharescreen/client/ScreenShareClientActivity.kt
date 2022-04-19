@@ -15,9 +15,6 @@ import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.exts.android.hideNavigationBar
-import com.leovp.androidbase.exts.android.requestFullScreenAfterVisible
-import com.leovp.androidbase.exts.android.requestFullScreenBeforeSetContentView
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
@@ -37,8 +34,7 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityScreenShareClientBinding
 import com.leovp.lib_bytes.asByteAndForceToBytes
 import com.leovp.lib_bytes.toBytesLE
 import com.leovp.lib_bytes.toHexStringLE
-import com.leovp.lib_common_android.exts.getAvailableResolution
-import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy

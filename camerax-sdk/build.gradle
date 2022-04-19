@@ -1,0 +1,80 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+apply plugin: "org.sonarqube"
+apply plugin: 'androidx.navigation.safeargs.kotlin'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility "$rootProject.ext.java_version"
+        targetCompatibility "$rootProject.ext.java_version"
+    }
+    kotlinOptions {
+        jvmTarget = "$rootProject.ext.java_version"
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
+
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
+    // Lifecycles only (without ViewModel or LiveData)
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
+
+    // Navigation library
+    implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
+    implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
+
+    // CameraX core library
+    implementation "androidx.camera:camera-core:$cameraVersion"
+    // CameraX Camera2 extensions
+    implementation "androidx.camera:camera-camera2:$cameraVersion"
+    // CameraX Lifecycle library
+    implementation "androidx.camera:camera-lifecycle:$cameraVersion"
+    // CameraX View class
+    implementation "androidx.camera:camera-view:$cameraVersion"
+    implementation "androidx.camera:camera-video:$cameraVersion"
+    // CameraX Extensions library
+    // implementation "androidx.camera:camera-extensions:$cameraVersion"
+
+    // WindowManager
+//    implementation "androidx.window:window:$windowVersion"
+
+    api project(':lib-common-android')
+    api project(':lib-image')
+    api project(':log-sdk')
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                artifactId = 'camerax-sdk'
+                version = "$rootProject.ext.leoVersion"
+            }
+        }
+    }
+}

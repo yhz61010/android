@@ -29,7 +29,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -50,6 +49,7 @@ import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.lib_common_android.exts.*
+import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -120,7 +120,7 @@ class CameraFragment : Fragment() {
         override fun onDisplayRemoved(displayId: Int) = Unit
         override fun onDisplayChanged(displayId: Int) = view?.let { view ->
             if (displayId == this@CameraFragment.displayId) {
-                Log.d(TAG, "Rotation changed: ${view.display.rotation}")
+                LogContext.log.d(TAG, "Rotation changed: ${view.display.rotation}")
                 imageCapture?.targetRotation = view.display.rotation
                 imageAnalyzer?.targetRotation = view.display.rotation
             }
@@ -249,11 +249,11 @@ class CameraFragment : Fragment() {
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
         // Get screen metrics used to setup camera for full screen resolution
-        val metrics = requireContext().getAvailableResolution()
-        Log.d(TAG, "Screen metrics: ${metrics.width} x ${metrics.height}")
+        val metrics = requireContext().getRealResolution()
+        LogContext.log.i(TAG, "Screen metrics: ${metrics.width} x ${metrics.height}")
 
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
+        LogContext.log.i(TAG, "Preview aspect ratio: $screenAspectRatio")
 
         val rotation = fragmentCameraBinding.viewFinder.display.rotation
 
@@ -296,24 +296,24 @@ class CameraFragment : Fragment() {
                     // Values returned from our analyzer are passed to the attached listener
                     // We log image analysis results here - you should do something useful
                     // instead!
-                    Log.d(TAG, "Average luminosity: $luma")
+                    LogContext.log.i(TAG, "Average luminosity: $luma")
                 })
             }
 
-        // Must unbind the use-cases before rebinding them
-        cameraProvider.unbindAll()
-
         try {
+            // Must unbind the use-cases before rebinding them
+            cameraProvider.unbindAll()
+
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
-            camera = cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview, imageCapture, imageAnalyzer)
+            camera = cameraProvider.bindToLifecycle(this,
+                cameraSelector, preview, imageCapture, imageAnalyzer)
 
             // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
             observeCameraState(camera?.cameraInfo!!)
         } catch (exc: Exception) {
-            Log.e(TAG, "Use case binding failed", exc)
+            LogContext.log.e(TAG, "Use case binding failed", exc)
         }
     }
 
@@ -472,12 +472,12 @@ class CameraFragment : Fragment() {
                 imageCapture.takePicture(
                     outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                         override fun onError(exc: ImageCaptureException) {
-                            Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                            LogContext.log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                         }
 
                         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                             val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                            Log.d(TAG, "Photo capture succeeded: $savedUri")
+                            LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -502,7 +502,7 @@ class CameraFragment : Fragment() {
                                 arrayOf(savedUri.toFile().absolutePath),
                                 arrayOf(mimeType)
                             ) { _, uri ->
-                                Log.d(TAG, "Image capture scanned into media store: $uri")
+                                LogContext.log.i(TAG, "Image capture scanned into media store: $uri")
                             }
                         }
                     })

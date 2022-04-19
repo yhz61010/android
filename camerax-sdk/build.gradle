@@ -53,12 +53,10 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:$cameraVersion"
     // CameraX View class
     implementation "androidx.camera:camera-view:$cameraVersion"
-    implementation "androidx.camera:camera-video:$cameraVersion"
+    // CameraX VideoCapture library
+//    implementation "androidx.camera:camera-video:$cameraVersion"
     // CameraX Extensions library
-    // implementation "androidx.camera:camera-extensions:$cameraVersion"
-
-    // WindowManager
-//    implementation "androidx.window:window:$windowVersion"
+    implementation "androidx.camera:camera-extensions:$cameraVersion"
 
     api project(':lib-common-android')
     api project(':lib-image')

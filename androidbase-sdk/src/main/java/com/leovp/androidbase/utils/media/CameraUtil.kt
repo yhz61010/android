@@ -2,7 +2,6 @@
 
 package com.leovp.androidbase.utils.media
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -10,12 +9,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
 import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.log_sdk.LogContext
-import java.util.*
 
 /**
  * Author: Michael Leo
@@ -99,7 +98,7 @@ object CameraUtil {
         act.startActivityForResult(chooserIntent, REQUEST_CODE_OPEN_GALLERY)
     }
 
-    @TargetApi(19)
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
         val selectedImage: MutableList<String> = ArrayList()
         data?.data?.let { url ->

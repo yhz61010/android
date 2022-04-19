@@ -1,11 +1,11 @@
 package com.leovp.androidbase.utils.network
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.net.*
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 
@@ -52,7 +52,7 @@ class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
         connectivityManager.registerNetworkCallback(networkRequestBuilder.build(), getConnectivityLollipopManagerCallback())
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun marshmallowNetworkAvailableRequest() {
         connectivityManager.registerNetworkCallback(networkRequestBuilder.build(), getConnectivityMarshmallowManagerCallback())

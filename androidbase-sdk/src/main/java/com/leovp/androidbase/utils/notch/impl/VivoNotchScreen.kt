@@ -3,19 +3,18 @@
 package com.leovp.androidbase.utils.notch.impl
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import com.leovp.lib_common_android.exts.calculateNotchRect
 import com.leovp.lib_common_android.exts.densityDpi
-import java.util.*
 
 /** vivo will not render on notch */
-@TargetApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 class VivoNotchScreen : INotchScreen {
 
     override fun hasNotch(activity: Activity) = isNotch
@@ -24,10 +23,10 @@ class VivoNotchScreen : INotchScreen {
     override fun setDisplayInNotch(activity: Activity) = Unit
 
     override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
-        val rects = ArrayList<Rect>()
+        val rectList = ArrayList<Rect>()
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
-        rects.add(rect)
-        callback.onResult(rects)
+        rectList.add(rect)
+        callback.onResult(rectList)
     }
 
     companion object {

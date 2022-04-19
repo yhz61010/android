@@ -21,8 +21,10 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityNavigationMainBinding
  * ```
  * plugins {
  *     # Use only one of the following plugin:
+ *     # apply plugin: 'androidx.navigation.safeargs'
  *     id 'androidx.navigation.safeargs'
  *     # Alternatively, to generate Kotlin code suitable for Kotlin-only modules add:
+ *     # apply plugin: 'androidx.navigation.safeargs.kotlin'
  *     id 'androidx.navigation.safeargs.kotlin'
  * }
  * ```

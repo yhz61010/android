@@ -54,7 +54,7 @@ import com.leovp.lib_common_android.utils.API
 /**
  * Get the package name
  */
-val Context.id get() = this.packageName!!
+val Context.id: String get() = this.packageName!!
 
 /**
  * Get package uri

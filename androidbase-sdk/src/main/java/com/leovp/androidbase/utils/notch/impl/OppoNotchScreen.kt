@@ -1,17 +1,16 @@
 package com.leovp.androidbase.utils.notch.impl
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.text.TextUtils
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import com.leovp.lib_common_android.exts.isPortrait
 import com.leovp.lib_common_android.utils.DeviceProp
-import java.util.*
 
-@TargetApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 class OppoNotchScreen : INotchScreen {
     override fun hasNotch(activity: Activity): Boolean {
         return runCatching { activity.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism") }.getOrDefault(false)
@@ -44,9 +43,9 @@ class OppoNotchScreen : INotchScreen {
                     bottom = Integer.valueOf(rightAndBottom[0])
                 }
                 val rect = Rect(left, top, right, bottom)
-                val rects = ArrayList<Rect>()
-                rects.add(rect)
-                callback.onResult(rects)
+                val rectList = ArrayList<Rect>()
+                rectList.add(rect)
+                callback.onResult(rectList)
             }
         }.onFailure { it.printStackTrace() }
     }

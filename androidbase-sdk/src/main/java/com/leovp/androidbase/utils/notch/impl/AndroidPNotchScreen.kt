@@ -1,14 +1,14 @@
 package com.leovp.androidbase.utils.notch.impl
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 
-@TargetApi(Build.VERSION_CODES.P)
+@RequiresApi(Build.VERSION_CODES.P)
 class AndroidPNotchScreen : INotchScreen {
     /**
      * Android P 没有单独的判断方法，根据getNotchRect方法的返回结果处理即可

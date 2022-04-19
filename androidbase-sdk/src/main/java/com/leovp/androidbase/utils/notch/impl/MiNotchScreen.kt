@@ -1,19 +1,18 @@
 package com.leovp.androidbase.utils.notch.impl
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.view.Window
+import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import com.leovp.lib_common_android.exts.calculateNotchRect
 import com.leovp.lib_common_android.exts.getDimenInPixel
 import com.leovp.lib_common_android.utils.DeviceProp
-import java.util.*
 
-@TargetApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.O)
 class MiNotchScreen : INotchScreen {
     override fun hasNotch(activity: Activity) = isNotch
 
@@ -27,9 +26,9 @@ class MiNotchScreen : INotchScreen {
 
     override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
-        val rects = ArrayList<Rect>()
-        rects.add(rect)
-        callback.onResult(rects)
+        val rectList = ArrayList<Rect>()
+        rectList.add(rect)
+        callback.onResult(rectList)
     }
 
     companion object {

@@ -142,9 +142,9 @@ class CameraFragment : Fragment() {
             photoViewButton.post {
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
                 photoViewButton.load(uri) {
-//                    placeholder(R.drawable.ic_photo)
+                    // placeholder(R.drawable.ic_photo)
+                    error(R.drawable.ic_photo)
                     transformations(CircleCropTransformation())
-//                    fetcher(VideoFrameUriFetcher(requireContext()))
                 }
             }
         }

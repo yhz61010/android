@@ -169,4 +169,5 @@ ext {
     fasterxmlVersion = '2.13.2'
     freeReflectionVersion = '3.1.0'
     androidasyncVersion = '3.1.0'
+    coilKtVersion = '1.4.0'
 }

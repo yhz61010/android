@@ -8,11 +8,17 @@
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/layout/toast_tools_layout.xml" value="0.42314814814814816" />
         <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
+        <entry key="camerax-sdk/src/main/res/drawable/bg_options.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_exposure.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_flash_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_grid_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.239" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_normal.xml" value="0.239" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/layout-land/camera_ui_container.xml" value="0.178125" />
         <entry key="camerax-sdk/src/main/res/layout/activity_camerax_main.xml" value="0.5765625" />
         <entry key="camerax-sdk/src/main/res/layout/activity_main.xml" value="0.31666666666666665" />

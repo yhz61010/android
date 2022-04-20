@@ -17,10 +17,8 @@
 package com.leovp.camerax_sdk.fragments
 
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -42,8 +40,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.Navigation
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBinding
@@ -80,7 +79,16 @@ class CameraFragment : Fragment() {
     private var cameraUiContainerBinding: CameraUiContainerBinding? = null
 
     private lateinit var outputDirectory: File
-    private lateinit var broadcastManager: LocalBroadcastManager
+    val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
+    private val functionKeyObserver = Observer<Int> { keyCode ->
+        when (keyCode) {
+            // When the volume up/down button is pressed, simulate a shutter button click
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                cameraUiContainerBinding?.cameraCaptureButton?.simulateClick()
+            }
+            KeyEvent.KEYCODE_UNKNOWN                                 -> Unit
+        }
+    }
 
     private var displayId: Int = -1
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
@@ -97,18 +105,6 @@ class CameraFragment : Fragment() {
 
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
-
-    /** Volume down button receiver used to trigger shutter */
-    private val volumeDownReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.getIntExtra(KEY_EVENT_EXTRA, KeyEvent.KEYCODE_UNKNOWN)) {
-                // When the volume down button is pressed, simulate a shutter button click
-                KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                    cameraUiContainerBinding?.cameraCaptureButton?.simulateClick()
-                }
-            }
-        }
-    }
 
     /**
      * We need a display listener for orientation changes that do not trigger a configuration
@@ -132,7 +128,7 @@ class CameraFragment : Fragment() {
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
         if (!PermissionsFragment.hasPermissions(requireContext())) {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
+            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
                 CameraFragmentDirections.actionCameraToPermissions()
             )
         }
@@ -141,12 +137,8 @@ class CameraFragment : Fragment() {
     override fun onDestroyView() {
         _fragmentCameraBinding = null
         super.onDestroyView()
-
         // Shut down our background executor
         cameraExecutor.shutdown()
-
-        // Unregister the broadcast receivers and listeners
-        broadcastManager.unregisterReceiver(volumeDownReceiver)
         displayManager.unregisterDisplayListener(displayListener)
     }
 
@@ -155,6 +147,7 @@ class CameraFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
         return fragmentCameraBinding.root
     }
@@ -176,12 +169,6 @@ class CameraFragment : Fragment() {
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
-
-        broadcastManager = LocalBroadcastManager.getInstance(view.context)
-
-        // Set up the intent filter that will receive events from our main activity
-        val filter = IntentFilter().apply { addAction(KEY_EVENT_ACTION) }
-        broadcastManager.registerReceiver(volumeDownReceiver, filter)
 
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
@@ -296,7 +283,7 @@ class CameraFragment : Fragment() {
                     // Values returned from our analyzer are passed to the attached listener
                     // We log image analysis results here - you should do something useful
                     // instead!
-                    LogContext.log.i(TAG, "Average luminosity: $luma")
+                    LogContext.log.v(TAG, "Average luminosity: $luma")
                 })
             }
 
@@ -468,11 +455,26 @@ class CameraFragment : Fragment() {
                     .setMetadata(metadata)
                     .build()
 
+                //                imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+                //                    override fun onCaptureSuccess(image: ImageProxy) {
+                //                        val imageBuffer = image.planes[0].buffer
+                //                        val width = image.width
+                //                        val height = image.height
+                //                        val imageBytes = ByteArray(imageBuffer.remaining()).apply { imageBuffer.get(this) }
+                //                        // DO NOT forget for close Image object
+                //                        image.close()
+                //                    }
+                //
+                //                    override fun onError(exc: ImageCaptureException) {
+                //                        LogContext.log.e(TAG, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
+                //                    }
+                //                })
+
                 // Setup image capture listener which is triggered after photo has been taken
                 imageCapture.takePicture(
                     outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                         override fun onError(exc: ImageCaptureException) {
-                            LogContext.log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                            LogContext.log.e(TAG, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
                         }
 
                         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
@@ -540,7 +542,7 @@ class CameraFragment : Fragment() {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
                 Navigation.findNavController(
-                    requireActivity(), R.id.fragment_container
+                    requireActivity(), R.id.fragment_container_camerax
                 ).navigate(CameraFragmentDirections
                     .actionCameraToGallery(outputDirectory.absolutePath))
             }
@@ -659,9 +661,6 @@ class CameraFragment : Fragment() {
         private const val PHOTO_EXTENSION = ".jpg"
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
-
-        val KEY_EVENT_ACTION = "key_event_action"
-        val KEY_EVENT_EXTRA = "key_event_extra"
 
         /** Helper function used to create a timestamped file */
         private fun createFile(baseFolder: File,

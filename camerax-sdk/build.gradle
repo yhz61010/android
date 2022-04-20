@@ -63,6 +63,8 @@ dependencies {
     api project(':lib-common-android')
     api project(':lib-image')
     api project(':log-sdk')
+
+    api "com.github.getActivity:XXPermissions:$xxPermissionVersion"
 }
 
 afterEvaluate {

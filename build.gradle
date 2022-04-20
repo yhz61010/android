@@ -168,4 +168,5 @@ ext {
     bsonVersion = '2.13.1' // As of 2.13.0, you need add fasterxml jackson manually.
     fasterxmlVersion = '2.13.2'
     freeReflectionVersion = '3.1.0'
+    androidasyncVersion = '3.1.0'
 }

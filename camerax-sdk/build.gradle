@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+    implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
 
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"

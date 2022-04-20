@@ -11,6 +11,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -32,7 +33,10 @@ import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
-import com.leovp.lib_common_android.exts.*
+import com.leovp.lib_common_android.exts.ANIMATION_FAST_MILLIS
+import com.leovp.lib_common_android.exts.ANIMATION_SLOW_MILLIS
+import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.simulateClick
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -562,13 +566,10 @@ class CameraFragment : Fragment() {
                 File(baseFolder, SimpleDateFormat(format, Locale.US)
                     .format(System.currentTimeMillis()) + extension)
 
-        /** Use external media if it is available, our app's file directory otherwise */
         private fun getOutputDirectory(context: Context): File {
-            val appContext = context.applicationContext
-            val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
-                File(it, context.id).apply { mkdirs() }
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX").also {
+                if (!it.exists()) it.mkdirs()
             }
-            return if (mediaDir != null && mediaDir.exists()) mediaDir else appContext.filesDir
         }
     }
 }

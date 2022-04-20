@@ -29,6 +29,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBinding
@@ -81,11 +82,8 @@ class CameraFragment : Fragment() {
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
-    //    private lateinit var windowManager: WindowManager
 
-    private val displayManager by lazy {
-        requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-    }
+    private val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
 
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
@@ -111,7 +109,7 @@ class CameraFragment : Fragment() {
         super.onResume()
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
-        if (!PermissionsFragment.hasPermissions(requireContext())) {
+        if (!XXPermissions.isGranted(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
             Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
                 CameraFragmentDirections.actionCameraToPermissions()
             )

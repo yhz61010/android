@@ -66,6 +66,9 @@ dependencies {
     api project(':log-sdk')
 
     api "com.github.getActivity:XXPermissions:$xxPermissionVersion"
+
+    implementation "io.coil-kt:coil:$coilKtVersion"
+    implementation "io.coil-kt:coil-video:$coilKtVersion"
 }
 
 afterEvaluate {

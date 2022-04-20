@@ -33,6 +33,7 @@ import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
+import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.lib_common_android.exts.ANIMATION_FAST_MILLIS
 import com.leovp.lib_common_android.exts.ANIMATION_SLOW_MILLIS
@@ -62,6 +63,7 @@ class CameraFragment : Fragment() {
 
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
+    private var cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
     private var cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
 
     private lateinit var outputDirectory: File
@@ -351,10 +353,14 @@ class CameraFragment : Fragment() {
     private fun updateCameraUi() {
 
         // Remove previous UI if any
-        cameraUiContainerBottomBinding?.root?.let {
-            fragmentCameraBinding.root.removeView(it)
-        }
+        cameraUiContainerTopBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
+        cameraUiContainerBottomBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
 
+        cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
+            LayoutInflater.from(requireContext()),
+            fragmentCameraBinding.root,
+            true
+        )
         cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
             LayoutInflater.from(requireContext()),
             fragmentCameraBinding.root,

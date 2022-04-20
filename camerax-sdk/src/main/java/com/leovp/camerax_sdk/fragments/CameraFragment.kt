@@ -32,7 +32,7 @@ import androidx.navigation.Navigation
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
-import com.leovp.camerax_sdk.databinding.CameraUiContainerBinding
+import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.lib_common_android.exts.ANIMATION_FAST_MILLIS
 import com.leovp.lib_common_android.exts.ANIMATION_SLOW_MILLIS
@@ -62,7 +62,7 @@ class CameraFragment : Fragment() {
 
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
-    private var cameraUiContainerBinding: CameraUiContainerBinding? = null
+    private var cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
 
     private lateinit var outputDirectory: File
     val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
@@ -70,7 +70,7 @@ class CameraFragment : Fragment() {
         when (keyCode) {
             // When the volume up/down button is pressed, simulate a shutter button click
             KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBinding?.cameraCaptureButton?.simulateClick()
+            KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding?.cameraCaptureButton?.simulateClick()
             KeyEvent.KEYCODE_UNKNOWN     -> Unit
         }
     }
@@ -136,7 +136,7 @@ class CameraFragment : Fragment() {
 
     private fun setGalleryThumbnail(uri: Uri) {
         // Run the operations in the view's thread
-        cameraUiContainerBinding?.photoViewButton?.let { photoViewButton ->
+        cameraUiContainerBottomBinding?.photoViewButton?.let { photoViewButton ->
             photoViewButton.post {
                 // Remove thumbnail padding
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_small).toInt())
@@ -351,11 +351,11 @@ class CameraFragment : Fragment() {
     private fun updateCameraUi() {
 
         // Remove previous UI if any
-        cameraUiContainerBinding?.root?.let {
+        cameraUiContainerBottomBinding?.root?.let {
             fragmentCameraBinding.root.removeView(it)
         }
 
-        cameraUiContainerBinding = CameraUiContainerBinding.inflate(
+        cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
             LayoutInflater.from(requireContext()),
             fragmentCameraBinding.root,
             true
@@ -371,7 +371,7 @@ class CameraFragment : Fragment() {
         }
 
         // Listener for button used to capture photo
-        cameraUiContainerBinding?.cameraCaptureButton?.setOnClickListener {
+        cameraUiContainerBottomBinding?.cameraCaptureButton?.setOnClickListener {
             // Get a stable reference of the modifiable image capture use case
             imageCapture?.let { imageCapture ->
                 // Create output file to hold the image
@@ -453,7 +453,7 @@ class CameraFragment : Fragment() {
         }
 
         // Setup for button used to switch cameras
-        cameraUiContainerBinding?.cameraSwitchButton?.let {
+        cameraUiContainerBottomBinding?.cameraSwitchButton?.let {
             // Disable the button until the camera is set up
             it.isEnabled = false
 
@@ -470,7 +470,7 @@ class CameraFragment : Fragment() {
         }
 
         // Listener for button used to view the most recent photo
-        cameraUiContainerBinding?.photoViewButton?.setOnClickListener {
+        cameraUiContainerBottomBinding?.photoViewButton?.setOnClickListener {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
                 Navigation.findNavController(
@@ -484,9 +484,9 @@ class CameraFragment : Fragment() {
     /** Enabled or disabled a button to switch cameras depending on the available cameras */
     private fun updateCameraSwitchButton() {
         try {
-            cameraUiContainerBinding?.cameraSwitchButton?.isEnabled = hasBackCamera() && hasFrontCamera()
+            cameraUiContainerBottomBinding?.cameraSwitchButton?.isEnabled = hasBackCamera() && hasFrontCamera()
         } catch (exception: CameraInfoUnavailableException) {
-            cameraUiContainerBinding?.cameraSwitchButton?.isEnabled = false
+            cameraUiContainerBottomBinding?.cameraSwitchButton?.isEnabled = false
         }
     }
 

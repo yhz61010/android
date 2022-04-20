@@ -162,8 +162,7 @@ class GalleryFragment internal constructor() : Fragment() {
                         }
 
                     }
-
-                    .setNegativeButton(android.R.string.no, null)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create().showImmersive()
             }
         }

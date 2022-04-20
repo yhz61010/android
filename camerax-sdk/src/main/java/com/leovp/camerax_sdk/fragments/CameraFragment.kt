@@ -29,6 +29,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
@@ -138,9 +140,12 @@ class CameraFragment : Fragment() {
         // Run the operations in the view's thread
         cameraUiContainerBottomBinding?.photoViewButton?.let { photoViewButton ->
             photoViewButton.post {
-                // Remove thumbnail padding
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
-                photoViewButton.setImageURI(uri)
+                photoViewButton.load(uri) {
+//                    placeholder(R.drawable.ic_photo)
+                    transformations(CircleCropTransformation())
+//                    fetcher(VideoFrameUriFetcher(requireContext()))
+                }
             }
         }
     }
@@ -477,10 +482,8 @@ class CameraFragment : Fragment() {
         cameraUiContainerBottomBinding?.photoViewButton?.setOnClickListener {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
-                Navigation.findNavController(
-                    requireActivity(), R.id.fragment_container_camerax
-                ).navigate(CameraFragmentDirections
-                    .actionCameraToGallery(outputDirectory.absolutePath))
+                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax
+                ).navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
             }
         }
     }

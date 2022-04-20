@@ -35,8 +35,6 @@ import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
-import com.leovp.lib_common_android.exts.ANIMATION_FAST_MILLIS
-import com.leovp.lib_common_android.exts.ANIMATION_SLOW_MILLIS
 import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.simulateClick
 import com.leovp.log_sdk.LogContext
@@ -141,7 +139,7 @@ class CameraFragment : Fragment() {
         cameraUiContainerBottomBinding?.photoViewButton?.let { photoViewButton ->
             photoViewButton.post {
                 // Remove thumbnail padding
-                photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_small).toInt())
+                photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
                 photoViewButton.setImageURI(uri)
             }
         }
@@ -451,7 +449,7 @@ class CameraFragment : Fragment() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     // Display flash animation to indicate that photo was captured
                     fragmentCameraBinding.root.postDelayed({
-                        fragmentCameraBinding.root.foreground = ColorDrawable(Color.LTGRAY)
+                        fragmentCameraBinding.root.foreground = ColorDrawable(Color.parseColor("#99DDDDDD"))
                         fragmentCameraBinding.root.postDelayed({ fragmentCameraBinding.root.foreground = null }, ANIMATION_FAST_MILLIS)
                     }, ANIMATION_SLOW_MILLIS)
                 }
@@ -509,6 +507,10 @@ class CameraFragment : Fragment() {
     companion object {
         private const val TAG = "CameraXBasic"
         private const val FILENAME = "yyyyMMdd-HHmmss.SSS"
+
+        /** Milliseconds used for UI animations */
+        private const val ANIMATION_FAST_MILLIS = 50L
+        private const val ANIMATION_SLOW_MILLIS = 100L
         private const val PHOTO_EXTENSION = ".jpg"
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0

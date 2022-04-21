@@ -5,13 +5,13 @@ import android.content.res.Configuration
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.buildConfigInDebug
-import com.leovp.androidbase.utils.pref.LPref
-import com.leovp.androidbase.utils.pref.PrefContext
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.leoandroidbaseutil.basic_components.examples.koin.*
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
+import com.leovp.pref_sdk.LPref
+import com.leovp.pref_sdk.PrefContext
 import io.reactivex.plugins.RxJavaPlugins
 import me.weishu.reflection.Reflection
 import org.koin.android.ext.koin.androidContext

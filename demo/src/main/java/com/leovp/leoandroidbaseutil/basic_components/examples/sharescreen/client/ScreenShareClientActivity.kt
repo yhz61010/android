@@ -16,7 +16,6 @@ import android.view.View
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
@@ -35,6 +34,7 @@ import com.leovp.lib_bytes.asByteAndForceToBytes
 import com.leovp.lib_bytes.toBytesLE
 import com.leovp.lib_bytes.toHexStringLE
 import com.leovp.lib_common_android.exts.*
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy

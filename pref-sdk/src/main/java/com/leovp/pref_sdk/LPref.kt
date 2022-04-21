@@ -1,15 +1,15 @@
-package com.leovp.androidbase.utils.pref
+package com.leovp.pref_sdk
 
+import android.app.Activity
 import android.content.Context
-import com.leovp.androidbase.utils.pref.base.AbsPref
-import com.leovp.lib_common_android.exts.sharedPrefs
+import com.leovp.pref_sdk.base.AbsPref
 
 /**
  * Author: Michael Leo
  * Date: 20-12-10 上午10:01
  */
 class LPref(ctx: Context, name: String = ctx.packageName) : AbsPref() {
-    private val pref = ctx.sharedPrefs(name)
+    private val pref = ctx.getSharedPreferences(name, Activity.MODE_PRIVATE)
 
     @Synchronized
     override fun put(key: String, v: Int) {

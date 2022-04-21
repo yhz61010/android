@@ -82,6 +82,8 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
     api project(':log-sdk')
+    api project(':pref-sdk')
+    api project(':lib-json')
     api project(':lib-bytes')
     api project(':lib-image')
 //    api project(':lib-network')
@@ -91,8 +93,6 @@ dependencies {
 
     // EXIF Interface
     api "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
-    // https://mvnrepository.com/artifact/com.google.code.gson/gson
-    api "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
 
     // https://github.com/hyuwah/DraggableView
 //    api "com.github.hyuwah:DraggableView:$draggableViewVersion"

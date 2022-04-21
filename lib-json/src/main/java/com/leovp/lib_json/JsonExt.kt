@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.kotlin
+package com.leovp.lib_json
 
 import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes

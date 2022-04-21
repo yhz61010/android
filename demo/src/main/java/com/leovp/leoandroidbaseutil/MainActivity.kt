@@ -9,12 +9,12 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.navigationBarHeight
 import com.leovp.lib_common_android.exts.statusBarHeight
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 
 class MainActivity : BaseDemonstrationActivity() {

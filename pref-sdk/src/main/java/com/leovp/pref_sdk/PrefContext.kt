@@ -1,15 +1,15 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.utils.pref
+package com.leovp.pref_sdk
 
-import com.leovp.androidbase.utils.pref.base.AbsPref
+import com.leovp.pref_sdk.base.AbsPref
 
 /**
  * ```kotlin
  * // You'd better initialize IPref in `Application`
- * PrefContext.setPrefImp(LPref())
+ * PrefContext.setPrefImp(LPref(context))
  * // Or define your custom Preference which extends `AbsPref`
- * PrefContext.setPrefImp(MMKVPref())
+ * PrefContext.setPrefImp(MMKVPref(context))
  * ```
  *
  * Author: Michael Leo

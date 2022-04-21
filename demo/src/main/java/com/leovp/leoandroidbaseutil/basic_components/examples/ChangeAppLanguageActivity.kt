@@ -7,12 +7,12 @@ import android.os.Bundle
 import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityChangeAppLanguageBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.lib_common_android.utils.LangUtil
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 
 /**

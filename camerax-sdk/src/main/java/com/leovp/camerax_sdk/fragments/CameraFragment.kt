@@ -7,7 +7,10 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaScannerConnection
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -66,6 +69,7 @@ import kotlin.properties.Delegates
 class CameraFragment : Fragment() {
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
+    private val audioManager: AudioManager by lazy { requireContext().getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
@@ -136,6 +140,9 @@ class CameraFragment : Fragment() {
         } ?: Unit
     }
 
+    private var soundIdCountdown: Int = 0
+    private lateinit var soundPool: SoundPool
+
     override fun onResume() {
         super.onResume()
         // Make sure that all permissions are still present, since the
@@ -149,6 +156,10 @@ class CameraFragment : Fragment() {
 
     override fun onDestroyView() {
         _fragmentCameraBinding = null
+        runCatching {
+            soundPool.autoPause()
+            soundPool.release()
+        }
         super.onDestroyView()
         // Shut down our background executor
         cameraExecutor.shutdown()
@@ -179,10 +190,25 @@ class CameraFragment : Fragment() {
         }
     }
 
+    private fun loadSounds() = lifecycleScope.launch(Dispatchers.IO) {
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                    .build()
+            ).build().apply {
+                val countdownSoundId = load(requireContext(), R.raw.countdown, 1)
+                soundIdCountdown = countdownSoundId
+                load(requireContext(), R.raw.countdown, 1)
+            }
+    }
+
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadPrefs()
+        loadSounds()
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -567,7 +593,15 @@ class CameraFragment : Fragment() {
         }
     }
 
+    private fun playCountdownSound(volume: Float) {
+        soundPool.play(soundIdCountdown, volume, volume, 1, 0, 1f)
+    }
+
     private suspend fun startCountdown() = coroutineScope {
+        if (CameraTimer.OFF != selectedTimer) {
+            val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            playCountdownSound(volume)
+        }
         // Show a timer based on user selection
         when (selectedTimer) {
             CameraTimer.S3  -> for (i in CameraTimer.S3.delay downTo 1) {
@@ -698,9 +732,9 @@ class CameraFragment : Fragment() {
         private const val TAG = "CameraXBasic"
         private const val FILENAME = "yyyyMMdd-HHmmss.SSS"
 
-        const val KEY_FLASH = "camerax-flash"
-        const val KEY_GRID = "camerax-grid"
-        const val KEY_HDR = "camerax-hdr"
+        private const val KEY_FLASH = "camerax-flash"
+        private const val KEY_GRID = "camerax-grid"
+        private const val KEY_HDR = "camerax-hdr"
 
         /** Milliseconds used for UI animations */
         private const val ANIMATION_FAST_MILLIS = 50L

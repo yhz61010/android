@@ -14,6 +14,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_flash_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_grid_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_launcher_background.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
@@ -37,6 +38,7 @@
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_idle.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_upload.xml" value="0.5927083333333333" />
         <entry key="demo-dex/src/main/res/layout/activity_main.xml" value="0.34739583333333335" />
+        <entry key="demo/src/main/res/drawable/ic_launcher_background.xml" value="0.3365" />
         <entry key="demo/src/main/res/layout/activity_accessibility.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_adb_communication.xml" value="0.3676923076923077" />
         <entry key="demo/src/main/res/layout/activity_aidl.xml" value="0.5765625" />

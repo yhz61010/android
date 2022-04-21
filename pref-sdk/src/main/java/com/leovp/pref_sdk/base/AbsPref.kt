@@ -1,9 +1,9 @@
-package com.leovp.androidbase.utils.pref.base
+package com.leovp.pref_sdk.base
 
 import com.google.gson.reflect.TypeToken
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.lib_exception.fail
+import com.leovp.lib_json.toJsonString
+import com.leovp.lib_json.toObject
 
 /**
  * Author: Michael Leo

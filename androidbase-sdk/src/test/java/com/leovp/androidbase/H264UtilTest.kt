@@ -1,8 +1,8 @@
 package com.leovp.androidbase
 
 import android.util.Log
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.media.H264Util
+import com.leovp.lib_json.toJsonString
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

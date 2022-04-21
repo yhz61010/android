@@ -1,7 +1,10 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresPermission
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
@@ -27,6 +30,8 @@ class BluetoothActivity : BaseDemonstrationActivity() {
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothBinding.inflate(layoutInflater).apply {
@@ -54,6 +59,8 @@ class BluetoothActivity : BaseDemonstrationActivity() {
         bluetooth.enable()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onResume() {
         super.onResume()
 
@@ -72,12 +79,16 @@ class BluetoothActivity : BaseDemonstrationActivity() {
         _binding = null
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun onEnableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val enable = bluetooth.enable()
         LogContext.log.i("Enable=$enable")
         toast("Enable=$enable")
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun onDisableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val disable = bluetooth.disable()
         LogContext.log.i("Disable=$disable")

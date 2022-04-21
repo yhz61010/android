@@ -38,6 +38,7 @@ import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
+import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
 import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
@@ -77,6 +78,9 @@ class CameraFragment : Fragment() {
 
     // Selector showing is hdr enabled or not (will work, only if device's camera supports hdr on hardware level)
     private var hasHdr = false
+
+    // Selector showing is there any selected timer and it's value (3s or 10s)
+    private var selectedTimer = CameraTimer.OFF
 
     // Selector showing which flash mode is selected (on, off or auto)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
@@ -409,6 +413,13 @@ class CameraFragment : Fragment() {
 
         cameraUiContainerTopBinding.btnGrid.setOnSingleClickListener { toggleGrid() }
         cameraUiContainerTopBinding.btnFlash.setOnClickListener { showFlashLayer() }
+        cameraUiContainerTopBinding.btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
+        cameraUiContainerTopBinding.btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
+        cameraUiContainerTopBinding.btnFlashAuto.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_AUTO) }
+        cameraUiContainerTopBinding.btnTimer.setOnClickListener { showSelectTimerLayer() }
+        cameraUiContainerTopBinding.btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
+        cameraUiContainerTopBinding.btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
+        cameraUiContainerTopBinding.btnTimer10.setOnClickListener { closeTimerAndSelect(CameraTimer.S10) }
 
         // In the background, load latest photo taken (if any) for gallery thumbnail
         lifecycleScope.launch(Dispatchers.IO) {
@@ -560,6 +571,12 @@ class CameraFragment : Fragment() {
     }
 
     /**
+     * Show timer selection menu by circular reveal animation.
+     * circularReveal() function is an Extension function which is adding the circular reveal
+     */
+    private fun showSelectTimerLayer() = cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
+
+    /**
      * Show flashlight selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
@@ -567,6 +584,7 @@ class CameraFragment : Fragment() {
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {
+        LogContext.log.i(TAG, "toggleGrid currentGridFlag=$hasGrid")
         cameraUiContainerTopBinding.btnGrid.toggleButton(
             flag = hasGrid,
             rotationAngle = 180f,
@@ -593,6 +611,44 @@ class CameraFragment : Fragment() {
 
     /** Returns true if the device has an available front camera. False otherwise */
     private fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
+
+    /**
+     * This function is called from XML view via Data Binding to select a timer
+     *  possible values are OFF, S3 or S10
+     *  circularClose() function is an Extension function which is adding circular close
+     */
+    private fun closeTimerAndSelect(timer: CameraTimer) {
+        cameraUiContainerTopBinding.llTimerOptions.circularClose(cameraUiContainerTopBinding.btnTimer) {
+            selectedTimer = timer
+            cameraUiContainerTopBinding.btnTimer.setImageResource(
+                when (timer) {
+                    CameraTimer.S3  -> R.drawable.ic_timer_3
+                    CameraTimer.S10 -> R.drawable.ic_timer_10
+                    CameraTimer.OFF -> R.drawable.ic_timer_off
+                }
+            )
+        }
+    }
+
+    /**
+     * This function is called from XML view via Data Binding to select a FlashMode
+     *  possible values are ON, OFF or AUTO
+     *  circularClose() function is an Extension function which is adding circular close
+     */
+    private fun closeFlashAndSelect(@ImageCapture.FlashMode flash: Int) {
+        cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash) {
+            flashMode = flash
+            cameraUiContainerTopBinding.btnFlash.setImageResource(
+                when (flash) {
+                    ImageCapture.FLASH_MODE_ON  -> R.drawable.ic_flash_on
+                    ImageCapture.FLASH_MODE_OFF -> R.drawable.ic_flash_off
+                    else                        -> R.drawable.ic_flash_auto
+                }
+            )
+            imageCapture?.flashMode = flashMode
+            prefs.putInt(KEY_FLASH, flashMode)
+        }
+    }
 
     companion object {
         private const val TAG = "CameraXBasic"

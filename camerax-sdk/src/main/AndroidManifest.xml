@@ -19,7 +19,6 @@
             android:resizeableActivity="true"
             android:rotationAnimation="seamless"
             android:screenOrientation="userPortrait"
-            android:theme="@style/CameraTheme.NoActionBar"
             tools:targetApi="O">
             <!-- Declare notch support -->
             <meta-data android:name="android.notch_support"

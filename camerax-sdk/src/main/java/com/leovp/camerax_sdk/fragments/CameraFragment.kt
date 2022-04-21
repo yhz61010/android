@@ -168,13 +168,10 @@ class CameraFragment : Fragment() {
 
         // Wait for the views to be properly laid out
         fragmentCameraBinding.viewFinder.post {
-
             // Keep track of the display in which this view is attached
             displayId = fragmentCameraBinding.viewFinder.display.displayId
-
             // Build UI controls
             updateCameraUi()
-
             // Set up the camera and its use cases
             setUpCamera()
         }
@@ -354,7 +351,6 @@ class CameraFragment : Fragment() {
 
     /** Method used to re-draw the camera UI controls, called every time configuration changes. */
     private fun updateCameraUi() {
-
         // Remove previous UI if any
         cameraUiContainerTopBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
         cameraUiContainerBottomBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }

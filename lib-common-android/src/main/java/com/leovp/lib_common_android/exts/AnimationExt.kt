@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.lib_common_android.exts
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
@@ -8,9 +8,11 @@ import android.view.View
  * Author: Michael Leo
  * Date: 2022/1/11 15:28
  */
+
 fun flipHorizontal(oldView: View, newView: View, durationInMills: Long) {
     val animator1: ObjectAnimator = ObjectAnimator.ofFloat(oldView, "rotationY", 0F, 90F)
-    val animator2: ObjectAnimator = ObjectAnimator.ofFloat(newView, "rotationY", -90F, 0F) //        animator2.interpolator = OvershootInterpolator(2.0f)
+    val animator2: ObjectAnimator = ObjectAnimator.ofFloat(newView, "rotationY", -90F, 0F)
+    // animator2.interpolator = OvershootInterpolator(2.0f)
     animator1.addListener(object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator) {}
         override fun onAnimationEnd(animation: Animator) {

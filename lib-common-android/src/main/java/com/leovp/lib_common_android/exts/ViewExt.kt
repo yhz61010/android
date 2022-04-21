@@ -3,13 +3,16 @@
 package com.leovp.lib_common_android.exts
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
-import android.view.DisplayCutout
-import android.view.View
-import android.view.WindowManager
+import android.view.*
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -18,6 +21,49 @@ import androidx.core.view.WindowInsetsControllerCompat
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:17
  */
+
+/** Milliseconds used for UI animations */
+const val ANIMATION_FAST_MILLIS = 50L
+const val ANIMATION_SLOW_MILLIS = 100L
+
+val Context.layoutInflater: LayoutInflater get() = LayoutInflater.from(this)
+
+fun Window.fitSystemWindows() = WindowCompat.setDecorFitsSystemWindows(this, false)
+
+fun ViewGroup.circularReveal(button: ImageView) {
+    ViewAnimationUtils.createCircularReveal(
+        this,
+        button.x.toInt() + button.width / 2,
+        button.y.toInt() + button.height / 2,
+        0f,
+        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) this.width.toFloat() else this.height.toFloat()
+    ).apply {
+        duration = 500
+        doOnStart { visibility = View.VISIBLE }
+    }.start()
+}
+
+fun ViewGroup.circularClose(button: ImageView, action: () -> Unit = {}) {
+    ViewAnimationUtils.createCircularReveal(
+        this,
+        button.x.toInt() + button.width / 2,
+        button.y.toInt() + button.height / 2,
+        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) this.width.toFloat() else this.height.toFloat(),
+        0f
+    ).apply {
+        duration = 500
+        doOnStart { action() }
+        doOnEnd { visibility = View.GONE }
+    }.start()
+}
+
+fun View.onWindowInsets(action: (View, WindowInsetsCompat) -> Unit) {
+    ViewCompat.requestApplyInsets(this)
+    ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
+        action(v, insets)
+        insets
+    }
+}
 
 /**
  * Attention:
@@ -35,10 +81,6 @@ const val FLAGS_FULLSCREEN =
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
                 // More flags
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-
-/** Milliseconds used for UI animations */
-const val ANIMATION_FAST_MILLIS = 50L
-const val ANIMATION_SLOW_MILLIS = 100L
 
 /**
  * You should use this click listener to replace with `setOnClickListener` to avoid duplicated click on view

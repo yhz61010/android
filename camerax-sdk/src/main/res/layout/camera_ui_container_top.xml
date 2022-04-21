@@ -246,6 +246,7 @@
         android:orientation="horizontal"
         android:padding="@dimen/double_margin"
         android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -261,8 +262,8 @@
             android:paddingHorizontal="@dimen/fab_margin"
             android:paddingVertical="@dimen/double_margin"
             android:progressBackgroundTint="@android:color/white"
-            app:haloColor="@color/cameraXColorAccent"
-            app:thumbColor="@color/cameraXColorAccent" />
+            android:value="0"
+            app:haloColor="@color/cameraXColorAccent" app:thumbColor="@color/cameraXColorAccent" />
     </FrameLayout>
 
     <TextView

@@ -313,7 +313,24 @@ class CameraFragment : Fragment() {
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = cameraProvider.bindToLifecycle(this,
-                cameraSelector, preview, imageCapture, imageAnalyzer)
+                cameraSelector, preview, imageCapture, imageAnalyzer).apply {
+                // Init camera exposure control
+                cameraInfo.exposureState.run {
+                    val lower = exposureCompensationRange.lower
+                    val upper = exposureCompensationRange.upper
+
+                    cameraUiContainerTopBinding.sliderExposure.run {
+                        valueFrom = lower.toFloat()
+                        valueTo = upper.toFloat()
+                        stepSize = 1f
+                        value = exposureCompensationIndex.toFloat()
+
+                        addOnChangeListener { _, value, _ ->
+                            cameraControl.setExposureCompensationIndex(value.toInt())
+                        }
+                    }
+                }
+            }
 
             // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)

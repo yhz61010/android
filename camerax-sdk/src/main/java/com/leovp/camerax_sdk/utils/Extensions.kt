@@ -1,3 +1,5 @@
+package com.leovp.camerax_sdk.utils
+
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.widget.ImageButton

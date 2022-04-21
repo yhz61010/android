@@ -1,12 +1,14 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresPermission
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothClientBinding
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 
 /**
@@ -41,6 +43,8 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
     private var device: BluetoothDevice? = null
     private var bluetoothGatt: BluetoothGatt? = null
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothClientBinding.inflate(layoutInflater).apply {
@@ -51,12 +55,16 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
         initData()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
         disconnect()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     private fun disconnect() {
         bluetoothGatt?.run {
             disconnect()
@@ -68,20 +76,23 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
         title = "Bluetooth Client"
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     private fun initData() {
         device = intent.getParcelableExtra("device")
         bluetoothGatt = device!!.connectGatt(this, false, object : BluetoothGattCallback() {
+            @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
             override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
                 when (newState) {
-                    BluetoothProfile.STATE_CONNECTED -> {
+                    BluetoothProfile.STATE_CONNECTED     -> {
                         LogContext.log.w("STATE_CONNECTED")
                         gatt!!.discoverServices()
                     }
-                    BluetoothProfile.STATE_CONNECTING -> {
+                    BluetoothProfile.STATE_CONNECTING    -> {
                         LogContext.log.w("STATE_CONNECTING")
                     }
-                    BluetoothProfile.STATE_DISCONNECTED -> {
+                    BluetoothProfile.STATE_DISCONNECTED  -> {
                         LogContext.log.w("STATE_DISCONNECTED")
                     }
                     BluetoothProfile.STATE_DISCONNECTING -> {
@@ -90,6 +101,8 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
                 }
             }
 
+            @SuppressLint("InlinedApi")
+            @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 LogContext.log.w("onServicesDiscovered status=$status")
                 super.onServicesDiscovered(gatt, status)
@@ -119,12 +132,16 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
         })
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     fun onSendClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val msg = binding.etMsg.text.toString()
         sendData(msg)
         binding.etMsg.setText("")
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     private fun sendData(msg: String) {
         if (bluetoothGatt == null) {
             return

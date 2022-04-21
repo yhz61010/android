@@ -271,4 +271,17 @@
             app:haloColor="@color/cameraXColorAccent"
             app:thumbColor="@color/cameraXColorAccent" />
     </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvCountDown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/count_down_text_size"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

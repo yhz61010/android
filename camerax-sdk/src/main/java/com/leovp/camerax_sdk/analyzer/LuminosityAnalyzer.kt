@@ -68,29 +68,21 @@ internal class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysi
         while (frameTimestamps.size >= frameRateWindow) frameTimestamps.removeLast()
         val timestampFirst = frameTimestamps.peekFirst() ?: currentTime
         val timestampLast = frameTimestamps.peekLast() ?: currentTime
-        framesPerSecond = 1.0 / ((timestampFirst - timestampLast) /
-                frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
+        framesPerSecond = 1.0 / ((timestampFirst - timestampLast) / frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
 
         // Analysis could take an arbitrarily long amount of time
         // Since we are running in a different thread, it won't stall other use cases
-
         lastAnalyzedTimestamp = frameTimestamps.first
-
         // Since format in ImageAnalysis is YUV, image.planes[0] contains the luminance plane
         val buffer = image.planes[0].buffer
-
         // Extract image data from callback object
         val data = buffer.toByteArray()
-
         // Convert the data into an array of pixel values ranging 0-255
         val pixels = data.map { it.toInt() and 0xFF }
-
         // Compute average luminance for the image
         val luma = pixels.average()
-
         // Call all listeners with new value
         listeners.forEach { it(luma) }
-
         image.close()
     }
 }

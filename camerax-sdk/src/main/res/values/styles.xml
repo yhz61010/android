@@ -1,0 +1,19 @@
+<resources>
+
+    <style name="CameraTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/cameraXColorPrimary</item>
+        <item name="colorPrimaryDark">@color/cameraXColorPrimaryDark</item>
+        <item name="colorAccent">@color/cameraXColorAccent</item>
+        <item name="android:navigationBarColor">@color/cameraXColorPrimaryDark</item>
+    </style>
+
+    <style name="CameraTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="CameraTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+
+    <style name="CameraTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Dark" />
+
+</resources>

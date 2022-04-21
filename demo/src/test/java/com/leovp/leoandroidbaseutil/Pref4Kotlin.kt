@@ -3,11 +3,11 @@ package com.leovp.leoandroidbaseutil
 import android.app.Application
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.utils.pref.LPref
-import com.leovp.androidbase.utils.pref.PrefContext
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
+import com.leovp.pref_sdk.LPref
+import com.leovp.pref_sdk.PrefContext
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

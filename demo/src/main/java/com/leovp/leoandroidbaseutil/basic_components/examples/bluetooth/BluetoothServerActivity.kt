@@ -1,16 +1,19 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresPermission
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothServerBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import java.util.*
 
@@ -45,6 +48,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     private var characteristicRead: BluetoothGattCharacteristic? = null
     private var bluetoothGattServer: BluetoothGattServer? = null
     private val advertiseCallback = object : AdvertiseCallback() {
+        @SuppressLint("InlinedApi")
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
             LogContext.log.w("onStartSuccess=${settingsInEffect.toJsonString()}")
@@ -52,6 +57,11 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         }
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothServerBinding.inflate(layoutInflater).apply {
@@ -62,6 +72,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         initBleServer()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
@@ -69,6 +81,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         disconnect()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun disconnect() {
         bluetoothGattServer?.run {
             clearServices()
@@ -80,6 +94,11 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         title = "Bluetooth Server"
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE]
+    )
     private fun initBleServer() {
         if (!bluetooth.isSupportBle(packageManager)) {
             toast("Does not support bluetooth!")
@@ -93,6 +112,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     /**
      * Add service and characteristic
      */
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun addService() {
         val gattService = BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         // Read only characteristic
@@ -117,6 +138,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     }
 
     private val gattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
+        @SuppressLint("InlinedApi")
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             super.onConnectionStateChange(device, status, newState)
             connectedDevice = device
@@ -130,6 +153,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
             LogContext.log.w("onConnectionStateChange device=$device status=$status newState=$state")
         }
 
+        @SuppressLint("InlinedApi")
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onCharacteristicWriteRequest(
             device: BluetoothDevice,
             requestId: Int,
@@ -149,13 +174,16 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         }
     }
 
-
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun onSendClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val msg = binding.etMsg.text.toString()
         sendData(msg)
         binding.etMsg.setText("")
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun sendData(msg: String) {
         runCatching {
             characteristicRead?.value = msg.toByteArray()

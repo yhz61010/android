@@ -4,8 +4,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -18,7 +18,7 @@ class LocalLogService : Service() {
 
     private val binder = object : ILocalLogService.Stub() {
         override fun getLogCount(app: String): Int {
-//            ThreadLocalRandom.current()
+            //            ThreadLocalRandom.current()
             return (0..100).random()
         }
 

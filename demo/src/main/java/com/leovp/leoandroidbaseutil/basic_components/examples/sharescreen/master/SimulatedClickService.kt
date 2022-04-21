@@ -8,9 +8,9 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -48,7 +48,7 @@ class SimulatedClickService : AccessibilityService() {
                         LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
                     }
                 }
-                else -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
+                else                                     -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
             }
         } else {
             LogContext.log.w(TAG, "Simulate click only available as of Android 7.0")
@@ -59,7 +59,7 @@ class SimulatedClickService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // The package names that you want to monitor which have been set in accessibility_service_config.
         // If you does not set it, it means monitor all application.
-//        val packageName: String = event.packageName.toString()
+        //        val packageName: String = event.packageName.toString()
         val eventType: Int = event.eventType
         val className: String? = event.className?.toString()
         // eventType: AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED

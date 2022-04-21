@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketClientBinding
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
@@ -80,9 +80,9 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 webSocketClient = createSocket()
                 LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
-//                webSocketClient?.disconnectManually()
-//                webSocketClient?.release()
-//                LogContext.log.i(TAG, "= released ================================================================================")
+                //                webSocketClient?.disconnectManually()
+                //                webSocketClient?.release()
+                //                LogContext.log.i(TAG, "= released ================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -107,7 +107,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         super.onDestroy()
     }
 
-// =====================================================
+    // =====================================================
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
@@ -166,7 +166,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         trustAllServers: Boolean,
-//        certInputStream: InputStream? = null,
+        //        certInputStream: InputStream? = null,
         retryStrategy: RetryStrategy
     ) :
         BaseNettyClient(webSocketUri, connectionListener, trustAllServers, /* trustAllServers,*/ retryStrategy) {
@@ -189,7 +189,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 is PongWebSocketFrame -> {
                     frame.content().toString(Charset.forName("UTF-8"))
                 }
-                else -> {
+                else                  -> {
                     null
                 }
             }
@@ -204,7 +204,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
         }
     }
 
-// =================================================
+    // =================================================
 
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {

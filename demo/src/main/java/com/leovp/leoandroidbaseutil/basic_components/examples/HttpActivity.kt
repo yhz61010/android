@@ -7,7 +7,6 @@ import android.webkit.MimeTypeMap
 import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.saveRawResourceToFile
 import com.leovp.androidbase.exts.android.toFile
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.http_sdk.retrofit.ApiService
 import com.leovp.http_sdk.retrofit.ApiSubscribe
 import com.leovp.http_sdk.retrofit.iter.ObserverOnNextListener
@@ -15,6 +14,7 @@ import com.leovp.http_sdk.retrofit.observers.NoProgressObserver
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityHttpBinding
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import io.reactivex.Observable
@@ -52,7 +52,7 @@ class HttpActivity : BaseDemonstrationActivity() {
         @GET("/{urlPath}")
         // Values are URL encoded by default. Disable with encoded=true.
         fun downloadFile(@Path("urlPath", encoded = true) urlPath: String): Observable<ResponseBody>
-//        fun downloadFile(@Url fileUrl: String): Observable<ResponseBody>
+        //        fun downloadFile(@Url fileUrl: String): Observable<ResponseBody>
     }
 
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -110,9 +110,9 @@ class HttpActivity : BaseDemonstrationActivity() {
             return
         }
         val requestBody: RequestBody =
-            MultipartBody.Builder().setType(MultipartBody.FORM)
-                .addFormDataPart("file", sourceFile.name, sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
-                .build()
+                MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("file", sourceFile.name, sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
+                    .build()
         val body: MultipartBody.Part = MultipartBody.Part.create(requestBody)
 
         val parameters = mapOf(

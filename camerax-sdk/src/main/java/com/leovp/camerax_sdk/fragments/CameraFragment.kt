@@ -23,6 +23,7 @@ import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
@@ -37,8 +38,9 @@ import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
-import com.leovp.lib_common_android.exts.getRealResolution
-import com.leovp.lib_common_android.exts.simulateClick
+import com.leovp.camerax_sdk.utils.SharedPrefsManager
+import com.leovp.camerax_sdk.utils.toggleButton
+import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,6 +52,7 @@ import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.properties.Delegates
 
 /**
  * Main fragment for this app. Implements all camera operations including:
@@ -58,23 +61,32 @@ import kotlin.math.min
  * - Image analysis
  */
 class CameraFragment : Fragment() {
+    // An instance of a helper function to work with Shared Preferences
+    private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
-
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
-    private var cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
-    private var cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
+    private var _cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
+    private var _cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
+    private val cameraUiContainerTopBinding get() = _cameraUiContainerTopBinding!!
+    private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
 
-    private lateinit var outputDirectory: File
-    val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
-    private val functionKeyObserver = Observer<Int> { keyCode ->
-        when (keyCode) {
-            // When the volume up/down button is pressed, simulate a shutter button click
-            KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding?.cameraCaptureButton?.simulateClick()
-            KeyEvent.KEYCODE_UNKNOWN     -> Unit
-        }
+    // Selector showing is grid enabled or not
+    private var hasGrid = false
+
+    // Selector showing is hdr enabled or not (will work, only if device's camera supports hdr on hardware level)
+    private var hasHdr = false
+
+    // Selector showing which flash mode is selected (on, off or auto)
+    private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
+        _cameraUiContainerTopBinding?.btnFlash?.setImageResource(
+            when (new) {
+                ImageCapture.FLASH_MODE_ON   -> R.drawable.ic_flash_on
+                ImageCapture.FLASH_MODE_AUTO -> R.drawable.ic_flash_auto
+                else                         -> R.drawable.ic_flash_off
+            }
+        )
     }
 
     private var displayId: Int = -1
@@ -89,6 +101,17 @@ class CameraFragment : Fragment() {
 
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
+
+    private lateinit var outputDirectory: File
+    val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
+    private val functionKeyObserver = Observer<Int> { keyCode ->
+        when (keyCode) {
+            // When the volume up/down button is pressed, simulate a shutter button click
+            KeyEvent.KEYCODE_VOLUME_UP,
+            KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
+            KeyEvent.KEYCODE_UNKNOWN     -> Unit
+        }
+    }
 
     /**
      * We need a display listener for orientation changes that do not trigger a configuration
@@ -138,7 +161,7 @@ class CameraFragment : Fragment() {
 
     private fun setGalleryThumbnail(uri: Uri) {
         // Run the operations in the view's thread
-        cameraUiContainerBottomBinding?.photoViewButton?.let { photoViewButton ->
+        cameraUiContainerBottomBinding.photoViewButton.let { photoViewButton ->
             photoViewButton.post {
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
                 photoViewButton.load(uri) {
@@ -153,15 +176,13 @@ class CameraFragment : Fragment() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadPrefs()
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
-
-        // Initialize WindowManager to retrieve display metrics
-        //        windowManager = requireContext().windowManager
 
         // Determine the output directory
         outputDirectory = getOutputDirectory(requireContext())
@@ -175,6 +196,12 @@ class CameraFragment : Fragment() {
             // Set up the camera and its use cases
             setUpCamera()
         }
+    }
+
+    private fun loadPrefs() {
+        flashMode = prefs.getInt(KEY_FLASH, ImageCapture.FLASH_MODE_OFF)
+        hasGrid = prefs.getBoolean(KEY_GRID, false)
+        hasHdr = prefs.getBoolean(KEY_HDR, false)
     }
 
     /**
@@ -244,7 +271,9 @@ class CameraFragment : Fragment() {
 
         // ImageCapture
         imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            // Set capture flash
+            .setFlashMode(flashMode)
             // We request aspect ratio but no resolution to match preview config, but letting
             // CameraX optimize for whatever specific resolution best fits our use cases
             .setTargetAspectRatio(screenAspectRatio)
@@ -252,6 +281,8 @@ class CameraFragment : Fragment() {
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
             .build()
+
+        checkForHdrExtensionAvailability()
 
         // ImageAnalysis
         imageAnalyzer = ImageAnalysis.Builder()
@@ -286,6 +317,10 @@ class CameraFragment : Fragment() {
         } catch (exc: Exception) {
             LogContext.log.e(TAG, "Use case binding failed", exc)
         }
+    }
+
+    private fun checkForHdrExtensionAvailability() {
+        // TODO("Not yet implemented")
     }
 
     private fun observeCameraState(cameraInfo: CameraInfo) {
@@ -352,19 +387,28 @@ class CameraFragment : Fragment() {
     /** Method used to re-draw the camera UI controls, called every time configuration changes. */
     private fun updateCameraUi() {
         // Remove previous UI if any
-        cameraUiContainerTopBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
-        cameraUiContainerBottomBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
+        _cameraUiContainerTopBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
+        _cameraUiContainerBottomBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
 
-        cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
-            LayoutInflater.from(requireContext()),
+        _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
+            requireContext().layoutInflater,
             fragmentCameraBinding.root,
             true
         )
-        cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
-            LayoutInflater.from(requireContext()),
+        _cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
+            requireContext().layoutInflater,
             fragmentCameraBinding.root,
             true
         )
+
+        // --------------------
+
+        cameraUiContainerTopBinding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
+        cameraUiContainerTopBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+        adjustInsets()
+
+        cameraUiContainerTopBinding.btnGrid.setOnSingleClickListener { toggleGrid() }
+        cameraUiContainerTopBinding.btnFlash.setOnClickListener { showFlashLayer() }
 
         // In the background, load latest photo taken (if any) for gallery thumbnail
         lifecycleScope.launch(Dispatchers.IO) {
@@ -376,7 +420,7 @@ class CameraFragment : Fragment() {
         }
 
         // Listener for button used to capture photo
-        cameraUiContainerBottomBinding?.cameraCaptureButton?.setOnClickListener {
+        cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
             // Get a stable reference of the modifiable image capture use case
             imageCapture?.let { imageCapture ->
                 // Create output file to hold the image
@@ -458,7 +502,7 @@ class CameraFragment : Fragment() {
         }
 
         // Setup for button used to switch cameras
-        cameraUiContainerBottomBinding?.cameraSwitchButton?.let {
+        cameraUiContainerBottomBinding.cameraSwitchButton.let {
             // Disable the button until the camera is set up
             it.isEnabled = false
 
@@ -475,7 +519,7 @@ class CameraFragment : Fragment() {
         }
 
         // Listener for button used to view the most recent photo
-        cameraUiContainerBottomBinding?.photoViewButton?.setOnClickListener {
+        cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
                 Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax
@@ -484,28 +528,79 @@ class CameraFragment : Fragment() {
         }
     }
 
+    /**
+     * This methods adds all necessary margins to some views based on window insets and screen orientation
+     */
+    private fun adjustInsets() {
+        activity?.window?.fitSystemWindows()
+        cameraUiContainerBottomBinding.cameraCaptureButton.onWindowInsets { view, windowInsets ->
+            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                view.bottomMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            } else {
+                view.endMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).right
+            }
+        }
+        cameraUiContainerTopBinding.btnTimer.onWindowInsets { view, windowInsets ->
+            view.topMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+        }
+        cameraUiContainerTopBinding.llTimerOptions.onWindowInsets { view, windowInsets ->
+            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                view.topPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            } else {
+                view.startPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).left
+            }
+        }
+        cameraUiContainerTopBinding.llFlashOptions.onWindowInsets { view, windowInsets ->
+            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                view.topPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            } else {
+                view.startPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).left
+            }
+        }
+    }
+
+    /**
+     * Show flashlight selection menu by circular reveal animation.
+     * circularReveal() function is an Extension function which is adding the circular reveal
+     */
+    private fun showFlashLayer() = cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
+
+    /** Turns on or off the grid on the screen */
+    private fun toggleGrid() {
+        cameraUiContainerTopBinding.btnGrid.toggleButton(
+            flag = hasGrid,
+            rotationAngle = 180f,
+            firstIcon = R.drawable.ic_grid_off,
+            secondIcon = R.drawable.ic_grid_on,
+        ) { flag ->
+            hasGrid = flag
+            prefs.putBoolean(KEY_GRID, flag)
+            cameraUiContainerTopBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
+        }
+    }
+
     /** Enabled or disabled a button to switch cameras depending on the available cameras */
     private fun updateCameraSwitchButton() {
         try {
-            cameraUiContainerBottomBinding?.cameraSwitchButton?.isEnabled = hasBackCamera() && hasFrontCamera()
+            cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = hasBackCamera() && hasFrontCamera()
         } catch (exception: CameraInfoUnavailableException) {
-            cameraUiContainerBottomBinding?.cameraSwitchButton?.isEnabled = false
+            cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = false
         }
     }
 
     /** Returns true if the device has an available back camera. False otherwise */
-    private fun hasBackCamera(): Boolean {
-        return cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
-    }
+    private fun hasBackCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
 
     /** Returns true if the device has an available front camera. False otherwise */
-    private fun hasFrontCamera(): Boolean {
-        return cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
-    }
+    private fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
     companion object {
         private const val TAG = "CameraXBasic"
         private const val FILENAME = "yyyyMMdd-HHmmss.SSS"
+
+        const val KEY_FLASH = "camerax-flash"
+        const val KEY_GRID = "camerax-grid"
+        const val KEY_HDR = "camerax-hdr"
 
         /** Milliseconds used for UI animations */
         private const val ANIMATION_FAST_MILLIS = 50L

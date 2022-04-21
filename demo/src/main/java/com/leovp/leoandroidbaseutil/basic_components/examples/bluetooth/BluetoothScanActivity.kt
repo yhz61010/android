@@ -1,7 +1,9 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,13 +11,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.device.ScanDeviceCallback
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
@@ -23,8 +25,8 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.Dev
 import com.leovp.leoandroidbaseutil.basic_components.examples.bluetooth.base.DeviceModel
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothScanBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
-import java.util.*
 
 @SuppressLint("SetTextI18n")
 class BluetoothScanActivity : BaseDemonstrationActivity() {
@@ -37,6 +39,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityBluetoothScanBinding.inflate(layoutInflater).apply {
@@ -56,6 +60,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                 Permission.BLUETOOTH_SCAN
             )
             .request(object : OnPermissionCallback {
+                @SuppressLint("InlinedApi")
+                @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
                 override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                     doDiscovery()
                 }
@@ -75,6 +81,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         registerReceiver(bluetoothReceiver, filter)
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
@@ -85,7 +93,9 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     private fun initView() {
         title = "Bluetooth Scan"
         adapter = DeviceAdapter().apply {
+            @SuppressLint("InlinedApi")
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
+                @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     bluetooth.cancelDiscovery()
                     startActivity<BluetoothClientActivity>({ intent -> intent.putExtra("device", item.device) })
@@ -99,6 +109,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         }
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     private fun initBluetooth() {
         if (!bluetooth.isSupportBle(packageManager)) {
             toast("Does not support bluetooth!")
@@ -108,6 +120,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         bluetooth.enable()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     private fun doDiscovery() {
         bluetoothDeviceMap.clear()
         binding.btnDiscovery.text = "Discovery"
@@ -115,18 +129,31 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         LogContext.log.w("startDiscovery rtn=$rtn")
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun onDiscoveryClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("onDiscoveryClick")
         toast("onDiscoveryClick")
         doDiscovery()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("onScanClick Before Scanning, please stop it first if you don't do that.")
         toast("onScanClick Before Scanning, please stop it first if you don't do that.")
         doScan()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun onStopScan(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("onStopScan")
         toast("onStopScan")
@@ -135,10 +162,20 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         bluetooth.stopScan()
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     private fun doScan() {
         bluetoothDeviceMap.clear()
         binding.btnDoScan.text = "Scan"
         bluetooth.scan(object : ScanDeviceCallback {
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (result?.isConnectable == false) {
@@ -163,9 +200,11 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     }
 
     private val bluetoothReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        @SuppressLint("InlinedApi")
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                BluetoothDevice.ACTION_FOUND -> {
+                BluetoothDevice.ACTION_FOUND               -> {
                     val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
                     val model = DeviceModel(device, device.name, device.address, null)
                     LogContext.log.w("Found device: ${model.toJsonString()}")
@@ -175,7 +214,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                     list.sortByDescending { it.name }
                     adapter?.clearAndAddList(list)
                 }
-                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED  -> {
                     LogContext.log.w("Bluetooth discovery started")
                     toast("Discovery started")
                 }
@@ -183,15 +222,15 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                     LogContext.log.w("Bluetooth discovery finished")
                     toast("Discovery done")
                 }
-                BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                BluetoothDevice.ACTION_ACL_CONNECTED       -> {
                     LogContext.log.w("Device connected")
                     toast("ACTION_ACL_CONNECTED")
                 }
-                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
+                BluetoothDevice.ACTION_ACL_DISCONNECTED    -> {
                     LogContext.log.w("Device disconnected")
                     toast("ACTION_ACL_DISCONNECTED")
                 }
-                else -> {
+                else                                       -> {
                     LogContext.log.e("Bluetooth discovery unknown error.")
                     toast("Bluetooth discovery unknown error.")
                 }

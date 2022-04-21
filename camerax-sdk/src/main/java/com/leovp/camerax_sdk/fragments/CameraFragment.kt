@@ -420,6 +420,8 @@ class CameraFragment : Fragment() {
         cameraUiContainerTopBinding.btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
         cameraUiContainerTopBinding.btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
         cameraUiContainerTopBinding.btnTimer10.setOnClickListener { closeTimerAndSelect(CameraTimer.S10) }
+        cameraUiContainerTopBinding.btnExposure.setOnClickListener { cameraUiContainerTopBinding.flExposure.visibility = View.VISIBLE }
+        cameraUiContainerTopBinding.flExposure.setOnClickListener { cameraUiContainerTopBinding.flExposure.visibility = View.GONE }
 
         // In the background, load latest photo taken (if any) for gallery thumbnail
         lifecycleScope.launch(Dispatchers.IO) {

@@ -10,15 +10,16 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.device.WifiUtil
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base.WifiAdapter
 import com.leovp.leoandroidbaseutil.basic_components.examples.wifi.base.WifiModel
 import com.leovp.leoandroidbaseutil.databinding.ActivityWifiBinding
 import com.leovp.lib_common_android.exts.wifiManager
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
@@ -140,6 +141,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         unregisterReceiver(wifiScanReceiver)
     }
 
+    @RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_WIFI_STATE])
     fun onSetWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val ssid = binding.etWifiName.text.toString()
         val pwd = binding.etWifiPwd.text.toString()

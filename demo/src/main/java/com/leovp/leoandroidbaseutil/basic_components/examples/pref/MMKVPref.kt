@@ -1,9 +1,9 @@
 package com.leovp.leoandroidbaseutil.basic_components.examples.pref
 
 import android.content.Context
-import com.leovp.androidbase.utils.pref.base.AbsPref
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import com.leovp.pref_sdk.base.AbsPref
 import com.tencent.mmkv.MMKV
 
 /**

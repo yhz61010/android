@@ -16,8 +16,6 @@ import android.util.Size
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
-import com.leovp.androidbase.exts.kotlin.toObject
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.drawonscreen.FingerPaintView
@@ -32,6 +30,8 @@ import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_android.utils.API
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.lib_exception.exception
+import com.leovp.lib_json.toJsonString
+import com.leovp.lib_json.toObject
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture
@@ -149,6 +149,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             @SuppressLint("NewApi")
             override fun run() {
                 runCatching {
+                    @Suppress("DEPRECATION")
                     val currentScreenRotation = if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
                     //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {

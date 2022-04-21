@@ -12,11 +12,11 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.leovp.androidbase.exts.android.getBaseDirString
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.androidbase.exts.kotlin.toJsonString
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
 import com.leovp.lib_image.compressBitmap
 import com.leovp.lib_image.writeToFile
+import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture
@@ -79,12 +79,12 @@ class MediaProjectionService : Service() {
                     e.printStackTrace()
                 }
             }
-//            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
+            //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
             screenDataUpdateListener?.onUpdate(data, flags, presentationTimeUs)
 
             // Bitmap for screenshot
-//            val file = FileUtil.createImageFile(app, "bmp")
-//            ImageUtil.writeBitmapToFile(file, buffer as Bitmap, 90)
+            //            val file = FileUtil.createImageFile(app, "bmp")
+            //            ImageUtil.writeBitmapToFile(file, buffer as Bitmap, 90)
         }
     }
 
@@ -220,7 +220,7 @@ class MediaProjectionService : Service() {
             .setKeyFrameRate(setting.keyFrameRate)
             .setIFrameInterval(setting.iFrameInterval) // 20
             // For bitmap
-//          .setSampleSize(2)
+            //          .setSampleSize(2)
             .build().apply {
                 onInit()
                 onStart()

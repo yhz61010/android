@@ -2,7 +2,10 @@ package com.leovp.lib_common_android.exts
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.view.View
 import android.view.Window
@@ -10,6 +13,7 @@ import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.fragment.app.Fragment
 
 /**
  * Author: Michael Leo
@@ -89,7 +93,7 @@ fun Window.requestFullScreenAfterVisible() {
         this.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
     // or
-//        act.window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    //        act.window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 }
 
 /**
@@ -124,7 +128,7 @@ fun Activity.hideNavigationBar(rootView: View = window.decorView) {
 @SuppressLint("ObsoleteSdkInt")
 fun Window.hideNavigationBar(rootView: View = decorView) {
     // Translucent virtual NavigationBar
-//    this.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+    //    this.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         // https://stackoverflow.com/a/64828028
@@ -156,6 +160,17 @@ fun Window.hideNavigationBar(rootView: View = decorView) {
         lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         this.attributes = lp
     }
+}
+
+fun Activity.share(uri: Uri, title: String) = doShare(this, uri, title)
+
+fun Fragment.share(uri: Uri, title: String) = doShare(requireContext(), uri, title)
+
+private fun doShare(ctx: Context, uri: Uri, title: String) {
+    val share = Intent(Intent.ACTION_SEND)
+    share.type = "image/*"
+    share.putExtra(Intent.EXTRA_STREAM, uri)
+    ctx.startActivity(Intent.createChooser(share, title))
 }
 
 /**

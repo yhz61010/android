@@ -10,6 +10,7 @@
         <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
         <entry key="camerax-sdk/src/main/res/drawable/bg_options.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_baseline_grid_on_24.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_exposure.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_flash_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_grid_on.xml" value="0.583" />
@@ -20,6 +21,8 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.239" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_normal.xml" value="0.239" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_pressed.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_switch.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_10.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_3.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
@@ -28,7 +31,7 @@
         <entry key="camerax-sdk/src/main/res/layout/activity_main.xml" value="0.31666666666666665" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_bottom_container.xml" value="0.5911458333333334" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container.xml" value="0.31666666666666665" />
-        <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_bottom.xml" value="0.5911458333333334" />
+        <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_bottom.xml" value="0.5" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.4527777777777778" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5765625" />

@@ -376,6 +376,7 @@ class CameraFragment : Fragment() {
                 val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
                 val delta = detector.scaleFactor
                 camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
+                LogContext.log.d(TAG, "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
                 return true
             }
         }

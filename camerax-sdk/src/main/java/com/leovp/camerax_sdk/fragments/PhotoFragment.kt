@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
+import coil.load
 import com.leovp.camerax_sdk.R
-import com.leovp.lib_image.getBitmap
 import java.io.File
 
 /** Fragment used for each individual page showing a photo inside of [GalleryFragment] */
@@ -22,9 +22,9 @@ class PhotoFragment internal constructor() : Fragment() {
         val iv: ImageView = view as ImageView
         val imgFile: File? = args.getString(FILE_NAME_KEY)?.let { File(it) }
         if (imgFile == null) {
-            iv.setImageResource(R.drawable.ic_photo)
+            iv.load(R.drawable.ic_photo)
         } else {
-            iv.setImageBitmap(imgFile.getBitmap())
+            iv.load(imgFile)
         }
     }
 

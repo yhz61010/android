@@ -1,5 +1,7 @@
 package com.leovp.camerax_sdk.fragments
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -487,12 +489,18 @@ class CameraFragment : Fragment() {
         }
 
         // Setup for button used to switch cameras
-        cameraUiContainerBottomBinding.cameraSwitchButton.let {
+        cameraUiContainerBottomBinding.cameraSwitchButton.let { switchBtn ->
             // Disable the button until the camera is set up
-            it.isEnabled = false
+            switchBtn.isEnabled = false
 
             // Listener for button used to switch cameras. Only called if the button is enabled
-            it.setOnClickListener {
+            switchBtn.setOnClickListener {
+                it.isEnabled = false
+                switchBtn.animate().rotationBy(-180f).setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        it.isEnabled = true
+                    }
+                })
                 lensFacing = if (CameraSelector.LENS_FACING_FRONT == lensFacing) {
                     CameraSelector.LENS_FACING_BACK
                 } else {
@@ -667,8 +675,8 @@ class CameraFragment : Fragment() {
 
     /**
      * This function is called from XML view via Data Binding to select a timer
-     *  possible values are OFF, S3 or S10
-     *  circularClose() function is an Extension function which is adding circular close
+     * possible values are OFF, S3 or S10
+     * circularClose() function is an Extension function which is adding circular close
      */
     private fun closeTimerAndSelect(timer: CameraTimer) {
         cameraUiContainerTopBinding.llTimerOptions.circularClose(cameraUiContainerTopBinding.btnTimer) {
@@ -685,8 +693,8 @@ class CameraFragment : Fragment() {
 
     /**
      * This function is called from XML view via Data Binding to select a FlashMode
-     *  possible values are ON, OFF or AUTO
-     *  circularClose() function is an Extension function which is adding circular close
+     * possible values are ON, OFF or AUTO
+     * circularClose() function is an Extension function which is adding circular close
      */
     private fun closeFlashAndSelect(@ImageCapture.FlashMode flash: Int) {
         cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash) {

@@ -14,9 +14,7 @@ import android.media.AudioManager
 import android.media.MediaScannerConnection
 import android.media.SoundPool
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -498,7 +496,7 @@ class CameraFragment : Fragment() {
                 it.isEnabled = false
                 switchBtn.animate().rotationBy(-180f).setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        it.isEnabled = true
+                        Handler(Looper.getMainLooper()).postDelayed({ it.isEnabled = true }, 500)
                     }
                 })
                 lensFacing = if (CameraSelector.LENS_FACING_FRONT == lensFacing) {

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
 import android.media.AudioAttributes
@@ -25,6 +24,7 @@ import androidx.camera.core.*
 import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
@@ -99,7 +99,9 @@ class CameraFragment : Fragment() {
     }
 
     private var displayId: Int = -1
-    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+
+    // Selector showing which camera is selected (front or back)
+    private var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -264,8 +266,8 @@ class CameraFragment : Fragment() {
 
             // Select lensFacing depending on the available cameras
             lensFacing = when {
-                hasBackCamera()  -> CameraSelector.LENS_FACING_BACK
-                hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
+                hasBackCamera()  -> CameraSelector.DEFAULT_BACK_CAMERA
+                hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
                 else             -> throw IllegalStateException("Back and front camera are unavailable")
             }
 
@@ -290,9 +292,6 @@ class CameraFragment : Fragment() {
 
         // CameraProvider
         val cameraProvider = cameraProvider ?: throw IllegalStateException("Camera initialization failed.")
-
-        // CameraSelector
-        val cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
 
         // Preview
         preview = Preview.Builder()
@@ -342,7 +341,7 @@ class CameraFragment : Fragment() {
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = cameraProvider.bindToLifecycle(this,
-                cameraSelector, preview, imageCapture, imageAnalyzer).apply {
+                lensFacing, preview, imageCapture, imageAnalyzer).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {
                     val lower = exposureCompensationRange.lower
@@ -499,10 +498,10 @@ class CameraFragment : Fragment() {
                         Handler(Looper.getMainLooper()).postDelayed({ it.isEnabled = true }, 500)
                     }
                 })
-                lensFacing = if (CameraSelector.LENS_FACING_FRONT == lensFacing) {
-                    CameraSelector.LENS_FACING_BACK
+                lensFacing = if (CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing) {
+                    CameraSelector.DEFAULT_BACK_CAMERA
                 } else {
-                    CameraSelector.LENS_FACING_FRONT
+                    CameraSelector.DEFAULT_FRONT_CAMERA
                 }
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
@@ -528,7 +527,7 @@ class CameraFragment : Fragment() {
             // Setup image capture metadata
             val metadata = Metadata().apply {
                 // Mirror image when using the front camera
-                isReversedHorizontal = lensFacing == CameraSelector.LENS_FACING_FRONT
+                isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
             }
 
             // Create output options object which contains file + metadata
@@ -594,7 +593,7 @@ class CameraFragment : Fragment() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // Display flash animation to indicate that photo was captured
                 fragmentCameraBinding.root.postDelayed({
-                    fragmentCameraBinding.root.foreground = ColorDrawable(Color.parseColor("#99DDDDDD"))
+                    fragmentCameraBinding.root.foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
                     fragmentCameraBinding.root.postDelayed({ fragmentCameraBinding.root.foreground = null }, ANIMATION_FAST_MILLIS)
                 }, ANIMATION_SLOW_MILLIS)
             }

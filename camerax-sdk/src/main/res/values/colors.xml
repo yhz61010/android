@@ -24,4 +24,6 @@
     <color name="cameraXColorPrimaryDark">#80000000</color>
     <color name="cameraXColorAccent">#e7a942</color>
     <color name="cameraXColorButtonGreyBg">#444444</color>
+
+    <color name="camera_flash_layer">#99DDDDDD</color>
 </resources>

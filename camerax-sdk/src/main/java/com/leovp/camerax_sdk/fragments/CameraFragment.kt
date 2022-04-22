@@ -14,12 +14,8 @@ import android.media.MediaScannerConnection
 import android.media.SoundPool
 import android.net.Uri
 import android.os.*
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.webkit.MimeTypeMap
-import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.extensions.ExtensionMode
@@ -56,6 +52,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -364,9 +361,39 @@ class CameraFragment : Fragment() {
 
             // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
-//            observeCameraState(camera?.cameraInfo!!)
+            //            observeCameraState(camera?.cameraInfo!!)
+            // Call this after [cameraProvider.bindToLifecycle]
+            initCameraGesture(camera!!)
         } catch (exc: Exception) {
             LogContext.log.e(TAG, "Use case binding failed", exc)
+        }
+    }
+
+    private fun initCameraGesture(camera: Camera) {
+        val viewFinder = fragmentCameraBinding.viewFinder
+        val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
+                val delta = detector.scaleFactor
+                camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
+                return true
+            }
+        }
+
+        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
+
+        viewFinder.setOnTouchListener { view, event ->
+            scaleGestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val factory = viewFinder.meteringPointFactory
+                val point = factory.createPoint(event.x, event.y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                    .build()
+                camera.cameraControl.startFocusAndMetering(action)
+            }
+            view.performClick()
+            true
         }
     }
 
@@ -397,47 +424,47 @@ class CameraFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun observeCameraState(cameraInfo: CameraInfo) {
-        cameraInfo.cameraState.observe(viewLifecycleOwner) { cameraState ->
-            run {
-                when (cameraState.type) {
-                    // Ask the user to close other camera apps
-                    CameraState.Type.PENDING_OPEN -> Toast.makeText(context, "CameraState: Pending Open", Toast.LENGTH_SHORT).show()
-                    // Show the Camera UI
-                    CameraState.Type.OPENING      -> Toast.makeText(context, "CameraState: Opening", Toast.LENGTH_SHORT).show()
-                    // Setup Camera resources and begin processing
-                    CameraState.Type.OPEN         -> Toast.makeText(context, "CameraState: Open", Toast.LENGTH_SHORT).show()
-                    // Close camera UI
-                    CameraState.Type.CLOSING      -> Toast.makeText(context, "CameraState: Closing", Toast.LENGTH_SHORT).show()
-                    // Free camera resources
-                    CameraState.Type.CLOSED       -> Toast.makeText(context, "CameraState: Closed", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            cameraState.error?.let { error ->
-                when (error.code) {
-                    // Open errors
-                    // Make sure to setup the use cases properly
-                    CameraState.ERROR_STREAM_CONFIG               -> Toast.makeText(context, "Stream config error", Toast.LENGTH_SHORT).show()
-                    // Opening errors
-                    // Close the camera or ask user to close another camera app that's using the camera
-                    CameraState.ERROR_CAMERA_IN_USE               -> Toast.makeText(context, "Camera in use", Toast.LENGTH_SHORT).show()
-                    // Close another open camera in the app,
-                    // or ask the user to close another camera app that's using the camera
-                    CameraState.ERROR_MAX_CAMERAS_IN_USE          -> Toast.makeText(context, "Max cameras in use", Toast.LENGTH_SHORT).show()
-                    CameraState.ERROR_OTHER_RECOVERABLE_ERROR     -> Toast.makeText(context, "Other recoverable error", Toast.LENGTH_SHORT).show()
-                    // Closing errors
-                    // Ask the user to enable the device's cameras
-                    CameraState.ERROR_CAMERA_DISABLED             -> Toast.makeText(context, "Camera disabled", Toast.LENGTH_SHORT).show()
-                    // Ask the user to reboot the device to restore camera function
-                    CameraState.ERROR_CAMERA_FATAL_ERROR          -> Toast.makeText(context, "Fatal error", Toast.LENGTH_SHORT).show()
-                    // Closed errors
-                    // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
-                    CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> Toast.makeText(context, "Do not disturb mode enabled", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
+    //    private fun observeCameraState(cameraInfo: CameraInfo) {
+    //        cameraInfo.cameraState.observe(viewLifecycleOwner) { cameraState ->
+    //            run {
+    //                when (cameraState.type) {
+    //                    // Ask the user to close other camera apps
+    //                    CameraState.Type.PENDING_OPEN -> Toast.makeText(context, "CameraState: Pending Open", Toast.LENGTH_SHORT).show()
+    //                    // Show the Camera UI
+    //                    CameraState.Type.OPENING      -> Toast.makeText(context, "CameraState: Opening", Toast.LENGTH_SHORT).show()
+    //                    // Setup Camera resources and begin processing
+    //                    CameraState.Type.OPEN         -> Toast.makeText(context, "CameraState: Open", Toast.LENGTH_SHORT).show()
+    //                    // Close camera UI
+    //                    CameraState.Type.CLOSING      -> Toast.makeText(context, "CameraState: Closing", Toast.LENGTH_SHORT).show()
+    //                    // Free camera resources
+    //                    CameraState.Type.CLOSED       -> Toast.makeText(context, "CameraState: Closed", Toast.LENGTH_SHORT).show()
+    //                }
+    //            }
+    //
+    //            cameraState.error?.let { error ->
+    //                when (error.code) {
+    //                    // Open errors
+    //                    // Make sure to setup the use cases properly
+    //                    CameraState.ERROR_STREAM_CONFIG               -> Toast.makeText(context, "Stream config error", Toast.LENGTH_SHORT).show()
+    //                    // Opening errors
+    //                    // Close the camera or ask user to close another camera app that's using the camera
+    //                    CameraState.ERROR_CAMERA_IN_USE               -> Toast.makeText(context, "Camera in use", Toast.LENGTH_SHORT).show()
+    //                    // Close another open camera in the app,
+    //                    // or ask the user to close another camera app that's using the camera
+    //                    CameraState.ERROR_MAX_CAMERAS_IN_USE          -> Toast.makeText(context, "Max cameras in use", Toast.LENGTH_SHORT).show()
+    //                    CameraState.ERROR_OTHER_RECOVERABLE_ERROR     -> Toast.makeText(context, "Other recoverable error", Toast.LENGTH_SHORT).show()
+    //                    // Closing errors
+    //                    // Ask the user to enable the device's cameras
+    //                    CameraState.ERROR_CAMERA_DISABLED             -> Toast.makeText(context, "Camera disabled", Toast.LENGTH_SHORT).show()
+    //                    // Ask the user to reboot the device to restore camera function
+    //                    CameraState.ERROR_CAMERA_FATAL_ERROR          -> Toast.makeText(context, "Fatal error", Toast.LENGTH_SHORT).show()
+    //                    // Closed errors
+    //                    // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
+    //                    CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> Toast.makeText(context, "Do not disturb mode enabled", Toast.LENGTH_SHORT).show()
+    //                }
+    //            }
+    //        }
+    //    }
 
     /**
      *  [androidx.camera.core.ImageAnalysis.Builder] requires enum value of

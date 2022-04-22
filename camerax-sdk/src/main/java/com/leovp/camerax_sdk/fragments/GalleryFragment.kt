@@ -56,7 +56,7 @@ class GalleryFragment internal constructor() : Fragment() {
         // Walk through all files in the root directory
         // We reverse the order of the list to present the last photos first
         mediaList = rootDirectory.listFiles { file ->
-            EXTENSION_WHITELIST.contains(file.extension.toUpperCase(Locale.ROOT))
+            EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
         }?.sortedDescending()?.toMutableList() ?: mutableListOf()
     }
 
@@ -72,7 +72,7 @@ class GalleryFragment internal constructor() : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Checking media files list
+        // Checking media files list
         if (mediaList.isEmpty()) {
             fragmentGalleryBinding.deleteButton.isEnabled = false
             fragmentGalleryBinding.shareButton.isEnabled = false
@@ -123,12 +123,11 @@ class GalleryFragment internal constructor() : Fragment() {
 
             mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)?.let { mediaFile ->
 
-                AlertDialog.Builder(view.context, android.R.style.Theme_Material_Dialog)
+                AlertDialog.Builder(view.context)
                     .setTitle(getString(R.string.delete_title))
                     .setMessage(getString(R.string.delete_dialog))
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
-
                         // Delete current photo
                         mediaFile.delete()
 

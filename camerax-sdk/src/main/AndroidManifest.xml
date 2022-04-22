@@ -11,6 +11,8 @@
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
+    <!-- 具备摄像头 -->
+    <uses-feature android:name="android.hardware.camera.any" />
 
     <application>
         <activity android:name=".CameraXActivity"

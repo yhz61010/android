@@ -283,12 +283,9 @@ class CameraFragment : Fragment() {
     private fun bindCameraUseCases() {
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
-        LogContext.log.i(TAG, "Screen metrics: ${metrics.width} x ${metrics.height}")
-
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.i(TAG, "Preview aspect ratio: $screenAspectRatio")
-
         val rotation = fragmentCameraBinding.viewFinder.display.rotation
+        LogContext.log.i(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview aspect ratio: $screenAspectRatio | rotation=$rotation")
 
         // CameraProvider
         val cameraProvider = cameraProvider ?: throw IllegalStateException("Camera initialization failed.")
@@ -323,6 +320,8 @@ class CameraFragment : Fragment() {
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
+            // In our analysis, we care about the latest image
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             // The analyzer can then be assigned to the instance
             .also {

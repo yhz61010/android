@@ -26,7 +26,6 @@ import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
@@ -454,21 +453,21 @@ class CameraFragment : Fragment() {
 
         // --------------------
 
-        cameraUiContainerTopBinding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
-        cameraUiContainerTopBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
-//        adjustInsets()
-
-        cameraUiContainerTopBinding.btnGrid.setOnSingleClickListener { toggleGrid() }
-        cameraUiContainerTopBinding.btnFlash.setOnClickListener { showFlashLayer() }
-        cameraUiContainerTopBinding.btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
-        cameraUiContainerTopBinding.btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
-        cameraUiContainerTopBinding.btnFlashAuto.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_AUTO) }
-        cameraUiContainerTopBinding.btnTimer.setOnClickListener { showSelectTimerLayer() }
-        cameraUiContainerTopBinding.btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
-        cameraUiContainerTopBinding.btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
-        cameraUiContainerTopBinding.btnTimer10.setOnClickListener { closeTimerAndSelect(CameraTimer.S10) }
-        cameraUiContainerTopBinding.btnExposure.setOnClickListener { cameraUiContainerTopBinding.flExposure.visibility = View.VISIBLE }
-        cameraUiContainerTopBinding.flExposure.setOnClickListener { cameraUiContainerTopBinding.flExposure.visibility = View.GONE }
+        with(cameraUiContainerTopBinding) {
+            btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
+            btnGrid.setOnSingleClickListener { toggleGrid() }
+            groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+            btnFlash.setOnClickListener { showFlashLayer() }
+            btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
+            btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
+            btnFlashAuto.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_AUTO) }
+            btnTimer.setOnClickListener { showSelectTimerLayer() }
+            btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
+            btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
+            btnTimer10.setOnClickListener { closeTimerAndSelect(CameraTimer.S10) }
+            btnExposure.setOnClickListener { flExposure.visibility = View.VISIBLE }
+            flExposure.setOnClickListener { flExposure.visibility = View.GONE }
+        }
 
         // In the background, load latest photo taken (if any) for gallery thumbnail
         lifecycleScope.launch(Dispatchers.IO) {
@@ -622,37 +621,6 @@ class CameraFragment : Fragment() {
             else            -> Unit
         }
         cameraUiContainerTopBinding.tvCountDown.text = ""
-    }
-
-    /**
-     * This methods adds all necessary margins to some views based on window insets and screen orientation
-     */
-    private fun adjustInsets() {
-        activity?.window?.fitSystemWindows()
-        cameraUiContainerBottomBinding.cameraCaptureButton.onWindowInsets { view, windowInsets ->
-            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                view.bottomMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            } else {
-                view.endMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).right
-            }
-        }
-        cameraUiContainerTopBinding.btnTimer.onWindowInsets { view, windowInsets ->
-            view.topMargin = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-        }
-        cameraUiContainerTopBinding.llTimerOptions.onWindowInsets { view, windowInsets ->
-            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                view.topPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-            } else {
-                view.startPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).left
-            }
-        }
-        cameraUiContainerTopBinding.llFlashOptions.onWindowInsets { view, windowInsets ->
-            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                view.topPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-            } else {
-                view.startPadding = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).left
-            }
-        }
     }
 
     /**

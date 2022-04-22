@@ -22,6 +22,8 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.core.ImageCapture.Metadata
+import androidx.camera.extensions.ExtensionMode
+import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -102,6 +104,7 @@ class CameraFragment : Fragment() {
 
     // Selector showing which camera is selected (front or back)
     private var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var hdrCameraSelector: CameraSelector? = null
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -340,20 +343,20 @@ class CameraFragment : Fragment() {
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = cameraProvider.bindToLifecycle(this,
-                lensFacing, preview, imageCapture, imageAnalyzer).apply {
+                hdrCameraSelector ?: lensFacing, preview, imageCapture, imageAnalyzer).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {
-                    val lower = exposureCompensationRange.lower
-                    val upper = exposureCompensationRange.upper
-
+                    val lower: Float = exposureCompensationRange.lower.toFloat()
+                    val upper: Float = exposureCompensationRange.upper.toFloat()
                     cameraUiContainerTopBinding.sliderExposure.run {
-                        valueFrom = lower.toFloat()
-                        valueTo = upper.toFloat()
-                        stepSize = 1f
-                        value = exposureCompensationIndex.toFloat()
-
+                        LogContext.log.i(TAG, "Exposure[${lower}, $upper]=$exposureCompensationIndex")
+                        valueFrom = lower / 10f
+                        valueTo = upper / 10f
+                        stepSize = 1f / 10
+                        value = exposureCompensationIndex / 10f
                         addOnChangeListener { _, value, _ ->
-                            cameraControl.setExposureCompensationIndex(value.toInt())
+                            LogContext.log.i(TAG, "Exposure change to ${value * 10}")
+                            cameraControl.setExposureCompensationIndex((value * 10).toInt())
                         }
                     }
                 }
@@ -368,7 +371,30 @@ class CameraFragment : Fragment() {
     }
 
     private fun checkForHdrExtensionAvailability() {
-        // TODO("Not yet implemented")
+        // Create a Vendor Extension for HDR
+        val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(requireContext(), cameraProvider ?: return)
+        extensionsManagerFuture.addListener({
+            val extensionsManager = extensionsManagerFuture.get() ?: return@addListener
+            val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
+
+            // check for any extension availability
+            LogContext.log.i(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
+            LogContext.log.i(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
+            LogContext.log.i(TAG, "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
+            LogContext.log.i(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
+            LogContext.log.i(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
+            LogContext.log.i(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
+
+            // Check if the extension is available on the device
+            if (!isAvailable) {
+                // If not, hide the HDR button
+                cameraUiContainerTopBinding.btnHdr.visibility = View.GONE
+            } else if (hasHdr) {
+                // If yes, turn on if the HDR is turned on by the user
+                cameraUiContainerTopBinding.btnHdr.visibility = View.VISIBLE
+                hdrCameraSelector = extensionsManager.getExtensionEnabledCameraSelector(lensFacing, ExtensionMode.HDR)
+            }
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     private fun observeCameraState(cameraInfo: CameraInfo) {

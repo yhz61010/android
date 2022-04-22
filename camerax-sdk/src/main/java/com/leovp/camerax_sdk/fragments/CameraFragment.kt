@@ -141,7 +141,8 @@ class CameraFragment : Fragment() {
     }
 
     private lateinit var soundPool: SoundPool
-    private var soundIdCountdown: Int = 0
+    private var soundIdCountdown1: Int = 0
+    private var soundIdCountdown2: Int = 0
     private var soundIdShutter: Int = 0
 
     override fun onResume() {
@@ -193,17 +194,15 @@ class CameraFragment : Fragment() {
 
     private fun loadSounds() = lifecycleScope.launch(Dispatchers.IO) {
         soundPool = SoundPool.Builder()
-            .setMaxStreams(2)
+            .setMaxStreams(3)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setLegacyStreamType(AudioManager.STREAM_MUSIC)
                     .build()
             ).build().apply {
-                val countdownSoundId = load(requireContext(), R.raw.countdown, 1)
-                soundIdCountdown = countdownSoundId
-
-                val shutterSoundId = load(requireContext(), R.raw.camera_shutter, 1)
-                soundIdShutter = shutterSoundId
+                soundIdCountdown1 = load(requireContext(), R.raw.countdown, 1)
+                soundIdCountdown2 = load(requireContext(), R.raw.countdown, 1)
+                soundIdShutter = load(requireContext(), R.raw.camera_shutter, 1)
             }
     }
 
@@ -607,14 +606,16 @@ class CameraFragment : Fragment() {
     }
 
     private suspend fun startCountdown() = coroutineScope {
-        if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown, getSoundVolume())
+        // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
         // Show a timer based on user selection
         when (selectedTimer) {
             CameraTimer.S3  -> for (i in CameraTimer.S3.delay downTo 1) {
+                playSound(if (i % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }
             CameraTimer.S10 -> for (i in CameraTimer.S10.delay downTo 1) {
+                playSound(if (i % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }

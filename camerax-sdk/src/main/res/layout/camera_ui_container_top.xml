@@ -5,8 +5,8 @@
     android:id="@+id/camera_ui_container_top"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:background="@android:color/black"
-    android:layoutDirection="ltr">
+    android:layoutDirection="ltr"
+    tools:background="@android:color/black">
 
     <!--
     <View
@@ -76,11 +76,13 @@
         android:padding="@dimen/fab_margin"
         android:scaleType="centerInside"
         android:src="@drawable/ic_hdr_off"
+        android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/btnExposure"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btnFlash"
         app:layout_constraintTop_toTopOf="@id/btnFlash"
-        tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+        tools:ignore="ContentDescription,SpeakableTextPresentCheck"
+        tools:visibility="visible" />
 
     <ImageButton
         android:id="@+id/btnExposure"
@@ -154,8 +156,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        tools:visibility="visible"
-        app:constraint_referenced_ids="gridVertical1,gridVertical2,gridHorizontal1,gridHorizontal2" />
+        app:constraint_referenced_ids="gridVertical1,gridVertical2,gridHorizontal1,gridHorizontal2"
+        tools:visibility="visible" />
 
     <LinearLayout
         android:id="@+id/llTimerOptions"
@@ -246,11 +248,11 @@
         android:orientation="horizontal"
         android:padding="@dimen/double_margin"
         android:visibility="gone"
-        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
         <com.google.android.material.slider.Slider
             android:id="@+id/sliderExposure"
@@ -263,7 +265,8 @@
             android:paddingVertical="@dimen/double_margin"
             android:progressBackgroundTint="@android:color/white"
             android:value="0"
-            app:haloColor="@color/cameraXColorAccent" app:thumbColor="@color/cameraXColorAccent" />
+            app:haloColor="@color/cameraXColorAccent"
+            app:thumbColor="@color/cameraXColorAccent" />
     </FrameLayout>
 
     <TextView

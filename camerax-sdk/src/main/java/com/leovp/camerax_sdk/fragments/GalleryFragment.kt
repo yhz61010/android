@@ -1,13 +1,11 @@
 package com.leovp.camerax_sdk.fragments
 
-import android.content.Intent
 import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -18,6 +16,7 @@ import androidx.navigation.fragment.navArgs
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentGalleryBinding
 import com.leovp.lib_common_android.exts.padWithDisplayCutout
+import com.leovp.lib_common_android.exts.share
 import com.leovp.lib_common_android.exts.showImmersive
 import java.io.File
 import java.util.*
@@ -98,31 +97,14 @@ class GalleryFragment internal constructor() : Fragment() {
         // Handle share button press
         fragmentGalleryBinding.shareButton.setOnClickListener {
             mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)?.let { mediaFile ->
-
-                // Create a sharing intent
-                val intent = Intent().apply {
-                    // Infer media type from file extension
-                    val mediaType = MimeTypeMap.getSingleton()
-                        .getMimeTypeFromExtension(mediaFile.extension)
-                    // Get URI from our FileProvider implementation
-                    val uri = FileProvider.getUriForFile(view.context, view.context.packageName + ".provider", mediaFile)
-                    // Set the appropriate intent extra, type, action and flags
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    type = mediaType
-                    action = Intent.ACTION_SEND
-                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                }
-
-                // Launch the intent letting the user choose which app to share with
-                startActivity(Intent.createChooser(intent, getString(R.string.share_hint)))
+                val uri = FileProvider.getUriForFile(view.context, view.context.packageName + ".provider", mediaFile)
+                share(uri, getString(R.string.share_hint))
             }
         }
 
         // Handle delete button press
         fragmentGalleryBinding.deleteButton.setOnClickListener {
-
             mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)?.let { mediaFile ->
-
                 AlertDialog.Builder(view.context)
                     .setTitle(getString(R.string.delete_title))
                     .setMessage(getString(R.string.delete_dialog))

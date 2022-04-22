@@ -34,7 +34,7 @@
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_bottom.xml" value="0.5" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.4527777777777778" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
-        <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5765625" />
+        <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />

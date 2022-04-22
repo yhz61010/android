@@ -456,7 +456,7 @@ class CameraFragment : Fragment() {
 
         cameraUiContainerTopBinding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
         cameraUiContainerTopBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
-        adjustInsets()
+//        adjustInsets()
 
         cameraUiContainerTopBinding.btnGrid.setOnSingleClickListener { toggleGrid() }
         cameraUiContainerTopBinding.btnFlash.setOnClickListener { showFlashLayer() }

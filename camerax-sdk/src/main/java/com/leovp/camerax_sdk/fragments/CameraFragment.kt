@@ -140,8 +140,9 @@ class CameraFragment : Fragment() {
         } ?: Unit
     }
 
-    private var soundIdCountdown: Int = 0
     private lateinit var soundPool: SoundPool
+    private var soundIdCountdown: Int = 0
+    private var soundIdShutter: Int = 0
 
     override fun onResume() {
         super.onResume()
@@ -200,7 +201,9 @@ class CameraFragment : Fragment() {
             ).build().apply {
                 val countdownSoundId = load(requireContext(), R.raw.countdown, 1)
                 soundIdCountdown = countdownSoundId
-                load(requireContext(), R.raw.countdown, 1)
+
+                val shutterSoundId = load(requireContext(), R.raw.camera_shutter, 1)
+                soundIdShutter = shutterSoundId
             }
     }
 
@@ -552,6 +555,7 @@ class CameraFragment : Fragment() {
                     }
 
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                        playSound(soundIdShutter, getSoundVolume())
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                         LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
 
@@ -593,15 +597,17 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun playCountdownSound(volume: Float) {
-        soundPool.play(soundIdCountdown, volume, volume, 1, 0, 1f)
+    private fun playSound(soundId: Int, volume: Float) {
+        soundPool.play(soundId, volume, volume, 1, 0, 1f)
+    }
+
+    private fun getSoundVolume(): Float {
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     }
 
     private suspend fun startCountdown() = coroutineScope {
-        if (CameraTimer.OFF != selectedTimer) {
-            val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            playCountdownSound(volume)
-        }
+        if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown, getSoundVolume())
         // Show a timer based on user selection
         when (selectedTimer) {
             CameraTimer.S3  -> for (i in CameraTimer.S3.delay downTo 1) {

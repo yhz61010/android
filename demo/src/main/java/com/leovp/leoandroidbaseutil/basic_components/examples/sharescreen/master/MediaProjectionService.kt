@@ -10,10 +10,10 @@ import android.media.projection.MediaProjectionManager
 import android.os.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.leovp.androidbase.exts.android.getBaseDirString
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.leoandroidbaseutil.basic_components.BasicFragment
+import com.leovp.lib_common_android.exts.getBaseDirString
 import com.leovp.lib_image.compressBitmap
 import com.leovp.lib_image.writeToFile
 import com.leovp.lib_json.toJsonString

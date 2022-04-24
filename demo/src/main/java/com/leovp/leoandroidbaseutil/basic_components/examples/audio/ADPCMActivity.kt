@@ -4,7 +4,6 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import com.leovp.androidbase.exts.android.createFile
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.base.AudioType
@@ -14,6 +13,7 @@ import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder
 import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.lib_common_android.exts.createFile
 import com.leovp.log_sdk.LogContext
 import java.io.BufferedOutputStream
 import java.io.FileInputStream

@@ -12,8 +12,8 @@ import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.R
-import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.utils.file.FileDocumentUtil
+import com.leovp.lib_common_android.exts.createImageFile
 import com.leovp.log_sdk.LogContext
 
 /**

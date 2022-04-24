@@ -14,6 +14,7 @@ import android.media.MediaScannerConnection
 import android.media.SoundPool
 import android.net.Uri
 import android.os.*
+import android.util.Log
 import android.view.*
 import android.webkit.MimeTypeMap
 import androidx.camera.core.*
@@ -32,6 +33,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import coil.load
 import coil.transform.CircleCropTransformation
+import com.google.common.util.concurrent.ListenableFuture
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
@@ -391,7 +393,21 @@ class CameraFragment : Fragment() {
                 val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
                     .setAutoCancelDuration(5, TimeUnit.SECONDS)
                     .build()
-                camera.cameraControl.startFocusAndMetering(action)
+                cameraUiContainerTopBinding.focusView.startFocus(event.x.toInt(), event.y.toInt())
+                val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
+                focusFuture.addListener({
+                    try {
+                        // 获取对焦结果
+                        val result = focusFuture.get() as FocusMeteringResult
+                        if (result.isFocusSuccessful) {
+                            cameraUiContainerTopBinding.focusView.focusSuccess()
+                        } else {
+                            cameraUiContainerTopBinding.focusView.focusFail()
+                        }
+                    } catch (e: java.lang.Exception) {
+                        Log.e(TAG, e.toString())
+                    }
+                }, ContextCompat.getMainExecutor(requireContext()))
             }
             view.performClick()
             true

@@ -269,6 +269,23 @@
             app:thumbColor="@color/cameraXColorAccent" />
     </FrameLayout>
 
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.leovp.camerax_sdk.ui.AutoFocusView
+            android:id="@+id/focus_view"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            app:focus_fail_id="@drawable/focus_focus_failed"
+            app:focus_focusing_id="@drawable/focus_focusing"
+            app:focus_success_id="@drawable/focus_focused" />
+    </FrameLayout>
+
     <TextView
         android:id="@+id/tvCountDown"
         android:layout_width="wrap_content"

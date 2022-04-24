@@ -3,8 +3,8 @@ package com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.Matrix
-import com.leovp.androidbase.exts.android.readAssetsFileAsString
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.lib_common_android.exts.readAssetsFileAsString
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.util.GLConstants.THREE_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl_sdk.util.createFloatBuffer

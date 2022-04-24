@@ -11,14 +11,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.os.Process
-import android.util.TypedValue
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.lib_common_android.exts.inputMethodManager
-import com.leovp.lib_exception.fail
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import kotlin.system.exitProcess
@@ -27,57 +24,6 @@ import kotlin.system.exitProcess
  * Author: Michael Leo
  * Date: 20-11-30 下午2:54
  */
-
-// TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
-// (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
-/**
- * Can I use [Resources.getSystem()] to get [Resources]?
- *
- * @return The return type is either `Int` or `Float`
- */
-inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T = px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
-
-/**
- * @return The return type is either `Int` or `Float`
- */
-inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
-    val result: Float = pxValue * 1.0f / displayMetrics.density + 0.5f
-    return when (T::class) {
-        Float::class -> result as T
-        Int::class   -> result.toInt() as T
-        else         -> fail("Type not supported")
-    }
-}
-
-/**
- * Can I use [Resources.getSystem()] to get [Resources]?
- *
- * @return The return type is either `Int` or `Float`
- */
-inline fun <reified T : Number> Resources.sp2px(spValue: Float): T = px(TypedValue.COMPLEX_UNIT_SP, spValue)
-
-/**
- * Converts an unpacked complex data value holding a dimension to its final floating point value.
- *
- * @param unit [TypedValue]
- * TypedValue.COMPLEX_UNIT_DIP: dp -> px
- * TypedValue.COMPLEX_UNIT_PT:  pt -> px
- * TypedValue.COMPLEX_UNIT_MM:  mm -> px
- * TypedValue.COMPLEX_UNIT_IN:  inch -> px
- *
- * Can I use [Resources.getSystem()] to get [Resources]?
- *
- * @return The return type is either `Int` or `Float`
- */
-@JvmOverloads
-inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT_DIP, value: Float): T {
-    val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
-    return when (T::class) {
-        Float::class -> result as T
-        Int::class   -> result.toInt() as T
-        else         -> fail("Type not supported")
-    }
-}
 
 /**
  * Get meta data in Activity or Application.<br></br>

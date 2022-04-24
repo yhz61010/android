@@ -27,7 +27,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.exts.android.computeExifOrientation
-import com.leovp.androidbase.exts.android.createImageFile
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -37,6 +36,7 @@ import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.CameraSurfaceView
+import com.leovp.lib_common_android.exts.createImageFile
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_exception.fail
 import com.leovp.log_sdk.LogContext

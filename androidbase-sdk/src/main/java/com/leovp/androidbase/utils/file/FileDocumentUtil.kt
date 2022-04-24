@@ -15,7 +15,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import androidx.core.content.FileProvider
-import com.leovp.androidbase.exts.android.fileExists
+import com.leovp.lib_common_android.exts.fileExists
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.io.FileOutputStream

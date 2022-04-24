@@ -20,9 +20,9 @@ class AutoFocusView(context: Context, attrs: AttributeSet? = null) : AppCompatIm
     init {
         visibility = GONE
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoFocusView)
-        focusImg = typedArray.getResourceId(R.styleable.AutoFocusView_focus_focusing_id, NO_ID)
-        focusSucceedImg = typedArray.getResourceId(R.styleable.AutoFocusView_focus_success_id, NO_ID)
-        focusFailedImg = typedArray.getResourceId(R.styleable.AutoFocusView_focus_fail_id, NO_ID)
+        focusImg = typedArray.getResourceId(R.styleable.AutoFocusView_focusingDrawable, NO_ID)
+        focusSucceedImg = typedArray.getResourceId(R.styleable.AutoFocusView_focusSuccessDrawable, NO_ID)
+        focusFailedImg = typedArray.getResourceId(R.styleable.AutoFocusView_focusFailDrawable, NO_ID)
         typedArray.recycle()
         if (focusImg == NO_ID || focusSucceedImg == NO_ID || focusFailedImg == NO_ID) {
             throw RuntimeException("Any focus images can not be null.")

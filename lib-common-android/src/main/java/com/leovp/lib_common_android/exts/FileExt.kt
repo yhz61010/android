@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.lib_common_android.exts
 
 import android.content.Context
 import android.os.Environment
@@ -6,7 +6,6 @@ import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 /**
  * Author: Michael Leo

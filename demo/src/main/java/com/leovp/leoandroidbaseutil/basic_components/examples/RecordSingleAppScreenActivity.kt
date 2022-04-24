@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import com.leovp.androidbase.exts.android.getBaseDirString
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.master.ScreenShareSetting
@@ -14,6 +13,7 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityScreenshotRecordH264Bind
 import com.leovp.lib_bytes.toHexString
 import com.leovp.lib_common_android.exts.densityDpi
 import com.leovp.lib_common_android.exts.getAvailableResolution
+import com.leovp.lib_common_android.exts.getBaseDirString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture

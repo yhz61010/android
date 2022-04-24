@@ -18,7 +18,7 @@ class AutoFocusView(context: Context, attrs: AttributeSet? = null) : AppCompatIm
     private val focusAnimation: Animation = AnimationUtils.loadAnimation(context, R.anim.focusview_show)
 
     init {
-        visibility = GONE
+        visibility = INVISIBLE
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoFocusView)
         focusImg = typedArray.getResourceId(R.styleable.AutoFocusView_focusingDrawable, NO_ID)
         focusSucceedImg = typedArray.getResourceId(R.styleable.AutoFocusView_focusSuccessDrawable, NO_ID)
@@ -33,23 +33,25 @@ class AutoFocusView(context: Context, attrs: AttributeSet? = null) : AppCompatIm
         if (focusImg == NO_ID || focusSucceedImg == NO_ID || focusFailedImg == NO_ID) {
             throw RuntimeException("Any focus images can not be null.")
         }
-        val params = layoutParams as FrameLayout.LayoutParams
-        params.topMargin = y - measuredHeight / 2
-        params.leftMargin = x - measuredWidth / 2
-        layoutParams = params
-        visibility = VISIBLE
         setImageResource(focusImg)
-        startAnimation(focusAnimation)
+        post {
+            visibility = VISIBLE
+            val params = layoutParams as FrameLayout.LayoutParams
+            params.leftMargin = x - width / 2
+            params.topMargin = y - height / 2
+            layoutParams = params
+            startAnimation(focusAnimation)
+        }
     }
 
     fun focusSuccess() {
         setImageResource(focusSucceedImg)
-        postDelayed({ visibility = GONE }, 600)
+        postDelayed({ visibility = GONE }, 500)
     }
 
     fun focusFail() {
         setImageResource(focusFailedImg)
-        postDelayed({ visibility = GONE }, 600)
+        postDelayed({ visibility = GONE }, 500)
     }
 
     companion object {

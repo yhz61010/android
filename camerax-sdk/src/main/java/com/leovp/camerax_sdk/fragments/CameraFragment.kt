@@ -14,7 +14,6 @@ import android.media.MediaScannerConnection
 import android.media.SoundPool
 import android.net.Uri
 import android.os.*
-import android.util.Log
 import android.view.*
 import android.webkit.MimeTypeMap
 import androidx.camera.core.*
@@ -393,19 +392,17 @@ class CameraFragment : Fragment() {
                 val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
                     .setAutoCancelDuration(5, TimeUnit.SECONDS)
                     .build()
-                cameraUiContainerTopBinding.focusView.startFocus(event.x.toInt(), event.y.toInt())
+                cameraUiContainerTopBinding.focusView.startFocus(event.rawX.toInt(), event.rawY.toInt())
                 val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
                 focusFuture.addListener({
-                    try {
-                        // 获取对焦结果
+                    runCatching {
+                        // Get focus result
                         val result = focusFuture.get() as FocusMeteringResult
                         if (result.isFocusSuccessful) {
                             cameraUiContainerTopBinding.focusView.focusSuccess()
                         } else {
                             cameraUiContainerTopBinding.focusView.focusFail()
                         }
-                    } catch (e: java.lang.Exception) {
-                        Log.e(TAG, e.toString())
                     }
                 }, ContextCompat.getMainExecutor(requireContext()))
             }

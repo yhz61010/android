@@ -281,9 +281,9 @@
             android:id="@+id/focus_view"
             android:layout_width="75dp"
             android:layout_height="75dp"
-            app:focus_fail_id="@drawable/focus_focus_failed"
-            app:focus_focusing_id="@drawable/focus_focusing"
-            app:focus_success_id="@drawable/focus_focused" />
+            app:focusFailDrawable="@drawable/focus_focus_failed"
+            app:focusSuccessDrawable="@drawable/focus_focused"
+            app:focusingDrawable="@drawable/focus_focusing" />
     </FrameLayout>
 
     <TextView

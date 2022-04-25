@@ -323,7 +323,7 @@ abstract class BaseCameraXFragment : Fragment() {
 
     companion object {
         internal const val TAG = "CameraXBasic"
-        internal const val FILENAME = "yyyyMMdd-HHmmss.SSS"
+        internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
 
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"

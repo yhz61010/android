@@ -1,0 +1,64 @@
+package com.leovp.camerax_sdk.utils
+
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.SoundPool
+import com.leovp.camerax_sdk.R
+import com.leovp.lib_common_android.exts.audioManager
+import com.leovp.lib_common_kotlin.utils.SingletonHolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * Author: Michael Leo
+ * Date: 2022/4/25 10:03
+ */
+class SoundManager private constructor(val ctx: Context) {
+    private lateinit var soundPool: SoundPool
+    var soundIdCountdown1: Int = 0
+    var soundIdCountdown2: Int = 0
+    var soundIdShutter: Int = 0
+
+    private val audioManager by lazy { ctx.audioManager }
+
+    suspend fun loadSounds() = withContext(Dispatchers.IO) {
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(3)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                    .build()
+            ).build().apply {
+                soundIdCountdown1 = load(ctx, R.raw.countdown, 1)
+                soundIdCountdown2 = load(ctx, R.raw.countdown, 1)
+                soundIdShutter = load(ctx, R.raw.camera_shutter, 1)
+            }
+    }
+
+    fun playShutterSound() {
+        playSound(soundIdShutter, getSoundVolume())
+    }
+
+    fun playTimerSound(times: Int) {
+        playSound(if (times % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
+    }
+
+    fun release() {
+        runCatching {
+            soundPool.autoPause()
+            soundPool.release()
+        }
+    }
+
+    private fun playSound(soundId: Int, volume: Float) {
+        soundPool.play(soundId, volume, volume, 1, 0, 1f)
+    }
+
+    private fun getSoundVolume(): Float {
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    }
+
+    companion object : SingletonHolder<SoundManager, Context>(::SoundManager)
+}

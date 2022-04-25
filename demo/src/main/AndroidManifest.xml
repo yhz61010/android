@@ -48,6 +48,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:rotationAnimation="seamless"
+            android:screenOrientation="userPortrait"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
+            tools:ignore="LockedOrientationActivity"
+            tools:targetApi="O">
+            <!-- Declare notch support -->
+            <meta-data android:name="android.notch_support"
+                android:value="true" />
+        </activity>
         <activity android:name=".jetpack_components.examples.navigation.NavigationMainActivity"
             android:exported="false" />
         <activity android:name=".basic_components.examples.opengl.OpenGLESPlaygroundActivity"

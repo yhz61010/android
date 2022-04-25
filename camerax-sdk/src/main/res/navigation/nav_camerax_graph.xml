@@ -17,7 +17,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/permissions_fragment">
+    app:startDestination="@id/camera_fragment">
 
     <fragment android:id="@+id/permissions_fragment"
         android:name="com.leovp.camerax_sdk.fragments.PermissionsFragment"

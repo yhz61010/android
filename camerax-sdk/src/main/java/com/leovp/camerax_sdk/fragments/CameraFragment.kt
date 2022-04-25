@@ -37,6 +37,7 @@ import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
+import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
 import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
@@ -66,6 +67,9 @@ class CameraFragment : BaseCameraXFragment() {
     private var _cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
     private val cameraUiContainerTopBinding get() = _cameraUiContainerTopBinding!!
     private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
+
+    var allowToOutputCaptureFile: Boolean = true
+    var captureImageListener: CaptureImageListener? = null
 
     // Selector showing is grid enabled or not
     private var hasGrid = false
@@ -351,33 +355,46 @@ class CameraFragment : BaseCameraXFragment() {
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
                 startCountdown()
-                captureImage(outputDirectory) { savedUri ->
-                    LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
 
-                    // We can only change the foreground Drawable using API level 23+ API
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        // Update the gallery thumbnail with latest picture taken
-                        setGalleryThumbnail(savedUri)
-                    }
+                // Get a stable reference of the modifiable image capture use case
+                imageCapture?.let { imageCapture ->
+                    if (allowToOutputCaptureFile) {
+                        captureForOutputFile(imageCapture, outputDirectory) { savedUri ->
+                            LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
 
-                    // Implicit broadcasts will be ignored for devices running API level >= 24
-                    // so if you only target API level 24+ you can remove this statement
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                        @Suppress("DEPRECATION")
-                        // ACTION_NEW_PICTURE = "android.hardware.action.NEW_PICTURE"
-                        requireActivity().sendBroadcast(Intent("android.hardware.action.NEW_PICTURE", savedUri))
-                    }
+                            // We can only change the foreground Drawable using API level 23+ API
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                // Update the gallery thumbnail with latest picture taken
+                                setGalleryThumbnail(savedUri)
+                            }
 
-                    // If the folder selected is an external media directory, this is
-                    // unnecessary but otherwise other apps will not be able to access our
-                    // images unless we scan them using [MediaScannerConnection]
-                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
-                    MediaScannerConnection.scanFile(
-                        context,
-                        arrayOf(savedUri.toFile().absolutePath),
-                        arrayOf(mimeType)
-                    ) { _, uri ->
-                        LogContext.log.i(TAG, "Image capture scanned into media store: $uri")
+                            // Implicit broadcasts will be ignored for devices running API level >= 24
+                            // so if you only target API level 24+ you can remove this statement
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                @Suppress("DEPRECATION")
+                                // ACTION_NEW_PICTURE = "android.hardware.action.NEW_PICTURE"
+                                requireActivity().sendBroadcast(Intent("android.hardware.action.NEW_PICTURE", savedUri))
+                            }
+
+                            // If the folder selected is an external media directory, this is
+                            // unnecessary but otherwise other apps will not be able to access our
+                            // images unless we scan them using [MediaScannerConnection]
+                            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
+                            MediaScannerConnection.scanFile(
+                                context,
+                                arrayOf(savedUri.toFile().absolutePath),
+                                arrayOf(mimeType)
+                            ) { _, uri ->
+                                LogContext.log.i(TAG, "Image capture scanned into media store: $uri")
+                            }
+
+                            captureImageListener?.onSavedImageUri(savedUri)
+                        }
+                    } else {
+                        captureForBytes(imageCapture) { (imageBytes, width, height) ->
+                            LogContext.log.i(TAG, "Saved image bytes[${imageBytes.size}] $width x $height")
+                            captureImageListener?.onSavedImageBytes(imageBytes, width, height)
+                        }
                     }
                 }
 

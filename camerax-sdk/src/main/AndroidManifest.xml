@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.leovp.camerax_sdk">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.leovp.camerax_sdk">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -15,19 +13,6 @@
     <uses-feature android:name="android.hardware.camera.any" />
 
     <application>
-        <activity android:name=".CameraXActivity"
-            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
-            android:exported="false"
-            android:resizeableActivity="true"
-            android:rotationAnimation="seamless"
-            android:screenOrientation="userPortrait"
-            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
-            tools:targetApi="O">
-            <!-- Declare notch support -->
-            <meta-data android:name="android.notch_support"
-                android:value="true" />
-        </activity>
-
         <!-- FileProvider used to share photos with other apps -->
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

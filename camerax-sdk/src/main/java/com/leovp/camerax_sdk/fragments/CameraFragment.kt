@@ -26,6 +26,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -382,17 +383,28 @@ class CameraFragment : Fragment() {
             }
         }
 
-        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
+        val gestureListener: GestureDetector.SimpleOnGestureListener = object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                LogContext.log.i(TAG, "Double click to zoom.")
+                val zoomState: LiveData<ZoomState> =  camera.cameraInfo.zoomState
+                val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
+                val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
+                if (currentZoomRatio > minZoomRatio) {
+                    camera.cameraControl.setLinearZoom(0f)
+                } else {
+                    camera.cameraControl.setLinearZoom(0.5f)
+                }
+                return true
+            }
 
-        viewFinder.setOnTouchListener { view, event ->
-            scaleGestureDetector.onTouchEvent(event)
-            if (event.action == MotionEvent.ACTION_DOWN) {
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                LogContext.log.i(TAG, "Single tap to focus.")
                 val factory = viewFinder.meteringPointFactory
-                val point = factory.createPoint(event.x, event.y)
+                val point = factory.createPoint(e.x, e.y)
                 val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
                     .setAutoCancelDuration(5, TimeUnit.SECONDS)
                     .build()
-                cameraUiContainerTopBinding.focusView.startFocus(event.rawX.toInt(), event.rawY.toInt())
+                cameraUiContainerTopBinding.focusView.startFocus(e.rawX.toInt(), e.rawY.toInt())
                 val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
                 focusFuture.addListener({
                     runCatching {
@@ -405,7 +417,17 @@ class CameraFragment : Fragment() {
                         }
                     }
                 }, ContextCompat.getMainExecutor(requireContext()))
+                return true
             }
+        }
+
+
+        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
+        val gestureDetector = GestureDetector(viewFinder.context, gestureListener)
+
+        viewFinder.setOnTouchListener { view, event ->
+            scaleGestureDetector.onTouchEvent(event)
+            if (!scaleGestureDetector.isInProgress) gestureDetector.onTouchEvent(event)
             view.performClick()
             true
         }

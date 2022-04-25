@@ -8,10 +8,8 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
-import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaScannerConnection
-import android.media.SoundPool
 import android.net.Uri
 import android.os.*
 import android.view.*
@@ -41,7 +39,9 @@ import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.camerax_sdk.enums.CameraTimer
+import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
+import com.leovp.camerax_sdk.utils.SoundManager
 import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
@@ -78,6 +78,10 @@ class CameraFragment : Fragment() {
     private var _cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
     private val cameraUiContainerTopBinding get() = _cameraUiContainerTopBinding!!
     private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
+
+    private val soundManager by lazy { SoundManager.getInstance(requireContext()) }
+
+    var touchListener: CameraXTouchListener? = null
 
     // Selector showing is grid enabled or not
     private var hasGrid = false
@@ -143,11 +147,6 @@ class CameraFragment : Fragment() {
         } ?: Unit
     }
 
-    private lateinit var soundPool: SoundPool
-    private var soundIdCountdown1: Int = 0
-    private var soundIdCountdown2: Int = 0
-    private var soundIdShutter: Int = 0
-
     override fun onResume() {
         super.onResume()
         // Make sure that all permissions are still present, since the
@@ -161,10 +160,7 @@ class CameraFragment : Fragment() {
 
     override fun onDestroyView() {
         _fragmentCameraBinding = null
-        runCatching {
-            soundPool.autoPause()
-            soundPool.release()
-        }
+        soundManager.release()
         super.onDestroyView()
         // Shut down our background executor
         cameraExecutor.shutdown()
@@ -195,25 +191,11 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun loadSounds() = lifecycleScope.launch(Dispatchers.IO) {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(3)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                    .build()
-            ).build().apply {
-                soundIdCountdown1 = load(requireContext(), R.raw.countdown, 1)
-                soundIdCountdown2 = load(requireContext(), R.raw.countdown, 1)
-                soundIdShutter = load(requireContext(), R.raw.camera_shutter, 1)
-            }
-    }
-
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadPrefs()
-        loadSounds()
+        lifecycleScope.launch { soundManager.loadSounds() }
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -386,7 +368,7 @@ class CameraFragment : Fragment() {
         val gestureListener: GestureDetector.SimpleOnGestureListener = object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 LogContext.log.i(TAG, "Double click to zoom.")
-                val zoomState: LiveData<ZoomState> =  camera.cameraInfo.zoomState
+                val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
                 val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
                 val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
                 if (currentZoomRatio > minZoomRatio) {
@@ -646,7 +628,7 @@ class CameraFragment : Fragment() {
                     }
 
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                        playSound(soundIdShutter, getSoundVolume())
+                        soundManager.playShutterSound()
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                         LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
 
@@ -688,26 +670,17 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun playSound(soundId: Int, volume: Float) {
-        soundPool.play(soundId, volume, volume, 1, 0, 1f)
-    }
-
-    private fun getSoundVolume(): Float {
-        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
-                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-    }
-
     private suspend fun startCountdown() = coroutineScope {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
         // Show a timer based on user selection
         when (selectedTimer) {
             CameraTimer.S3  -> for (i in CameraTimer.S3.delay downTo 1) {
-                playSound(if (i % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
+                soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }
             CameraTimer.S10 -> for (i in CameraTimer.S10.delay downTo 1) {
-                playSound(if (i % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
+                soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }

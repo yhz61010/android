@@ -20,6 +20,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
+import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.SoundManager
 import com.leovp.lib_common_android.exts.getRealResolution
@@ -85,52 +86,52 @@ abstract class BaseCameraXFragment : Fragment() {
         super.onDestroyView()
     }
 
-    protected fun captureImage(outputDirectory: File, onImageSaved: (uri: Uri) -> Unit) {
-        // Get a stable reference of the modifiable image capture use case
-        imageCapture?.let { imageCapture ->
-            // Create output file to hold the image
-            val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
-
-            // Setup image capture metadata
-            val metadata = ImageCapture.Metadata().apply {
-                // Mirror image when using the front camera
-                isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
+    protected fun captureForBytes(imageCapture: ImageCapture, onImageSaved: (savedImage: CaptureImage) -> Unit) {
+        imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            override fun onCaptureSuccess(image: ImageProxy) {
+                val imageBuffer = image.planes[0].buffer
+                val width = image.width
+                val height = image.height
+                val imageBytes = ByteArray(imageBuffer.remaining()).apply { imageBuffer.get(this) }
+                // DO NOT forget for close Image object
+                image.close()
+                onImageSaved(CaptureImage(imageBytes, width, height))
             }
 
-            // Create output options object which contains file + metadata
-            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
-                .setMetadata(metadata)
-                .build()
+            override fun onError(exc: ImageCaptureException) {
+                LogContext.log.e(TAG, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
+            }
+        })
+    }
 
-            //                imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
-            //                    override fun onCaptureSuccess(image: ImageProxy) {
-            //                        val imageBuffer = image.planes[0].buffer
-            //                        val width = image.width
-            //                        val height = image.height
-            //                        val imageBytes = ByteArray(imageBuffer.remaining()).apply { imageBuffer.get(this) }
-            //                        // DO NOT forget for close Image object
-            //                        image.close()
-            //                    }
-            //
-            //                    override fun onError(exc: ImageCaptureException) {
-            //                        LogContext.log.e(TAG, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
-            //                    }
-            //                })
+    protected fun captureForOutputFile(imageCapture: ImageCapture, outputDirectory: File, onImageSaved: (uri: Uri) -> Unit) {
+        // Create output file to hold the image
+        val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
-            // Setup image capture listener which is triggered after photo has been taken
-            imageCapture.takePicture(
-                outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
-                    override fun onError(exc: ImageCaptureException) {
-                        LogContext.log.e(TAG, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
-                    }
-
-                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                        soundManager.playShutterSound()
-                        val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                        onImageSaved(savedUri)
-                    }
-                })
+        // Setup image capture metadata
+        val metadata = ImageCapture.Metadata().apply {
+            // Mirror image when using the front camera
+            isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
         }
+
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
+            .setMetadata(metadata)
+            .build()
+
+        // Setup image capture listener which is triggered after photo has been taken
+        imageCapture.takePicture(
+            outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    LogContext.log.e(TAG, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    soundManager.playShutterSound()
+                    val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                    onImageSaved(savedUri)
+                }
+            })
     }
 
     protected fun setUpCamera(callback: () -> Unit) {

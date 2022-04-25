@@ -1,0 +1,351 @@
+package com.leovp.camerax_sdk
+
+import android.content.Context
+import android.hardware.display.DisplayManager
+import android.net.Uri
+import android.os.Bundle
+import android.os.Environment
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.View
+import androidx.camera.core.*
+import androidx.camera.extensions.ExtensionMode
+import androidx.camera.extensions.ExtensionsManager
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
+import com.google.common.util.concurrent.ListenableFuture
+import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
+import com.leovp.camerax_sdk.listeners.CameraXTouchListener
+import com.leovp.camerax_sdk.utils.SoundManager
+import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.log_sdk.LogContext
+import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * Author: Michael Leo
+ * Date: 2022/4/25 10:26
+ */
+abstract class BaseCameraXFragment : Fragment() {
+    // Selector showing which camera is selected (front or back)
+    protected var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    protected var hdrCameraSelector: CameraSelector? = null
+    protected var preview: Preview? = null
+    protected var imageCapture: ImageCapture? = null
+    protected var imageAnalyzer: ImageAnalysis? = null
+    protected var camera: Camera? = null
+    protected var cameraProvider: ProcessCameraProvider? = null
+
+    //    abstract fun getPreviewView(): PreviewView
+    //    private val viewFinder: PreviewView by lazy { getPreviewView() }
+
+    /** Blocking camera operations are performed using this executor */
+    private lateinit var cameraExecutor: ExecutorService
+
+    protected var displayId: Int = -1
+    private val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
+    protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
+    protected var touchListener: CameraXTouchListener? = null
+
+    /** Returns true if the device has an available back camera. False otherwise */
+    protected fun hasBackCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
+
+    /** Returns true if the device has an available front camera. False otherwise */
+    protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        lifecycleScope.launch { soundManager.loadSounds() }
+
+        // Initialize our background executor
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        // Every time the orientation of device changes, update rotation for use cases
+        displayManager.registerDisplayListener(displayListener, null)
+    }
+
+    override fun onDestroyView() {
+        soundManager.release()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+        displayManager.unregisterDisplayListener(displayListener)
+        super.onDestroyView()
+    }
+
+    protected fun captureImage(outputDirectory: File, onImageSaved: (uri: Uri) -> Unit) {
+        // Get a stable reference of the modifiable image capture use case
+        imageCapture?.let { imageCapture ->
+            // Create output file to hold the image
+            val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
+
+            // Setup image capture metadata
+            val metadata = ImageCapture.Metadata().apply {
+                // Mirror image when using the front camera
+                isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
+            }
+
+            // Create output options object which contains file + metadata
+            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
+                .setMetadata(metadata)
+                .build()
+
+            //                imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            //                    override fun onCaptureSuccess(image: ImageProxy) {
+            //                        val imageBuffer = image.planes[0].buffer
+            //                        val width = image.width
+            //                        val height = image.height
+            //                        val imageBytes = ByteArray(imageBuffer.remaining()).apply { imageBuffer.get(this) }
+            //                        // DO NOT forget for close Image object
+            //                        image.close()
+            //                    }
+            //
+            //                    override fun onError(exc: ImageCaptureException) {
+            //                        LogContext.log.e(TAG, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
+            //                    }
+            //                })
+
+            // Setup image capture listener which is triggered after photo has been taken
+            imageCapture.takePicture(
+                outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                    override fun onError(exc: ImageCaptureException) {
+                        LogContext.log.e(TAG, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
+                    }
+
+                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                        soundManager.playShutterSound()
+                        val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                        onImageSaved(savedUri)
+                    }
+                })
+        }
+    }
+
+    protected fun setUpCamera(callback: () -> Unit) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraProviderFuture.addListener({
+            // CameraProvider
+            cameraProvider = cameraProviderFuture.get()
+
+            // Select lensFacing depending on the available cameras
+            lensFacing = when {
+                hasBackCamera()  -> CameraSelector.DEFAULT_BACK_CAMERA
+                hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
+                else             -> throw IllegalStateException("Back and front camera are unavailable")
+            }
+
+            callback()
+        }, ContextCompat.getMainExecutor(requireContext()))
+    }
+
+    /** Declare and bind preview, capture and analysis use cases */
+    protected fun bindCameraUseCases(rotation: Int, flashMode: Int) {
+        // Get screen metrics used to setup camera for full screen resolution
+        val metrics = requireContext().getRealResolution()
+        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+        LogContext.log.i(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview aspect ratio: $screenAspectRatio | rotation=$rotation")
+
+        // Preview
+        preview = Preview.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation
+            .setTargetRotation(rotation)
+            .build()
+
+        // ImageCapture
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            // Set capture flash
+            .setFlashMode(flashMode)
+            // We request aspect ratio but no resolution to match preview config, but letting
+            // CameraX optimize for whatever specific resolution best fits our use cases
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            .build()
+
+        // ImageAnalysis
+        imageAnalyzer = ImageAnalysis.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            // In our analysis, we care about the latest image
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            // The analyzer can then be assigned to the instance
+            .also {
+                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                    // Values returned from our analyzer are passed to the attached listener
+                    // We log image analysis results here - you should do something useful
+                    // instead!
+                    LogContext.log.v(TAG, "Average luminosity: $luma")
+                })
+            }
+    }
+
+    protected fun initCameraGesture(viewFinder: PreviewView, camera: Camera) {
+        val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
+                val delta = detector.scaleFactor
+                camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
+                LogContext.log.d(TAG, "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
+                return true
+            }
+        }
+
+        val gestureListener: GestureDetector.SimpleOnGestureListener = object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                LogContext.log.i(TAG, "Double click to zoom.")
+                val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
+                val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
+                val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
+                if (currentZoomRatio > minZoomRatio) {
+                    camera.cameraControl.setLinearZoom(0f)
+                } else {
+                    camera.cameraControl.setLinearZoom(0.5f)
+                }
+                return true
+            }
+
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                LogContext.log.i(TAG, "Single tap to focus.")
+                val factory = viewFinder.meteringPointFactory
+                val point = factory.createPoint(e.x, e.y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                    .build()
+                touchListener?.onStartFocusing(e.rawX, e.rawY)
+                val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
+                focusFuture.addListener({
+                    runCatching {
+                        // Get focus result
+                        val result = focusFuture.get() as FocusMeteringResult
+                        if (result.isFocusSuccessful) {
+                            touchListener?.onFocusSuccess()
+                        } else {
+                            touchListener?.onFocusFail()
+                        }
+                    }
+                }, ContextCompat.getMainExecutor(requireContext()))
+                return true
+            }
+        }
+
+        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
+        val gestureDetector = GestureDetector(viewFinder.context, gestureListener)
+
+        viewFinder.setOnTouchListener { view, event ->
+            scaleGestureDetector.onTouchEvent(event)
+            if (!scaleGestureDetector.isInProgress) gestureDetector.onTouchEvent(event)
+            view.performClick()
+            true
+        }
+    }
+
+    protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit) {
+        // Create a Vendor Extension for HDR
+        val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(requireContext(), cameraProvider ?: return)
+        extensionsManagerFuture.addListener({
+            val extensionsManager = extensionsManagerFuture.get() ?: return@addListener
+            val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
+
+            // check for any extension availability
+            LogContext.log.i(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
+            LogContext.log.i(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
+            LogContext.log.i(TAG, "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
+            LogContext.log.i(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
+            LogContext.log.i(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
+            LogContext.log.i(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
+
+            // Check if the extension is available on the device
+            if (!isAvailable) {
+                callback(false)
+            } else if (hasHdr) {
+                callback(true)
+                hdrCameraSelector = extensionsManager.getExtensionEnabledCameraSelector(lensFacing, ExtensionMode.HDR)
+            }
+        }, ContextCompat.getMainExecutor(requireContext()))
+    }
+
+    /**
+     * We need a display listener for orientation changes that do not trigger a configuration
+     * change, for example if we choose to override config change in manifest or for 180-degree
+     * orientation changes.
+     */
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
+            if (displayId == this@BaseCameraXFragment.displayId) {
+                LogContext.log.d(TAG, "Rotation changed: ${view.display.rotation}")
+                imageCapture?.targetRotation = view.display.rotation
+                imageAnalyzer?.targetRotation = view.display.rotation
+            }
+        } ?: Unit
+    }
+
+    /**
+     *  [androidx.camera.core.ImageAnalysis.Builder] requires enum value of
+     *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
+     *
+     *  Detecting the most suitable ratio for dimensions provided in @params by counting absolute
+     *  of preview ratio to one of the provided values.
+     *
+     *  @param width - preview width
+     *  @param height - preview height
+     *  @return suitable aspect ratio
+     */
+    private fun aspectRatio(width: Int, height: Int): Int {
+        val previewRatio = max(width, height).toDouble() / min(width, height)
+        if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
+            return AspectRatio.RATIO_4_3
+        }
+        return AspectRatio.RATIO_16_9
+    }
+
+    companion object {
+        internal const val TAG = "CameraXBasic"
+        internal const val FILENAME = "yyyyMMdd-HHmmss.SSS"
+
+        internal const val KEY_FLASH = "camerax-flash"
+        internal const val KEY_GRID = "camerax-grid"
+        internal const val KEY_HDR = "camerax-hdr"
+
+        /** Milliseconds used for UI animations */
+        internal const val ANIMATION_FAST_MILLIS = 50L
+        internal const val ANIMATION_SLOW_MILLIS = 100L
+        internal const val PHOTO_EXTENSION = ".jpg"
+        internal const val RATIO_4_3_VALUE = 4.0 / 3.0
+        internal const val RATIO_16_9_VALUE = 16.0 / 9.0
+
+        /** Helper function used to create a timestamped file */
+        internal fun createFile(baseFolder: File,
+            @Suppress("SameParameterValue") format: String,
+            @Suppress("SameParameterValue") extension: String) =
+                File(baseFolder, SimpleDateFormat(format, Locale.US)
+                    .format(System.currentTimeMillis()) + extension)
+
+        internal fun getOutputDirectory(context: Context): File {
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX").also {
+                if (!it.exists()) it.mkdirs()
+            }
+        }
+    }
+}

@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.android.startActivity
-import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.leoandroidbaseutil.ColorBaseAdapter
 import com.leovp.leoandroidbaseutil.R
+import com.leovp.leoandroidbaseutil.jetpack_components.examples.camerax.CameraXDemoActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.navigation.NavigationMainActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.RecyclerviewActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.RoomActivity
@@ -54,7 +54,7 @@ class JetpackFragment : Fragment() {
             Pair("Room", RoomActivity::class.java),
             Pair("Recyclerview", RecyclerviewActivity::class.java),
             Pair("Navigation", NavigationMainActivity::class.java),
-            Pair("CameraX", CameraXActivity::class.java),
+            Pair("CameraX", CameraXDemoActivity::class.java),
         )
 
         val colors = arrayOf(

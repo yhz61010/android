@@ -31,6 +31,7 @@ import com.leovp.log_sdk.base.ITAG
 class CameraXDemoActivity : CameraXActivity() {
     override fun allowToOutputCaptureFile() = true
 
+    /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
         override fun onSavedImageUri(savedUri: Uri) {
             LogContext.log.w(ITAG, "onSavedImageUri uri=$savedUri")

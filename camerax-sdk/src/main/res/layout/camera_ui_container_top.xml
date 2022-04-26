@@ -255,6 +255,55 @@
             tools:ignore="ContentDescription" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/llRatioOptions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/black"
+        android:elevation="3dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnRatio4v3"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_ratio_4v3"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btnRatio16v9"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_ratio_16v9"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btnRatio1v1"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_ratio_1v1"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btnRatioFull"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_ratio_full"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
+
     <FrameLayout
         android:id="@+id/flExposure"
         android:layout_width="0dp"

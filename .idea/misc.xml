@@ -12,12 +12,28 @@
         <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_baseline_grid_on_24.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_exposure.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_flash_auto.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_flash_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_flash_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_grid_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_grid_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_launcher_background.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9_on.xml" value="0.346" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1.xml" value="0.346" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_4v3.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_4v3_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_4v3_rm.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_9v16.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_9v16_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_full.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_full_on.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_standard.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_share.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.239" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_normal.xml" value="0.239" />
@@ -26,13 +42,14 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_10.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_3.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/menu_blur.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/layout-land/camera_ui_container.xml" value="0.178125" />
         <entry key="camerax-sdk/src/main/res/layout/activity_camerax_main.xml" value="0.5765625" />
         <entry key="camerax-sdk/src/main/res/layout/activity_main.xml" value="0.31666666666666665" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_bottom_container.xml" value="0.5911458333333334" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container.xml" value="0.31666666666666665" />
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_bottom.xml" value="0.5" />
-        <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.4527777777777778" />
+        <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.48504273504273504" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />

@@ -61,10 +61,25 @@
         android:padding="@dimen/fab_margin"
         android:scaleType="centerInside"
         android:src="@drawable/ic_flash_off"
-        app:layout_constraintEnd_toStartOf="@+id/btnHdr"
+        app:layout_constraintEnd_toStartOf="@+id/btnRatio"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btnGrid"
         app:layout_constraintTop_toTopOf="@id/btnGrid"
+        tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+
+    <ImageButton
+        android:id="@+id/btnRatio"
+        android:layout_width="@dimen/button_size_big"
+        android:layout_height="@dimen/button_size_big"
+        android:background="@android:color/transparent"
+        android:elevation="1dp"
+        android:padding="@dimen/fab_margin"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_ratio_4v3"
+        app:layout_constraintEnd_toStartOf="@+id/btnHdr"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnFlash"
+        app:layout_constraintTop_toTopOf="@id/btnFlash"
         tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -79,8 +94,8 @@
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/btnExposure"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnFlash"
-        app:layout_constraintTop_toTopOf="@id/btnFlash"
+        app:layout_constraintStart_toEndOf="@+id/btnRatio"
+        app:layout_constraintTop_toTopOf="@id/btnRatio"
         tools:ignore="ContentDescription,SpeakableTextPresentCheck"
         tools:visibility="visible" />
 

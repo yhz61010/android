@@ -155,6 +155,8 @@ class CameraFragment : BaseCameraXFragment() {
 
         // Wait for the views to be properly laid out
         fragmentCameraBinding.viewFinder.post {
+            val screenDimen = requireContext().getRealResolution()
+            outputCameraParameters(screenDimen.width, screenDimen.height)
             // Keep track of the display in which this view is attached
             displayId = fragmentCameraBinding.viewFinder.display.displayId
             // Build UI controls

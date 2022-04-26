@@ -14,6 +14,7 @@ import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
@@ -152,11 +153,12 @@ abstract class BaseCameraXFragment : Fragment() {
     }
 
     /** Declare and bind preview, capture and analysis use cases */
-    protected fun bindCameraUseCases(rotation: Int, flashMode: Int) {
+    protected fun bindCameraUseCases(previewView: PreviewView, rotation: Int, flashMode: Int) {
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.i(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview aspect ratio: $screenAspectRatio | rotation=$rotation")
+        LogContext.log.i(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
 
         // Preview
         preview = Preview.Builder()

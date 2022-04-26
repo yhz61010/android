@@ -219,7 +219,7 @@ class CameraFragment : BaseCameraXFragment() {
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
         val rotation = fragmentCameraBinding.viewFinder.display.rotation
-        bindCameraUseCases(rotation, flashMode)
+        bindCameraUseCases(fragmentCameraBinding.viewFinder, rotation, flashMode)
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {
                 // If yes, turn on if the HDR is turned on by the user

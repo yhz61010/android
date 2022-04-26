@@ -177,7 +177,7 @@ abstract class BaseCameraXFragment : Fragment() {
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.i(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+        LogContext.log.w(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
         (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
 
         // Preview
@@ -289,13 +289,13 @@ abstract class BaseCameraXFragment : Fragment() {
             val extensionsManager = extensionsManagerFuture.get() ?: return@addListener
             val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
 
-            // check for any extension availability
-            LogContext.log.i(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
-            LogContext.log.i(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
-            LogContext.log.i(TAG, "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
-            LogContext.log.i(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
-            LogContext.log.i(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
-            LogContext.log.i(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
+            // Check for any extension availability
+            LogContext.log.w(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
+            LogContext.log.w(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
+            LogContext.log.w(TAG, "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
+            LogContext.log.w(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
+            LogContext.log.w(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
+            LogContext.log.w(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
 
             // Check if the extension is available on the device
             if (!isAvailable) {

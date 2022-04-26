@@ -6,7 +6,6 @@ import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
 import android.media.MediaFormat
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Range
@@ -26,13 +25,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
-import com.leovp.camerax_sdk.utils.SoundManager
-import com.leovp.camerax_sdk.utils.getPreviewOutputSize
-import com.leovp.camerax_sdk.utils.getSupportedColorFormatForEncoder
-import com.leovp.camerax_sdk.utils.getSupportedProfileLevelsForEncoder
-import com.leovp.lib_common_android.exts.getAvailableResolution
+import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.getRealResolution
-import com.leovp.lib_common_android.exts.windowManager
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -71,16 +65,6 @@ abstract class BaseCameraXFragment : Fragment() {
     private val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
     protected var touchListener: CameraXTouchListener? = null
-
-    // Camera2 API supported the MAX width and height
-    private val cameraSupportedMaxPreviewWidth: Int by lazy {
-        val screenSize = requireContext().getAvailableResolution()
-        max(screenSize.width, screenSize.height)
-    }
-    private val cameraSupportedMaxPreviewHeight: Int by lazy {
-        val screenSize = requireContext().getAvailableResolution()
-        min(screenSize.width, screenSize.height)
-    }
 
     /** Returns true if the device has an available back camera. False otherwise */
     protected fun hasBackCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
@@ -346,68 +330,27 @@ abstract class BaseCameraXFragment : Fragment() {
     protected fun outputCameraParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-        val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+        val configMap = characteristics.getConfigMap()
 
-        val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+        val isFlashSupported = characteristics.isFlashSupported()
         // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
-        val hardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+        val hardwareLevel = characteristics.hardwareLevel()
         // Get camera supported fps. It will be used to create CaptureRequest
-        val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+        val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.supportedFpsRanges()
         val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
         val highSpeedVideoSizes = configMap.highSpeedVideoSizes
 
-        // Generally, if the device is in portrait(Surface.ROTATION_0),
-        // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
-        // Example: deviceRotation: 0
-        val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            requireContext().display?.rotation ?: -1
-        } else {
-            @Suppress("DEPRECATION")
-            requireContext().windowManager.defaultDisplay.rotation
-        }
-        // Example: cameraSensorOrientation: 90
-        val cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
-        var swapDimension = false
-        when (deviceRotation) {
-            Surface.ROTATION_0, Surface.ROTATION_180  -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
-                swapDimension = true
-            }
-            Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
-                swapDimension = true
-            }
-            else                                      -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
-        }
         val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
-
-        // The device is normally in portrait by default.
-        // Actually, the camera orientation is just 90 degree anticlockwise.
-        var cameraWidth = desiredVideoHeight
-        var cameraHeight = desiredVideoWidth
-
-        // Landscape: true. Portrait: false
-        if (swapDimension) {
-            cameraWidth = desiredVideoWidth
-            cameraHeight = desiredVideoHeight
-        }
-        if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
-        if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
 
         // Calculate ImageReader input preview size from supported size list by camera.
         // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
         // Attention: The returned value is in camera orientation. NOT in device orientation.
-        val selectedSizeFromCamera: Size = getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
-        // Take care of the result value. It's in camera orientation.
-        // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
-        val previewSize: Size = if (swapDimension) {
-            Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width)
-        } else {
-            selectedSizeFromCamera
-        }
+        val previewSize: Size = getSpecificPreviewOutputSize(requireContext(), desiredVideoWidth, desiredVideoHeight, characteristics)
 
         val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
-         deviceRotation=$deviceRotation
-cameraSensorOrientation=$cameraSensorOrientation
+         deviceRotation=${requireContext().getDeviceRotation()}
+cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
        isFlashSupported=$isFlashSupported
           hardwareLevel=$hardwareLevel
 
@@ -424,8 +367,6 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
         allCameraSupportSize=${allCameraSupportSize?.contentToString()}
 
                Desired dimen=${desiredVideoWidth}x$desiredVideoHeight
-   After adjust camera dimen=${cameraWidth}x$cameraHeight
-selectedSizeFromCamera dimen=${selectedSizeFromCamera.width}x${selectedSizeFromCamera.height}
            previewSize dimen=${previewSize.width}x${previewSize.height}
         """.trimIndent()
         LogContext.log.w(TAG, cameraParametersString)

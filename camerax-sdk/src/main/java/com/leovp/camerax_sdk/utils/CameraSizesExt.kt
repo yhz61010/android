@@ -35,8 +35,13 @@ class SmartSize(width: Int, height: Int) {
     override fun toString() = "SmartSize(${long}x${short})"
 }
 
-/** Standard High Definition size for pictures and video */
-val SIZE_1080P: SmartSize = SmartSize(1920, 1080)
+/** Screen size for pictures and video */
+val SIZE_SD_576P: SmartSize = SmartSize(720, 576)
+val SIZE_HD_720P: SmartSize = SmartSize(1280, 720) // 16:9
+val SIZE_FHD_1080P: SmartSize = SmartSize(1920, 1080) // 16:9
+val SIZE_4K_UHD_2160P_TV: SmartSize = SmartSize(3840, 2160) // 16:9
+val SIZE_4K_DCI_2160P: SmartSize = SmartSize(4096, 2160) // Used by Digital Cinemas (DCI)
+val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(7680, 4320) // TV format in Japan from 2020 on
 
 /** Returns a [SmartSize] object for the given [Display] */
 fun getDisplaySmartSize(ctx: Context): SmartSize {
@@ -72,8 +77,8 @@ fun <T> getPreviewOutputSize(
 ): Size {
     val smartSize = getDisplaySmartSize(designSize)
     // Find which is smaller: designSize or 1080p
-    val hdScreen = smartSize.long >= SIZE_1080P.long || smartSize.short >= SIZE_1080P.short
-    val maxSize = if (hdScreen) SIZE_1080P else smartSize
+    val uhdScreen = smartSize.long >= SIZE_4K_UHD_2160P_TV.long || smartSize.short >= SIZE_4K_UHD_2160P_TV.short
+    val maxSize = if (uhdScreen) SIZE_4K_UHD_2160P_TV else smartSize
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!

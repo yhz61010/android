@@ -35,6 +35,7 @@ import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
+import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
@@ -79,6 +80,8 @@ class CameraFragment : BaseCameraXFragment() {
 
     // Selector showing is there any selected timer and it's value (3s or 10s)
     private var selectedTimer = CameraTimer.OFF
+
+    private var selectedRatio = CameraRatio.R4v3
 
     // Selector showing which flash mode is selected (on, off or auto)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
@@ -334,6 +337,11 @@ class CameraFragment : BaseCameraXFragment() {
             btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
             btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
             btnFlashAuto.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_AUTO) }
+            btnRatio.setOnClickListener { showRatioLayer() }
+            btnRatio4v3.setOnClickListener { closeRatioAndSelect(CameraRatio.R4v3) }
+            btnRatio16v9.setOnClickListener { closeRatioAndSelect(CameraRatio.R16v9) }
+            btnRatio1v1.setOnClickListener { closeRatioAndSelect(CameraRatio.R1v1) }
+            btnRatioFull.setOnClickListener { closeRatioAndSelect(CameraRatio.RFull) }
             btnTimer.setOnClickListener { showSelectTimerLayer() }
             btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
             btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
@@ -442,6 +450,8 @@ class CameraFragment : BaseCameraXFragment() {
         }
     }
 
+    private fun showRatioLayer() = cameraUiContainerTopBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
+
     private suspend fun startCountdown() = withContext(Dispatchers.Main) {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
         // Show a timer based on user selection
@@ -532,6 +542,20 @@ class CameraFragment : BaseCameraXFragment() {
             )
             imageCapture?.flashMode = flashMode
             prefs.putInt(KEY_FLASH, flashMode)
+        }
+    }
+
+    private fun closeRatioAndSelect(ratio: CameraRatio) {
+        cameraUiContainerTopBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
+            selectedRatio = ratio
+            cameraUiContainerTopBinding.btnRatio.setImageResource(
+                when (ratio) {
+                    CameraRatio.R4v3  -> R.drawable.ic_ratio_4v3
+                    CameraRatio.R16v9 -> R.drawable.ic_ratio_16v9
+                    CameraRatio.R1v1  -> R.drawable.ic_ratio_1v1
+                    CameraRatio.RFull -> R.drawable.ic_ratio_full
+                }
+            )
         }
     }
 }

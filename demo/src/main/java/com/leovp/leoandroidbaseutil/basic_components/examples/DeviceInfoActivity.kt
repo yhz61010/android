@@ -2,6 +2,7 @@ package com.leovp.leoandroidbaseutil.basic_components.examples
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
@@ -13,6 +14,8 @@ import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.utils.DeviceUtil
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {
 
@@ -50,11 +53,12 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
             }
         })
 
-        for (index in 0 until DeviceUtil.getInstance(this).cpuCoreCount) {
-            val coreInfo = DeviceUtil.getInstance(this).getCpuCoreInfoByIndex(index)
-            LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
+        lifecycleScope.launch(Dispatchers.IO) {
+            for (index in 0 until DeviceUtil.getInstance(this@DeviceInfoActivity).cpuCoreCount) {
+                val coreInfo = DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
+                LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
+            }
         }
-
 
         val sb: StringBuilder = StringBuilder()
         sb.append("=====> AVC <===============================")

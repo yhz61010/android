@@ -229,6 +229,8 @@ dependencies {
     implementation project(':androidbase-sdk')
     implementation project(':http-sdk')
     implementation project(':audio-sdk')
+    implementation project(':pref-sdk')
+    implementation project(':lib-json')
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
 //    implementation project(':ffmpeg-sdk')
 //    implementation project(':ffmpeg-javacpp-sdk')

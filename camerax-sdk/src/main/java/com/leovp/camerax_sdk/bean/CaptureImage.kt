@@ -1,9 +1,12 @@
 package com.leovp.camerax_sdk.bean
 
+import androidx.annotation.Keep
+
 /**
  * Author: Michael Leo
  * Date: 2022/4/25 14:33
  */
+@Keep
 data class CaptureImage(val imgBytes: ByteArray, val width: Int, val height: Int) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

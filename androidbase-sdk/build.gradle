@@ -82,8 +82,8 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
     api project(':log-sdk')
-    api project(':pref-sdk')
-    api project(':lib-json')
+//    api project(':pref-sdk')
+//    api project(':lib-json')
     api project(':lib-bytes')
     api project(':lib-image')
 //    api project(':lib-network')

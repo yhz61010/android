@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
+apply from: "$project.rootDir/jacoco.gradle"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -83,7 +84,7 @@ dependencies {
 
     api project(':log-sdk')
 //    api project(':pref-sdk')
-//    api project(':lib-json')
+    api project(':lib-json')
     api project(':lib-bytes')
     api project(':lib-image')
 //    api project(':lib-network')

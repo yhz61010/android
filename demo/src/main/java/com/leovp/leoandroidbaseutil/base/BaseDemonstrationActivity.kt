@@ -22,21 +22,27 @@ import com.leovp.log_sdk.LogContext
  * Author: Michael Leo
  * Date: 20-6-17 上午11:14
  */
-open class BaseDemonstrationActivity : AppCompatActivity() {
+abstract class BaseDemonstrationActivity : AppCompatActivity() {
+    abstract fun getTagName(): String
+
+    val tag by lazy { getTagName() }
+
     lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
 
     private val appLangChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
+            LogContext.log.e(tag, "=====> appLangChangeReceiver onReceive()")
             recreate()
         }
     }
 
     override fun attachBaseContext(base: Context) {
+        LogContext.log.e(tag, "=====> attachBaseContext setLocale()")
         super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        LogContext.log.i("onCreate()")
+        LogContext.log.i(tag, "onCreate()")
         super.onCreate(savedInstanceState)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
@@ -45,7 +51,7 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getInstance(this).getAppLanguage()
-        LogContext.log.i("Pref lang=$lang")
+        LogContext.log.i(tag, "Pref lang=$lang")
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -53,26 +59,26 @@ open class BaseDemonstrationActivity : AppCompatActivity() {
         return true
     }
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        return when (item.itemId) {
-//            R.id.home -> {
-//                finish()
-//                true
-//            }
-//            else -> super.onOptionsItemSelected(item)
-//        }
-//    }
+    //    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    //        return when (item.itemId) {
+    //            R.id.home -> {
+    //                finish()
+    //                true
+    //            }
+    //            else -> super.onOptionsItemSelected(item)
+    //        }
+    //    }
 
     /**
      * If you set `android:configChanges="orientation|screenSize"` for activity on `AndroidManifest`, this method will be called.
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
-        LogContext.log.i("onConfigurationChanged()")
+        LogContext.log.i(tag, "onConfigurationChanged()")
         super.onConfigurationChanged(newConfig)
     }
 
     override fun onDestroy() {
-        LogContext.log.i("onDestroy()")
+        LogContext.log.i(tag, "onDestroy()")
         LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
         super.onDestroy()
     }

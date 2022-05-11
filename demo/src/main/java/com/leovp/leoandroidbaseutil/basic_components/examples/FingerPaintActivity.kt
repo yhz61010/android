@@ -6,8 +6,10 @@ import android.view.View
 import android.widget.SeekBar
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityFingerPaintBinding
+import com.leovp.log_sdk.base.ITAG
 
 class FingerPaintActivity : BaseDemonstrationActivity(), SeekBar.OnSeekBarChangeListener, View.OnClickListener {
+    override fun getTagName(): String = ITAG
 
     private lateinit var binding: ActivityFingerPaintBinding
 

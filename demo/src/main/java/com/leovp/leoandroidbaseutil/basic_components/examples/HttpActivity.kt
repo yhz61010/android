@@ -28,6 +28,8 @@ import java.io.File
 
 
 class HttpActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityHttpBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

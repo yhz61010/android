@@ -5,12 +5,15 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.adb.base.LocalServerSocket
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlin.concurrent.thread
 
 /**
  * https://juejin.cn/post/6844903746464399367
  */
 class AdbCommunication : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adb_communication)

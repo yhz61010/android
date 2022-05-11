@@ -7,8 +7,10 @@ import com.leovp.androidbase.utils.system.KeepAlive
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class KeepAliveActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     private val keepAlive: KeepAlive by lazy {
         KeepAlive(application, R.raw.single_note30, 0.05f) {

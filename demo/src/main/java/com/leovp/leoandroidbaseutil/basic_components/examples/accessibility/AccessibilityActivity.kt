@@ -12,9 +12,12 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityAccessibilityBinding
 import com.leovp.lib_common_android.exts.id
+import com.leovp.log_sdk.base.ITAG
 import org.greenrobot.eventbus.EventBus
 
 class AccessibilityActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityAccessibilityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

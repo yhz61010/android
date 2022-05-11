@@ -55,6 +55,8 @@ import java.util.*
 
 
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         const val CMD_GRAPHIC_CSD: Int = 1
         const val CMD_GRAPHIC_DATA: Int = 2

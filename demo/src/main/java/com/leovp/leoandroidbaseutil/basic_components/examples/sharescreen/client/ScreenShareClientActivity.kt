@@ -58,6 +58,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
 class ScreenShareClientActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val CLICK_THRESHOLD = 8
     }

@@ -10,8 +10,11 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityAppSettingsBinding
 import com.leovp.lib_common_android.exts.packageUri
+import com.leovp.log_sdk.base.ITAG
 
 class AppSettingsActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityAppSettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

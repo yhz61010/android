@@ -19,8 +19,11 @@ import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.room.entity.Word
+import com.leovp.log_sdk.base.ITAG
 
 class RoomActivity : BaseDemonstrationActivity() {
+
+    override fun getTagName(): String = ITAG
 
     private lateinit var wordViewModel: WordViewModel
 

@@ -7,6 +7,7 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.cipher.AESUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.base.ITAG
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -14,6 +15,8 @@ import java.io.FileOutputStream
 import javax.crypto.SecretKey
 
 class AudioCipherActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
     }

@@ -22,6 +22,8 @@ import com.leovp.log_sdk.base.ITAG
  */
 class NetworkMonitorActivity : BaseDemonstrationActivity() {
 
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityNetworkMonitorBinding
 
     private lateinit var networkMonitor: NetworkMonitor

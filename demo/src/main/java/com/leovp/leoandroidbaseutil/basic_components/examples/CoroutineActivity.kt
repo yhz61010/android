@@ -10,6 +10,7 @@ import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
 class CoroutineActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     private val mainScope = MainScope()
 

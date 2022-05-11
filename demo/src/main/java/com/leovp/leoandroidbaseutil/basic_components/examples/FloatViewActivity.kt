@@ -15,9 +15,12 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityFloatViewBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.util.*
 
 class FloatViewActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityFloatViewBinding
 
     @SuppressLint("SetTextI18n")

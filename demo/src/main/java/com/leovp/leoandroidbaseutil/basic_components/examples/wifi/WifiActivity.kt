@@ -43,6 +43,8 @@ import com.leovp.log_sdk.base.ITAG
  * There is a new developer option to toggle the throttling off for local testing (under Developer Options > Networking > Wi-Fi scan throttling).
  */
 class WifiActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private var _binding: ActivityWifiBinding? = null
     private val binding get() = _binding!!
 

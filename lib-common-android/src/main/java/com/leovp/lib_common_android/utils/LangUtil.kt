@@ -118,7 +118,7 @@ class LangUtil private constructor(private val ctx: Context) {
     private fun updateResources(context: Context, targetLocale: Locale): Context {
         val res: Resources = context.resources
         val conf = res.configuration
-        // There two line codes(although they have already deprecated) are the magic.
+        // These two lines(although they have already deprecated) are the magic.
         // If I comment them, the text string in Service will not be shown in correct language.
         conf.locale = targetLocale
         res.updateConfiguration(conf, res.displayMetrics)

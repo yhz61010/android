@@ -1,9 +1,7 @@
 package com.leovp.demo.base
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.MotionEvent
@@ -11,12 +9,14 @@ import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LogContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
 /**
  * Author: Michael Leo
@@ -27,14 +27,15 @@ abstract class BaseDemonstrationActivity : AppCompatActivity() {
 
     val tag by lazy { getTagName() }
 
-    lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
+    class LangChangeEvent
 
-    private val appLangChangeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent?) {
-            LogContext.log.e(tag, "=====> appLangChangeReceiver onReceive()")
-            recreate()
-        }
+    @Suppress("unused")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onLangChangedEvent(@Suppress("UNUSED_PARAMETER") event: LangChangeEvent) {
+        recreate()
     }
+
+    lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
 
     override fun attachBaseContext(base: Context) {
         LogContext.log.e(tag, "=====> attachBaseContext setLocale()")
@@ -44,12 +45,12 @@ abstract class BaseDemonstrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")
         super.onCreate(savedInstanceState)
+        EventBus.getDefault().register(this)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = intent.getStringExtra("title")
         simpleActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
             toast("Result in BaseActivity: ${result.resultCode}")
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
         val lang = LangUtil.getInstance(this).getAppLanguage()
         LogContext.log.i(tag, "Pref lang=$lang")
     }
@@ -79,7 +80,7 @@ abstract class BaseDemonstrationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         LogContext.log.i(tag, "onDestroy()")
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
+        EventBus.getDefault().unregister(this)
         super.onDestroy()
     }
 

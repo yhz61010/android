@@ -35,7 +35,6 @@ dependencies {
     implementation "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
     api project(':lib-common-kotlin')
     api project(':lib-exception')
-    api "androidx.localbroadcastmanager:localbroadcastmanager:$rootProject.ext.localbroadcastVersion"
 }
 
 afterEvaluate {

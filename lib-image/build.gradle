@@ -2,7 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
-apply from: "$project.rootDir/jacoco.gradle"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion

@@ -7,13 +7,12 @@
 
     <fragment
         android:id="@+id/navigation_common"
-        android:name="com.leovp.leoandroidbaseutil.basic_components.BasicFragment"
+        android:name="com.leovp.demo.basic_components.BasicFragment"
         android:label="@string/title_common"
         tools:layout="@layout/fragment_basic" />
 
-    <fragment
-        android:id="@+id/navigation_jetpack"
-        android:name="com.leovp.leoandroidbaseutil.jetpack_components.JetpackFragment"
+    <fragment android:id="@+id/navigation_jetpack"
+        android:name="com.leovp.demo.jetpack_components.JetpackFragment"
         android:label="@string/title_jetpack"
         tools:layout="@layout/fragment_jetpack" />
 

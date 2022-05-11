@@ -9,8 +9,8 @@ import android.os.IBinder
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.ILocalLogService
-import com.leovp.leoandroidbaseutil.basic_components.examples.aidl.model.LocalLog
+import com.leovp.demo.basic_components.examples.aidl.ILocalLogService
+import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
 
@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         // Intent action is configured in AndroidManifest.xml
         val intent = Intent("service.name")
         // It's necessary on Android 5.0+
-        intent.setPackage("com.leovp.leoandroidbaseutil")
+        intent.setPackage("com.leovp.demo")
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 

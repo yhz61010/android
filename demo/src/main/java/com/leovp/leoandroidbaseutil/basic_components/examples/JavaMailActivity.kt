@@ -22,6 +22,8 @@ import javax.mail.internet.MimeMultipart
 
 
 class JavaMailActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val TO = "t@leovp.com"
         private const val FROM = "t@leovp.com"

@@ -17,6 +17,8 @@ import com.leovp.log_sdk.base.ITAG
  * ```
  */
 class LogActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log)

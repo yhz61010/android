@@ -6,9 +6,12 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityViewAnimBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.log_sdk.base.ITAG
 
 
 class ViewAnimActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityViewAnimBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

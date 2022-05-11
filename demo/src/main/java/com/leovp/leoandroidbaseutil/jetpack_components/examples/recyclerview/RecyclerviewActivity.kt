@@ -22,9 +22,12 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityRecyclerviewBinding
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SimpleAdapter
 import com.leovp.leoandroidbaseutil.jetpack_components.examples.recyclerview.base.SimpleItemTouchCallback
+import com.leovp.log_sdk.base.ITAG
 
 
 class RecyclerviewActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityRecyclerviewBinding
 
     private lateinit var simpleAdapter: SimpleAdapter

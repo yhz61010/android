@@ -1,3 +1,6 @@
+// Add the following line in your module, if you want to generate code coverage report by jacoco.
+// apply from: "$project.rootDir/jacoco.gradle"
+
 // ********************
 // https://gist.github.com/huuphuoc1396/497c27c1fac205f5d9c6696016227e1c
 //

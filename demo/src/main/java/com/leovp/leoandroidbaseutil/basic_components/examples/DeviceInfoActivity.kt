@@ -14,10 +14,12 @@ import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.utils.DeviceUtil
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DeviceInfoActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     private lateinit var binding: ActivityDeviceInfoBinding
 

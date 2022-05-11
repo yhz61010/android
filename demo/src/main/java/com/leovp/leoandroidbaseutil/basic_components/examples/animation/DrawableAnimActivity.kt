@@ -5,9 +5,12 @@ import android.os.Bundle
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityDrawableAnimBinding
+import com.leovp.log_sdk.base.ITAG
 
 
 class DrawableAnimActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityDrawableAnimBinding.inflate(layoutInflater).apply { setContentView(root) }

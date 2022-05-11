@@ -16,8 +16,11 @@ import com.leovp.lib_common_android.exts.navigationBarHeight
 import com.leovp.lib_common_android.exts.statusBarHeight
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class MainActivity : BaseDemonstrationActivity() {
+
+    override fun getTagName(): String = ITAG
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

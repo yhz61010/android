@@ -5,8 +5,11 @@ import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityAnimationBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.log_sdk.base.ITAG
 
 class AnimationActivity : BaseDemonstrationActivity() {
+
+    override fun getTagName(): String = ITAG
 
     private lateinit var binding: ActivityAnimationBinding
 

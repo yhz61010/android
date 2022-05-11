@@ -6,10 +6,13 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.lib_image.writeToFile
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.io.File
 
 class TakeScreenshotActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_take_screenshot)

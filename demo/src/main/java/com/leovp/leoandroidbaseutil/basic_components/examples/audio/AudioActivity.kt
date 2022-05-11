@@ -19,6 +19,7 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.audio.sender.Audio
 import com.leovp.leoandroidbaseutil.databinding.ActivityAudioBinding
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +30,8 @@ import java.io.FileOutputStream
 import java.net.URI
 
 class AudioActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val TAG = "AudioActivity"
 

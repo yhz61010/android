@@ -15,6 +15,7 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothServerBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.util.*
 
 /**
@@ -26,6 +27,8 @@ import java.util.*
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
 class BluetoothServerActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val SERVER_NAME = "Leo_BLE_Server"
 

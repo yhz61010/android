@@ -9,6 +9,8 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 class ClipboardActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityClipboardBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

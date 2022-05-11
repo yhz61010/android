@@ -7,6 +7,7 @@ import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.socket_sdk.eventbus.handler.EventBusHandler
 import com.leovp.socket_sdk.eventbus.util.EventBus
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
@@ -23,13 +24,19 @@ import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
 
 class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
+
+    override fun getTagName(): String = ITAG
+
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private var webSocket: EventBusBridgeSocketClient? = null

@@ -8,8 +8,11 @@ import android.widget.Button
 import android.widget.EditText
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.base.ITAG
 
 class NewWordActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var editWordView: EditText
 
     public override fun onCreate(savedInstanceState: Bundle?) {

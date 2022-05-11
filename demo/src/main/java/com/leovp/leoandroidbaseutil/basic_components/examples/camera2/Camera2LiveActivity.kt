@@ -19,10 +19,13 @@ import com.leovp.lib_common_android.exts.hideNavigationBar
 import com.leovp.lib_common_android.exts.requestFullScreenAfterVisible
 import com.leovp.lib_common_android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.io.File
 import java.io.FileOutputStream
 
 class Camera2LiveActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private val cameraViewFragment = Camera2LiveFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {

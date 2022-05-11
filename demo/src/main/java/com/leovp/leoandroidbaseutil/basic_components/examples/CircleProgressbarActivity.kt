@@ -11,6 +11,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityCircleProgressbarBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlin.concurrent.thread
 
 /**
@@ -18,6 +19,8 @@ import kotlin.concurrent.thread
  * Date: 2021/9/30 14:07
  */
 class CircleProgressbarActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityCircleProgressbarBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

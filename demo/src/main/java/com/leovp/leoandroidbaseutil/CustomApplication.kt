@@ -2,6 +2,7 @@ package com.leovp.leoandroidbaseutil
 
 import android.content.Context
 import android.content.res.Configuration
+import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.buildConfigInDebug
@@ -23,6 +24,9 @@ import org.koin.dsl.module
  * Date: 20-5-18 下午5:33
  */
 class CustomApplication : MultiDexApplication() {
+    companion object {
+        private const val TAG_PREFIX = "LEO"
+    }
 
     private val appModules = module {
         // single instance of HelloRepository
@@ -51,15 +55,17 @@ class CustomApplication : MultiDexApplication() {
 
         ForegroundComponent.init(this, 0L)
 
-        //        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE)
+        // InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE)
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
 
-        LogContext.setLogImp(LLog("LEO")) //        LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        // LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        LogContext.setLogImp(LLog(TAG_PREFIX))
         PrefContext.setPrefImp(LPref(this))
     }
 
     override fun attachBaseContext(base: Context) {
+        Log.e("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
         super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
         Reflection.unseal(base)
         MultiDex.install(this)
@@ -67,6 +73,7 @@ class CustomApplication : MultiDexApplication() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        Log.e("LEO-Application", "=====> onConfigurationChanged setLocale()")
         LangUtil.getInstance(this).setLocale(this)
     }
 }

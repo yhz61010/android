@@ -10,9 +10,12 @@ import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.*
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGles20Binding
+import com.leovp.log_sdk.base.ITAG
 import java.io.Serializable
 
 class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickListener {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityOpenGles20Binding
 
     private lateinit var simpleAdapter: ArrayAdapter<Item>

@@ -5,9 +5,12 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.basic_components.examples.ffmpeg.utils.DecodeH264RawFileByFFMpeg
 import com.leovp.lib_common_android.exts.saveRawResourceToFile
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.opengl_sdk.ui.LeoGLSurfaceView
 
 class FFMpegH264Activity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var glSurfaceView: LeoGLSurfaceView
     private val decodeObjByFFMpeg: DecodeH264RawFileByFFMpeg = DecodeH264RawFileByFFMpeg()
 

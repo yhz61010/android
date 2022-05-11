@@ -9,6 +9,7 @@ import com.leovp.leoandroidbaseutil.databinding.ActivitySocketServerBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.socket_sdk.framework.server.BaseNettyServer
 import com.leovp.socket_sdk.framework.server.BaseServerChannelInboundHandler
 import com.leovp.socket_sdk.framework.server.ServerConnectListener
@@ -29,9 +30,9 @@ import kotlinx.coroutines.launch
  * Date: 21-1-25 上午11:43
  */
 class SocketServerActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     companion object {
-        private const val TAG = "SocketServerActivity"
         private const val PORT = 10020
     }
 
@@ -45,19 +46,19 @@ class SocketServerActivity : BaseDemonstrationActivity() {
     @SuppressLint("SetTextI18n")
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
-            LogContext.log.i(TAG, "onStarted on port: $PORT")
+            LogContext.log.i(tag, "onStarted on port: $PORT")
             toast("onStarted on port: $PORT", debug = true)
             runOnUiThread { binding.txtResponse.text = "Server started on port: $PORT";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
-            LogContext.log.i(TAG, "onStop")
+            LogContext.log.i(tag, "onStop")
             toast("onStop", debug = true)
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
-            LogContext.log.i(TAG, "onClientConnected: ${clientChannel.remoteAddress()}")
+            LogContext.log.i(tag, "onClientConnected: ${clientChannel.remoteAddress()}")
             toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text = "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
@@ -66,13 +67,13 @@ class SocketServerActivity : BaseDemonstrationActivity() {
         }
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
-            LogContext.log.i(TAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
+            LogContext.log.i(tag, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data";binding.sv.fullScroll(View.FOCUS_DOWN) }
             socketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
-            LogContext.log.w(TAG, "onClientDisconnected: ${clientChannel.remoteAddress()}")
+            LogContext.log.w(tag, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text = "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
@@ -81,7 +82,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
         }
 
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
-            LogContext.log.w(TAG, "onFailed code: $code message: $msg")
+            LogContext.log.w(tag, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
             runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg";binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
@@ -94,7 +95,7 @@ class SocketServerActivity : BaseDemonstrationActivity() {
         binding.tvServerIp.text = NetworkUtil.getIp()[0]
 
         binding.btnStop.setOnSingleClickListener {
-            LogContext.log.d(TAG, "Stop button clicked.")
+            LogContext.log.d(tag, "Stop button clicked.")
             cs.launch {
                 if (::socketServer.isInitialized) socketServer.stopServer()
             }

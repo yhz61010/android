@@ -21,6 +21,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }

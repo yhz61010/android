@@ -15,12 +15,15 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
 class ADPCMActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     companion object {
         private const val OUTPUT_IMA_FILE_NAME = "raw_adpcm_ima_qt.raw"
         private const val AUDIO_SAMPLE_RATE = 44100

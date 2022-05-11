@@ -7,6 +7,7 @@ import android.view.animation.AccelerateInterpolator
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityPropertyAnimBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.log_sdk.base.ITAG
 import kotlin.random.Random
 
 /**
@@ -23,6 +24,8 @@ import kotlin.random.Random
  * CycleInterpolator 来回循环
  */
 class PropertyAnimActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityPropertyAnimBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

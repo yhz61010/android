@@ -12,11 +12,14 @@ import com.leovp.leoandroidbaseutil.basic_components.examples.opengl.renderers.b
 import com.leovp.leoandroidbaseutil.databinding.ActivityOpenGlesplaygroundBinding
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.lib_image.writeToFile
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.opengl_sdk.BaseRenderer
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityOpenGlesplaygroundBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

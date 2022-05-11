@@ -15,6 +15,7 @@ import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import org.greenrobot.eventbus.EventBus
 
 /**
  * Attention:
@@ -44,7 +45,9 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
                     LogContext.log.e(ITAG, "=====> MaterialAlertDialogBuilder setLocale()")
-                    langUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, langUtil.getLocale(langCode)!!, refreshUI = true)
+                    langUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, langUtil.getLocale(langCode)!!, refreshUI = true) { refreshUi ->
+                        if (refreshUi) EventBus.getDefault().post(LangChangeEvent())
+                    }
                     dlg.dismiss()
                 }
                 .show()

@@ -26,6 +26,7 @@ import java.io.FileOutputStream
 
 
 class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     companion object {
         val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265

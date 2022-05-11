@@ -6,11 +6,14 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityKoinBinding
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 
 class KoinActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityKoinBinding
 
     private val firstPresenter: MySimplePresenter by inject()

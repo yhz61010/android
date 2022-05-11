@@ -14,6 +14,7 @@ import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 /**
  * Attention:
@@ -22,6 +23,8 @@ import com.leovp.log_sdk.LogContext
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  */
 class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private val langUtil: LangUtil by lazy { LangUtil.getInstance(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +43,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setTitle(R.string.select_lang)
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
+                    LogContext.log.e(ITAG, "=====> MaterialAlertDialogBuilder setLocale()")
                     langUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, langUtil.getLocale(langCode)!!, refreshUI = true)
                     dlg.dismiss()
                 }
@@ -54,6 +58,7 @@ class ChangeAppTestService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun attachBaseContext(base: Context) {
+        LogContext.log.e(ITAG, "=====> ChangeAppTestService setLocale()")
         super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
     }
 

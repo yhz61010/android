@@ -6,8 +6,11 @@ import com.leovp.androidbase.exts.android.cancelToast
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
+import com.leovp.log_sdk.base.ITAG
 
 class ToastActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_toast)

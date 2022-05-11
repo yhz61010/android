@@ -9,6 +9,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityWebsocketClientBinding
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import com.leovp.socket_sdk.framework.client.BaseClientChannelInboundHandler
 import com.leovp.socket_sdk.framework.client.BaseNettyClient
 import com.leovp.socket_sdk.framework.client.ClientConnectListener
@@ -25,9 +26,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicInteger
 
 class WebSocketClientActivity : BaseDemonstrationActivity() {
-    companion object {
-        private const val TAG = "WebSocketClient"
-    }
+    override fun getTagName(): String = ITAG
 
     private lateinit var binding: ActivityWebsocketClientBinding
 
@@ -57,7 +56,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     }
 
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        LogContext.log.i(TAG, "onConnectClick at ${SystemClock.elapsedRealtime()}")
+        LogContext.log.i(tag, "onConnectClick at ${SystemClock.elapsedRealtime()}")
 
         // For none-ssl websocket or trust all certificates websocket, you can create just one socket object,
         // then disconnect it and connect it again for many times as you wish.
@@ -78,11 +77,11 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
             for (i in 1..1) {
                 ensureActive()
                 webSocketClient = createSocket()
-                LogContext.log.i(TAG, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
+                LogContext.log.i(tag, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
                 //                webSocketClient?.disconnectManually()
                 //                webSocketClient?.release()
-                //                LogContext.log.i(TAG, "= released ================================================================================")
+                //                LogContext.log.i(tag, "= released ================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -111,8 +110,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
-            LogContext.log.w(TAG, "onConnected")
-            LogContext.log.i(TAG, "- connected -------------------------------------------------")
+            LogContext.log.w(tag, "onConnected")
+            LogContext.log.i(tag, "- connected -------------------------------------------------")
             toast("onConnected", debug = true)
 
             // Reset retry counter
@@ -121,18 +120,18 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
-            LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
+            LogContext.log.i(tag, "onReceivedData: ${data?.toJsonString()}")
             runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
         }
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
-            LogContext.log.w(TAG, "onDisconnected byRemote=$byRemote")
-            LogContext.log.i(TAG, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            LogContext.log.w(tag, "onDisconnected byRemote=$byRemote")
+            LogContext.log.i(tag, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             toast("onDisconnected byRemote=$byRemote", debug = true)
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
-            LogContext.log.w(TAG, "onFailed code: $code e=$e message: $msg")
+            LogContext.log.w(tag, "onFailed code: $code e=$e message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
 
             if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
@@ -141,21 +140,21 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
                 || code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
             ) {
                 if (retryTimes.incrementAndGet() > constantRetry.getMaxTimes()) {
-                    LogContext.log.e(TAG, "===== Connect failed - Exceed max retry times. =====")
+                    LogContext.log.e(tag, "===== Connect failed - Exceed max retry times. =====")
                     toast("Exceed max retry times.", debug = true)
 
                     // Reset retry counter
                     retryTimes.set(0)
                 } else {
-                    LogContext.log.w(TAG, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
+                    LogContext.log.w(tag, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
                     cs.launch {
                         runCatching {
                             delay(constantRetry.getDelayInMillSec(retryTimes.get()))
                             ensureActive()
                             netty.release()
-                            LogContext.log.w(TAG, "= Start Reconnecting ===============================================================")
+                            LogContext.log.w(tag, "= Start Reconnecting ===============================================================")
                             webSocketClient = createSocket().apply { connect() }
-                        }.onFailure { LogContext.log.e(TAG, "Do retry failed.", it) }
+                        }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
                     } // launch
                 } // else
             } // if for exception

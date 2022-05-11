@@ -18,6 +18,8 @@ import kotlinx.coroutines.*
 
 class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
 
+    override fun getTagName(): String = ITAG
+
     private val uiScope = CoroutineScope(Dispatchers.Main + Job())
     private val decoderManager = DecodeH265RawFile()
 

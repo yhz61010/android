@@ -27,9 +27,12 @@ import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothScanBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 @SuppressLint("SetTextI18n")
 class BluetoothScanActivity : BaseDemonstrationActivity() {
+
+    override fun getTagName(): String = ITAG
 
     private var _binding: ActivityBluetoothScanBinding? = null
     private val binding get() = _binding!!

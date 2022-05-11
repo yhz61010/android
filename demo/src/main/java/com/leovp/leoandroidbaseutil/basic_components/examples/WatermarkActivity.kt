@@ -13,6 +13,8 @@ import com.leovp.log_sdk.base.ITAG
 
 
 class WatermarkActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityWatermarkBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

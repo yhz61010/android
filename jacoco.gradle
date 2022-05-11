@@ -7,8 +7,9 @@ jacoco {
     toolVersion = "$jacoco_version"
 }
 
-// Use the resolution strategy along with the version in the app.gradle. It will fix the issue.
-configurations.all{
+// Use the resolution strategy along with the version in the app.gradle.
+// It will fix the issue.
+configurations.all {
     resolutionStrategy {
         eachDependency { details ->
             if ('org.jacoco' == details.requested.group) {
@@ -52,9 +53,8 @@ def setupAndroidReporting() {
                 sourceName = "${productFlavorName}${buildTypeName.capitalize()}"
                 sourcePath = "${productFlavorName}/${buildTypeName}"
             }
-            System.out.println("sourceName -> $sourceName | sourcePath -> $sourcePath")
             def testTaskName = "test${sourceName.capitalize()}UnitTest"
-            System.out.println("Task -> $testTaskName")
+            System.out.println("sourceName -> $sourceName\nsourcePath -> $sourcePath\nTask -> $testTaskName\n--------------------")
 
             // Create coverage task of form 'testFlavorTypeCoverage' depending on 'testFlavorTypeUnitTest'
             task "${testTaskName}Coverage"(type: JacocoReport, dependsOn: "$testTaskName") {
@@ -103,8 +103,13 @@ def setupAndroidReporting() {
                 def javaTree = fileTree(dir: "${project.buildDir}/intermediates/javac/$sourceName/classes", excludes: fileFilter)
                 def kotlinTree = fileTree(dir: "${project.buildDir}/tmp/kotlin-classes/$sourceName", excludes: fileFilter)
                 classDirectories.from = files([javaTree], [kotlinTree])
-                executionData.from = files("${project.buildDir}/jacoco/${testTaskName}.exec")
-                System.out.println("project.buildDir=${project.buildDir} buildDir=$buildDir productFlavorName -> $productFlavorName | buildTypeName -> buildTypeName ")
+                def androidTestsData = fileTree(dir: "${project.buildDir}/outputs/code_coverage/${sourceName}AndroidTest/connected/", includes: ["**/*.ec"])
+//                System.out.println("androidTestsData=${androidTestsData}\nproject.buildDir=${project.buildDir}\nbuildDir=$buildDir\nproductFlavorName -> $productFlavorName | buildTypeName -> $buildTypeName")
+                executionData.from = files(([
+                        "${project.buildDir}/jacoco/${testTaskName}.exec",
+                        androidTestsData
+                ]))
+//                executionData.from = files("${project.buildDir}/jacoco/${testTaskName}.exec")
                 def coverageSourceDirs = ["src/main/java",
                                           "src/$productFlavorName/java",
                                           "src/$buildTypeName/java"]

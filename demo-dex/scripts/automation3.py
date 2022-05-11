@@ -2,7 +2,7 @@
 
 # Script (generated for Python 3.6+) to automate the configurations to show the screenshot on your
 # default web browser.
-# To get started, simply run : 'python ./automation.py'
+# To get started, simply run : 'python ./automation3.py'
 
 import subprocess
 import webbrowser

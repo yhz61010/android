@@ -3,13 +3,11 @@
 package com.leovp.lib_common_android.utils
 
 import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.RequiresApi
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.lib_common_android.exts.sharedPrefs
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.lib_exception.fail
@@ -33,6 +31,8 @@ import java.util.*
  *
  * **HOW TO USE**
  *
+ * **[EventBus](https://github.com/greenrobot/EventBus)** is needed.
+ *
  * Add these codes in your custom Application:
  * ```kotlin
  * override fun attachBaseContext(base: Context) {
@@ -48,10 +48,12 @@ import java.util.*
  * Add the following codes into your base activity:
  *
  * ```kotlin
- * private val appLangChangeReceiver = object : BroadcastReceiver() {
- *     override fun onReceive(context: Context, intent: Intent?) {
- *         recreate()
- *     }
+ * class LangChangeEvent
+ *
+ * @Suppress("unused")
+ * @Subscribe(threadMode = ThreadMode.MAIN)
+ * fun onLangChangedEvent(@Suppress("UNUSED_PARAMETER") event: LangChangeEvent) {
+ *     recreate()
  * }
  *
  * override fun attachBaseContext(base: Context) {
@@ -60,11 +62,11 @@ import java.util.*
  *
  * override fun onCreate(savedInstanceState: Bundle?) {
  *     super.onCreate(savedInstanceState)
- *     LocalBroadcastManager.getInstance(this).registerReceiver(appLangChangeReceiver, IntentFilter(LangUtil.INTENT_APP_LANG_CHANGE))
+ *     EventBus.getDefault().register(this)
  * }
  *
  * override fun onDestroy() {
- *     LocalBroadcastManager.getInstance(this).unregisterReceiver(appLangChangeReceiver)
+ *     EventBus.getDefault().unregister(this)
  *     super.onDestroy()
  * }
  * ```
@@ -78,7 +80,9 @@ import java.util.*
  *
  * When you want to change app language, it's easy:
  * ```kotlin
- * LangUtil.setLocale(context, LangUtil.getLocale("zh_CN")!!, refreshUI = true)
+ * LangUtil.setLocale(context, LangUtil.getLocale("zh_CN")!!, refreshUI = true) { refreshUi ->
+ *     if (refreshUi) EventBus.getDefault().post(LangChangeEvent())
+ * }
  * ```
  *
  * @param ctx Most of time, this context should be `Activity` context.
@@ -88,7 +92,6 @@ import java.util.*
  */
 class LangUtil private constructor(private val ctx: Context) {
     companion object : SingletonHolder<LangUtil, Context>(::LangUtil) {
-        const val INTENT_APP_LANG_CHANGE = "app-lang-change-broadcast"
         private const val PREF_KEY_LANGUAGE = "language"
     }
 
@@ -103,10 +106,10 @@ class LangUtil private constructor(private val ctx: Context) {
      * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
     @Synchronized
-    fun setLocale(ctx: Context, targetLocale: Locale = getAppLanguage(), refreshUI: Boolean = false): Context {
+    fun setLocale(ctx: Context, targetLocale: Locale = getAppLanguage(), refreshUI: Boolean = false, callback: ((Boolean) -> Unit)? = null): Context {
         saveLanguage(targetLocale)
         val context = updateResources(ctx, targetLocale)
-        if (refreshUI) LocalBroadcastManager.getInstance(ctx).sendBroadcast(Intent(INTENT_APP_LANG_CHANGE))
+        callback?.invoke(refreshUI)
         return context
     }
 

@@ -15,6 +15,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 /**
  *  Need following permissions:
@@ -25,6 +26,8 @@ import com.leovp.log_sdk.LogContext
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
 class BluetoothActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private var _binding: ActivityBluetoothBinding? = null
     private val binding get() = _binding!!
 

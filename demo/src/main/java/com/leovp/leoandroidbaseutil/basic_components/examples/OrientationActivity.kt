@@ -11,8 +11,11 @@ import com.leovp.leoandroidbaseutil.R
 import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 class OrientationActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     private lateinit var tvOrientation: TextView
     private lateinit var tvDirection: TextView
     private lateinit var tvRotationInDisplay: TextView

@@ -10,6 +10,7 @@ import com.leovp.leoandroidbaseutil.base.BaseDemonstrationActivity
 import com.leovp.leoandroidbaseutil.databinding.ActivityBluetoothClientBinding
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 
 /**
  * Steps:
@@ -36,6 +37,7 @@ import com.leovp.log_sdk.LogContext
  * @see [FAQ](https://www.jianshu.com/p/71116665fd08)
  */
 class BluetoothClientActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
 
     private var _binding: ActivityBluetoothClientBinding? = null
     private val binding get() = _binding!!

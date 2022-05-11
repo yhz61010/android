@@ -18,6 +18,8 @@ import kotlinx.coroutines.*
 
 class PlayH265VideoByMediaCodecActivity : BaseDemonstrationActivity() {
 
+    override fun getTagName(): String = ITAG
+
     private lateinit var binding: ActivityPlayVideoBinding
 
     private val uiScope = CoroutineScope(Dispatchers.Main + Job())

@@ -8,6 +8,8 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 class SaveInstanceStateActivity : BaseDemonstrationActivity() {
+    override fun getTagName(): String = ITAG
+
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.w(ITAG, "=====> onCreate <=====")
         super.onCreate(savedInstanceState)

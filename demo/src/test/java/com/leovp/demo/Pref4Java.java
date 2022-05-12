@@ -1,5 +1,7 @@
 package com.leovp.demo;
 
+import static org.koin.core.context.DefaultContextExtKt.stopKoin;
+
 import android.app.Application;
 import android.util.Log;
 
@@ -10,6 +12,7 @@ import com.leovp.log_sdk.LogContext;
 import com.leovp.pref_sdk.LPref;
 import com.leovp.pref_sdk.PrefContext;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +42,14 @@ public class Pref4Java {
 
     @Before
     public void setUp() {
+        stopKoin(); // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out;
         LogContext.INSTANCE.setLogImp(new LLog("LEO"));
+    }
+
+    @After
+    public void tearDown() {
+        stopKoin();
     }
 
     @Test

@@ -286,4 +286,12 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-annotations:$fasterxmlVersion"
 
     implementation "com.github.tiann:FreeReflection:$freeReflectionVersion"
+
+    // Net - dependencies - Start
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    implementation "com.github.liangjingkanji:Net:$netVersion"
+    // 支持自动下拉刷新和缺省页的(可选)
+    implementation "com.github.liangjingkanji:BRV:$brvVersion"
+    // Net - dependencies - End
 }

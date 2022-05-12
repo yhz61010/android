@@ -14,7 +14,6 @@ import com.leovp.http_sdk.retrofit.observers.NoProgressObserver
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.lib_common_android.exts.saveRawResourceToFile
 import com.leovp.lib_common_android.exts.toFile
-import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import io.reactivex.Observable
@@ -60,7 +59,7 @@ class HttpActivity : BaseDemonstrationActivity() {
     fun onGetClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
-                LogContext.log.w(ITAG, "Response bean=${t?.toJsonString()}")
+                LogContext.log.w(tag, "Response bean=$t")
                 binding.txtResult.text = t
             }
         }
@@ -73,12 +72,12 @@ class HttpActivity : BaseDemonstrationActivity() {
         binding.txtResult.text = "It will cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
-                LogContext.log.w(ITAG, "Response=$t")
+                LogContext.log.w(tag, "Response=$t")
                 binding.txtResult.text = t
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
+                LogContext.log.w(tag, "Request error. code=$code msg=$msg")
                 binding.txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
@@ -94,12 +93,12 @@ class HttpActivity : BaseDemonstrationActivity() {
         binding.txtResult.text = "It may cost several seconds. Please be patient..."
         val observer: ObserverOnNextListener<String> = object : ObserverOnNextListener<String?> {
             override fun onNext(t: String?) {
-                LogContext.log.w(ITAG, "Response=$t")
+                LogContext.log.w(tag, "Response=$t")
                 binding.txtResult.text = "Upload Done"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LogContext.log.w(ITAG, "Request error. code=$code msg=$msg")
+                LogContext.log.w(tag, "Request error. code=$code msg=$msg")
                 binding.txtResult.text = "Request error. code=$code msg=$msg"
             }
         }
@@ -133,12 +132,12 @@ class HttpActivity : BaseDemonstrationActivity() {
             override fun onNext(t: ResponseBody?) {
                 val filePath = this@HttpActivity.createFile("download.pdf").absolutePath
                 t!!.byteStream().toFile(filePath)
-                LogContext.log.w(ITAG, "Downloaded to $filePath")
+                LogContext.log.w(tag, "Downloaded to $filePath")
                 binding.txtResult.text = "Downloaded to $filePath"
             }
 
             override fun onError(code: Int, msg: String, e: Throwable) {
-                LogContext.log.w(ITAG, "Download error. code=$code msg=$msg")
+                LogContext.log.w(tag, "Download error. code=$code msg=$msg")
                 binding.txtResult.text = "Download error. code=$code msg=$msg"
             }
         }

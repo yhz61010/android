@@ -34,6 +34,7 @@ dependencies {
     api project(':log-sdk')
     api project(':lib-exception')
     api project(':lib-common-android')
+    implementation "androidx.annotation:annotation:$annotationVersion"
 }
 
 afterEvaluate {

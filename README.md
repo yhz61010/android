@@ -3,18 +3,24 @@
 [![AGP](https://img.shields.io/badge/AGP-7.1.3-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-7.4.2-green)](https://gradle.org)
 
-
 [![codebeat badge](https://codebeat.co/badges/e657f36f-48ab-466c-9dae-36da4241b675)](https://codebeat.co/projects/github-com-yhz61010-leoandroidbaseutilproject-kotlin-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin/badge)](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin)
 
+# Upload to bintray(Maven and jcenter)
+
+```sh
+./gradlew clean build bintrayUpload -PbintrayUser=yhz61010 -PbintrayKey=<Your API Key> -PdryRun=false
+```
+
+**You can get your API Key as following url [API Key](https://bintray.com/profile/edit)**
+
 # Known Issues
+
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~
-~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
-2. AudioReceiver
-In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
-3. FFMpegH264Activity & FFMpegH265Activity
-When you back to previously activity while playing video, it will crash caused by ffmpeg in following place:
-`h264_hevc_decoder_all_in_one_file.cpp` in `decode()` method, when calling `avcodec_send_packet`. 
+   ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
+2. AudioReceiver In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
+3. FFMpegH264Activity & FFMpegH265Activity When you back to previously activity while playing video, it will crash caused by ffmpeg in following place:
+   `h264_hevc_decoder_all_in_one_file.cpp` in `decode()` method, when calling `avcodec_send_packet`.
 
 # TODO List
 ~~1. Camera2Live~~(Solved)

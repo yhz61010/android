@@ -8,10 +8,12 @@ import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
 import com.leovp.pref_sdk.LPref
 import com.leovp.pref_sdk.PrefContext
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -31,8 +33,14 @@ class Pref4Kotlin {
 
     @Before
     fun setUp() {
+        stopKoin() // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out
         LogContext.setLogImp(LLog("LEO"))
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test

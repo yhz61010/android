@@ -1,5 +1,6 @@
 package com.leovp.androidbase.utils.device
 
+import android.Manifest
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -83,6 +84,7 @@ class WifiUtil private constructor(private val ctx: Context) {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getCurrentSsid(): String? {
         var ssid: String? = null
         val networkInfo: NetworkInfo? = ctx.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)

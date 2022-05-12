@@ -48,6 +48,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".basic_components.examples.NetActivity"
+            android:exported="false" />
         <activity android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="false"
@@ -57,6 +59,7 @@
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
             tools:ignore="LockedOrientationActivity"
             tools:targetApi="O">
+
             <!-- Declare notch support -->
             <meta-data android:name="android.notch_support"
                 android:value="true" />

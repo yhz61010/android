@@ -77,6 +77,7 @@ class BasicFragment : Fragment() {
             Pair("Audio Cipher", AudioCipherActivity::class.java),
             Pair("Coroutine", CoroutineActivity::class.java),
             Pair("HTTP Related", HttpActivity::class.java),
+            Pair("HTTP Net", NetActivity::class.java),
             Pair("Log", LogActivity::class.java),
             Pair("Clipboard", ClipboardActivity::class.java),
             Pair("SaveInstanceState", SaveInstanceStateActivity::class.java),

@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.6.21'
-    ext.coroutines_version = '1.6.1-native-mt'
+    ext.coroutines_version = '1.6.1'
     ext.gradle_plugin_version = '7.1.3'
     ext.java_version = JavaVersion.VERSION_11
     ext.jacoco_version = '0.8.8'
@@ -150,8 +150,8 @@ ext {
 
     annotationVersion = '1.3.0'
     nettyVersion = '4.1.70.Final'
-    okhttpVersion = '4.9.0'
-    koinVersion = '3.1.5'
+    okhttpVersion = '4.9.3'
+    koinVersion = '3.2.0'
 //    rxjava2RxjavaVersion = '2.2.21'
     rxjava2RxAndroidVersion = '2.1.1'
     retrofit2Version = '2.9.0'
@@ -174,5 +174,7 @@ ext {
     fasterxmlVersion = '2.13.2'
     freeReflectionVersion = '3.1.0'
     androidasyncVersion = '3.1.0'
-    coilKtVersion = '1.4.0'
+    coilKtVersion = '2.0.0'
+    netVersion = '3.4.6'
+    brvVersion = '1.3.62'
 }

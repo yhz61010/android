@@ -24,6 +24,7 @@ android {
             }
         }
     }
+    namespace 'com.leovp.demo_dex'
 }
 
 dependencies {

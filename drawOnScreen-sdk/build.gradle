@@ -27,6 +27,7 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
+    namespace 'com.leovp.drawonscreen'
 }
 
 dependencies {

@@ -26,6 +26,7 @@ android {
         sourceCompatibility "$rootProject.ext.java_version"
         targetCompatibility "$rootProject.ext.java_version"
     }
+    namespace 'com.leovp.socket_sdk'
 
 }
 

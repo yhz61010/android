@@ -46,6 +46,7 @@ android {
     lint {
         abortOnError false
     }
+    namespace 'com.leovp.androidbase'
 
 }
 

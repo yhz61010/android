@@ -80,6 +80,7 @@ android {
             ]
         }
     }
+    namespace 'com.leovp.yuv_sdk'
 }
 
 dependencies {

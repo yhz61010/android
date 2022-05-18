@@ -1,14 +1,14 @@
 buildscript {
     ext.kotlin_version = '1.6.21'
     ext.coroutines_version = '1.6.1'
-    ext.gradle_plugin_version = '7.1.3'
+    ext.gradle_plugin_version = '7.2.0'
     ext.java_version = JavaVersion.VERSION_11
     ext.jacoco_version = '0.8.8'
 
     ext.navVersion = '2.4.2'
     ext.sonarqube_version = '3.3'
 
-    ext.leoVersion = '5.3.5'
+    ext.leoVersion = '5.3.6'
 
     // ===============================
     // ===== Leo modules version =====
@@ -114,8 +114,8 @@ static def gitVersionTag() {
 }
 
 ext {
-    compileSdkVersion = 31
-    buildToolsVersion = "31.0.0"
+    compileSdkVersion = 32
+    buildToolsVersion = "32.0.0"
     // This version is just for JitPack
     ndkVersion = "21.1.6352462" // 22.1.7171670
 
@@ -144,7 +144,7 @@ ext {
     multidexVersion = '2.0.1'
     preferenceVersion = '1.2.0'
     roomVersion = '2.4.2'
-    cameraVersion = '1.1.0-beta03'
+    cameraVersion = '1.1.0-rc01'
     exifinterfaceVersion = '1.3.3'
     windowVersion = '1.0.0'
 
@@ -171,10 +171,10 @@ ext {
     javaMailVersion = '1.6.7'
     jzlibVersion = '1.1.3'
     bsonVersion = '2.13.1' // As of 2.13.0, you need add fasterxml jackson manually.
-    fasterxmlVersion = '2.13.2'
+    fasterxmlVersion = '2.13.3'
     freeReflectionVersion = '3.1.0'
     androidasyncVersion = '3.1.0'
-    coilKtVersion = '2.0.0'
+    coilKtVersion = '2.1.0'
     netVersion = '3.4.6'
     brvVersion = '1.3.62'
 }

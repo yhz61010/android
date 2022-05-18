@@ -29,6 +29,7 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
+    namespace 'com.leovp.circle_progressbar'
 }
 
 dependencies {

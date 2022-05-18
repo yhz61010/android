@@ -38,6 +38,7 @@ android {
             jniLibs.srcDirs = ['src/main/libs']
         }
     }
+    namespace 'com.leovp.ffmpeg_javacpp'
 }
 
 dependencies {

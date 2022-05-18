@@ -69,6 +69,7 @@ android {
         checkReleaseBuilds false
         disable 'MissingTranslation', 'RtlHardcoded', 'RtlCompat', 'RtlEnabled'
     }
+    namespace 'com.leovp.aidl_client'
 
 }
 

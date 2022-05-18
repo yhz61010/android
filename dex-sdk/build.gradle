@@ -24,6 +24,7 @@ android {
         sourceCompatibility "$rootProject.ext.java_version"
         targetCompatibility "$rootProject.ext.java_version"
     }
+    namespace 'com.leovp.dex_sdk'
 }
 
 dependencies {

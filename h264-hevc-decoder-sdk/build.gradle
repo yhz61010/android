@@ -61,6 +61,7 @@ android {
                            'lib/arm64-v8a/libh264-hevc-decoder.so']
         }
     }
+    namespace 'com.leovp.h264_hevc_decoder'
 }
 
 dependencies {

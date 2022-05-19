@@ -35,6 +35,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @SuppressLint("RestrictedApi")
 class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
@@ -145,9 +146,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         val mediaStoreOutput = MediaStoreOutputOptions.Builder(
             requireActivity().contentResolver,
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        )
-            .setContentValues(contentValues)
-            .build()
+        ).setContentValues(contentValues).build()
 
         // configure Recorder and Start recording to the mediaStoreOutput.
         currentRecording = videoCapture.output
@@ -168,15 +167,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         updateUI(event)
 
-        if (event is VideoRecordEvent.Finalize) {
-            // display the captured video
-            lifecycleScope.launch {
-                navController.navigate(
-                    // FIXME We need Uri not string
-                    VideoFragmentDirections.actionVideoFragmentToGalleryFragment(event.outputResults.outputUri.path!!)
-                )
-            }
-        }
+        // FIXME process after stopping
+        //        if (event is VideoRecordEvent.Finalize) {
+        //            // display the captured video
+        //            lifecycleScope.launch {
+        //                navController.navigate(
+        //                    // FIXME We need Uri not string
+        //                    VideoFragmentDirections.actionVideoFragmentToGalleryFragment(event.outputResults.outputUri.path!!)
+        //                )
+        //            }
+        //        }
     }
 
     /**
@@ -284,25 +284,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
-            setOnClickListener {
-                if (!this@VideoFragment::recordingState.isInitialized ||
-                    recordingState is VideoRecordEvent.Finalize
-                ) {
-                    enableUI(false)  // Our eventListener will turn on the Recording UI.
-                    startRecording()
-                } else {
-                    when (recordingState) {
-                        is VideoRecordEvent.Start  -> {
-                            currentRecording?.pause()
-                            // FIXME add me
-                            //                            binding.stopButton.visibility = View.VISIBLE
-                        }
-                        is VideoRecordEvent.Pause  -> currentRecording?.resume()
-                        is VideoRecordEvent.Resume -> currentRecording?.pause()
-                        else                       -> throw IllegalStateException("recordingState in unknown state")
-                    }
-                }
-            }
+            setOnClickListener { doStartRecording() }
             isEnabled = false
         }
 
@@ -332,6 +314,41 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         setSwipeCallback(right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) })
     }
 
+    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
+    private fun doStartRecording() {
+        LogContext.log.i(logTag, "doStartRecording")
+        if (!this@VideoFragment::recordingState.isInitialized ||
+            recordingState is VideoRecordEvent.Finalize
+        ) {
+            enableUI(false)  // Our eventListener will turn on the Recording UI.
+            startRecording()
+        } else {
+            // FIXME How to enter here?
+            when (recordingState) {
+                is VideoRecordEvent.Start  -> {
+                    currentRecording?.pause()
+                    // FIXME add me
+                    //                            binding.stopButton.visibility = View.VISIBLE
+                }
+                is VideoRecordEvent.Pause  -> currentRecording?.resume()
+                is VideoRecordEvent.Resume -> currentRecording?.pause()
+                else                       -> throw IllegalStateException("recordingState in unknown state")
+            }
+        }
+    }
+
+    private fun doStopRecording() {
+        if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
+            return
+        }
+
+        val recording = currentRecording
+        if (recording != null) {
+            recording.stop()
+            currentRecording = null
+        }
+    }
+
     /**
      * UpdateUI according to CameraX VideoRecordEvent type:
      *   - user starts capture.
@@ -343,8 +360,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *   - this app starts VideoViewer fragment to view the captured result.
      */
     private fun updateUI(event: VideoRecordEvent) {
-        val state = if (event is VideoRecordEvent.Status) recordingState.getNameString()
-        else event.getNameString()
+        val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
         when (event) {
             is VideoRecordEvent.Status   -> {
                 // placeholder: we update the UI with new status after this when() block,
@@ -357,23 +373,21 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 showUI(UiState.FINALIZED, event.getNameString())
             }
             is VideoRecordEvent.Pause    -> {
-                // FIXME
-                binding.btnRecordVideo.setImageResource(R.drawable.ic_resume)
+                binding.btnGallery.setImageResource(R.drawable.ic_resume)
             }
             is VideoRecordEvent.Resume   -> {
-                // FIXME
-                binding.btnRecordVideo.setImageResource(R.drawable.ic_pause)
+                binding.btnGallery.setImageResource(R.drawable.ic_pause)
             }
         }
 
         val stats = event.recordingStats
         val size = stats.numBytesRecorded / 1000
-        val time = java.util.concurrent.TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
+        val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
         var text = "${state}: recorded ${size}KB, in ${time}second"
         if (event is VideoRecordEvent.Finalize)
             text = "${text}\nFile saved to: ${event.outputResults.outputUri}"
 
-        LogContext.log.i(logTag, "recording event: $text")
+        LogContext.log.w(logTag, "recording event: $text")
     }
 
     /**
@@ -382,15 +396,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *    Once recording is started, need to disable able UI to avoid conflict.
      */
     private fun enableUI(enable: Boolean) {
-        //        arrayOf(
-        //            captureViewBinding.cameraButton,
-        //            captureViewBinding.captureButton,
-        //            captureViewBinding.stopButton,
-        //            captureViewBinding.audioSelection,
-        //            captureViewBinding.qualitySelection
-        //        ).forEach {
-        //            it.isEnabled = enable
-        //        }
+        arrayOf(
+            binding.btnRecordVideo,
+            binding.btnSwitchCamera,
+            binding.btnGallery,
+        ).forEach {
+            it.isEnabled = enable
+        }
         // disable the camera button if no device to switch
         if (cameraCapabilities.size <= 1) {
             binding.btnRecordVideo.isEnabled = false
@@ -407,38 +419,40 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *  - at recording: hide audio, qualitySelection,change camera UI; enable stop button
      *  - otherwise: show all except the stop button
      */
+    @SuppressLint("MissingPermission")
     private fun showUI(state: UiState, status: String = "idle") {
         binding.let {
-            // FIXME add me
-            //            when (state) {
-            //                UiState.IDLE      -> {
-            //                    it.captureButton.setImageResource(R.drawable.ic_start)
-            //                    it.stopButton.visibility = View.INVISIBLE
-            //
-            //                    it.cameraButton.visibility = View.VISIBLE
-            //                    it.audioSelection.visibility = View.VISIBLE
-            //                    it.qualitySelection.visibility = View.VISIBLE
-            //                }
-            //                UiState.RECORDING -> {
-            //                    it.cameraButton.visibility = View.INVISIBLE
-            //                    it.audioSelection.visibility = View.INVISIBLE
-            //                    it.qualitySelection.visibility = View.INVISIBLE
-            //
-            //                    it.captureButton.setImageResource(R.drawable.ic_pause)
-            //                    it.captureButton.isEnabled = true
-            //                    it.stopButton.visibility = View.VISIBLE
-            //                    it.stopButton.isEnabled = true
-            //                }
-            //                UiState.FINALIZED -> {
-            //                    it.captureButton.setImageResource(R.drawable.ic_start)
-            //                    it.stopButton.visibility = View.INVISIBLE
-            //                }
-            //                else              -> {
-            //                    val errorMsg = "Error: showUI($state) is not supported"
-            //                    LogContext.log.e(logTag, errorMsg)
-            //                    return
-            //                }
-            //            }
+            when (state) {
+                UiState.IDLE      -> {
+                    it.btnRecordVideo.setImageResource(R.drawable.ic_start)
+                    it.btnGallery.setImageResource(R.drawable.ic_photo)
+                    //                    it.audioSelection.visibility = View.VISIBLE
+                    //                    it.qualitySelection.visibility = View.VISIBLE
+                }
+                UiState.RECORDING -> {
+                    it.btnRecordVideo.apply {
+                        setImageResource(R.drawable.ic_stop)
+                        setOnClickListener { doStopRecording() }
+                        isEnabled = true
+                    }
+
+                    it.btnGallery.setImageResource(R.drawable.ic_pause)
+                    //                    it.audioSelection.visibility = View.INVISIBLE
+                    //                    it.qualitySelection.visibility = View.INVISIBLE
+                }
+                UiState.FINALIZED -> {
+                    it.btnRecordVideo.apply {
+                        setImageResource(R.drawable.ic_start)
+                        setOnClickListener { doStartRecording() }
+                    }
+                    it.btnGallery.setImageResource(R.drawable.ic_photo)
+                }
+                else              -> {
+                    val errorMsg = "Error: showUI($state) is not supported"
+                    LogContext.log.e(logTag, errorMsg)
+                    return
+                }
+            }
         }
     }
 

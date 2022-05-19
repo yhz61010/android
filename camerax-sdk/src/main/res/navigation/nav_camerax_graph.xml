@@ -35,13 +35,13 @@
         android:label="CameraFragment"
         tools:layout="@layout/fragment_camera">
 
-        <action android:id="@+id/action_camera_to_gallery"
-            app:destination="@id/gallery_fragment" />
+        <action android:id="@+id/action_camera_to_gallery" app:destination="@id/gallery_fragment" />
 
         <action android:id="@+id/action_camera_to_permissions"
             app:destination="@id/permissions_fragment"
             app:popUpTo="@id/camera_fragment"
             app:popUpToInclusive="true" />
+        <action android:id="@+id/action_camera_fragment_to_video_fragment" app:destination="@id/video_fragment" />
 
     </fragment>
 
@@ -50,6 +50,14 @@
         android:label="GalleryFragment"
         tools:layout="@layout/fragment_gallery">
         <argument android:name="root_directory" app:argType="string" />
+    </fragment>
+
+    <fragment android:id="@+id/video_fragment"
+        android:name="com.leovp.camerax_sdk.fragments.VideoFragment"
+        android:label="fragment_video"
+        tools:layout="@layout/fragment_video">
+        <action android:id="@+id/action_video_fragment_to_camera_fragment" app:destination="@id/camera_fragment" />
+        <action android:id="@+id/action_video_fragment_to_gallery_fragment" app:destination="@id/gallery_fragment" />
     </fragment>
 
 </navigation>

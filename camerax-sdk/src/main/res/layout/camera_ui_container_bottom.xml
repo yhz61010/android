@@ -43,7 +43,7 @@
         android:padding="@dimen/spacing_large"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="@+id/camera_capture_button"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/camera_capture_button"
         app:srcCompat="@drawable/ic_photo" />
 

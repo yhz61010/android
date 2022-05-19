@@ -423,6 +423,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     @SuppressLint("MissingPermission")
     private fun showUI(state: UiState, status: String = "idle") {
+        LogContext.log.w(logTag, "showUI state=$state status=$status")
         binding.let {
             when (state) {
                 UiState.IDLE      -> {
@@ -450,6 +451,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     }
                     it.btnGallery.visibility = View.VISIBLE
                     resetSwitchCameraIcon()
+                    enableUI(true)
                 }
                 else              -> {
                     LogContext.log.e(logTag, "Error: showUI($state) is not supported")

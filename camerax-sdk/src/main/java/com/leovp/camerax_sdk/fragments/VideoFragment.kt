@@ -139,7 +139,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     @SuppressLint("MissingPermission")
     private fun startRecording() {
         // create MediaStoreOutputOptions for our recorder: resulting our recording!
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis()) + ".mp4"
+        val name = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
         val contentValues = ContentValues().apply {
             put(MediaStore.Video.Media.DISPLAY_NAME, name)
         }
@@ -524,6 +524,5 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         // default Quality selection if no input from UI
         const val DEFAULT_QUALITY_IDX = 0
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     }
 }

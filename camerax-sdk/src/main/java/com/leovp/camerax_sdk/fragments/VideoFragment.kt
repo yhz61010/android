@@ -5,10 +5,10 @@ import android.content.ContentValues
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -29,6 +29,7 @@ import com.leovp.camerax_sdk.utils.SharedPrefsManager
 import com.leovp.camerax_sdk.utils.getAspectRatio
 import com.leovp.camerax_sdk.utils.getAspectRatioString
 import com.leovp.camerax_sdk.utils.getNameString
+import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ import java.util.*
 
 @SuppressLint("RestrictedApi")
 class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
+    override fun getTagName() = "VideoFragment"
 
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
@@ -118,7 +120,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             )
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
-            Log.e(TAG, "Use case binding failed", exc)
+            LogContext.log.e(logTag, "Use case binding failed", exc)
             resetUIandState("bindToLifecycle failed: $exc")
         }
         enableUI(true)
@@ -133,7 +135,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * After this function, user could start/pause/resume/stop recording and application listens
      * to VideoRecordEvent for the current recording status.
      */
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     private fun startRecording() {
         // create MediaStoreOutputOptions for our recorder: resulting our recording!
         val name = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
@@ -153,7 +155,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             .apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
-        Log.i(TAG, "Recording started")
+        LogContext.log.i(logTag, "Recording started")
     }
 
     /**
@@ -184,7 +186,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     private fun getCameraSelector(idx: Int): CameraSelector {
         if (cameraCapabilities.size == 0) {
-            Log.i(TAG, "Error: This device does not have any camera, bailing out")
+            LogContext.log.i(logTag, "Error: This device does not have any camera, bailing out")
             requireActivity().finish()
         }
         return (cameraCapabilities[idx % cameraCapabilities.size].camSelector)
@@ -223,7 +225,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                                 }
                         }
                     } catch (exc: java.lang.Exception) {
-                        Log.e(TAG, "Camera Face $camSelector is not supported")
+                        LogContext.log.e(logTag, "Camera Face $camSelector is not supported")
                     }
                 }
             }
@@ -371,7 +373,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         if (event is VideoRecordEvent.Finalize)
             text = "${text}\nFile saved to: ${event.outputResults.outputUri}"
 
-        Log.i(TAG, "recording event: $text")
+        LogContext.log.i(logTag, "recording event: $text")
     }
 
     /**
@@ -433,7 +435,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             //                }
             //                else              -> {
             //                    val errorMsg = "Error: showUI($state) is not supported"
-            //                    Log.e(TAG, errorMsg)
+            //                    LogContext.log.e(logTag, errorMsg)
             //                    return
             //                }
             //            }
@@ -514,8 +516,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     companion object {
-        private val TAG: String = "VideoFragment"
-
         // default Quality selection if no input from UI
         const val DEFAULT_QUALITY_IDX = 0
     }

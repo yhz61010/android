@@ -8,7 +8,6 @@ import android.util.Range
 import android.util.Size
 import android.view.Surface
 import android.view.SurfaceHolder
-import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_common_android.exts.windowManager
 import com.leovp.log_sdk.LogContext
@@ -20,8 +19,9 @@ import kotlin.math.min
  * Date: 2022/4/26 13:55
  */
 
-// Camera2 API supported the MAX width and height
+private const val TAG = "CameraExt"
 
+// Camera2 API supported the MAX width and height
 fun Context.getPreviewViewMaxWidth(): Int {
     val screenSize = getAvailableResolution()
     return max(screenSize.width, screenSize.height)
@@ -48,7 +48,8 @@ fun CameraCharacteristics.hardwareLevelName(): String {
     }
 }
 
-fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> = get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
+        get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
 
 fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
@@ -61,7 +62,10 @@ fun Context.getDeviceRotation(): Int {
     }
 }
 
-fun getSpecificPreviewOutputSize(context: Context, desiredVideoWidth: Int, desiredVideoHeight: Int, characteristics: CameraCharacteristics): Size {
+fun getSpecificPreviewOutputSize(context: Context,
+    desiredVideoWidth: Int,
+    desiredVideoHeight: Int,
+    characteristics: CameraCharacteristics): Size {
     // Generally, if the device is in portrait(Surface.ROTATION_0),
     // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
     // Example: deviceRotation: 0
@@ -70,13 +74,15 @@ fun getSpecificPreviewOutputSize(context: Context, desiredVideoWidth: Int, desir
     val cameraSensorOrientation = characteristics.cameraSensorOrientation()
     var swapDimension = false
     when (deviceRotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180  -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+        Surface.ROTATION_0,
+        Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
             swapDimension = true
         }
-        Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
+        Surface.ROTATION_90,
+        Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
             swapDimension = true
         }
-        else                                      -> LogContext.log.e(BaseCameraXFragment.TAG, "Display rotation is invalid: $deviceRotation")
+        else                 -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
     }
 
     // The device is normally in portrait by default.
@@ -95,7 +101,8 @@ fun getSpecificPreviewOutputSize(context: Context, desiredVideoWidth: Int, desir
     // Calculate ImageReader input preview size from supported size list by camera.
     // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
     // Attention: The returned value is in camera orientation. NOT in device orientation.
-    val selectedSizeFromCamera: Size = getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
+    val selectedSizeFromCamera: Size =
+            getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
 
     // Take care of the result value. It's in camera orientation.
     // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.

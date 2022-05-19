@@ -535,7 +535,7 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
 
     companion object {
         internal const val TAG = "CameraXBasic"
-        internal const val FILENAME = "yyyyMMdd-HH-mm-ss-SSS"
+        internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
 
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"

@@ -41,11 +41,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
-    override fun getViewBinding(inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentVideoBinding {
-        return FragmentVideoBinding.inflate(inflater, container, false)
-    }
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
+            FragmentVideoBinding.inflate(inflater, container, false)
 
     /** Host's navigation controller */
     private val navController: NavController by lazy {
@@ -330,10 +327,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         initCameraGesture(binding.viewFinder, camera!!)
 
-        setSwipeCallback(right = {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
-                .navigate(R.id.action_video_fragment_to_camera_fragment)
-        })
+        setSwipeCallback(right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) })
     }
 
     /**

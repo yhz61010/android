@@ -22,7 +22,7 @@
         android:fillType="evenOdd"
         android:pathData="M73.1,37C73.1,17.0637 56.9373,0.9 37,0.9C17.0627,0.9 0.9,17.0637 0.9,37C0.9,56.9373 17.0627,73.1 37,73.1C56.9373,73.1 73.1,56.9373 73.1,37"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="1" />
+        android:strokeWidth="2" />
     <path android:fillColor="#FFFF0000"
         android:fillType="evenOdd"
         android:pathData="M58,37C58,48.5980 48.5980,58 37,58C25.4020,58 16,48.5980 16,37C16,25.4020 25.4020,16 37,16C48.5980,16 58,25.4020 58,37"

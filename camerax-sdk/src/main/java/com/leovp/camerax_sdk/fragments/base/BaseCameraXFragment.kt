@@ -51,6 +51,9 @@ import kotlin.math.min
  * Date: 2022/4/25 10:26
  */
 abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
+    abstract fun getTagName(): String
+    val logTag: String by lazy { getTagName() }
+
     /** Generic ViewBinding of the subclasses */
     lateinit var binding: B
 
@@ -126,7 +129,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             }
 
             override fun onError(exc: ImageCaptureException) {
-                LogContext.log.e(TAG, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
+                LogContext.log.e(logTag, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
             }
         })
     }
@@ -152,7 +155,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         imageCapture.takePicture(
             outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(TAG, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
+                    LogContext.log.e(logTag, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
@@ -185,7 +188,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.w(TAG,
+        LogContext.log.w(logTag,
             "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
         (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio =
                 if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
@@ -227,7 +230,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     // Values returned from our analyzer are passed to the attached listener
                     // We log image analysis results here - you should do something useful
                     // instead!
-                    LogContext.log.v(TAG, "Average luminosity: $luma")
+                    LogContext.log.v(logTag, "Average luminosity: $luma")
                 })
             }
     }
@@ -238,7 +241,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
                 val delta = detector.scaleFactor
                 camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
-                LogContext.log.d(TAG,
+                LogContext.log.d(logTag,
                     "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
                 return true
             }
@@ -247,7 +250,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val gestureListener: GestureDetector.SimpleOnGestureListener =
                 object : GestureDetector.SimpleOnGestureListener() {
                     override fun onDoubleTap(e: MotionEvent): Boolean {
-                        LogContext.log.i(TAG, "Double click to zoom.")
+                        LogContext.log.i(logTag, "Double click to zoom.")
                         val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
                         val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
                         val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
@@ -260,7 +263,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     }
 
                     override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                        LogContext.log.i(TAG, "Single tap to focus.")
+                        LogContext.log.i(logTag, "Single tap to focus.")
                         val factory = viewFinder.meteringPointFactory
                         val point = factory.createPoint(e.x, e.y)
                         val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
@@ -346,13 +349,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
 
             // Check for any extension availability
-            LogContext.log.w(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
-            LogContext.log.w(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
-            LogContext.log.w(TAG,
+            LogContext.log.w(logTag, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
+            LogContext.log.w(logTag, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
+            LogContext.log.w(logTag,
                 "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
-            LogContext.log.w(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
-            LogContext.log.w(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
-            LogContext.log.w(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
+            LogContext.log.w(logTag, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
+            LogContext.log.w(logTag, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
+            LogContext.log.w(logTag, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
 
             // Check if the extension is available on the device
             if (!isAvailable) {
@@ -374,7 +377,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         override fun onDisplayRemoved(displayId: Int) = Unit
         override fun onDisplayChanged(displayId: Int) = view?.let { view ->
             if (displayId == this@BaseCameraXFragment.displayId) {
-                LogContext.log.d(TAG, "Rotation changed: ${view.display.rotation}")
+                LogContext.log.d(logTag, "Rotation changed: ${view.display.rotation}")
                 imageCapture?.targetRotation = view.display.rotation
                 imageAnalyzer?.targetRotation = view.display.rotation
             }
@@ -449,7 +452,7 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
                Desired dimen=${desiredVideoWidth}x$desiredVideoHeight
            previewSize dimen=${previewSize.width}x${previewSize.height}
         """.trimIndent()
-        LogContext.log.w(TAG, cameraParametersString)
+        LogContext.log.w(logTag, cameraParametersString)
     }
 
     protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -534,7 +537,6 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
     }
 
     companion object {
-        internal const val TAG = "CameraXBasic"
         internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
 
         internal const val KEY_FLASH = "camerax-flash"

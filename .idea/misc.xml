@@ -8,6 +8,7 @@
         <entry key="androidbase-sdk/src/main/res/drawable/toast_bg_normal.xml" value="0.6072916666666667" />
         <entry key="androidbase-sdk/src/main/res/layout/toast_tools_layout.xml" value="0.42314814814814816" />
         <entry key="camera2live-sdk/src/main/res/layout/fragment_camera_view.xml" value="0.34479166666666666" />
+        <entry key="camerax-sdk/src/main/res/drawable/bg_button_round.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/bg_options.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_baseline_grid_on_24.xml" value="0.569" />
@@ -20,7 +21,12 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_launcher_background.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_no_picture.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_enhance.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_front.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_rear.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_pause.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9_on.xml" value="0.346" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1.xml" value="0.346" />
@@ -33,12 +39,16 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_full.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_full_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_standard.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_resume.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_share.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.239" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_normal.xml" value="0.239" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_pressed.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_start.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_stop.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_switch.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_take_video.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_10.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_3.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
@@ -52,6 +62,7 @@
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.48504273504273504" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
+        <entry key="camerax-sdk/src/main/res/layout/fragment_video.xml" value="0.46153846153846156" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />

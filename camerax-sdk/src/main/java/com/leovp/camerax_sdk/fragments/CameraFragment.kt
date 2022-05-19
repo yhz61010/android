@@ -30,13 +30,13 @@ import androidx.navigation.Navigation
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.hjq.permissions.XXPermissions
-import com.leovp.camerax_sdk.BaseCameraXFragment
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.CameraTimer
+import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
@@ -47,7 +47,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.*
 import kotlin.properties.Delegates
 
@@ -57,12 +56,15 @@ import kotlin.properties.Delegates
  * - Photo taking
  * - Image analysis
  */
-class CameraFragment : BaseCameraXFragment() {
+class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
-    private var _fragmentCameraBinding: FragmentCameraBinding? = null
-    private val fragmentCameraBinding get() = _fragmentCameraBinding!!
+    override fun getViewBinding(inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): FragmentCameraBinding {
+        return FragmentCameraBinding.inflate(inflater, container, false)
+    }
 
     private var _cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
     private var _cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
@@ -94,7 +96,6 @@ class CameraFragment : BaseCameraXFragment() {
         )
     }
 
-    private lateinit var outputDirectory: File
     val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
     private val functionKeyObserver = Observer<Int> { keyCode ->
         when (keyCode) {
@@ -116,19 +117,9 @@ class CameraFragment : BaseCameraXFragment() {
         }
     }
 
-    override fun onDestroyView() {
-        _fragmentCameraBinding = null
-        super.onDestroyView()
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
-        _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
-        return fragmentCameraBinding.root
+        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     private fun setGalleryThumbnail(uri: Uri) {
@@ -150,15 +141,12 @@ class CameraFragment : BaseCameraXFragment() {
         super.onViewCreated(view, savedInstanceState)
         loadPrefs()
 
-        // Determine the output directory
-        outputDirectory = getOutputDirectory(requireContext())
-
         // Wait for the views to be properly laid out
-        fragmentCameraBinding.viewFinder.post {
+        binding.viewFinder.post {
             val screenDimen = requireContext().getRealResolution()
             outputCameraParameters(screenDimen.width, screenDimen.height)
             // Keep track of the display in which this view is attached
-            displayId = fragmentCameraBinding.viewFinder.display.displayId
+            displayId = binding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
             // Set up the camera and its use cases
@@ -194,7 +182,8 @@ class CameraFragment : BaseCameraXFragment() {
     private fun setUpCamera() {
         setUpCamera {
             touchListener = object : CameraXTouchListener {
-                override fun onStartFocusing(x: Float, y: Float) = cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
+                override fun onStartFocusing(x: Float, y: Float) =
+                        cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
 
                 override fun onFocusSuccess() = cameraUiContainerTopBinding.focusView.focusSuccess()
 
@@ -220,8 +209,8 @@ class CameraFragment : BaseCameraXFragment() {
 
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
-        val rotation = fragmentCameraBinding.viewFinder.display.rotation
-        bindCameraUseCases(fragmentCameraBinding.viewFinder, rotation, flashMode)
+        val rotation = binding.viewFinder.display.rotation
+        bindCameraUseCases(binding.viewFinder, rotation, flashMode)
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {
                 // If yes, turn on if the HDR is turned on by the user
@@ -261,10 +250,15 @@ class CameraFragment : BaseCameraXFragment() {
             }
 
             // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
+            preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             //            observeCameraState(camera?.cameraInfo!!)
             // Call this after [cameraProvider.bindToLifecycle]
-            initCameraGesture(fragmentCameraBinding.viewFinder, camera!!)
+            initCameraGesture(binding.viewFinder, camera!!)
+
+            setSwipeCallback(left = {
+                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+                    .navigate(R.id.action_camera_fragment_to_video_fragment)
+            })
         } catch (exc: Exception) {
             LogContext.log.e(TAG, "Use case binding failed", exc)
         }
@@ -315,17 +309,17 @@ class CameraFragment : BaseCameraXFragment() {
     /** Method used to re-draw the camera UI controls, called every time configuration changes. */
     private fun updateCameraUi() {
         // Remove previous UI if any
-        _cameraUiContainerTopBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
-        _cameraUiContainerBottomBinding?.root?.let { fragmentCameraBinding.root.removeView(it) }
+        _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
+        _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
 
         _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
             requireContext().layoutInflater,
-            fragmentCameraBinding.root,
+            binding.root,
             true
         )
         _cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
             requireContext().layoutInflater,
-            fragmentCameraBinding.root,
+            binding.root,
             true
         )
 
@@ -389,7 +383,8 @@ class CameraFragment : BaseCameraXFragment() {
                             // If the folder selected is an external media directory, this is
                             // unnecessary but otherwise other apps will not be able to access our
                             // images unless we scan them using [MediaScannerConnection]
-                            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
+                            val mimeType =
+                                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
                             MediaScannerConnection.scanFile(
                                 context,
                                 arrayOf(savedUri.toFile().absolutePath),
@@ -411,9 +406,10 @@ class CameraFragment : BaseCameraXFragment() {
                 // We can only change the foreground Drawable using API level 23+ API
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     // Display flash animation to indicate that photo was captured
-                    fragmentCameraBinding.root.postDelayed({
-                        fragmentCameraBinding.root.foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
-                        fragmentCameraBinding.root.postDelayed({ fragmentCameraBinding.root.foreground = null }, ANIMATION_FAST_MILLIS)
+                    binding.root.postDelayed({
+                        binding.root.foreground =
+                                ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
+                        binding.root.postDelayed({ binding.root.foreground = null }, ANIMATION_FAST_MILLIS)
                     }, ANIMATION_SLOW_MILLIS)
                 }
             }
@@ -446,13 +442,14 @@ class CameraFragment : BaseCameraXFragment() {
         cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
-                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax
-                ).navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
+                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+                    .navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
             }
         }
     }
 
-    private fun showRatioLayer() = cameraUiContainerTopBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
+    private fun showRatioLayer() =
+            cameraUiContainerTopBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
 
     private suspend fun startCountdown() = withContext(Dispatchers.Main) {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
@@ -477,13 +474,15 @@ class CameraFragment : BaseCameraXFragment() {
      * Show timer selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showSelectTimerLayer() = cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
+    private fun showSelectTimerLayer() =
+            cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
 
     /**
      * Show flashlight selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showFlashLayer() = cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
+    private fun showFlashLayer() =
+            cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {

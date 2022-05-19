@@ -26,6 +26,7 @@ import androidx.core.view.setPadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import coil.load
 import coil.transform.CircleCropTransformation
@@ -64,6 +65,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         container: ViewGroup?,
         savedInstanceState: Bundle?): FragmentCameraBinding {
         return FragmentCameraBinding.inflate(inflater, container, false)
+    }
+
+    /** Host's navigation controller */
+    private val navController: NavController by lazy {
+        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
     }
 
     private var _cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
@@ -111,9 +117,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
         if (!XXPermissions.isGranted(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
-                CameraFragmentDirections.actionCameraToPermissions()
-            )
+            navController.navigate(CameraFragmentDirections.actionCameraToPermissions())
         }
     }
 
@@ -255,10 +259,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // Call this after [cameraProvider.bindToLifecycle]
             initCameraGesture(binding.viewFinder, camera!!)
 
-            setSwipeCallback(left = {
-                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
-                    .navigate(R.id.action_camera_fragment_to_video_fragment)
-            })
+            setSwipeCallback(left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) })
         } catch (exc: Exception) {
             LogContext.log.e(TAG, "Use case binding failed", exc)
         }
@@ -442,8 +443,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
             // Only navigate when the gallery has photos
             if (true == outputDirectory.listFiles()?.isNotEmpty()) {
-                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
-                    .navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
+                navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
             }
         }
     }

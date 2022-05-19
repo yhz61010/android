@@ -217,11 +217,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                             QualitySelector
                                 .getSupportedQualities(camera!!.cameraInfo)
                                 .filter { quality ->
-                                    listOf(Quality.UHD,
-                                        Quality.FHD,
-                                        Quality.HD,
-                                        Quality.SD)
-                                        .contains(quality)
+                                    listOf(Quality.FHD, Quality.HD, Quality.SD).contains(quality)
                                 }.also {
                                     cameraCapabilities.add(CameraCapability(camSelector, it))
                                 }

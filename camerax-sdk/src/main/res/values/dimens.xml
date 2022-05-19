@@ -23,6 +23,7 @@
 
     <dimen name="spacing_small">4dp</dimen>
     <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_small_large">12dp</dimen>
     <dimen name="spacing_large">16dp</dimen>
 
     <dimen name="stroke_tiny">2dp</dimen>

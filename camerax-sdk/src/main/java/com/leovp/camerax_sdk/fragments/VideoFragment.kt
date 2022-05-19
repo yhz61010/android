@@ -3,6 +3,7 @@ package com.leovp.camerax_sdk.fragments
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import androidx.concurrent.futures.await
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
+import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenCreated
@@ -405,7 +407,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
         // disable the camera button if no device to switch
         if (cameraCapabilities.size <= 1) {
-            binding.btnRecordVideo.isEnabled = false
+            binding.btnSwitchCamera.isEnabled = false
         }
         // TODO
         // disable the resolution list if no resolution to switch
@@ -426,6 +428,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 UiState.IDLE      -> {
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
                     it.btnGallery.setImageResource(R.drawable.ic_photo)
+                    resetSwitchCameraIcon()
                     //                    it.audioSelection.visibility = View.VISIBLE
                     //                    it.qualitySelection.visibility = View.VISIBLE
                 }
@@ -435,8 +438,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                         setOnClickListener { doStopRecording() }
                         isEnabled = true
                     }
-
-                    it.btnGallery.setImageResource(R.drawable.ic_pause)
+                    setSwitchCameraIconToPauseIcon()
+                    it.btnGallery.visibility = View.GONE
                     //                    it.audioSelection.visibility = View.INVISIBLE
                     //                    it.qualitySelection.visibility = View.INVISIBLE
                 }
@@ -445,14 +448,30 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                         setImageResource(R.drawable.ic_start)
                         setOnClickListener { doStartRecording() }
                     }
-                    it.btnGallery.setImageResource(R.drawable.ic_photo)
+                    it.btnGallery.visibility = View.VISIBLE
+                    resetSwitchCameraIcon()
                 }
                 else              -> {
-                    val errorMsg = "Error: showUI($state) is not supported"
-                    LogContext.log.e(logTag, errorMsg)
+                    LogContext.log.e(logTag, "Error: showUI($state) is not supported")
                     return
                 }
             }
+        }
+    }
+
+    private fun setSwitchCameraIconToPauseIcon() {
+        binding.btnSwitchCamera.apply {
+            setImageResource(R.drawable.ic_pause)
+            setBackgroundResource(R.drawable.ic_outer_circle)
+            setPadding(resources.getDimensionPixelSize(R.dimen.spacing_small_large))
+        }
+    }
+
+    private fun resetSwitchCameraIcon() {
+        binding.btnSwitchCamera.apply {
+            setImageResource(R.drawable.ic_switch)
+            setBackgroundColor(Color.TRANSPARENT)
+            setPadding(resources.getDimensionPixelSize(R.dimen.spacing_small))
         }
     }
 

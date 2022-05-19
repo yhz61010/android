@@ -59,12 +59,17 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="-184" />
-                            <option name="y" value="-204" />
+                            <option name="x" value="-314" />
+                            <option name="y" value="-13" />
                           </Point>
                         </option>
                         <option name="myPositions">
                           <map>
+                            <entry key="action_camera_fragment_to_video_fragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_camera_to_gallery">
                               <value>
                                 <LayoutPositions />
@@ -104,6 +109,32 @@
                         <option name="myPositions">
                           <map>
                             <entry key="action_permissions_to_camera">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="video_fragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="12" />
+                            <option name="y" value="12" />
+                          </Point>
+                        </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_video_fragment_to_camera_fragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_video_fragment_to_gallery_fragment">
                               <value>
                                 <LayoutPositions />
                               </value>

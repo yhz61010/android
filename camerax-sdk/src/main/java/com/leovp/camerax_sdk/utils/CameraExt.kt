@@ -8,7 +8,7 @@ import android.util.Range
 import android.util.Size
 import android.view.Surface
 import android.view.SurfaceHolder
-import com.leovp.camerax_sdk.BaseCameraXFragment
+import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_common_android.exts.windowManager
 import com.leovp.log_sdk.LogContext

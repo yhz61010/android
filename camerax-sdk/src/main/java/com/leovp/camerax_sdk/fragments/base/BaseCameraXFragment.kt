@@ -1,16 +1,20 @@
-package com.leovp.camerax_sdk
+package com.leovp.camerax_sdk.fragments.base
 
+import android.content.ContentUris
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
 import android.media.MediaFormat
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Range
 import android.util.Size
 import android.view.*
+import androidx.annotation.RequiresApi
 import androidx.camera.core.*
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
@@ -18,10 +22,13 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.viewbinding.ViewBinding
 import com.google.common.util.concurrent.ListenableFuture
+import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
@@ -43,7 +50,14 @@ import kotlin.math.min
  * Author: Michael Leo
  * Date: 2022/4/25 10:26
  */
-abstract class BaseCameraXFragment : Fragment() {
+abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
+    /** Generic ViewBinding of the subclasses */
+    lateinit var binding: B
+
+    abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
+
+    protected lateinit var outputDirectory: File
+
     // Selector showing which camera is selected (front or back)
     protected var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     protected var hdrCameraSelector: CameraSelector? = null
@@ -60,7 +74,7 @@ abstract class BaseCameraXFragment : Fragment() {
     private lateinit var cameraExecutor: ExecutorService
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
-    protected val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
+    private val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     protected var displayId: Int = -1
     private val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
@@ -76,11 +90,19 @@ abstract class BaseCameraXFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         lifecycleScope.launch { soundManager.loadSounds() }
 
+        // Determine the output directory
+        outputDirectory = getOutputDirectory(requireContext())
+
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        binding = getViewBinding(inflater, container, savedInstanceState)
+        return binding.root
     }
 
     override fun onDestroyView() {
@@ -109,7 +131,9 @@ abstract class BaseCameraXFragment : Fragment() {
         })
     }
 
-    protected fun captureForOutputFile(imageCapture: ImageCapture, outputDirectory: File, onImageSaved: (uri: Uri) -> Unit) {
+    protected fun captureForOutputFile(imageCapture: ImageCapture,
+        outputDirectory: File,
+        onImageSaved: (uri: Uri) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -161,8 +185,10 @@ abstract class BaseCameraXFragment : Fragment() {
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.w(TAG, "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
-        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
+        LogContext.log.w(TAG,
+            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio =
+                if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
 
         // Preview
         preview = Preview.Builder()
@@ -212,48 +238,74 @@ abstract class BaseCameraXFragment : Fragment() {
                 val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
                 val delta = detector.scaleFactor
                 camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
-                LogContext.log.d(TAG, "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
+                LogContext.log.d(TAG,
+                    "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
                 return true
             }
         }
 
-        val gestureListener: GestureDetector.SimpleOnGestureListener = object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                LogContext.log.i(TAG, "Double click to zoom.")
-                val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
-                val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
-                val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
-                if (currentZoomRatio > minZoomRatio) {
-                    camera.cameraControl.setLinearZoom(0f)
-                } else {
-                    camera.cameraControl.setLinearZoom(0.5f)
-                }
-                return true
-            }
-
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                LogContext.log.i(TAG, "Single tap to focus.")
-                val factory = viewFinder.meteringPointFactory
-                val point = factory.createPoint(e.x, e.y)
-                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
-                    .build()
-                touchListener?.onStartFocusing(e.rawX, e.rawY)
-                val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
-                focusFuture.addListener({
-                    runCatching {
-                        // Get focus result
-                        val result = focusFuture.get() as FocusMeteringResult
-                        if (result.isFocusSuccessful) {
-                            touchListener?.onFocusSuccess()
+        val gestureListener: GestureDetector.SimpleOnGestureListener =
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onDoubleTap(e: MotionEvent): Boolean {
+                        LogContext.log.i(TAG, "Double click to zoom.")
+                        val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
+                        val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
+                        val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
+                        if (currentZoomRatio > minZoomRatio) {
+                            camera.cameraControl.setLinearZoom(0f)
                         } else {
-                            touchListener?.onFocusFail()
+                            camera.cameraControl.setLinearZoom(0.5f)
                         }
+                        return true
                     }
-                }, ContextCompat.getMainExecutor(requireContext()))
-                return true
-            }
-        }
+
+                    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                        LogContext.log.i(TAG, "Single tap to focus.")
+                        val factory = viewFinder.meteringPointFactory
+                        val point = factory.createPoint(e.x, e.y)
+                        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                            .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                            .build()
+                        touchListener?.onStartFocusing(e.rawX, e.rawY)
+                        val focusFuture: ListenableFuture<FocusMeteringResult> =
+                                camera.cameraControl.startFocusAndMetering(action)
+                        focusFuture.addListener({
+                            runCatching {
+                                // Get focus result
+                                val result = focusFuture.get() as FocusMeteringResult
+                                if (result.isFocusSuccessful) {
+                                    touchListener?.onFocusSuccess()
+                                } else {
+                                    touchListener?.onFocusFail()
+                                }
+                            }
+                        }, ContextCompat.getMainExecutor(requireContext()))
+                        return true
+                    }
+
+                    // ====================
+
+                    private val MIN_SWIPE_DISTANCE_X = 100
+
+                    override fun onFling(e1: MotionEvent?,
+                        e2: MotionEvent?,
+                        velocityX: Float,
+                        velocityY: Float): Boolean {
+                        if (e1 == null || e2 == null) return super.onFling(e1, e2, velocityX, velocityY)
+                        val deltaX = e1.x - e2.x
+                        val deltaXAbs = abs(deltaX)
+
+                        if (deltaXAbs >= MIN_SWIPE_DISTANCE_X) {
+                            if (deltaX > 0) {
+                                swipeCallback?.onLeftSwipe()
+                            } else {
+                                swipeCallback?.onRightSwipe()
+                            }
+                        }
+
+                        return true
+                    }
+                }
 
         val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
         val gestureDetector = GestureDetector(viewFinder.context, gestureListener)
@@ -266,6 +318,26 @@ abstract class BaseCameraXFragment : Fragment() {
         }
     }
 
+    private var swipeCallback: SwipeCallback? = null
+
+    fun setSwipeCallback(left: () -> Unit = {}, right: () -> Unit = {}) {
+        swipeCallback = object : SwipeCallback {
+            override fun onLeftSwipe() {
+                left()
+            }
+
+            override fun onRightSwipe() {
+                right()
+            }
+        }
+    }
+
+    interface SwipeCallback {
+        fun onLeftSwipe()
+
+        fun onRightSwipe()
+    }
+
     protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit) {
         // Create a Vendor Extension for HDR
         val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(requireContext(), cameraProvider ?: return)
@@ -276,7 +348,8 @@ abstract class BaseCameraXFragment : Fragment() {
             // Check for any extension availability
             LogContext.log.w(TAG, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
             LogContext.log.w(TAG, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
-            LogContext.log.w(TAG, "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
+            LogContext.log.w(TAG,
+                "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
             LogContext.log.w(TAG, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
             LogContext.log.w(TAG, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
             LogContext.log.w(TAG, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
@@ -345,7 +418,8 @@ abstract class BaseCameraXFragment : Fragment() {
         // Calculate ImageReader input preview size from supported size list by camera.
         // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
         // Attention: The returned value is in camera orientation. NOT in device orientation.
-        val previewSize: Size = getSpecificPreviewOutputSize(requireContext(), desiredVideoWidth, desiredVideoHeight, characteristics)
+        val previewSize: Size =
+                getSpecificPreviewOutputSize(requireContext(), desiredVideoWidth, desiredVideoHeight, characteristics)
 
         val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
@@ -354,8 +428,14 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
        isFlashSupported=$isFlashSupported
           hardwareLevel=$hardwareLevel
 
-  Supported color format for AVC=${getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")}
- Supported color format for HEVC=${getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted().joinToString(",")}
+  Supported color format for AVC=${
+            getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                .joinToString(",")
+        }
+ Supported color format for HEVC=${
+            getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                .joinToString(",")
+        }
 
  Supported profile/level for AVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
 Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
@@ -372,9 +452,90 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
         LogContext.log.w(TAG, cameraParametersString)
     }
 
+    protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        getMediaQPlus()
+    } else {
+        getMediaQMinus()
+    }.reversed()
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun getMediaQPlus(): List<Media> {
+        val items = mutableListOf<Media>()
+        val contentResolver = requireContext().applicationContext.contentResolver
+
+        contentResolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.RELATIVE_PATH,
+                MediaStore.Video.Media.DATE_TAKEN,
+            ),
+            null,
+            null,
+            "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.RELATIVE_PATH)
+            val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_TAKEN)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val path = cursor.getString(pathColumn)
+                val date = cursor.getLong(dateColumn)
+
+                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+
+                if (path == outputDirectory.absolutePath) {
+                    items.add(Media(contentUri, true, date))
+                }
+            }
+        }
+
+        contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.RELATIVE_PATH,
+                MediaStore.Images.Media.DATE_TAKEN,
+            ),
+            null,
+            null,
+            "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
+            val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val path = cursor.getString(pathColumn)
+                val date = cursor.getLong(dateColumn)
+
+                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+                if (path == outputDirectory.absolutePath) {
+                    items.add(Media(contentUri, false, date))
+                }
+            }
+        }
+        return items
+    }
+
+    private fun getMediaQMinus(): List<Media> {
+        val items = mutableListOf<Media>()
+
+        outputDirectory.listFiles()?.forEach {
+            val authority = requireContext().applicationContext.packageName + ".provider"
+            val mediaUri = FileProvider.getUriForFile(requireContext(), authority, it)
+            items.add(Media(mediaUri, it.extension == "mp4", it.lastModified()))
+        }
+
+        return items
+    }
+
     companion object {
         internal const val TAG = "CameraXBasic"
-        internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
+        internal const val FILENAME = "yyyyMMdd-HH-mm-ss-SSS"
 
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"

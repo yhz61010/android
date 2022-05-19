@@ -58,6 +58,8 @@ import kotlin.properties.Delegates
  * - Image analysis
  */
 class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
+    override fun getTagName() = "CameraFragment"
+
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
@@ -240,13 +242,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     val lower: Float = exposureCompensationRange.lower.toFloat()
                     val upper: Float = exposureCompensationRange.upper.toFloat()
                     cameraUiContainerTopBinding.sliderExposure.run {
-                        LogContext.log.w(TAG, "Exposure[${lower}, $upper]=$exposureCompensationIndex")
+                        LogContext.log.w(logTag, "Exposure[${lower}, $upper]=$exposureCompensationIndex")
                         valueFrom = lower / 10f
                         valueTo = upper / 10f
                         stepSize = 1f / 10
                         value = exposureCompensationIndex / 10f
                         addOnChangeListener { _, value, _ ->
-                            LogContext.log.i(TAG, "Exposure change to ${value * 10}")
+                            LogContext.log.i(logTag, "Exposure change to ${value * 10}")
                             cameraControl.setExposureCompensationIndex((value * 10).toInt())
                         }
                     }
@@ -261,7 +263,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             setSwipeCallback(left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) })
         } catch (exc: Exception) {
-            LogContext.log.e(TAG, "Use case binding failed", exc)
+            LogContext.log.e(logTag, "Use case binding failed", exc)
         }
     }
 
@@ -365,7 +367,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 imageCapture?.let { imageCapture ->
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(imageCapture, outputDirectory) { savedUri ->
-                            LogContext.log.i(TAG, "Photo capture succeeded: $savedUri")
+                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -391,14 +393,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 arrayOf(savedUri.toFile().absolutePath),
                                 arrayOf(mimeType)
                             ) { _, uri ->
-                                LogContext.log.i(TAG, "Image capture scanned into media store: $uri")
+                                LogContext.log.i(logTag, "Image capture scanned into media store: $uri")
                             }
 
                             captureImageListener?.onSavedImageUri(savedUri)
                         }
                     } else {
                         captureForBytes(imageCapture) { (imageBytes, width, height) ->
-                            LogContext.log.i(TAG, "Saved image bytes[${imageBytes.size}] $width x $height")
+                            LogContext.log.i(logTag, "Saved image bytes[${imageBytes.size}] $width x $height")
                             captureImageListener?.onSavedImageBytes(imageBytes, width, height)
                         }
                     }
@@ -486,7 +488,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {
-        LogContext.log.i(TAG, "toggleGrid currentGridFlag=$hasGrid")
+        LogContext.log.i(logTag, "toggleGrid currentGridFlag=$hasGrid")
         cameraUiContainerTopBinding.btnGrid.toggleButton(
             flag = hasGrid,
             rotationAngle = 180f,

@@ -1,14 +1,19 @@
 package com.leovp.camerax_sdk.fragments
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -205,10 +210,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
 
                 provider.unbindAll()
-                for (camSelector in arrayOf(
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    CameraSelector.DEFAULT_FRONT_CAMERA
-                )) {
+                for (camSelector in arrayOf(CameraSelector.DEFAULT_BACK_CAMERA, CameraSelector.DEFAULT_FRONT_CAMERA)) {
                     try {
                         // just get the camera.cameraInfo to query capabilities
                         // we are not binding anything here.
@@ -258,19 +260,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     @SuppressLint("ClickableViewAccessibility", "MissingPermission")
     private fun initializeUI() {
         binding.btnSwitchCamera.apply {
-            setOnClickListener {
-                cameraIndex = (cameraIndex + 1) % cameraCapabilities.size
-                // camera device change is in effect instantly:
-                //   - reset quality selection
-                //   - restart preview
-                qualityIndex = DEFAULT_QUALITY_IDX
-                initializeQualitySectionsUI()
-                enableUI(false)
-                viewLifecycleOwner.lifecycleScope.launch {
-                    bindCaptureUsecase()
-                }
-            }
-            isEnabled = false
+            resetSwitchCameraIcon()
         }
 
         // FIXME add me
@@ -462,7 +452,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             setImageResource(R.drawable.ic_pause)
             setBackgroundResource(R.drawable.ic_outer_circle)
             setPadding(resources.getDimensionPixelSize(R.dimen.spacing_small_large))
+            setOnClickListener { doPause() }
         }
+    }
+
+    private fun doPause() {
+        Toast.makeText(requireContext(), "Pause record.", Toast.LENGTH_SHORT).show()
     }
 
     private fun resetSwitchCameraIcon() {
@@ -470,6 +465,25 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             setImageResource(R.drawable.ic_switch)
             setBackgroundColor(Color.TRANSPARENT)
             setPadding(resources.getDimensionPixelSize(R.dimen.spacing_small))
+            setOnClickListener {
+                isEnabled = false
+                animate().rotationBy(-180f).setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        Handler(Looper.getMainLooper()).postDelayed({ isEnabled = true }, 500)
+                    }
+                })
+
+                cameraIndex = (cameraIndex + 1) % cameraCapabilities.size
+                // camera device change is in effect instantly:
+                //   - reset quality selection
+                //   - restart preview
+                qualityIndex = DEFAULT_QUALITY_IDX
+                initializeQualitySectionsUI()
+                enableUI(false)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    bindCaptureUsecase()
+                }
+            }
         }
     }
 

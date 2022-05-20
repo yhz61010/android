@@ -141,6 +141,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 videoCapture, // video capture use case
                 preview // camera preview use case
             )
+
+            val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
+            val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
+            LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
+            binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
+
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
             LogContext.log.e(logTag, "Use case binding failed", exc)

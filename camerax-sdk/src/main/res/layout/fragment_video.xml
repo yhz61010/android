@@ -110,11 +110,11 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/viewFinder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.33"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/viewFinder" />
 
     <View
         android:id="@+id/gridVertical2"
@@ -123,11 +123,11 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/viewFinder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.66"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/viewFinder" />
 
     <View
         android:id="@+id/gridHorizontal1"

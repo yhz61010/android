@@ -288,7 +288,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                     // ====================
 
-                    private val MIN_SWIPE_DISTANCE_X = 100
+                    private val MIN_SWIPE_DISTANCE = 100
 
                     override fun onFling(e1: MotionEvent?,
                         e2: MotionEvent?,
@@ -298,11 +298,24 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         val deltaX = e1.x - e2.x
                         val deltaXAbs = abs(deltaX)
 
-                        if (deltaXAbs >= MIN_SWIPE_DISTANCE_X) {
+                        if (deltaXAbs >= MIN_SWIPE_DISTANCE) {
                             if (deltaX > 0) {
                                 swipeCallback?.onLeftSwipe()
                             } else {
                                 swipeCallback?.onRightSwipe()
+                            }
+                        }
+
+                        val deltaY = e1.y - e2.y
+                        val deltaYAbs = abs(deltaY)
+
+                        LogContext.log.e(logTag, "deltaX=$deltaX deltaY=$deltaY")
+
+                        if (deltaYAbs >= MIN_SWIPE_DISTANCE) {
+                            if (deltaY > 0) {
+                                swipeCallback?.onUpSwipe()
+                            } else {
+                                swipeCallback?.onDownSwipe()
                             }
                         }
 
@@ -323,8 +336,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     private var swipeCallback: SwipeCallback? = null
 
-    fun setSwipeCallback(left: () -> Unit = {}, right: () -> Unit = {}) {
+    fun setSwipeCallback(left: () -> Unit = {}, right: () -> Unit = {}, up: () -> Unit = {}, down: () -> Unit = {}) {
         swipeCallback = object : SwipeCallback {
+            override fun onUpSwipe() {
+                up()
+            }
+
+            override fun onDownSwipe() {
+                down()
+            }
+
             override fun onLeftSwipe() {
                 left()
             }
@@ -336,6 +357,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     interface SwipeCallback {
+        fun onUpSwipe()
+
+        fun onDownSwipe()
+
         fun onLeftSwipe()
 
         fun onRightSwipe()

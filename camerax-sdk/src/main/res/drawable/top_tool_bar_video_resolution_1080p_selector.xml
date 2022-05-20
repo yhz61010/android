@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/top_tool_bar_video_resolution_1080p_inverse" android:state_selected="true" />
+    <item android:drawable="@drawable/top_tool_bar_video_resolution_1080p" android:state_selected="false" />
+</selector>

@@ -51,20 +51,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
-    // Selector showing is flash enabled or not
-    private var isTorchOn = false
-
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
             FragmentVideoBinding.inflate(inflater, container, false)
 
-    // Selector showing which flash mode is selected (on, off or auto)
+    // Selector showing which flash mode is selected (on, off)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
-        binding.btnFlash.setImageResource(
-            when (new) {
-                ImageCapture.FLASH_MODE_ON -> R.drawable.ic_flash_on
-                else                       -> R.drawable.ic_flash_off
-            }
-        )
+        val flashDrawable = if (new == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off
+        binding.btnFlash.setImageResource(flashDrawable)
     }
 
     /** Host's navigation controller */
@@ -80,26 +73,31 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     // Camera UI  states and inputs
     enum class UiState {
-        IDLE,       // Not recording, all UI controls are active.
-        RECORDING,  // Camera is recording, only display Pause/Resume & Stop button.
-        FINALIZED,  // Recording just completes, disable all RECORDING UI controls.
-        RECOVERY    // For future use.
+        IDLE,      // Not recording, all UI controls are active.
+        RECORDING, // Camera is recording, only display Pause/Resume & Stop button.
+        FINALIZED, // Recording just completes, disable all RECORDING UI controls.
+        RECOVERY   // For future use.
     }
 
     private var cameraIndex = 0
     private var qualityIndex = DEFAULT_QUALITY_IDX
-    private var audioEnabled = false
+
+    private var audioEnabled = true
+
+    // Selector showing is flash enabled or not
+    private var torchEnabled = false
 
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(requireContext()) }
     private var enumerationDeferred: Deferred<Unit>? = null
 
-    // main cameraX capture functions
     /**
-     *   Always bind preview + video capture use case combinations in this sample
-     *   (VideoCapture can work on its own). The function should always execute on
-     *   the main thread.
+     * Main cameraX capture functions.
+     *
+     * Always bind preview + video capture use case combinations in this sample
+     * (VideoCapture can work on its own). The function should always execute on
+     * the main thread.
      */
-    private suspend fun bindCaptureUsecase() {
+    private suspend fun bindCaptureUseCase() {
         val cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
 
         val cameraSelector = getCameraSelector(cameraIndex)
@@ -146,7 +144,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
             LogContext.log.e(logTag, "Use case binding failed", exc)
-            resetUIandState("bindToLifecycle failed: $exc")
+            resetUIAndState("bindToLifecycle failed: $exc")
         }
         enableUI(true)
     }
@@ -178,7 +176,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             .apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
-        LogContext.log.i(logTag, "Recording started")
+        LogContext.log.w(logTag, "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
     }
 
     /**
@@ -261,13 +259,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private fun initCameraFragment() {
         initializeUI()
         viewLifecycleOwner.lifecycleScope.launch {
-            if (enumerationDeferred != null) {
-                enumerationDeferred!!.await()
-                enumerationDeferred = null
-            }
+            enumerationDeferred?.await()
+            enumerationDeferred = null
+
             initializeQualitySectionsUI()
 
-            bindCaptureUsecase()
+            bindCaptureUseCase()
 
             initCameraGesture(binding.viewFinder, camera!!)
 
@@ -306,8 +303,19 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
         binding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
-
+        binding.btnMicrophone.setImageResource(if (audioEnabled) R.drawable.ic_microphone_on else R.drawable.ic_microphone_off)
+        binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }
         binding.btnFlash.setOnClickListener { toggleFlash() }
+    }
+
+    private fun toggleAudio() = binding.btnMicrophone.toggleButton(
+        flag = audioEnabled,
+        rotationAngle = 360f,
+        firstIcon = R.drawable.ic_microphone_off,
+        secondIcon = R.drawable.ic_microphone_on
+    ) { flag ->
+        audioEnabled = flag
+        LogContext.log.w(logTag, "Enable audio: $audioEnabled")
     }
 
     /** Turns on or off the grid on the screen */
@@ -334,7 +342,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     ) { flag ->
         LogContext.log.w(logTag,
             "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash")
-        isTorchOn = flag
+        torchEnabled = flag
         flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
         camera?.cameraControl?.enableTorch(flag)
     }
@@ -397,10 +405,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 // nothing needs to do here.
             }
             is VideoRecordEvent.Start    -> {
-                showUI(VideoFragment.UiState.RECORDING, event.getNameString())
+                showUI(UiState.RECORDING, event.getNameString())
             }
             is VideoRecordEvent.Finalize -> {
-                showUI(VideoFragment.UiState.FINALIZED, event.getNameString())
+                showUI(UiState.FINALIZED, event.getNameString())
             }
             is VideoRecordEvent.Pause    -> {
                 binding.btnGallery.setImageResource(R.drawable.ic_resume)
@@ -430,6 +438,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             binding.btnRecordVideo,
             binding.btnSwitchCamera,
             binding.btnGallery,
+            binding.btnMicrophone
         ).forEach {
             it.isEnabled = enable
         }
@@ -523,7 +532,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 initializeQualitySectionsUI()
                 enableUI(false)
                 viewLifecycleOwner.lifecycleScope.launch {
-                    bindCaptureUsecase()
+                    bindCaptureUseCase()
                 }
             }
         }
@@ -534,7 +543,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *    in case binding failed, let's give it another change for re-try. In future cases
      *    we might fail and user get notified on the status
      */
-    private fun resetUIandState(reason: String) {
+    private fun resetUIAndState(reason: String) {
         enableUI(true)
         showUI(UiState.IDLE, reason)
 

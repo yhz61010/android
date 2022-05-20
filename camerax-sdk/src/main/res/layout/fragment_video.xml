@@ -80,7 +80,7 @@
         android:src="@drawable/ic_grid_off"
         app:layout_constraintBottom_toBottomOf="@id/btnFlash"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.3"
+        app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnFlash" />
 
@@ -94,9 +94,24 @@
         android:scaleType="centerInside"
         android:src="@drawable/ic_flash_off"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.7"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnMicrophone"
+        android:layout_width="@dimen/button_size_big"
+        android:layout_height="@dimen/button_size_big"
+        android:background="@android:color/transparent"
+        android:elevation="1dp"
+        android:padding="@dimen/fab_margin"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_microphone_on"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.75"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <View
         android:id="@+id/gridVertical1"

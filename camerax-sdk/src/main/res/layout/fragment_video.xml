@@ -71,11 +71,11 @@
 
     <ImageButton
         android:id="@+id/btnGrid"
-        android:layout_width="@dimen/button_size_small"
-        android:layout_height="@dimen/button_size_small"
+        android:layout_width="@dimen/button_size_big"
+        android:layout_height="@dimen/button_size_big"
         android:background="@android:color/transparent"
         android:elevation="1dp"
-        android:padding="@dimen/half_margin"
+        android:padding="@dimen/fab_margin"
         android:scaleType="centerInside"
         android:src="@drawable/ic_grid_off"
         app:layout_constraintBottom_toBottomOf="@id/btnFlash"
@@ -86,11 +86,11 @@
 
     <ImageButton
         android:id="@+id/btnFlash"
-        android:layout_width="@dimen/button_size_small"
-        android:layout_height="@dimen/button_size_small"
+        android:layout_width="@dimen/button_size_big"
+        android:layout_height="@dimen/button_size_big"
         android:background="@android:color/transparent"
         android:elevation="1dp"
-        android:padding="@dimen/half_margin"
+        android:padding="@dimen/fab_margin"
         android:scaleType="centerInside"
         android:src="@drawable/ic_flash_off"
         app:layout_constraintEnd_toEndOf="parent"
@@ -155,5 +155,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:constraint_referenced_ids="gridVertical1,gridVertical2,gridHorizontal1,gridHorizontal2" />
+        app:constraint_referenced_ids="gridVertical1,gridVertical2,gridHorizontal1,gridHorizontal2"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

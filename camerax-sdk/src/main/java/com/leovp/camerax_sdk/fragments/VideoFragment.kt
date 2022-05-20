@@ -442,7 +442,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         ).forEach {
             it.isEnabled = enable
         }
-        // disable the camera button if no device to switch
+        // Disable the camera switch button if no device to switch
         if (cameraCapabilities.size <= 1) {
             binding.btnSwitchCamera.isEnabled = false
         }

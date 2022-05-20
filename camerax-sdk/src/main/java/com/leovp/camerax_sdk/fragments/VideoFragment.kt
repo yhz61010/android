@@ -299,7 +299,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         initCameraGesture(binding.viewFinder, camera!!)
 
-        setSwipeCallback(right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) })
+        setSwipeCallback(
+            left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+            right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+            up = { binding.btnSwitchCamera.performClick() },
+            down = { binding.btnSwitchCamera.performClick() }
+        )
     }
 
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)

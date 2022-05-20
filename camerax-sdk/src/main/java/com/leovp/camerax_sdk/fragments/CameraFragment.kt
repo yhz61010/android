@@ -261,7 +261,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // Call this after [cameraProvider.bindToLifecycle]
             initCameraGesture(binding.viewFinder, camera!!)
 
-            setSwipeCallback(left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) })
+            setSwipeCallback(
+                left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
+                right = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
+                up = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() },
+                down = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() }
+            )
         } catch (exc: Exception) {
             LogContext.log.e(logTag, "Use case binding failed", exc)
         }

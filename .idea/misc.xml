@@ -59,6 +59,18 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_3.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/menu_blur.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_fps_120.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_fps_30.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_fps_60.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_1080p.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_1080p_inverse.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_1080p_selector.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_4k.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_4k_inverse.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_4k_selector.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_720p.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_720p_inverse.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_resolution_720p_selector.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/layout-land/camera_ui_container.xml" value="0.178125" />
         <entry key="camerax-sdk/src/main/res/layout/activity_camerax_main.xml" value="0.5765625" />
         <entry key="camerax-sdk/src/main/res/layout/activity_main.xml" value="0.31666666666666665" />
@@ -68,7 +80,7 @@
         <entry key="camerax-sdk/src/main/res/layout/camera_ui_container_top.xml" value="0.48504273504273504" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_camera.xml" value="0.5489583333333333" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
-        <entry key="camerax-sdk/src/main/res/layout/fragment_video.xml" value="0.6604057099924868" />
+        <entry key="camerax-sdk/src/main/res/layout/fragment_video.xml" value="0.5" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />

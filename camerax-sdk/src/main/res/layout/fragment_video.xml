@@ -61,6 +61,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/margin_small"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -75,7 +76,7 @@
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
             android:src="@drawable/ic_grid_off"
-            tools:ignore="ContentDescription" />
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton
             android:id="@+id/btnFlash"
@@ -87,7 +88,7 @@
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
             android:src="@drawable/ic_flash_off"
-            tools:ignore="ContentDescription" />
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton
             android:id="@+id/btnMicrophone"
@@ -99,7 +100,7 @@
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
             android:src="@drawable/ic_microphone_on"
-            tools:ignore="ContentDescription" />
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
     </LinearLayout>
 
     <View

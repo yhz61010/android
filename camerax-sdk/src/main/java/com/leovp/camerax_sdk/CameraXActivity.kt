@@ -68,8 +68,11 @@ open class CameraXActivity : AppCompatActivity() {
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP,
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                getCameraFragment()?.functionKey?.value = keyCode
-                true
+                getCameraFragment()?.run {
+                    functionKey.value = keyCode
+                    return true
+                }
+                return false
             }
             else                         -> super.onKeyDown(keyCode, event)
         }

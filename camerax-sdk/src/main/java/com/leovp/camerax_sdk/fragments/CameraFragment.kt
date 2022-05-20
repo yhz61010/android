@@ -255,6 +255,16 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 }
             }
 
+            val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
+            val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
+            LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
+            if (!hasFlash) {
+                cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash)
+                cameraUiContainerTopBinding.btnFlash.visibility = View.GONE
+            } else {
+                cameraUiContainerTopBinding.btnFlash.visibility = View.VISIBLE
+            }
+
             // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             //            observeCameraState(camera?.cameraInfo!!)

@@ -43,7 +43,7 @@ open class CameraXActivity : AppCompatActivity() {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
         binding = ActivityCameraxMainBinding.inflate(layoutInflater).apply { setContentView(root) }
-        getCameraFragment().run {
+        getCameraFragment()?.run {
             captureImageListener = this@CameraXActivity.captureImageListener
             allowToOutputCaptureFile = allowToOutputCaptureFile()
         }
@@ -57,9 +57,10 @@ open class CameraXActivity : AppCompatActivity() {
         hideNavigationBar()
     }
 
-    private fun getCameraFragment(): CameraFragment {
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_camerax) as NavHostFragment
-        return navHostFragment.childFragmentManager.primaryNavigationFragment as CameraFragment
+    private fun getCameraFragment(): CameraFragment? {
+        val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.fragment_container_camerax) as NavHostFragment
+        return navHostFragment.childFragmentManager.primaryNavigationFragment as? CameraFragment
     }
 
     /** When key down event is triggered, relay it via local broadcast so fragments can handle it */
@@ -67,7 +68,7 @@ open class CameraXActivity : AppCompatActivity() {
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP,
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                getCameraFragment().functionKey.value = keyCode
+                getCameraFragment()?.functionKey?.value = keyCode
                 true
             }
             else                         -> super.onKeyDown(keyCode, event)

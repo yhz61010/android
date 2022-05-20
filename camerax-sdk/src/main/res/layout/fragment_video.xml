@@ -57,18 +57,6 @@
         app:layout_constraintTop_toTopOf="@id/btnRecordVideo"
         app:srcCompat="@drawable/ic_switch" />
 
-    <View
-        android:id="@+id/viewBg2"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:alpha="0.4"
-        android:background="@android:color/black"
-        android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="@id/btnFlash"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <ImageButton
         android:id="@+id/btnGrid"
         android:layout_width="@dimen/button_size_big"
@@ -78,11 +66,11 @@
         android:padding="@dimen/fab_margin"
         android:scaleType="centerInside"
         android:src="@drawable/ic_grid_off"
-        app:layout_constraintBottom_toBottomOf="@id/btnFlash"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnFlash" />
+        app:layout_constraintTop_toTopOf="@id/btnFlash"
+        tools:ignore="ContentDescription" />
 
     <ImageButton
         android:id="@+id/btnFlash"
@@ -96,7 +84,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <ImageButton
         android:id="@+id/btnMicrophone"

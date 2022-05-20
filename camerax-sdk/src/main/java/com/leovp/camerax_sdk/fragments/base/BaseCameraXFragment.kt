@@ -288,7 +288,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                     // ====================
 
-                    private val MIN_SWIPE_DISTANCE = 100
+                    private val MIN_SWIPE_DISTANCE = 200
 
                     override fun onFling(e1: MotionEvent?,
                         e2: MotionEvent?,
@@ -309,7 +309,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         val deltaY = e1.y - e2.y
                         val deltaYAbs = abs(deltaY)
 
-                        LogContext.log.e(logTag, "deltaX=$deltaX deltaY=$deltaY")
+                        //                        LogContext.log.v(logTag, "deltaX=$deltaX deltaY=$deltaY")
 
                         if (deltaYAbs >= MIN_SWIPE_DISTANCE) {
                             if (deltaY > 0) {

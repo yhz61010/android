@@ -346,7 +346,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
             btnGrid.setOnSingleClickListener { toggleGrid() }
-            groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+            binding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
             btnFlash.setOnClickListener { showFlashLayer() }
             btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
             btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
@@ -512,7 +512,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         ) { flag ->
             hasGrid = flag
             prefs.putBoolean(KEY_GRID, flag)
-            cameraUiContainerTopBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
+            binding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
         }
     }
 

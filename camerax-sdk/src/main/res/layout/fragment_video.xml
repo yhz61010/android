@@ -57,50 +57,50 @@
         app:layout_constraintTop_toTopOf="@id/btnRecordVideo"
         app:srcCompat="@drawable/ic_switch" />
 
-    <ImageButton
-        android:id="@+id/btnGrid"
-        android:layout_width="@dimen/button_size_big"
-        android:layout_height="@dimen/button_size_big"
-        android:background="@android:color/transparent"
-        android:elevation="1dp"
-        android:padding="@dimen/fab_margin"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_grid_off"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnFlash"
-        tools:ignore="ContentDescription" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <ImageButton
-        android:id="@+id/btnFlash"
-        android:layout_width="@dimen/button_size_big"
-        android:layout_height="@dimen/button_size_big"
-        android:background="@android:color/transparent"
-        android:elevation="1dp"
-        android:padding="@dimen/fab_margin"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_flash_off"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
+        <ImageButton
+            android:id="@+id/btnGrid"
+            android:layout_width="@dimen/button_size_big"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:elevation="1dp"
+            android:padding="@dimen/fab_margin"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_grid_off"
+            tools:ignore="ContentDescription" />
 
-    <ImageButton
-        android:id="@+id/btnMicrophone"
-        android:layout_width="@dimen/button_size_big"
-        android:layout_height="@dimen/button_size_big"
-        android:background="@android:color/transparent"
-        android:elevation="1dp"
-        android:padding="@dimen/fab_margin"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_microphone_on"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.75"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
+        <ImageButton
+            android:id="@+id/btnFlash"
+            android:layout_width="@dimen/button_size_big"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:elevation="1dp"
+            android:padding="@dimen/fab_margin"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_flash_off"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btnMicrophone"
+            android:layout_width="@dimen/button_size_big"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:elevation="1dp"
+            android:padding="@dimen/fab_margin"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_microphone_on"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
 
     <View
         android:id="@+id/gridVertical1"

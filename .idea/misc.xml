@@ -13,6 +13,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/btn_video_pause.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/btn_video_record_resume.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/button_round_corners.xml" value="0.1835" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic__05_microphone2.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_baseline_grid_on_24.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_baseline_pause_circle_outline_24.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_exposure.xml" value="0.583" />
@@ -24,6 +25,8 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_off.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_hdr_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_launcher_background.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_microphone.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_microphone_mute.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_no_picture.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_enhance.xml" value="0.5555" />

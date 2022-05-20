@@ -91,6 +91,18 @@
             tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton
+            android:id="@+id/btnResolution"
+            android:layout_width="@dimen/button_size_big"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:elevation="1dp"
+            android:padding="@dimen/fab_margin"
+            android:scaleType="centerInside"
+            android:src="@drawable/top_tool_bar_video_resolution_1080p_selector"
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+
+        <ImageButton
             android:id="@+id/btnMicrophone"
             android:layout_width="@dimen/button_size_big"
             android:layout_height="@dimen/button_size_big"

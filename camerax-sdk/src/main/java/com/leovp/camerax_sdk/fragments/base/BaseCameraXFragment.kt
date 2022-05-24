@@ -91,7 +91,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        lifecycleScope.launch { soundManager.loadSounds() }
 
         // Determine the output directory
         outputDirectory = getOutputDirectory(requireContext())
@@ -104,6 +103,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
     }

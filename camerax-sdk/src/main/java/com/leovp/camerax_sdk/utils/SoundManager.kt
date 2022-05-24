@@ -20,12 +20,14 @@ class SoundManager private constructor(val ctx: Context) {
     var soundIdCountdown2: Int = 0
     var soundIdCountdownFinal: Int = 0
     var soundIdShutter: Int = 0
+    var soundIdCamStart: Int = 0
+    var soundIdCamStop: Int = 0
 
     private val audioManager by lazy { ctx.audioManager }
 
     suspend fun loadSounds() = withContext(Dispatchers.IO) {
         soundPool = SoundPool.Builder()
-            .setMaxStreams(5)
+            .setMaxStreams(6)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setLegacyStreamType(AudioManager.STREAM_MUSIC)
@@ -35,6 +37,8 @@ class SoundManager private constructor(val ctx: Context) {
                 soundIdCountdown2 = load(ctx, R.raw.camera_timer, 1)
                 soundIdCountdownFinal = load(ctx, R.raw.camera_timer_2sec, 1)
                 soundIdShutter = load(ctx, R.raw.camera_shutter, 1)
+                soundIdCamStart = load(ctx, R.raw.cam_start, 1)
+                soundIdCamStop = load(ctx, R.raw.cam_stop, 1)
             }
     }
 
@@ -49,6 +53,9 @@ class SoundManager private constructor(val ctx: Context) {
             playSound(if (leftTime % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
         }
     }
+
+    fun playCameraStartSound() = playSound(soundIdCamStart, getSoundVolume())
+    fun playCameraStopSound() = playSound(soundIdCamStop, getSoundVolume())
 
     fun release() {
         runCatching {

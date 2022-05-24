@@ -11,4 +11,6 @@
     <string name="delete_button_alt">Delete</string>
     <string name="delete_dialog">Delete current photo?</string>
     <string name="delete_title">Confirm</string>
+
+    <string name="record_default_time">00:00</string>
 </resources>

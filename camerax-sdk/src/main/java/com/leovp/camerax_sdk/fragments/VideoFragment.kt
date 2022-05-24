@@ -13,6 +13,8 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
@@ -89,6 +91,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(requireContext()) }
     private var enumerationDeferred: Deferred<Unit>? = null
+
+    private val blinkAnim = AlphaAnimation(0.1f, 1.0f).apply {
+        duration = 500
+        repeatCount = Animation.INFINITE
+        repeatMode = Animation.REVERSE
+    }
 
     /**
      * Main cameraX capture functions.
@@ -404,11 +412,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *   - this app starts VideoViewer fragment to view the captured result.
      */
     private fun updateUI(event: VideoRecordEvent) {
-        val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
         when (event) {
-            is VideoRecordEvent.Status   -> {
-                // placeholder: we update the UI with new status after this when() block,
-                // nothing needs to do here.
+            is VideoRecordEvent.Status   -> { // Recording in progress
+                val timeInSec = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
+                binding.tvRecTime.text = String.format("%02d:%02d", timeInSec / 60, (timeInSec % 60))
             }
             is VideoRecordEvent.Start    -> {
                 showUI(UiState.RECORDING, event.getNameString())
@@ -417,21 +424,24 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 showUI(UiState.FINALIZED, event.getNameString())
             }
             is VideoRecordEvent.Pause    -> {
+                binding.icRedDot.clearAnimation()
                 binding.btnGallery.setImageResource(R.drawable.ic_resume)
             }
             is VideoRecordEvent.Resume   -> {
+                binding.icRedDot.startAnimation(blinkAnim)
                 binding.btnGallery.setImageResource(R.drawable.ic_pause)
             }
         }
 
-        val stats = event.recordingStats
-        val size = stats.numBytesRecorded / 1000
-        val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
-        var text = "${state}: recorded ${size}KB, in ${time}second"
-        if (event is VideoRecordEvent.Finalize)
-            text = "${text}\nFile saved to: ${event.outputResults.outputUri}"
-
-        LogContext.log.w(logTag, "recording event: $text")
+        //        val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
+        //        val stats = event.recordingStats
+        //        val size = stats.numBytesRecorded / 1000
+        //        val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
+        //        var text = "${state}: recorded ${size}KB, in ${time}second"
+        //        if (event is VideoRecordEvent.Finalize)
+        //            text = "${text}\nFile saved to: ${event.outputResults.outputUri}"
+        //
+        //        LogContext.log.d(logTag, "recording event: $text")
     }
 
     /**
@@ -477,6 +487,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     //                    it.qualitySelection.visibility = View.VISIBLE
                 }
                 UiState.RECORDING -> {
+                    it.tvRecTime.text = getString(R.string.record_default_time)
+                    it.llRecLayer.visibility = View.VISIBLE
+                    it.icRedDot.startAnimation(blinkAnim)
                     it.btnRecordVideo.apply {
                         setImageResource(R.drawable.ic_stop)
                         setOnClickListener { doStopRecording() }
@@ -488,6 +501,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     //                    it.qualitySelection.visibility = View.INVISIBLE
                 }
                 UiState.FINALIZED -> {
+                    it.llRecLayer.visibility = View.GONE
+                    it.icRedDot.clearAnimation()
                     it.btnRecordVideo.apply {
                         setImageResource(R.drawable.ic_start)
                         setOnClickListener { doStartRecording() }

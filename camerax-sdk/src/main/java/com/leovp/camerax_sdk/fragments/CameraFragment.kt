@@ -382,7 +382,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 imageCapture?.let { imageCapture ->
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(imageCapture, outputDirectory) { savedUri ->
-                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
+                            //                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
+
+                            // We can only change the foreground Drawable using API level 23+ API
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                binding.viewFinder.apply {
+                                    post {
+                                        // Display flash animation to indicate that photo was captured.
+                                        foreground = ColorDrawable(ResourcesCompat.getColor(resources,
+                                            R.color.camera_flash_layer, null))
+                                        postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
+                                    }
+                                }
+                            }
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -407,8 +419,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 context,
                                 arrayOf(savedUri.toFile().absolutePath),
                                 arrayOf(mimeType)
-                            ) { _, uri ->
-                                LogContext.log.i(logTag, "Image capture scanned into media store: $uri")
+                            ) { path, uri ->
+                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             }
 
                             captureImageListener?.onSavedImageUri(savedUri)
@@ -419,16 +431,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             captureImageListener?.onSavedImageBytes(imageBytes, width, height)
                         }
                     }
-                }
-
-                // We can only change the foreground Drawable using API level 23+ API
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    // Display flash animation to indicate that photo was captured
-                    binding.root.postDelayed({
-                        binding.root.foreground =
-                                ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
-                        binding.root.postDelayed({ binding.root.foreground = null }, ANIMATION_FAST_MILLIS)
-                    }, ANIMATION_SLOW_MILLIS)
                 }
             }
         }

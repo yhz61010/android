@@ -152,7 +152,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             LogContext.log.e(logTag, "Use case binding failed", exc)
             resetUIAndState("bindToLifecycle failed: $exc")
         }
-        enableUI(true)
     }
 
     /**
@@ -271,6 +270,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             initializeQualitySectionsUI()
 
             bindCaptureUseCase()
+            enableUI(true)
 
             initCameraGesture(binding.viewFinder, camera!!)
 
@@ -316,7 +316,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private fun toggleAudio() = binding.btnMicrophone.toggleButton(
         flag = audioEnabled,
-        rotationAngle = 360f,
+        rotationAngle = 180f,
         firstIcon = R.drawable.ic_microphone_off,
         secondIcon = R.drawable.ic_microphone_on
     ) { flag ->
@@ -526,7 +526,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 isEnabled = false
                 animate().rotationBy(-180f).setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        Handler(Looper.getMainLooper()).postDelayed({ isEnabled = true }, 500)
+                        Handler(Looper.getMainLooper()).postDelayed({ enableUI(true) }, 500)
                     }
                 })
 

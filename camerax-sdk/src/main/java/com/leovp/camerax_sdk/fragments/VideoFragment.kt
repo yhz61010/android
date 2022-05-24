@@ -93,7 +93,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var enumerationDeferred: Deferred<Unit>? = null
 
     private val blinkAnim = AlphaAnimation(0.1f, 1.0f).apply {
-        duration = 500
+        duration = 400
         repeatCount = Animation.INFINITE
         repeatMode = Animation.REVERSE
     }
@@ -316,20 +316,15 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     LogContext.log.i(logTag, "Start recording...")
                     enableUI(false)  // Our eventListener will turn on the Recording UI.
                     startRecording()
-                } else {
-                    LogContext.log.i(logTag, "Pause recording.")
-                    when (recordingState) {
-                        is VideoRecordEvent.Start  -> {
-                            if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
-                                return@setOnClickListener
-                            }
-                            currentRecording?.stop()
-                            currentRecording = null
-                        }
-                        is VideoRecordEvent.Pause  -> currentRecording?.resume()
-                        is VideoRecordEvent.Resume -> currentRecording?.pause()
-                        else                       -> throw IllegalStateException("recordingState in unknown state")
+                } else if (recordingState is VideoRecordEvent.Start) {
+                    if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
+                        return@setOnClickListener
                     }
+                    currentRecording?.stop()
+                    currentRecording = null
+                    LogContext.log.i(logTag, "Record stopped!")
+                } else {
+                    throw IllegalStateException("recordingState[${recordingState.getNameString()}] in unknown state.")
                 }
             }
             isEnabled = false
@@ -402,7 +397,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         when (event) {
             is VideoRecordEvent.Status   -> { // Recording in progress
                 val timeInSec = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
-                binding.tvRecTime.text = String.format("%02d:%02d", timeInSec / 60, (timeInSec % 60))
+                binding.tvRecTime.text = getString(R.string.record_default_time,
+                    timeInSec / 3600,
+                    (timeInSec % 3600) / 60,
+                    (timeInSec % 60))
             }
             is VideoRecordEvent.Start    -> {
                 showUI(UiState.RECORDING, event.getNameString())
@@ -470,11 +468,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
                     it.btnGallery.setImageResource(R.drawable.ic_photo)
                     resetSwitchCameraIcon()
-                    //                    it.audioSelection.visibility = View.VISIBLE
-                    //                    it.qualitySelection.visibility = View.VISIBLE
                 }
                 UiState.RECORDING -> {
-                    it.tvRecTime.text = getString(R.string.record_default_time)
+                    it.tvRecTime.text = getString(R.string.record_default_time, 0, 0, 0)
                     it.llRecLayer.visibility = View.VISIBLE
                     it.icRedDot.startAnimation(blinkAnim)
                     it.btnRecordVideo.apply {
@@ -483,8 +479,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     }
                     setSwitchCameraIconToPauseIcon()
                     it.btnGallery.visibility = View.GONE
-                    //                    it.audioSelection.visibility = View.INVISIBLE
-                    //                    it.qualitySelection.visibility = View.INVISIBLE
                 }
                 UiState.FINALIZED -> {
                     it.llRecLayer.visibility = View.GONE

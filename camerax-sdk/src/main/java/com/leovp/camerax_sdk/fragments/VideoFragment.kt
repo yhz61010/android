@@ -309,7 +309,29 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
-            setOnClickListener { doStartRecording() }
+            setOnClickListener {
+                if (!this@VideoFragment::recordingState.isInitialized ||
+                    recordingState is VideoRecordEvent.Finalize
+                ) {
+                    LogContext.log.i(logTag, "Start recording...")
+                    enableUI(false)  // Our eventListener will turn on the Recording UI.
+                    startRecording()
+                } else {
+                    LogContext.log.i(logTag, "Pause recording.")
+                    when (recordingState) {
+                        is VideoRecordEvent.Start  -> {
+                            if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
+                                return@setOnClickListener
+                            }
+                            currentRecording?.stop()
+                            currentRecording = null
+                        }
+                        is VideoRecordEvent.Pause  -> currentRecording?.resume()
+                        is VideoRecordEvent.Resume -> currentRecording?.pause()
+                        else                       -> throw IllegalStateException("recordingState in unknown state")
+                    }
+                }
+            }
             isEnabled = false
         }
 
@@ -364,41 +386,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     override fun onStop() {
         super.onStop()
         camera?.cameraControl?.enableTorch(false)
-    }
-
-    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun doStartRecording() {
-        LogContext.log.i(logTag, "doStartRecording")
-        if (!this@VideoFragment::recordingState.isInitialized ||
-            recordingState is VideoRecordEvent.Finalize
-        ) {
-            enableUI(false)  // Our eventListener will turn on the Recording UI.
-            startRecording()
-        } else {
-            // FIXME How to enter here?
-            when (recordingState) {
-                is VideoRecordEvent.Start  -> {
-                    currentRecording?.pause()
-                    // FIXME add me
-                    //                            binding.stopButton.visibility = View.VISIBLE
-                }
-                is VideoRecordEvent.Pause  -> currentRecording?.resume()
-                is VideoRecordEvent.Resume -> currentRecording?.pause()
-                else                       -> throw IllegalStateException("recordingState in unknown state")
-            }
-        }
-    }
-
-    private fun doStopRecording() {
-        if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
-            return
-        }
-
-        val recording = currentRecording
-        if (recording != null) {
-            recording.stop()
-            currentRecording = null
-        }
     }
 
     /**
@@ -492,7 +479,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.icRedDot.startAnimation(blinkAnim)
                     it.btnRecordVideo.apply {
                         setImageResource(R.drawable.ic_stop)
-                        setOnClickListener { doStopRecording() }
                         isEnabled = true
                     }
                     setSwitchCameraIconToPauseIcon()
@@ -503,10 +489,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 UiState.FINALIZED -> {
                     it.llRecLayer.visibility = View.GONE
                     it.icRedDot.clearAnimation()
-                    it.btnRecordVideo.apply {
-                        setImageResource(R.drawable.ic_start)
-                        setOnClickListener { doStartRecording() }
-                    }
+                    it.btnRecordVideo.setImageResource(R.drawable.ic_start)
                     it.btnGallery.visibility = View.VISIBLE
                     resetSwitchCameraIcon()
                     enableUI(true)

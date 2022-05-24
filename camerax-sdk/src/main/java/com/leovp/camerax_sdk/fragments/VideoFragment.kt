@@ -439,7 +439,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             binding.btnRecordVideo,
             binding.btnSwitchCamera,
             binding.btnGallery,
-            binding.btnMicrophone
         ).forEach {
             it.isEnabled = enable
         }

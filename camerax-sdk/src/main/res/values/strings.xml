@@ -12,5 +12,5 @@
     <string name="delete_dialog">Delete current photo?</string>
     <string name="delete_title">Confirm</string>
 
-    <string name="record_default_time">00:00</string>
+    <string name="record_default_time">%1$02d:%2$02d:%3$02d</string>
 </resources>

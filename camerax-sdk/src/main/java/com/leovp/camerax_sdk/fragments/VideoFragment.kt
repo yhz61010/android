@@ -15,7 +15,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -197,8 +196,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     private val captureListener = Consumer<VideoRecordEvent> { event ->
         // cache the recording state
-        if (event !is VideoRecordEvent.Status)
+        if (event !is VideoRecordEvent.Status) {
             recordingState = event
+        }
 
         updateUI(event)
 
@@ -316,15 +316,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     LogContext.log.i(logTag, "Start recording...")
                     enableUI(false)  // Our eventListener will turn on the Recording UI.
                     startRecording()
-                } else if (recordingState is VideoRecordEvent.Start) {
+                } else {
                     if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
                         return@setOnClickListener
                     }
                     currentRecording?.stop()
                     currentRecording = null
                     LogContext.log.i(logTag, "Record stopped!")
-                } else {
-                    throw IllegalStateException("recordingState[${recordingState.getNameString()}] in unknown state.")
                 }
             }
             isEnabled = false
@@ -402,19 +400,15 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     (timeInSec % 3600) / 60,
                     (timeInSec % 60))
             }
-            is VideoRecordEvent.Start    -> {
-                showUI(UiState.RECORDING, event.getNameString())
-            }
-            is VideoRecordEvent.Finalize -> {
-                showUI(UiState.FINALIZED, event.getNameString())
-            }
+            is VideoRecordEvent.Start    -> showUI(UiState.RECORDING, event.getNameString())
+            is VideoRecordEvent.Finalize -> showUI(UiState.FINALIZED, event.getNameString())
             is VideoRecordEvent.Pause    -> {
                 binding.icRedDot.clearAnimation()
-                binding.btnGallery.setImageResource(R.drawable.ic_resume)
+                binding.btnSwitchCamera.setImageResource(R.drawable.ic_resume)
             }
             is VideoRecordEvent.Resume   -> {
                 binding.icRedDot.startAnimation(blinkAnim)
-                binding.btnGallery.setImageResource(R.drawable.ic_pause)
+                binding.btnSwitchCamera.setImageResource(R.drawable.ic_pause)
             }
         }
 
@@ -497,6 +491,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private fun setSwitchCameraIconToPauseIcon() {
         binding.btnSwitchCamera.apply {
+            isEnabled = true
             setImageResource(R.drawable.ic_pause)
             setBackgroundResource(R.drawable.ic_outer_circle)
             setPadding(resources.getDimensionPixelSize(R.dimen.spacing_small_large))
@@ -505,7 +500,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     private fun doPause() {
-        Toast.makeText(requireContext(), "Pause record.", Toast.LENGTH_SHORT).show()
+        when (recordingState) {
+            is VideoRecordEvent.Start  -> currentRecording?.pause()
+            is VideoRecordEvent.Pause  -> currentRecording?.resume()
+            is VideoRecordEvent.Resume -> currentRecording?.pause()
+            else                       -> throw IllegalStateException("recordingState in unknown state")
+        }
     }
 
     private fun resetSwitchCameraIcon() {

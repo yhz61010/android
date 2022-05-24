@@ -377,8 +377,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     override fun onStop() {
-        super.onStop()
+        // Stop recording
         camera?.cameraControl?.enableTorch(false)
+        super.onStop()
     }
 
     /**
@@ -394,14 +395,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private fun updateUI(event: VideoRecordEvent) {
         when (event) {
             is VideoRecordEvent.Status   -> { // Recording in progress
-                val timeInSec = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
-                binding.tvRecTime.text = getString(R.string.record_default_time,
-                    timeInSec / 3600,
-                    (timeInSec % 3600) / 60,
-                    (timeInSec % 60))
+                val s = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
+                binding.tvRecTime.text = getString(R.string.record_default_time, s / 3600, (s % 3600) / 60, s % 60)
             }
-            is VideoRecordEvent.Start    -> showUI(UiState.RECORDING, event.getNameString())
-            is VideoRecordEvent.Finalize -> showUI(UiState.FINALIZED, event.getNameString())
+            is VideoRecordEvent.Start    -> {
+                soundManager.playCameraStartSound()
+                showUI(UiState.RECORDING, event.getNameString())
+            }
+            is VideoRecordEvent.Finalize -> {
+                soundManager.playCameraStopSound()
+                showUI(UiState.FINALIZED, event.getNameString())
+            }
             is VideoRecordEvent.Pause    -> {
                 binding.icRedDot.clearAnimation()
                 binding.btnSwitchCamera.setImageResource(R.drawable.ic_resume)

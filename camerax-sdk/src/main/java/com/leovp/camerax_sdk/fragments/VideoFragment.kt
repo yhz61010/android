@@ -275,7 +275,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             enumerationDeferred?.await()
             enumerationDeferred = null
 
-            initializeQualitySectionsUI()
+            initializeResolutionSectionsUI()
 
             bindCaptureUseCase()
             enableUI(true)
@@ -444,15 +444,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         if (cameraCapabilities.size <= 1) {
             binding.btnSwitchCamera.isEnabled = false
         }
-        // TODO
-        // disable the resolution list if no resolution to switch
-        //        if (cameraCapabilities[cameraIndex].qualities.size <= 1) {
-        //            captureViewBinding.qualitySelection.apply { isEnabled = false }
-        //        }
+        // Disable the resolution list if no resolution to switch.
+        if (cameraCapabilities[cameraIndex].qualities.size <= 1) {
+            binding.btnResolution.apply { isEnabled = false }
+        }
     }
 
     /**
-     * initialize UI for recording:
+     * Initialize UI for recording:
      *  - at recording: hide audio, qualitySelection,change camera UI; enable stop button
      *  - otherwise: show all except the stop button
      */
@@ -530,7 +529,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 //   - reset quality selection
                 //   - restart preview
                 qualityIndex = DEFAULT_QUALITY_IDX
-                initializeQualitySectionsUI()
+                initializeResolutionSectionsUI()
                 enableUI(false)
                 viewLifecycleOwner.lifecycleScope.launch {
                     bindCaptureUseCase()
@@ -553,7 +552,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         audioEnabled = false
         // FIXME add me
         //        captureViewBinding.audioSelection.isChecked = audioEnabled
-        initializeQualitySectionsUI()
+        initializeResolutionSectionsUI()
     }
 
     /**
@@ -564,7 +563,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *    User selection is saved to qualityIndex, will be used
      *    in the bindCaptureUsecase().
      */
-    private fun initializeQualitySectionsUI() {
+    private fun initializeResolutionSectionsUI() {
         val selectorStrings = cameraCapabilities[cameraIndex].qualities.map {
             it.getNameString()
         }

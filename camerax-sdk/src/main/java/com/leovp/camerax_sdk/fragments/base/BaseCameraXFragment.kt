@@ -287,8 +287,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                     // ====================
 
-                    private val MIN_SWIPE_DISTANCE = 200
-
                     override fun onFling(e1: MotionEvent?,
                         e2: MotionEvent?,
                         velocityX: Float,
@@ -590,6 +588,8 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"
         internal const val KEY_HDR = "camerax-hdr"
+
+        internal const val MIN_SWIPE_DISTANCE = 400
 
         /** Milliseconds used for UI animations */
         internal const val ANIMATION_FAST_MILLIS = 50L

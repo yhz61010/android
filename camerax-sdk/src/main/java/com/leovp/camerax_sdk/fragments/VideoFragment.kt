@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -56,6 +57,18 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
             FragmentVideoBinding.inflate(inflater, container, false)
+
+    /**
+     * CaptureEvent listener.
+     */
+    private val captureListener = Consumer<VideoRecordEvent> { event ->
+        // cache the recording state
+        if (event !is VideoRecordEvent.Status) {
+            recordingState = event
+        }
+
+        updateUI(event)
+    }
 
     // Selector showing which flash mode is selected (on, off)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
@@ -185,36 +198,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         ).setContentValues(contentValues).build()
 
-        // configure Recorder and Start recording to the mediaStoreOutput.
+        // Configure Recorder and Start recording to the mediaStoreOutput.
         currentRecording = videoCapture.output
             .prepareRecording(requireActivity(), mediaStoreOutput)
             .apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
         LogContext.log.w(logTag, "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
-    }
-
-    /**
-     * CaptureEvent listener.
-     */
-    private val captureListener = Consumer<VideoRecordEvent> { event ->
-        // cache the recording state
-        if (event !is VideoRecordEvent.Status) {
-            recordingState = event
-        }
-
-        updateUI(event)
-
-        // FIXME process after stopping
-        //        if (event is VideoRecordEvent.Finalize) {
-        //            // display the captured video
-        //            lifecycleScope.launch {
-        //                navController.navigate(
-        //                    // FIXME We need Uri not string
-        //                    VideoFragmentDirections.actionVideoFragmentToGalleryFragment(event.outputResults.outputUri.path!!)
-        //                )
-        //            }
-        //        }
     }
 
     /**
@@ -331,6 +321,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btn4k.setOnClickListener { closeResolutionAndSelect(Quality.UHD) }
         binding.btn1080p.setOnClickListener { closeResolutionAndSelect(Quality.FHD) }
         binding.btn720p.setOnClickListener { closeResolutionAndSelect(Quality.HD) }
+
+        binding.btnGallery.setOnClickListener {
+            Toast.makeText(requireContext(), "Click Gallery button.", Toast.LENGTH_SHORT).show()
+            // Display the captured video
+            //            lifecycleScope.launch {
+            //                navController.navigate(
+            //                    // FIXME We need Uri not string
+            //                    VideoFragmentDirections.actionVideoFragmentToGalleryFragment(event.outputResults.outputUri.path!!)
+            //                )
+            //            }
+        }
     }
 
     private fun toggleAudio() = binding.btnMicrophone.toggleButton(
@@ -502,10 +503,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.btnGallery.visibility = View.VISIBLE
                     resetSwitchCameraIcon()
                     enableUI(true)
-                }
-                else              -> {
-                    LogContext.log.e(logTag, "Error: showUI($state) is not supported")
-                    return
                 }
             }
         }

@@ -211,7 +211,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
 
         // CameraProvider
-        val cameraProvider = cameraProvider ?: throw IllegalStateException("Camera initialization failed.")
+        val camProvider = cameraProvider
+            ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
         try {
             val outputCameraParamCost = measureTimeMillis {
                 val screenDimen = requireContext().getRealResolution()
@@ -220,11 +221,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             }
             LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
             // Must unbind the use-cases before rebinding them
-            cameraProvider.unbindAll()
+            camProvider.unbindAll()
 
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
-            camera = cameraProvider.bindToLifecycle(this,
+            camera = camProvider.bindToLifecycle(this,
                 hdrCameraSelector ?: lensFacing, preview, imageCapture, imageAnalyzer).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {

@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -43,6 +44,7 @@ import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -188,20 +190,30 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     private fun startRecording() {
-        // create MediaStoreOutputOptions for our recorder: resulting our recording!
-        val name = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Video.Media.DISPLAY_NAME, name)
-        }
-        val mediaStoreOutput = MediaStoreOutputOptions.Builder(
-            requireActivity().contentResolver,
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        ).setContentValues(contentValues).build()
+        val outFileName = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
-        currentRecording = videoCapture.output
-            .prepareRecording(requireActivity(), mediaStoreOutput)
-            .apply { if (audioEnabled) withAudioEnabled() }
+        val pendingRecording = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Create MediaStoreOutputOptions for our recorder: resulting our recording!
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+                put(MediaStore.Video.Media.DISPLAY_NAME, outFileName)
+                // As of Android Q
+                // put(MediaStore.MediaColumns.RELATIVE_PATH, getOutputMovieDirectory(requireContext()).absolutePath)
+            }
+            val outputOptions = MediaStoreOutputOptions.Builder(
+                requireActivity().contentResolver,
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            ).setContentValues(contentValues).build()
+            videoCapture.output.prepareRecording(requireActivity(), outputOptions)
+        } else {
+            val outputOptions = FileOutputOptions
+                .Builder(File(getOutputMovieDirectory(requireContext()), outFileName))
+                .build()
+            videoCapture.output.prepareRecording(requireActivity(), outputOptions)
+        }
+
+        currentRecording = pendingRecording.apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
         LogContext.log.w(logTag, "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
@@ -436,15 +448,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             }
         }
 
-        //        val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
-        //        val stats = event.recordingStats
-        //        val size = stats.numBytesRecorded / 1000
-        //        val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
-        //        var text = "${state}: recorded ${size}KB, in ${time}second"
-        //        if (event is VideoRecordEvent.Finalize)
-        //            text = "${text}\nFile saved to: ${event.outputResults.outputUri}"
-        //
-        //        LogContext.log.d(logTag, "recording event: $text")
+        if (event is VideoRecordEvent.Finalize) {
+            val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
+            val stats = event.recordingStats
+            val size = stats.numBytesRecorded / 1024
+            val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
+            val recordInfo = "${state}. ${size}KiB in ${time}s Save to: ${event.outputResults.outputUri}"
+            LogContext.log.w(logTag, "Recorded result: $recordInfo")
+        }
     }
 
     /**

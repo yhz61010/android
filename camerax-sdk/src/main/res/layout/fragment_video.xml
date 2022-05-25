@@ -18,6 +18,23 @@
 
     </androidx.camera.view.PreviewView>
 
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.leovp.camerax_sdk.ui.AutoFocusView
+            android:id="@+id/focus_view"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            app:focusFailDrawable="@drawable/focus_focus_failed"
+            app:focusSuccessDrawable="@drawable/focus_focused"
+            app:focusingDrawable="@drawable/focus_focusing" />
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/llResolution"
         android:layout_width="0dp"

@@ -6,10 +6,7 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
@@ -40,6 +37,7 @@ import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.circularClose
 import com.leovp.lib_common_android.exts.circularReveal
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -199,7 +197,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
                 put(MediaStore.Video.Media.DISPLAY_NAME, outFileName)
                 // As of Android Q
-                // put(MediaStore.MediaColumns.RELATIVE_PATH, getOutputMovieDirectory(requireContext()).absolutePath)
+                put(MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_MOVIES + File.separator + BASE_FOLDER_NAME)
             }
             val outputOptions = MediaStoreOutputOptions.Builder(
                 requireActivity().contentResolver,
@@ -408,8 +407,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     override fun onStop() {
-        // Stop recording
-        binding.btnRecordVideo.callOnClick()
+        if (currentRecording != null && recordingState !is VideoRecordEvent.Finalize) {
+            // Stop recording
+            currentRecording?.stop()
+            currentRecording = null
+        }
         camera?.cameraControl?.enableTorch(false)
         super.onStop()
     }
@@ -451,9 +453,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         if (event is VideoRecordEvent.Finalize) {
             val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
             val stats = event.recordingStats
-            val size = stats.numBytesRecorded / 1024
+            val size = stats.numBytesRecorded
             val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
-            val recordInfo = "${state}. ${size}KiB in ${time}s Save to: ${event.outputResults.outputUri}"
+            val recordInfo =
+                    "${state}. ${size.humanReadableByteCount()}[$size] in ${time}s. Save to: ${event.outputResults.outputUri}"
             LogContext.log.w(logTag, "Recorded result: $recordInfo")
         }
     }

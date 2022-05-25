@@ -33,6 +33,7 @@ import androidx.navigation.Navigation
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentVideoBinding
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
+import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.circularClose
 import com.leovp.lib_common_android.exts.circularReveal
@@ -120,7 +121,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private suspend fun bindCaptureUseCase(enableUI: Boolean = true) {
-        val cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
+        configCamera()
 
         val cameraSelector = getCameraSelector(cameraIndex)
         LogContext.log.w(logTag,
@@ -155,9 +156,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         videoCapture = VideoCapture.withOutput(recorder)
 
         try {
+            val camProvider = cameraProvider
+                ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
             // Unbind the use-cases before rebinding them.
-            cameraProvider.unbindAll()
-            camera = cameraProvider.bindToLifecycle(
+            camProvider.unbindAll()
+            camera = camProvider.bindToLifecycle(
                 viewLifecycleOwner, // current lifecycle owner
                 cameraSelector, // either front or back facing
                 videoCapture, // video capture use case
@@ -241,7 +244,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         enumerationDeferred = lifecycleScope.async {
             whenCreated {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
-
                 provider.unbindAll()
                 for (camSelector in arrayOf(CameraSelector.DEFAULT_BACK_CAMERA, CameraSelector.DEFAULT_FRONT_CAMERA)) {
                     try {
@@ -587,6 +589,28 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initCameraFragment()
+
+        // Wait for the views to be properly laid out
+        binding.viewFinder.post {
+            // Keep track of the display in which this view is attached
+            displayId = binding.viewFinder.display.displayId
+
+            touchListener = object : CameraXTouchListener {
+                override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
+
+                override fun onFocusSuccess() = binding.focusView.focusSuccess()
+
+                override fun onFocusFail() = binding.focusView.focusFail()
+
+                override fun onDoubleTap(x: Float, y: Float) {}
+
+                override fun onZoom(ratio: Float) {
+                }
+
+                override fun onScale(scale: Float) {
+                }
+            }
+        }
     }
 
     companion object {

@@ -18,6 +18,46 @@
 
     </androidx.camera.view.PreviewView>
 
+    <LinearLayout
+        android:id="@+id/llResolution"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/black"
+        android:elevation="3dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn4k"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/top_tool_bar_video_resolution_4k_selector"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btn1080p"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/top_tool_bar_video_resolution_1080p_selector"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/btn720p"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_size_big"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/top_tool_bar_video_resolution_720p_selector"
+            tools:ignore="ContentDescription" />
+    </LinearLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/llRecLayer"
         android:layout_width="0dp"
@@ -67,7 +107,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="ContentDescription" />
+        tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
     <ImageButton
         android:id="@+id/btnGallery"

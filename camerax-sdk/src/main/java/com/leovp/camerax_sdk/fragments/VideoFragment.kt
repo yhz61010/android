@@ -35,6 +35,8 @@ import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentVideoBinding
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.utils.*
+import com.leovp.lib_common_android.exts.circularClose
+import com.leovp.lib_common_android.exts.circularReveal
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
@@ -77,7 +79,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         IDLE,      // Not recording, all UI controls are active.
         RECORDING, // Camera is recording, only display Pause/Resume & Stop button.
         FINALIZED, // Recording just completes, disable all RECORDING UI controls.
-        RECOVERY   // For future use.
+        //        RECOVERY   // For future use.
     }
 
     private var cameraIndex = 0
@@ -104,7 +106,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * (VideoCapture can work on its own). The function should always execute on
      * the main thread.
      */
-    private suspend fun bindCaptureUseCase() {
+    private suspend fun bindCaptureUseCase(enableUI: Boolean = true) {
         val cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
 
         val cameraSelector = getCameraSelector(cameraIndex)
@@ -153,12 +155,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
             LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
             binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
-
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
             LogContext.log.e(logTag, "Use case binding failed", exc)
             resetUIAndState("bindToLifecycle failed: $exc")
         }
+
+        enableUI(enableUI)
     }
 
     /**
@@ -227,8 +230,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         return if (idx % 2 == 0) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
     }
 
-    data class CameraCapability(val camSelector: CameraSelector, val qualities: List<Quality>)
-
     /**
      * Query and cache this platform's camera capabilities, run only once.
      */
@@ -275,10 +276,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             enumerationDeferred?.await()
             enumerationDeferred = null
 
-            initializeResolutionSectionsUI()
-
             bindCaptureUseCase()
-            enableUI(true)
 
             initCameraGesture(binding.viewFinder, camera!!)
 
@@ -299,13 +297,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     @SuppressLint("ClickableViewAccessibility", "MissingPermission")
     private fun initializeUI() {
         resetSwitchCameraIcon()
-
-        // FIXME add me
-        // audioEnabled by default is disabled.
-        //        captureViewBinding.audioSelection.isChecked = audioEnabled
-        //        captureViewBinding.audioSelection.setOnClickListener {
-        //            audioEnabled = captureViewBinding.audioSelection.isChecked
-        //        }
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
@@ -335,6 +326,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btnMicrophone.setImageResource(if (audioEnabled) R.drawable.ic_microphone_on else R.drawable.ic_microphone_off)
         binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }
         binding.btnFlash.setOnClickListener { toggleFlash() }
+
+        binding.btnResolution.setOnClickListener { showResolutionLayer() }
+        binding.btn4k.setOnClickListener { closeResolutionAndSelect(Quality.UHD) }
+        binding.btn1080p.setOnClickListener { closeResolutionAndSelect(Quality.FHD) }
+        binding.btn720p.setOnClickListener { closeResolutionAndSelect(Quality.HD) }
     }
 
     private fun toggleAudio() = binding.btnMicrophone.toggleButton(
@@ -374,6 +370,28 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         torchEnabled = flag
         flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
         camera?.cameraControl?.enableTorch(flag)
+    }
+
+    private fun showResolutionLayer() =
+            binding.llResolution.circularReveal(binding.btnResolution)
+
+    private fun closeResolutionAndSelect(quality: Quality) {
+        binding.llResolution.circularClose(binding.btnResolution) {
+            val cameraSelector = getCameraSelector(cameraIndex)
+            qualityIndex = cameraCapabilities[cameraSelector]!!.indexOf(quality)
+            LogContext.log.w(logTag, "Change to ${quality.getNameString()} index: $qualityIndex")
+            binding.btnResolution.setImageResource(
+                when (quality) {
+                    Quality.UHD -> R.drawable.top_tool_bar_video_resolution_4k
+                    Quality.FHD -> R.drawable.top_tool_bar_video_resolution_1080p
+                    Quality.HD  -> R.drawable.top_tool_bar_video_resolution_720p
+                    else        -> R.drawable.top_tool_bar_video_resolution_1080p
+                }
+            )
+            // rebind the use cases to put the new QualitySelection in action.
+            enableUI(false)
+            viewLifecycleOwner.lifecycleScope.launch { bindCaptureUseCase() }
+        }
     }
 
     override fun onStop() {
@@ -526,14 +544,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 })
 
                 cameraIndex = (cameraIndex + 1) % cameraCapabilities.size
-                // camera device change is in effect instantly:
+                // Camera device change is in effect instantly:
                 //   - reset quality selection
                 //   - restart preview
                 qualityIndex = DEFAULT_QUALITY_IDX
-                initializeResolutionSectionsUI()
                 enableUI(false)
                 viewLifecycleOwner.lifecycleScope.launch {
-                    bindCaptureUseCase()
+                    bindCaptureUseCase(false)
                 }
             }
         }
@@ -551,60 +568,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         cameraIndex = 0
         qualityIndex = DEFAULT_QUALITY_IDX
         audioEnabled = false
-        // FIXME add me
-        //        captureViewBinding.audioSelection.isChecked = audioEnabled
-        initializeResolutionSectionsUI()
-    }
-
-    /**
-     *  initializeQualitySectionsUI():
-     *    Populate a RecyclerView to display camera capabilities:
-     *       - one front facing
-     *       - one back facing
-     *    User selection is saved to qualityIndex, will be used
-     *    in the bindCaptureUseCase().
-     */
-    private fun initializeResolutionSectionsUI() {
-        //        val selectorStrings = cameraCapabilities[cameraIndex].qualities.map {
-        //            it.getNameString()
-        //        }
-        // TODO
-        // create the adapter to Quality selection RecyclerView
-        //        captureViewBinding.qualitySelection.apply {
-        //            layoutManager = LinearLayoutManager(context)
-        //            adapter = GenericListAdapter(
-        //                selectorStrings,
-        //                itemLayoutId = R.layout.video_quality_item
-        //            ) { holderView, qcString, position ->
-        //
-        //                holderView.apply {
-        //                    findViewById<TextView>(R.id.qualityTextView)?.text = qcString
-        //                    // select the default quality selector
-        //                    isSelected = (position == qualityIndex)
-        //                }
-        //
-        //                holderView.setOnClickListener { view ->
-        //                    if (qualityIndex == position) return@setOnClickListener
-        //
-        //                    captureViewBinding.qualitySelection.let {
-        //                        // deselect the previous selection on UI.
-        //                        it.findViewHolderForAdapterPosition(qualityIndex)
-        //                            ?.itemView
-        //                            ?.isSelected = false
-        //                    }
-        //                    // turn on the new selection on UI.
-        //                    view.isSelected = true
-        //                    qualityIndex = position
-        //
-        //                    // rebind the use cases to put the new QualitySelection in action.
-        //                    enableUI(false)
-        //                    viewLifecycleOwner.lifecycleScope.launch {
-        //                        bindCaptureUsecase()
-        //                    }
-        //                }
-        //            }
-        //            isEnabled = false
-        //        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

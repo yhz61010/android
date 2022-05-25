@@ -99,7 +99,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Determine the output directory
-        outputDirectory = getOutputDirectory(requireContext())
+        outputDirectory = getOutputPictureDirectory(requireContext())
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -585,6 +585,8 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
     companion object {
         internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
 
+        internal const val BASE_FOLDER_NAME = "CameraX"
+
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"
         internal const val KEY_HDR = "camerax-hdr"
@@ -603,8 +605,14 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
                 File(baseFolder, SimpleDateFormat(format, Locale.US)
                     .format(System.currentTimeMillis()) + extension)
 
-        internal fun getOutputDirectory(context: Context): File {
-            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX").also {
+        internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {
+                if (!it.exists()) it.mkdirs()
+            }
+        }
+
+        internal fun getOutputMovieDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
         }

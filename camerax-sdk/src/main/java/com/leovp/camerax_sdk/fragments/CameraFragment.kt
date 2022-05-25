@@ -22,14 +22,11 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
-import androidx.core.view.setPadding
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import coil.load
-import coil.transform.CircleCropTransformation
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
@@ -127,20 +124,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-    private fun setGalleryThumbnail(uri: Uri) {
-        // Run the operations in the view's thread
-        cameraUiContainerBottomBinding.photoViewButton.let { photoViewButton ->
-            photoViewButton.post {
-                photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
-                photoViewButton.load(uri) {
-                    // placeholder(R.drawable.ic_photo)
-                    error(R.drawable.ic_photo)
-                    transformations(CircleCropTransformation())
-                }
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -375,7 +358,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             outputDirectory.listFiles { file ->
                 EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
             }?.maxOrNull()?.let {
-                setGalleryThumbnail(Uri.fromFile(it))
+                setGalleryThumbnail(Uri.fromFile(it), cameraUiContainerBottomBinding.photoViewButton)
             }
         }
 
@@ -405,7 +388,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 // Update the gallery thumbnail with latest picture taken
-                                setGalleryThumbnail(savedUri)
+                                setGalleryThumbnail(savedUri, cameraUiContainerBottomBinding.photoViewButton)
                             }
 
                             // Implicit broadcasts will be ignored for devices running API level >= 24

@@ -20,6 +20,7 @@ import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.concurrent.futures.await
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -166,21 +167,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             })
     }
 
-    protected fun setUpCamera(callback: () -> Unit) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener({
-            // CameraProvider
-            cameraProvider = cameraProviderFuture.get()
-
-            // Select lensFacing depending on the available cameras
-            lensFacing = when {
-                hasBackCamera()  -> CameraSelector.DEFAULT_BACK_CAMERA
-                hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
-                else             -> throw IllegalStateException("Back and front camera are unavailable")
-            }
-
-            callback()
-        }, ContextCompat.getMainExecutor(requireContext()))
+    protected suspend fun configCamera() {
+        cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
+        // Select lensFacing depending on the available cameras
+        lensFacing = when {
+            hasBackCamera()  -> CameraSelector.DEFAULT_BACK_CAMERA
+            hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
+            else             -> throw IllegalStateException("Back and front camera are unavailable")
+        }
     }
 
     /** Declare and bind preview, capture and analysis use cases */
@@ -428,44 +422,50 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         return AspectRatio.RATIO_16_9
     }
 
-    protected fun outputCameraParameters(desiredVideoWidth: Int, desiredVideoHeight: Int) {
-        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-        val configMap = characteristics.getConfigMap()
+    protected fun outputCameraParameters(camSelector: CameraSelector, desiredVideoWidth: Int, desiredVideoHeight: Int) =
+            runCatching {
+                if (cameraProvider?.hasCamera(camSelector) == true) {
+                    val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
+                    val characteristics: CameraCharacteristics =
+                            cameraManager.getCameraCharacteristics(cameraId)
+                    val configMap = characteristics.getConfigMap()
 
-        val isFlashSupported = characteristics.isFlashSupported()
-        // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
-        val hardwareLevel = characteristics.hardwareLevel()
-        // Get camera supported fps. It will be used to create CaptureRequest
-        val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.supportedFpsRanges()
-        val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-        val highSpeedVideoSizes = configMap.highSpeedVideoSizes
+                    val isFlashSupported = characteristics.isFlashSupported()
+                    // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
+                    val hardwareLevel = characteristics.hardwareLevel()
+                    // Get camera supported fps. It will be used to create CaptureRequest
+                    val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.supportedFpsRanges()
+                    val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
+                    val highSpeedVideoSizes = configMap.highSpeedVideoSizes
 
-        val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
+                    val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
 
-        // Calculate ImageReader input preview size from supported size list by camera.
-        // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
-        // Attention: The returned value is in camera orientation. NOT in device orientation.
-        val previewSize: Size =
-                getSpecificPreviewOutputSize(requireContext(), desiredVideoWidth, desiredVideoHeight, characteristics)
+                    // Calculate ImageReader input preview size from supported size list by camera.
+                    // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
+                    // Attention: The returned value is in camera orientation. NOT in device orientation.
+                    val previewSize: Size =
+                            getSpecificPreviewOutputSize(requireContext(),
+                                desiredVideoWidth,
+                                desiredVideoHeight,
+                                characteristics)
 
-        val cameraParametersString = """Camera Info:
+                    val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
          deviceRotation=${requireContext().getDeviceRotation()}
 cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
        isFlashSupported=$isFlashSupported
           hardwareLevel=$hardwareLevel
 
-  Supported color format for AVC=${
-            getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                .joinToString(",")
-        }
+ Supported color format for  AVC=${
+                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                            .joinToString(",")
+                    }
  Supported color format for HEVC=${
-            getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                .joinToString(",")
-        }
+                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                            .joinToString(",")
+                    }
 
- Supported profile/level for AVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
+Supported profile/level for  AVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
 Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
@@ -477,8 +477,10 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
                Desired dimen=${desiredVideoWidth}x$desiredVideoHeight
            previewSize dimen=${previewSize.width}x${previewSize.height}
         """.trimIndent()
-        LogContext.log.w(logTag, cameraParametersString)
-    }
+                    LogContext.log.w(logTag, cameraParametersString)
+                    LogContext.log.w(logTag, "==================================================")
+                }
+            }.onFailure { LogContext.log.i(logTag, "outputCameraParameters error.", it) }
 
     protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         getMediaQPlus()

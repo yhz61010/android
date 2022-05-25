@@ -66,7 +66,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
     }
 
-    private val cameraCapabilities = mutableListOf<CameraCapability>()
+    private val cameraCapabilities = mutableMapOf<CameraSelector, List<Quality>>()
 
     private lateinit var videoCapture: VideoCapture<Recorder>
     private var currentRecording: Recording? = null
@@ -113,8 +113,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
-        val quality: Quality = cameraCapabilities[cameraIndex].qualities[qualityIndex]
-        LogContext.log.w(logTag, "quality=$quality")
+        val quality: Quality = cameraCapabilities[cameraSelector]!![qualityIndex]
+        LogContext.log.w(logTag, "Selected quality=$quality")
         val qualitySelector = QualitySelector.from(quality)
 
         binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
@@ -220,11 +220,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *          odd number:   CameraSelector.LENS_FACING_FRONT
      */
     private fun getCameraSelector(idx: Int): CameraSelector {
-        if (cameraCapabilities.size == 0) {
+        if (cameraCapabilities.isEmpty()) {
             LogContext.log.e(logTag, "Error: This device does not have any camera, bailing out")
             requireActivity().finish()
         }
-        return (cameraCapabilities[idx % cameraCapabilities.size].camSelector)
+        return if (idx % 2 == 0) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
     }
 
     data class CameraCapability(val camSelector: CameraSelector, val qualities: List<Quality>)
@@ -249,9 +249,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                             LogContext.log.w(logTag,
                                 "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}")
                             supportedQualities.filter { quality ->
-                                listOf(Quality.FHD, Quality.HD, Quality.SD).contains(quality)
+                                listOf(Quality.UHD, Quality.FHD, Quality.HD).contains(quality)
                             }.also {
-                                cameraCapabilities.add(CameraCapability(camSelector, it))
+                                cameraCapabilities[camSelector] = it
                             }
                         }
                     } catch (exc: java.lang.Exception) {
@@ -445,7 +445,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             binding.btnSwitchCamera.isEnabled = false
         }
         // Disable the resolution list if no resolution to switch.
-        if (cameraCapabilities[cameraIndex].qualities.size <= 1) {
+        if ((cameraCapabilities[getCameraSelector(cameraIndex)]?.size ?: 0) <= 1) {
             binding.btnResolution.apply { isEnabled = false }
         }
     }
@@ -561,12 +561,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *       - one front facing
      *       - one back facing
      *    User selection is saved to qualityIndex, will be used
-     *    in the bindCaptureUsecase().
+     *    in the bindCaptureUseCase().
      */
     private fun initializeResolutionSectionsUI() {
-        val selectorStrings = cameraCapabilities[cameraIndex].qualities.map {
-            it.getNameString()
-        }
+        //        val selectorStrings = cameraCapabilities[cameraIndex].qualities.map {
+        //            it.getNameString()
+        //        }
         // TODO
         // create the adapter to Quality selection RecyclerView
         //        captureViewBinding.qualitySelection.apply {
@@ -612,7 +612,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     companion object {
-        // default Quality selection if no input from UI
-        const val DEFAULT_QUALITY_IDX = 0
+        // Default Quality selection if no input from UI
+        const val DEFAULT_QUALITY_IDX = 0 // Back camera
     }
 }

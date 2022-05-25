@@ -378,6 +378,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     override fun onStop() {
         // Stop recording
+        binding.btnRecordVideo.callOnClick()
         camera?.cameraControl?.enableTorch(false)
         super.onStop()
     }
@@ -446,7 +447,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
         // Disable the resolution list if no resolution to switch.
         if ((cameraCapabilities[getCameraSelector(cameraIndex)]?.size ?: 0) <= 1) {
-            binding.btnResolution.apply { isEnabled = false }
+            binding.btnResolution.isEnabled = false
         }
     }
 

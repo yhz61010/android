@@ -187,27 +187,30 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * to VideoRecordEvent for the current recording status.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun startRecording() {
+    private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
         val outFileName = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
-        val pendingRecording = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val pendingRecording = if (saveInGallery) {
             // Create MediaStoreOutputOptions for our recorder: resulting our recording!
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
                 put(MediaStore.Video.Media.DISPLAY_NAME, outFileName)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // As of Android Q
-                put(MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_MOVIES + File.separator + BASE_FOLDER_NAME)
+                // File will be saved in /sdcard/Movies/CameraX
+                contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_MOVIES + File.separator + baseFolderName)
             }
             val outputOptions = MediaStoreOutputOptions.Builder(
                 requireActivity().contentResolver,
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             ).setContentValues(contentValues).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
-        } else {
+        } else { // Save in app internal folder (Android/data)
             val outputOptions = FileOutputOptions
-                .Builder(File(getOutputMovieDirectory(requireContext()), outFileName))
+                .Builder(File(getOutputMovieDirectory(requireContext(), baseFolderName), outFileName))
                 .build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }

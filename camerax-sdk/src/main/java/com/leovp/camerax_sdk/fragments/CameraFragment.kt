@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.system.measureTimeMillis
 
 /**
  * Main fragment for this app. Implements all camera operations including:
@@ -149,14 +150,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // Wait for the views to be properly laid out
         binding.viewFinder.post {
-            val screenDimen = requireContext().getRealResolution()
-            outputCameraParameters(screenDimen.width, screenDimen.height)
             // Keep track of the display in which this view is attached
             displayId = binding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
-            // Set up the camera and its use cases
-            setUpCamera()
+            lifecycleScope.launch(Dispatchers.Main) {
+                // Set up the camera and its use cases
+                setUpCamera()
+            }
         }
     }
 
@@ -185,32 +186,31 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     }
 
     /** Initialize CameraX, and prepare to bind the camera use cases  */
-    private fun setUpCamera() {
-        setUpCamera {
-            touchListener = object : CameraXTouchListener {
-                override fun onStartFocusing(x: Float, y: Float) =
-                        cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
+    private suspend fun setUpCamera() {
+        configCamera()
+        touchListener = object : CameraXTouchListener {
+            override fun onStartFocusing(x: Float, y: Float) =
+                    cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
 
-                override fun onFocusSuccess() = cameraUiContainerTopBinding.focusView.focusSuccess()
+            override fun onFocusSuccess() = cameraUiContainerTopBinding.focusView.focusSuccess()
 
-                override fun onFocusFail() = cameraUiContainerTopBinding.focusView.focusFail()
+            override fun onFocusFail() = cameraUiContainerTopBinding.focusView.focusFail()
 
-                override fun onDoubleTap(x: Float, y: Float) {
-                }
-
-                override fun onZoom(ratio: Float) {
-                }
-
-                override fun onScale(scale: Float) {
-                }
+            override fun onDoubleTap(x: Float, y: Float) {
             }
 
-            // Enable or disable switching between cameras
-            updateCameraSwitchButton()
+            override fun onZoom(ratio: Float) {
+            }
 
-            // Build and bind the camera use cases
-            bindCameraUseCases()
+            override fun onScale(scale: Float) {
+            }
         }
+
+        // Enable or disable switching between cameras
+        updateCameraSwitchButton()
+
+        // Build and bind the camera use cases
+        bindCameraUseCases()
     }
 
     /** Declare and bind preview, capture and analysis use cases */
@@ -230,6 +230,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         // CameraProvider
         val cameraProvider = cameraProvider ?: throw IllegalStateException("Camera initialization failed.")
         try {
+            val outputCameraParamCost = measureTimeMillis {
+                val screenDimen = requireContext().getRealResolution()
+                // TODO set desire dimension.
+                outputCameraParameters(hdrCameraSelector ?: lensFacing, screenDimen.width, screenDimen.height)
+            }
+            LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
             // Must unbind the use-cases before rebinding them
             cameraProvider.unbindAll()
 

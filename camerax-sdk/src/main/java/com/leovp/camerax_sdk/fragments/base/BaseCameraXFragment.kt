@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.util.Range
 import android.util.Size
 import android.view.*
+import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.camera.core.*
 import androidx.camera.extensions.ExtensionMode
@@ -24,11 +25,15 @@ import androidx.concurrent.futures.await
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.google.common.util.concurrent.ListenableFuture
+import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.bean.CaptureImage
@@ -420,6 +425,20 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             return AspectRatio.RATIO_4_3
         }
         return AspectRatio.RATIO_16_9
+    }
+
+    protected fun setGalleryThumbnail(uri: Uri, galleryButton: ImageButton) {
+        // Run the operations in the view's thread
+        galleryButton.let { photoViewButton ->
+            photoViewButton.post {
+                photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
+                photoViewButton.load(uri) {
+                    // placeholder(R.drawable.ic_photo)
+                    error(R.drawable.ic_photo)
+                    transformations(CircleCropTransformation())
+                }
+            }
+        }
     }
 
     protected fun outputCameraParameters(camSelector: CameraSelector, desiredVideoWidth: Int, desiredVideoHeight: Int) =

@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentVideoBinding
+import com.leovp.camerax_sdk.enums.RecordUiState
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
@@ -59,16 +60,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
             FragmentVideoBinding.inflate(inflater, container, false)
 
-    /**
-     * CaptureEvent listener.
-     */
-    private val captureListener = Consumer<VideoRecordEvent> { event ->
-        // cache the recording state
-        if (event !is VideoRecordEvent.Status) {
-            recordingState = event
-        }
-
-        updateUI(event)
+    /** Host's navigation controller */
+    private val navController: NavController by lazy {
+        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
     }
 
     // Selector showing which flash mode is selected (on, off)
@@ -77,24 +71,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btnFlash.setImageResource(flashDrawable)
     }
 
-    /** Host's navigation controller */
-    private val navController: NavController by lazy {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
-    }
-
     private val cameraCapabilities = mutableMapOf<CameraSelector, List<Quality>>()
 
     private lateinit var videoCapture: VideoCapture<Recorder>
     private var currentRecording: Recording? = null
     private lateinit var recordingState: VideoRecordEvent
-
-    // Camera UI  states and inputs
-    enum class UiState {
-        IDLE,      // Not recording, all UI controls are active.
-        RECORDING, // Camera is recording, only display Pause/Resume & Stop button.
-        FINALIZED, // Recording just completes, disable all RECORDING UI controls.
-        //        RECOVERY   // For future use.
-    }
 
     private var cameraIndex = 0
     private var qualityIndex = DEFAULT_QUALITY_IDX
@@ -107,10 +88,49 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(requireContext()) }
     private var enumerationDeferred: Deferred<Unit>? = null
 
+    /**
+     * CaptureEvent listener.
+     */
+    private val captureListener = Consumer<VideoRecordEvent> { event ->
+        // cache the recording state
+        if (event !is VideoRecordEvent.Status) {
+            recordingState = event
+        }
+
+        updateUI(event)
+    }
+
     private val blinkAnim = AlphaAnimation(0.1f, 1.0f).apply {
         duration = 400
         repeatCount = Animation.INFINITE
         repeatMode = Animation.REVERSE
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initCameraFragment()
+
+        // Wait for the views to be properly laid out
+        binding.viewFinder.post {
+            // Keep track of the display in which this view is attached
+            displayId = binding.viewFinder.display.displayId
+
+            touchListener = object : CameraXTouchListener {
+                override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
+
+                override fun onFocusSuccess() = binding.focusView.focusSuccess()
+
+                override fun onFocusFail() = binding.focusView.focusFail()
+
+                override fun onDoubleTap(x: Float, y: Float) {}
+
+                override fun onZoom(ratio: Float) {
+                }
+
+                override fun onScale(scale: Float) {
+                }
+            }
+        }
     }
 
     /**
@@ -437,11 +457,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             }
             is VideoRecordEvent.Start    -> {
                 soundManager.playCameraStartSound()
-                showUI(UiState.RECORDING, event.getNameString())
+                showUI(RecordUiState.RECORDING, event.getNameString())
             }
             is VideoRecordEvent.Finalize -> {
                 soundManager.playCameraStopSound()
-                showUI(UiState.FINALIZED, event.getNameString())
+                showUI(RecordUiState.FINALIZED, event.getNameString())
             }
             is VideoRecordEvent.Pause    -> {
                 binding.icRedDot.clearAnimation()
@@ -493,16 +513,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      *  - otherwise: show all except the stop button
      */
     @SuppressLint("MissingPermission")
-    private fun showUI(state: UiState, status: String = "idle") {
+    private fun showUI(state: RecordUiState, status: String = "idle") {
         LogContext.log.w(logTag, "showUI state=$state status=$status")
         binding.let {
             when (state) {
-                UiState.IDLE      -> {
+                RecordUiState.IDLE      -> {
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
                     it.btnGallery.setImageResource(R.drawable.ic_photo)
                     resetSwitchCameraIcon()
                 }
-                UiState.RECORDING -> {
+                RecordUiState.RECORDING -> {
                     it.tvRecTime.text = getString(R.string.record_default_time, 0, 0, 0)
                     it.llRecLayer.visibility = View.VISIBLE
                     it.icRedDot.startAnimation(blinkAnim)
@@ -513,7 +533,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     setSwitchCameraIconToPauseIcon()
                     it.btnGallery.visibility = View.GONE
                 }
-                UiState.FINALIZED -> {
+                RecordUiState.FINALIZED -> {
                     it.llRecLayer.visibility = View.GONE
                     it.icRedDot.clearAnimation()
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
@@ -577,38 +597,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     private fun resetUIAndState(reason: String) {
         enableUI(true)
-        showUI(UiState.IDLE, reason)
+        showUI(RecordUiState.IDLE, reason)
 
         cameraIndex = 0
         qualityIndex = DEFAULT_QUALITY_IDX
         audioEnabled = false
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initCameraFragment()
-
-        // Wait for the views to be properly laid out
-        binding.viewFinder.post {
-            // Keep track of the display in which this view is attached
-            displayId = binding.viewFinder.display.displayId
-
-            touchListener = object : CameraXTouchListener {
-                override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
-
-                override fun onFocusSuccess() = binding.focusView.focusSuccess()
-
-                override fun onFocusFail() = binding.focusView.focusFail()
-
-                override fun onDoubleTap(x: Float, y: Float) {}
-
-                override fun onZoom(ratio: Float) {
-                }
-
-                override fun onScale(scale: Float) {
-                }
-            }
-        }
     }
 
     companion object {

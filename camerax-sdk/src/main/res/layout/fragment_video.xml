@@ -11,6 +11,7 @@
         android:id="@+id/viewFinder"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="9:16"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +54,7 @@
             android:layout_height="@dimen/button_size_big"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:src="@drawable/top_tool_bar_video_resolution_4k_selector"
+            android:src="@drawable/ic_resolution_4k_selector"
             tools:ignore="ContentDescription" />
 
         <ImageButton
@@ -62,7 +63,7 @@
             android:layout_height="@dimen/button_size_big"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:src="@drawable/top_tool_bar_video_resolution_1080p_selector"
+            android:src="@drawable/ic_resolution_1080p_selector"
             tools:ignore="ContentDescription" />
 
         <ImageButton
@@ -71,7 +72,7 @@
             android:layout_height="@dimen/button_size_big"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:src="@drawable/top_tool_bar_video_resolution_720p_selector"
+            android:src="@drawable/ic_resolution_720p_selector"
             tools:ignore="ContentDescription" />
     </LinearLayout>
 
@@ -196,7 +197,7 @@
             android:elevation="1dp"
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
-            android:src="@drawable/top_tool_bar_video_resolution_1080p_selector"
+            android:src="@drawable/ic_resolution_1080p_selector"
             tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton

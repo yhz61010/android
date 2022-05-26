@@ -359,8 +359,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             runCatching {
                 if (cameraProvider?.hasCamera(camSelector) == true) {
                     val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-                    val characteristics: CameraCharacteristics =
-                            cameraManager.getCameraCharacteristics(cameraId)
+                    val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
                     val configMap = characteristics.getConfigMap()
 
                     val isFlashSupported = characteristics.isFlashSupported()

@@ -37,6 +37,7 @@ import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
+import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -355,6 +356,20 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
     }
 
+    protected fun getMaxPreviewSize(camSelector: CameraSelector): Size {
+        val screenMetrics = requireContext().getRealResolution()
+        return if (cameraProvider?.hasCamera(camSelector) == true) {
+            val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
+            val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            getSpecificPreviewOutputSize(requireContext(),
+                screenMetrics.width,
+                screenMetrics.height,
+                characteristics)
+        } else {
+            Size(0, 0)
+        }
+    }
+
     protected fun outputCameraParameters(camSelector: CameraSelector, desiredVideoWidth: Int, desiredVideoHeight: Int) =
             runCatching {
                 if (cameraProvider?.hasCamera(camSelector) == true) {
@@ -406,7 +421,7 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
     cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}
         allCameraSupportSize=${allCameraSupportSize?.contentToString()}
 
-               Desired dimen=${desiredVideoWidth}x$desiredVideoHeight
+               Screen  dimen=${desiredVideoWidth}x$desiredVideoHeight
            previewSize dimen=${previewSize.width}x${previewSize.height}
         """.trimIndent()
                     LogContext.log.w(logTag, cameraParametersString)

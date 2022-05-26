@@ -522,8 +522,8 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
         internal const val MIN_SWIPE_DISTANCE = 400
 
         /** Milliseconds used for UI animations */
-        internal const val ANIMATION_FAST_MILLIS = 50L
         internal const val ANIMATION_SLOW_MILLIS = 100L
+
         internal const val PHOTO_EXTENSION = ".jpg"
         internal const val RATIO_4_3_VALUE = 4.0 / 3.0
         internal const val RATIO_16_9_VALUE = 16.0 / 9.0

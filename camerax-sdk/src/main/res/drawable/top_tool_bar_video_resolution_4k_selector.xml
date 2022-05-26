@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/top_tool_bar_video_resolution_4k_inverse" android:state_selected="true" />
-    <item android:drawable="@drawable/top_tool_bar_video_resolution_4k" android:state_selected="false" />
-</selector>

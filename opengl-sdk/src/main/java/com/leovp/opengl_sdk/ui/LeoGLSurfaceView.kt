@@ -7,7 +7,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.leovp.lib_common_android.exts.getScreenAvailableHeight
 import com.leovp.lib_common_android.exts.getScreenWidth
-import com.leovp.lib_common_android.ui.TouchHelper
+import com.leovp.lib_common_android.utils.TouchHelper
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.GLRenderer

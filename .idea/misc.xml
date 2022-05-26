@@ -47,6 +47,9 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_full_on.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_standard.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_red_dot.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_resolution_4k.xml" value="0.2775" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_resolution_4k_inverse.xml" value="0.2775" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_resolution_4k_selector.xml" value="0.2775" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_resume.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_share.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
@@ -60,6 +63,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_10.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_3.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_timer_off.xml" value="0.583" />
+        <entry key="camerax-sdk/src/main/res/drawable/icresolution_4k_selector.xml" value="0.2775" />
         <entry key="camerax-sdk/src/main/res/drawable/menu_blur.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_fps_120.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/top_tool_bar_video_fps_30.xml" value="0.5555" />

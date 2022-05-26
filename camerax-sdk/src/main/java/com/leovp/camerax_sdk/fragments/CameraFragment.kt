@@ -518,11 +518,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         Handler(Looper.getMainLooper()).postDelayed({ it.isEnabled = true }, 500)
                     }
                 })
-                lensFacing = if (CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing) {
-                    CameraSelector.DEFAULT_BACK_CAMERA
-                } else {
-                    CameraSelector.DEFAULT_FRONT_CAMERA
-                }
+                lensFacing = switchAndGetCameraSelector()
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
             }

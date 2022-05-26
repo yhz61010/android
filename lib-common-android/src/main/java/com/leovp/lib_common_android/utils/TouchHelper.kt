@@ -1,4 +1,4 @@
-package com.leovp.lib_common_android.ui
+package com.leovp.lib_common_android.utils
 
 import android.os.SystemClock
 import android.util.SparseArray

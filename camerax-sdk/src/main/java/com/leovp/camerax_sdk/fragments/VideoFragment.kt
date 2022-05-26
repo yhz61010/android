@@ -427,9 +427,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             LogContext.log.w(logTag, "Change to ${quality.getNameString()} index: $qualityIndex")
             binding.btnResolution.setImageResource(
                 when (quality) {
-                    Quality.UHD -> R.drawable.top_tool_bar_video_resolution_4k
-                    Quality.FHD -> R.drawable.top_tool_bar_video_resolution_1080p
-                    Quality.HD  -> R.drawable.top_tool_bar_video_resolution_720p
+                    Quality.UHD -> R.drawable.ic_resolution_4k
+                    Quality.FHD -> R.drawable.ic_resolution_1080p
+                    Quality.HD  -> R.drawable.ic_resolution_720p
                     else        -> throw IllegalArgumentException("Device does not support $quality")
                 }
             )

@@ -22,7 +22,6 @@ import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.setPadding
@@ -35,11 +34,9 @@ import coil.transform.CircleCropTransformation
 import com.google.common.util.concurrent.ListenableFuture
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.adapter.Media
-import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
-import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -71,8 +68,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     protected var hdrCameraSelector: CameraSelector? = null
     protected var preview: Preview? = null
-    protected var imageCapture: ImageCapture? = null
-    protected var imageAnalyzer: ImageAnalysis? = null
     protected var camera: Camera? = null
     protected var cameraProvider: ProcessCameraProvider? = null
 
@@ -80,12 +75,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     //    private val viewFinder: PreviewView by lazy { getPreviewView() }
 
     /** Blocking camera operations are performed using this executor */
-    private lateinit var cameraExecutor: ExecutorService
+    protected val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     protected var displayId: Int = -1
-    private val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
+    protected val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
     protected var touchListener: CameraXTouchListener? = null
 
@@ -100,12 +95,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
         // Determine the output directory
         outputDirectory = getOutputPictureDirectory(requireContext())
-
-        // Initialize our background executor
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
-        // Every time the orientation of device changes, update rotation for use cases
-        displayManager.registerDisplayListener(displayListener, null)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -118,7 +107,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         soundManager.release()
         // Shut down our background executor
         cameraExecutor.shutdown()
-        displayManager.unregisterDisplayListener(displayListener)
         super.onDestroyView()
     }
 
@@ -180,58 +168,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
             else             -> throw IllegalStateException("Back and front camera are unavailable")
         }
-    }
-
-    /** Declare and bind preview, capture and analysis use cases */
-    protected fun bindCameraUseCases(previewView: PreviewView, rotation: Int, flashMode: Int) {
-        // Get screen metrics used to setup camera for full screen resolution
-        val metrics = requireContext().getRealResolution()
-        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.w(logTag,
-            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
-        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio =
-                if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
-
-        // Preview
-        preview = Preview.Builder()
-            // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation
-            .setTargetRotation(rotation)
-            .build()
-
-        // ImageCapture
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-            // Set capture flash
-            .setFlashMode(flashMode)
-            // We request aspect ratio but no resolution to match preview config, but letting
-            // CameraX optimize for whatever specific resolution best fits our use cases
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(rotation)
-            .build()
-
-        // ImageAnalysis
-        imageAnalyzer = ImageAnalysis.Builder()
-            // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(rotation)
-            // In our analysis, we care about the latest image
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            // The analyzer can then be assigned to the instance
-            .also {
-                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-                    // Values returned from our analyzer are passed to the attached listener
-                    // We log image analysis results here - you should do something useful
-                    // instead!
-                    LogContext.log.v(logTag, "Average luminosity: $luma")
-                })
-            }
     }
 
     protected fun initCameraGesture(viewFinder: PreviewView, camera: Camera) {
@@ -390,23 +326,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     /**
-     * We need a display listener for orientation changes that do not trigger a configuration
-     * change, for example if we choose to override config change in manifest or for 180-degree
-     * orientation changes.
-     */
-    private val displayListener = object : DisplayManager.DisplayListener {
-        override fun onDisplayAdded(displayId: Int) = Unit
-        override fun onDisplayRemoved(displayId: Int) = Unit
-        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
-            if (displayId == this@BaseCameraXFragment.displayId) {
-                LogContext.log.d(logTag, "Rotation changed: ${view.display.rotation}")
-                imageCapture?.targetRotation = view.display.rotation
-                imageAnalyzer?.targetRotation = view.display.rotation
-            }
-        } ?: Unit
-    }
-
-    /**
      *  [androidx.camera.core.ImageAnalysis.Builder] requires enum value of
      *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
      *
@@ -417,7 +336,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
      *  @param height - preview height
      *  @return suitable aspect ratio
      */
-    private fun aspectRatio(width: Int, height: Int): Int {
+    protected fun aspectRatio(width: Int, height: Int): Int {
         val previewRatio = max(width, height).toDouble() / min(width, height)
         if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
             return AspectRatio.RATIO_4_3

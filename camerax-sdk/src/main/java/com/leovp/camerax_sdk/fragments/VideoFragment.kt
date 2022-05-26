@@ -352,6 +352,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btn1080p.setOnClickListener { closeResolutionAndSelect(Quality.FHD) }
         binding.btn720p.setOnClickListener { closeResolutionAndSelect(Quality.HD) }
 
+        for (quality in cameraCapabilities.getValue(lensFacing)) {
+            when (quality) {
+                Quality.UHD -> binding.btn4k.visibility = View.VISIBLE
+                Quality.FHD -> binding.btn1080p.visibility = View.VISIBLE
+                Quality.HD  -> binding.btn720p.visibility = View.VISIBLE
+            }
+        }
+
         binding.btnGallery.setOnClickListener {
             Toast.makeText(requireContext(), "Click Gallery button.", Toast.LENGTH_SHORT).show()
             // Display the captured video

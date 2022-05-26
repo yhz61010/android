@@ -71,9 +71,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var camera: Camera? = null
     protected var cameraProvider: ProcessCameraProvider? = null
 
-    //    abstract fun getPreviewView(): PreviewView
-    //    private val viewFinder: PreviewView by lazy { getPreviewView() }
-
     /** Blocking camera operations are performed using this executor */
     protected val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 

@@ -66,6 +66,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected lateinit var outputDirectory: File
 
     // Selector showing which camera is selected (front or back)
+    // Default value is Back Camera.
     protected var lensFacing: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     protected var hdrCameraSelector: CameraSelector? = null
     protected var preview: Preview? = null
@@ -367,6 +368,28 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 characteristics)
         } else {
             Size(0, 0)
+        }
+    }
+
+    /**
+     * Retrieve the asked camera's type(lens facing type). In this sample, only 2 types:
+     *   idx is even number:  CameraSelector.LENS_FACING_BACK
+     *          odd number:   CameraSelector.LENS_FACING_FRONT
+     */
+    protected fun switchAndGetCameraSelector(): CameraSelector {
+        return when {
+            hasBackCamera() && hasFrontCamera() -> {
+                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                else CameraSelector.DEFAULT_FRONT_CAMERA
+            }
+            hasBackCamera()                     -> CameraSelector.DEFAULT_BACK_CAMERA
+            hasFrontCamera()                    -> CameraSelector.DEFAULT_FRONT_CAMERA
+            else                                -> {
+                LogContext.log.e(logTag, "Error: This device does not have any camera, bailing out")
+                //                requireActivity().finish()
+                throw RuntimeException("This device does not have any camera")
+            }
         }
     }
 

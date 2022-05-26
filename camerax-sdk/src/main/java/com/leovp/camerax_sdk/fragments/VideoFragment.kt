@@ -166,7 +166,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // supported, a valid qualitySelector will be created.
         val quality: Quality = cameraCapabilities[cameraSelector]!![qualityIndex]
         LogContext.log.w(logTag, "Selected quality=$quality")
-        val qualitySelector = QualitySelector.from(quality)
+        val qualitySelector = QualitySelector.from(quality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
 
         binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
@@ -174,7 +174,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 quality,
                 (orientation == Configuration.ORIENTATION_PORTRAIT)
             )
-            LogContext.log.w(logTag, "dimensionRatio=$dimensionRatio")
+            LogContext.log.w(logTag, "View Finder dimension ratio=$dimensionRatio")
         }
 
         //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)

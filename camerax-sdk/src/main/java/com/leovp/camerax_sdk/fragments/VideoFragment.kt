@@ -78,7 +78,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var currentRecording: Recording? = null
     private lateinit var recordingState: VideoRecordEvent
 
-    private var cameraIndex = 0
     private var qualityIndex = DEFAULT_QUALITY_IDX
 
     private var audioEnabled = true
@@ -158,13 +157,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
         val rotation = binding.viewFinder.display.rotation
 
-        val cameraSelector = getCameraSelector(cameraIndex)
         LogContext.log.w(logTag,
-            "cameraSelector=${if (cameraSelector.lensFacing == CameraSelector.LENS_FACING_FRONT) "Front" else "Back"}")
+            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"}")
 
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
-        val quality: Quality = cameraCapabilities[cameraSelector]!![qualityIndex]
+        val quality: Quality = cameraCapabilities[lensFacing]!![qualityIndex]
         LogContext.log.w(logTag, "Selected quality=$quality")
         val qualitySelector = QualitySelector.from(quality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
 
@@ -207,7 +205,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
             camera = camProvider.bindToLifecycle(
                 viewLifecycleOwner, // current lifecycle owner
-                cameraSelector, // either front or back facing
+                lensFacing, // either front or back facing
                 videoCapture, // video capture use case
                 preview // camera preview use case
             )
@@ -270,19 +268,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             .start(mainThreadExecutor, captureListener)
 
         LogContext.log.w(logTag, "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
-    }
-
-    /**
-     * Retrieve the asked camera's type(lens facing type). In this sample, only 2 types:
-     *   idx is even number:  CameraSelector.LENS_FACING_BACK
-     *          odd number:   CameraSelector.LENS_FACING_FRONT
-     */
-    private fun getCameraSelector(idx: Int): CameraSelector {
-        if (cameraCapabilities.isEmpty()) {
-            LogContext.log.e(logTag, "Error: This device does not have any camera, bailing out")
-            requireActivity().finish()
-        }
-        return if (idx % 2 == 0) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
     }
 
     /**
@@ -423,8 +408,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private fun closeResolutionAndSelect(quality: Quality) {
         binding.llResolution.circularClose(binding.btnResolution) {
-            val cameraSelector = getCameraSelector(cameraIndex)
-            qualityIndex = cameraCapabilities[cameraSelector]!!.indexOf(quality)
+            qualityIndex = cameraCapabilities[lensFacing]!!.indexOf(quality)
             LogContext.log.w(logTag, "Change to ${quality.getNameString()} index: $qualityIndex")
             binding.btnResolution.setImageResource(
                 when (quality) {
@@ -513,7 +497,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             binding.btnSwitchCamera.isEnabled = false
         }
         // Disable the resolution list if no resolution to switch.
-        if ((cameraCapabilities[getCameraSelector(cameraIndex)]?.size ?: 0) <= 1) {
+        if ((cameraCapabilities[lensFacing]?.size ?: 0) <= 1) {
             binding.btnResolution.isEnabled = false
         }
     }
@@ -588,15 +572,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     }
                 })
 
-                cameraIndex = (cameraIndex + 1) % cameraCapabilities.size
+                lensFacing = switchAndGetCameraSelector()
                 // Camera device change is in effect instantly:
                 //   - reset quality selection
                 //   - restart preview
                 qualityIndex = DEFAULT_QUALITY_IDX
                 enableUI(false)
-                viewLifecycleOwner.lifecycleScope.launch {
-                    bindCaptureUseCase(false)
-                }
+                bindCaptureUseCase(false)
             }
         }
     }
@@ -610,7 +592,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         enableUI(true)
         showUI(RecordUiState.IDLE, reason)
 
-        cameraIndex = 0
+        lensFacing = CameraSelector.DEFAULT_BACK_CAMERA
         qualityIndex = DEFAULT_QUALITY_IDX
         audioEnabled = false
     }

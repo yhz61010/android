@@ -174,6 +174,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 quality,
                 (orientation == Configuration.ORIENTATION_PORTRAIT)
             )
+            LogContext.log.w(logTag, "dimensionRatio=$dimensionRatio")
         }
 
         //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)

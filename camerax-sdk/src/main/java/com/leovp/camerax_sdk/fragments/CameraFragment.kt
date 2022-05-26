@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
+import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -17,9 +18,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
-import androidx.camera.core.CameraInfoUnavailableException
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
+import androidx.camera.core.*
+import androidx.camera.view.PreviewView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
 import androidx.lifecycle.MutableLiveData
@@ -29,6 +30,7 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax_sdk.R
+import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
@@ -72,6 +74,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
     }
 
+    private var imageCapture: ImageCapture? = null
+    private var imageAnalyzer: ImageAnalysis? = null
+
     private var _cameraUiContainerTopBinding: CameraUiContainerTopBinding? = null
     private var _cameraUiContainerBottomBinding: CameraUiContainerBottomBinding? = null
     private val cameraUiContainerTopBinding get() = _cameraUiContainerTopBinding!!
@@ -112,6 +117,23 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
     }
 
+    /**
+     * We need a display listener for orientation changes that do not trigger a configuration
+     * change, for example if we choose to override config change in manifest or for 180-degree
+     * orientation changes.
+     */
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
+            if (displayId == this@CameraFragment.displayId) {
+                LogContext.log.d(logTag, "Rotation changed: ${view.display.rotation}")
+                imageCapture?.targetRotation = view.display.rotation
+                imageAnalyzer?.targetRotation = view.display.rotation
+            }
+        } ?: Unit
+    }
+
     override fun onResume() {
         super.onResume()
         // Make sure that all permissions are still present, since the
@@ -129,6 +151,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Every time the orientation of device changes, update rotation for use cases
+        displayManager.registerDisplayListener(displayListener, null)
         loadPrefs()
 
         // Wait for the views to be properly laid out
@@ -142,6 +166,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 setUpCamera()
             }
         }
+    }
+
+    override fun onDestroyView() {
+        displayManager.unregisterDisplayListener(displayListener)
+        super.onDestroyView()
     }
 
     private fun loadPrefs() {
@@ -258,18 +287,63 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             //            observeCameraState(camera?.cameraInfo!!)
-            // Call this after [cameraProvider.bindToLifecycle]
+            // Call this after [camProvider.bindToLifecycle]
             initCameraGesture(binding.viewFinder, camera!!)
-
-            setSwipeCallback(
-                left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
-                right = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
-                up = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() },
-                down = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() }
-            )
         } catch (exc: Exception) {
             LogContext.log.e(logTag, "Use case binding failed", exc)
         }
+    }
+
+    /** Declare and bind preview, capture and analysis use cases */
+    private fun bindCameraUseCases(previewView: PreviewView, rotation: Int, flashMode: Int) {
+        // Get screen metrics used to setup camera for full screen resolution
+        val metrics = requireContext().getRealResolution()
+        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+        LogContext.log.w(logTag,
+            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio =
+                if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
+
+        // Preview
+        preview = Preview.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation
+            .setTargetRotation(rotation)
+            .build()
+
+        // ImageCapture
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            // Set capture flash
+            .setFlashMode(flashMode)
+            // We request aspect ratio but no resolution to match preview config, but letting
+            // CameraX optimize for whatever specific resolution best fits our use cases
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            .build()
+
+        // ImageAnalysis
+        imageAnalyzer = ImageAnalysis.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            // In our analysis, we care about the latest image
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            // The analyzer can then be assigned to the instance
+            .also {
+                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                    // Values returned from our analyzer are passed to the attached listener
+                    // We log image analysis results here - you should do something useful
+                    // instead!
+                    LogContext.log.v(logTag, "Average luminosity: $luma")
+                })
+            }
     }
 
     //    private fun observeCameraState(cameraInfo: CameraInfo) {
@@ -316,6 +390,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Method used to re-draw the camera UI controls, called every time configuration changes. */
     private fun updateCameraUi() {
+        setSwipeCallback(
+            left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
+            right = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
+            up = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() },
+            down = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() }
+        )
+
         // Remove previous UI if any
         _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
         _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }

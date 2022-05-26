@@ -78,7 +78,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var currentRecording: Recording? = null
     private lateinit var recordingState: VideoRecordEvent
 
-    private var qualityIndex = DEFAULT_QUALITY_IDX
+    private var selectedQuality: Quality = DEFAULT_QUALITY
 
     private var audioEnabled = true
 
@@ -162,14 +162,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
-        val quality: Quality = cameraCapabilities[lensFacing]!![qualityIndex]
-        LogContext.log.w(logTag, "Selected quality=$quality")
-        val qualitySelector = QualitySelector.from(quality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
+        LogContext.log.w(logTag, "Selected quality=$selectedQuality")
+        val qualitySelector =
+                QualitySelector.from(selectedQuality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
 
         binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
-            dimensionRatio = quality.getAspectRatioString(
-                quality,
+            dimensionRatio = selectedQuality.getAspectRatioString(
+                selectedQuality,
                 (orientation == Configuration.ORIENTATION_PORTRAIT)
             )
             LogContext.log.w(logTag, "View Finder dimension ratio=$dimensionRatio")
@@ -180,7 +180,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val preview = Preview.Builder()
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            .setTargetAspectRatio(quality.getAspectRatio(quality))
+            .setTargetAspectRatio(selectedQuality.getAspectRatio(selectedQuality))
             // Set initial target rotation
             .setTargetRotation(rotation)
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
@@ -352,13 +352,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btn1080p.setOnClickListener { closeResolutionAndSelect(Quality.FHD) }
         binding.btn720p.setOnClickListener { closeResolutionAndSelect(Quality.HD) }
 
-        for (quality in cameraCapabilities.getValue(lensFacing)) {
-            when (quality) {
-                Quality.UHD -> binding.btn4k.visibility = View.VISIBLE
-                Quality.FHD -> binding.btn1080p.visibility = View.VISIBLE
-                Quality.HD  -> binding.btn720p.visibility = View.VISIBLE
-            }
-        }
+        updateQualitySelectionUI(selectedQuality)
 
         binding.btnGallery.setOnClickListener {
             Toast.makeText(requireContext(), "Click Gallery button.", Toast.LENGTH_SHORT).show()
@@ -416,20 +410,32 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private fun closeResolutionAndSelect(quality: Quality) {
         binding.llResolution.circularClose(binding.btnResolution) {
-            qualityIndex = cameraCapabilities[lensFacing]!!.indexOf(quality)
-            LogContext.log.w(logTag, "Change to ${quality.getNameString()} index: $qualityIndex")
-            binding.btnResolution.setImageResource(
-                when (quality) {
-                    Quality.UHD -> R.drawable.ic_resolution_4k
-                    Quality.FHD -> R.drawable.ic_resolution_1080p
-                    Quality.HD  -> R.drawable.ic_resolution_720p
-                    else        -> throw IllegalArgumentException("Device does not support $quality")
-                }
-            )
+            selectedQuality = quality
+            LogContext.log.w(logTag, "Change to ${quality.getNameString()}")
+            updateQualitySelectionUI(quality)
             // rebind the use cases to put the new QualitySelection in action.
             enableUI(false)
-            viewLifecycleOwner.lifecycleScope.launch { bindCaptureUseCase() }
+            bindCaptureUseCase()
         }
+    }
+
+    private fun updateQualitySelectionUI(quality: Quality) {
+        for (q in cameraCapabilities.getValue(lensFacing)) {
+            when (q) {
+                Quality.UHD -> binding.btn4k.visibility = View.VISIBLE
+                Quality.FHD -> binding.btn1080p.visibility = View.VISIBLE
+                Quality.HD  -> binding.btn720p.visibility = View.VISIBLE
+            }
+        }
+
+        binding.btnResolution.setImageResource(
+            when (quality) {
+                Quality.UHD -> R.drawable.ic_resolution_4k
+                Quality.FHD -> R.drawable.ic_resolution_1080p
+                Quality.HD  -> R.drawable.ic_resolution_720p
+                else        -> throw IllegalArgumentException("Device does not support $quality")
+            }
+        )
     }
 
     override fun onStop() {
@@ -584,7 +590,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 // Camera device change is in effect instantly:
                 //   - reset quality selection
                 //   - restart preview
-                qualityIndex = DEFAULT_QUALITY_IDX
+                selectedQuality = DEFAULT_QUALITY
+                updateQualitySelectionUI(selectedQuality)
                 enableUI(false)
                 bindCaptureUseCase(false)
             }
@@ -601,12 +608,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         showUI(RecordUiState.IDLE, reason)
 
         lensFacing = CameraSelector.DEFAULT_BACK_CAMERA
-        qualityIndex = DEFAULT_QUALITY_IDX
+        selectedQuality = DEFAULT_QUALITY
+        updateQualitySelectionUI(selectedQuality)
         audioEnabled = false
     }
 
     companion object {
-        // Default Quality selection if no input from UI
-        const val DEFAULT_QUALITY_IDX = 0 // Back camera
+        private val DEFAULT_QUALITY = Quality.FHD
     }
 }

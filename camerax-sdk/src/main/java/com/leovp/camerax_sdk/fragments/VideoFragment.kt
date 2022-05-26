@@ -42,6 +42,7 @@ import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.File
@@ -108,29 +109,43 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initCameraFragment()
 
         // Wait for the views to be properly laid out
         binding.viewFinder.post {
             // Keep track of the display in which this view is attached
             displayId = binding.viewFinder.display.displayId
-
-            touchListener = object : CameraXTouchListener {
-                override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
-
-                override fun onFocusSuccess() = binding.focusView.focusSuccess()
-
-                override fun onFocusFail() = binding.focusView.focusFail()
-
-                override fun onDoubleTap(x: Float, y: Float) {}
-
-                override fun onZoom(ratio: Float) {
-                }
-
-                override fun onScale(scale: Float) {
-                }
+            // Build UI controls
+            updateCameraUi()
+            lifecycleScope.launch(Dispatchers.Main) {
+                enumerationDeferred?.await()
+                enumerationDeferred = null
+                // Set up the camera and its use cases
+                setUpCamera()
             }
         }
+    }
+
+    /** Initialize CameraX, and prepare to bind the camera use cases  */
+    private suspend fun setUpCamera() {
+        configCamera()
+        touchListener = object : CameraXTouchListener {
+            override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
+
+            override fun onFocusSuccess() = binding.focusView.focusSuccess()
+
+            override fun onFocusFail() = binding.focusView.focusFail()
+
+            override fun onDoubleTap(x: Float, y: Float) {}
+
+            override fun onZoom(ratio: Float) {
+            }
+
+            override fun onScale(scale: Float) {
+            }
+        }
+
+        // Build and bind the camera use cases
+        bindCaptureUseCase()
     }
 
     /**
@@ -140,9 +155,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * (VideoCapture can work on its own). The function should always execute on
      * the main thread.
      */
-    private suspend fun bindCaptureUseCase(enableUI: Boolean = true) {
-        configCamera()
-
+    private fun bindCaptureUseCase(enableUI: Boolean = true) {
         val cameraSelector = getCameraSelector(cameraIndex)
         LogContext.log.w(logTag,
             "cameraSelector=${if (cameraSelector.lensFacing == CameraSelector.LENS_FACING_FRONT) "Front" else "Back"}")
@@ -189,6 +202,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
             LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
             binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
+
+            // Call this after [camProvider.bindToLifecycle]
+            initCameraGesture(binding.viewFinder, camera!!)
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
             LogContext.log.e(logTag, "Use case binding failed", exc)
@@ -288,39 +304,20 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     /**
-     * One time initialize for CameraFragment (as a part of fragment layout's creation process).
-     * This function performs the following:
-     *   - initialize but disable all UI controls except the Quality selection.
-     *   - set up the Quality selection recycler view.
-     *   - bind use cases to a lifecycle camera, enable UI controls.
-     */
-    private fun initCameraFragment() {
-        initializeUI()
-        viewLifecycleOwner.lifecycleScope.launch {
-            enumerationDeferred?.await()
-            enumerationDeferred = null
-
-            bindCaptureUseCase()
-
-            initCameraGesture(binding.viewFinder, camera!!)
-
-            setSwipeCallback(
-                left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
-                right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
-                up = { binding.btnSwitchCamera.performClick() },
-                down = { binding.btnSwitchCamera.performClick() }
-            )
-        }
-    }
-
-    /**
      * Initialize UI. Preview and Capture actions are configured in this function.
      * Note that preview and capture are both initialized either by UI or CameraX callbacks
      * (except the very 1st time upon entering to this fragment in onCreateView()
      */
     @SuppressLint("ClickableViewAccessibility", "MissingPermission")
-    private fun initializeUI() {
+    private fun updateCameraUi() {
         resetSwitchCameraIcon()
+
+        setSwipeCallback(
+            left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+            right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+            up = { binding.btnSwitchCamera.performClick() },
+            down = { binding.btnSwitchCamera.performClick() }
+        )
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {

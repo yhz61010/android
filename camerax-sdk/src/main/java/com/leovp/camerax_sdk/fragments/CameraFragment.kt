@@ -19,10 +19,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import androidx.camera.core.*
-import androidx.camera.view.PreviewView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -228,7 +228,61 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
         val rotation = binding.viewFinder.display.rotation
-        bindCameraUseCases(binding.viewFinder, rotation, flashMode)
+
+        // Get screen metrics used to setup camera for full screen resolution
+        val metrics = requireContext().getRealResolution()
+        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+        LogContext.log.w(logTag,
+            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
+        }
+
+        // Preview
+        preview = Preview.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation
+            .setTargetRotation(rotation)
+            .build()
+            .apply {
+                // Attach the viewfinder's surface provider to preview use case
+                setSurfaceProvider(binding.viewFinder.surfaceProvider)
+            }
+
+        // ImageCapture
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            // Set capture flash
+            .setFlashMode(flashMode)
+            // We request aspect ratio but no resolution to match preview config, but letting
+            // CameraX optimize for whatever specific resolution best fits our use cases
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            .build()
+
+        // ImageAnalysis
+        imageAnalyzer = ImageAnalysis.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            // In our analysis, we care about the latest image
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            // The analyzer can then be assigned to the instance
+            .also {
+                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                    // Values returned from our analyzer are passed to the attached listener
+                    // We log image analysis results here - you should do something useful
+                    // instead!
+                    LogContext.log.v(logTag, "Average luminosity: $luma")
+                })
+            }
+
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {
                 // If yes, turn on if the HDR is turned on by the user
@@ -284,66 +338,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 cameraUiContainerTopBinding.btnFlash.visibility = View.VISIBLE
             }
 
-            // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             //            observeCameraState(camera?.cameraInfo!!)
             // Call this after [camProvider.bindToLifecycle]
             initCameraGesture(binding.viewFinder, camera!!)
         } catch (exc: Exception) {
             LogContext.log.e(logTag, "Use case binding failed", exc)
         }
-    }
-
-    /** Declare and bind preview, capture and analysis use cases */
-    private fun bindCameraUseCases(previewView: PreviewView, rotation: Int, flashMode: Int) {
-        // Get screen metrics used to setup camera for full screen resolution
-        val metrics = requireContext().getRealResolution()
-        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-        LogContext.log.w(logTag,
-            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
-        (previewView.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio =
-                if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
-
-        // Preview
-        preview = Preview.Builder()
-            // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation
-            .setTargetRotation(rotation)
-            .build()
-
-        // ImageCapture
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-            // Set capture flash
-            .setFlashMode(flashMode)
-            // We request aspect ratio but no resolution to match preview config, but letting
-            // CameraX optimize for whatever specific resolution best fits our use cases
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(rotation)
-            .build()
-
-        // ImageAnalysis
-        imageAnalyzer = ImageAnalysis.Builder()
-            // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(rotation)
-            // In our analysis, we care about the latest image
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            // The analyzer can then be assigned to the instance
-            .also {
-                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-                    // Values returned from our analyzer are passed to the attached listener
-                    // We log image analysis results here - you should do something useful
-                    // instead!
-                    LogContext.log.v(logTag, "Average luminosity: $luma")
-                })
-            }
     }
 
     //    private fun observeCameraState(cameraInfo: CameraInfo) {

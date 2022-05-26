@@ -156,6 +156,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
+        val rotation = binding.viewFinder.display.rotation
+
         val cameraSelector = getCameraSelector(cameraIndex)
         LogContext.log.w(logTag,
             "cameraSelector=${if (cameraSelector.lensFacing == CameraSelector.LENS_FACING_FRONT) "Front" else "Back"}")
@@ -176,7 +178,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val preview = Preview.Builder()
             .setTargetAspectRatio(quality.getAspectRatio(quality))
-            .build().apply {
+            // Set initial target rotation
+            .setTargetRotation(rotation)
+            .build()
+            .apply {
+                // Attach the viewfinder's surface provider to preview use case
                 setSurfaceProvider(binding.viewFinder.surfaceProvider)
             }
 
@@ -186,11 +192,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         val recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
         videoCapture = VideoCapture.withOutput(recorder)
 
+        val camProvider = cameraProvider
+            ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
         try {
-            val camProvider = cameraProvider
-                ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
-            // Unbind the use-cases before rebinding them.
+            // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
+
             camera = camProvider.bindToLifecycle(
                 viewLifecycleOwner, // current lifecycle owner
                 cameraSelector, // either front or back facing

@@ -541,12 +541,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     }
                     setSwitchCameraIconToPauseIcon()
                     it.btnGallery.visibility = View.GONE
+                    it.btnResolution.visibility = View.GONE
+                    it.btnMicrophone.visibility = View.GONE
                 }
                 RecordUiState.FINALIZED -> {
                     it.llRecLayer.visibility = View.GONE
+                    it.btnGallery.visibility = View.VISIBLE
+                    it.btnResolution.visibility = View.VISIBLE
+                    it.btnMicrophone.visibility = View.VISIBLE
+
                     it.icRedDot.clearAnimation()
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
-                    it.btnGallery.visibility = View.VISIBLE
                     resetSwitchCameraIcon()
                     enableUI(true)
                 }

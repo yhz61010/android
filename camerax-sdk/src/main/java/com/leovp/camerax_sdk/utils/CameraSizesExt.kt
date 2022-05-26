@@ -82,11 +82,13 @@ fun <T> getPreviewOutputSize(
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-    if (format == null) require(StreamConfigurationMap.isOutputSupportedFor(targetClass)) else require(config.isOutputSupportedFor(format))
+    if (format == null) require(StreamConfigurationMap.isOutputSupportedFor(targetClass)) else require(config.isOutputSupportedFor(
+        format))
     val allSizes = if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
 
     // Get available sizes and sort them by area from largest to smallest
-    val validSizes = allSizes.sortedWith(compareBy { it.height * it.width }).map { SmartSize(it.width, it.height) }.reversed()
+    val validSizes =
+            allSizes.sortedWith(compareBy { it.height * it.width }).map { SmartSize(it.width, it.height) }.reversed()
 
     // Then, get the largest output size that is smaller or equal than our max size
     val alphaSize = validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }

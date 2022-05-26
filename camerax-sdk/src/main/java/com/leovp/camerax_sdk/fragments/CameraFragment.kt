@@ -94,7 +94,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // Selector showing is there any selected timer and it's value (3s or 10s)
     private var selectedTimer = CameraTimer.OFF
 
-    private var selectedRatio = CameraRatio.R4v3
+    private var selectedRatio = CameraRatio.R16v9
 
     // Selector showing which flash mode is selected (on, off or auto)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
@@ -413,6 +413,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // --------------------
 
+        updateRatioUI(selectedRatio)
+
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
             btnGrid.setOnSingleClickListener { toggleGrid() }
@@ -634,14 +636,21 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeRatioAndSelect(ratio: CameraRatio) {
         cameraUiContainerTopBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
-            cameraUiContainerTopBinding.btnRatio.setImageResource(
-                when (ratio) {
-                    CameraRatio.R4v3  -> R.drawable.ic_ratio_4v3
-                    CameraRatio.R16v9 -> R.drawable.ic_ratio_16v9
-                    CameraRatio.R1v1  -> R.drawable.ic_ratio_1v1
-                    CameraRatio.RFull -> R.drawable.ic_ratio_full
-                }
-            )
+            updateRatioUI(ratio)
         }
+    }
+
+    private fun updateRatioUI(ratio: CameraRatio) {
+        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            dimensionRatio = ratio.ratioString
+        }
+        cameraUiContainerTopBinding.btnRatio.setImageResource(
+            when (ratio) {
+                CameraRatio.R4v3  -> R.drawable.ic_ratio_4v3
+                CameraRatio.R16v9 -> R.drawable.ic_ratio_16v9
+                CameraRatio.R1v1  -> R.drawable.ic_ratio_1v1
+                CameraRatio.RFull -> R.drawable.ic_ratio_full
+            }
+        )
     }
 }

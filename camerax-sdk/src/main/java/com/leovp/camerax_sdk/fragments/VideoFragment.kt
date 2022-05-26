@@ -150,9 +150,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // build a recorder, which can:
         //   - record video/audio to MediaStore(only shown here), File, ParcelFileDescriptor
         //   - be used create recording(s) (the recording performs recording)
-        val recorder = Recorder.Builder()
-            .setQualitySelector(qualitySelector)
-            .build()
+        val recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
         videoCapture = VideoCapture.withOutput(recorder)
 
         try {
@@ -402,7 +400,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     Quality.UHD -> R.drawable.top_tool_bar_video_resolution_4k
                     Quality.FHD -> R.drawable.top_tool_bar_video_resolution_1080p
                     Quality.HD  -> R.drawable.top_tool_bar_video_resolution_720p
-                    else        -> R.drawable.top_tool_bar_video_resolution_1080p
+                    else        -> throw IllegalArgumentException("Device does not support $quality")
                 }
             )
             // rebind the use cases to put the new QualitySelection in action.

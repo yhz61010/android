@@ -176,10 +176,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             )
         }
 
+        //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)
+        //        LogContext.log.w(logTag, "Max preview size=$maxPreviewSize")
+
         val preview = Preview.Builder()
+            // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
             .setTargetAspectRatio(quality.getAspectRatio(quality))
             // Set initial target rotation
             .setTargetRotation(rotation)
+            // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
+            // .setTargetResolution(maxPreviewSize)
             .build()
             .apply {
                 // Attach the viewfinder's surface provider to preview use case

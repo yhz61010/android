@@ -299,7 +299,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         try {
             val outputCameraParamCost = measureTimeMillis {
                 val screenDimen = requireContext().getRealResolution()
-                // TODO set desire dimension.
                 outputCameraParameters(hdrCameraSelector ?: lensFacing, screenDimen.width, screenDimen.height)
             }
             LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")

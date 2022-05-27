@@ -32,6 +32,7 @@ import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax_sdk.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax_sdk.databinding.FragmentCameraBinding
+import com.leovp.camerax_sdk.databinding.IncPreviewGridBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
@@ -61,10 +62,16 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // An instance of a helper function to work with Shared Preferences
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
+    // https://stackoverflow.com/a/64858848/1685062
+    private lateinit var incBinding: IncPreviewGridBinding
+
     override fun getViewBinding(inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?): FragmentCameraBinding {
-        return FragmentCameraBinding.inflate(inflater, container, false)
+        val rootBinding = FragmentCameraBinding.inflate(inflater, container, false)
+        // https://stackoverflow.com/a/64858848/1685062
+        incBinding = IncPreviewGridBinding.bind(rootBinding.root)
+        return rootBinding
     }
 
     /** Host's navigation controller */
@@ -154,9 +161,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         loadPrefs()
 
         // Wait for the views to be properly laid out
-        binding.viewFinder.post {
+        incBinding.viewFinder.post {
             // Keep track of the display in which this view is attached
-            displayId = binding.viewFinder.display.displayId
+            displayId = incBinding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
             lifecycleScope.launch(Dispatchers.Main) {
@@ -225,7 +232,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
-        val rotation = binding.viewFinder.display.rotation
+        val rotation = incBinding.viewFinder.display.rotation
 
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
@@ -245,7 +252,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             .build()
             .apply {
                 // Attach the viewfinder's surface provider to preview use case
-                setSurfaceProvider(binding.viewFinder.surfaceProvider)
+                setSurfaceProvider(incBinding.viewFinder.surfaceProvider)
             }
 
         // ImageCapture
@@ -337,7 +344,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             //            observeCameraState(camera?.cameraInfo!!)
             // Call this after [camProvider.bindToLifecycle]
-            initCameraGesture(binding.viewFinder, camera!!)
+            initCameraGesture(incBinding.viewFinder, camera!!)
         } catch (exc: Exception) {
             LogContext.log.e(logTag, "Use case binding failed", exc)
         }
@@ -411,12 +418,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // --------------------
 
-        updateRatioUI(selectedRatio, binding.viewFinder, cameraUiContainerTopBinding.btnRatio)
+        updateRatioUI(selectedRatio, incBinding.viewFinder, cameraUiContainerTopBinding.btnRatio)
 
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
             btnGrid.setOnSingleClickListener { toggleGrid() }
-            binding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+            incBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
             btnFlash.setOnClickListener { showFlashLayer() }
             btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
             btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }
@@ -456,7 +463,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                binding.viewFinder.apply {
+                                incBinding.viewFinder.apply {
                                     post {
                                         // Display flash animation to indicate that photo was captured.
                                         foreground = ColorDrawable(ResourcesCompat.getColor(resources,
@@ -580,7 +587,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         ) { flag ->
             hasGrid = flag
             prefs.putBoolean(KEY_GRID, flag)
-            binding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
+            incBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
         }
     }
 
@@ -634,7 +641,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeRatioAndSelect(ratio: CameraRatio) {
         cameraUiContainerTopBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
-            updateRatioUI(ratio, binding.viewFinder, cameraUiContainerTopBinding.btnRatio)
+            updateRatioUI(ratio, incBinding.viewFinder, cameraUiContainerTopBinding.btnRatio)
         }
     }
 }

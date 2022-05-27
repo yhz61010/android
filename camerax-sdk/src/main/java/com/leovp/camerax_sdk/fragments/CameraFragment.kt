@@ -234,9 +234,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
         LogContext.log.w(logTag,
             "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
-        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
-        }
+        //        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+        //            dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
+        //        }
 
         // Preview
         preview = Preview.Builder()
@@ -652,5 +652,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 CameraRatio.RFull -> R.drawable.ic_ratio_full
             }
         )
+        binding.viewFinder.topMargin = when (ratio) {
+            CameraRatio.R16v9 -> resources.dp2px(64f)
+            CameraRatio.R4v3  -> resources.dp2px(74f)
+            CameraRatio.R1v1  -> resources.dp2px(112f)
+            CameraRatio.RFull -> 0
+        }
     }
 }

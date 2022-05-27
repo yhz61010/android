@@ -99,7 +99,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // Selector showing is there any selected timer and it's value (3s or 10s)
     private var selectedTimer = CameraTimer.OFF
 
-    private var selectedRatio = CameraRatio.R16v9
+    private var selectedRatio = CameraRatio.R4v3
 
     // Selector showing which flash mode is selected (on, off or auto)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->

@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.util.Range
 import android.util.Size
 import android.view.*
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.camera.core.*
@@ -22,9 +23,11 @@ import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.concurrent.futures.await
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.setPadding
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
@@ -35,9 +38,12 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.bean.CaptureImage
+import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
+import com.leovp.lib_common_android.exts.dp2px
 import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -352,6 +358,54 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     // placeholder(R.drawable.ic_photo)
                     error(R.drawable.ic_photo)
                     transformations(CircleCropTransformation())
+                }
+            }
+        }
+    }
+
+    protected fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton) {
+        if (ratio != CameraRatio.RFull) previewView.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            dimensionRatio = ratio.ratioString
+        }
+        when (ratio) {
+            CameraRatio.R16v9 -> {
+                ratioBtn.setImageResource(R.drawable.ic_ratio_16v9)
+                previewView.run {
+                    updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        width = 0
+                        height = 0
+                    }
+                    topMargin = resources.dp2px(64f)
+                }
+            }
+            CameraRatio.R4v3  -> {
+                ratioBtn.setImageResource(R.drawable.ic_ratio_4v3)
+                previewView.run {
+                    updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        width = 0
+                        height = 0
+                    }
+                    topMargin = resources.dp2px(74f)
+                }
+            }
+            CameraRatio.R1v1  -> {
+                ratioBtn.setImageResource(R.drawable.ic_ratio_1v1)
+                previewView.run {
+                    updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        width = 0
+                        height = 0
+                    }
+                    topMargin = resources.dp2px(112f)
+                }
+            }
+            CameraRatio.RFull -> {
+                ratioBtn.setImageResource(R.drawable.ic_ratio_full)
+                previewView.run {
+                    updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        width = FrameLayout.LayoutParams.MATCH_PARENT
+                        height = FrameLayout.LayoutParams.MATCH_PARENT
+                    }
+                    topMargin = 0
                 }
             }
         }

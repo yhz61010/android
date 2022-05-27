@@ -18,12 +18,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
-import android.widget.FrameLayout
 import androidx.camera.core.*
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -414,7 +411,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // --------------------
 
-        updateRatioUI(selectedRatio)
+        updateRatioUI(selectedRatio, binding.viewFinder, cameraUiContainerTopBinding.btnRatio)
 
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
@@ -637,55 +634,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeRatioAndSelect(ratio: CameraRatio) {
         cameraUiContainerTopBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
-            updateRatioUI(ratio)
-        }
-    }
-
-    private fun updateRatioUI(ratio: CameraRatio) {
-        if (ratio != CameraRatio.RFull) binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            dimensionRatio = ratio.ratioString
-        }
-        when (ratio) {
-            CameraRatio.R16v9 -> {
-                cameraUiContainerTopBinding.btnRatio.setImageResource(R.drawable.ic_ratio_16v9)
-                binding.viewFinder.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(64f)
-                }
-            }
-            CameraRatio.R4v3  -> {
-                cameraUiContainerTopBinding.btnRatio.setImageResource(R.drawable.ic_ratio_4v3)
-                binding.viewFinder.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(74f)
-                }
-            }
-            CameraRatio.R1v1  -> {
-                cameraUiContainerTopBinding.btnRatio.setImageResource(R.drawable.ic_ratio_1v1)
-                binding.viewFinder.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(112f)
-                }
-            }
-            CameraRatio.RFull -> {
-                cameraUiContainerTopBinding.btnRatio.setImageResource(R.drawable.ic_ratio_full)
-                binding.viewFinder.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = FrameLayout.LayoutParams.MATCH_PARENT
-                        height = FrameLayout.LayoutParams.MATCH_PARENT
-                    }
-                    topMargin = 0
-                }
-            }
+            updateRatioUI(ratio, binding.viewFinder, cameraUiContainerTopBinding.btnRatio)
         }
     }
 }

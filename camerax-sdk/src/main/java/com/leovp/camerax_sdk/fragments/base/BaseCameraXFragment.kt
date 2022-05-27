@@ -109,10 +109,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     override fun onDestroyView() {
+        LogContext.log.w(logTag, "=====> onDestroyView() <=====")
+        super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        LogContext.log.w(logTag, "=====> onDestroy() <=====")
         soundManager.release()
         // Shut down our background executor
         cameraExecutor.shutdown()
-        super.onDestroyView()
+        super.onDestroy()
     }
 
     protected fun captureForBytes(imageCapture: ImageCapture, onImageSaved: (savedImage: CaptureImage) -> Unit) {

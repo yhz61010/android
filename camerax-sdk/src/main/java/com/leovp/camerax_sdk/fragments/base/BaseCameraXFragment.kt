@@ -501,11 +501,11 @@ Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaForm
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}
 
-    cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}
-        allCameraSupportSize=${allCameraSupportSize?.contentToString()}
+        Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
+              Supported Size=${allCameraSupportSize?.contentToString()}
 
-               Screen  dimen=${desiredVideoWidth}x$desiredVideoHeight
-           previewSize dimen=${previewSize.width}x${previewSize.height}
+                Screen dimen=${desiredVideoWidth}x$desiredVideoHeight
+          Preview Size dimen=${previewSize.width}x${previewSize.height}
         """.trimIndent()
                     LogContext.log.w(logTag, cameraParametersString)
                     LogContext.log.w(logTag, "==================================================")

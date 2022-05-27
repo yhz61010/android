@@ -17,16 +17,20 @@ import java.nio.charset.StandardCharsets
  */
 
 fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): String {
-    return resources.assets.open(if (subdirectory.isNullOrBlank()) filename else "$subdirectory${File.separatorChar}$filename").use {
-        it.readBytes().toString(StandardCharsets.UTF_8)
-    }
+    return resources.assets.open(if (subdirectory.isNullOrBlank()) filename else "$subdirectory${File.separatorChar}$filename")
+        .use {
+            it.readBytes().toString(StandardCharsets.UTF_8)
+        }
 }
 
 fun Context.readAssetsFileAsString(@RawRes rawId: Int): String {
     return resources.openRawResource(rawId).use { it.readBytes().toString(StandardCharsets.UTF_8) }
 }
 
-fun Context.saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileName: String, force: Boolean = false): String {
+fun Context.saveRawResourceToFile(@RawRes id: Int,
+    storagePath: String,
+    outFileName: String,
+    force: Boolean = false): String {
     val inputStream: InputStream = resources.openRawResource(id)
     val file = File(storagePath)
     if (!file.exists()) {
@@ -36,7 +40,10 @@ fun Context.saveRawResourceToFile(@RawRes id: Int, storagePath: String, outFileN
     return storagePath + File.separatorChar + outFileName
 }
 
-fun Context.saveAssetToFile(assetFileName: String, storagePath: String, outFileName: String, force: Boolean = false): Boolean {
+fun Context.saveAssetToFile(assetFileName: String,
+    storagePath: String,
+    outFileName: String,
+    force: Boolean = false): Boolean {
     return runCatching {
         assets.open(assetFileName).toFile(File(storagePath, outFileName).absolutePath, force = force)
         true
@@ -56,6 +63,12 @@ fun Context.saveAssetToFile(assetFileName: String, storagePath: String, outFileN
  */
 inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T = px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
 
+/** Converts dp to pixel. */
+val Int.px get(): Int = (this * Resources.getSystem().displayMetrics.density).toInt()
+
+/** Converts dp to pixel. */
+val Float.px get(): Int = (this * Resources.getSystem().displayMetrics.density).toInt()
+
 /**
  * @return The return type is either `Int` or `Float`
  */
@@ -67,6 +80,12 @@ inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
         else         -> fail("Type not supported")
     }
 }
+
+/** Converts pixel to dp. */
+val Int.dp get(): Float = (this * 1.0f / Resources.getSystem().displayMetrics.density + 0.5f)
+
+/** Converts pixel to dp. */
+val Float.dp get(): Float = (this * 1.0f / Resources.getSystem().displayMetrics.density + 0.5f)
 
 /**
  * Can I use [Resources.getSystem()] to get [Resources]?

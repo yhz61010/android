@@ -240,7 +240,7 @@
             android:elevation="1dp"
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_ratio_4v3"
+            android:src="@drawable/ic_ratio_16v9"
             tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton

@@ -13,7 +13,8 @@
         android:layout_height="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_constraintDimensionRatio="3:4" />
 
     <View
         android:id="@+id/gridVertical1"
@@ -22,11 +23,11 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/view_finder"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/groupGridLines"
+        app:layout_constraintEnd_toEndOf="@+id/groupGridLines"
         app:layout_constraintHorizontal_bias="0.33"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/view_finder" />
+        app:layout_constraintStart_toStartOf="@+id/groupGridLines"
+        app:layout_constraintTop_toTopOf="@+id/groupGridLines" />
 
     <View
         android:id="@+id/gridVertical2"
@@ -35,11 +36,11 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/view_finder"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/groupGridLines"
+        app:layout_constraintEnd_toEndOf="@+id/groupGridLines"
         app:layout_constraintHorizontal_bias="0.66"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/view_finder" />
+        app:layout_constraintStart_toStartOf="@+id/groupGridLines"
+        app:layout_constraintTop_toTopOf="@+id/groupGridLines" />
 
     <View
         android:id="@+id/gridHorizontal1"
@@ -48,10 +49,10 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/view_finder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/view_finder"
+        app:layout_constraintBottom_toBottomOf="@+id/groupGridLines"
+        app:layout_constraintEnd_toEndOf="@+id/groupGridLines"
+        app:layout_constraintStart_toStartOf="@+id/groupGridLines"
+        app:layout_constraintTop_toTopOf="@+id/groupGridLines"
         app:layout_constraintVertical_bias="0.33" />
 
     <View
@@ -61,10 +62,10 @@
         android:alpha="0.5"
         android:background="@android:color/white"
         android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/view_finder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/view_finder"
+        app:layout_constraintBottom_toBottomOf="@+id/groupGridLines"
+        app:layout_constraintEnd_toEndOf="@+id/groupGridLines"
+        app:layout_constraintStart_toStartOf="@+id/groupGridLines"
+        app:layout_constraintTop_toTopOf="@+id/groupGridLines"
         app:layout_constraintVertical_bias="0.66" />
 
     <androidx.constraintlayout.widget.Group
@@ -73,6 +74,10 @@
         android:layout_height="0dp"
         android:visibility="gone"
         app:constraint_referenced_ids="gridVertical1,gridVertical2,gridHorizontal1,gridHorizontal2"
+        app:layout_constraintBottom_toBottomOf="@+id/view_finder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/view_finder"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

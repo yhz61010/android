@@ -370,42 +370,41 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
     }
 
-    protected fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton) {
-        if (ratio != CameraRatio.RFull) previewView.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            dimensionRatio = ratio.ratioString
+    private fun updatePreviewViewLayoutParams(previewView: PreviewView, ratio: CameraRatio) {
+        previewView.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            width = 0
+            height = 0
+            if (ratio != CameraRatio.RFull) dimensionRatio = ratio.ratioString
         }
+    }
+
+    protected fun updateRatioUI(ratio: CameraRatio,
+        previewView: PreviewView,
+        ratioBtn: ImageButton,
+        onStart: ((CameraRatio) -> Unit)? = null) {
+        onStart?.invoke(ratio)
+        ratioBtn.visibility = View.GONE
         when (ratio) {
             CameraRatio.R16v9 -> {
+                ratioBtn.visibility = View.VISIBLE
                 ratioBtn.setImageResource(R.drawable.ic_ratio_16v9)
-                previewView.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(64f)
-                }
+                updatePreviewViewLayoutParams(previewView, ratio)
+                previewView.topMargin = resources.dp2px(64f)
             }
             CameraRatio.R4v3  -> {
+                ratioBtn.visibility = View.VISIBLE
                 ratioBtn.setImageResource(R.drawable.ic_ratio_4v3)
-                previewView.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(74f)
-                }
+                updatePreviewViewLayoutParams(previewView, ratio)
+                previewView.topMargin = resources.dp2px(74f)
             }
             CameraRatio.R1v1  -> {
+                ratioBtn.visibility = View.VISIBLE
                 ratioBtn.setImageResource(R.drawable.ic_ratio_1v1)
-                previewView.run {
-                    updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        width = 0
-                        height = 0
-                    }
-                    topMargin = resources.dp2px(112f)
-                }
+                updatePreviewViewLayoutParams(previewView, ratio)
+                previewView.topMargin = resources.dp2px(112f)
             }
             CameraRatio.RFull -> {
+                ratioBtn.visibility = View.VISIBLE
                 ratioBtn.setImageResource(R.drawable.ic_ratio_full)
                 previewView.run {
                     updateLayoutParams<ConstraintLayout.LayoutParams> {
@@ -524,15 +523,6 @@ Supported profile/level for HEVC=${
                             })"
                         }
                     }
-
-                Screen dimen=${desiredVideoWidth}x$desiredVideoHeight(${
-                        getRatio(desiredVideoWidth,
-                            desiredVideoHeight)
-                    })
-          Preview Size dimen=${previewSize.width}x${previewSize.height}(${
-                        getRatio(previewSize.width,
-                            previewSize.height)
-                    })
         """.trimIndent()
                     LogContext.log.w(logTag, cameraParametersString)
                     LogContext.log.w(logTag, "==================================================")
@@ -629,7 +619,7 @@ Supported profile/level for HEVC=${
         internal const val KEY_GRID = "camerax-grid"
         internal const val KEY_HDR = "camerax-hdr"
 
-        internal const val MIN_SWIPE_DISTANCE = 400
+        internal const val MIN_SWIPE_DISTANCE = 300
 
         /** Milliseconds used for UI animations */
         internal const val ANIMATION_SLOW_MILLIS = 100L

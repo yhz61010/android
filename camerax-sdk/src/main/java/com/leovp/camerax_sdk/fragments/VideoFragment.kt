@@ -33,6 +33,7 @@ import androidx.navigation.Navigation
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentVideoBinding
 import com.leovp.camerax_sdk.databinding.IncPreviewGridBinding
+import com.leovp.camerax_sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.RecordUiState
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
@@ -61,14 +62,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
     // https://stackoverflow.com/a/64858848/1685062
-    private lateinit var incBinding: IncPreviewGridBinding
+    private lateinit var incPreviewGridBinding: IncPreviewGridBinding
+    private lateinit var incRatioBinding: IncRatioOptionsBinding
 
     override fun getViewBinding(inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?): FragmentVideoBinding {
         val rootBinding = FragmentVideoBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
-        incBinding = IncPreviewGridBinding.bind(rootBinding.root)
+        incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
+        incRatioBinding = IncRatioOptionsBinding.bind(rootBinding.root)
         return rootBinding
     }
 
@@ -122,9 +125,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         // Wait for the views to be properly laid out
-        incBinding.viewFinder.post {
+        incPreviewGridBinding.viewFinder.post {
             // Keep track of the display in which this view is attached
-            displayId = incBinding.viewFinder.display.displayId
+            displayId = incPreviewGridBinding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
             lifecycleScope.launch(Dispatchers.Main) {
@@ -167,7 +170,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
-        val rotation = incBinding.viewFinder.display.rotation
+        val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
         LogContext.log.w(logTag,
             "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"}")
@@ -178,7 +181,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         val qualitySelector =
                 QualitySelector.from(selectedQuality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
 
-        incBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+        incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
             dimensionRatio = selectedQuality.getAspectRatioString(
                 selectedQuality,
@@ -200,7 +203,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             .build()
             .apply {
                 // Attach the viewfinder's surface provider to preview use case
-                setSurfaceProvider(incBinding.viewFinder.surfaceProvider)
+                setSurfaceProvider(incPreviewGridBinding.viewFinder.surfaceProvider)
             }
 
         // build a recorder, which can:
@@ -228,7 +231,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
 
             // Call this after [camProvider.bindToLifecycle]
-            initCameraGesture(incBinding.viewFinder, camera!!)
+            initCameraGesture(incPreviewGridBinding.viewFinder, camera!!)
         } catch (exc: Exception) {
             // we are on main thread, let's reset the controls on the UI.
             LogContext.log.e(logTag, "Use case binding failed", exc)
@@ -353,7 +356,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val hasGrid = prefs.getBoolean(KEY_GRID, false)
         binding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
-        incBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+        incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
         binding.btnMicrophone.setImageResource(if (audioEnabled) R.drawable.ic_microphone_on else R.drawable.ic_microphone_off)
         binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }
@@ -365,13 +368,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btn720p.setOnClickListener { closeResolutionAndSelect(Quality.HD) }
 
         binding.btnRatio.setOnClickListener { showRatioLayer() }
-        binding.btnRatio4v3.setOnClickListener { closeRatioAndSelect(CameraRatio.R4v3) }
-        binding.btnRatio16v9.setOnClickListener { closeRatioAndSelect(CameraRatio.R16v9) }
-        binding.btnRatio1v1.setOnClickListener { closeRatioAndSelect(CameraRatio.R1v1) }
-        binding.btnRatioFull.setOnClickListener { closeRatioAndSelect(CameraRatio.RFull) }
+        incRatioBinding.btnRatio4v3.setOnClickListener { closeRatioAndSelect(CameraRatio.R4v3) }
+        incRatioBinding.btnRatio16v9.setOnClickListener { closeRatioAndSelect(CameraRatio.R16v9) }
+        incRatioBinding.btnRatio1v1.setOnClickListener { closeRatioAndSelect(CameraRatio.R1v1) }
+        incRatioBinding.btnRatioFull.setOnClickListener { closeRatioAndSelect(CameraRatio.RFull) }
 
         updateQualitySelectionUI(selectedQuality)
-        updateRatioUI(selectedRatio, incBinding.viewFinder, binding.btnRatio)
+        updateRatioUI(selectedRatio, incPreviewGridBinding.viewFinder, binding.btnRatio)
 
         binding.btnGallery.setOnClickListener {
             Toast.makeText(requireContext(), "Click Gallery button.", Toast.LENGTH_SHORT).show()
@@ -406,7 +409,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             secondIcon = R.drawable.ic_grid_on,
         ) { flag ->
             prefs.putBoolean(KEY_GRID, flag)
-            incBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
+            incPreviewGridBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
         }
     }
 
@@ -438,12 +441,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
     }
 
-    private fun showRatioLayer() = binding.llRatioOptions.circularReveal(binding.btnRatio)
+    private fun showRatioLayer() = incRatioBinding.llRatioOptions.circularReveal(binding.btnRatio)
 
     private fun closeRatioAndSelect(ratio: CameraRatio) {
-        binding.llRatioOptions.circularClose(binding.btnRatio) {
+        incRatioBinding.llRatioOptions.circularClose(binding.btnRatio) {
             selectedRatio = ratio
-            updateRatioUI(ratio, incBinding.viewFinder, binding.btnRatio)
+            updateRatioUI(ratio, incPreviewGridBinding.viewFinder, binding.btnRatio)
         }
     }
 

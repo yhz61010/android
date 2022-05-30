@@ -171,7 +171,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
-        showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder, binding.btnRatio)
+        showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*, binding.btnRatio*/)
 
         val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
@@ -590,7 +590,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.llRecLayer.visibility = View.GONE
                     it.btnGallery.visibility = View.VISIBLE
                     it.btnResolution.visibility = View.VISIBLE
-                    it.btnRatio.visibility = View.VISIBLE
+                    // it.btnRatio.visibility = View.VISIBLE
                     it.btnMicrophone.visibility = View.VISIBLE
 
                     it.icRedDot.clearAnimation()

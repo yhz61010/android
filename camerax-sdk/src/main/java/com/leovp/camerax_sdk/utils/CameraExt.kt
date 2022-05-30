@@ -8,6 +8,7 @@ import android.util.Range
 import android.util.Size
 import android.view.Surface
 import android.view.SurfaceHolder
+import com.leovp.lib_common_android.exts.SmartSize
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_common_android.exts.windowManager
 import com.leovp.log_sdk.LogContext
@@ -60,6 +61,12 @@ fun Context.getDeviceRotation(): Int {
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.rotation
     }
+}
+
+fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
+    return getConfigMap().getOutputSizes(SurfaceHolder::class.java)
+        .map { SmartSize(it.width, it.height) }
+        .toTypedArray()
 }
 
 fun getSpecificPreviewOutputSize(context: Context,

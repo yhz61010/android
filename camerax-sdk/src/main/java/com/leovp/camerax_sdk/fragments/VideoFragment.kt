@@ -211,6 +211,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             dimensionRatio = ratioString
         }
 
+        val hasGrid = prefs.getBoolean(KEY_GRID, false)
+        // Show grid after preview view adjusted.
+        incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
+
         //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)
         //        LogContext.log.w(logTag, "Max preview size=$maxPreviewSize")
 
@@ -377,7 +381,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val hasGrid = prefs.getBoolean(KEY_GRID, false)
         binding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
-        incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
         binding.btnMicrophone.setImageResource(if (audioEnabled) R.drawable.ic_microphone_on else R.drawable.ic_microphone_off)
         binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }

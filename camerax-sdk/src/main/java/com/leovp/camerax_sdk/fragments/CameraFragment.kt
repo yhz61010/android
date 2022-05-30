@@ -235,6 +235,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
+        showAvailableRatio(incRatioBinding,
+            selectedRatio,
+            incPreviewGridBinding.viewFinder,
+            cameraUiContainerTopBinding.btnRatio)
         val outputCameraParamCost = measureTimeMillis {
             val screenDimen = requireContext().getRealResolution()
             outputCameraParameters(hdrCameraSelector ?: lensFacing, screenDimen.width, screenDimen.height)
@@ -466,8 +470,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // --------------------
 
-        updateRatioUI(selectedRatio, incPreviewGridBinding.viewFinder, cameraUiContainerTopBinding.btnRatio)
-
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
             btnGrid.setOnSingleClickListener { toggleGrid() }
@@ -689,7 +691,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeRatioAndSelect(ratio: CameraRatio) {
         incRatioBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
-            updateRatioUI(ratio, incPreviewGridBinding.viewFinder, cameraUiContainerTopBinding.btnRatio)
             bindCameraUseCases()
         }
     }

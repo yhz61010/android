@@ -383,7 +383,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun showAvailableRatio(incRatioBinding: IncRatioOptionsBinding,
         ratio: CameraRatio,
         previewView: PreviewView,
-        ratioBtn: ImageButton) {
+        ratioBtn: ImageButton? = null) {
         val metrics = requireContext().getRealResolution()
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
@@ -412,30 +412,30 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         updateRatioUI(ratio, previewView, ratioBtn)
     }
 
-    private fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton) {
-        ratioBtn.visibility = View.GONE
+    protected fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton? = null) {
+        ratioBtn?.visibility = View.GONE
         when (ratio) {
             CameraRatio.R16v9 -> {
-                ratioBtn.visibility = View.VISIBLE
-                ratioBtn.setImageResource(R.drawable.ic_ratio_16v9)
+                ratioBtn?.visibility = View.VISIBLE
+                ratioBtn?.setImageResource(R.drawable.ic_ratio_16v9)
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(64f)
             }
             CameraRatio.R4v3  -> {
-                ratioBtn.visibility = View.VISIBLE
-                ratioBtn.setImageResource(R.drawable.ic_ratio_4v3)
+                ratioBtn?.visibility = View.VISIBLE
+                ratioBtn?.setImageResource(R.drawable.ic_ratio_4v3)
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(74f)
             }
             CameraRatio.R1v1  -> {
-                ratioBtn.visibility = View.VISIBLE
-                ratioBtn.setImageResource(R.drawable.ic_ratio_1v1)
+                ratioBtn?.visibility = View.VISIBLE
+                ratioBtn?.setImageResource(R.drawable.ic_ratio_1v1)
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(112f)
             }
             CameraRatio.RFull -> {
-                ratioBtn.visibility = View.VISIBLE
-                ratioBtn.setImageResource(R.drawable.ic_ratio_full)
+                ratioBtn?.visibility = View.VISIBLE
+                ratioBtn?.setImageResource(R.drawable.ic_ratio_full)
                 previewView.run {
                     updateLayoutParams<ConstraintLayout.LayoutParams> {
                         width = FrameLayout.LayoutParams.MATCH_PARENT
@@ -483,7 +483,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
     }
 
-    protected fun outputCameraParameters(camSelector: CameraSelector, desiredVideoWidth: Int, desiredVideoHeight: Int) =
+    protected fun outputCameraParameters(camSelector: CameraSelector/*, desiredVideoWidth: Int, desiredVideoHeight: Int*/) =
             runCatching {
                 if (cameraProvider?.hasCamera(camSelector) == true) {
                     val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
@@ -503,11 +503,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     // Calculate ImageReader input preview size from supported size list by camera.
                     // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
                     // Attention: The returned value is in camera orientation. NOT in device orientation.
-                    val previewSize: Size =
-                            getSpecificPreviewOutputSize(requireContext(),
-                                desiredVideoWidth,
-                                desiredVideoHeight,
-                                characteristics)
+                    //                    val previewSize: Size =
+                    //                            getSpecificPreviewOutputSize(requireContext(),
+                    //                                desiredVideoWidth,
+                    //                                desiredVideoHeight,
+                    //                                characteristics)
 
                     val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}

@@ -23,8 +23,7 @@
             android:layout_height="@dimen/button_size_big"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_ratio_4v3"
-            tools:ignore="ContentDescription" />
+            android:src="@drawable/ic_ratio_4v3" android:visibility="gone" tools:ignore="ContentDescription" />
 
         <ImageButton
             android:id="@+id/btnRatio16v9"
@@ -33,6 +32,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_ratio_16v9"
+            android:visibility="gone"
             tools:ignore="ContentDescription" />
 
         <ImageButton
@@ -42,6 +42,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_ratio_1v1"
+            android:visibility="gone"
             tools:ignore="ContentDescription" />
 
         <ImageButton
@@ -51,6 +52,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_ratio_full"
+            android:visibility="gone"
             tools:ignore="ContentDescription" />
     </LinearLayout>
 

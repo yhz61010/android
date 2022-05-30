@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.bean.CaptureImage
+import com.leovp.camerax_sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
@@ -45,6 +46,7 @@ import com.leovp.lib_common_android.exts.dp2px
 import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
+import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -378,11 +380,39 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
     }
 
-    protected fun updateRatioUI(ratio: CameraRatio,
+    protected fun showAvailableRatio(incRatioBinding: IncRatioOptionsBinding,
+        ratio: CameraRatio,
         previewView: PreviewView,
-        ratioBtn: ImageButton,
-        onStart: ((CameraRatio) -> Unit)? = null) {
-        onStart?.invoke(ratio)
+        ratioBtn: ImageButton) {
+        val metrics = requireContext().getRealResolution()
+
+        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+
+        characteristics.getCameraSupportedSize().forEach {
+            when (com.leovp.lib_common_android.exts.getRatio(it)) {
+                "16:9" -> {
+                    incRatioBinding.btnRatio16v9.visibility = View.VISIBLE
+                    return@forEach
+                }
+                "4:3"  -> {
+                    incRatioBinding.btnRatio4v3.visibility = View.VISIBLE
+                    return@forEach
+                }
+                "1:1"  -> {
+                    incRatioBinding.btnRatio1v1.visibility = View.VISIBLE
+                    return@forEach
+                }
+            }
+            if ((it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)) {
+                incRatioBinding.btnRatioFull.visibility = View.VISIBLE
+            }
+        }
+
+        updateRatioUI(ratio, previewView, ratioBtn)
+    }
+
+    private fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton) {
         ratioBtn.visibility = View.GONE
         when (ratio) {
             CameraRatio.R16v9 -> {

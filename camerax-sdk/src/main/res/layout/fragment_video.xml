@@ -195,6 +195,7 @@
             android:padding="@dimen/fab_margin"
             android:scaleType="centerInside"
             android:src="@drawable/ic_ratio_16v9"
+            android:visibility="gone"
             tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
         <ImageButton

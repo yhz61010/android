@@ -239,6 +239,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             selectedRatio,
             incPreviewGridBinding.viewFinder,
             cameraUiContainerTopBinding.btnRatio)
+        // Show grid after preview view adjusted.
+        incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
         val outputCameraParamCost = measureTimeMillis {
             outputCameraParameters(hdrCameraSelector ?: lensFacing)
         }
@@ -472,7 +474,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         with(cameraUiContainerTopBinding) {
             btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
             btnGrid.setOnSingleClickListener { toggleGrid() }
-            incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
             btnFlash.setOnClickListener { showFlashLayer() }
             btnFlashOff.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_OFF) }
             btnFlashOn.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_ON) }

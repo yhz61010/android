@@ -4,11 +4,10 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.res.Configuration
 import android.graphics.Color
-import android.hardware.camera2.CameraCharacteristics
 import android.os.*
 import android.provider.MediaStore
-import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,9 +21,11 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.concurrent.futures.await
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.core.view.setPadding
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenCreated
 import androidx.navigation.NavController
@@ -37,13 +38,11 @@ import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.RecordUiState
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
-import com.leovp.camerax_sdk.utils.SharedPrefsManager
-import com.leovp.camerax_sdk.utils.getCameraSupportedSize
-import com.leovp.camerax_sdk.utils.getNameString
-import com.leovp.camerax_sdk.utils.toggleButton
-import com.leovp.lib_common_android.exts.*
+import com.leovp.camerax_sdk.utils.*
+import com.leovp.lib_common_android.exts.circularClose
+import com.leovp.lib_common_android.exts.circularReveal
+import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
-import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -171,46 +170,57 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
-        showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*, binding.btnRatio*/)
+        //        showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*, binding.btnRatio*/)
 
         val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
-        // Get screen metrics used to setup camera for full screen resolution
-        val metrics = requireContext().getRealResolution()
-        //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
-
-        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-        val tempSupportedSize: SmartSize? = when (selectedRatio) {
-            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
-            CameraRatio.R1v1  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
-            CameraRatio.R4v3  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
-            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
-                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
-            }
-        }
-        val supportedSize = tempSupportedSize ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
-        val targetSize = Size(supportedSize.short, supportedSize.long)
+        //        // Get screen metrics used to setup camera for full screen resolution
+        //        val metrics = requireContext().getRealResolution()
+        //        //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+        //
+        //        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        //        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        //        val tempSupportedSize: SmartSize? = when (selectedRatio) {
+        //            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
+        //            CameraRatio.R1v1  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
+        //            CameraRatio.R4v3  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
+        //            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
+        //                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
+        //            }
+        //        }
+        //        val supportedSize = tempSupportedSize ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
+        //        val targetSize = Size(supportedSize.short, supportedSize.long)
 
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
         val qualitySelector =
                 QualitySelector.from(selectedQuality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
         LogContext.log.w(logTag,
-            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality targetSize=$targetSize[${
-                getRatio(targetSize)
-            }]")
+            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality")
+
+        incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            val orientation = this@VideoFragment.resources.configuration.orientation
+            val ratioString = selectedQuality.getAspectRatioString(
+                selectedQuality,
+                (orientation == Configuration.ORIENTATION_PORTRAIT)
+            )
+            when (ratioString) {
+                "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
+                "V,3:4"  -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
+            }
+            dimensionRatio = ratioString
+        }
 
         //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)
         //        LogContext.log.w(logTag, "Max preview size=$maxPreviewSize")
 
         val preview = Preview.Builder()
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            //            .setTargetAspectRatio(selectedQuality.getAspectRatio(selectedQuality))
+            .setTargetAspectRatio(selectedQuality.getAspectRatio(selectedQuality))
             // Set initial target rotation
             .setTargetRotation(rotation)
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            .setTargetResolution(targetSize)
+            //            .setTargetResolution(targetSize)
             .build()
             .apply {
                 // Attach the viewfinder's surface provider to preview use case

@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
+import android.hardware.camera2.CameraCharacteristics
 import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -13,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Size
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -40,8 +42,10 @@ import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
+import com.leovp.camerax_sdk.utils.getCameraSupportedSize
 import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
+import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -237,9 +241,25 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
-        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+        //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
+
+        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        val tempSupportedSize: SmartSize? = when (selectedRatio) {
+            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
+            CameraRatio.R1v1  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
+            CameraRatio.R4v3  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
+            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
+                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
+            }
+        }
+        val supportedSize = tempSupportedSize ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
+        val targetSize = Size(supportedSize.short, supportedSize.long)
+
         LogContext.log.w(logTag,
-            "Screen metrics: ${metrics.width}x${metrics.height} | Preview AspectRatio: $screenAspectRatio | rotation=$rotation")
+            "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] | targetSize=$targetSize[${
+                getRatio(targetSize)
+            }] | rotation=$rotation")
         //        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
         //            dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
         //        }
@@ -247,9 +267,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         // Preview
         preview = Preview.Builder()
             // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
+            //            .setTargetAspectRatio(screenAspectRatio)
             // Set initial target rotation
             .setTargetRotation(rotation)
+            .setTargetResolution(targetSize)
             .build()
             .apply {
                 // Attach the viewfinder's surface provider to preview use case
@@ -263,7 +284,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             .setFlashMode(flashMode)
             // We request aspect ratio but no resolution to match preview config, but letting
             // CameraX optimize for whatever specific resolution best fits our use cases
-            .setTargetAspectRatio(screenAspectRatio)
+            // .setTargetAspectRatio(screenAspectRatio)
+            // The size must be the camera supported size.
+            .setTargetResolution(targetSize)
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
@@ -272,7 +295,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         // ImageAnalysis
         imageAnalyzer = ImageAnalysis.Builder()
             // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
+            //            .setTargetAspectRatio(screenAspectRatio)
+            .setTargetResolution(targetSize)
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
@@ -665,6 +689,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         cameraUiContainerTopBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
             updateRatioUI(ratio, incBinding.viewFinder, cameraUiContainerTopBinding.btnRatio)
+            bindCameraUseCases()
         }
     }
 }

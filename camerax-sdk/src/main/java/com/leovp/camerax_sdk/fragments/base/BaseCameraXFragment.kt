@@ -44,6 +44,7 @@ import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.dp2px
 import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.topMargin
+import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -83,7 +84,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
-    private val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
+    protected val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     protected var displayId: Int = -1
     protected val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
@@ -484,7 +485,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
          deviceRotation=${requireContext().getDeviceRotation()}
 cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
        isFlashSupported=$isFlashSupported
-          hardwareLevel=$hardwareLevel
+          hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
                         getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
@@ -495,17 +496,43 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
                             .joinToString(",")
                     }
 
-Supported profile/level for  AVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
-Supported profile/level for HEVC=${getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }}
+Supported profile/level for  AVC=${
+                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
+                        { "${it.profile}/${it.level}" }
+                    }
+Supported profile/level for HEVC=${
+                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
+                        { "${it.profile}/${it.level}" }
+                    }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
-         highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}
+         highSpeedVideoSizes=${
+                        highSpeedVideoSizes?.joinToString(",") {
+                            "${it.width}x${it.height}(${
+                                getRatio(it.width,
+                                    it.height)
+                            })"
+                        }
+                    }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
-              Supported Size=${allCameraSupportSize?.contentToString()}
+              Supported Size=${
+                        allCameraSupportSize?.joinToString(",") {
+                            "${it.width}x${it.height}(${
+                                getRatio(it.width,
+                                    it.height)
+                            })"
+                        }
+                    }
 
-                Screen dimen=${desiredVideoWidth}x$desiredVideoHeight
-          Preview Size dimen=${previewSize.width}x${previewSize.height}
+                Screen dimen=${desiredVideoWidth}x$desiredVideoHeight(${
+                        getRatio(desiredVideoWidth,
+                            desiredVideoHeight)
+                    })
+          Preview Size dimen=${previewSize.width}x${previewSize.height}(${
+                        getRatio(previewSize.width,
+                            previewSize.height)
+                    })
         """.trimIndent()
                     LogContext.log.w(logTag, cameraParametersString)
                     LogContext.log.w(logTag, "==================================================")

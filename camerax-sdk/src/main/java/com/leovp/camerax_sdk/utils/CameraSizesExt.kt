@@ -23,17 +23,8 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
 import android.view.Display
+import com.leovp.lib_common_android.exts.SmartSize
 import com.leovp.lib_common_android.exts.getRealResolution
-import kotlin.math.max
-import kotlin.math.min
-
-/** Helper class used to pre-compute shortest and longest sides of a [Size] */
-class SmartSize(width: Int, height: Int) {
-    var size = Size(width, height)
-    var long = max(size.width, size.height)
-    var short = min(size.width, size.height)
-    override fun toString() = "SmartSize(${long}x${short})"
-}
 
 /** Screen size for pictures and video */
 val SIZE_SD_576P: SmartSize = SmartSize(720, 576)

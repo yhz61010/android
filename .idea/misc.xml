@@ -89,6 +89,7 @@
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_video.xml" value="0.4561933534743202" />
         <entry key="camerax-sdk/src/main/res/layout/inc_preview_grid.xml" value="0.33" />
+        <entry key="camerax-sdk/src/main/res/layout/inc_ratio_options.xml" value="0.46153846153846156" />
         <entry key="camerax-sdk/src/main/res/layout/inc_ration_options.xml" value="0.46153846153846156" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />

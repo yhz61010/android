@@ -35,6 +35,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_rear.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_pause.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9_on.xml" value="0.346" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1.xml" value="0.346" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1_on.xml" value="0.583" />
@@ -88,6 +89,7 @@
         <entry key="camerax-sdk/src/main/res/layout/fragment_gallery.xml" value="0.5" />
         <entry key="camerax-sdk/src/main/res/layout/fragment_video.xml" value="0.4561933534743202" />
         <entry key="camerax-sdk/src/main/res/layout/inc_preview_grid.xml" value="0.33" />
+        <entry key="camerax-sdk/src/main/res/layout/inc_ration_options.xml" value="0.46153846153846156" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_cancel.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_error.xml" value="0.5927083333333333" />
         <entry key="circle-progressbar-sdk/src/main/res/drawable/ic_default_finish.xml" value="0.5927083333333333" />

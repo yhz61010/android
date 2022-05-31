@@ -133,7 +133,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         override fun onDisplayRemoved(displayId: Int) = Unit
         override fun onDisplayChanged(displayId: Int) = view?.let { view ->
             if (displayId == this@CameraFragment.displayId) {
-                LogContext.log.d(logTag, "Rotation changed: ${view.display.rotation}")
+                LogContext.log.i(logTag, "Rotation changed: ${view.display.rotation}")
                 imageCapture?.targetRotation = view.display.rotation
                 imageAnalyzer?.targetRotation = view.display.rotation
             }
@@ -244,14 +244,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
         LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
 
-        val rotation = incPreviewGridBinding.viewFinder.display.rotation
-
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = requireContext().getRealResolution()
         //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        // val rotation = characteristics.cameraSensorOrientation()
+        val rotation = incPreviewGridBinding.viewFinder.display.rotation
+
         val tempSupportedSize: SmartSize? = when (selectedRatio) {
             CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
             CameraRatio.R1v1  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
@@ -554,9 +555,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             captureImageListener?.onSavedImageUri(savedUri)
                         }
                     } else {
-                        captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { (imageBytes, width, height) ->
+                        captureForBytes(incPreviewGridBinding.viewFinder,
+                            imageCapture) { (imageBytes, width, height, rotationDegrees) ->
                             LogContext.log.i(logTag, "Saved image bytes[${imageBytes.size}] $width x $height")
-                            captureImageListener?.onSavedImageBytes(imageBytes, width, height)
+                            captureImageListener?.onSavedImageBytes(imageBytes, width, height, rotationDegrees)
                         }
                     }
                 }

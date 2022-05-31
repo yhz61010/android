@@ -433,8 +433,10 @@ abstract class BaseNettyClient protected constructor(
     }
 
     /**
-     * Return `true` to consume retry operation meanwhile. Otherwise return false.
-     * If you return `true`, you must do reconnect by yourself or else it will not be reconnected again.
+     * Return `true` to consume retry operation. In this case,
+     * you must process reconnecting by yourself, otherwise
+     * it won't reconnect automatically.
+     * Return `false` indicates retry will be triggered automatically.
      */
     open fun retryProcess() = false
 

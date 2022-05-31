@@ -496,7 +496,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         if (allowToOutputCaptureFile) {
             // In the background, load latest photo taken (if any) for gallery thumbnail
             lifecycleScope.launch(Dispatchers.IO) {
-                outputDirectory.listFiles { file ->
+                outputPictureDirectory.listFiles { file ->
                     EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
                 }?.maxOrNull()?.let {
                     setGalleryThumbnail(Uri.fromFile(it), cameraUiContainerBottomBinding.photoViewButton)
@@ -507,8 +507,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // Listener for button used to view the most recent photo
             cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
                 // Only navigate when the gallery has photos
-                if (true == outputDirectory.listFiles()?.isNotEmpty()) {
-                    navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
+                if (true == outputPictureDirectory.listFiles()?.isNotEmpty()) {
+                    navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputPictureDirectory.absolutePath))
                 }
             }
         } else {
@@ -525,7 +525,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputDirectory) { savedUri ->
+                            outputPictureDirectory) { savedUri ->
                             //                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API

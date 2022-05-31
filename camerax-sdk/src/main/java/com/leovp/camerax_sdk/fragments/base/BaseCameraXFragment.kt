@@ -71,7 +71,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
 
-    protected lateinit var outputDirectory: File
+    protected lateinit var outputPictureDirectory: File
+    protected lateinit var outputVideoDirectory: File
 
     // Selector showing which camera is selected (front or back)
     // Default value is Back Camera.
@@ -108,7 +109,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Determine the output directory
-        outputDirectory = getOutputPictureDirectory(requireContext())
+        outputPictureDirectory = getOutputPictureDirectory(requireContext())
+        outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -601,7 +603,7 @@ Supported profile/level for HEVC=${
 
                 val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
-                if (path == outputDirectory.absolutePath) {
+                if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, true, date))
                 }
             }
@@ -629,7 +631,7 @@ Supported profile/level for HEVC=${
 
                 val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
-                if (path == outputDirectory.absolutePath) {
+                if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, false, date))
                 }
             }
@@ -640,7 +642,7 @@ Supported profile/level for HEVC=${
     private fun getMediaQMinus(): List<Media> {
         val items = mutableListOf<Media>()
 
-        outputDirectory.listFiles()?.forEach {
+        outputPictureDirectory.listFiles()?.forEach {
             val authority = requireContext().applicationContext.packageName + ".provider"
             val mediaUri = FileProvider.getUriForFile(requireContext(), authority, it)
             items.add(Media(mediaUri, it.extension == "mp4", it.lastModified()))
@@ -664,6 +666,7 @@ Supported profile/level for HEVC=${
         internal const val ANIMATION_SLOW_MILLIS = 100L
 
         internal const val PHOTO_EXTENSION = ".jpg"
+        internal const val VIDEO_EXTENSION = ".mp4"
 
         /** Helper function used to create a timestamped file */
         internal fun createFile(baseFolder: File,
@@ -678,7 +681,7 @@ Supported profile/level for HEVC=${
             }
         }
 
-        internal fun getOutputMovieDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
+        internal fun getOutputVideoDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
             return File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }

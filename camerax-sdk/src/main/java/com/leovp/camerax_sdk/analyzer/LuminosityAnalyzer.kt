@@ -2,7 +2,7 @@ package com.leovp.camerax_sdk.analyzer
 
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import java.nio.ByteBuffer
+import com.leovp.camerax_sdk.utils.toByteArray
 import java.util.*
 
 /** Helper type alias used for analysis use case callbacks */
@@ -26,16 +26,6 @@ internal class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysi
      * Used to add listeners that will be called with each luma computed
      */
     fun onFrameAnalyzed(listener: LumaListener) = listeners.add(listener)
-
-    /**
-     * Helper extension function used to extract a byte array from an image plane buffer
-     */
-    private fun ByteBuffer.toByteArray(): ByteArray {
-        rewind()    // Rewind the buffer to zero
-        val data = ByteArray(remaining())
-        get(data)   // Copy the buffer into a byte array
-        return data // Return the byte array
-    }
 
     /**
      * Analyzes an image to produce a result.
@@ -68,7 +58,8 @@ internal class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysi
         while (frameTimestamps.size >= frameRateWindow) frameTimestamps.removeLast()
         val timestampFirst = frameTimestamps.peekFirst() ?: currentTime
         val timestampLast = frameTimestamps.peekLast() ?: currentTime
-        framesPerSecond = 1.0 / ((timestampFirst - timestampLast) / frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
+        framesPerSecond =
+                1.0 / ((timestampFirst - timestampLast) / frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
 
         // Analysis could take an arbitrarily long amount of time
         // Since we are running in a different thread, it won't stall other use cases

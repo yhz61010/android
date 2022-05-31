@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
@@ -22,7 +21,6 @@ import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.camera.core.*
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toFile
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -491,13 +489,26 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             flExposure.setOnClickListener { flExposure.visibility = View.GONE }
         }
 
-        // In the background, load latest photo taken (if any) for gallery thumbnail
-        lifecycleScope.launch(Dispatchers.IO) {
-            outputDirectory.listFiles { file ->
-                EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
-            }?.maxOrNull()?.let {
-                setGalleryThumbnail(Uri.fromFile(it), cameraUiContainerBottomBinding.photoViewButton)
+        if (allowToOutputCaptureFile) {
+            // In the background, load latest photo taken (if any) for gallery thumbnail
+            lifecycleScope.launch(Dispatchers.IO) {
+                outputDirectory.listFiles { file ->
+                    EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
+                }?.maxOrNull()?.let {
+                    setGalleryThumbnail(Uri.fromFile(it), cameraUiContainerBottomBinding.photoViewButton)
+                }
             }
+
+            cameraUiContainerBottomBinding.photoViewButton.visibility = View.VISIBLE
+            // Listener for button used to view the most recent photo
+            cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
+                // Only navigate when the gallery has photos
+                if (true == outputDirectory.listFiles()?.isNotEmpty()) {
+                    navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
+                }
+            }
+        } else {
+            cameraUiContainerBottomBinding.photoViewButton.visibility = View.GONE
         }
 
         // Listener for button used to capture photo
@@ -508,20 +519,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
                     if (allowToOutputCaptureFile) {
-                        captureForOutputFile(imageCapture, outputDirectory) { savedUri ->
+                        captureForOutputFile(incPreviewGridBinding.viewFinder,
+                            imageCapture,
+                            outputDirectory) { savedUri ->
                             //                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
-
-                            // We can only change the foreground Drawable using API level 23+ API
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                incPreviewGridBinding.viewFinder.apply {
-                                    post {
-                                        // Display flash animation to indicate that photo was captured.
-                                        foreground = ColorDrawable(ResourcesCompat.getColor(resources,
-                                            R.color.camera_flash_layer, null))
-                                        postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
-                                    }
-                                }
-                            }
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -553,7 +554,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             captureImageListener?.onSavedImageUri(savedUri)
                         }
                     } else {
-                        captureForBytes(imageCapture) { (imageBytes, width, height) ->
+                        captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { (imageBytes, width, height) ->
                             LogContext.log.i(logTag, "Saved image bytes[${imageBytes.size}] $width x $height")
                             captureImageListener?.onSavedImageBytes(imageBytes, width, height)
                         }
@@ -578,14 +579,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 lensFacing = switchAndGetCameraSelector()
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
-            }
-        }
-
-        // Listener for button used to view the most recent photo
-        cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
-            // Only navigate when the gallery has photos
-            if (true == outputDirectory.listFiles()?.isNotEmpty()) {
-                navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputDirectory.absolutePath))
             }
         }
     }

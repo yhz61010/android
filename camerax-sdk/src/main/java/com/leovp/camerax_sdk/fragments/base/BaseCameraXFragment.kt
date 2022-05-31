@@ -2,6 +2,7 @@ package com.leovp.camerax_sdk.fragments.base
 
 import android.content.ContentUris
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
@@ -26,6 +27,7 @@ import androidx.concurrent.futures.await
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
@@ -124,9 +126,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         super.onDestroy()
     }
 
-    protected fun captureForBytes(imageCapture: ImageCapture, onImageSaved: (savedImage: CaptureImage) -> Unit) {
+    protected fun captureForBytes(viewFinder: PreviewView,
+        imageCapture: ImageCapture,
+        onImageSaved: (savedImage: CaptureImage) -> Unit) {
         imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
+                showShutterAnimation(viewFinder)
+                soundManager.playShutterSound()
+
                 val imageBuffer = image.planes[0].buffer
                 val width = image.width
                 val height = image.height
@@ -142,7 +149,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         })
     }
 
-    protected fun captureForOutputFile(imageCapture: ImageCapture,
+    protected fun captureForOutputFile(viewFinder: PreviewView, imageCapture: ImageCapture,
         outputDirectory: File,
         onImageSaved: (uri: Uri) -> Unit) {
         // Create output file to hold the image
@@ -167,11 +174,26 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    showShutterAnimation(viewFinder)
                     soundManager.playShutterSound()
                     val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                     onImageSaved(savedUri)
                 }
             })
+    }
+
+    private fun showShutterAnimation(viewFinder: PreviewView) {
+        // We can only change the foreground Drawable using API level 23+ API
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            viewFinder.apply {
+                post {
+                    // Display flash animation to indicate that photo was captured.
+                    foreground = ColorDrawable(ResourcesCompat.getColor(resources,
+                        R.color.camera_flash_layer, null))
+                    postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
+                }
+            }
+        }
     }
 
     protected suspend fun configCamera() {

@@ -142,7 +142,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 // DO NOT forget for close Image object
                 image.close()
-                onImageSaved(CaptureImage(imageBytes, width, height))
+                onImageSaved(CaptureImage(imageBytes, width, height, image.imageInfo.rotationDegrees))
             }
 
             override fun onError(exc: ImageCaptureException) {

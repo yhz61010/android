@@ -539,7 +539,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                                 @Suppress("DEPRECATION")
                                 // ACTION_NEW_PICTURE = "android.hardware.action.NEW_PICTURE"
-                                requireActivity().sendBroadcast(Intent("android.hardware.action.NEW_PICTURE", savedUri))
+                                requireActivity().sendBroadcast(Intent(android.hardware.Camera.ACTION_NEW_PICTURE,
+                                    savedUri))
                             }
 
                             // If the folder selected is an external media directory, this is

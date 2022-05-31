@@ -8,5 +8,5 @@ import android.net.Uri
  */
 interface CaptureImageListener {
     fun onSavedImageUri(savedUri: Uri)
-    fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int)
+    fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int, rotationDegrees: Int)
 }

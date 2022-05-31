@@ -33,7 +33,7 @@ import java.io.File
  * Date: 2022/4/25 14:50
  */
 class CameraXDemoActivity : CameraXActivity() {
-    override fun allowToOutputCaptureFile() = false
+    override fun allowToOutputCaptureFile() = true
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
@@ -41,12 +41,12 @@ class CameraXDemoActivity : CameraXActivity() {
             LogContext.log.w(ITAG, "onSavedImageUri uri=$savedUri")
         }
 
-        override fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int) {
-            LogContext.log.w(ITAG, "onSavedImageBytes $width x $height image[${imageBytes.size}]")
+        override fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int, rotationDegrees: Int) {
+            LogContext.log.w(ITAG,
+                "onSavedImageBytes $width x $height rotation=$rotationDegrees image[${imageBytes.size}]")
             val bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
             val outFile = File(getExternalFolder("Leo"), "" + System.currentTimeMillis() + ".jpg")
             bmp.writeToFile(outFile)
         }
     }
-
 }

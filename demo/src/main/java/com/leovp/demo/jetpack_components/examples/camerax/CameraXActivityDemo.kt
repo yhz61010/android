@@ -33,7 +33,7 @@ import java.io.File
  * Date: 2022/4/25 14:50
  */
 class CameraXDemoActivity : CameraXActivity() {
-    override fun allowToOutputCaptureFile() = true
+    override fun allowToOutputCaptureFile() = false
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {

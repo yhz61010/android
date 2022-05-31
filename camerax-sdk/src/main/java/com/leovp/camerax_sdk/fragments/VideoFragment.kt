@@ -49,8 +49,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
@@ -277,7 +275,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
-        val outFileName = SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis()) + ".mp4"
+        val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION).absolutePath
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
         val pendingRecording = if (saveInGallery) {
@@ -299,7 +297,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
             val outputOptions = FileOutputOptions
-                .Builder(File(getOutputMovieDirectory(requireContext(), baseFolderName), outFileName))
+                .Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName), outFileName))
                 .build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }

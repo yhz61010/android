@@ -134,10 +134,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
 
+                // For takePicture, the ImageProxy only contains one plane AKA Y plane.
                 val imageBuffer = image.planes[0].buffer
                 val width = image.width
                 val height = image.height
-                val imageBytes = ByteArray(imageBuffer.remaining()).apply { imageBuffer.get(this) }
+                val imageBytes = imageBuffer.toByteArray()
+
                 // DO NOT forget for close Image object
                 image.close()
                 onImageSaved(CaptureImage(imageBytes, width, height))

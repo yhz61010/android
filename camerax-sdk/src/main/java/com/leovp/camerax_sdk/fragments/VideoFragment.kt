@@ -275,14 +275,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
-        val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION).absolutePath
+        val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION)
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
         val pendingRecording = if (saveInGallery) {
             // Create MediaStoreOutputOptions for our recorder: resulting our recording!
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-                put(MediaStore.Video.Media.DISPLAY_NAME, outFileName)
+                put(MediaStore.Video.Media.DISPLAY_NAME, outFileName.name)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // As of Android Q
@@ -297,7 +297,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
             val outputOptions = FileOutputOptions
-                .Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName), outFileName))
+                .Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName), outFileName.absolutePath))
                 .build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }

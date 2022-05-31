@@ -1,10 +1,14 @@
 package com.leovp.demo.jetpack_components.examples.camerax
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
+import com.leovp.lib_common_android.exts.getExternalFolder
+import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+import java.io.File
 
 /**
  * Add following `<activity>` in your `<AndroidManifest.xml>`.
@@ -38,7 +42,10 @@ class CameraXDemoActivity : CameraXActivity() {
         }
 
         override fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int) {
-            LogContext.log.w(ITAG, "onSavedImageBytes image[${imageBytes.size}] $width x $height")
+            LogContext.log.w(ITAG, "onSavedImageBytes $width x $height image[${imageBytes.size}]")
+            val bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            val outFile = File(getExternalFolder("Leo"), "" + System.currentTimeMillis() + ".jpg")
+            bmp.writeToFile(outFile)
         }
     }
 

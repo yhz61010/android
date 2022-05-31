@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.camera2.CameraCharacteristics
-import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -37,6 +36,7 @@ import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.camerax_sdk.utils.SharedPrefsManager
+import com.leovp.camerax_sdk.utils.cameraSensorOrientation
 import com.leovp.camerax_sdk.utils.getCameraSupportedSize
 import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
@@ -124,21 +124,26 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     }
 
     /**
+     * We have already set `android:screenOrientation` to "userPortrait".
+     * So we don't need to monitor the orientation.
+     *
+     * https://developer.android.com/training/camerax/orientation-rotation#displayListener
+     *
      * We need a display listener for orientation changes that do not trigger a configuration
      * change, for example if we choose to override config change in manifest or for 180-degree
      * orientation changes.
      */
-    private val displayListener = object : DisplayManager.DisplayListener {
-        override fun onDisplayAdded(displayId: Int) = Unit
-        override fun onDisplayRemoved(displayId: Int) = Unit
-        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
-            if (displayId == this@CameraFragment.displayId) {
-                LogContext.log.i(logTag, "Rotation changed: ${view.display.rotation}")
-                imageCapture?.targetRotation = view.display.rotation
-                imageAnalyzer?.targetRotation = view.display.rotation
-            }
-        } ?: Unit
-    }
+    //    private val displayListener = object : DisplayManager.DisplayListener {
+    //        override fun onDisplayAdded(displayId: Int) = Unit
+    //        override fun onDisplayRemoved(displayId: Int) = Unit
+    //        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
+    //            if (displayId == this@CameraFragment.displayId) {
+    //                LogContext.log.i(logTag, "Rotation changed: ${view.display.rotation}")
+    //                imageCapture?.targetRotation = view.display.rotation
+    //                imageAnalyzer?.targetRotation = view.display.rotation
+    //            }
+    //        } ?: Unit
+    //    }
 
     override fun onResume() {
         super.onResume()
@@ -158,7 +163,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Every time the orientation of device changes, update rotation for use cases
-        displayManager.registerDisplayListener(displayListener, null)
+        //        displayManager.registerDisplayListener(displayListener, null)
         loadPrefs()
 
         // Wait for the views to be properly laid out
@@ -175,7 +180,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     }
 
     override fun onDestroyView() {
-        displayManager.unregisterDisplayListener(displayListener)
+        LogContext.log.w(logTag, "=====> onDestroyView() in concrete CameraFragment <=====")
+        //        displayManager.unregisterDisplayListener(displayListener)
         super.onDestroyView()
     }
 
@@ -250,7 +256,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-        // val rotation = characteristics.cameraSensorOrientation()
+        val cameraOrientation = characteristics.cameraSensorOrientation()
         val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val tempSupportedSize: SmartSize? = when (selectedRatio) {
@@ -267,10 +273,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         LogContext.log.w(logTag,
             "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] | targetSize=$targetSize[${
                 getRatio(targetSize)
-            }] | rotation=$rotation")
-        //        binding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
-        //            dimensionRatio = if (screenAspectRatio == AspectRatio.RATIO_16_9) "9:16" else "3:4"
-        //        }
+            }] | rotation=$rotation | cameraOrientation=$cameraOrientation")
 
         // Preview
         preview = Preview.Builder()

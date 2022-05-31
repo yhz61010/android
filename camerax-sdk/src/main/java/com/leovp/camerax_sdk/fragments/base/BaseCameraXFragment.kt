@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import android.hardware.display.DisplayManager
 import android.media.MediaFormat
 import android.net.Uri
 import android.os.Build
@@ -90,7 +89,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     protected val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     protected var displayId: Int = -1
-    protected val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
+
+    /**
+     *  We have already set `android:screenOrientation` to "userPortrait".
+     * So we don't need to monitor the orientation.
+     *
+     * https://developer.android.com/training/camerax/orientation-rotation#displayListener
+     */
+    //    protected val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
     protected var touchListener: CameraXTouchListener? = null
 

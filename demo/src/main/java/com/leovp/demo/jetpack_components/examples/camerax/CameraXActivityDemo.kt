@@ -13,6 +13,9 @@ import java.io.File
 /**
  * Add following `<activity>` in your `<AndroidManifest.xml>`.
  *
+ * Attention:
+ * Make sure you've set `android:screenOrientation` to "userPortrait".
+ *
  * ```xml
  * <activity android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
  *     android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"

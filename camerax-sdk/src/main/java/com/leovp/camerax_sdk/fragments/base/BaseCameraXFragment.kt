@@ -669,9 +669,7 @@ Supported profile/level for HEVC=${
         internal const val VIDEO_EXTENSION = ".mp4"
 
         /** Helper function used to create a timestamped file */
-        internal fun createFile(baseFolder: File,
-            @Suppress("SameParameterValue") format: String,
-            @Suppress("SameParameterValue") extension: String) =
+        internal fun createFile(baseFolder: File, format: String, extension: String) =
                 File(baseFolder, SimpleDateFormat(format, Locale.US)
                     .format(System.currentTimeMillis()) + extension)
 

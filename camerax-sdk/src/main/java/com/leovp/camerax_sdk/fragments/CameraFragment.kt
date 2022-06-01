@@ -4,7 +4,6 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.res.Configuration
 import android.hardware.camera2.CameraCharacteristics
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -35,10 +34,7 @@ import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
-import com.leovp.camerax_sdk.utils.SharedPrefsManager
-import com.leovp.camerax_sdk.utils.cameraSensorOrientation
-import com.leovp.camerax_sdk.utils.getCameraSupportedSize
-import com.leovp.camerax_sdk.utils.toggleButton
+import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
@@ -104,22 +100,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     // Selector showing which flash mode is selected (on, off or auto)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
-        _cameraUiContainerTopBinding?.btnFlash?.setImageResource(
-            when (new) {
-                ImageCapture.FLASH_MODE_ON   -> R.drawable.ic_flash_on
-                ImageCapture.FLASH_MODE_AUTO -> R.drawable.ic_flash_auto
-                else                         -> R.drawable.ic_flash_off
-            }
-        )
+        _cameraUiContainerTopBinding?.btnFlash?.setImageResource(when (new) {
+            ImageCapture.FLASH_MODE_ON   -> R.drawable.ic_flash_on
+            ImageCapture.FLASH_MODE_AUTO -> R.drawable.ic_flash_auto
+            else                         -> R.drawable.ic_flash_off
+        })
     }
 
     val functionKey: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
     private val functionKeyObserver = Observer<Int> { keyCode ->
         when (keyCode) {
             // When the volume up/down button is pressed, simulate a shutter button click
-            KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
-            KeyEvent.KEYCODE_UNKNOWN     -> Unit
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
+            KeyEvent.KEYCODE_UNKNOWN                                 -> Unit
         }
     }
 
@@ -191,24 +184,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         enableHdr = prefs.getBoolean(KEY_HDR, false)
     }
 
-    /**
-     * Inflate camera controls and update the UI manually upon config changes to avoid removing
-     * and re-adding the view finder from the view hierarchy; this provides a seamless rotation
-     * transition on devices that support it.
-     *
-     * NOTE: The flag is supported starting in Android 8 but there still is a small flash on the
-     * screen for devices that run Android 9 or below.
-     */
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-
-        // Rebind the camera with the updated display metrics
-        bindCameraUseCases()
-
-        // Enable or disable switching between cameras
-        updateCameraSwitchButton()
-    }
-
     /** Initialize CameraX, and prepare to bind the camera use cases  */
     private suspend fun setUpCamera() {
         configCamera()
@@ -257,7 +232,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
-        val rotation = incPreviewGridBinding.viewFinder.display.rotation
+//        val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
+        val deviceRotation = rotationInDegree
 
         val tempSupportedSize: SmartSize? = when (selectedRatio) {
             CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
@@ -273,24 +249,20 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         LogContext.log.w(logTag,
             "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] | targetSize=$targetSize[${
                 getRatio(targetSize)
-            }] | rotation=$rotation | cameraOrientation=$cameraOrientation")
+            }] | deviceOrientation=${SURFACE_ORIENTATIONS_TO_DEGREE[deviceRotation]} | cameraOrientation=$cameraOrientation")
 
         // Preview
         preview = Preview.Builder()
             // We request aspect ratio but no resolution
             //            .setTargetAspectRatio(screenAspectRatio)
             // Set initial target rotation
-            .setTargetRotation(rotation)
-            .setTargetResolution(targetSize)
-            .build()
-            .apply {
+            .setTargetRotation(deviceRotation).setTargetResolution(targetSize).build().apply {
                 // Attach the viewfinder's surface provider to preview use case
                 setSurfaceProvider(incPreviewGridBinding.viewFinder.surfaceProvider)
             }
 
         // ImageCapture
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+        imageCapture = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             // Set capture flash
             .setFlashMode(flashMode)
             // We request aspect ratio but no resolution to match preview config, but letting
@@ -300,8 +272,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             .setTargetResolution(targetSize)
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
-            .setTargetRotation(rotation)
-            .build()
+            .setTargetRotation(deviceRotation).build()
 
         // ImageAnalysis
         imageAnalyzer = ImageAnalysis.Builder()
@@ -310,10 +281,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             .setTargetResolution(targetSize)
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
-            .setTargetRotation(rotation)
+            .setTargetRotation(deviceRotation)
             // In our analysis, we care about the latest image
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
             // The analyzer can then be assigned to the instance
             .also {
                 it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
@@ -344,7 +314,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = camProvider.bindToLifecycle(this,
-                hdrCameraSelector ?: lensFacing, preview, imageCapture, imageAnalyzer).apply {
+                hdrCameraSelector ?: lensFacing,
+                preview,
+                imageCapture,
+                imageAnalyzer).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {
                     val lower: Float = exposureCompensationRange.lower.toFloat()
@@ -447,27 +420,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Method used to re-draw the camera UI controls, called every time configuration changes. */
     private fun updateCameraUi() {
-        setSwipeCallback(
-            left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
+        setSwipeCallback(left = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
             right = { navController.navigate(R.id.action_camera_fragment_to_video_fragment) },
             up = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() },
-            down = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() }
-        )
+            down = { cameraUiContainerBottomBinding.cameraSwitchButton.performClick() })
 
         // Remove previous UI if any
         _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
         _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
 
-        _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
-            requireContext().layoutInflater,
-            binding.root,
-            true
-        )
-        _cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(
-            requireContext().layoutInflater,
-            binding.root,
-            true
-        )
+        _cameraUiContainerTopBinding =
+                CameraUiContainerTopBinding.inflate(requireContext().layoutInflater, binding.root, true)
+        _cameraUiContainerBottomBinding =
+                CameraUiContainerBottomBinding.inflate(requireContext().layoutInflater, binding.root, true)
 
         incRatioBinding = IncRatioOptionsBinding.bind(cameraUiContainerTopBinding.root)
 
@@ -520,13 +485,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             lifecycleScope.launch(Dispatchers.Main) {
                 startCountdown()
 
+                LogContext.log.i(logTag, "Device orientation=${requireContext().getDeviceOrientation()}")
+
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory) { savedUri ->
-                            //                            LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
+                            // LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -548,21 +515,18 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // images unless we scan them using [MediaScannerConnection]
                             val mimeType =
                                     MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
-                            MediaScannerConnection.scanFile(
-                                context,
+                            MediaScannerConnection.scanFile(context,
                                 arrayOf(savedUri.toFile().absolutePath),
-                                arrayOf(mimeType)
-                            ) { path, uri ->
+                                arrayOf(mimeType)) { path, uri ->
                                 LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             }
 
                             captureImageListener?.onSavedImageUri(savedUri)
                         }
                     } else {
-                        captureForBytes(incPreviewGridBinding.viewFinder,
-                            imageCapture) { (imageBytes, width, height, rotationDegrees) ->
-                            LogContext.log.i(logTag, "Saved image bytes[${imageBytes.size}] $width x $height")
-                            captureImageListener?.onSavedImageBytes(imageBytes, width, height, rotationDegrees)
+                        captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { savedImage ->
+                            LogContext.log.w(logTag, "Saved image: $savedImage")
+                            captureImageListener?.onSavedImageBytes(savedImage)
                         }
                     }
                 }
@@ -589,8 +553,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
     }
 
-    private fun showRatioLayer() =
-            incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
+    private fun showRatioLayer() = incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
 
     private suspend fun startCountdown() = withContext(Dispatchers.Main) {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
@@ -657,13 +620,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeTimerAndSelect(timer: CameraTimer) {
         cameraUiContainerTopBinding.llTimerOptions.circularClose(cameraUiContainerTopBinding.btnTimer) {
             selectedTimer = timer
-            cameraUiContainerTopBinding.btnTimer.setImageResource(
-                when (timer) {
-                    CameraTimer.S3  -> R.drawable.ic_timer_3
-                    CameraTimer.S10 -> R.drawable.ic_timer_10
-                    CameraTimer.OFF -> R.drawable.ic_timer_off
-                }
-            )
+            cameraUiContainerTopBinding.btnTimer.setImageResource(when (timer) {
+                CameraTimer.S3  -> R.drawable.ic_timer_3
+                CameraTimer.S10 -> R.drawable.ic_timer_10
+                CameraTimer.OFF -> R.drawable.ic_timer_off
+            })
         }
     }
 
@@ -675,13 +636,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun closeFlashAndSelect(@ImageCapture.FlashMode flash: Int) {
         cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash) {
             flashMode = flash
-            cameraUiContainerTopBinding.btnFlash.setImageResource(
-                when (flash) {
-                    ImageCapture.FLASH_MODE_ON  -> R.drawable.ic_flash_on
-                    ImageCapture.FLASH_MODE_OFF -> R.drawable.ic_flash_off
-                    else                        -> R.drawable.ic_flash_auto
-                }
-            )
+            cameraUiContainerTopBinding.btnFlash.setImageResource(when (flash) {
+                ImageCapture.FLASH_MODE_ON  -> R.drawable.ic_flash_on
+                ImageCapture.FLASH_MODE_OFF -> R.drawable.ic_flash_off
+                else                        -> R.drawable.ic_flash_auto
+            })
             imageCapture?.flashMode = flashMode
             prefs.putInt(KEY_FLASH, flashMode)
         }

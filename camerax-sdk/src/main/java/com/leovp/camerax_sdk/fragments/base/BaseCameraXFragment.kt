@@ -670,8 +670,7 @@ Supported profile/level for HEVC=${
 
         /** Helper function used to create a timestamped file */
         internal fun createFile(baseFolder: File, format: String, extension: String) =
-                File(baseFolder, SimpleDateFormat(format, Locale.US)
-                    .format(System.currentTimeMillis()) + extension)
+                File(baseFolder, SimpleDateFormat(format, Locale.US).format(System.currentTimeMillis()) + extension)
 
         internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
             return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {

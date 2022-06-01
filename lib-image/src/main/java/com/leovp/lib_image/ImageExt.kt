@@ -5,6 +5,7 @@ package com.leovp.lib_image
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -57,7 +58,9 @@ fun Image.createBitmap(): Bitmap {
  * Using this method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
  * It's better to release the source bitmap by calling Bitmap.recycle() after calling this method.
  */
-fun Bitmap.compressBitmap(quality: Int = 100, sampleSize: Int = 1, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG): Bitmap {
+fun Bitmap.compressBitmap(quality: Int = 100,
+    sampleSize: Int = 1,
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG): Bitmap {
     val compressedBmpOS = ByteArrayOutputStream()
     this.compress(imgType, quality, compressedBmpOS)
     val opt = BitmapFactory.Options()
@@ -68,7 +71,9 @@ fun Bitmap.compressBitmap(quality: Int = 100, sampleSize: Int = 1, imgType: Bitm
 /**
  * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
  */
-fun Bitmap.writeToFile(outputFile: File, quality: Int = 100, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG) {
+fun Bitmap.writeToFile(outputFile: File,
+    quality: Int = 100,
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG) {
     val outputStream = FileOutputStream(outputFile)
     outputStream.use {
         this.compress(imgType, quality, outputStream)
@@ -77,3 +82,8 @@ fun Bitmap.writeToFile(outputFile: File, quality: Int = 100, imgType: Bitmap.Com
 }
 
 fun File?.getBitmap(): Bitmap? = if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
+
+fun Bitmap.rotate(degrees: Float): Bitmap {
+    val matrix = Matrix().apply { postRotate(degrees) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}

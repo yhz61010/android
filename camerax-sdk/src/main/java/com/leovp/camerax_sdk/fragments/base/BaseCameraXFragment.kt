@@ -1,9 +1,7 @@
 package com.leovp.camerax_sdk.fragments.base
 
-import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
@@ -45,7 +43,9 @@ import com.leovp.camerax_sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
-import com.leovp.lib_common_android.exts.*
+import com.leovp.lib_common_android.exts.dp2px
+import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
@@ -62,6 +62,9 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 2022/4/25 10:26
  */
+
+//typealias OrientationListener = (Int) -> Unit
+
 abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     abstract fun getTagName(): String
     val logTag: String by lazy { getTagName() }
@@ -106,8 +109,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
     protected var rotationInDegree = 0
-    private var currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-    private var screenOrientationEventListener: ScreenOrientationListener? = null
+//    var deviceOrientationListener: OrientationListener? = null
+
+    /** Live data listener for changes in the device orientation relative to the camera */
+    private lateinit var relativeOrientation: OrientationLiveData
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -117,36 +122,21 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
-    inner class ScreenOrientationListener(ctx: Context) : OrientationEventListener(ctx) {
-        @SuppressLint("SetTextI18n")
-        override fun onOrientationChanged(orientation: Int) {
-            val newOrientation = getOrientationByDegree(orientation, thresholdInDegree = 15)
-            if (orientation == ORIENTATION_UNKNOWN || newOrientation == ORIENTATION_UNKNOWN) return
-            if (currentScreenOrientation == newOrientation) return
-            currentScreenOrientation = newOrientation
-            when {
-                isNormalPortraitByDegree(orientation)   -> {
-                    LogContext.log.w("Orientation=Portrait")
-                    rotationInDegree = 0
-                }
-                isReversePortraitByDegree(orientation)  -> {
-                    LogContext.log.w("Orientation=ReversePortrait")
-                    rotationInDegree = 180
-                }
-                isNormalLandscapeByDegree(orientation)  -> {
-                    LogContext.log.w("Orientation=Landscape")
-                    rotationInDegree = 270
-                }
-                isReverseLandscapeByDegree(orientation) -> {
-                    LogContext.log.w("Orientation=ReverseLandscape")
-                    rotationInDegree = 90
-                }
+    protected fun updateOrientationLiveData() {
+        if (::relativeOrientation.isInitialized) relativeOrientation.removeObservers(viewLifecycleOwner)
+        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        // Used to rotate the output media to match device orientation
+        relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
+            observe(viewLifecycleOwner) { orientation ->
+                LogContext.log.w(logTag, "Orientation changed: $orientation")
+                rotationInDegree = orientation
+//                deviceOrientationListener?.invoke(orientation)
             }
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        screenOrientationEventListener = ScreenOrientationListener(requireContext())
         lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
@@ -154,12 +144,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        screenOrientationEventListener?.enable()
+        updateOrientationLiveData()
     }
 
     override fun onPause() {
         super.onPause()
-        screenOrientationEventListener?.disable()
+        if (::relativeOrientation.isInitialized) relativeOrientation.removeObservers(viewLifecycleOwner)
     }
 
     override fun onDestroyView() {

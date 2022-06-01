@@ -116,28 +116,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
     }
 
-    /**
-     * We have already set `android:screenOrientation` to "userPortrait".
-     * So we don't need to monitor the orientation.
-     *
-     * https://developer.android.com/training/camerax/orientation-rotation#displayListener
-     *
-     * We need a display listener for orientation changes that do not trigger a configuration
-     * change, for example if we choose to override config change in manifest or for 180-degree
-     * orientation changes.
-     */
-    //    private val displayListener = object : DisplayManager.DisplayListener {
-    //        override fun onDisplayAdded(displayId: Int) = Unit
-    //        override fun onDisplayRemoved(displayId: Int) = Unit
-    //        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
-    //            if (displayId == this@CameraFragment.displayId) {
-    //                LogContext.log.i(logTag, "Rotation changed: ${view.display.rotation}")
-    //                imageCapture?.targetRotation = view.display.rotation
-    //                imageAnalyzer?.targetRotation = view.display.rotation
-    //            }
-    //        } ?: Unit
-    //    }
-
     override fun onResume() {
         super.onResume()
         // Make sure that all permissions are still present, since the
@@ -168,6 +146,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             lifecycleScope.launch(Dispatchers.Main) {
                 // Set up the camera and its use cases
                 setUpCamera()
+//                deviceOrientationListener = object : OrientationListener {
+//                    override fun invoke(rotation: Int) {
+//                        LogContext.log.w(logTag, "OrientationListener rotation=$rotation")
+//                        bindCameraUseCases()
+//                    }
+//                }
             }
         }
     }
@@ -195,14 +179,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             override fun onFocusFail() = cameraUiContainerTopBinding.focusView.focusFail()
 
-            override fun onDoubleTap(x: Float, y: Float) {
-            }
+            override fun onDoubleTap(x: Float, y: Float) = Unit
 
-            override fun onZoom(ratio: Float) {
-            }
+            override fun onZoom(ratio: Float) = Unit
 
-            override fun onScale(scale: Float) {
-            }
+            override fun onScale(scale: Float) = Unit
         }
 
         // Enable or disable switching between cameras
@@ -232,8 +213,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
-//        val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
-        val deviceRotation = rotationInDegree
+        val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val tempSupportedSize: SmartSize? = when (selectedRatio) {
             CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
@@ -484,9 +464,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
                 startCountdown()
-
-                LogContext.log.i(logTag, "Device orientation=${requireContext().getDeviceOrientation()}")
-
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
                     if (allowToOutputCaptureFile) {
@@ -525,7 +502,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { savedImage ->
-                            LogContext.log.w(logTag, "Saved image: $savedImage")
+//                            LogContext.log.w(logTag, "Saved image=$savedImage")
                             captureImageListener?.onSavedImageBytes(savedImage)
                         }
                     }

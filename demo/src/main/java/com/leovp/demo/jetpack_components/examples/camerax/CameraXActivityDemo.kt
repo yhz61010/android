@@ -3,8 +3,10 @@ package com.leovp.demo.jetpack_components.examples.camerax
 import android.graphics.BitmapFactory
 import android.net.Uri
 import com.leovp.camerax_sdk.CameraXActivity
+import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.lib_common_android.exts.getExternalFolder
+import com.leovp.lib_image.rotate
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
@@ -36,7 +38,7 @@ import java.io.File
  * Date: 2022/4/25 14:50
  */
 class CameraXDemoActivity : CameraXActivity() {
-    override fun allowToOutputCaptureFile() = true
+    override fun allowToOutputCaptureFile() = false
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
@@ -44,12 +46,14 @@ class CameraXDemoActivity : CameraXActivity() {
             LogContext.log.w(ITAG, "onSavedImageUri uri=$savedUri")
         }
 
-        override fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int, rotationDegrees: Int) {
-            LogContext.log.w(ITAG,
-                "onSavedImageBytes $width x $height rotation=$rotationDegrees image[${imageBytes.size}]")
-            val bmp = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        override fun onSavedImageBytes(savedImage: CaptureImage) {
+            LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
+
+            val bmp = BitmapFactory.decodeByteArray(savedImage.imgBytes, 0, savedImage.imgBytes.size)
+                .rotate(savedImage.rotationDegrees.toFloat())
             val outFile = File(getExternalFolder("Leo"), "" + System.currentTimeMillis() + ".jpg")
             bmp.writeToFile(outFile)
+            bmp.recycle()
         }
     }
 }

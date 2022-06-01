@@ -1,7 +1,9 @@
 package com.leovp.camerax_sdk.fragments.base
 
+import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
@@ -43,9 +45,7 @@ import com.leovp.camerax_sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
-import com.leovp.lib_common_android.exts.dp2px
-import com.leovp.lib_common_android.exts.getRealResolution
-import com.leovp.lib_common_android.exts.topMargin
+import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
@@ -105,6 +105,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /** Returns true if the device has an available front camera. False otherwise */
     protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
+    protected var rotationInDegree = 0
+    private var currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    private var screenOrientationEventListener: ScreenOrientationListener? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -113,10 +117,49 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
+    inner class ScreenOrientationListener(ctx: Context) : OrientationEventListener(ctx) {
+        @SuppressLint("SetTextI18n")
+        override fun onOrientationChanged(orientation: Int) {
+            val newOrientation = getOrientationByDegree(orientation, thresholdInDegree = 15)
+            if (orientation == ORIENTATION_UNKNOWN || newOrientation == ORIENTATION_UNKNOWN) return
+            if (currentScreenOrientation == newOrientation) return
+            currentScreenOrientation = newOrientation
+            when {
+                isNormalPortraitByDegree(orientation)   -> {
+                    LogContext.log.w("Orientation=Portrait")
+                    rotationInDegree = 0
+                }
+                isReversePortraitByDegree(orientation)  -> {
+                    LogContext.log.w("Orientation=ReversePortrait")
+                    rotationInDegree = 180
+                }
+                isNormalLandscapeByDegree(orientation)  -> {
+                    LogContext.log.w("Orientation=Landscape")
+                    rotationInDegree = 270
+                }
+                isReverseLandscapeByDegree(orientation) -> {
+                    LogContext.log.w("Orientation=ReverseLandscape")
+                    rotationInDegree = 90
+                }
+            }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        screenOrientationEventListener = ScreenOrientationListener(requireContext())
         lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        screenOrientationEventListener?.enable()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        screenOrientationEventListener?.disable()
     }
 
     override fun onDestroyView() {
@@ -148,7 +191,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 // DO NOT forget for close Image object
                 image.close()
-                onImageSaved(CaptureImage(imageBytes, width, height, image.imageInfo.rotationDegrees))
+                onImageSaved(CaptureImage(imageBytes,
+                    width,
+                    height,
+                    image.imageInfo.rotationDegrees,
+                    CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -157,7 +204,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         })
     }
 
-    protected fun captureForOutputFile(viewFinder: PreviewView, imageCapture: ImageCapture,
+    protected fun captureForOutputFile(viewFinder: PreviewView,
+        imageCapture: ImageCapture,
         outputDirectory: File,
         onImageSaved: (uri: Uri) -> Unit) {
         // Create output file to hold the image
@@ -170,24 +218,21 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
 
         // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
-            .setMetadata(metadata)
-            .build()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         // Setup image capture listener which is triggered after photo has been taken
-        imageCapture.takePicture(
-            outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(logTag, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
-                }
+        imageCapture.takePicture(outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+            override fun onError(exc: ImageCaptureException) {
+                LogContext.log.e(logTag, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
+            }
 
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    showShutterAnimation(viewFinder)
-                    soundManager.playShutterSound()
-                    val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                    onImageSaved(savedUri)
-                }
-            })
+            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                showShutterAnimation(viewFinder)
+                soundManager.playShutterSound()
+                val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                onImageSaved(savedUri)
+            }
+        })
     }
 
     private fun showShutterAnimation(viewFinder: PreviewView) {
@@ -196,8 +241,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             viewFinder.apply {
                 post {
                     // Display flash animation to indicate that photo was captured.
-                    foreground = ColorDrawable(ResourcesCompat.getColor(resources,
-                        R.color.camera_flash_layer, null))
+                    foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
                     postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
                 }
             }
@@ -463,10 +507,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         return if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
             val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-            getSpecificPreviewOutputSize(requireContext(),
-                screenMetrics.width,
-                screenMetrics.height,
-                characteristics)
+            getSpecificPreviewOutputSize(requireContext(), screenMetrics.width, screenMetrics.height, characteristics)
         } else {
             Size(0, 0)
         }
@@ -480,8 +521,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun switchAndGetCameraSelector(): CameraSelector {
         return when {
             hasBackCamera() && hasFrontCamera() -> {
-                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
-                    CameraSelector.DEFAULT_BACK_CAMERA
+                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) CameraSelector.DEFAULT_BACK_CAMERA
                 else CameraSelector.DEFAULT_FRONT_CAMERA
             }
             hasBackCamera()                     -> CameraSelector.DEFAULT_BACK_CAMERA
@@ -528,29 +568,24 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                            .joinToString(",")
+                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
                     }
  Supported color format for HEVC=${
-                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                            .joinToString(",")
+                        getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted().joinToString(",")
                     }
 
 Supported profile/level for  AVC=${
-                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
-                        { "${it.profile}/${it.level}" }
+                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
                     }
 Supported profile/level for HEVC=${
-                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",")
-                        { "${it.profile}/${it.level}" }
+                        getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
                     }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
                         highSpeedVideoSizes?.joinToString(",") {
                             "${it.width}x${it.height}(${
-                                getRatio(it.width,
-                                    it.height)
+                                getRatio(it.width, it.height)
                             })"
                         }
                     }
@@ -559,8 +594,7 @@ Supported profile/level for HEVC=${
               Supported Size=${
                         allCameraSupportSize?.joinToString(",") {
                             "${it.width}x${it.height}(${
-                                getRatio(it.width,
-                                    it.height)
+                                getRatio(it.width, it.height)
                             })"
                         }
                     }
@@ -581,8 +615,7 @@ Supported profile/level for HEVC=${
         val items = mutableListOf<Media>()
         val contentResolver = requireContext().applicationContext.contentResolver
 
-        contentResolver.query(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+        contentResolver.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
             arrayOf(
                 MediaStore.Video.Media._ID,
                 MediaStore.Video.Media.RELATIVE_PATH,
@@ -590,8 +623,7 @@ Supported profile/level for HEVC=${
             ),
             null,
             null,
-            "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
-        )?.use { cursor ->
+            "${MediaStore.Video.Media.DISPLAY_NAME} ASC")?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
             val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.RELATIVE_PATH)
             val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_TAKEN)
@@ -609,8 +641,7 @@ Supported profile/level for HEVC=${
             }
         }
 
-        contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             arrayOf(
                 MediaStore.Images.Media._ID,
                 MediaStore.Images.Media.RELATIVE_PATH,
@@ -618,8 +649,7 @@ Supported profile/level for HEVC=${
             ),
             null,
             null,
-            "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
-        )?.use { cursor ->
+            "${MediaStore.Images.Media.DISPLAY_NAME} ASC")?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
             val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)

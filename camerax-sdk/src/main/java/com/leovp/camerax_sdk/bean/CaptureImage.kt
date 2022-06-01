@@ -5,6 +5,9 @@ import androidx.annotation.Keep
 /**
  * Author: Michael Leo
  * Date: 2022/4/25 14:33
+ *
+ * @param rotationDegrees Indicates the rotation that the image should be rotated.
+ * @param mirror Whether the image should be mirrored.
  */
 @Keep
 data class CaptureImage(val imgBytes: ByteArray,

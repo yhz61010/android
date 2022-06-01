@@ -1,6 +1,7 @@
 package com.leovp.camerax_sdk.listeners
 
 import android.net.Uri
+import com.leovp.camerax_sdk.bean.CaptureImage
 
 /**
  * Author: Michael Leo
@@ -8,5 +9,5 @@ import android.net.Uri
  */
 interface CaptureImageListener {
     fun onSavedImageUri(savedUri: Uri)
-    fun onSavedImageBytes(imageBytes: ByteArray, width: Int, height: Int, rotationDegrees: Int)
+    fun onSavedImageBytes(savedImage: CaptureImage)
 }

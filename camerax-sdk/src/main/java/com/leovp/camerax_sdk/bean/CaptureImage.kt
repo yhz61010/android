@@ -11,6 +11,14 @@ import androidx.annotation.Keep
 sealed class CaptureImage(open val rotationDegrees: Int, open val mirror: Boolean) {
 
     /**
+     * The image saved in [fileUri] has already set Exif Orientation in order to
+     * display it in correct orientation. Please note that **the original bitmap
+     * data are not rotated.**
+     *
+     * Due to the original bitmap data are not rotated, if you load image into bitmap,
+     * these two parameters [rotationDegrees] and [mirror] tell you how to rotate
+     * your image correctly.
+     *
      * @param rotationDegrees Indicates the rotation that the image should be rotated.
      * @param mirror Whether the image should be mirrored.
      */

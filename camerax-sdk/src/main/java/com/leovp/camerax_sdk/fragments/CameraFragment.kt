@@ -35,6 +35,7 @@ import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -468,6 +469,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             imageCapture,
                             outputPictureDirectory) { savedImage ->
                             // LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
+                            val cost = measureTimeMillis {
+                                ExifUtil.saveExif(savedImage.fileUri.path!!,
+                                    savedImage = savedImage)
+                            }
+                            LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

@@ -219,10 +219,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
                 val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
-                val tmpRotation = cameraRotationInDegree - 90
-                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
+//                val tmpRotation = cameraRotationInDegree - 90
+//                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
                 onImageSaved(CaptureImage.ImageUri(savedUri,
-                    imageRotation,
+                    cameraRotationInDegree,
                     lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA))
             }
         })

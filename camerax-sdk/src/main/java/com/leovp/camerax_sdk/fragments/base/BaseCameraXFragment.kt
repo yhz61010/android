@@ -112,7 +112,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 //    var deviceOrientationListener: OrientationListener? = null
 
     /** Live data listener for changes in the device orientation relative to the camera */
-    private lateinit var relativeOrientation: OrientationLiveData
+    private var relativeOrientation: OrientationLiveData? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -123,15 +123,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     private fun updateOrientationLiveData() {
-        if (::relativeOrientation.isInitialized) relativeOrientation.removeObservers(viewLifecycleOwner)
+        relativeOrientation?.removeObservers(viewLifecycleOwner)
+        relativeOrientation = null
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
-            observe(viewLifecycleOwner) { orientation ->
-                LogContext.log.w(logTag, "Orientation changed: $orientation")
-                cameraRotationInDegree = orientation
-//                deviceOrientationListener?.invoke(orientation)
+            observe(viewLifecycleOwner) { cameraRotation ->
+                LogContext.log.w(logTag, "Camera orientation changed to: $cameraRotation")
+                cameraRotationInDegree = cameraRotation
+//                deviceOrientationListener?.invoke(cameraRotation)
             }
         }
     }
@@ -149,7 +150,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        if (::relativeOrientation.isInitialized) relativeOrientation.removeObservers(viewLifecycleOwner)
+        relativeOrientation?.removeObservers(viewLifecycleOwner)
     }
 
     override fun onDestroyView() {
@@ -195,7 +196,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun captureForOutputFile(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         outputDirectory: File,
-        onImageSaved: (uri: Uri, rotationInDegree: Int, mirror: Boolean) -> Unit) {
+        onImageSaved: (uri: Uri, imageRotationInDegree: Int, mirror: Boolean) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -218,7 +219,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
                 val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                onImageSaved(savedUri, cameraRotationInDegree, lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
+                val tmpRotation = cameraRotationInDegree - 90
+                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
+                onImageSaved(savedUri, imageRotation, lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
             }
         })
     }
@@ -252,7 +255,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
                 val delta = detector.scaleFactor
                 camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
-                LogContext.log.d(logTag,
+                LogContext.log.w(logTag,
                     "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
                 return true
             }
@@ -261,7 +264,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val gestureListener: GestureDetector.SimpleOnGestureListener =
                 object : GestureDetector.SimpleOnGestureListener() {
                     override fun onDoubleTap(e: MotionEvent): Boolean {
-                        LogContext.log.i(logTag, "Double click to zoom.")
+                        LogContext.log.w(logTag, "Double click[${e.x},${e.y}] to zoom.")
                         val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
                         val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
                         val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
@@ -274,7 +277,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     }
 
                     override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                        LogContext.log.i(logTag, "Single tap to focus.")
+                        LogContext.log.w(logTag, "Single tap[${e.x},${e.y}] to focus.")
                         val factory = viewFinder.meteringPointFactory
                         val point = factory.createPoint(e.x, e.y)
                         val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
@@ -288,8 +291,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                                 // Get focus result
                                 val result = focusFuture.get() as FocusMeteringResult
                                 if (result.isFocusSuccessful) {
+                                    LogContext.log.w(logTag, "Focus successfully.")
                                     touchListener?.onFocusSuccess()
                                 } else {
+                                    LogContext.log.w(logTag, "Focus failed.")
                                     touchListener?.onFocusFail()
                                 }
                             }
@@ -318,7 +323,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         val deltaY = e1.y - e2.y
                         val deltaYAbs = abs(deltaY)
 
-                        //                        LogContext.log.v(logTag, "deltaX=$deltaX deltaY=$deltaY")
+                        // LogContext.log.v(logTag, "deltaX=$deltaX deltaY=$deltaY")
 
                         if (deltaYAbs >= MIN_SWIPE_DISTANCE) {
                             if (deltaY > 0) {

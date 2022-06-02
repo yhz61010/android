@@ -30,7 +30,7 @@ object ExifUtil {
      *   1	     top        left      0°
      *   2	     top       right      flip horizontal
      *   3	  bottom       right      180°
-     *   4	  bottom        left      flip vertical
+     *   4	  bottom        left      flip vertical(flip horizontal+180°)
      *   5	    left         top      transpose(flip horizontal+270° or 90°+flip horizontal)
      *   6	   right         top      90°
      *   7	   right      bottom      transverse(flip horizontal+90° or 90°+flip vertical)
@@ -61,12 +61,22 @@ object ExifUtil {
             width?.let { setAttribute(ExifInterface.TAG_IMAGE_WIDTH, it.toString()) }
             height?.let { setAttribute(ExifInterface.TAG_IMAGE_LENGTH, it.toString()) }
             setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
-            val rotateString = when (savedImage.rotationDegrees) {
-                0    -> ExifInterface.ORIENTATION_NORMAL.toString()
-                90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()
-                180  -> ExifInterface.ORIENTATION_ROTATE_180.toString()
-                270  -> ExifInterface.ORIENTATION_ROTATE_270.toString()
-                else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
+            val rotateString = if (savedImage.mirror) { // Front camera
+                when (savedImage.rotationDegrees) {
+                    0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
+                    90   -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
+                    180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
+                    270  -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
+                    else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
+                }
+            } else { // Back camera
+                when (savedImage.rotationDegrees) {
+                    0    -> ExifInterface.ORIENTATION_NORMAL.toString()
+                    90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()
+                    180  -> ExifInterface.ORIENTATION_ROTATE_180.toString()
+                    270  -> ExifInterface.ORIENTATION_ROTATE_270.toString()
+                    else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
+                }
             }
             setAttribute(ExifInterface.TAG_ORIENTATION, rotateString)
             saveAttributes()

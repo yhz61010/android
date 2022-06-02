@@ -250,7 +250,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
             val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
             val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
-            LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
+            LogContext.log.i(logTag, "$cameraName camera support flash: $hasFlash")
             binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
 
             // Call this after [camProvider.bindToLifecycle]

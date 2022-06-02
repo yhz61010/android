@@ -388,13 +388,15 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
 
             // Check for any extension availability
-            LogContext.log.w(logTag, "AUTO " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO))
-            LogContext.log.w(logTag, "HDR " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR))
-            LogContext.log.w(logTag,
-                "FACE RETOUCH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH))
-            LogContext.log.w(logTag, "BOKEH " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH))
-            LogContext.log.w(logTag, "NIGHT " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT))
-            LogContext.log.w(logTag, "NONE " + extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE))
+            LogContext.log.i(logTag, "AUTO: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO)}")
+            LogContext.log.i(logTag, "HDR: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)}")
+            LogContext.log.i(logTag,
+                "FACE RETOUCH: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.FACE_RETOUCH)}")
+            LogContext.log.i(logTag,
+                "BOKEH: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH)}")
+            LogContext.log.i(logTag,
+                "NIGHT: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT)}")
+            LogContext.log.i(logTag, "NONE: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE)}")
 
             // Check if the extension is available on the device
             if (!isAvailable) {
@@ -592,10 +594,10 @@ Supported profile/level for HEVC=${
                         }
                     }
         """.trimIndent()
-                    LogContext.log.w(logTag, cameraParametersString)
-                    LogContext.log.w(logTag, "==================================================")
+                    LogContext.log.i(logTag, cameraParametersString)
+                    LogContext.log.i(logTag, "==================================================")
                 }
-            }.onFailure { LogContext.log.i(logTag, "outputCameraParameters error.", it) }
+            }.onFailure { LogContext.log.e(logTag, "outputCameraParameters error.", it) }
 
     protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         getMediaQPlus()

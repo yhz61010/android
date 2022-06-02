@@ -300,7 +300,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     val lower: Float = exposureCompensationRange.lower.toFloat()
                     val upper: Float = exposureCompensationRange.upper.toFloat()
                     cameraUiContainerTopBinding.sliderExposure.run {
-                        LogContext.log.w(logTag, "Exposure[${lower}, $upper]=$exposureCompensationIndex")
+                        LogContext.log.i(logTag, "Exposure[${lower}, $upper]=$exposureCompensationIndex")
                         valueFrom = lower / 10f
                         valueTo = upper / 10f
                         stepSize = 1f / 10

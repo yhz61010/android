@@ -22,7 +22,8 @@ import java.io.FileOutputStream
  */
 
 fun Drawable.getBitmap(): Bitmap? {
-    if (Build.VERSION.SDK_INT < 26 || this is BitmapDrawable) {
+    // API < 26
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || this is BitmapDrawable) {
         return (this as BitmapDrawable).bitmap
     }
     return runCatching {
@@ -41,7 +42,7 @@ fun Drawable.getBitmap(): Bitmap? {
     }.getOrNull()
 }
 
-fun Image.createBitmap(): Bitmap {
+fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
     val width = this.width
     val height = this.height
     val planes = this.planes
@@ -49,7 +50,7 @@ fun Image.createBitmap(): Bitmap {
     val pixelStride = planes[0].pixelStride
     val rowStride = planes[0].rowStride
     val rowPadding = rowStride - pixelStride * width
-    val bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888)
+    val bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, config)
     bitmap.copyPixelsFromBuffer(buffer)
     return bitmap
 }

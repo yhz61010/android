@@ -37,11 +37,11 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
             val rotation = when {
-                isNormalPortraitByDegree(orientation, 30)   -> Surface.ROTATION_0
-                isReverseLandscapeByDegree(orientation, 30) -> Surface.ROTATION_90
-                isReversePortraitByDegree(orientation, 30)  -> Surface.ROTATION_180
-                isLandscapeByDegree(orientation, 30)        -> Surface.ROTATION_270
-                else                                        -> Surface.ROTATION_0
+                isNormalPortraitByDegree(orientation)   -> Surface.ROTATION_0
+                isReverseLandscapeByDegree(orientation) -> Surface.ROTATION_90
+                isReversePortraitByDegree(orientation)  -> Surface.ROTATION_180
+                isLandscapeByDegree(orientation)        -> Surface.ROTATION_270
+                else                                    -> Surface.ROTATION_0
             }
             val relative = computeRelativeRotation(characteristics, rotation)
             if (relative != value) postValue(relative)

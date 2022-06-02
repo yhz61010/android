@@ -315,7 +315,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
             val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
-            LogContext.log.w(logTag, "$cameraName camera support flash: $hasFlash")
+            LogContext.log.i(logTag, "$cameraName camera support flash: $hasFlash")
             if (!hasFlash) {
                 cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash)
                 cameraUiContainerTopBinding.btnFlash.visibility = View.GONE
@@ -466,13 +466,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputPictureDirectory) { savedUri, rotationInDegree, mirror ->
+                            outputPictureDirectory) { savedImage ->
                             // LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 // Update the gallery thumbnail with latest picture taken
-                                setGalleryThumbnail(savedUri, cameraUiContainerBottomBinding.photoViewButton)
+                                setGalleryThumbnail(savedImage.fileUri, cameraUiContainerBottomBinding.photoViewButton)
                             }
 
                             // Implicit broadcasts will be ignored for devices running API level >= 24
@@ -481,7 +481,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 @Suppress("DEPRECATION")
                                 // ACTION_NEW_PICTURE = "android.hardware.action.NEW_PICTURE"
                                 requireActivity().sendBroadcast(Intent(android.hardware.Camera.ACTION_NEW_PICTURE,
-                                    savedUri))
+                                    savedImage.fileUri))
                             }
 
                             // If the folder selected is an external media directory, this is
@@ -495,7 +495,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
 //                            }
 
-                            captureImageListener?.onSavedImageUri(savedUri, rotationInDegree, mirror)
+                            captureImageListener?.onSavedImageFile(savedImage)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { savedImage ->

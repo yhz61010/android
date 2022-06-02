@@ -38,7 +38,10 @@ import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.RecordUiState
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
-import com.leovp.camerax_sdk.utils.*
+import com.leovp.camerax_sdk.utils.getAspectRatio
+import com.leovp.camerax_sdk.utils.getAspectRatioString
+import com.leovp.camerax_sdk.utils.getNameString
+import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.circularClose
 import com.leovp.lib_common_android.exts.circularReveal
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
@@ -55,9 +58,6 @@ import kotlin.properties.Delegates
 @SuppressLint("RestrictedApi")
 class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     override fun getTagName() = "VideoFragment"
-
-    // An instance of a helper function to work with Shared Preferences
-    private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
 
     // https://stackoverflow.com/a/64858848/1685062
     private lateinit var incPreviewGridBinding: IncPreviewGridBinding
@@ -645,7 +645,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     }
                 })
 
-                lensFacing = switchAndGetCameraSelector()
+                switchCameraSelector()
                 // Camera device change is in effect instantly:
                 //   - reset quality selection
                 //   - restart preview

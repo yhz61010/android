@@ -469,7 +469,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     if (allowToOutputCaptureFile) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputPictureDirectory) { savedUri ->
+                            outputPictureDirectory) { savedUri, rotationInDegree, mirror ->
                             // LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
 
                             // We can only change the foreground Drawable using API level 23+ API
@@ -498,7 +498,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             }
 
-                            captureImageListener?.onSavedImageUri(savedUri)
+                            captureImageListener?.onSavedImageUri(savedUri, rotationInDegree, mirror)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { savedImage ->

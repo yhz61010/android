@@ -8,6 +8,6 @@ import com.leovp.camerax_sdk.bean.CaptureImage
  * Date: 2022/4/25 14:23
  */
 interface CaptureImageListener {
-    fun onSavedImageUri(savedUri: Uri)
+    fun onSavedImageUri(savedUri: Uri, rotationInDegree: Int, mirror: Boolean)
     fun onSavedImageBytes(savedImage: CaptureImage)
 }

@@ -11,7 +11,7 @@ import com.leovp.camerax_sdk.listeners.CaptureImageListener
  * Date: 2022/4/25 15:34
  */
 class SimpleCaptureImageListener : CaptureImageListener {
-    override fun onSavedImageUri(savedUri: Uri) {}
+    override fun onSavedImageUri(savedUri: Uri, rotationInDegree: Int, mirror: Boolean) {}
 
     override fun onSavedImageBytes(savedImage: CaptureImage) {
     }

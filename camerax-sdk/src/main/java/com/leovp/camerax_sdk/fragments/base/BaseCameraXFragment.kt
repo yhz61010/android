@@ -132,6 +132,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         relativeOrientation = null
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        LogContext.log.d(logTag, "updateOrientationLiveData cameraId: ${if (cameraId == "0") "BACK" else "FRONT"}")
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
@@ -151,6 +152,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     override fun onResume() {
+        LogContext.log.w(logTag, "=====> onResume() <=====")
         super.onResume()
         updateOrientationLiveData()
     }
@@ -158,6 +160,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     override fun onPause() {
         super.onPause()
         relativeOrientation?.removeObservers(viewLifecycleOwner)
+        relativeOrientation = null
     }
 
     override fun onDestroyView() {
@@ -526,6 +529,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             }
         }
         saveCameraLensFacing()
+        updateOrientationLiveData()
     }
 
     private fun saveCameraLensFacing() {

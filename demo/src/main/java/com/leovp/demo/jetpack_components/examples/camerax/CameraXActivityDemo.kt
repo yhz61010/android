@@ -42,10 +42,11 @@ class CameraXDemoActivity : CameraXActivity() {
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
-        override fun onSavedImageFile(savedImage: CaptureImage.ImageUri) {
+        override fun onSavedImageUri(savedImage: CaptureImage.ImageUri) {
             LogContext.log.w(ITAG,
-                "onSavedImageUri rotationDegrees=${savedImage.rotationDegrees} mirror=${savedImage.mirror} uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
+                "onSavedImageUri mirror=${savedImage.mirror} rotationDegrees=${savedImage.rotationDegrees} uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
 
+            // To verify the original bitmap orientation.
 //            val filePath: String = savedImage.fileUri.path!!
 //            val bmp = BitmapFactory.decodeFile(filePath)
 //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")

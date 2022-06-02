@@ -500,7 +500,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
 //                            }
 
-                            captureImageListener?.onSavedImageFile(savedImage)
+                            captureImageListener?.onSavedImageUri(savedImage)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder, imageCapture) { savedImage ->

@@ -7,6 +7,6 @@ import com.leovp.camerax_sdk.bean.CaptureImage
  * Date: 2022/4/25 14:23
  */
 interface CaptureImageListener {
-    fun onSavedImageFile(savedImage: CaptureImage.ImageUri)
+    fun onSavedImageUri(savedImage: CaptureImage.ImageUri)
     fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes)
 }

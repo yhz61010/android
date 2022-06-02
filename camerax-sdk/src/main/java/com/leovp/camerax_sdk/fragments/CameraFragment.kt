@@ -53,9 +53,6 @@ import kotlin.system.measureTimeMillis
 class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     override fun getTagName() = "CameraFragment"
 
-    // An instance of a helper function to work with Shared Preferences
-    private val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
-
     // https://stackoverflow.com/a/64858848/1685062
     private lateinit var incPreviewGridBinding: IncPreviewGridBinding
     private lateinit var incRatioBinding: IncRatioOptionsBinding
@@ -164,6 +161,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         flashMode = prefs.getInt(KEY_FLASH, ImageCapture.FLASH_MODE_OFF)
         hasGrid = prefs.getBoolean(KEY_GRID, false)
         enableHdr = prefs.getBoolean(KEY_HDR, false)
+        // The lensFacing are loaded in base fragment.
     }
 
     /** Initialize CameraX, and prepare to bind the camera use cases  */
@@ -525,7 +523,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         Handler(Looper.getMainLooper()).postDelayed({ it.isEnabled = true }, 500)
                     }
                 })
-                lensFacing = switchAndGetCameraSelector()
+                switchCameraSelector()
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
             }

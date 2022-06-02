@@ -74,6 +74,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
 
+    // An instance of a helper function to work with Shared Preferences
+    protected val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
     protected lateinit var outputPictureDirectory: File
     protected lateinit var outputVideoDirectory: File
 
@@ -115,7 +117,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private var relativeOrientation: OrientationLiveData? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        LogContext.log.w(logTag, "=====> onViewCreated <=====")
         super.onViewCreated(view, savedInstanceState)
+
+        lensFacing = loadCameraLensFacing()
 
         // Determine the output directory
         outputPictureDirectory = getOutputPictureDirectory(requireContext())
@@ -125,6 +130,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private fun updateOrientationLiveData() {
         relativeOrientation?.removeObservers(viewLifecycleOwner)
         relativeOrientation = null
+
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         // Used to rotate the output media to match device orientation
@@ -138,6 +144,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
@@ -243,12 +250,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     protected suspend fun configCamera() {
         cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
-        // Select lensFacing depending on the available cameras
-        lensFacing = when {
-            hasBackCamera()  -> CameraSelector.DEFAULT_BACK_CAMERA
-            hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
-            else             -> throw IllegalStateException("Back and front camera are unavailable")
-        }
     }
 
     protected fun initCameraGesture(viewFinder: PreviewView, camera: Camera) {
@@ -510,13 +511,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         }
     }
 
-    /**
-     * Retrieve the asked camera's type(lens facing type). In this sample, only 2 types:
-     *   idx is even number:  CameraSelector.LENS_FACING_BACK
-     *          odd number:   CameraSelector.LENS_FACING_FRONT
-     */
-    protected fun switchAndGetCameraSelector(): CameraSelector {
-        return when {
+    protected fun switchCameraSelector() {
+        lensFacing = when {
             hasBackCamera() && hasFrontCamera() -> {
                 if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) CameraSelector.DEFAULT_BACK_CAMERA
                 else CameraSelector.DEFAULT_FRONT_CAMERA
@@ -529,6 +525,18 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 throw RuntimeException("This device does not have any camera")
             }
         }
+        saveCameraLensFacing()
+    }
+
+    private fun saveCameraLensFacing() {
+        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        prefs.putString(KEY_LENS_FACING, cameraId)
+    }
+
+    private fun loadCameraLensFacing(): CameraSelector {
+        // Default value: Back camera
+        val cameraId = prefs.getString(KEY_LENS_FACING, "0")
+        return if ("0" == cameraId) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
     }
 
     protected fun outputCameraParameters(camSelector: CameraSelector/*, desiredVideoWidth: Int, desiredVideoHeight: Int*/) =
@@ -686,6 +694,7 @@ Supported profile/level for HEVC=${
         internal const val KEY_FLASH = "camerax-flash"
         internal const val KEY_GRID = "camerax-grid"
         internal const val KEY_HDR = "camerax-hdr"
+        internal const val KEY_LENS_FACING = "camerax-lens-facing"
 
         internal const val MIN_SWIPE_DISTANCE = 300
 

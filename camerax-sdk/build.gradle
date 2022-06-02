@@ -65,6 +65,9 @@ dependencies {
     // CameraX Extensions library
     implementation "androidx.camera:camera-extensions:$cameraVersion"
 
+    // EXIF Interface
+    implementation "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
+
     api project(':lib-common-android')
     api project(':lib-image')
     api project(':log-sdk')

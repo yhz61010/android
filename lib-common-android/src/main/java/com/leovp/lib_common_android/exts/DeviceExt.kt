@@ -32,7 +32,7 @@ const val VENDOR_HUAWEI = "HUAWEI"
 const val VENDOR_XIAOMI = "xiaomi"
 const val VENDOR_OPPO = "OPPO"
 const val VENDOR_VIVO = "vivo"
-const val VENDOR_ONEPLUS = "OnePlus"
+const val VENDOR_ONE_PLUS = "OnePlus"
 const val VENDOR_SAMSUNG = "samsung"
 const val VENDOR_OTHER = "other"
 
@@ -40,7 +40,7 @@ val Context.isHuaWei: Boolean get() = VENDOR_HUAWEI.equals(DeviceUtil.getInstanc
 val Context.isXiaoMi: Boolean get() = VENDOR_XIAOMI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isOppo: Boolean get() = VENDOR_OPPO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isOnePlus: Boolean
-    get() = VENDOR_ONEPLUS.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+    get() = VENDOR_ONE_PLUS.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isSamsung: Boolean
     get() = VENDOR_SAMSUNG.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
@@ -289,14 +289,14 @@ fun Context.isTablet(): Boolean {
 // ================================
 
 fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) || isReversePortraitByDegree(
         orientationInDegree,
         thresholdInDegree)
 }
 
 fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return isNormalLandscapeByDegree(orientationInDegree, thresholdInDegree) || isReverseLandscapeByDegree(
         orientationInDegree,
         thresholdInDegree)
@@ -325,27 +325,27 @@ fun isLandscape(surfaceRotation: Int): Boolean =
 // ---------------
 
 fun isNormalPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return (orientationInDegree in 0..thresholdInDegree) || (orientationInDegree in (360 - thresholdInDegree)..359)
 }
 
 fun isReversePortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
-    return orientationInDegree >= (180 - thresholdInDegree) && orientationInDegree <= (180 + thresholdInDegree)
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
+    return orientationInDegree in (180 - thresholdInDegree)..(180 + thresholdInDegree)
 }
 
 fun isNormalLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
-    return orientationInDegree > (270 - thresholdInDegree) && orientationInDegree < (270 + thresholdInDegree)
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
+    return orientationInDegree in (270 - thresholdInDegree)..(270 + thresholdInDegree)
 }
 
 fun isReverseLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Boolean {
-    return orientationInDegree > (90 - thresholdInDegree) && orientationInDegree < (90 + thresholdInDegree)
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
+    return orientationInDegree in (90 - thresholdInDegree)..(90 + thresholdInDegree)
 }
 
 fun getOrientationByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 45): Int {
+    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Int {
     return when {
         isNormalPortraitByDegree(orientationInDegree, thresholdInDegree)   -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         isReversePortraitByDegree(orientationInDegree,

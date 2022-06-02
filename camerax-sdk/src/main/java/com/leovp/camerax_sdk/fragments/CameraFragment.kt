@@ -470,8 +470,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             outputPictureDirectory) { savedImage ->
                             // LogContext.log.i(logTag, "Photo capture succeeded: $savedUri")
                             val cost = measureTimeMillis {
-                                ExifUtil.saveExif(savedImage.fileUri.path!!,
-                                    savedImage = savedImage)
+                                ExifUtil.saveExif(savedImage.fileUri.path!!, savedImage = savedImage)
                             }
                             LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
 

@@ -291,8 +291,7 @@ fun Context.isTablet(): Boolean {
 fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) || isReversePortraitByDegree(
-        orientationInDegree,
-        thresholdInDegree)
+        orientationInDegree, thresholdInDegree)
 }
 
 fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
@@ -301,6 +300,8 @@ fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
         orientationInDegree,
         thresholdInDegree)
 }
+
+// ---------------
 
 /**
  * @param surfaceRotation The value may be
@@ -343,6 +344,8 @@ fun isReverseLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return orientationInDegree in (90 - thresholdInDegree)..(90 + thresholdInDegree)
 }
+
+// ---------------
 
 fun getOrientationByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Int {

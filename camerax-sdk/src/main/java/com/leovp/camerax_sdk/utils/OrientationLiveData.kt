@@ -21,7 +21,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.view.OrientationEventListener
 import android.view.Surface
 import androidx.lifecycle.LiveData
-import com.leovp.lib_common_android.exts.isLandscapeByDegree
+import com.leovp.lib_common_android.exts.isNormalLandscapeByDegree
 import com.leovp.lib_common_android.exts.isNormalPortraitByDegree
 import com.leovp.lib_common_android.exts.isReverseLandscapeByDegree
 import com.leovp.lib_common_android.exts.isReversePortraitByDegree
@@ -36,14 +36,14 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
-            val rotation = when {
+            val deviceSurfaceRotation = when {
                 isNormalPortraitByDegree(orientation)   -> Surface.ROTATION_0
                 isReverseLandscapeByDegree(orientation) -> Surface.ROTATION_90
                 isReversePortraitByDegree(orientation)  -> Surface.ROTATION_180
-                isLandscapeByDegree(orientation)        -> Surface.ROTATION_270
-                else                                    -> Surface.ROTATION_0
+                isNormalLandscapeByDegree(orientation)  -> Surface.ROTATION_270
+                else                                    -> return
             }
-            val relative = computeRelativeRotation(characteristics, rotation)
+            val relative = computeRelativeRotation(characteristics, deviceSurfaceRotation)
             if (relative != value) postValue(relative)
         }
     }
@@ -65,14 +65,14 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
          * device's current orientation in degrees.
          *
          * @param characteristics the [CameraCharacteristics] to query for the sensor orientation.
-         * @param surfaceRotation the current device orientation as a Surface constant
+         * @param deviceSurfaceRotation the current device orientation as a Surface constant
          * @return the relative rotation from the camera sensor to the current device orientation.
          */
         @JvmStatic
-        private fun computeRelativeRotation(characteristics: CameraCharacteristics, surfaceRotation: Int): Int {
+        private fun computeRelativeRotation(characteristics: CameraCharacteristics, deviceSurfaceRotation: Int): Int {
             val sensorOrientationDegrees = characteristics.cameraSensorOrientation()
 
-            val deviceOrientationDegrees = when (surfaceRotation) {
+            val deviceOrientationDegrees = when (deviceSurfaceRotation) {
                 Surface.ROTATION_0   -> 0
                 Surface.ROTATION_90  -> 90
                 Surface.ROTATION_180 -> 180

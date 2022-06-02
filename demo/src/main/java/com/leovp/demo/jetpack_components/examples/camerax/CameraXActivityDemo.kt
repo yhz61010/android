@@ -46,7 +46,7 @@ class CameraXDemoActivity : CameraXActivity() {
             LogContext.log.w(ITAG,
                 "onSavedImageUri mirror=${savedImage.mirror} rotationDegrees=${savedImage.rotationDegrees} uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
 
-            // To verify the original bitmap orientation.
+//            // To verify the original bitmap orientation.
 //            val filePath: String = savedImage.fileUri.path!!
 //            val bmp = BitmapFactory.decodeFile(filePath)
 //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")

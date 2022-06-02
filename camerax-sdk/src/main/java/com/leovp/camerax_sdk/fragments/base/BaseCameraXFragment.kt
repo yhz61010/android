@@ -168,7 +168,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     protected fun captureForBytes(viewFinder: PreviewView,
         imageCapture: ImageCapture,
-        onImageSaved: (savedImage: CaptureImage) -> Unit) {
+        onImageSaved: (savedImage: CaptureImage.ImageBytes) -> Unit) {
         imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
                 showShutterAnimation(viewFinder)
@@ -182,7 +182,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 // DO NOT forget for close Image object
                 image.close()
-                onImageSaved(CaptureImage(imageBytes, width, height,
+                onImageSaved(CaptureImage.ImageBytes(imageBytes, width, height,
 //                    image.imageInfo.rotationDegrees,
                     cameraRotationInDegree, CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing))
             }
@@ -196,7 +196,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun captureForOutputFile(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         outputDirectory: File,
-        onImageSaved: (uri: Uri, imageRotationInDegree: Int, mirror: Boolean) -> Unit) {
+        onImageSaved: (savedImage: CaptureImage.ImageUri) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -218,10 +218,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
-                val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
                 val tmpRotation = cameraRotationInDegree - 90
                 val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
-                onImageSaved(savedUri, imageRotation, lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
+                onImageSaved(CaptureImage.ImageUri(savedUri,
+                    imageRotation,
+                    lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA))
             }
         })
     }

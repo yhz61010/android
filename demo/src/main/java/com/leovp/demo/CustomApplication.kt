@@ -65,7 +65,7 @@ class CustomApplication : MultiDexApplication() {
     }
 
     override fun attachBaseContext(base: Context) {
-        Log.e("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
+        Log.i("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
         super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
         Reflection.unseal(base)
         MultiDex.install(this)

@@ -1,7 +1,6 @@
 package com.leovp.demo.jetpack_components.examples.camerax
 
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.LIGHT_SOURCE_UNKNOWN
 import com.leovp.camerax_sdk.CameraXActivity
@@ -50,11 +49,15 @@ class CameraXDemoActivity : CameraXActivity() {
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
-        override fun onSavedImageUri(savedUri: Uri, rotationInDegree: Int, mirror: Boolean) {
-            LogContext.log.w(ITAG, "onSavedImageUri rotationInDegree=$rotationInDegree mirror=$mirror uri=$savedUri")
+        override fun onSavedImageFile(savedImage: CaptureImage.ImageUri) {
+            LogContext.log.w(ITAG,
+                "onSavedImageUri rotationDegrees=${savedImage.rotationDegrees} " + "mirror=${savedImage.mirror} " + "uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
+
+//            val filePath: String = savedImage.fileUri.path!!
+//            saveExif(filePath, savedImage = savedImage)
         }
 
-        override fun onSavedImageBytes(savedImage: CaptureImage) {
+        override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
             LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
 
             val outFile = File(getBaseDirString("Leo"), "" + System.currentTimeMillis() + ".jpg")
@@ -69,25 +72,29 @@ class CameraXDemoActivity : CameraXActivity() {
 //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
 //            }
 
-            ExifInterface(outFile.absolutePath).apply {
-                setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
-                setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
-                setAttribute(ExifInterface.TAG_DATETIME, SDF.format(Date()))
-                setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, SDF.format(Date()))
-                setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, SDF.format(Date()))
-                setAttribute(ExifInterface.TAG_IMAGE_WIDTH, savedImage.width.toString())
-                setAttribute(ExifInterface.TAG_IMAGE_LENGTH, savedImage.height.toString())
-                setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
-                val rotateString = when (savedImage.rotationDegrees) {
-                    0    -> ExifInterface.ORIENTATION_NORMAL.toString()
-                    90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()
-                    180  -> ExifInterface.ORIENTATION_ROTATE_180.toString()
-                    270  -> ExifInterface.ORIENTATION_ROTATE_270.toString()
-                    else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
-                }
-                setAttribute(ExifInterface.TAG_ORIENTATION, rotateString)
-                saveAttributes()
+            saveExif(outFile.absolutePath, savedImage.width, savedImage.height, savedImage)
+        }
+    }
+
+    private fun saveExif(filePath: String, width: Int? = null, height: Int? = null, savedImage: CaptureImage) {
+        ExifInterface(filePath).apply {
+            setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
+            setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
+            setAttribute(ExifInterface.TAG_DATETIME, SDF.format(Date()))
+            setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, SDF.format(Date()))
+            setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, SDF.format(Date()))
+            width?.let { setAttribute(ExifInterface.TAG_IMAGE_WIDTH, it.toString()) }
+            height?.let { setAttribute(ExifInterface.TAG_IMAGE_LENGTH, it.toString()) }
+            setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
+            val rotateString = when (savedImage.rotationDegrees) {
+                0    -> ExifInterface.ORIENTATION_NORMAL.toString()
+                90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()
+                180  -> ExifInterface.ORIENTATION_ROTATE_180.toString()
+                270  -> ExifInterface.ORIENTATION_ROTATE_270.toString()
+                else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
             }
+            setAttribute(ExifInterface.TAG_ORIENTATION, rotateString)
+            saveAttributes()
         }
     }
 
@@ -103,7 +110,7 @@ class CameraXDemoActivity : CameraXActivity() {
 //        val rowsUpdated: Int = context.contentResolver.update(fileUri, values, null, null)
 //        return rowsUpdated > 0
 //    }
-
+//
 //    /**
 //     * Get content uri for the file path
 //     *

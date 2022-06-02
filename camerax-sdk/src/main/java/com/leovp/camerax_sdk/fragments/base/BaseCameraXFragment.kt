@@ -130,7 +130,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
-                LogContext.log.i(logTag, "Camera orientation changed to: $cameraRotation")
+                LogContext.log.d(logTag, "Camera orientation changed to: $cameraRotation")
                 cameraRotationInDegree = cameraRotation
 //                deviceOrientationListener?.invoke(cameraRotation)
             }

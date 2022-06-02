@@ -63,10 +63,10 @@ object ExifUtil {
             setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
             val rotateString = if (savedImage.mirror) { // Front camera
                 when (savedImage.rotationDegrees) {
-                    0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
-                    90   -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
-                    180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
-                    270  -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
+                    0    -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
+                    90   -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
+                    180  -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
+                    270  -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
                     else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
                 }
             } else { // Back camera

@@ -38,7 +38,7 @@ abstract class BaseDemonstrationActivity : AppCompatActivity() {
     lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
 
     override fun attachBaseContext(base: Context) {
-        LogContext.log.e(tag, "=====> attachBaseContext setLocale()")
+        LogContext.log.i(tag, "=====> attachBaseContext setLocale()")
         super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
     }
 

@@ -130,7 +130,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
-                LogContext.log.w(logTag, "Camera orientation changed to: $cameraRotation")
+                LogContext.log.i(logTag, "Camera orientation changed to: $cameraRotation")
                 cameraRotationInDegree = cameraRotation
 //                deviceOrientationListener?.invoke(cameraRotation)
             }
@@ -184,7 +184,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 image.close()
                 onImageSaved(CaptureImage.ImageBytes(imageBytes, width, height,
 //                    image.imageInfo.rotationDegrees,
-                    cameraRotationInDegree, CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing))
+                    CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing, cameraRotationInDegree))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -222,8 +222,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 //                val tmpRotation = cameraRotationInDegree - 90
 //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
                 onImageSaved(CaptureImage.ImageUri(savedUri,
-                    cameraRotationInDegree,
-                    lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA))
+                    lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA,
+                    cameraRotationInDegree))
             }
         })
     }

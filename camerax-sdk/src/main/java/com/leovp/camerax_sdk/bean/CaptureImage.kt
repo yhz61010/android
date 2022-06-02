@@ -8,7 +8,7 @@ import androidx.annotation.Keep
  * Date: 2022/6/2 14:24
  */
 @Keep
-sealed class CaptureImage(open val rotationDegrees: Int, open val mirror: Boolean) {
+sealed class CaptureImage(open val mirror: Boolean, open val rotationDegrees: Int) {
 
     /**
      * The image saved in [fileUri] has already set Exif Orientation in order to
@@ -16,26 +16,27 @@ sealed class CaptureImage(open val rotationDegrees: Int, open val mirror: Boolea
      * data are not rotated.**
      *
      * Due to the original bitmap data are not rotated, if you load image into bitmap,
-     * these two parameters [rotationDegrees] and [mirror] tell you how to rotate
+     * these two parameters [mirror] and [rotationDegrees] tell you how to rotate
      * your image correctly.
+     * Flip horizontally firstly and rotate clockwise.
      *
-     * @param rotationDegrees Indicates the rotation that the image should be rotated.
      * @param mirror Whether the image should be mirrored.
+     * @param rotationDegrees Indicates the rotation that the image should be rotated.
      */
     @Keep
-    data class ImageUri(val fileUri: Uri, override val rotationDegrees: Int, override val mirror: Boolean) :
-        CaptureImage(rotationDegrees, mirror)
+    data class ImageUri(val fileUri: Uri, override val mirror: Boolean, override val rotationDegrees: Int) :
+        CaptureImage(mirror, rotationDegrees)
 
     /**
-     * @param rotationDegrees Indicates the rotation that the image should be rotated.
      * @param mirror Whether the image should be mirrored.
+     * @param rotationDegrees Indicates the rotation that the image should be rotated.
      */
     @Keep
     data class ImageBytes(val imgBytes: ByteArray,
         val width: Int,
         val height: Int,
-        override val rotationDegrees: Int,
-        override val mirror: Boolean) : CaptureImage(rotationDegrees, mirror) {
+        override val mirror: Boolean,
+        override val rotationDegrees: Int) : CaptureImage(mirror, rotationDegrees) {
 
         override fun toString(): String {
             return "CaptureImageBytes(size=${imgBytes.size}, ${width}x$height, rotation=$rotationDegrees, mirror=$mirror)"

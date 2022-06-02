@@ -3,6 +3,7 @@ package com.leovp.demo.jetpack_components.examples.camerax
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface.LIGHT_SOURCE_UNKNOWN
 import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
@@ -70,11 +71,13 @@ class CameraXDemoActivity : CameraXActivity() {
 
             ExifInterface(outFile.absolutePath).apply {
                 setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
+                setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
                 setAttribute(ExifInterface.TAG_DATETIME, SDF.format(Date()))
-//                setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, sdf1.format(Date()))
-//                setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, sdf2.format(Date()))
+                setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, SDF.format(Date()))
+                setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, SDF.format(Date()))
                 setAttribute(ExifInterface.TAG_IMAGE_WIDTH, savedImage.width.toString())
                 setAttribute(ExifInterface.TAG_IMAGE_LENGTH, savedImage.height.toString())
+                setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
                 val rotateString = when (savedImage.rotationDegrees) {
                     0    -> ExifInterface.ORIENTATION_NORMAL.toString()
                     90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()

@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.hardware.camera2.CameraCharacteristics
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,10 +15,8 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.camera.core.*
-import androidx.core.net.toFile
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -490,13 +487,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // If the folder selected is an external media directory, this is
                             // unnecessary but otherwise other apps will not be able to access our
                             // images unless we scan them using [MediaScannerConnection]
-                            val mimeType =
-                                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
-                            MediaScannerConnection.scanFile(context,
-                                arrayOf(savedUri.toFile().absolutePath),
-                                arrayOf(mimeType)) { path, uri ->
-                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
-                            }
+//                            val mimeType =
+//                                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
+//                            MediaScannerConnection.scanFile(context,
+//                                arrayOf(savedUri.toFile().absolutePath),
+//                                arrayOf(mimeType)) { path, uri ->
+//                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
+//                            }
 
                             captureImageListener?.onSavedImageUri(savedUri, rotationInDegree, mirror)
                         }

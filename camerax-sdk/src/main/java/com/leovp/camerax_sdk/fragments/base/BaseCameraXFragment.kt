@@ -108,7 +108,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /** Returns true if the device has an available front camera. False otherwise */
     protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
-    protected var rotationInDegree = 0
+    protected var cameraRotationInDegree = 90
 //    var deviceOrientationListener: OrientationListener? = null
 
     /** Live data listener for changes in the device orientation relative to the camera */
@@ -122,7 +122,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
-    protected fun updateOrientationLiveData() {
+    private fun updateOrientationLiveData() {
         if (::relativeOrientation.isInitialized) relativeOrientation.removeObservers(viewLifecycleOwner)
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
@@ -130,7 +130,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { orientation ->
                 LogContext.log.w(logTag, "Orientation changed: $orientation")
-                rotationInDegree = orientation
+                cameraRotationInDegree = orientation
 //                deviceOrientationListener?.invoke(orientation)
             }
         }
@@ -181,11 +181,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 // DO NOT forget for close Image object
                 image.close()
-                onImageSaved(CaptureImage(imageBytes,
-                    width,
-                    height,
-                    image.imageInfo.rotationDegrees,
-                    CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing))
+                onImageSaved(CaptureImage(imageBytes, width, height,
+//                    image.imageInfo.rotationDegrees,
+                    cameraRotationInDegree, CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -197,7 +195,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun captureForOutputFile(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         outputDirectory: File,
-        onImageSaved: (uri: Uri) -> Unit) {
+        onImageSaved: (uri: Uri, rotationInDegree: Int, mirror: Boolean) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -220,7 +218,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
                 val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                onImageSaved(savedUri)
+                onImageSaved(savedUri, cameraRotationInDegree, lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA)
             }
         })
     }

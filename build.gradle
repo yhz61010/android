@@ -1,7 +1,7 @@
 buildscript {
     ext.kotlin_version = '1.6.21'
     ext.coroutines_version = '1.6.2'
-    ext.gradle_plugin_version = '7.2.0'
+    ext.gradle_plugin_version = '7.2.1'
     ext.java_version = JavaVersion.VERSION_11
     ext.jacoco_version = '0.8.8'
 
@@ -114,13 +114,13 @@ static def gitVersionTag() {
 }
 
 ext {
-    compileSdkVersion = 32
-    buildToolsVersion = "32.0.0"
-    // This version is just for JitPack
+    compileSdkVersion = 33
+    buildToolsVersion = "33.0.0"
+    // This version is suit for JitPack
     ndkVersion = "21.1.6352462" // 22.1.7171670
 
     minSdkVersion = 21
-    targetSdkVersion = 32
+    targetSdkVersion = 33
 
     junitVersion = '4.13.2'
     androidTestRunnerVersion = '1.4.0'

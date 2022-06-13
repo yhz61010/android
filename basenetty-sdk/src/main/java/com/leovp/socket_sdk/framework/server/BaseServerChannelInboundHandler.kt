@@ -80,6 +80,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     /**
      * Call [ctx.close().syncUninterruptibly()] synchronized.
      */
+    @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         val exceptionType = when (cause) {
             is IOException -> "IOException"

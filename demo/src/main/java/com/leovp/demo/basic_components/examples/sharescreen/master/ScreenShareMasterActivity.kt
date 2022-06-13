@@ -9,11 +9,14 @@ import android.content.res.Configuration
 import android.graphics.Paint
 import android.graphics.Path
 import android.media.MediaCodecInfo
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Size
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.ByteUtil
@@ -34,7 +37,6 @@ import com.leovp.lib_json.toJsonString
 import com.leovp.lib_json.toObject
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
-import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.socket_sdk.framework.base.decoder.CustomSocketByteStreamDecoder
@@ -53,7 +55,6 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import java.util.*
 
-
 class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     override fun getTagName(): String = ITAG
 
@@ -69,8 +70,6 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         const val CMD_TOUCH_BACK: Int = 8
         const val CMD_TOUCH_RECENT: Int = 9
         const val CMD_TOUCH_DRAG: Int = 10
-
-        private const val REQUEST_CODE_DRAW_OVERLAY_PERMISSION = 0x2233
     }
 
     private lateinit var binding: ActivityScreenShareMasterBinding
@@ -81,6 +80,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     private var lastScreenRotation = 0
     private var testTimer: Timer? = null
     private var testTimerTask: TimerTask? = null
+
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var currentRealResolution: Size
     private var mediaProjectService: MediaProjectionService? = null
@@ -97,9 +98,14 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
                         LogContext.log.d("onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs")
                         if (clientChannel != null) {
-                            runOnUiThread { binding.txtInfo.text = "flags=$flags Data length=${data.size} presentationTimeUs=$presentationTimeUs" }
+                            runOnUiThread {
+                                binding.txtInfo.text =
+                                        "flags=$flags Data length=${data.size} presentationTimeUs=$presentationTimeUs"
+                            }
                             runCatching {
-                                clientChannel?.let { ch -> webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data) }
+                                clientChannel?.let { ch ->
+                                    webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data)
+                                }
                             }.onFailure { e -> e.printStackTrace() }
                         } // if
                     } // onUpdate
@@ -121,6 +127,34 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
 
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                LogContext.log.w(ITAG, "Prepare to record...")
+                startServer()
+                checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
+                mediaProjectService?.setData(result.resultCode,
+                    result.data ?: exception("Intent data is null. Can not capture screen!"))
+                val screenInfo = getAvailableResolution()
+                val setting = ScreenShareSetting(
+                    // Round the value to the nearest multiple of 16.
+                    (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
+                    // Round the value to the nearest multiple of 16.
+                    (screenInfo.height * 0.8F + 8).toInt() and 0xF.inv(), densityDpi)
+                setting.fps = 30F
+                setting.bitrate = screenInfo.width * screenInfo.height * 2
+                // setting.bitrate = setting.width * setting.height
+                // !!! Attention !!!
+                // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
+                // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+                // setting.keyFrameRate = 2
+                // setting.iFrameInterval = 3
+                mediaProjectService?.startScreenShare(setting)
+            } else {
+                LogContext.log.w(ITAG, "Permission denied!")
+                toast("Permission denied!", error = true)
+            }
+        }
+
         binding.txtInfo.text = NetworkUtil.getIp()[0]
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
@@ -133,7 +167,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                ScreenCapture.requestPermission(this@ScreenShareMasterActivity)
+                val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+                activityResultLauncher.launch(captureIntent)
             } else {
                 FloatView.clear()
                 stopServer()
@@ -151,8 +187,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             @SuppressLint("NewApi")
             override fun run() {
                 runCatching {
-                    @Suppress("DEPRECATION")
-                    val currentScreenRotation = if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
+                    @Suppress("DEPRECATION") val currentScreenRotation =
+                            if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
                     //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation
@@ -165,14 +201,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     private fun createFloatView() {
-        FloatView.with(this)
-            .setLayout(R.layout.component_screen_share_float_canvas) { v ->
-                fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
-            }
-            .setTouchable(false) // We must set this value to false. Check that method comment.
-            .setEnableDrag(false)
-            .setEnableFullScreenFloatView(true)
-            .build()
+        FloatView.with(this).setLayout(R.layout.component_screen_share_float_canvas) { v ->
+            fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
+        }.setTouchable(false) // We must set this value to false. Check that method comment.
+            .setEnableDrag(false).setEnableFullScreenFloatView(true).build()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -187,67 +219,20 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     private fun startManageDrawOverlaysPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${applicationContext.packageName}")
-            ).let {
-                startActivityForResult(it, REQUEST_CODE_DRAW_OVERLAY_PERMISSION)
-            }
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_CODE_DRAW_OVERLAY_PERMISSION -> {
-                if (canDrawOverlays) {
-                    if (FloatView.exist()) {
-                        FloatView.clear()
-                        createFloatView()
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${applicationContext.packageName}")).let {
+                simpleActivityLauncher.launch(it) {
+                    if (canDrawOverlays) {
+                        if (FloatView.exist()) {
+                            FloatView.clear()
+                            createFloatView()
+                        }
+                    } else {
+                        toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
                     }
-                } else {
-                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
-                }
-                return
-            }
-        }
-        ScreenCapture.onActivityResult(requestCode, resultCode, data, object : ScreenCapture.ScreenCaptureListener {
-            override fun requestResult(result: Int, resultCode: Int, data: Intent?) {
-                when (result) {
-                    ScreenCapture.SCREEN_CAPTURE_RESULT_GRANT -> {
-                        LogContext.log.w(ITAG, "Prepare to record...")
-                        startServer()
-                        checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
-                        mediaProjectService?.setData(
-                            resultCode,
-                            data ?: exception("Intent data is null. Can not capture screen!")
-                        )
-                        val screenInfo = getAvailableResolution()
-                        val setting = ScreenShareSetting(
-                            // Round the value to the nearest multiple of 16.
-                            (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
-                            // Round the value to the nearest multiple of 16.
-                            (screenInfo.height * 0.8F + 8).toInt() and 0xF.inv(),
-                            densityDpi
-                        )
-                        setting.fps = 30F
-                        setting.bitrate = screenInfo.width * screenInfo.height * 2
-                        // setting.bitrate = setting.width * setting.height
-                        // !!! Attention !!!
-                        // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
-                        // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-                        // setting.keyFrameRate = 2
-                        // setting.iFrameInterval = 3
-                        mediaProjectService?.startScreenShare(setting)
-                    }
-                    ScreenCapture.SCREEN_CAPTURE_RESULT_DENY  -> {
-                        LogContext.log.w(ITAG, "Permission denied!")
-                        toast("Permission denied!", error = true)
-                    }
-                    else                                      -> LogContext.log.d(ITAG, "Not screen capture request")
                 }
             }
-        })
+        }
     }
 
     override fun onDestroy() {
@@ -269,7 +254,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     private var clientChannel: Channel? = null
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port,
+        connectionListener,
+        true) {
         override fun getTagName() = "SSMA-WS"
 
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
@@ -377,8 +364,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                                 ScreenShareClientActivity.TouchType.DOWN  -> userPath.add(Path().also {
                                     it.moveTo(calX, calY)
                                 } to Paint(pathPaint))
-                                ScreenShareClientActivity.TouchType.MOVE  -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
-                                ScreenShareClientActivity.TouchType.UP    -> userPath.lastOrNull()?.first?.lineTo(calX, calY)
+                                ScreenShareClientActivity.TouchType.MOVE  -> userPath.lastOrNull()?.first?.lineTo(calX,
+                                    calY)
+                                ScreenShareClientActivity.TouchType.UP    -> userPath.lastOrNull()?.first?.lineTo(calX,
+                                    calY)
                                 ScreenShareClientActivity.TouchType.CLEAR -> {
                                     userPath.clear()
                                     fingerPaintView?.clear()
@@ -436,7 +425,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
-        Handler(Looper.getMainLooper()).postDelayed({ mediaProjectService?.takeScreenshot(getScreenWidth(), getScreenRealHeight()) }, 3000)
+        Handler(Looper.getMainLooper()).postDelayed({
+            mediaProjectService?.takeScreenshot(getScreenWidth(), getScreenRealHeight())
+        }, 3000)
     }
 }
 

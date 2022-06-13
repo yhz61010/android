@@ -3,6 +3,7 @@ package com.leovp.camerax_sdk
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import com.leovp.camerax_sdk.databinding.ActivityCameraxMainBinding
@@ -47,6 +48,16 @@ open class CameraXActivity : AppCompatActivity() {
             captureImageListener = this@CameraXActivity.captureImageListener
             allowToOutputCaptureFile = allowToOutputCaptureFile()
         }
+
+        onBackPressedDispatcher.addCallback(this, true) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                // Workaround for Android Q memory leak issue in IRequestFinishCallback$Stub.
+                // (https://issuetracker.google.com/issues/139738913)
+                finishAfterTransition()
+            } else {
+                finish()
+            }
+        }
     }
 
     override fun onResume() {
@@ -66,25 +77,14 @@ open class CameraXActivity : AppCompatActivity() {
     /** When key down event is triggered, relay it via local broadcast so fragments can handle it */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         return when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 getCameraFragment()?.run {
                     functionKey.value = keyCode
                     return true
                 }
                 return false
             }
-            else                         -> super.onKeyDown(keyCode, event)
-        }
-    }
-
-    override fun onBackPressed() {
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-            // Workaround for Android Q memory leak issue in IRequestFinishCallback$Stub.
-            // (https://issuetracker.google.com/issues/139738913)
-            finishAfterTransition()
-        } else {
-            super.onBackPressed()
+            else                                                     -> super.onKeyDown(keyCode, event)
         }
     }
 }

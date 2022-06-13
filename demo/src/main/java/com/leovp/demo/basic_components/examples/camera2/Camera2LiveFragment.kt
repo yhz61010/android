@@ -1,20 +1,30 @@
 package com.leovp.demo.basic_components.examples.camera2
 
+import android.content.Intent
 import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
+import android.os.Environment
 import android.util.Size
 import android.view.SurfaceHolder
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
+import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.BaseCamera2Fragment
+import com.leovp.demo.R
 import com.leovp.log_sdk.LogContext
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Author: Michael Leo
@@ -26,19 +36,23 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }
 
+    private lateinit var activityResultLauncher: BetterActivityResult<Intent, ActivityResult>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableRecordFeature = true
         enableTakePhotoFeature = true
 
-        LogContext.log.w(
-            TAG, "Supported image format for avc encoder: ${
-                CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
-            }"
-        )
+        activityResultLauncher =
+                BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
+
+        LogContext.log.w(TAG, "Supported image format for avc encoder: ${
+            CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
+        }")
 
         CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach {
-            LogContext.log.w(TAG, "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
+            LogContext.log.w(TAG,
+                "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
         }
     }
 
@@ -57,14 +71,14 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
 //                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
 
-                CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC).forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
+                CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                    .forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
-                val previewSize = getPreviewOutputSize(
-                    Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                val previewSize = getPreviewOutputSize(Size(DESIGNED_CAMERA_SIZE.width,
+                    DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
                     camera2Helper.characteristics,
-                    SurfaceHolder::class.java
-                )
+                    SurfaceHolder::class.java)
                 LogContext.log.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
                 LogContext.log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
@@ -157,6 +171,24 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
     }
 
     override fun onOpenGallery() {
-        CameraUtil.openGallery(requireActivity(), false)
+        val act = requireActivity() as AppCompatActivity
+        CameraUtil.openGallery(getString(R.string.cmn_chooser_gallery), false, activityResultLauncher) { uri ->
+            LogContext.log.i(TAG, "OPEN_GALLERY onActivityResult")
+//            CameraUtil.handleImageAboveKitKat(this, data).forEach { LogContext.log.i(TAG, "Selected image=$it") }
+            // The following code is just for demo. The exception is not considered.
+
+            // In Android 10+, I really do not know how to get the file real path.
+            // According to the post [https://stackoverflow.com/a/2790688],
+            // there is no need for us to know the real path. I just need to get the InputStream directly. That's enough.
+            // Set uri for ImageView
+//                ImageView(this).setImageURI(uri)
+            // Or get file input stream.
+            val inputStream = act.contentResolver.openInputStream(uri)!!
+            val outFile = File(act.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg")
+            val outputStream = FileOutputStream(outFile)
+            inputStream.copyTo(outputStream)
+            LogContext.log.i(TAG, "Image stream has been copied to FileOutputStream")
+            Toast.makeText(context, "Save selected file to ${outFile.absolutePath}", Toast.LENGTH_SHORT).show()
+        }
     }
 }

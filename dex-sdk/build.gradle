@@ -13,7 +13,6 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
-
     buildTypes {
         release {
             minifyEnabled false
@@ -25,6 +24,12 @@ android {
         targetCompatibility "$rootProject.ext.java_version"
     }
     namespace 'com.leovp.dex_sdk'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

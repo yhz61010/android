@@ -62,6 +62,12 @@ android {
         }
     }
     namespace 'com.leovp.adpcm_ima_qt_codec'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

@@ -62,6 +62,12 @@ android {
         }
     }
     namespace 'com.leovp.h264_hevc_decoder'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

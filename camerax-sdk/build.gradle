@@ -32,6 +32,12 @@ android {
         viewBinding true
     }
     namespace 'com.leovp.camerax_sdk'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

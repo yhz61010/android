@@ -39,6 +39,12 @@ android {
         }
     }
     namespace 'com.leovp.ffmpeg_javacpp'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

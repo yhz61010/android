@@ -70,6 +70,12 @@ android {
                            'lib/arm64-v8a/libh264-hevc-decoder.so']
         }
     }
+
+//    publishing {
+//        // Publishes "release" build variant with "release" component created by
+//        // Android Gradle plugin
+//        singleVariant("release")
+//    }
 }
 
 dependencies {

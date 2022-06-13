@@ -116,6 +116,7 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
             }
 
             // Receive data
+            @Deprecated("Deprecated in Java")
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
                 val data = String(characteristic.value)

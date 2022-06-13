@@ -28,6 +28,12 @@ android {
         jvmTarget = "$rootProject.ext.java_version"
     }
     namespace 'com.leovp.pref_sdk'
+
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

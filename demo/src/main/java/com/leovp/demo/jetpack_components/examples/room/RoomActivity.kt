@@ -71,10 +71,10 @@ class RoomActivity : BaseDemonstrationActivity() {
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
         wordViewModel = ViewModelProvider(this).get(WordViewModel::class.java)
-        wordViewModel.allWords.observe(this, { words ->
+        wordViewModel.allWords.observe(this) { words ->
             // Update the cached copy of the words in the adapter.
             words?.let { adapter.setWords(it) }
-        })
+        }
 
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {

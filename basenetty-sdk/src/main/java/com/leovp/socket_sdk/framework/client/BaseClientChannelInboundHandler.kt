@@ -120,6 +120,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     /**
      * Call [ctx.close().syncUninterruptibly()] synchronized.
      */
+    @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (caughtException) {
             LogContext.log.e(tag, "exceptionCaught had been triggered. Do not fire it again.")

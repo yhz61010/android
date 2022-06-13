@@ -41,6 +41,7 @@ dependencies {
     api project(':lib-bytes')
     api project(':lib-exception')
     api project(':lib-image')
+    implementation "androidx.appcompat:appcompat:$appcompatVersion"
 }
 
 afterEvaluate {

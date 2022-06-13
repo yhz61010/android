@@ -13,7 +13,7 @@ fun ImageButton.toggleButton(
         if (rotationY == 0f) rotationY = rotationAngle
         animate().rotationY(0f).apply {
             setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     action(!flag)
                 }
@@ -24,7 +24,7 @@ fun ImageButton.toggleButton(
         if (rotationY == rotationAngle) rotationY = 0f
         animate().rotationY(rotationAngle).apply {
             setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     action(!flag)
                 }

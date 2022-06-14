@@ -11,8 +11,7 @@ import androidx.annotation.LayoutRes
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.DefaultConfig
 import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.lib_common_android.exts.canDrawOverlays
-
+import com.leovp.floatview_sdk.util.canDrawOverlays
 
 /**
  * Author: Michael Leo
@@ -33,7 +32,9 @@ class FloatView private constructor(private val context: Activity) {
     companion object {
         fun with(context: Activity): FloatViewCreator = FloatViewCreator(FloatView(context))
         fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean = FloatViewManager.exist(tag)
-        fun getCustomLayout(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): View? = FloatViewManager.getConfig(tag)?.customView
+        fun getCustomLayout(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): View? =
+                FloatViewManager.getConfig(tag)?.customView
+
         fun setEnableDrag(enable: Boolean, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
             FloatViewManager.getConfig(tag)?.enableDrag = enable
         }
@@ -72,39 +73,56 @@ class FloatView private constructor(private val context: Activity) {
          * Make float view be invisible. Note that, the target float view should be created before.
          */
         fun invisible(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.visible(tag, false)
-        fun isShowing(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean = FloatViewManager.getConfig(tag)?.isShowing ?: false
+        fun isShowing(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean =
+                FloatViewManager.getConfig(tag)?.isShowing ?: false
 
         /**
          * **Destroy** all float views.
          */
         fun clear() = FloatViewManager.clear()
 
-        fun getX(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.x ?: 0
-        fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.y ?: 0
-        fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition() ?: Point(0, 0)
+        fun getX(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
+                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.x ?: 0
+
+        fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
+                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.y ?: 0
+
+        fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point =
+                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition() ?: Point(0, 0)
 
         /**
          * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
-        fun setX(x: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, null)
+        fun setX(x: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
+                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, null)
 
         /**
          * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
-        fun setY(y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, y)
+        fun setY(y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
+                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, y)
 
         /**
          * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
          */
-        fun setPosition(x: Int, y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, y)
+        fun setPosition(x: Int, y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
+                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, y)
 
-        fun setStickyEdge(stickyEdge: StickyEdge, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateStickyEdge(stickyEdge)
-        fun setAutoDock(autoDock: AutoDock, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(autoDock)
+        fun setStickyEdge(stickyEdge: StickyEdge, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
+                FloatViewManager.getFloatViewImpl(tag)?.updateStickyEdge(stickyEdge)
 
-        fun getFloatViewWidth(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewWidth(tag)
-        fun getFloatViewHeight(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int = FloatViewManager.getFloatViewHeight(tag)
-        fun getFloatViewSize(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Size = Size(getFloatViewWidth(tag), getFloatViewHeight(tag))
+        fun setAutoDock(autoDock: AutoDock, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
+                FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(autoDock)
+
+        fun getFloatViewWidth(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
+                FloatViewManager.getFloatViewWidth(tag)
+
+        fun getFloatViewHeight(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
+                FloatViewManager.getFloatViewHeight(tag)
+
+        fun getFloatViewSize(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Size =
+                Size(getFloatViewWidth(tag), getFloatViewHeight(tag))
     }
 
     class FloatViewCreator internal constructor(floatingView: FloatView) {
@@ -151,7 +169,8 @@ class FloatView private constructor(private val context: Activity) {
          * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom layer.
          * So the float layer itself can not be touched anymore.
          */
-        fun setTouchEventListener(touchEventListener: TouchEventListener) = apply { config.touchEventListener = touchEventListener }
+        fun setTouchEventListener(touchEventListener: TouchEventListener) =
+                apply { config.touchEventListener = touchEventListener }
 
         /**
          * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.

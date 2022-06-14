@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.media.MediaCodec
 import android.media.MediaFormat
-import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Size
@@ -14,7 +13,6 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
-import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -93,7 +91,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         screenInfo = getRealResolution()
         //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
                 // When surface recreated, we need to redraw screen again.
@@ -182,7 +179,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         super.onDestroy()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
         LogContext.log.w(ITAG, "initDecoder vps=${vps?.toHexStringLE()} sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
         this.vps = vps
@@ -236,8 +232,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
         decoder?.start()
     }
 
-    private val mediaCodecCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    object : MediaCodec.Callback() {
+    private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
             try {
                 val inputBuffer = codec.getInputBuffer(inputBufferId)
@@ -449,7 +444,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
                 webSocketClientHandler?.sendDeviceScreenInfoToServer(getRealResolution())
             }
 
-            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             @SuppressLint("SetTextI18n")
             override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
                 val dataArray = data as ByteArray

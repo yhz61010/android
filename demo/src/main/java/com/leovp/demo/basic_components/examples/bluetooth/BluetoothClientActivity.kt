@@ -33,8 +33,8 @@ import com.leovp.log_sdk.base.ITAG
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  *
- * @see [BLE_Develop](https://www.jianshu.com/p/a27f3ca027e3)
- * @see [FAQ](https://www.jianshu.com/p/71116665fd08)
+ * @see <a href="https://www.jianshu.com/p/a27f3ca027e3">BLE Develop</a>
+ * @see <a href="https://www.jianshu.com/p/71116665fd08">FAQ</a>
  */
 class BluetoothClientActivity : BaseDemonstrationActivity() {
     override fun getTagName(): String = ITAG

@@ -170,7 +170,7 @@ public class CustomConnectivityManager {
         }
 
         private <T> T getObject(Message msg, Class<T> c) {
-            return (T) msg.getData().getParcelable(c.getSimpleName());
+            return msg.getData().getParcelable(c.getSimpleName());
         }
     }
 

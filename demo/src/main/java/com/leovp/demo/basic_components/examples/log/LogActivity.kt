@@ -62,10 +62,10 @@ class LogActivity : BaseDemonstrationActivity() {
         }
     }
 
-    override fun onStop() {
-//        (LogContext.log as CLog).flushLog()
-        super.onStop()
-    }
+//    override fun onStop() {
+////        (LogContext.log as CLog).flushLog()
+//        super.onStop()
+//    }
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "=====> onDestroy <=====")

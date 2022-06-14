@@ -77,14 +77,14 @@ class WifiActivity : BaseDemonstrationActivity() {
 
     private fun initData() {
         val previousScanResults: List<ScanResult>? = wifiManager.scanResults
-        if (previousScanResults?.isNullOrEmpty() == true) {
+        if (previousScanResults?.isEmpty() == true) {
             LogContext.log.w("Scan automatically.")
             toast("Scan automatically.")
             doScan()
         } else {
             LogContext.log.w("Found previously scan results.")
             toast("Found previously scan results.")
-            scanSuccess(previousScanResults)
+            previousScanResults?.let { scanSuccess(it) }
         }
     }
 
@@ -114,7 +114,10 @@ class WifiActivity : BaseDemonstrationActivity() {
         results.forEachIndexed { index, scanResult ->
             LogContext.log.i("Result=${scanResult.toJsonString()}")
             if (scanResult.SSID.isNotBlank()) {
-                val wifiModel = WifiModel(scanResult.SSID, scanResult.BSSID, scanResult.level, scanResult.frequency).apply { this.index = index + 1 }
+                val wifiModel = WifiModel(scanResult.SSID,
+                    scanResult.BSSID,
+                    scanResult.level,
+                    scanResult.frequency).apply { this.index = index + 1 }
                 wifiList.add(wifiModel)
             }
         }

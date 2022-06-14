@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.camerax_sdk.utils
 
 import android.view.Surface

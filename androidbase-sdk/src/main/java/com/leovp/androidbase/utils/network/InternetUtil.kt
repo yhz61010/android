@@ -2,7 +2,6 @@
 
 package com.leovp.androidbase.utils.network
 
-import com.leovp.androidbase.iters.EventCallBack
 import com.leovp.log_sdk.LogContext
 import java.net.InetAddress
 import kotlin.concurrent.thread
@@ -14,18 +13,19 @@ import kotlin.concurrent.thread
 object InternetUtil {
     private const val TAG = "InternetUtil"
 
-    fun getIpsByName(host: String?): List<String> {
+    fun getIpsByHost(host: String): List<String> {
         return try {
             val ipAddressArr: ArrayList<String> = ArrayList()
-            InetAddress.getAllByName(host?.trim())?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
+            InetAddress.getAllByName(host.trim())
+                ?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
             ipAddressArr
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getIpsByName error=${e.message}")
+            LogContext.log.e(TAG, "getIpsByName error host=$host", e)
             emptyList()
         }
     }
 
-    fun getIpsByName(host: String?, callback: EventCallBack) {
-        thread { callback.onCallback(getIpsByName(host)) }
+    fun getIpsByHost(host: String, callback: (List<String>) -> Unit) {
+        thread { callback(getIpsByHost(host)) }
     }
 }

@@ -16,12 +16,12 @@ import kotlinx.coroutines.withContext
  */
 class SoundManager private constructor(val ctx: Context) {
     private lateinit var soundPool: SoundPool
-    var soundIdCountdown1: Int = 0
-    var soundIdCountdown2: Int = 0
-    var soundIdCountdownFinal: Int = 0
-    var soundIdShutter: Int = 0
-    var soundIdCamStart: Int = 0
-    var soundIdCamStop: Int = 0
+    private var soundIdCountdown1: Int = 0
+    private var soundIdCountdown2: Int = 0
+    private var soundIdCountdownFinal: Int = 0
+    private var soundIdShutter: Int = 0
+    private var soundIdCamStart: Int = 0
+    private var soundIdCamStop: Int = 0
 
     private val audioManager by lazy { ctx.audioManager }
 

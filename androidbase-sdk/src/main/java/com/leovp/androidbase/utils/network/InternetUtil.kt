@@ -20,7 +20,7 @@ object InternetUtil {
                 ?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
             ipAddressArr
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getIpsByName error host=$host", e)
+            LogContext.log.e(TAG, "getIpsByName error host=$host. Exception: $e")
             emptyList()
         }
     }

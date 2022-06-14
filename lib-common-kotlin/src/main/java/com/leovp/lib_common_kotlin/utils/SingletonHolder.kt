@@ -26,17 +26,7 @@ open class SingletonHolder<out T, in A>(creator: (A) -> T) {
     @Volatile
     private var instance: T? = null
 
-    fun getInstance(arg: A): T {
-        return instance ?: synchronized(this) {
-            val inst = instance
-            if (inst != null) {
-                inst
-            } else {
-                val created = creator!!(arg)
-                instance = created
-                creator = null
-                created
-            }
-        }
+    fun getInstance(arg: A): T = instance ?: synchronized(this) {
+        val inst = instance ?: creator!!(arg).also { instance = it }; creator = null; inst
     }
 }

@@ -13,9 +13,9 @@ import androidx.core.view.children
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.DefaultConfig
 import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.lib_common_android.exts.getScreenAvailableHeight
-import com.leovp.lib_common_android.exts.getScreenWidth
-import com.leovp.lib_common_android.exts.statusBarHeight
+import com.leovp.floatview_sdk.util.getScreenAvailableHeight
+import com.leovp.floatview_sdk.util.getScreenWidth
+import com.leovp.floatview_sdk.util.statusBarHeight
 import kotlin.math.abs
 
 /**
@@ -48,7 +48,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         val totalDeltaY = lastY - firstY
 
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
+            MotionEvent.ACTION_DOWN                                                      -> {
                 lastX = event.rawX.toInt()
                 lastY = event.rawY.toInt()
                 firstX = lastX
@@ -63,9 +63,10 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 if (!consumeIsAlwaysFalse && config.autoDock != AutoDock.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.autoDock)
                 }
-                touchConsumedByMove = config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
+                touchConsumedByMove =
+                        config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
             }
-            MotionEvent.ACTION_MOVE -> {
+            MotionEvent.ACTION_MOVE                                                      -> {
                 val deltaX = event.rawX.toInt() - lastX
                 val deltaY = event.rawY.toInt() - lastY
                 lastX = event.rawX.toInt()
@@ -86,9 +87,10 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                     isClickGesture = true
                     touchConsumedByMove = false
                 }
-                touchConsumedByMove = config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
+                touchConsumedByMove =
+                        config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
             }
-            else -> Unit
+            else                                                                         -> Unit
         }
         if (consumeIsAlwaysFalse) touchConsumedByMove = false
         touchConsumedByMove
@@ -96,23 +98,23 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private fun updateLayoutForSticky(deltaX: Int, deltaY: Int) {
         when (config.stickyEdge) {
-            StickyEdge.NONE -> {
+            StickyEdge.NONE   -> {
                 layoutParams.x += deltaX
                 layoutParams.y += deltaY
                 layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
-            StickyEdge.LEFT -> {
+            StickyEdge.LEFT   -> {
                 layoutParams.x = getFloatViewLeftMinMargin()
                 layoutParams.y += deltaY
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
-            StickyEdge.RIGHT -> {
+            StickyEdge.RIGHT  -> {
                 layoutParams.x = getFloatViewRightMaxMargin()
                 layoutParams.y += deltaY
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
-            StickyEdge.TOP -> {
+            StickyEdge.TOP    -> {
                 layoutParams.x += deltaX
                 layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
                 layoutParams.y = getFloatViewTopMinMargin()
@@ -131,11 +133,11 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             val floatViewCenterY = top + config.customView!!.height / 2
             var animateDirectionForDockFull = AutoDock.NONE
             when (autoDock) {
-                AutoDock.NONE -> null
-                AutoDock.LEFT -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
-                AutoDock.RIGHT -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
-                AutoDock.TOP -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
-                AutoDock.BOTTOM -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
+                AutoDock.NONE       -> null
+                AutoDock.LEFT       -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
+                AutoDock.RIGHT      -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
+                AutoDock.TOP        -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
+                AutoDock.BOTTOM     -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                 AutoDock.LEFT_RIGHT -> {
                     if (floatViewCenterX <= context.getScreenWidth() / 2) {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
@@ -150,7 +152,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
-                AutoDock.FULL -> {
+                AutoDock.FULL       -> {
                     if (floatViewCenterX <= context.getScreenWidth() / 2) { // On left screen
                         if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) { // On top screen // Top left
                             if (left <= top - drawHeightOffset) { // Animate to left
@@ -194,14 +196,14 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 start()
             }?.addUpdateListener {
                 when (autoDock) {
-                    AutoDock.NONE -> Unit
+                    AutoDock.NONE                                      -> Unit
                     AutoDock.LEFT, AutoDock.RIGHT, AutoDock.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
                     AutoDock.TOP, AutoDock.BOTTOM, AutoDock.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
-                    AutoDock.FULL -> {
+                    AutoDock.FULL                                      -> {
                         when (animateDirectionForDockFull) {
                             AutoDock.LEFT, AutoDock.RIGHT -> layoutParams.x = it.animatedValue as Int
                             AutoDock.TOP, AutoDock.BOTTOM -> layoutParams.y = it.animatedValue as Int
-                            else -> Unit
+                            else                          -> Unit
                         }
                     }
                 }
@@ -260,25 +262,36 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private fun adjustPosX(x: Int, minValue: Int): Int {
         if (x < minValue || x <= 0) return minValue
-        return if ((x + (config.customView?.width ?: 0) + minValue) >= context.getScreenWidth()) context.getScreenWidth() - (config.customView?.width ?: 0) - minValue else x
+        return if ((x + (config.customView?.width
+                ?: 0) + minValue) >= context.getScreenWidth()
+        ) context.getScreenWidth() - (config.customView?.width ?: 0) - minValue else x
     }
 
     private fun adjustPosY(y: Int, minValue: Int): Int {
         if (y <= minValue + drawHeightOffset) return minValue + drawHeightOffset
-        return if ((y + (config.customView?.height ?: 0) + minValue) >= context.getScreenAvailableHeight())
-            context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - minValue
+        return if ((y + (config.customView?.height
+                ?: 0) + minValue) >= context.getScreenAvailableHeight()
+        ) context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - minValue
         else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
-    private fun getFloatViewRightMaxMargin(): Int = context.getScreenWidth() - (config.customView?.width ?: 0) - config.edgeMargin
+    private fun getFloatViewRightMaxMargin(): Int =
+            context.getScreenWidth() - (config.customView?.width ?: 0) - config.edgeMargin
+
     private fun getFloatViewTopMinMargin(): Int = drawHeightOffset + config.edgeMargin
-    private fun getFloatViewBottomMaxMargin(): Int = context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - config.edgeMargin
+    private fun getFloatViewBottomMaxMargin(): Int =
+            context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
-    private fun getFloatViewTopRightPos(): Point = Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)
-    private fun getFloatViewBottomLeftPos(): Point = Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
-    private fun getFloatViewBottomRightPos(): Point = Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y + (config.customView?.height ?: 0))
+    private fun getFloatViewTopRightPos(): Point =
+            Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)
+
+    private fun getFloatViewBottomLeftPos(): Point =
+            Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
+
+    private fun getFloatViewBottomRightPos(): Point =
+            Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y + (config.customView?.height ?: 0))
 
     private fun setWindowLayoutParams() {
         drawHeightOffset = if (config.canDragOverStatusBar) 0 else context.statusBarHeight
@@ -296,17 +309,20 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 // However the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
-            @Suppress("DEPRECATION")
             type = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else -> WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                else                                           -> @Suppress("DEPRECATION") {
+                    WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                }
                 // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
                 // android.view.WindowManager$BadTokenException: Unable to add window -- token null is not valid; is your activity running?
             }
 
             gravity = Gravity.TOP or Gravity.START // Default value: Gravity.CENTER
-            width = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
-            height = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            width =
+                    if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            height =
+                    if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
 
@@ -336,11 +352,14 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
     fun updateStickyEdge(stickyEdge: StickyEdge) {
         config.stickyEdge = stickyEdge
         updateLayoutForSticky(0, 0)
-        runCatching { windowManager.updateViewLayout(config.customView, layoutParams) }.onFailure { e -> e.printStackTrace() }
+        runCatching {
+            windowManager.updateViewLayout(config.customView, layoutParams)
+        }.onFailure { e -> e.printStackTrace() }
     }
 
     @Suppress("unused")
-    private fun getResourceEntryName(@IdRes id: Int): String = runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
+    private fun getResourceEntryName(@IdRes id: Int): String =
+            runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
     fun show() {
         runCatching {

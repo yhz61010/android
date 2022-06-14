@@ -30,7 +30,7 @@ class WifiUtil private constructor(private val ctx: Context) {
      *
      * @param enc Only available below API 29(API < 29)(Android Q/Android 10)
      */
-    @RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WEP) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             val wifiNetworkSpecifier =

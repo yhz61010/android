@@ -113,14 +113,10 @@ val Context.statusBarHeight
 
 val Context.isFullScreenDevice
     @SuppressLint("ObsoleteSdkInt") get(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return false
-        } else {
-            if (screenRatio >= 1.97f) {
-                return true
-            }
-            return false
+        if (screenRatio >= 1.97f) {
+            return true
         }
+        return false
     }
 
 /**
@@ -291,7 +287,8 @@ fun Context.isTablet(): Boolean {
 fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
     return isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) || isReversePortraitByDegree(
-        orientationInDegree, thresholdInDegree)
+        orientationInDegree,
+        thresholdInDegree)
 }
 
 fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,

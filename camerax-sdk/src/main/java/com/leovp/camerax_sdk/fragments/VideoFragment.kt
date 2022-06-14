@@ -198,10 +198,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
-            val ratioString = selectedQuality.getAspectRatioString(
-                selectedQuality,
-                (orientation == Configuration.ORIENTATION_PORTRAIT)
-            )
+            val ratioString = selectedQuality.getAspectRatioString((orientation == Configuration.ORIENTATION_PORTRAIT))
             when (ratioString) {
                 "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
                 "V,3:4"  -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
@@ -218,13 +215,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val preview = Preview.Builder()
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            .setTargetAspectRatio(selectedQuality.getAspectRatio(selectedQuality))
+            .setTargetAspectRatio(selectedQuality.getAspectRatio())
             // Set initial target rotation
             .setTargetRotation(rotation)
             // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
             //            .setTargetResolution(targetSize)
-            .build()
-            .apply {
+            .build().apply {
                 // Attach the viewfinder's surface provider to preview use case
                 setSurfaceProvider(incPreviewGridBinding.viewFinder.surfaceProvider)
             }
@@ -241,8 +237,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
 
-            camera = camProvider.bindToLifecycle(
-                viewLifecycleOwner, // current lifecycle owner
+            camera = camProvider.bindToLifecycle(viewLifecycleOwner, // current lifecycle owner
                 lensFacing, // either front or back facing
                 videoCapture, // video capture use case
                 preview // camera preview use case
@@ -290,15 +285,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
                     Environment.DIRECTORY_MOVIES + File.separator + baseFolderName)
             }
-            val outputOptions = MediaStoreOutputOptions.Builder(
-                requireActivity().contentResolver,
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            ).setContentValues(contentValues).build()
+            val outputOptions = MediaStoreOutputOptions.Builder(requireActivity().contentResolver,
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
-            val outputOptions = FileOutputOptions
-                .Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName), outFileName.absolutePath))
-                .build()
+            val outputOptions =
+                    FileOutputOptions.Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName),
+                        outFileName.absolutePath)).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }
 
@@ -349,19 +342,15 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private fun updateCameraUi() {
         resetSwitchCameraIcon()
 
-        setSwipeCallback(
-            left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+        setSwipeCallback(left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
             right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
             up = { binding.btnSwitchCamera.performClick() },
-            down = { binding.btnSwitchCamera.performClick() }
-        )
+            down = { binding.btnSwitchCamera.performClick() })
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
             setOnClickListener {
-                if (!this@VideoFragment::recordingState.isInitialized ||
-                    recordingState is VideoRecordEvent.Finalize
-                ) {
+                if (!this@VideoFragment::recordingState.isInitialized || recordingState is VideoRecordEvent.Finalize) {
                     LogContext.log.i(logTag, "Start recording...")
                     enableUI(false)  // Our eventListener will turn on the Recording UI.
                     startRecording()
@@ -409,12 +398,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
     }
 
-    private fun toggleAudio() = binding.btnMicrophone.toggleButton(
-        flag = audioEnabled,
+    private fun toggleAudio() = binding.btnMicrophone.toggleButton(flag = audioEnabled,
         rotationAngle = 180f,
         firstIcon = R.drawable.ic_microphone_off,
-        secondIcon = R.drawable.ic_microphone_on
-    ) { flag ->
+        secondIcon = R.drawable.ic_microphone_on) { flag ->
         audioEnabled = flag
         LogContext.log.w(logTag, "Enable audio: $audioEnabled")
     }
@@ -435,12 +422,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     /** Turns on or off the flashlight */
-    private fun toggleFlash() = binding.btnFlash.toggleButton(
-        flag = flashMode == ImageCapture.FLASH_MODE_ON,
+    private fun toggleFlash() = binding.btnFlash.toggleButton(flag = flashMode == ImageCapture.FLASH_MODE_ON,
         rotationAngle = 360f,
         firstIcon = R.drawable.ic_flash_off,
-        secondIcon = R.drawable.ic_flash_on
-    ) { flag ->
+        secondIcon = R.drawable.ic_flash_on) { flag ->
         LogContext.log.w(logTag,
             "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash")
         torchEnabled = flag
@@ -448,8 +433,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         camera?.cameraControl?.enableTorch(flag)
     }
 
-    private fun showResolutionLayer() =
-            binding.llResolution.circularReveal(binding.btnResolution)
+    private fun showResolutionLayer() = binding.llResolution.circularReveal(binding.btnResolution)
 
     private fun closeResolutionAndSelect(quality: Quality) {
         binding.llResolution.circularClose(binding.btnResolution) {
@@ -480,14 +464,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             }
         }
 
-        binding.btnResolution.setImageResource(
-            when (quality) {
-                Quality.UHD -> R.drawable.ic_resolution_4k
-                Quality.FHD -> R.drawable.ic_resolution_1080p
-                Quality.HD  -> R.drawable.ic_resolution_720p
-                else        -> throw IllegalArgumentException("Device does not support $quality")
-            }
-        )
+        binding.btnResolution.setImageResource(when (quality) {
+            Quality.UHD -> R.drawable.ic_resolution_4k
+            Quality.FHD -> R.drawable.ic_resolution_1080p
+            Quality.HD  -> R.drawable.ic_resolution_720p
+            else        -> throw IllegalArgumentException("Device does not support $quality")
+        })
     }
 
     override fun onStop() {

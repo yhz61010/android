@@ -15,7 +15,6 @@ import com.leovp.log_sdk.LogContext
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
-import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
@@ -47,7 +46,8 @@ object Falcon {
             bitmap = takeBitmapUnchecked(weakAct)
             writeBitmap(bitmap, toFile)
         } catch (e: Exception) {
-            val message = ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
+            val message =
+                    ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
             LogContext.log.e(TAG, message, e)
             throw UnableToTakeScreenshotException(message, e)
         } finally {
@@ -62,12 +62,12 @@ object Falcon {
      * @param activity WeakReference<Activity> of which the screenshot will be taken.
      * @return Bitmap of what is displayed in activity.
      */
-    fun takeScreenshotBitmap(activity: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+    fun takeScreenshotBitmap(activity: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
         return try {
             takeBitmapUnchecked(activity, config)
         } catch (e: Exception) {
-            val message = ("Unable to take screenshot to bitmap of activity "
-                    + activity.javaClass.name)
+            val message = ("Unable to take screenshot to bitmap of activity " + activity.javaClass.name)
             LogContext.log.e(TAG, message, e)
 //            throw UnableToTakeScreenshotException(message, e)
             null
@@ -77,7 +77,8 @@ object Falcon {
     //endregion
     //region Methods
     @Throws(InterruptedException::class)
-    private fun takeBitmapUnchecked(weakAct: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
+    private fun takeBitmapUnchecked(weakAct: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
         val viewRoots = getRootViews(weakAct)
         if (viewRoots.isEmpty()) {
             throw UnableToTakeScreenshotException("Unable to capture any view data in $weakAct")
@@ -104,11 +105,14 @@ object Falcon {
     }
 
     @Throws(InterruptedException::class)
-    private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>, viewRoots: List<ViewRootData>, bitmap: Bitmap) {
+    private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>,
+        viewRoots: List<ViewRootData>,
+        bitmap: Bitmap) {
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
-            runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }.also { latch.countDown() }
+            runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }
+                .also { latch.countDown() }
         } ?: latch.countDown()
         latch.await()
         errorInMainThread.get()?.let {
@@ -169,14 +173,10 @@ object Falcon {
         val params: Array<WindowManager.LayoutParams>
 
         //  There was a change to ArrayList implementation in 4.4
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            roots = (rootObjects as List<Any>).toTypedArray()
-            val paramsList = paramsObject as List<WindowManager.LayoutParams>
-            params = paramsList.toTypedArray()
-        } else {
-            roots = rootObjects as Array<Any>
-            params = paramsObject as Array<WindowManager.LayoutParams>
-        }
+        roots = (rootObjects as List<Any>).toTypedArray()
+        val paramsList = paramsObject as List<WindowManager.LayoutParams>
+        params = paramsList.toTypedArray()
+
         val rootViews = viewRootData(roots, params)
         if (rootViews.isEmpty()) {
             return emptyList()
@@ -186,10 +186,7 @@ object Falcon {
         return rootViews
     }
 
-    private fun viewRootData(
-        roots: Array<Any>,
-        params: Array<WindowManager.LayoutParams>
-    ): MutableList<ViewRootData> {
+    private fun viewRootData(roots: Array<Any>, params: Array<WindowManager.LayoutParams>): MutableList<ViewRootData> {
         val rootViews: MutableList<ViewRootData> = ArrayList()
         for (i in roots.indices) {
             val root = roots[i]
@@ -246,9 +243,7 @@ object Falcon {
             }
             for (parentIndex in dialogIndex + 1 until viewRoots.size) {
                 val possibleParent = viewRoots[parentIndex]
-                if (possibleParent.isActivityType
-                    && possibleParent.windowToken === viewRoot.windowToken
-                ) {
+                if (possibleParent.isActivityType && possibleParent.windowToken === viewRoot.windowToken) {
                     viewRoots.remove(possibleParent)
                     viewRoots.add(dialogIndex, possibleParent)
                     break
@@ -296,10 +291,8 @@ object Falcon {
      */
     class UnableToTakeScreenshotException : RuntimeException {
         internal constructor(detailMessage: String) : super(detailMessage)
-        internal constructor(detailMessage: String, exception: Throwable) : super(
-            detailMessage,
-            extractException(exception)
-        )
+        internal constructor(detailMessage: String, exception: Throwable) : super(detailMessage,
+            extractException(exception))
 
         constructor(ex: Throwable) : super(extractException(ex))
 

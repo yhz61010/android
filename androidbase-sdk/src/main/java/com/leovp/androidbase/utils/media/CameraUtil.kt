@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResult
-import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.androidbase.utils.ui.BetterActivityResult
@@ -108,7 +107,6 @@ object CameraUtil {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
         val selectedImage: MutableList<String> = ArrayList()
         data?.data?.let { url ->

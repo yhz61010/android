@@ -1,8 +1,7 @@
 package com.leovp.lib_common_kotlin.utils
 
 /**
- * Author: Michael Leo
- * Date: 20-12-24 下午2:56
+ * Thread-Safe singleton holder.
  *
  * Usage:
  * ```kotlin
@@ -18,6 +17,9 @@ package com.leovp.lib_common_kotlin.utils
  * ```kotlin
  * SomeSingleton.getInstance(context, arg).doSomething()
  * ```
+ *
+ * Author: Michael Leo
+ * Date: 20-12-24 下午2:56
  */
 open class SingletonHolder2<out T, in A, in B>(creator: (A, B) -> T) {
     private var creator: ((A, B) -> T)? = creator
@@ -26,12 +28,7 @@ open class SingletonHolder2<out T, in A, in B>(creator: (A, B) -> T) {
     private var instance: T? = null
 
     fun getInstance(arg1: A, arg2: B): T {
-        val ins = instance
-        if (ins != null) {
-            return ins
-        }
-
-        return synchronized(this) {
+        return instance ?: synchronized(this) {
             val inst = instance
             if (inst != null) {
                 inst

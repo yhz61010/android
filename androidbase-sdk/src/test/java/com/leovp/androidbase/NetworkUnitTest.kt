@@ -26,71 +26,68 @@ class NetworkUnitTest {
 
     @Test
     fun getIpsByName() {
-        var ips = InternetUtil.getIpsByName("50d.win").toTypedArray()
+        var ips = InternetUtil.getIpsByHost("50d.win").toTypedArray()
         assertArrayEquals(arrayOf("142.11.215.254"), ips)
 
-        ips = InternetUtil.getIpsByName("barcode.50d.win").toTypedArray()
+        ips = InternetUtil.getIpsByHost("barcode.50d.win").toTypedArray()
 //        InternetUtil.getIpsByName("lib.leovp.com").toTypedArray().forEach { println(it) }
         assertEquals("142.11.215.254", ips[0])
 
-        ips = InternetUtil.getIpsByName("leo vp.com").toTypedArray()
+        ips = InternetUtil.getIpsByHost("leo vp.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("50d.win   ").toTypedArray()
+        ips = InternetUtil.getIpsByHost("50d.win   ").toTypedArray()
         assertArrayEquals(arrayOf("142.11.215.254"), ips)
 
-        ips = InternetUtil.getIpsByName("   50d.win   ").toTypedArray()
+        ips = InternetUtil.getIpsByHost("   50d.win   ").toTypedArray()
         assertArrayEquals(arrayOf("142.11.215.254"), ips)
 
-        ips = InternetUtil.getIpsByName("203.107.43.165").toTypedArray()
+        ips = InternetUtil.getIpsByHost("203.107.43.165").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
-        ips = InternetUtil.getIpsByName("203.1 7.43.165").toTypedArray()
+        ips = InternetUtil.getIpsByHost("203.1 7.43.165").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("203..43.165").toTypedArray()
+        ips = InternetUtil.getIpsByHost("203..43.165").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName(".203.43.165").toTypedArray()
+        ips = InternetUtil.getIpsByHost(".203.43.165").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("203.107.43.165   ").toTypedArray()
+        ips = InternetUtil.getIpsByHost("203.107.43.165   ").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
-        ips = InternetUtil.getIpsByName("   203.107.43.165   ").toTypedArray()
+        ips = InternetUtil.getIpsByHost("   203.107.43.165   ").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)
 
-        ips = InternetUtil.getIpsByName(null).toTypedArray()
-        assertArrayEquals(arrayOf("127.0.0.1"), ips)
-
-        ips = InternetUtil.getIpsByName("dummy.dummy").toTypedArray()
+        ips = InternetUtil.getIpsByHost("dummy.dummy").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("http://leovp.com").toTypedArray()
+        ips = InternetUtil.getIpsByHost("http://leovp.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("https://leovp.com").toTypedArray()
+        ips = InternetUtil.getIpsByHost("https://leovp.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("http://leovp.com/abc").toTypedArray()
+        ips = InternetUtil.getIpsByHost("http://leovp.com/abc").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("https://leovp.com/abc").toTypedArray()
+        ips = InternetUtil.getIpsByHost("https://leovp.com/abc").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("http://www.cip.cc/175.162.7.41").toTypedArray()
+        ips = InternetUtil.getIpsByHost("http://www.cip.cc/175.162.7.41").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("leovp.com/resource/dummy").toTypedArray()
+        ips = InternetUtil.getIpsByHost("leovp.com/resource/dummy").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("12345").toTypedArray()
+        ips = InternetUtil.getIpsByHost("12345").toTypedArray()
         assertArrayEquals(arrayOf("0.0.48.57"), ips)
 
-        ips = InternetUtil.getIpsByName("abc").toTypedArray()
+        ips = InternetUtil.getIpsByHost("abc").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
-        ips = InternetUtil.getIpsByName("abc.b").toTypedArray()
+        ips = InternetUtil.getIpsByHost("abc.b").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
     }
 

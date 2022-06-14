@@ -7,8 +7,6 @@ import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.content.pm.PackageManager
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.log_sdk.LogContext
@@ -128,7 +126,6 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
 
     private var scanDeviceCallback: ScanDeviceCallback? = null
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
@@ -186,11 +183,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     )
     fun scan(scanDeviceCallback: ScanDeviceCallback) {
         this.scanDeviceCallback = scanDeviceCallback
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         bluetoothAdapter.bluetoothLeScanner?.startScan(scanCallback)
-//        } else {
-//            bluetoothAdapter.startLeScan(leScanCallback)
-//        }
     }
 
     /**
@@ -204,11 +197,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     @SuppressLint("InlinedApi")
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     fun stopScan() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
-//        } else {
-//            bluetoothAdapter.stopLeScan(leScanCallback)
-//        }
     }
 
     /**

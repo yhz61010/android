@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.lib_common_kotlin.utils
 
 /**
@@ -27,17 +29,7 @@ open class SingletonHolder2<out T, in A, in B>(creator: (A, B) -> T) {
     @Volatile
     private var instance: T? = null
 
-    fun getInstance(arg1: A, arg2: B): T {
-        return instance ?: synchronized(this) {
-            val inst = instance
-            if (inst != null) {
-                inst
-            } else {
-                val created = creator!!(arg1, arg2)
-                instance = created
-                creator = null
-                created
-            }
-        }
+    fun getInstance(arg1: A, arg2: B): T = instance ?: synchronized(this) {
+        val inst = instance ?: creator!!(arg1, arg2).also { instance = it }; creator = null; inst
     }
 }

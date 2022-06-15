@@ -62,19 +62,18 @@ val Context.id: String get() = this.packageName!!
  */
 val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null)!!
 
+private fun Context.getPackageInfo() =
+        packageManager.getPackageInfo(packageName, PackageManager.GET_CONFIGURATIONS)
+
 /**
  * Return the version name of empty string if can't get version string.
  */
-val Context.versionName
-    get() = packageManager.getPackageInfo(this.packageName,
-        PackageManager.GET_CONFIGURATIONS).versionName ?: ""
+val Context.versionName get() = getPackageInfo().versionName ?: ""
 
 /**
  * Return the version code or 0 if can't get version code.
  */
-val Context.versionCode
-    get() = PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(this.packageName,
-        PackageManager.GET_CONFIGURATIONS))
+val Context.versionCode get() = PackageInfoCompat.getLongVersionCode(getPackageInfo())
 
 val Context.isPortrait get() = this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 val Context.isLandscape get() = this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE

@@ -1,6 +1,9 @@
 package com.leovp.demo
 
+import android.content.pm.ConfigurationInfo
+import android.content.pm.ServiceInfo
 import android.os.Bundle
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -10,13 +13,12 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.lib_common_android.exts.getAvailableResolution
-import com.leovp.lib_common_android.exts.getRealResolution
-import com.leovp.lib_common_android.exts.navigationBarHeight
-import com.leovp.lib_common_android.exts.statusBarHeight
+import com.leovp.lib_bytes.toHexString
+import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
+
 
 class MainActivity : BaseDemonstrationActivity() {
 
@@ -43,8 +45,7 @@ class MainActivity : BaseDemonstrationActivity() {
                 Permission.ACCESS_COARSE_LOCATION,
                 Permission.SYSTEM_ALERT_WINDOW,
                 Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN)
+                Permission.BLUETOOTH_CONNECT, Permission.BLUETOOTH_SCAN)
             .request(object : OnPermissionCallback {
                 override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                 }
@@ -54,5 +55,83 @@ class MainActivity : BaseDemonstrationActivity() {
             })
 
         LogContext.log.i("real=${getRealResolution().toJsonString()} available=${getAvailableResolution().toJsonString()} status_bar=$statusBarHeight navigation_bar=$navigationBarHeight")
+
+        LogContext.log.i(ITAG, "===================================")
+        val info = getPackageInfo()
+        val activities = info.activities
+        if (activities?.isNotEmpty() == true) {
+            for (i in activities.indices) {
+                LogContext.log.i(ITAG, "activities:" + i + "=" + activities[i])
+            }
+        }
+        val providers = info.providers
+        if (providers?.isNotEmpty() == true) {
+            for (i in providers.indices) {
+                LogContext.log.i(ITAG, "providers:" + i + "=" + providers[i])
+            }
+        }
+        val permissions = info.permissions
+        if (permissions?.isNotEmpty() == true) {
+            for (i in permissions.indices) {
+                LogContext.log.i(ITAG, "permissions:" + i + "=" + permissions[i])
+            }
+        }
+
+        val reqFeatures = info.reqFeatures
+        if (reqFeatures?.isNotEmpty() == true) {
+            for (i in reqFeatures.indices) {
+                LogContext.log.i(ITAG, "reqFeatures:" + i + "=" + reqFeatures[i])
+            }
+        }
+        val configs: Array<ConfigurationInfo>? = info.configPreferences
+        if (configs?.isNotEmpty() == true) {
+            for (i in configs.indices) {
+                LogContext.log.i(ITAG, "configs:" + i + "=" + configs[i])
+            }
+        }
+
+        val receivers = info.receivers
+        if (receivers?.isNotEmpty() == true) {
+            for (i in receivers.indices) {
+                LogContext.log.i(ITAG, "receivers:" + i + "=" + receivers[i])
+            }
+        }
+        val instrumentations = info.instrumentation
+        if (instrumentations?.isNotEmpty() == true) {
+            for (i in instrumentations.indices) {
+                LogContext.log.i(ITAG, "instrumentations:" + i + "=" + instrumentations[i])
+            }
+        }
+        val requestedPermissions = info.requestedPermissions
+        if (requestedPermissions?.isNotEmpty() == true) {
+            for (i in requestedPermissions.indices) {
+                LogContext.log.i(ITAG, "requestedPermissions:" + i + "=" + requestedPermissions[i])
+            }
+        }
+        val services: Array<ServiceInfo>? = info.services
+        if (services?.isNotEmpty() == true) {
+            for (i in services.indices) {
+                LogContext.log.i(ITAG, "services:" + i + "=" + services[i])
+            }
+        }
+        val signatures: List<ByteArray> = getApplicationSignatures()
+        if (signatures.isNotEmpty()) {
+            for (i in signatures.indices) {
+                LogContext.log.i(ITAG,
+                    "signatures:" + i + "=" + signatures[i].toHexString(true, ""))
+            }
+        }
+
+        val gids = info.gids
+        if (gids?.isNotEmpty() == true) {
+            for (i in gids.indices) {
+                LogContext.log.i(ITAG, "gids:" + i + "=" + gids[i])
+            }
+        }
+        val versionCode = PackageInfoCompat.getLongVersionCode(info)
+        LogContext.log.i(ITAG, "versionCode: $versionCode")
+        val versionName = info.versionName
+        LogContext.log.i(ITAG, "versionName: $versionName")
+        LogContext.log.i(ITAG, "===================================")
     }
 }

@@ -52,6 +52,7 @@ import android.view.textclassifier.TextClassificationManager
 import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
 import com.leovp.lib_common_android.utils.API
+import java.security.MessageDigest
 
 /**
  * Get the package name
@@ -63,12 +64,57 @@ val Context.id: String get() = this.packageName!!
  */
 val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null)!!
 
-fun Context.getPackageInfo(value: Int = PackageManager.GET_CONFIGURATIONS): PackageInfo {
+/**
+ *  @param value The constant defined in [PackageManager].
+ *  For instance: [PackageManager.GET_ACTIVITIES], [PackageManager.GET_CONFIGURATIONS] and etc.
+ */
+fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): PackageInfo {
     return if (Build.VERSION.SDK_INT >= 33) {
         val infoFlags = PackageManager.PackageInfoFlags.of(value.toLong())
-        packageManager.getPackageInfo(packageName, infoFlags)
+        packageManager.getPackageInfo(pkgName, infoFlags)
     } else {
-        @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, value)
+        @Suppress("DEPRECATION") packageManager.getPackageInfo(pkgName, value)
+    }
+}
+
+/**
+ * @param algorithm "SHA", "SHA-1", "SHA-256", "MD5" and etc. Default value is "SHA2-56"
+ */
+fun Context.getApplicationSignatures(pkgName: String = packageName,
+    algorithm: String = "SHA-256"): List<ByteArray> {
+    val signatureList: List<ByteArray>
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // New signature
+            val sig = getPackageInfo(PackageManager.GET_SIGNING_CERTIFICATES, pkgName).signingInfo
+            signatureList = if (sig.hasMultipleSigners()) {
+                // Send all with apkContentsSigners
+                sig.apkContentsSigners.map {
+                    val digest = MessageDigest.getInstance(algorithm)
+                    digest.update(it.toByteArray())
+                    digest.digest()
+                }
+            } else {
+                // Send one with signingCertificateHistory
+                sig.signingCertificateHistory.map {
+                    val digest = MessageDigest.getInstance(algorithm)
+                    digest.update(it.toByteArray())
+                    digest.digest()
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION") val sig =
+                    getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures
+            signatureList = sig.map {
+                val digest = MessageDigest.getInstance(algorithm)
+                digest.update(it.toByteArray())
+                digest.digest()
+            }
+        }
+
+        return signatureList
+    } catch (e: Exception) {
+        return emptyList()
     }
 }
 

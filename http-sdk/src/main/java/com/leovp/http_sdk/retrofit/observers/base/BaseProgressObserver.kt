@@ -22,7 +22,7 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         mDisposable = d
     }
 
-    override fun onNext(t: T) {
+    override fun onNext(t: T & Any) {
         LogContext.log.d(javaClass.simpleName, "onNext()")
         mListener.onNext(t)
     }

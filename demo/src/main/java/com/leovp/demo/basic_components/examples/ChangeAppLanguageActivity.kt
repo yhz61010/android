@@ -30,6 +30,7 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        title = getString(R.string.act_title_change_app_lang)
         val binding = ActivityChangeAppLanguageBinding.inflate(layoutInflater).apply { setContentView(root) }
         val itemList = resources.getStringArray(R.array.lang_list)
         LogContext.log.w("itemList=${itemList.toJsonString()}")

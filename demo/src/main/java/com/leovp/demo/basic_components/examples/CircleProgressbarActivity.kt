@@ -25,9 +25,11 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCircleProgressbarBinding.inflate(layoutInflater).apply { setContentView(root) }
+        binding = ActivityCircleProgressbarBinding.inflate(layoutInflater)
+            .apply { setContentView(root) }
 
-        binding.btnDownload.setOnSingleClickListener {
+        binding.btnDownload.setOnSingleClickListener { btn ->
+            btn.isEnabled = false
             binding.vDownload.setDeterminate()
             thread {
                 for (prog in 0..100) {
@@ -35,10 +37,12 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
                     binding.vDownload.currentProgress = prog
                 }
                 binding.vDownload.setFinish()
+                runOnUiThread { btn.isEnabled = true }
             }
         }
 
-        binding.btnUpload.setOnSingleClickListener {
+        binding.btnUpload.setOnSingleClickListener { btn ->
+            btn.isEnabled = false
             binding.vUpload.setDeterminate()
             thread {
                 for (prog in 0..100) {
@@ -46,6 +50,7 @@ class CircleProgressbarActivity : BaseDemonstrationActivity() {
                     binding.vUpload.currentProgress = prog
                 }
                 binding.vUpload.setError()
+                runOnUiThread { btn.isEnabled = true }
             }
         }
 

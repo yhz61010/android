@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.content.res.TypedArray
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -39,7 +40,8 @@ import kotlin.math.min
  * You can use this view to make a download or upload button, you might also use this for another purpose.
  */
 @Suppress("unused", "WeakerAccess")
-class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
+    View(context, attrs) {
     var idleItem: IdleState
     var finishItem: FinishState
     var errorItem: ErrorState
@@ -86,26 +88,46 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         _progressTextPaint.style = Paint.Style.FILL
         _progressTextPaint.textAlign = Paint.Align.CENTER
 
-        val attr: TypedArray? = if (attrs != null) context.obtainStyledAttributes(attrs, R.styleable.CircleProgressbar, 0, 0) else null
+        val attr: TypedArray? = if (attrs != null) context.obtainStyledAttributes(attrs,
+            R.styleable.CircleProgressbar,
+            0,
+            0) else null
         if (attrs != null && attr != null) {
             val bgResId = attr.getResourceId(R.styleable.CircleProgressbar_backgroundDrawable, -1)
             if (bgResId != -1) _defaultBgDrawable = context.getDrawable(bgResId)
-            _defaultBgColor = attr.getColor(R.styleable.CircleProgressbar_backgroundColor, State.DEF_BG_COLOR)
+            _defaultBgColor =
+                    attr.getColor(R.styleable.CircleProgressbar_backgroundColor, State.DEF_BG_COLOR)
 
-            currState = State.Type.getState(attr.getInt(R.styleable.CircleProgressbar_state, State.Type.STATE_IDLE.value))
+            currState = State.Type.getState(attr.getInt(R.styleable.CircleProgressbar_state,
+                State.Type.STATE_IDLE.value))
             _cancelable = attr.getBoolean(R.styleable.CircleProgressbar_cancelable, DEF_CANCELABLE)
-            _enableClickListener = attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener, DEF_ENABLE_CLICK_LISTENER)
-            _progressIndeterminateSweepAngle = attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle, DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE)
-            _progressColor = attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
-            _progressPaint.strokeWidth = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth, resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)).toFloat()
-            _progressMargin = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin, resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
+            _enableClickListener =
+                    attr.getBoolean(R.styleable.CircleProgressbar_enableClickListener,
+                        DEF_ENABLE_CLICK_LISTENER)
+            _progressIndeterminateSweepAngle =
+                    attr.getInteger(R.styleable.CircleProgressbar_progressIndeterminateSweepAngle,
+                        DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE)
+            _progressColor =
+                    attr.getColor(R.styleable.CircleProgressbar_progressColor, DEF_PROGRESS_COLOR)
+            _progressPaint.strokeWidth =
+                    attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressWidth,
+                        resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)).toFloat()
+            _progressMargin =
+                    attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressMargin,
+                        resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP))
             _currProgress = attr.getInteger(R.styleable.CircleProgressbar_progress, 0)
             _maxProgress = attr.getInteger(R.styleable.CircleProgressbar_maxProgress, 100)
-            _progressAnimDuration = attr.getInteger(R.styleable.CircleProgressbar_progressAnimDuration, 1000).toLong()
+            _progressAnimDuration =
+                    attr.getInteger(R.styleable.CircleProgressbar_progressAnimDuration, 1000)
+                        .toLong()
 
-            _showProgressText = attr.getBoolean(R.styleable.CircleProgressbar_showProgressText, DEF_SHOW_PROGRESS_TEXT)
-            _progressTextColor = attr.getColor(R.styleable.CircleProgressbar_progressTextColor, DEF_PROGRESS_TEXT_COLOR)
-            _progressTextSize = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressTextSize, resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat()))
+            _showProgressText = attr.getBoolean(R.styleable.CircleProgressbar_showProgressText,
+                DEF_SHOW_PROGRESS_TEXT)
+            _progressTextColor = attr.getColor(R.styleable.CircleProgressbar_progressTextColor,
+                DEF_PROGRESS_TEXT_COLOR)
+            _progressTextSize =
+                    attr.getDimensionPixelSize(R.styleable.CircleProgressbar_progressTextSize,
+                        resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat()))
         } else {
             _progressPaint.strokeWidth = resources.dp2px(DEF_PROGRESS_WIDTH_IN_DP)
 
@@ -113,10 +135,18 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             //            _progressTextPaint.textSize = DEF_PROGRESS_TEXT_SIZE.toFloat()
         }
 
-        idleItem = IdleState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
-        finishItem = FinishState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
-        errorItem = ErrorState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
-        cancelItem = CancelState(this).apply { setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable) }
+        idleItem = IdleState(this).apply {
+            setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable)
+        }
+        finishItem = FinishState(this).apply {
+            setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable)
+        }
+        errorItem = ErrorState(this).apply {
+            setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable)
+        }
+        cancelItem = CancelState(this).apply {
+            setAttributes(context, attrs, attr, _defaultBgColor, _defaultBgDrawable)
+        }
 
         attr?.recycle()
 
@@ -235,7 +265,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         invalidate()
     }
 
-    fun addOnClickListener(listener: OnClickListener): Boolean = if (!_clickListeners.contains(listener)) _clickListeners.add(listener) else false
+    fun addOnClickListener(listener: OnClickListener): Boolean =
+            if (!_clickListeners.contains(listener)) _clickListeners.add(listener) else false
 
     fun removeOnClickListener(listener: OnClickListener): Boolean = _clickListeners.remove(listener)
 
@@ -250,9 +281,11 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     fun removeAllOnClickListeners() = _clickListeners.clear()
 
-    fun addOnStateChangedListeners(listener: OnStateChangedListener): Boolean = if (!_onStateChangedListeners.contains(listener)) _onStateChangedListeners.add(listener) else false
+    fun addOnStateChangedListeners(listener: OnStateChangedListener): Boolean =
+            if (!_onStateChangedListeners.contains(listener)) _onStateChangedListeners.add(listener) else false
 
-    fun removeOnStateChangedListener(listener: OnStateChangedListener): Boolean = _onStateChangedListeners.remove(listener)
+    fun removeOnStateChangedListener(listener: OnStateChangedListener): Boolean =
+            _onStateChangedListeners.remove(listener)
 
     private fun callStateChangedListener(newState: State.Type) {
         for (listener in _onStateChangedListeners) listener.onStateChanged(newState)
@@ -281,10 +314,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun onCustomClick(v: View) {
         if (!_cancelable && (currState == State.Type.STATE_INDETERMINATE || currState == State.Type.STATE_DETERMINATE)) return
         when (currState) {
-            State.Type.STATE_IDLE                                        -> for (listener in _clickListeners) listener.onIdleButtonClick(v)
-            State.Type.STATE_INDETERMINATE, State.Type.STATE_DETERMINATE -> for (listener in _clickListeners) listener.onCancelButtonClick(v)
-            State.Type.STATE_FINISHED                                    -> for (listener in _clickListeners) listener.onFinishButtonClick(v)
-            State.Type.STATE_ERROR                                       -> for (listener in _clickListeners) listener.onErrorButtonClick(v)
+            State.Type.STATE_IDLE                                        -> for (listener in _clickListeners) listener.onIdleButtonClick(
+                v)
+            State.Type.STATE_INDETERMINATE, State.Type.STATE_DETERMINATE -> for (listener in _clickListeners) listener.onCancelButtonClick(
+                v)
+            State.Type.STATE_FINISHED                                    -> for (listener in _clickListeners) listener.onFinishButtonClick(
+                v)
+            State.Type.STATE_ERROR                                       -> for (listener in _clickListeners) listener.onErrorButtonClick(
+                v)
             else                                                         -> Unit
         }
     }
@@ -301,14 +338,21 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun drawStaticState(canvas: Canvas, state: State) {
-        val bgDrawable: Drawable? = if (_defaultBgDrawable != state.backgroundDrawable) state.backgroundDrawable else _defaultBgDrawable
-        setBgDrawable(canvas, bgDrawable, if (_defaultBgColor != state.backgroundColor) state.backgroundColor else _defaultBgColor)
+        val bgDrawable: Drawable? =
+                if (_defaultBgDrawable != state.backgroundDrawable) state.backgroundDrawable else _defaultBgDrawable
+        setBgDrawable(canvas,
+            bgDrawable,
+            if (_defaultBgColor != state.backgroundColor) state.backgroundColor else _defaultBgColor)
         state.getIcon().setTint(state.iconTint)
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
 
-    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
-        if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException("Illegal state. Current state=$currState")
+    private fun drawActionState(canvas: Canvas,
+        showProgressText: Boolean,
+        startAngle: Float,
+        sweepAngle: Float) {
+        if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException(
+            "Illegal state. Current state=$currState")
         if (_cancelable) {
             setBgDrawable(canvas, cancelItem.backgroundDrawable, cancelItem.backgroundColor)
         } else {
@@ -328,14 +372,23 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         _progressTextPaint.color = _progressTextColor
         _progressTextPaint.textSize = _progressTextSize.toFloat()
         val baseLineY: Float = abs(_progressTextPaint.ascent() + _progressTextPaint.descent()) / 2
-        canvas.drawText("$_currProgress%", width.toFloat() / 2, height.toFloat() / 2 + baseLineY, _progressTextPaint)
+        canvas.drawText("$_currProgress%",
+            width.toFloat() / 2,
+            height.toFloat() / 2 + baseLineY,
+            _progressTextPaint)
     }
 
     override fun onDraw(canvas: Canvas) {
         when (currState) {
             State.Type.STATE_IDLE          -> drawStaticState(canvas, idleItem)
-            State.Type.STATE_INDETERMINATE -> drawActionState(canvas, false, _currIndeterminateBarPos.toFloat(), _progressIndeterminateSweepAngle.toFloat())
-            State.Type.STATE_DETERMINATE   -> drawActionState(canvas, _showProgressText, BASE_START_ANGLE.toFloat(), getDegrees())
+            State.Type.STATE_INDETERMINATE -> drawActionState(canvas,
+                false,
+                _currIndeterminateBarPos.toFloat(),
+                _progressIndeterminateSweepAngle.toFloat())
+            State.Type.STATE_DETERMINATE   -> drawActionState(canvas,
+                _showProgressText,
+                BASE_START_ANGLE.toFloat(),
+                getDegrees())
             State.Type.STATE_FINISHED      -> drawStaticState(canvas, finishItem)
             State.Type.STATE_ERROR         -> drawStaticState(canvas, errorItem)
             else                           -> Unit
@@ -367,7 +420,11 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (state is Bundle) {
             _maxProgress = state.getInt(INSTANCE_MAX_PROGRESS)
             _currProgress = state.getInt(INSTANCE_CURRENT_PROGRESS)
-            currState = state.getSerializable(INSTANCE_CURRENT_STATE) as State.Type
+            currState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                state.getSerializable(INSTANCE_CURRENT_STATE, State.Type::class.java)!!
+            } else {
+                @Suppress("DEPRECATION") state.getSerializable(INSTANCE_CURRENT_STATE) as State.Type
+            }
             _cancelable = state.getBoolean(INSTANCE_CANCELABLE)
             _enableClickListener = state.getBoolean(INSTANCE_ENABLE_CLICK)
             //            idleItem = state.getSerializable(INSTANCE_IDLE_ITEM) as IdleState
@@ -380,7 +437,15 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _showProgressText = state.getBoolean(INSTANCE_SHOW_PROGRESS_TEXT)
             _progressTextColor = state.getInt(INSTANCE_PROGRESS_TEXT_COLOR)
             _progressTextSize = state.getInt(INSTANCE_PROGRESS_TEXT_SIZE)
-            super.onRestoreInstanceState(state.getParcelable(INSTANCE_STATE))
+
+            val instanceState: Parcelable? =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        state.getParcelable(INSTANCE_STATE, Parcelable::class.java)
+                    } else {
+                        @Suppress("DEPRECATION") state.getParcelable(INSTANCE_STATE)
+                    }
+
+            super.onRestoreInstanceState(instanceState)
             if (currState == State.Type.STATE_INDETERMINATE) _indeterminateAnimator.start()
             return
         }

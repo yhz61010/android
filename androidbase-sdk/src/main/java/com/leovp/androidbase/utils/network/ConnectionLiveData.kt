@@ -1,29 +1,36 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.utils.network
 
 import android.Manifest
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
-import android.net.*
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
+import com.leovp.lib_common_android.utils.NetworkUtil
 
 /**
  * Usage:
  * ```kotlin
  * val connectionLiveData = ConnectionLiveData(context)
- * connectionLiveData.observe(this, { isConnected ->
- *     // Do your job
- * })
+ * connectionLiveData.observe(this) { isConnected ->
+ *     // Add your codes here.
+ * }
  * ```
  * Author: Michael Leo
  * Date: 2022/1/6 17:25
  *
  * https://stackoverflow.com/a/52718543
  */
-class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
-    private var connectivityManager: ConnectivityManager = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
+    private var connectivityManager: ConnectivityManager =
+            context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private lateinit var connectivityManagerCallback: ConnectivityManager.NetworkCallback
 
@@ -36,9 +43,10 @@ class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
         super.onActive()
         updateConnection()
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(getConnectivityMarshmallowManagerCallback())
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(
+                getConnectivityMarshmallowManagerCallback())
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> marshmallowNetworkAvailableRequest()
-            else -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
+            else                                           -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
         }
     }
 
@@ -49,13 +57,15 @@ class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun lollipopNetworkAvailableRequest() {
-        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(), getConnectivityLollipopManagerCallback())
+        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(),
+            getConnectivityLollipopManagerCallback())
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun marshmallowNetworkAvailableRequest() {
-        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(), getConnectivityMarshmallowManagerCallback())
+        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(),
+            getConnectivityMarshmallowManagerCallback())
     }
 
     private fun getConnectivityLollipopManagerCallback(): ConnectivityManager.NetworkCallback {
@@ -74,7 +84,8 @@ class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
     private fun getConnectivityMarshmallowManagerCallback(): ConnectivityManager.NetworkCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                override fun onCapabilitiesChanged(network: Network,
+                                                   networkCapabilities: NetworkCapabilities) {
                     if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                         && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     ) {
@@ -94,7 +105,6 @@ class ConnectionLiveData(context: Context) : LiveData<Boolean>() {
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun updateConnection() {
-        val activeNetwork: NetworkInfo? = connectivityManager.activeNetworkInfo
-        postValue(activeNetwork?.isConnected == true)
+        postValue(NetworkUtil.isOnline(context))
     }
 }

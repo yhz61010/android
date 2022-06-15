@@ -134,6 +134,7 @@ class LangUtil private constructor(private val ctx: Context) {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             // You must return the new context.
+            // Or else the text string in Service will not be displayed in correct language.
             return context.createConfigurationContext(conf)
         } else {
             @Suppress("DEPRECATION")

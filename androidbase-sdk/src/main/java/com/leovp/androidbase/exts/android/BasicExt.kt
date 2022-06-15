@@ -2,7 +2,9 @@
 
 package com.leovp.androidbase.exts.android
 
+import android.os.Build
 import android.os.Bundle
+import java.io.Serializable
 
 /**
  * Author: Michael Leo
@@ -17,4 +19,10 @@ import android.os.Bundle
  * val value: String? = bundle.getDataOrNull("key")
  * ```
  */
-inline fun <reified T> Bundle.getDataOrNull(key: String): T? = getSerializable(key) as? T
+inline fun <reified T : Serializable> Bundle.getDataOrNull(key: String): T? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getSerializable(key, T::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            getSerializable(key) as? T
+        }

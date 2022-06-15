@@ -12,6 +12,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.lib_bytes.toHexString
 import com.leovp.lib_common_android.exts.*
@@ -23,6 +25,8 @@ import com.leovp.log_sdk.base.ITAG
 class MainActivity : BaseDemonstrationActivity() {
 
     override fun getTagName(): String = ITAG
+
+    private val connectionLiveData by lazy { ConnectionLiveData(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,5 +137,15 @@ class MainActivity : BaseDemonstrationActivity() {
         val versionName = info.versionName
         LogContext.log.i(ITAG, "versionName: $versionName")
         LogContext.log.i(ITAG, "===================================")
+
+        connectionLiveData.observe(this) { isConnected ->
+            LogContext.log.w(ITAG, "online=$isConnected")
+            toast("online=$isConnected")
+        }
+    }
+
+    override fun onDestroy() {
+        connectionLiveData.removeObservers(this)
+        super.onDestroy()
     }
 }

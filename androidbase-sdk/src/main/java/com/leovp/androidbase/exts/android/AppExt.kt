@@ -54,19 +54,38 @@ fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
     var metaData: String? = ""
     try {
         if (ctx is Activity) {
-            val info = ctx.getPackageManager().getActivityInfo(ctx.componentName, PackageManager.GET_META_DATA)
+            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ctx.packageManager.getActivityInfo(ctx.componentName,
+                    PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+            } else {
+                @Suppress("DEPRECATION") ctx.getPackageManager()
+                    .getActivityInfo(ctx.componentName, PackageManager.GET_META_DATA)
+            }
             metaData = info.metaData.getString(key)
             return metaData
         }
         if (ctx is Application) {
-            val info =
-                    ctx.getPackageManager().getApplicationInfo(ctx.getPackageName(), PackageManager.GET_META_DATA)
+            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ctx.getPackageManager()
+                    .getApplicationInfo(ctx.getPackageName(),
+                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+            } else {
+                @Suppress("DEPRECATION") ctx.getPackageManager()
+                    .getApplicationInfo(ctx.getPackageName(), PackageManager.GET_META_DATA)
+            }
             metaData = info.metaData.getString(key)
             return metaData
         }
         if (clazz != null && ctx is Service) {
             val cn = ComponentName(ctx, clazz)
-            val info = ctx.getPackageManager().getServiceInfo(cn, PackageManager.GET_META_DATA)
+            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ctx.getPackageManager()
+                    .getServiceInfo(cn,
+                        PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+            } else {
+                @Suppress("DEPRECATION") ctx.getPackageManager()
+                    .getServiceInfo(cn, PackageManager.GET_META_DATA)
+            }
             metaData = info.metaData.getString(key)
             return metaData
         }
@@ -74,7 +93,13 @@ fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
         // BroadcastReceiver
         if (clazz != null && "android.content.BroadcastReceiver" == clazz.simpleName) {
             val cn = ComponentName(ctx, clazz)
-            val info = ctx.packageManager.getReceiverInfo(cn, PackageManager.GET_META_DATA)
+            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ctx.packageManager.getReceiverInfo(cn,
+                    PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+            } else {
+                @Suppress("DEPRECATION") ctx.packageManager.getReceiverInfo(cn,
+                    PackageManager.GET_META_DATA)
+            }
             metaData = info.metaData.getString(key)
             return metaData
         }
@@ -117,7 +142,8 @@ fun ActivityManager.exitApp() {
 
 fun Context.startApp(targetPackageName: String) {
     this.packageManager.getLaunchIntentForPackage(targetPackageName)?.let {
-        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+        it.flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         this.startActivity(it)
     }
 }

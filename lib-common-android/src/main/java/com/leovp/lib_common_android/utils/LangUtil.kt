@@ -106,7 +106,10 @@ class LangUtil private constructor(private val ctx: Context) {
      * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
     @Synchronized
-    fun setLocale(ctx: Context, targetLocale: Locale = getAppLanguage(), refreshUI: Boolean = false, callback: ((Boolean) -> Unit)? = null): Context {
+    fun setLocale(ctx: Context,
+                  targetLocale: Locale = getAppLanguage(),
+                  refreshUI: Boolean = false,
+                  callback: ((Boolean) -> Unit)? = null): Context {
         saveLanguage(targetLocale)
         val context = updateResources(ctx, targetLocale)
         callback?.invoke(refreshUI)
@@ -121,15 +124,25 @@ class LangUtil private constructor(private val ctx: Context) {
     private fun updateResources(context: Context, targetLocale: Locale): Context {
         val res: Resources = context.resources
         val conf = res.configuration
-        // These two lines(although they have already deprecated) are the magic.
-        // If I comment them, the text string in Service will not be shown in correct language.
-        conf.locale = targetLocale
+        // This line is the magic.(although they have already deprecated)
+        // If I comment them, the text string in Service will not be shown in correct language
+        // in Samsung Galaxy S9+.
         res.updateConfiguration(conf, res.displayMetrics)
+        //        conf.locale = targetLocale
+
         Locale.setDefault(targetLocale)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             setLocaleForApi24(conf, targetLocale)
+        } else {
+            @Suppress("DEPRECATION")
+            conf.locale = targetLocale
         }
-        context.createConfigurationContext(conf)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+            context.createConfigurationContext(conf)
+        } else {
+            @Suppress("DEPRECATION")
+            res.updateConfiguration(conf, res.displayMetrics)
+        }
         return context
     }
 

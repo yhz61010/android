@@ -5,7 +5,7 @@ package com.leovp.lib_common_android.exts
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.pm.ActivityInfo
+import android.content.pm.ActivityInfo.*
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
@@ -36,12 +36,16 @@ const val VENDOR_ONE_PLUS = "OnePlus"
 const val VENDOR_SAMSUNG = "samsung"
 const val VENDOR_OTHER = "other"
 
-val Context.isHuaWei: Boolean get() = VENDOR_HUAWEI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
-val Context.isXiaoMi: Boolean get() = VENDOR_XIAOMI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
-val Context.isOppo: Boolean get() = VENDOR_OPPO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isHuaWei: Boolean
+    get() = VENDOR_HUAWEI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isXiaoMi: Boolean
+    get() = VENDOR_XIAOMI.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isOppo: Boolean
+    get() = VENDOR_OPPO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isOnePlus: Boolean
     get() = VENDOR_ONE_PLUS.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
-val Context.isVivo: Boolean get() = VENDOR_VIVO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isVivo: Boolean
+    get() = VENDOR_VIVO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isSamsung: Boolean
     get() = VENDOR_SAMSUNG.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 
@@ -102,7 +106,7 @@ fun Context.getScreenRealHeight() = getRealResolution().height
 fun Context.getScreenAvailableHeight() = getAvailableResolution().height
 
 val Context.statusBarHeight
-    get() : Int {
+    @SuppressLint("DiscouragedApi") get() : Int {
         var result = 0
         val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {
@@ -111,13 +115,7 @@ val Context.statusBarHeight
         return result
     }
 
-val Context.isFullScreenDevice
-    @SuppressLint("ObsoleteSdkInt") get(): Boolean {
-        if (screenRatio >= 1.97f) {
-            return true
-        }
-        return false
-    }
+val Context.isFullScreenDevice get(): Boolean = screenRatio >= 1.97f
 
 /**
  * Need to investigate Window.ID_ANDROID_CONTENT
@@ -286,16 +284,14 @@ fun Context.isTablet(): Boolean {
 
 fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalPortraitByDegree(orientationInDegree, thresholdInDegree) || isReversePortraitByDegree(
-        orientationInDegree,
-        thresholdInDegree)
+    return isNormalPortraitByDegree(orientationInDegree,
+        thresholdInDegree) || isReversePortraitByDegree(orientationInDegree, thresholdInDegree)
 }
 
 fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalLandscapeByDegree(orientationInDegree, thresholdInDegree) || isReverseLandscapeByDegree(
-        orientationInDegree,
-        thresholdInDegree)
+    return isNormalLandscapeByDegree(orientationInDegree,
+        thresholdInDegree) || isReverseLandscapeByDegree(orientationInDegree, thresholdInDegree)
 }
 
 // ---------------
@@ -344,16 +340,14 @@ fun isReverseLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree
 
 // ---------------
 
-fun getOrientationByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Int {
+fun getOrientationByDegree(@IntRange(from = 0, to = 359) degree: Int,
+    @IntRange(from = 0, to = 45) threshold: Int = 30): Int {
     return when {
-        isNormalPortraitByDegree(orientationInDegree, thresholdInDegree)   -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        isReversePortraitByDegree(orientationInDegree,
-            thresholdInDegree)                                             -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        isNormalLandscapeByDegree(orientationInDegree, thresholdInDegree)  -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        isReverseLandscapeByDegree(orientationInDegree,
-            thresholdInDegree)                                             -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        else                                                               -> OrientationEventListener.ORIENTATION_UNKNOWN
+        isNormalPortraitByDegree(degree, threshold)   -> SCREEN_ORIENTATION_PORTRAIT
+        isReversePortraitByDegree(degree, threshold)  -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        isNormalLandscapeByDegree(degree, threshold)  -> SCREEN_ORIENTATION_LANDSCAPE
+        isReverseLandscapeByDegree(degree, threshold) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+        else                                          -> OrientationEventListener.ORIENTATION_UNKNOWN
     }
 }
 

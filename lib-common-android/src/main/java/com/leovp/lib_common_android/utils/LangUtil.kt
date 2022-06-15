@@ -124,11 +124,6 @@ class LangUtil private constructor(private val ctx: Context) {
     private fun updateResources(context: Context, targetLocale: Locale): Context {
         val res: Resources = context.resources
         val conf = res.configuration
-        // This line is the magic.(although they have already deprecated)
-        // If I comment them, the text string in Service will not be shown in correct language
-        // in Samsung Galaxy S9+.
-        res.updateConfiguration(conf, res.displayMetrics)
-        //        conf.locale = targetLocale
 
         Locale.setDefault(targetLocale)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -138,7 +133,8 @@ class LangUtil private constructor(private val ctx: Context) {
             conf.locale = targetLocale
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-            context.createConfigurationContext(conf)
+            // You must return the new context.
+            return context.createConfigurationContext(conf)
         } else {
             @Suppress("DEPRECATION")
             res.updateConfiguration(conf, res.displayMetrics)

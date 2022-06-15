@@ -3,6 +3,7 @@ package com.leovp.androidbase.utils.network
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.TrafficStats
+import android.os.Build
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import java.io.RandomAccessFile
 
@@ -22,12 +23,18 @@ import java.io.RandomAccessFile
  * Date: 19-8-30 下午1:38
  */
 class TrafficStatHelper private constructor(val ctx: Context) {
-    private val uuid = ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
+    private val uid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ctx.packageManager.getApplicationInfo(ctx.packageName,
+            PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong())).uid
+    } else {
+        @Suppress("DEPRECATION")
+        ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
+    }
 
     /**
      * The data will be sent in every *freq* second(s)
      */
-//    private var freq = 1
+    //    private var freq = 1
 
     /**
      * Last saved received bytes
@@ -43,9 +50,6 @@ class TrafficStatHelper private constructor(val ctx: Context) {
         return arrayOf(downloadSpeed, uploadSpeed)
     }
 
-    @Suppress("unused")
-    val currentAppUid = ctx.packageManager.getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA).uid
-
     /**
      * Total traffic
      */
@@ -57,8 +61,8 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val sendTraffic: Long
         get() {
-            var sendTrafficBytes = TrafficStats.getUidTxBytes(uuid)
-            val sndPath = "/proc/uid_stat/$uuid/tcp_snd"
+            var sendTrafficBytes = TrafficStats.getUidTxBytes(uid)
+            val sndPath = "/proc/uid_stat/$uid/tcp_snd"
             return runCatching {
                 RandomAccessFile(sndPath, "r").use { sendTrafficBytes = it.readLine().toLong() }
                 sendTrafficBytes
@@ -70,8 +74,8 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val receiveTraffic: Long
         get() {
-            var recTrafficBytes = TrafficStats.getUidRxBytes(uuid)
-            val rcvPath = "/proc/uid_stat/$uuid/tcp_rcv"
+            var recTrafficBytes = TrafficStats.getUidRxBytes(uid)
+            val rcvPath = "/proc/uid_stat/$uid/tcp_rcv"
             return runCatching {
                 RandomAccessFile(rcvPath, "r").use { recTrafficBytes = it.readLine().toLong() }
                 recTrafficBytes

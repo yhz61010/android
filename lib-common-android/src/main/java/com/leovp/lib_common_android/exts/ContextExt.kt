@@ -15,6 +15,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.RestrictionsManager
 import android.content.SharedPreferences
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutManager
 import android.content.res.Configuration
@@ -62,8 +63,14 @@ val Context.id: String get() = this.packageName!!
  */
 val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null)!!
 
-private fun Context.getPackageInfo() =
-        packageManager.getPackageInfo(packageName, PackageManager.GET_CONFIGURATIONS)
+fun Context.getPackageInfo(value: Int = PackageManager.GET_CONFIGURATIONS): PackageInfo {
+    return if (Build.VERSION.SDK_INT >= 33) {
+        val infoFlags = PackageManager.PackageInfoFlags.of(value.toLong())
+        packageManager.getPackageInfo(packageName, infoFlags)
+    } else {
+        @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, value)
+    }
+}
 
 /**
  * Return the version name of empty string if can't get version string.

@@ -30,24 +30,21 @@ class MainActivity : BaseDemonstrationActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_common, R.id.navigation_jetpack
-            )
-        )
+        val appBarConfiguration =
+                AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
-            .permission(
-                Permission.MANAGE_EXTERNAL_STORAGE, Permission.CAMERA, Permission.RECORD_AUDIO,
+            .permission(Permission.MANAGE_EXTERNAL_STORAGE,
+                Permission.CAMERA,
+                Permission.RECORD_AUDIO,
                 Permission.ACCESS_FINE_LOCATION,
                 Permission.ACCESS_COARSE_LOCATION,
                 Permission.SYSTEM_ALERT_WINDOW,
                 Permission.BLUETOOTH_ADVERTISE,
                 Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN
-            )
+                Permission.BLUETOOTH_SCAN)
             .request(object : OnPermissionCallback {
                 override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                 }
@@ -56,6 +53,6 @@ class MainActivity : BaseDemonstrationActivity() {
                 }
             })
 
-        LogContext.log.e("real=${getRealResolution().toJsonString()} available=${getAvailableResolution().toJsonString()} statusbar=$statusBarHeight navigationbar=$navigationBarHeight")
+        LogContext.log.i("real=${getRealResolution().toJsonString()} available=${getAvailableResolution().toJsonString()} status_bar=$statusBarHeight navigation_bar=$navigationBarHeight")
     }
 }

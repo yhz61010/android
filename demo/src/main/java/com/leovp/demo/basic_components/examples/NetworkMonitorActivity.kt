@@ -29,11 +29,12 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
 
     private lateinit var binding: ActivityNetworkMonitorBinding
 
-    private lateinit var networkMonitor: NetworkMonitor
+    private var networkMonitor: NetworkMonitor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityNetworkMonitorBinding.inflate(layoutInflater).apply { setContentView(root) }
+        binding =
+                ActivityNetworkMonitorBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         InternetUtil.getIpsByHost("leovp.com") { ipList ->
             LogContext.log.i(ITAG, "ipList=${ipList.toJsonString()}")
@@ -55,10 +56,10 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
                         NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
                         else                                         -> null
                     }
-                    val infoStr = String.format("↓%s\t↑%s\t%sms\t%dMbps\tR:%d %d %d%s",
+                    val infoStr = String.format("↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr,
                         uploadSpeedStr,
-                        if (latencyStatus.isNullOrBlank()) "${info.ping}" else "${info.ping}($latencyStatus)",
+                        if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
                         info.linkSpeed,
                         info.rssi,
                         info.wifiScoreIn5,
@@ -68,14 +69,14 @@ class NetworkMonitorActivity : BaseDemonstrationActivity() {
                     runOnUiThread { binding.txtNetworkStatus.text = infoStr }
                     binding.scrollView2.post { binding.scrollView2.fullScroll(View.FOCUS_DOWN) }
                 }
-                networkMonitor.startMonitor(2)
+                networkMonitor?.startMonitor(2)
             }
         }
     }
 
     override fun onDestroy() {
         // DO NOT forget to stop monitor.
-        networkMonitor.stopMonitor()
+        networkMonitor?.stopMonitor()
         super.onDestroy()
     }
 }

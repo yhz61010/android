@@ -25,7 +25,8 @@ import java.io.RandomAccessFile
  */
 class TrafficStatHelper private constructor(val ctx: Context) {
     private val uid =
-            getCompatContextInfo<Context, ApplicationInfo>(ctx, PackageManager.GET_META_DATA).uid
+            getCompatContextInfo<Context, ApplicationInfo>(ctx.applicationContext,
+                PackageManager.GET_META_DATA).uid
 
     /**
      * The data will be sent in every *freq* second(s)
@@ -59,12 +60,10 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val sendTraffic: Long
         get() {
-            var sendTrafficBytes = TrafficStats.getUidTxBytes(uid)
             val sndPath = "/proc/uid_stat/$uid/tcp_snd"
             return runCatching {
-                RandomAccessFile(sndPath, "r").use { sendTrafficBytes = it.readLine().toLong() }
-                sendTrafficBytes
-            }.getOrDefault(sendTrafficBytes)
+                RandomAccessFile(sndPath, "r").use { it.readLine().toLong() }
+            }.getOrDefault(0)
         }
 
     /**
@@ -72,12 +71,10 @@ class TrafficStatHelper private constructor(val ctx: Context) {
      */
     private val receiveTraffic: Long
         get() {
-            var recTrafficBytes = TrafficStats.getUidRxBytes(uid)
             val rcvPath = "/proc/uid_stat/$uid/tcp_rcv"
             return runCatching {
-                RandomAccessFile(rcvPath, "r").use { recTrafficBytes = it.readLine().toLong() }
-                recTrafficBytes
-            }.getOrDefault(recTrafficBytes)
+                RandomAccessFile(rcvPath, "r").use { it.readLine().toLong() }
+            }.getOrDefault(0)
         }
 
     /**

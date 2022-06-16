@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
@@ -118,7 +119,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     @SuppressLint("InlinedApi")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun addService() {
-        val gattService = BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val gattService =
+                BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         // Read only characteristic
         characteristicRead = BluetoothGattCharacteristic(
             CHARACTERISTIC_READ_UUID,
@@ -140,42 +142,58 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         bluetoothGattServer?.addService(gattService)
     }
 
-    private val gattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        @SuppressLint("InlinedApi")
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-        override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            super.onConnectionStateChange(device, status, newState)
-            connectedDevice = device
-            var state = ""
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                state = "Connected"
-                runOnUiThread { this@BluetoothServerActivity.title = "Bluetooth Server - ${connectedDevice?.name ?: connectedDevice?.address ?: ""}" }
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                state = "Disconnected"
-            }
-            LogContext.log.w("onConnectionStateChange device=$device status=$status newState=$state")
-        }
+    private val gattServerCallback: BluetoothGattServerCallback =
+            object : BluetoothGattServerCallback() {
+                @SuppressLint("InlinedApi")
+                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                override fun onConnectionStateChange(device: BluetoothDevice,
+                    status: Int,
+                    newState: Int) {
+                    super.onConnectionStateChange(device, status, newState)
+                    connectedDevice = device
+                    var state = ""
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        state = "Connected"
+                        runOnUiThread {
+                            this@BluetoothServerActivity.title =
+                                    "Bluetooth Server - ${connectedDevice?.name ?: connectedDevice?.address ?: ""}"
+                        }
+                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        state = "Disconnected"
+                    }
+                    LogContext.log.w("onConnectionStateChange device=$device status=$status newState=$state")
+                }
 
-        @SuppressLint("InlinedApi")
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-        override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice,
-            requestId: Int,
-            characteristic: BluetoothGattCharacteristic,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray
-        ) {
-            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
-            val data = String(value)
-            LogContext.log.w("Received message=$data")
-            toast("Received message=$data")
-            // Response message
-            bluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.value)
-            sendData("I received: $data")
-        }
-    }
+                @SuppressLint("InlinedApi")
+                @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                override fun onCharacteristicWriteRequest(
+                    device: BluetoothDevice,
+                    requestId: Int,
+                    characteristic: BluetoothGattCharacteristic,
+                    preparedWrite: Boolean,
+                    responseNeeded: Boolean,
+                    offset: Int,
+                    value: ByteArray
+                ) {
+                    super.onCharacteristicWriteRequest(device,
+                        requestId,
+                        characteristic,
+                        preparedWrite,
+                        responseNeeded,
+                        offset,
+                        value)
+                    val data = String(value)
+                    LogContext.log.w("Received message=$data")
+                    toast("Received message=$data")
+                    // Response message
+                    bluetoothGattServer?.sendResponse(device,
+                        requestId,
+                        BluetoothGatt.GATT_SUCCESS,
+                        offset,
+                        value)
+                    sendData("I received: $data")
+                }
+            }
 
     @SuppressLint("InlinedApi")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -189,8 +207,19 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun sendData(msg: String) {
         runCatching {
-            characteristicRead?.value = msg.toByteArray()
-            bluetoothGattServer?.notifyCharacteristicChanged(connectedDevice, characteristicRead, false)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                bluetoothGattServer?.notifyCharacteristicChanged(connectedDevice!!,
+                    characteristicRead!!,
+                    false, msg.toByteArray())
+            } else {
+                @Suppress("DEPRECATION")
+                characteristicRead?.value = msg.toByteArray()
+                @Suppress("DEPRECATION")
+                bluetoothGattServer?.notifyCharacteristicChanged(connectedDevice,
+                    characteristicRead,
+                    false)
+            }
+
             LogContext.log.w("Send message to client: $msg")
         }.onFailure { it.printStackTrace() }
     }

@@ -11,6 +11,7 @@ import com.leovp.demo.basic_components.examples.opengl.renderers.L8_1_FilterRend
 import com.leovp.demo.basic_components.examples.opengl.renderers.base_L7.L7_BaseRenderer
 import com.leovp.demo.databinding.ActivityOpenGlesplaygroundBinding
 import com.leovp.lib_common_android.exts.createFile
+import com.leovp.lib_common_android.exts.getSerializableExtraOrNull
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.opengl_sdk.BaseRenderer
@@ -24,9 +25,10 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityOpenGlesplaygroundBinding.inflate(layoutInflater).apply { setContentView(root) }
+        binding = ActivityOpenGlesplaygroundBinding.inflate(layoutInflater)
+            .apply { setContentView(root) }
 
-        val item: OpenGLES20Activity.Item = intent.getSerializableExtra("item") as OpenGLES20Activity.Item
+        val item: OpenGLES20Activity.Item = intent.getSerializableExtraOrNull("item")!!
         title = item.title
 
         binding.glSurfaceView.setEGLContextClientVersion(2)
@@ -52,7 +54,9 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
 
     private fun readCurrentFrame(renderer: L7_BaseRenderer) {
         val imageView = ImageView(this)
-        val params = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        val params =
+                ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT)
         binding.rootView.addView(imageView, params)
 
         renderer.rendererCallback = object : BaseRenderer.RendererCallback {

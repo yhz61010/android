@@ -25,9 +25,9 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-        val currentItem = dataArray[holder.adapterPosition]
+        val currentItem = dataArray[holder.bindingAdapterPosition]
 //        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
-        currentItem.index = holder.adapterPosition + 1
+        currentItem.index = holder.bindingAdapterPosition + 1
         holder.bind(currentItem)
         holder.itemView.setOnClickListener {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1

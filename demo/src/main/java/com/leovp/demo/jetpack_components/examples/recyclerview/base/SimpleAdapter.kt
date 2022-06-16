@@ -47,15 +47,18 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     private var shouldRunEditCancelAnimation = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_demo_item, parent, false)
+        val view =
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.recyclerview_demo_item, parent, false)
         return ItemViewHolder(view)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-        val currentItem = dataArray[holder.adapterPosition]
-        LogContext.log.d(ITAG, "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
+        val currentItem = dataArray[holder.bindingAdapterPosition]
+        LogContext.log.d(ITAG,
+            "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
         // In some cases, it will prevent unexpected situations
         holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
@@ -96,7 +99,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         val translationXOffset = 110F
         val animDuration = 200L
         if (editMode) {
-            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, translationXOffset)
+            val translationX =
+                    ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, translationXOffset)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 0F, 1F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
@@ -113,7 +117,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
                 .playOn(holder.ivDrag)
         }
         if (shouldRunEditCancelAnimation) {
-            val translationX = ObjectAnimator.ofFloat(holder.primaryLL, "translationX", translationXOffset, 0F)
+            val translationX =
+                    ObjectAnimator.ofFloat(holder.primaryLL, "translationX", translationXOffset, 0F)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 1F, 0F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
@@ -135,10 +140,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     override fun getItemId(position: Int) = position.toLong()
 
-//    override fun getItemViewType(position: Int) = position
+    //    override fun getItemViewType(position: Int) = position
 
     override fun onViewRecycled(holder: ItemViewHolder) {
-        LogContext.log.d(ITAG, "onViewRecycled text=${holder.txtView.text}    pos=${holder.adapterPosition}    tag=${holder.txtView.tag}")
+        @Suppress("DEPRECATION")
+        LogContext.log.d(ITAG, "onViewRecycled text=${holder.txtView.text}  " +
+                "adapterPosition=${holder.adapterPosition}  " +
+                "bindingAdapterPosition=${holder.bindingAdapterPosition}  " +
+                "tag=${holder.txtView.tag}")
         super.onViewRecycled(holder)
     }
 
@@ -208,7 +217,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             for (i in dataArray.size - 1 downTo 0) {
                 val currentItem = dataArray[i]
                 if (currentItem.id == itemBean.id) {
-                    LogContext.log.w(ITAG, "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
+                    LogContext.log.w(ITAG,
+                        "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
                     dataArray.removeAt(i)
                     break
                 }

@@ -113,8 +113,14 @@ class WifiActivity : BaseDemonstrationActivity() {
         val wifiList: MutableList<WifiModel> = mutableListOf()
         results.forEachIndexed { index, scanResult ->
             LogContext.log.i("Result=${scanResult.toJsonString()}")
-            if (scanResult.SSID.isNotBlank()) {
-                val wifiModel = WifiModel(scanResult.SSID,
+            val ssid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                scanResult.wifiSsid.toString()
+            } else {
+                @Suppress("DEPRECATION")
+                scanResult.SSID
+            }
+            if (ssid.isNotBlank()) {
+                val wifiModel = WifiModel(ssid,
                     scanResult.BSSID,
                     scanResult.level,
                     scanResult.frequency).apply { this.index = index + 1 }

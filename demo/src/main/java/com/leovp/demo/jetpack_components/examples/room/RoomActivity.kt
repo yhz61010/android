@@ -62,7 +62,7 @@ class RoomActivity : BaseDemonstrationActivity() {
                 }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    wordViewModel.delete(adapter.removeAt(viewHolder.adapterPosition))
+                    wordViewModel.delete(adapter.removeAt(viewHolder.bindingAdapterPosition))
                 }
 
             }

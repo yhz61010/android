@@ -25,6 +25,7 @@ import com.leovp.demo.basic_components.examples.bluetooth.base.DeviceAdapter
 import com.leovp.demo.basic_components.examples.bluetooth.base.DeviceModel
 import com.leovp.demo.databinding.ActivityBluetoothScanBinding
 import com.leovp.lib_common_android.exts.bluetoothManager
+import com.leovp.lib_common_android.exts.getParcelableExtraOrNull
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
@@ -101,7 +102,10 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
                 @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     bluetooth.cancelDiscovery()
-                    startActivity<BluetoothClientActivity>({ intent -> intent.putExtra("device", item.device) })
+                    startActivity<BluetoothClientActivity>({ intent ->
+                        intent.putExtra("device",
+                            item.device)
+                    })
                 }
             }
         }
@@ -208,7 +212,8 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 BluetoothDevice.ACTION_FOUND               -> {
-                    val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
+                    val device: BluetoothDevice =
+                            intent.getParcelableExtraOrNull(BluetoothDevice.EXTRA_DEVICE) ?: return
                     val model = DeviceModel(device, device.name, device.address, null)
                     LogContext.log.w("Found device: ${model.toJsonString()}")
                     bluetoothDeviceMap[device.address] = model

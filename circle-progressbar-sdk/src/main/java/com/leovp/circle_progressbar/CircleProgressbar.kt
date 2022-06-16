@@ -8,7 +8,6 @@ import android.content.res.Resources
 import android.content.res.TypedArray
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -22,6 +21,8 @@ import com.leovp.circle_progressbar.state.ErrorState
 import com.leovp.circle_progressbar.state.FinishState
 import com.leovp.circle_progressbar.state.IdleState
 import com.leovp.circle_progressbar.util.dp2px
+import com.leovp.circle_progressbar.util.getParcelableOrNull
+import com.leovp.circle_progressbar.util.getSerializableOrNull
 import com.leovp.circle_progressbar.util.sp2px
 import kotlin.math.abs
 import kotlin.math.min
@@ -420,11 +421,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (state is Bundle) {
             _maxProgress = state.getInt(INSTANCE_MAX_PROGRESS)
             _currProgress = state.getInt(INSTANCE_CURRENT_PROGRESS)
-            currState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                state.getSerializable(INSTANCE_CURRENT_STATE, State.Type::class.java)!!
-            } else {
-                @Suppress("DEPRECATION") state.getSerializable(INSTANCE_CURRENT_STATE) as State.Type
-            }
+            currState = state.getSerializableOrNull(INSTANCE_CURRENT_STATE)!!
             _cancelable = state.getBoolean(INSTANCE_CANCELABLE)
             _enableClickListener = state.getBoolean(INSTANCE_ENABLE_CLICK)
             //            idleItem = state.getSerializable(INSTANCE_IDLE_ITEM) as IdleState
@@ -438,12 +435,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             _progressTextColor = state.getInt(INSTANCE_PROGRESS_TEXT_COLOR)
             _progressTextSize = state.getInt(INSTANCE_PROGRESS_TEXT_SIZE)
 
-            val instanceState: Parcelable? =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        state.getParcelable(INSTANCE_STATE, Parcelable::class.java)
-                    } else {
-                        @Suppress("DEPRECATION") state.getParcelable(INSTANCE_STATE)
-                    }
+            val instanceState: Parcelable? = state.getParcelableOrNull(INSTANCE_STATE)
 
             super.onRestoreInstanceState(instanceState)
             if (currState == State.Type.STATE_INDETERMINATE) _indeterminateAnimator.start()

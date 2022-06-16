@@ -10,14 +10,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentGalleryBinding
 import com.leovp.lib_common_android.exts.padWithDisplayCutout
 import com.leovp.lib_common_android.exts.share
 import com.leovp.lib_common_android.exts.showImmersive
+import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.util.*
 
@@ -37,10 +40,14 @@ class GalleryFragment internal constructor() : Fragment() {
     private lateinit var mediaList: MutableList<File>
 
     /** Adapter class used to present a fragment containing one photo or video as a page */
-    inner class MediaPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-        override fun getCount(): Int = mediaList.size
-        override fun getItem(position: Int): Fragment = PhotoFragment.create(mediaList[position])
-        override fun getItemPosition(obj: Any): Int = POSITION_NONE
+    inner class MediaPagerAdapter(fm: FragmentManager, lifecycle: Lifecycle) : FragmentStateAdapter(
+        fm,
+        lifecycle) {
+
+        override fun getItemCount(): Int = mediaList.size
+
+        override fun createFragment(position: Int): Fragment =
+                PhotoFragment.create(mediaList[position])
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,7 +87,13 @@ class GalleryFragment internal constructor() : Fragment() {
         // Populate the ViewPager and implement a cache of two media items
         fragmentGalleryBinding.photoViewPager.apply {
             offscreenPageLimit = 2
-            adapter = MediaPagerAdapter(childFragmentManager)
+            adapter = MediaPagerAdapter(childFragmentManager, lifecycle)
+            currentItem = 0
+            registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    LogContext.log.d(TAG, "ViewPager position=$position")
+                }
+            })
         }
 
         // Make sure that the cutout "safe area" avoids the screen notch if any
@@ -91,50 +104,61 @@ class GalleryFragment internal constructor() : Fragment() {
 
         // Handle back button press
         fragmentGalleryBinding.backButton.setOnClickListener {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigateUp()
+            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+                .navigateUp()
         }
 
         // Handle share button press
         fragmentGalleryBinding.shareButton.setOnClickListener {
-            mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)?.let { mediaFile ->
-                val uri = FileProvider.getUriForFile(view.context, view.context.packageName + ".provider", mediaFile)
-                share(uri, getString(R.string.share_hint))
-            }
+            mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)
+                ?.let { mediaFile ->
+                    val uri =
+                            FileProvider.getUriForFile(view.context,
+                                view.context.packageName + ".provider",
+                                mediaFile)
+                    share(uri, getString(R.string.share_hint))
+                }
         }
 
         // Handle delete button press
         fragmentGalleryBinding.deleteButton.setOnClickListener {
-            mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)?.let { mediaFile ->
-                AlertDialog.Builder(view.context)
-                    .setTitle(getString(R.string.delete_title))
-                    .setMessage(getString(R.string.delete_dialog))
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        // Delete current photo
-                        mediaFile.delete()
+            mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)
+                ?.let { mediaFile ->
+                    AlertDialog.Builder(view.context)
+                        .setTitle(getString(R.string.delete_title))
+                        .setMessage(getString(R.string.delete_dialog))
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton(android.R.string.ok) { _, _ ->
+                            // Delete current photo
+                            mediaFile.delete()
 
-                        // Send relevant broadcast to notify other apps of deletion
-                        MediaScannerConnection.scanFile(
-                            view.context, arrayOf(mediaFile.absolutePath), null, null)
+                            // Send relevant broadcast to notify other apps of deletion
+                            MediaScannerConnection.scanFile(
+                                view.context, arrayOf(mediaFile.absolutePath), null, null)
 
-                        // Notify our view pager
-                        mediaList.removeAt(fragmentGalleryBinding.photoViewPager.currentItem)
-                        fragmentGalleryBinding.photoViewPager.adapter?.notifyDataSetChanged()
+                            // Notify our view pager
+                            mediaList.removeAt(fragmentGalleryBinding.photoViewPager.currentItem)
+                            fragmentGalleryBinding.photoViewPager.adapter?.notifyDataSetChanged()
 
-                        // If all photos have been deleted, return to camera
-                        if (mediaList.isEmpty()) {
-                            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigateUp()
+                            // If all photos have been deleted, return to camera
+                            if (mediaList.isEmpty()) {
+                                Navigation.findNavController(requireActivity(),
+                                    R.id.fragment_container_camerax).navigateUp()
+                            }
+
                         }
-
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create().showImmersive()
-            }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .create().showImmersive()
+                }
         }
     }
 
     override fun onDestroyView() {
         _fragmentGalleryBinding = null
         super.onDestroyView()
+    }
+
+    companion object {
+        private const val TAG = "GalleryFragment"
     }
 }

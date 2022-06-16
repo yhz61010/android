@@ -16,3 +16,5 @@ class SmartSize(width: Int, height: Int) {
     var short = min(size.width, size.height)
     override fun toString() = "SmartSize(${size.width}x${size.height})"
 }
+
+fun Size.toSmartSize(): SmartSize = SmartSize(width, height)

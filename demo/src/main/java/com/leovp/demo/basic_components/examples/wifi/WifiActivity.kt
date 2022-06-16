@@ -80,6 +80,7 @@ class WifiActivity : BaseDemonstrationActivity() {
         if (previousScanResults?.isEmpty() == true) {
             LogContext.log.w("Scan automatically.")
             toast("Scan automatically.")
+            @Suppress("DEPRECATION")
             doScan()
         } else {
             LogContext.log.w("Found previously scan results.")
@@ -163,11 +164,21 @@ class WifiActivity : BaseDemonstrationActivity() {
         LogContext.log.w("Scan manually.")
         toast("Scan manually.")
         adapter?.clear()
+        @Suppress("DEPRECATION")
         doScan()
     }
 
+    /**
+     * The WifiManager.startScan() usage is limited on Android 8+, especially on Android 9+.
+     *
+     * https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
+     */
+    @Deprecated("WifiManager#startScan() was deprecated in API level 28(Android 9).")
     private fun doScan() {
+        // https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
+        @Suppress("DEPRECATION")
         val success = wifiManager.startScan()
+        LogContext.log.w(ITAG, "doScan()=$success")
         if (!success) {
             // scan failure handling
             scanFailure()

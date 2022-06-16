@@ -7,6 +7,7 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -22,6 +23,7 @@ class LocalLogService : Service() {
             return (0..100).random()
         }
 
+        @DelicateCoroutinesApi
         override fun writeLog(appPackage: String, log: LocalLog) {
             GlobalScope.launch {
                 LogContext.log.w("Write log: [$appPackage]=${log.toJsonString()}")

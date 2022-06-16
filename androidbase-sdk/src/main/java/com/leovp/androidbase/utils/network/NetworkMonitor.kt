@@ -87,9 +87,9 @@ class NetworkMonitor(private val ctx: Context,
                 }
                 var downloadSpeed: Long = 0
                 var uploadSpeed: Long = 0
-                trafficStat?.getSpeed()?.let {
-                    downloadSpeed = it[0] / freq
-                    uploadSpeed = it[1] / freq
+                trafficStat?.getSpeed()?.let { (download, upload) ->
+                    downloadSpeed = download / freq
+                    uploadSpeed = upload / freq
                 }
 
                 callback.invoke(
@@ -119,6 +119,7 @@ class NetworkMonitor(private val ctx: Context,
         LogContext.log.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq
         this.freq = interval
+        trafficStat = TrafficStatHelper.getInstance(ctx)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             NetworkUtil.getWifiNetworkStatsAboveAndroidS(ctx) { wifiSignal ->
                 globalWifiSignal = wifiSignal

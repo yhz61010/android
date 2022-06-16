@@ -7,14 +7,17 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
 import android.app.Service
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Process
 import com.leovp.androidbase.utils.file.FileDocumentUtil
+import com.leovp.lib_common_android.exts.getCompatContextInfo
 import com.leovp.lib_common_android.exts.inputMethodManager
 import com.leovp.log_sdk.LogContext
 import java.io.File
@@ -35,7 +38,6 @@ import kotlin.system.exitProcess
  * @param key The meta data key
  * @return The value of meta data
  */
-@Suppress("unused")
 fun getMetaData(ctx: Context, key: String): String? {
     return getMetaData<Any>(ctx, key, null)
 }
@@ -49,57 +51,28 @@ fun getMetaData(ctx: Context, key: String): String? {
  * @param clazz The class of Service and Broadcast. For Activity or Application, set `null` to this parameter.
  * @return The value of meta data
  */
-@Suppress("unused")
 fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
     var metaData: String? = ""
     try {
         if (ctx is Activity) {
-            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.packageManager.getActivityInfo(ctx.componentName,
-                    PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
-            } else {
-                @Suppress("DEPRECATION") ctx.getPackageManager()
-                    .getActivityInfo(ctx.componentName, PackageManager.GET_META_DATA)
-            }
+            val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
             metaData = info.metaData.getString(key)
             return metaData
         }
         if (ctx is Application) {
-            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.getPackageManager()
-                    .getApplicationInfo(ctx.getPackageName(),
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
-            } else {
-                @Suppress("DEPRECATION") ctx.getPackageManager()
-                    .getApplicationInfo(ctx.getPackageName(), PackageManager.GET_META_DATA)
-            }
+            val info: ApplicationInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
             metaData = info.metaData.getString(key)
             return metaData
         }
         if (clazz != null && ctx is Service) {
-            val cn = ComponentName(ctx, clazz)
-            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.getPackageManager()
-                    .getServiceInfo(cn,
-                        PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
-            } else {
-                @Suppress("DEPRECATION") ctx.getPackageManager()
-                    .getServiceInfo(cn, PackageManager.GET_META_DATA)
-            }
+            val info: ServiceInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
             metaData = info.metaData.getString(key)
             return metaData
         }
 
         // BroadcastReceiver
         if (clazz != null && "android.content.BroadcastReceiver" == clazz.simpleName) {
-            val cn = ComponentName(ctx, clazz)
-            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.packageManager.getReceiverInfo(cn,
-                    PackageManager.ComponentInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
-            } else {
-                @Suppress("DEPRECATION") ctx.packageManager.getReceiverInfo(cn,
-                    PackageManager.GET_META_DATA)
-            }
+            val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
             metaData = info.metaData.getString(key)
             return metaData
         }

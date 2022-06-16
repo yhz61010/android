@@ -34,31 +34,34 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 
-        NotchScreenManager.getInstance(this).getNotchInfo(object : INotchScreen.NotchScreenCallback {
-            @SuppressLint("SetTextI18n")
-            override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
-                LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
-                binding.tv2.text = "notchScreenInfo: ${notchScreenInfo.toJsonString()}"
-                notchScreenInfo.notchRects?.let {
-                    val halfScreenWidth = getRealResolution().width / 2
-                    if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
-                        LogContext.log.i(TAG, "Notch in Middle")
-                        binding.tv2.text = "Notch in Middle"
-                    } else if (halfScreenWidth < it[0].left) {
-                        LogContext.log.i(TAG, "Notch in Right")
-                        binding.tv2.text = "Notch in Right"
-                    } else {
-                        LogContext.log.i(TAG, "Notch in Left")
-                        binding.tv2.text = "Notch in Left"
+        NotchScreenManager.getInstance(this)
+            .getNotchInfo(object : INotchScreen.NotchScreenCallback {
+                @SuppressLint("SetTextI18n")
+                override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
+                    LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
+                    binding.tv2.text = "notchScreenInfo: ${notchScreenInfo.toJsonString()}"
+                    notchScreenInfo.notchRects?.let {
+                        val halfScreenWidth = getRealResolution().width / 2
+                        if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
+                            LogContext.log.i(TAG, "Notch in Middle")
+                            binding.tv2.text = "Notch in Middle"
+                        } else if (halfScreenWidth < it[0].left) {
+                            LogContext.log.i(TAG, "Notch in Right")
+                            binding.tv2.text = "Notch in Right"
+                        } else {
+                            LogContext.log.i(TAG, "Notch in Left")
+                            binding.tv2.text = "Notch in Left"
+                        }
                     }
                 }
-            }
-        })
+            })
 
         lifecycleScope.launch(Dispatchers.IO) {
             for (index in 0 until DeviceUtil.getInstance(this@DeviceInfoActivity).cpuCoreCount) {
-                val coreInfo = DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
-                LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
+                val coreInfo =
+                        DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
+                LogContext.log.i(TAG,
+                    "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
             }
         }
 
@@ -67,12 +70,14 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         sb.append("\n")
         LogContext.log.i(TAG, "=====> AVC <===============================")
         H264Util.getAvcCodec().forEach {
-            LogContext.log.i(TAG, "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            LogContext.log.i(TAG,
+                "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
         H264Util.getAvcCodec(false).forEach {
-            LogContext.log.i(TAG, "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            LogContext.log.i(TAG,
+                "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
@@ -80,12 +85,14 @@ class DeviceInfoActivity : BaseDemonstrationActivity() {
         sb.append("\n")
         LogContext.log.i(TAG, "=====> HEVC <==============================")
         H265Util.getHevcCodec().forEach {
-            LogContext.log.i(TAG, "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            LogContext.log.i(TAG,
+                "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
         H265Util.getHevcCodec(false).forEach {
-            LogContext.log.i(TAG, "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
+            LogContext.log.i(TAG,
+                "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }

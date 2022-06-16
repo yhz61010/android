@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit
  * ```
  */
 class NetworkMonitor(private val ctx: Context,
-                     private val ip: String,
-                     callback: (NetworkMonitorResult) -> Unit) {
+    private val ip: String,
+    callback: (NetworkMonitorResult) -> Unit) {
     companion object {
         private const val TAG = "NM"
     }
@@ -87,9 +87,11 @@ class NetworkMonitor(private val ctx: Context,
                 }
                 var downloadSpeed: Long = 0
                 var uploadSpeed: Long = 0
-                trafficStat?.getSpeed()?.let { (download, upload) ->
-                    downloadSpeed = download / freq
-                    uploadSpeed = upload / freq
+                if (ping > -1) { // Network is online.
+                    trafficStat?.getSpeed()?.let { (download, upload) ->
+                        downloadSpeed = download / freq
+                        uploadSpeed = upload / freq
+                    }
                 }
 
                 callback.invoke(

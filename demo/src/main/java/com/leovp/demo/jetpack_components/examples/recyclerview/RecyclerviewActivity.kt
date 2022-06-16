@@ -68,7 +68,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         itemTouchHandler = object : SimpleItemTouchCallback(this) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = binding.recyclerView.adapter as SimpleAdapter
-                adapter.removeAt(viewHolder.adapterPosition)
+                adapter.removeAt(viewHolder.bindingAdapterPosition)
                 findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
                 binding.rootLL.snack("Undo last delete?") {
                     action("Undo") { adapter.undo() }

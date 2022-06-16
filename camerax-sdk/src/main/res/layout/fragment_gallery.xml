@@ -7,16 +7,15 @@
     android:background="@android:color/black"
     android:layoutDirection="ltr">
 
-    <androidx.viewpager.widget.ViewPager
+    <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/photo_view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/cutout_safe_area"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:id="@+id/cutout_safe_area" android:layout_width="match_parent" android:layout_height="match_parent">
 
         <ImageButton
             android:id="@+id/back_button"

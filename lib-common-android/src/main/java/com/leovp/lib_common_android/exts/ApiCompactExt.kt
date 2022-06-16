@@ -44,6 +44,15 @@ inline fun <reified T : Parcelable> Bundle.getParcelableOrNull(key: String): T? 
             getParcelable(key) as? T
         }
 
+
+inline fun <reified T : Serializable> Intent.getSerializableExtraOrNull(key: String): T? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getSerializableExtra(key, T::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            getSerializableExtra(key) as? T
+        }
+
 inline fun <reified T : Parcelable> Intent.getParcelableExtraOrNull(key: String): T? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getParcelableExtra(key, T::class.java)

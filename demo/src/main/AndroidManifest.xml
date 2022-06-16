@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature android:name="android.hardware.bluetooth_le"
-        android:required="true" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -34,8 +32,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- For get nearby devices, need location permission when above android M -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <permission android:name="remote.service.permission"
-        android:protectionLevel="signature" />
+    <permission android:name="remote.service.permission" android:protectionLevel="signature" />
 
     <application android:name=".CustomApplication"
         android:icon="@mipmap/ic_launcher"
@@ -46,8 +43,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        <activity android:name=".basic_components.examples.NetActivity"
-            android:exported="false" />
+        <activity android:name=".basic_components.examples.NetActivity" android:exported="false" />
         <activity android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="false"
@@ -59,28 +55,21 @@
             tools:targetApi="O">
 
             <!-- Declare notch support -->
-            <meta-data android:name="android.notch_support"
-                android:value="true" />
+            <meta-data android:name="android.notch_support" android:value="true" />
         </activity>
         <activity android:name=".jetpack_components.examples.navigation.NavigationMainActivity"
             android:exported="false" />
         <activity android:name=".basic_components.examples.opengl.OpenGLESPlaygroundActivity"
             android:exported="false" />
-        <activity android:name=".basic_components.examples.opengl.OpenGLES20Activity"
-            android:exported="false" />
-        <activity android:name=".basic_components.examples.adb.AdbCommunication"
-            android:exported="false" />
-        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity"
-            android:exported="false" />
-        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity"
-            android:exported="false" />
-        <activity android:name=".basic_components.examples.koin.KoinActivity"
-            android:exported="false" />
-        <activity android:name=".basic_components.examples.OrientationActivity"
-            android:exported="true" />
-        <activity android:name=".basic_components.AppSettingsActivity"
-            android:exported="true" />
-        <activity android:name=".basic_components.examples.CircleProgressbarActivity" />
+        <activity android:name=".basic_components.examples.opengl.OpenGLES20Activity" android:exported="false" />
+        <activity android:name=".basic_components.examples.adb.AdbCommunication" android:exported="false" />
+        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity" android:exported="false" />
+        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity" android:exported="false" />
+        <activity android:name=".basic_components.examples.koin.KoinActivity" android:exported="false" />
+        <activity android:name=".basic_components.examples.OrientationActivity" android:exported="true" />
+        <activity android:name=".basic_components.AppSettingsActivity" android:exported="true" />
+        <activity android:name=".basic_components.examples.CircleProgressbarActivity"
+            android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.FloatViewActivity" />
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
         <activity android:name=".basic_components.examples.ToastActivity" />
@@ -171,15 +160,13 @@
             <meta-data android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-        <service android:name=".basic_components.examples.ChangeAppTestService"
-            android:exported="false" />
+        <service android:name=".basic_components.examples.ChangeAppTestService" android:exported="false" />
 
         <receiver android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <property android:name="android.content.MEDIA_CAPABILITIES"
-            android:resource="@xml/media_capabilities" />
+        <property android:name="android.content.MEDIA_CAPABILITIES" android:resource="@xml/media_capabilities" />
     </application>
 
 </manifest>

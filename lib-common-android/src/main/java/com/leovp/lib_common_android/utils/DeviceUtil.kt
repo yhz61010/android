@@ -199,12 +199,14 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Product          : $product
             Host             : $host
             Hardware         : $hardware
-            CPU              : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)
+            CPU              : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${
+                "%.2f".format(cpuMaxFreq / 1000_000F)
+            }GHz)
             CPU Arch         : $cpuArch
             OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]
             Supported ABIS   : ${supportedCpuArchs.contentToString()}
             Display          : $display
-            Screen           : ${screenSize.width}x${screenSize.height}(${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
+            Screen           : ${screenSize.width}x${screenSize.height}(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
             MemoryUsage      : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
             External Storage : $externalStorageBytesInReadable
             Fingerprint      : ${Build.FINGERPRINT}

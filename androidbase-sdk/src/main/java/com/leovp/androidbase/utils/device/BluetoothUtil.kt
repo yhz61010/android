@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.annotation.RequiresPermission
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.log_sdk.LogContext
@@ -31,15 +32,15 @@ import java.lang.reflect.Method
 class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothAdapter) {
     companion object : SingletonHolder<BluetoothUtil, BluetoothAdapter>(::BluetoothUtil)
 
-//    private val bluetoothManager: BluetoothManager by lazy { ctx.bluetoothManager }
-//    private val bluetoothAdapter: BluetoothAdapter by lazy {
-//        bluetoothManager.adapter
-////        BluetoothAdapter.getDefaultAdapter()
-//
-//        // TODO The following descriptions are right?
-//        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
-//        // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
-//    }
+    //    private val bluetoothManager: BluetoothManager by lazy { ctx.bluetoothManager }
+    //    private val bluetoothAdapter: BluetoothAdapter by lazy {
+    //        bluetoothManager.adapter
+    ////        BluetoothAdapter.getDefaultAdapter()
+    //
+    //        // TODO The following descriptions are right?
+    //        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
+    //        // Bluetooth Low Energy -> use BluetoothManager#getAdapter()
+    //    }
 
     /**
      * Create bond with device
@@ -68,7 +69,9 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Set pin
      */
-    fun setPin(bluetoothClass: Class<out BluetoothDevice>, device: BluetoothDevice, str: String): Boolean {
+    fun setPin(bluetoothClass: Class<out BluetoothDevice>,
+        device: BluetoothDevice,
+        str: String): Boolean {
         runCatching {
             val removeBondMethod = bluetoothClass.getDeclaredMethod("setPin", ByteArray::class.java)
             return removeBondMethod.invoke(device, str.toByteArray()) as Boolean
@@ -100,7 +103,9 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *  Confirm pairing
      */
     fun setPairingConfirmation(btClass: Class<*>, device: BluetoothDevice?, isConfirm: Boolean) {
-        val setPairingConfirmation = btClass.getDeclaredMethod("setPairingConfirmation", Boolean::class.javaPrimitiveType)
+        val setPairingConfirmation =
+                btClass.getDeclaredMethod("setPairingConfirmation",
+                    Boolean::class.javaPrimitiveType)
         setPairingConfirmation.invoke(device, isConfirm)
     }
 
@@ -138,7 +143,8 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     // Bluetooth Low Energy
-    fun isSupportBle(pm: PackageManager): Boolean = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    fun isSupportBle(pm: PackageManager): Boolean =
+            pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     var isEnabled: Boolean = bluetoothAdapter.isEnabled
         private set
@@ -146,17 +152,21 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * You'd better add a short delay after calling this method to make sure the operation will be done.
      *
-     * Requires
-     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-     * permission
-     */
-    @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
-    fun enable(): Boolean = bluetoothAdapter.enable()
-
-    /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * Starting with Build.VERSION_CODES.TIRAMISU,
+     * applications are not allowed to enable/disable Bluetooth.
+     * Compatibility Note: For applications targeting Build.VERSION_CODES.TIRAMISU or above,
+     * this API will always fail and return false.
+     * If apps are targeting an older SDK (Build.VERSION_CODES.S or below),
+     * they can continue to use this API.
+     *
+     * https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#enable()
+     *
+     * Bluetooth should never be enabled without direct user consent.
+     * If you want to turn on Bluetooth in order to create a wireless connection,
+     * you should use the ACTION_REQUEST_ENABLE Intent,
+     * which will raise a dialog that requests user permission to turn on Bluetooth.
+     * The enable() method is provided only for applications that include a user interface
+     * for changing system settings, such as a "power manager" app.
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -165,7 +175,42 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      */
     @SuppressLint("InlinedApi")
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
-    fun disable(): Boolean = bluetoothAdapter.disable()
+    fun enable(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        false
+    } else {
+        @Suppress("DEPRECATION")
+        bluetoothAdapter.enable()
+    }
+
+    /**
+     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     *
+     * Starting with Build.VERSION_CODES.TIRAMISU,
+     * applications are not allowed to enable/disable Bluetooth.
+     * Compatibility Note: For applications targeting Build.VERSION_CODES.TIRAMISU or above,
+     * this API will always fail and return false.
+     * If apps are targeting an older SDK (Build.VERSION_CODES.S or below),
+     * they can continue to use this API.
+     *
+     * https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#disable()
+     *
+     * Bluetooth should never be disabled without direct user consent.
+     * The disable() method is provided only for applications that include a user interface
+     * for changing system settings, such as a "power manager" app.
+     *
+     * Requires
+     * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+     * <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+     * permission
+     */
+    @SuppressLint("InlinedApi")
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    fun disable(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        false
+    } else {
+        @Suppress("DEPRECATION")
+        bluetoothAdapter.disable()
+    }
 
     /**
      * Make sure bluetooth is enabled before calling this method.

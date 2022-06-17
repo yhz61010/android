@@ -8,7 +8,7 @@ buildscript {
     ext.navVersion = '2.4.2'
     ext.sonarqube_version = '3.3'
 
-    ext.leoVersion = '5.4.3'
+    ext.leoVersion = '5.4.4'
 
     // ===============================
     // ===== Leo modules version =====

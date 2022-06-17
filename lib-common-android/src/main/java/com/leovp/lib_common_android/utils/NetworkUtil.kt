@@ -224,6 +224,7 @@ object NetworkUtil {
      * **Need following permission:**
      * ```xml
      * <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
     @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])

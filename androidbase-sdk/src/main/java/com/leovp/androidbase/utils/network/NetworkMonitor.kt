@@ -116,7 +116,15 @@ class NetworkMonitor(private val ctx: Context,
 
     /**
      * The data will be sent in every *freq* second(s)
+     *
+     * Need following permission:**
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * <!-- Above Android 12, you also need CHANGE_NETWORK_STATE permission. -->
+     * <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+     * ```
      */
+    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
     fun startMonitor(freq: Int = 1) {
         LogContext.log.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq

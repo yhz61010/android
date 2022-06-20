@@ -46,11 +46,17 @@ class CameraXDemoActivity : CameraXActivity() {
             LogContext.log.w(ITAG,
                 "onSavedImageUri mirror=${savedImage.mirror} rotationDegrees=${savedImage.rotationDegrees} uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
 
-//            // To verify the original bitmap orientation.
-//            val filePath: String = savedImage.fileUri.path!!
-//            val bmp = BitmapFactory.decodeFile(filePath)
-//            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
-//            bmp.writeToFile(File(newFile, "new.jpg"))
+            //            // To verify the original bitmap orientation.
+            //            val filePath: String = savedImage.fileUri.path!!
+            //            var bmp = BitmapFactory.decodeFile(filePath)
+            //            bmp = when (savedImage.rotationDegrees) {
+            //                0             -> bmp.rotate(0f)
+            //                270           -> bmp.rotate(90f)
+            //                180           -> bmp.rotate(180f)
+            //                else /* 90 */ -> bmp.rotate(270f)
+            //            }
+            //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
+            //            bmp.writeToFile(File(newFile, "new.jpg"))
         }
 
         override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
@@ -62,49 +68,49 @@ class CameraXDemoActivity : CameraXActivity() {
                 recycle()
             }
 
-//            val outUri: Uri? = getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
-//            LogContext.log.i(ITAG, "outUri=$outUri")
-//            outUri?.let { uri ->
-//                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
-//            }
+            //            val outUri: Uri? = getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
+            //            LogContext.log.i(ITAG, "outUri=$outUri")
+            //            outUri?.let { uri ->
+            //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
+            //            }
 
             ExifUtil.saveExif(outFile.absolutePath, savedImage.width, savedImage.height, savedImage)
         }
     }
 
-//    /**
-//     * @param fileUri the media store file uri
-//     * @param orientation in degrees 0, 90, 180, 270
-//     * @param context
-//     * @return
-//     */
-//    fun setOrientation(fileUri: Uri, orientation: Int, context: Context): Boolean {
-//        val values = ContentValues()
-//        values.put(MediaStore.Images.Media.ORIENTATION, orientation)
-//        val rowsUpdated: Int = context.contentResolver.update(fileUri, values, null, null)
-//        return rowsUpdated > 0
-//    }
-//
-//    /**
-//     * Get content uri for the file path
-//     *
-//     * @param path
-//     * @param context
-//     * @return
-//     */
-//    fun getContentUriForFilePath(path: String, context: Context): Uri? {
-//        val projection = arrayOf(MediaStore.Images.Media._ID)
-//        var result: Uri? = null
-//        context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//            projection,
-//            MediaStore.Images.Media.DATA + " = ?",
-//            arrayOf(path),
-//            null)?.use { cursor ->
-//            if (cursor.moveToNext()) {
-//                val mediaId: Long = cursor.getLong(0)
-//                result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
-//            }
-//        }
-//        return result
-//    }
+    //    /**
+    //     * @param fileUri the media store file uri
+    //     * @param orientation in degrees 0, 90, 180, 270
+    //     * @param context
+    //     * @return
+    //     */
+    //    fun setOrientation(fileUri: Uri, orientation: Int, context: Context): Boolean {
+    //        val values = ContentValues()
+    //        values.put(MediaStore.Images.Media.ORIENTATION, orientation)
+    //        val rowsUpdated: Int = context.contentResolver.update(fileUri, values, null, null)
+    //        return rowsUpdated > 0
+    //    }
+    //
+    //    /**
+    //     * Get content uri for the file path
+    //     *
+    //     * @param path
+    //     * @param context
+    //     * @return
+    //     */
+    //    fun getContentUriForFilePath(path: String, context: Context): Uri? {
+    //        val projection = arrayOf(MediaStore.Images.Media._ID)
+    //        var result: Uri? = null
+    //        context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    //            projection,
+    //            MediaStore.Images.Media.DATA + " = ?",
+    //            arrayOf(path),
+    //            null)?.use { cursor ->
+    //            if (cursor.moveToNext()) {
+    //                val mediaId: Long = cursor.getLong(0)
+    //                result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
+    //            }
+    //        }
+    //        return result
+    //    }
 }

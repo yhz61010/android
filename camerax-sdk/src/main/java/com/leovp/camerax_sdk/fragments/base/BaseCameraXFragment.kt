@@ -136,14 +136,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         relativeOrientation = null
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        val cameraName = if (cameraId == "0") "BACK" else "FRONT"
         LogContext.log.d(logTag,
-            "updateOrientationLiveData cameraId: ${if (cameraId == "0") "BACK" else "FRONT"}")
+            "updateOrientationLiveData cameraId: $cameraName")
         val characteristics: CameraCharacteristics =
                 cameraManager.getCameraCharacteristics(cameraId)
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
-                LogContext.log.d(logTag, "Camera orientation changed to: $cameraRotation")
+                LogContext.log.d(logTag,
+                    "$cameraName camera orientation changed to: $cameraRotation")
                 cameraRotationInDegree = cameraRotation
                 //                deviceOrientationListener?.invoke(cameraRotation)
             }
@@ -246,20 +248,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
-                    val isFrameCamera = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
-                    onImageSaved(
-                        CaptureImage.ImageUri(savedUri,
-                            isFrameCamera,
-                            if (isFrameCamera) {
-                                when (cameraRotationInDegree) {
-                                    0             -> 0
-                                    270           -> 90
-                                    180           -> 180
-                                    else /* 90 */ -> 270
-                                }
-                            } else cameraRotationInDegree
-                        )
-                    )
+                    onImageSaved(CaptureImage.ImageUri(savedUri,
+                        lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA,
+                        cameraRotationInDegree))
                 }
             })
     }

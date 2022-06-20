@@ -3,6 +3,8 @@ package com.leovp.camerax_sdk.utils
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.LIGHT_SOURCE_UNKNOWN
 import com.leovp.camerax_sdk.bean.CaptureImage
+import com.leovp.log_sdk.LogContext
+import com.leovp.log_sdk.base.ITAG
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -63,10 +65,10 @@ object ExifUtil {
             setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
             val rotateString = if (savedImage.mirror) { // Front camera
                 when (savedImage.rotationDegrees) {
-                    0    -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
-                    90   -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
-                    180  -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
-                    270  -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
+                    0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString() // Check 2
+                    90   -> ExifInterface.ORIENTATION_TRANSPOSE.toString() // Check 4
+                    180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString() // Check 3
+                    270  -> ExifInterface.ORIENTATION_TRANSVERSE.toString() // Check 1
                     else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
                 }
             } else { // Back camera
@@ -78,6 +80,7 @@ object ExifUtil {
                     else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
                 }
             }
+            LogContext.log.i(ITAG, "savedImage=${savedImage} rotateString=$rotateString")
             setAttribute(ExifInterface.TAG_ORIENTATION, rotateString)
             saveAttributes()
         }

@@ -64,6 +64,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.system.measureTimeMillis
 
 /**
  * Author: Michael Leo
@@ -275,13 +276,18 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
                     lifecycleScope.launch(Dispatchers.IO) {
-                        val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
-                        adjustBitmapRotation(oriBmp, mirror, cameraSensorOrientationDegree).run {
-                            writeToFile(photoFile)
-                            recycledSafety()
+                        val processCost = measureTimeMillis {
+                            val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                            adjustBitmapRotation(oriBmp,
+                                mirror,
+                                cameraSensorOrientationDegree).run {
+                                writeToFile(photoFile)
+                                recycledSafety()
+                            }
                         }
+                        LogContext.log.w(logTag, "Process bitmap cost=${processCost}ms")
                     }
-                    onImageSaved(CaptureImage.ImageUri(savedUri))
+                    requireActivity().runOnUiThread { onImageSaved(CaptureImage.ImageUri(savedUri)) }
                 }
             })
     }

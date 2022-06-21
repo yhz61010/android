@@ -29,7 +29,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.BuildConfig
-import com.leovp.androidbase.exts.android.computeExifOrientation
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -42,6 +41,7 @@ import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.lib_common_android.exts.createImageFile
 import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_exception.fail
+import com.leovp.lib_exif.computeExifOrientation
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -65,8 +65,8 @@ import kotlin.math.min
  */
 @Suppress("unused")
 class Camera2ComponentHelper(private val context: FragmentActivity,
-                             private var lensFacing: Int,
-                             private val cameraView: View? = null) {
+    private var lensFacing: Int,
+    private val cameraView: View? = null) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
     var enableGallery = true

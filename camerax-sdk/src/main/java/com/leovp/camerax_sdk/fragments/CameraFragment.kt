@@ -28,6 +28,7 @@ import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
 import com.leovp.camerax_sdk.databinding.*
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.CameraTimer
+import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
@@ -81,7 +82,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private val cameraUiContainerTopBinding get() = _cameraUiContainerTopBinding!!
     private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
 
-    var allowToOutputCaptureFile: Boolean = true
+    var outputCapturedImageStrategy: CapturedImageStrategy = CapturedImageStrategy.FILE
     var captureImageListener: CaptureImageListener? = null
 
     // Selector showing is grid enabled or not
@@ -453,7 +454,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             flExposure.setOnClickListener { flExposure.visibility = View.GONE }
         }
 
-        if (allowToOutputCaptureFile) {
+        if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
             // In the background, load latest photo taken (if any) for gallery thumbnail
             lifecycleScope.launch(Dispatchers.IO) {
                 outputPictureDirectory.listFiles { file ->
@@ -483,7 +484,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 startCountdown()
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
-                    if (allowToOutputCaptureFile) {
+                    if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory) { savedImage ->

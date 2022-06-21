@@ -7,6 +7,7 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import com.leovp.camerax_sdk.databinding.ActivityCameraxMainBinding
+import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.CameraFragment
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.lib_common_android.exts.hideNavigationBar
@@ -38,15 +39,15 @@ open class CameraXActivity : AppCompatActivity() {
 
     open var captureImageListener: CaptureImageListener? = null
 
-    open fun allowToOutputCaptureFile(): Boolean = true
+    open fun getOutputCapturedImageStrategy(): CapturedImageStrategy = CapturedImageStrategy.FILE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
         binding = ActivityCameraxMainBinding.inflate(layoutInflater).apply { setContentView(root) }
-        getCameraFragment()?.run {
-            captureImageListener = this@CameraXActivity.captureImageListener
-            allowToOutputCaptureFile = allowToOutputCaptureFile()
+        getCameraFragment()?.let { fragment ->
+            fragment.captureImageListener = this@CameraXActivity.captureImageListener
+            fragment.outputCapturedImageStrategy = getOutputCapturedImageStrategy()
         }
 
         onBackPressedDispatcher.addCallback(this, true) {
@@ -84,7 +85,8 @@ open class CameraXActivity : AppCompatActivity() {
                 }
                 return false
             }
-            else                                                     -> super.onKeyDown(keyCode, event)
+            else                                                     -> super.onKeyDown(keyCode,
+                event)
         }
     }
 }

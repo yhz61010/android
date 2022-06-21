@@ -521,19 +521,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
                             val newSavedImage =
                                     savedImage.copy(rotationDegrees = if (savedImage.mirror) {
-                                        when (cameraRotationInDegree) {
+                                        when (savedImage.rotationDegrees) {
                                             0             -> 0
                                             270           -> 90
                                             180           -> 180
                                             else /* 90 */ -> 270
                                         }
-                                    } else cameraRotationInDegree)
+                                    } else savedImage.rotationDegrees)
                             captureImageListener?.onSavedImageUri(newSavedImage)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder,
                             imageCapture) { savedImage ->
-                            //                            LogContext.log.w(logTag, "Saved image=$savedImage")
+                            // LogContext.log.w(logTag, "Saved image=$savedImage")
                             captureImageListener?.onSavedImageBytes(savedImage)
                         }
                     }

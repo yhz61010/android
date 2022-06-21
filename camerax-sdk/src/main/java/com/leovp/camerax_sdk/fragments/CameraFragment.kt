@@ -31,11 +31,13 @@ import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
-import com.leovp.camerax_sdk.utils.*
+import com.leovp.camerax_sdk.utils.SURFACE_ORIENTATIONS_TO_DEGREE
+import com.leovp.camerax_sdk.utils.cameraSensorOrientation
+import com.leovp.camerax_sdk.utils.getCameraSupportedSize
+import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -486,11 +488,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             imageCapture,
                             outputPictureDirectory) { savedImage ->
                             //                             LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
-                            val cost = measureTimeMillis {
-                                ExifUtil.saveExif(savedImage.fileUri.path!!,
-                                    savedImage = savedImage)
-                            }
-                            LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
+                            //                            val cost = measureTimeMillis {
+                            //                                ExifUtil.saveExif(savedImage.fileUri.path!!,
+                            //                                    savedImage = savedImage)
+                            //                            }
+                            //                            LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -518,22 +520,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             //                                arrayOf(mimeType)) { path, uri ->
                             //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             //                            }
-
-                            val newSavedImage =
-                                    savedImage.copy(rotationDegrees = if (savedImage.mirror) {
-                                        when (savedImage.rotationDegrees) {
-                                            0             -> 0
-                                            270           -> 90
-                                            180           -> 180
-                                            else /* 90 */ -> 270
-                                        }
-                                    } else savedImage.rotationDegrees)
-                            captureImageListener?.onSavedImageUri(newSavedImage)
+                            captureImageListener?.onSavedImageUri(savedImage)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder,
                             imageCapture) { savedImage ->
-                            // LogContext.log.w(logTag, "Saved image=$savedImage")
+                            // LogContext.log.w(logTag, "Saved image=savedImage")
                             captureImageListener?.onSavedImageBytes(savedImage)
                         }
                     }

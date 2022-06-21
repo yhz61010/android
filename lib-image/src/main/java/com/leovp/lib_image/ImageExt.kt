@@ -15,11 +15,44 @@ import android.os.Build
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
+
 
 /**
  * Author: Michael Leo
  * Date: 2021/7/30 10:10
  */
+
+fun Bitmap?.recycledSafety() {
+    if (this != null && !this.isRecycled) this.recycle()
+}
+
+/**
+ * Convert ARGB bitmap to bytes.
+ */
+fun Bitmap.toARGBBytes(): ByteArray {
+    val size = this.byteCount
+
+    val buffer = ByteBuffer.allocate(size)
+    val bytes = ByteArray(size)
+
+    this.copyPixelsToBuffer(buffer)
+    buffer.rewind()
+    buffer.get(bytes)
+
+    return bytes
+}
+
+/**
+ * Convert ARGB bitmap bytes to Bitmap.
+ */
+fun ByteArray.toBitmap(width: Int, height: Int): Bitmap? {
+    return runCatching {
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+            it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
+        }
+    }.getOrNull()
+}
 
 fun Drawable.getBitmap(): Bitmap? {
     // API < 26
@@ -66,7 +99,10 @@ fun Bitmap.compressBitmap(quality: Int = 100,
     this.compress(imgType, quality, compressedBmpOS)
     val opt = BitmapFactory.Options()
     opt.inSampleSize = sampleSize
-    return BitmapFactory.decodeByteArray(compressedBmpOS.toByteArray(), 0, compressedBmpOS.size(), opt)
+    return BitmapFactory.decodeByteArray(compressedBmpOS.toByteArray(),
+        0,
+        compressedBmpOS.size(),
+        opt)
 }
 
 /**
@@ -82,9 +118,69 @@ fun Bitmap.writeToFile(outputFile: File,
     }
 }
 
-fun File?.getBitmap(): Bitmap? = if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
+fun File?.getBitmap(): Bitmap? =
+        if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
 
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+/**
+ * @param x The center x position of image.
+ * @param y The center y position of image.
+ */
+fun Bitmap.flipHorizontal(x: Float = width / 2f, y: Float = height / 2f): Bitmap {
+    val matrix = Matrix().apply { postScale(-1f, 1f, x, y) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+/**
+ * @param x The center x position of image.
+ * @param y The center y position of image.
+ */
+fun Bitmap.flipVertical(x: Float = width / 2f, y: Float = height / 2f): Bitmap {
+    val matrix = Matrix().apply { postScale(1f, -1f, x, y) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+/**
+ * @param x The center x position of image.
+ * @param y The center y position of image.
+ */
+fun Bitmap.flip(
+    horizontal: Boolean,
+    vertical: Boolean,
+    x: Float = width / 2f,
+    y: Float = height / 2f): Bitmap {
+    val matrix = Matrix().apply {
+        postScale(
+            if (horizontal) -1f else 1f,
+            if (vertical) -1f else 1f,
+            x, y)
+    }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+/**
+ * Flip firstly then rotate image.
+ *
+ * @param x The center x position of image.
+ * @param y The center y position of image.
+ */
+fun Bitmap.flipRotate(
+    horizontal: Boolean,
+    vertical: Boolean,
+    degrees: Float,
+    x: Float = width / 2f,
+    y: Float = height / 2f): Bitmap {
+
+    val matrix = Matrix().apply {
+        postScale(
+            if (horizontal) -1f else 1f,
+            if (vertical) -1f else 1f,
+            x, y)
+        postRotate(degrees)
+    }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }

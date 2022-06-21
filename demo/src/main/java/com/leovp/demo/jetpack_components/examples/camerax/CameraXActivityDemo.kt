@@ -56,14 +56,15 @@ class CameraXDemoActivity : CameraXActivity() {
 
         override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
             LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
-
             val outFile = File(getBaseDirString("Leo"), "" + System.currentTimeMillis() + ".jpg")
+            LogContext.log.w(ITAG, "outFile=${outFile.absolutePath}")
             BitmapFactory.decodeByteArray(savedImage.imgBytes, 0, savedImage.imgBytes.size).run {
                 writeToFile(outFile)
                 recycle()
             }
 
-            //            val outUri: Uri? = getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
+            //            val outUri: Uri? =
+            //                    getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
             //            LogContext.log.i(ITAG, "outUri=$outUri")
             //            outUri?.let { uri ->
             //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)

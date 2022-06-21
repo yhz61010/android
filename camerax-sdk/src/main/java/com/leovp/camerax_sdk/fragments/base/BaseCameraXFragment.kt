@@ -114,7 +114,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun hasFrontCamera(): Boolean =
             cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
-    protected var cameraRotationInDegree = 90
+    // This property will be initialize in updateOrientationLiveData()
+    protected var cameraRotationInDegree = -1
     //    var deviceOrientationListener: OrientationListener? = null
 
     /** Live data listener for changes in the device orientation relative to the camera */
@@ -141,10 +142,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             "updateOrientationLiveData cameraId: $cameraName")
         val characteristics: CameraCharacteristics =
                 cameraManager.getCameraCharacteristics(cameraId)
+        cameraRotationInDegree = characteristics.cameraSensorOrientation()
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
-                LogContext.log.d(logTag,
+                LogContext.log.i(logTag,
                     "$cameraName camera orientation changed to: $cameraRotation")
                 cameraRotationInDegree = cameraRotation
                 //                deviceOrientationListener?.invoke(cameraRotation)

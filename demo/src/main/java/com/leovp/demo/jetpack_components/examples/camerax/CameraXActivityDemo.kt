@@ -2,6 +2,7 @@ package com.leovp.demo.jetpack_components.examples.camerax
 
 import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.camerax_sdk.bean.CaptureImage
+import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.lib_common_android.exts.getBaseDirString
 import com.leovp.lib_image.toBitmap
@@ -37,7 +38,7 @@ import java.io.File
  * Date: 2022/4/25 14:50
  */
 class CameraXDemoActivity : CameraXActivity() {
-    override fun allowToOutputCaptureFile() = true
+    override fun getOutputCapturedImageStrategy() = CapturedImageStrategy.FILE
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
     override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {

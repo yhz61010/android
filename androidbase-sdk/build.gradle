@@ -96,9 +96,6 @@ dependencies {
     api project(':lib-common-android') // 'lib-common-kotlin' has already included in this library.
 //    api project(':lib-common-kotlin')
 
-    // EXIF Interface
-    api "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
-
     // https://github.com/hyuwah/DraggableView
 //    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
 }

@@ -264,6 +264,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         //        val outputOptions =
         //                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
+        val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+        val cameraSensorOrientationDegree: Int = cameraRotationInDegree
+
         // Setup image capture listener which is triggered after photo has been taken
         imageCapture.takePicture(outputOptions,
             cameraExecutor,
@@ -281,15 +284,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
-                    val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
                     val imageRotationDegree: Int = if (mirror) {
-                        when (cameraRotationInDegree) {
+                        when (cameraSensorOrientationDegree) {
                             0             -> 0
                             270           -> 90
                             180           -> 180
                             else /* 90 */ -> 270
                         }
-                    } else cameraRotationInDegree
+                    } else cameraSensorOrientationDegree
 
                     val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
                     val processedBmp: Bitmap =

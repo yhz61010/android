@@ -153,7 +153,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
                 LogContext.log.i(logTag,
-                    "$cameraName camera orientation changed to: $cameraRotation")
+                    "$cameraName cameraSensorOrientation changed to: $cameraRotation")
                 cameraRotationInDegree = cameraRotation
                 //                deviceOrientationListener?.invoke(cameraRotation)
             }

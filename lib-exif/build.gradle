@@ -1,17 +1,16 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-parcelize'
 apply plugin: 'maven-publish'
 apply plugin: "org.sonarqube"
 
 android {
     compileSdk rootProject.ext.compileSdkVersion
-    
+
     defaultConfig {
         minSdk rootProject.ext.minSdkVersion
         targetSdk rootProject.ext.targetSdkVersion
 
-        consumerProguardFiles 'consumer-rules.pro'
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -24,15 +23,10 @@ android {
         sourceCompatibility "$rootProject.ext.java_version"
         targetCompatibility "$rootProject.ext.java_version"
     }
-
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
-
-    buildFeatures {
-        viewBinding true
-    }
-    namespace 'com.leovp.camera2live'
+    namespace 'com.leovp.lib_exif'
 
     publishing {
         // Publishes "release" build variant with "release" component created by
@@ -42,12 +36,10 @@ android {
 }
 
 dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
-    api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
-
-    api project(':androidbase-sdk')
-    api project(':yuv-sdk')
-    api project(':lib-exif')
+//    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    implementation "androidx.annotation:annotation:$annotationVersion"
+    // EXIF Interface
+    implementation "androidx.exifinterface:exifinterface:$rootProject.ext.exifinterfaceVersion"
 }
 
 afterEvaluate {
@@ -57,7 +49,7 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
-                artifactId = 'camera2live-sdk'
+                artifactId = 'lib-exif'
                 version = "$rootProject.ext.leoVersion"
             }
         }

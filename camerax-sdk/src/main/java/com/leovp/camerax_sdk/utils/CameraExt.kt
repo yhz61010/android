@@ -10,6 +10,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import com.leovp.lib_common_android.exts.SmartSize
 import com.leovp.lib_common_android.exts.getAvailableResolution
+import com.leovp.lib_common_android.exts.getRatio
 import com.leovp.lib_common_android.exts.windowManager
 import com.leovp.log_sdk.LogContext
 import kotlin.math.max
@@ -37,8 +38,12 @@ fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap {
     return get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
 }
 
-fun CameraCharacteristics.isFlashSupported(): Boolean = get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
-fun CameraCharacteristics.hardwareLevel(): Int = get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
+fun CameraCharacteristics.isFlashSupported(): Boolean =
+        get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
+
+fun CameraCharacteristics.hardwareLevel(): Int =
+        get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
+
 fun CameraCharacteristics.hardwareLevelName(): String {
     return when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
         0    -> "LIMIT"
@@ -52,7 +57,8 @@ fun CameraCharacteristics.hardwareLevelName(): String {
 fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
         get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
 
-fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+fun CameraCharacteristics.cameraSensorOrientation(): Int =
+        get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
 fun Context.getDeviceRotation(): Int {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -67,6 +73,10 @@ fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
     return getConfigMap().getOutputSizes(SurfaceHolder::class.java)
         .map { SmartSize(it.width, it.height) }
         .toTypedArray()
+}
+
+fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
+    return getCameraSupportedSize().groupBy { getRatio(it) }
 }
 
 fun getSpecificPreviewOutputSize(context: Context,
@@ -89,7 +99,8 @@ fun getSpecificPreviewOutputSize(context: Context,
         Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
             swapDimension = true
         }
-        else                 -> LogContext.log.e(TAG, "Display rotation is invalid: $deviceRotation")
+        else                 -> LogContext.log.e(TAG,
+            "Display rotation is invalid: $deviceRotation")
     }
 
     // The device is normally in portrait by default.
@@ -102,14 +113,18 @@ fun getSpecificPreviewOutputSize(context: Context,
         cameraWidth = desiredVideoWidth
         cameraHeight = desiredVideoHeight
     }
-    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth = context.getPreviewViewMaxHeight()
-    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight = context.getPreviewViewMaxWidth()
+    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth =
+            context.getPreviewViewMaxHeight()
+    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight =
+            context.getPreviewViewMaxWidth()
 
     // Calculate ImageReader input preview size from supported size list by camera.
     // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
     // Attention: The returned value is in camera orientation. NOT in device orientation.
     val selectedSizeFromCamera: Size =
-            getPreviewOutputSize(Size(cameraWidth, cameraHeight), characteristics, SurfaceHolder::class.java)
+            getPreviewOutputSize(Size(cameraWidth, cameraHeight),
+                characteristics,
+                SurfaceHolder::class.java)
 
     // Take care of the result value. It's in camera orientation.
     // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.

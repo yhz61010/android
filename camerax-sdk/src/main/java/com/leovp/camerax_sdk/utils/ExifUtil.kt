@@ -1,8 +1,9 @@
+@file:Suppress("unused")
+
 package com.leovp.camerax_sdk.utils
 
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.LIGHT_SOURCE_UNKNOWN
-import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import java.text.SimpleDateFormat
@@ -56,7 +57,9 @@ object ExifUtil {
     fun saveExif(filePath: String,
         width: Int? = null,
         height: Int? = null,
-        savedImage: CaptureImage) {
+        flipHorizontal: Boolean,
+        rotationDegrees: Int
+    ) {
         ExifInterface(filePath).apply {
             //            setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
             //            setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
@@ -66,24 +69,24 @@ object ExifUtil {
             width?.let { setAttribute(ExifInterface.TAG_IMAGE_WIDTH, it.toString()) }
             height?.let { setAttribute(ExifInterface.TAG_IMAGE_LENGTH, it.toString()) }
             setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
-            val rotateString = if (savedImage.mirror) { // Front camera
-                when (savedImage.rotationDegrees) {
+            val rotateString = if (flipHorizontal) { // Front camera
+                when (rotationDegrees) {
                     0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
                     90   -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
                     180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
                     270  -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
-                    else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
+                    else -> throw IllegalArgumentException("Illegal orientation: $rotationDegrees")
                 }
             } else { // Back camera
-                when (savedImage.rotationDegrees) {
+                when (rotationDegrees) {
                     0    -> ExifInterface.ORIENTATION_NORMAL.toString()
                     90   -> ExifInterface.ORIENTATION_ROTATE_90.toString()
                     180  -> ExifInterface.ORIENTATION_ROTATE_180.toString()
                     270  -> ExifInterface.ORIENTATION_ROTATE_270.toString()
-                    else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
+                    else -> throw IllegalArgumentException("Illegal orientation: $rotationDegrees")
                 }
             }
-            LogContext.log.i(ITAG, "savedImage=${savedImage} rotateString=$rotateString")
+            LogContext.log.i(ITAG, "flipHorizontal=$flipHorizontal rotateString=$rotateString")
             setAttribute(ExifInterface.TAG_ORIENTATION, rotateString)
             saveAttributes()
         }

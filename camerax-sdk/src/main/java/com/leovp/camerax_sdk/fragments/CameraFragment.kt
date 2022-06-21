@@ -238,6 +238,22 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 getRatio(targetSize)
             }] | deviceOrientation=${SURFACE_ORIENTATIONS_TO_DEGREE[deviceRotation]} | cameraOrientation=$cameraOrientation")
 
+        //        characteristics.getCameraSupportedSizeMap().forEach { (ratio, sizeList) ->
+        //            LogContext.log.w(logTag, "$ratio -> ${
+        //                sizeList.map { size ->
+        //                    "${size.long}x${size.short}=${getCameraSizeTotalPixels(size.size)}"
+        //                }
+        //            }")
+        //        }
+        //        LogContext.log.w(logTag, "==========")
+        //        characteristics.getCameraSizeMapForOutput().forEach { (ratio, sizeList) ->
+        //            LogContext.log.w(logTag, "$ratio -> ${
+        //                sizeList.map { size ->
+        //                    "${size.long}x${size.short}=${getCameraSizeTotalPixels(size.size)}"
+        //                }
+        //            }")
+        //        }
+
         // Preview
         preview = Preview.Builder()
             // We request aspect ratio but no resolution

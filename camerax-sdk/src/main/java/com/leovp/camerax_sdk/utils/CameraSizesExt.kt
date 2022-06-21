@@ -23,7 +23,10 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
 import android.view.Display
+import android.view.Surface
+import android.view.SurfaceHolder
 import com.leovp.lib_common_android.exts.SmartSize
+import com.leovp.lib_common_android.exts.getRatio
 import com.leovp.lib_common_android.exts.getRealResolution
 
 /** Screen size for pictures and video */
@@ -68,18 +71,23 @@ fun <T> getPreviewOutputSize(
 ): Size {
     val smartSize = getDisplaySmartSize(designSize)
     // Find which is smaller: designSize or 1080p
-    val uhdScreen = smartSize.long >= SIZE_4K_UHD_2160P_TV.long || smartSize.short >= SIZE_4K_UHD_2160P_TV.short
+    val uhdScreen =
+            smartSize.long >= SIZE_4K_UHD_2160P_TV.long || smartSize.short >= SIZE_4K_UHD_2160P_TV.short
     val maxSize = if (uhdScreen) SIZE_4K_UHD_2160P_TV else smartSize
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-    if (format == null) require(StreamConfigurationMap.isOutputSupportedFor(targetClass)) else require(config.isOutputSupportedFor(
-        format))
-    val allSizes = if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
+    if (format == null) require(StreamConfigurationMap.isOutputSupportedFor(targetClass)) else require(
+        config.isOutputSupportedFor(
+            format))
+    val allSizes =
+            if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
 
     // Get available sizes and sort them by area from largest to smallest
     val validSizes =
-            allSizes.sortedWith(compareBy { it.height * it.width }).map { SmartSize(it.width, it.height) }.reversed()
+            allSizes.sortedWith(compareBy { it.height * it.width })
+                .map { SmartSize(it.width, it.height) }
+                .reversed()
 
     // Then, get the largest output size that is smaller or equal than our max size
     val alphaSize = validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }
@@ -97,5 +105,93 @@ fun <T> getPreviewOutputSize(
     format: Int? = null
 ): Size {
     val screenSize = getDisplaySmartSize(ctx)
-    return getPreviewOutputSize(Size(screenSize.short, screenSize.long), characteristics, targetClass, format)
+    return getPreviewOutputSize(Size(screenSize.short, screenSize.long),
+        characteristics,
+        targetClass,
+        format)
+}
+
+fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
+    return getConfigMap().getOutputSizes(SurfaceHolder::class.java)
+        .map { SmartSize(it.width, it.height) }
+        .toTypedArray()
+}
+
+fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
+    return getCameraSupportedSize().groupBy { getRatio(it) }
+}
+
+fun getSpecificPreviewOutputSize(context: Context,
+    desiredVideoWidth: Int,
+    desiredVideoHeight: Int,
+    characteristics: CameraCharacteristics): Size {
+    // Generally, if the device is in portrait(Surface.ROTATION_0),
+    // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
+    // Example: deviceRotation: 0
+    val deviceRotation = context.getDeviceRotation()
+    // Example: cameraSensorOrientation: 90
+    val cameraSensorOrientation = characteristics.cameraSensorOrientation()
+    var swapDimension = false
+    when (deviceRotation) {
+        Surface.ROTATION_0,
+        Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+            swapDimension = true
+        }
+        Surface.ROTATION_90,
+        Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
+            swapDimension = true
+        }
+        else                 -> throw IllegalAccessException("Display rotation is invalid: $deviceRotation")
+    }
+
+    // The device is normally in portrait by default.
+    // Actually, the camera orientation is just 90 degree anticlockwise.
+    var cameraWidth = desiredVideoHeight
+    var cameraHeight = desiredVideoWidth
+
+    // Landscape: true. Portrait: false
+    if (swapDimension) {
+        cameraWidth = desiredVideoWidth
+        cameraHeight = desiredVideoHeight
+    }
+    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth =
+            context.getPreviewViewMaxHeight()
+    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight =
+            context.getPreviewViewMaxWidth()
+
+    // Calculate ImageReader input preview size from supported size list by camera.
+    // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
+    // Attention: The returned value is in camera orientation. NOT in device orientation.
+    val selectedSizeFromCamera: Size = getPreviewOutputSize(Size(cameraWidth, cameraHeight),
+        characteristics,
+        SurfaceHolder::class.java)
+
+    // Take care of the result value. It's in camera orientation.
+    // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
+    val previewSize: Size = if (swapDimension) {
+        Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width)
+    } else {
+        selectedSizeFromCamera
+    }
+
+    return previewSize
+}
+
+fun CameraCharacteristics.getCameraSizeMapForOutput(): Map<String, List<SmartSize>> {
+    val outputSizeMap = HashMap<String, List<SmartSize>>()
+    this.getCameraSupportedSizeMap().onEach { (ratio, sizeList) ->
+        // Get available sizes and sort them by area from smallest to largest
+        val allSize = sizeList.sortedWith(compareBy { it.long * it.short })
+        val maxSize = allSize[allSize.size - 1]
+
+        val targetMaxValue = (maxSize.long shr 1) * (maxSize.short shr 1) * 1.5f
+
+        // Get the first size that greater or equal then targetMaxValue.
+        val filteredMaxSize: SmartSize? =
+                allSize.firstOrNull { it.long * it.short >= targetMaxValue }
+        val filteredList: List<SmartSize> =
+                filteredMaxSize?.let { listOf(maxSize, it) } ?: listOf(maxSize)
+        outputSizeMap[ratio] = filteredList
+    }
+    return outputSizeMap
 }

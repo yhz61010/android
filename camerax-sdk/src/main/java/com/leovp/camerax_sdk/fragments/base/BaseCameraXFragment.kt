@@ -52,6 +52,7 @@ import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.lib_image.flipRotate
 import com.leovp.lib_image.toARGBBytes
+import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -61,8 +62,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -204,8 +203,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 // For takePicture, the ImageProxy only contains one plane AKA Y plane.
                 val imageBuffer = image.planes[0].buffer
-                val width = image.width
-                val height = image.height
+                //                val width = image.width
+                //                val height = image.height
                 val oriImageBytes = imageBuffer.toByteArray()
 
                 // DO NOT forget for close Image object
@@ -234,13 +233,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
                 //                processedBmp.recycledSafety()
 
-                val finalWidth =
-                        if (cameraRotationInDegree == 0 || cameraRotationInDegree == 180) max(width,
-                            height) else min(width, height)
-                val finalHeight =
-                        if (cameraRotationInDegree == 0 || cameraRotationInDegree == 180) min(width,
-                            height) else max(width, height)
-                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
+                onImageSaved(CaptureImage.ImageBytes(imageBytes,
+                    processedBmp.width,
+                    processedBmp.height))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -259,14 +254,15 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
         // Setup image capture metadata
-        val metadata = ImageCapture.Metadata().apply {
-            // Mirror image when using the front camera
-            isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
-        }
+        //        val metadata = ImageCapture.Metadata().apply {
+        //            // Mirror image when using the front camera
+        //            isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
+        //        }
 
         // Create output options object which contains file + metadata
-        val outputOptions =
-                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        //        val outputOptions =
+        //                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         // Setup image capture listener which is triggered after photo has been taken
         imageCapture.takePicture(outputOptions,
@@ -284,6 +280,25 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
+
+                    val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                    val imageRotationDegree: Int = if (mirror) {
+                        when (cameraRotationInDegree) {
+                            0             -> 0
+                            270           -> 90
+                            180           -> 180
+                            else /* 90 */ -> 270
+                        }
+                    } else cameraRotationInDegree
+
+                    val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                    val processedBmp: Bitmap =
+                            oriBmp.flipRotate(mirror, false, imageRotationDegree.toFloat())
+                    processedBmp.writeToFile(photoFile)
+                    // If recycled bitmap,
+                    // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
+                    //                oriBmp.recycledSafety()
+
                     onImageSaved(CaptureImage.ImageUri(savedUri))
                 }
             })

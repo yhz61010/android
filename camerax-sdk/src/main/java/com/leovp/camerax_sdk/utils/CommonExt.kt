@@ -2,7 +2,9 @@
 
 package com.leovp.camerax_sdk.utils
 
+import android.util.Size
 import android.view.Surface
+import com.leovp.lib_common_kotlin.exts.round
 import java.nio.ByteBuffer
 
 /**
@@ -29,3 +31,13 @@ val DEGREE_TO_SURFACE_ORIENTATIONS = mapOf(0 to Surface.ROTATION_0,
     90 to Surface.ROTATION_90,
     180 to Surface.ROTATION_180,
     270 to Surface.ROTATION_270)
+
+fun getCameraSizeTotalPixels(size: Size): String {
+    val total = size.width * size.height
+    val calTotal = total * 1f / 1_000_000
+    return if (calTotal > 10) {
+        "${calTotal.toInt()}MP"
+    } else {
+        "${calTotal.round(1)}MP"
+    }
+}

@@ -690,9 +690,9 @@ Supported profile/level for HEVC=${
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
                         allCameraSupportSize?.joinToString(",") {
-                            "${it.width}x${it.height}(${
-                                getRatio(it.width, it.height)
-                            })"
+                            "${it.width}x${it.height}" +
+                                    "(${getCameraSizeTotalPixels(it)}-" +
+                                    "${getRatio(it.width, it.height)})"
                         }
                     }
         """.trimIndent()

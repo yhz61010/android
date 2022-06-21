@@ -229,9 +229,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     1)
             }
         }
-        val supportedSize =
-                tempSupportedSize
-                    ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
+        val supportedSize = tempSupportedSize
+            ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
         val targetSize = Size(supportedSize.short, supportedSize.long)
 
         LogContext.log.w(logTag,

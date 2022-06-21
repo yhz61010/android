@@ -51,6 +51,7 @@ import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.lib_image.flipRotate
+import com.leovp.lib_image.recycledSafety
 import com.leovp.lib_image.toARGBBytes
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
@@ -211,31 +212,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 image.close()
 
                 val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-                val imageRotationDegree: Int = if (mirror) {
-                    when (cameraRotationInDegree) {
-                        0             -> 0
-                        270           -> 90
-                        180           -> 180
-                        else /* 90 */ -> 270
-                    }
-                } else cameraRotationInDegree
-
-                val oriBmp: Bitmap =
-                        BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
-                val processedBmp: Bitmap =
-                        oriBmp.flipRotate(mirror, false, imageRotationDegree.toFloat())
-                // If recycled bitmap,
-                // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
-                //                oriBmp.recycledSafety()
-
+                val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                val finalWidth = processedBmp.width
+                val finalHeight = processedBmp.height
                 val imageBytes: ByteArray = processedBmp.toARGBBytes()
-                // If recycled bitmap,
-                // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
-                //                processedBmp.recycledSafety()
 
-                onImageSaved(CaptureImage.ImageBytes(imageBytes,
-                    processedBmp.width,
-                    processedBmp.height))
+                oriBmp.recycledSafety()
+                processedBmp.recycledSafety()
+
+                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -284,26 +270,29 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
-                    val imageRotationDegree: Int = if (mirror) {
-                        when (cameraSensorOrientationDegree) {
-                            0             -> 0
-                            270           -> 90
-                            180           -> 180
-                            else /* 90 */ -> 270
-                        }
-                    } else cameraSensorOrientationDegree
-
                     val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
-                    val processedBmp: Bitmap =
-                            oriBmp.flipRotate(mirror, false, imageRotationDegree.toFloat())
-                    processedBmp.writeToFile(photoFile)
-                    // If recycled bitmap,
-                    // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
-                    //                oriBmp.recycledSafety()
-
+                    adjustBitmapRotation(oriBmp, mirror, cameraSensorOrientationDegree).run {
+                        writeToFile(photoFile)
+                        recycledSafety()
+                    }
                     onImageSaved(CaptureImage.ImageUri(savedUri))
                 }
             })
+    }
+
+    private fun adjustBitmapRotation(bitmap: Bitmap,
+        mirror: Boolean,
+        cameraSensorOrientationDegree: Int): Bitmap {
+        val imageRotationDegree: Int = if (mirror) {
+            when (cameraSensorOrientationDegree) {
+                0             -> 0
+                270           -> 90
+                180           -> 180
+                else /* 90 */ -> 270
+            }
+        } else cameraSensorOrientationDegree
+
+        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())
     }
 
     private fun showShutterAnimation(viewFinder: PreviewView) {

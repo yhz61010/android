@@ -46,7 +46,7 @@ fun Bitmap.toARGBBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmap(width: Int, height: Int): Bitmap? {
+fun ByteArray.toBitmapFromARGBBytes(width: Int, height: Int): Bitmap? {
     return runCatching {
         Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
             it.copyPixelsFromBuffer(ByteBuffer.wrap(this))

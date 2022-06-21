@@ -55,6 +55,7 @@ import com.leovp.lib_image.recycledSafety
 import com.leovp.lib_image.toARGBBytes
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -235,6 +236,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun captureForOutputFile(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         outputDirectory: File,
+        startTimestamp: Long,
         onImageSaved: (savedImage: CaptureImage.ImageUri) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
@@ -264,16 +266,20 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    LogContext.log.w(logTag,
+                        "Capture image cost=${System.currentTimeMillis() - startTimestamp}ms")
                     showShutterAnimation(viewFinder)
                     soundManager.playShutterSound()
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
-                    val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
-                    adjustBitmapRotation(oriBmp, mirror, cameraSensorOrientationDegree).run {
-                        writeToFile(photoFile)
-                        recycledSafety()
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                        adjustBitmapRotation(oriBmp, mirror, cameraSensorOrientationDegree).run {
+                            writeToFile(photoFile)
+                            recycledSafety()
+                        }
                     }
                     onImageSaved(CaptureImage.ImageUri(savedUri))
                 }

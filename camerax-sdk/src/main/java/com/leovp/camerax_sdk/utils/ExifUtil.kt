@@ -53,10 +53,13 @@ object ExifUtil {
      *
      * https://blog.csdn.net/ouyangtianhan/article/details/29825885
      */
-    fun saveExif(filePath: String, width: Int? = null, height: Int? = null, savedImage: CaptureImage) {
+    fun saveExif(filePath: String,
+        width: Int? = null,
+        height: Int? = null,
+        savedImage: CaptureImage) {
         ExifInterface(filePath).apply {
-//            setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
-//            setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
+            //            setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, "Leo Camera")
+            //            setAttribute(ExifInterface.TAG_COPYRIGHT, "Michael Leo")
             setAttribute(ExifInterface.TAG_DATETIME, SDF.format(Date()))
             setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, SDF.format(Date()))
             setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, SDF.format(Date()))
@@ -65,10 +68,10 @@ object ExifUtil {
             setAttribute(ExifInterface.TAG_LIGHT_SOURCE, LIGHT_SOURCE_UNKNOWN.toString())
             val rotateString = if (savedImage.mirror) { // Front camera
                 when (savedImage.rotationDegrees) {
-                    0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString() // Check 2
-                    90   -> ExifInterface.ORIENTATION_TRANSPOSE.toString() // Check 4
-                    180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString() // Check 3
-                    270  -> ExifInterface.ORIENTATION_TRANSVERSE.toString() // Check 1
+                    0    -> ExifInterface.ORIENTATION_FLIP_HORIZONTAL.toString()
+                    90   -> ExifInterface.ORIENTATION_TRANSPOSE.toString()
+                    180  -> ExifInterface.ORIENTATION_FLIP_VERTICAL.toString()
+                    270  -> ExifInterface.ORIENTATION_TRANSVERSE.toString()
                     else -> throw IllegalArgumentException("Illegal orientation: ${savedImage.rotationDegrees}")
                 }
             } else { // Back camera

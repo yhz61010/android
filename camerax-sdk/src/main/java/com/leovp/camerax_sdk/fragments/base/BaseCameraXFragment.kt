@@ -2,6 +2,8 @@ package com.leovp.camerax_sdk.fragments.base
 
 import android.content.ContentUris
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
@@ -48,6 +50,8 @@ import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
+import com.leovp.lib_image.flipRotate
+import com.leovp.lib_image.toARGBBytes
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.launch
 import java.io.File
@@ -57,6 +61,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -200,13 +206,41 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 val imageBuffer = image.planes[0].buffer
                 val width = image.width
                 val height = image.height
-                val imageBytes = imageBuffer.toByteArray()
+                val oriImageBytes = imageBuffer.toByteArray()
 
                 // DO NOT forget for close Image object
                 image.close()
-                onImageSaved(CaptureImage.ImageBytes(imageBytes, width, height,
-                    //                    image.imageInfo.rotationDegrees,
-                    CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing, cameraRotationInDegree))
+
+                val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                val imageRotationDegree: Int = if (mirror) {
+                    when (cameraRotationInDegree) {
+                        0             -> 0
+                        270           -> 90
+                        180           -> 180
+                        else /* 90 */ -> 270
+                    }
+                } else cameraRotationInDegree
+
+                val oriBmp: Bitmap =
+                        BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                val processedBmp: Bitmap =
+                        oriBmp.flipRotate(mirror, false, imageRotationDegree.toFloat())
+                // If recycled bitmap,
+                // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
+                //                oriBmp.recycledSafety()
+
+                val imageBytes: ByteArray = processedBmp.toARGBBytes()
+                // If recycled bitmap,
+                // it will cause "Error, cannot access an invalid/free'd bitmap here!" exception.
+                //                processedBmp.recycledSafety()
+
+                val finalWidth =
+                        if (cameraRotationInDegree == 0 || cameraRotationInDegree == 180) max(width,
+                            height) else min(width, height)
+                val finalHeight =
+                        if (cameraRotationInDegree == 0 || cameraRotationInDegree == 180) min(width,
+                            height) else max(width, height)
+                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -250,9 +284,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
                     //                val tmpRotation = cameraRotationInDegree - 90
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
-                    onImageSaved(CaptureImage.ImageUri(savedUri,
-                        lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA,
-                        cameraRotationInDegree))
+                    onImageSaved(CaptureImage.ImageUri(savedUri))
                 }
             })
     }

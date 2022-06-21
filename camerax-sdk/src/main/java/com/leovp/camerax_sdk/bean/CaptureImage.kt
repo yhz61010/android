@@ -8,38 +8,23 @@ import androidx.annotation.Keep
  * Date: 2022/6/2 14:24
  */
 @Keep
-sealed class CaptureImage(open val mirror: Boolean, open val rotationDegrees: Int) {
+sealed class CaptureImage {
 
     /**
      * The image saved in [fileUri] has already set Exif Orientation in order to
      * display it in correct orientation. Please note that **the original bitmap
      * data are not rotated.**
-     *
-     * Due to the original bitmap data are not rotated, if you load image into bitmap,
-     * these two parameters [mirror] and [rotationDegrees] tell you how to rotate
-     * your image correctly.
-     * Flip horizontally firstly and rotate clockwise.
-     *
-     * @param mirror Whether the image should be mirrored.
-     * @param rotationDegrees Indicates the rotation that the image should be rotated.
      */
     @Keep
-    data class ImageUri(val fileUri: Uri, override val mirror: Boolean, override val rotationDegrees: Int) :
-        CaptureImage(mirror, rotationDegrees)
+    data class ImageUri(val fileUri: Uri) : CaptureImage()
 
-    /**
-     * @param mirror Whether the image should be mirrored.
-     * @param rotationDegrees Indicates the rotation that the image should be rotated.
-     */
     @Keep
     data class ImageBytes(val imgBytes: ByteArray,
         val width: Int,
-        val height: Int,
-        override val mirror: Boolean,
-        override val rotationDegrees: Int) : CaptureImage(mirror, rotationDegrees) {
+        val height: Int) : CaptureImage() {
 
         override fun toString(): String {
-            return "CaptureImageBytes(size=${imgBytes.size}, ${width}x$height, rotation=$rotationDegrees, mirror=$mirror)"
+            return "CaptureImageBytes(size=${imgBytes.size}, ${width}x$height)"
         }
 
         override fun equals(other: Any?): Boolean {
@@ -51,8 +36,6 @@ sealed class CaptureImage(open val mirror: Boolean, open val rotationDegrees: In
             if (!imgBytes.contentEquals(other.imgBytes)) return false
             if (width != other.width) return false
             if (height != other.height) return false
-            if (rotationDegrees != other.rotationDegrees) return false
-            if (mirror != other.mirror) return false
 
             return true
         }
@@ -61,8 +44,6 @@ sealed class CaptureImage(open val mirror: Boolean, open val rotationDegrees: In
             var result = imgBytes.contentHashCode()
             result = 31 * result + width
             result = 31 * result + height
-            result = 31 * result + rotationDegrees
-            result = 31 * result + mirror.hashCode()
             return result
         }
     }

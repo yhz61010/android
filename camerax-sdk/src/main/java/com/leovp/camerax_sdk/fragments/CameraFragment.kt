@@ -496,13 +496,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         // Listener for button used to capture photo
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
+                LogContext.log.w(logTag, "Click capture photo button.")
+                val startCaptureTimestamp: Long = System.currentTimeMillis()
                 startCountdown()
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
                     if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputPictureDirectory) { savedImage ->
+                            outputPictureDirectory, startCaptureTimestamp) { savedImage ->
                             //                             LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
                             //                            val cost = measureTimeMillis {
                             //                                ExifUtil.saveExif(savedImage.fileUri.path!!,
@@ -536,6 +538,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             //                                arrayOf(mimeType)) { path, uri ->
                             //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             //                            }
+                            LogContext.log.w(logTag,
+                                "Final total capture image cost=${System.currentTimeMillis() - startCaptureTimestamp}ms")
                             captureImageListener?.onSavedImageUri(savedImage)
                         }
                     } else {

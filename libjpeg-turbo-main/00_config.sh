@@ -57,7 +57,7 @@ case "$THE_ARCH" in
 	;;
 esac
 
-echo "--------------------infos--------------------"
+echo "-------------------- Information --------------------"
 echo "ANDROID_NDK_VERSION"=$ANDROID_NDK_VERSION
 echo "ANDROID_NDK_ROOT"=$ANDROID_NDK_ROOT
 echo "TOOLCHAIN"=$TOOLCHAIN

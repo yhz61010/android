@@ -1,5 +1,6 @@
 package com.leovp.camerax_sdk.fragments
 
+import android.graphics.PointF
 import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,7 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.leovp.camerax_sdk.R
 import com.leovp.camerax_sdk.databinding.FragmentGalleryBinding
 import com.leovp.lib_common_android.exts.padWithDisplayCutout
@@ -46,8 +48,7 @@ class GalleryFragment internal constructor() : Fragment() {
 
         override fun getItemCount(): Int = mediaList.size
 
-        override fun createFragment(position: Int): Fragment =
-                PhotoFragment.create(mediaList[position])
+        override fun createFragment(position: Int) = PhotoFragment.create(mediaList[position])
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,8 +95,16 @@ class GalleryFragment internal constructor() : Fragment() {
             adapter = MediaPagerAdapter(childFragmentManager, lifecycle)
             currentItem = 0
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                private var previousPosition = 0
                 override fun onPageSelected(position: Int) {
-                    LogContext.log.d(TAG, "ViewPager position=$position")
+                    LogContext.log.d(TAG, "Current position=$position previous=$previousPosition")
+                    if (previousPosition != position) {
+                        val photoFragment =
+                                childFragmentManager.findFragmentByTag("f$previousPosition") as PhotoFragment
+                        val iv = photoFragment.view as SubsamplingScaleImageView
+                        iv.setScaleAndCenter(0f, PointF(0f, 0f))
+                    }
+                    previousPosition = position
                 }
             })
         }

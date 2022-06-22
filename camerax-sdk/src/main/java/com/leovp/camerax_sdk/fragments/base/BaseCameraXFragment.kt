@@ -198,9 +198,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     protected fun captureForBytes(viewFinder: PreviewView,
         imageCapture: ImageCapture,
+        startTimestamp: Long,
         onImageSaved: (savedImage: CaptureImage.ImageBytes) -> Unit) {
         imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
+                LogContext.log.w(logTag,
+                    "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms")
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
 
@@ -268,7 +271,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     LogContext.log.w(logTag,
-                        "Capture image cost=${System.currentTimeMillis() - startTimestamp}ms")
+                        "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms")
                     showShutterAnimation(viewFinder)
                     soundManager.playShutterSound()
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)

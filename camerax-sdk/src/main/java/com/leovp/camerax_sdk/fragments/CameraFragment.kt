@@ -544,7 +544,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder,
-                            imageCapture) { savedImage ->
+                            imageCapture, startCaptureTimestamp) { savedImage ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
                             captureImageListener?.onSavedImageBytes(savedImage)
                         }

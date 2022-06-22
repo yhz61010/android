@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.fragment.app.Fragment
-import coil.load
+import com.davemorrissey.labs.subscaleview.ImageSource
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.leovp.camerax_sdk.R
 import java.io.File
 
@@ -14,17 +14,17 @@ import java.io.File
 class PhotoFragment internal constructor() : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?) = ImageView(context)
+        savedInstanceState: Bundle?) = SubsamplingScaleImageView(context)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val args = arguments ?: return
-        val iv: ImageView = view as ImageView
+        val iv: SubsamplingScaleImageView = view as SubsamplingScaleImageView
         val imgFile: File? = args.getString(FILE_NAME_KEY)?.let { File(it) }
         if (imgFile == null) {
-            iv.load(R.drawable.ic_photo)
+            iv.setImage(ImageSource.resource(R.drawable.ic_photo))
         } else {
-            iv.load(imgFile)
+            iv.setImage(ImageSource.uri(imgFile.absolutePath))
         }
     }
 

@@ -28,9 +28,9 @@ fun Bitmap?.recycledSafety() {
 }
 
 /**
- * Convert ARGB bitmap to bytes.
+ * Convert bitmap to bytes.
  */
-fun Bitmap.toARGBBytes(): ByteArray {
+fun Bitmap.toBytes(): ByteArray {
     val size = this.byteCount
 
     val buffer = ByteBuffer.allocate(size)
@@ -46,15 +46,17 @@ fun Bitmap.toARGBBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmapFromARGBBytes(width: Int, height: Int): Bitmap? {
+fun ByteArray.toBitmapFromBytes(width: Int,
+    height: Int,
+    config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     return runCatching {
-        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+        Bitmap.createBitmap(width, height, config).also {
             it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
         }
     }.getOrNull()
 }
 
-fun Drawable.getBitmap(): Bitmap? {
+fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     // API < 26
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || this is BitmapDrawable) {
         return (this as BitmapDrawable).bitmap
@@ -64,7 +66,7 @@ fun Drawable.getBitmap(): Bitmap? {
             val layerDrawable = LayerDrawable(arrayOf<Drawable>(this.background, this.foreground))
             val width = layerDrawable.intrinsicWidth
             val height = layerDrawable.intrinsicHeight
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val bitmap = Bitmap.createBitmap(width, height, config)
             val canvas = Canvas(bitmap)
             layerDrawable.setBounds(0, 0, canvas.width, canvas.height)
             layerDrawable.draw(canvas)
@@ -89,7 +91,7 @@ fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap 
 }
 
 /**
- * Using this method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
+ * Using this method will only reduce the bitmap file size NOT the bitmap size loaded in memory.
  * It's better to release the source bitmap by calling Bitmap.recycle() after calling this method.
  */
 fun Bitmap.compressBitmap(quality: Int = 100,

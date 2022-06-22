@@ -52,7 +52,7 @@ import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.lib_image.flipRotate
 import com.leovp.lib_image.recycledSafety
-import com.leovp.lib_image.toARGBBytes
+import com.leovp.lib_image.toBytes
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
@@ -230,9 +230,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     LogContext.log.w(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
                     val finalWidth = processedBmp.width
                     val finalHeight = processedBmp.height
-                    val imageBytes: ByteArray = processedBmp.toARGBBytes()
+                    val imageBytes: ByteArray = processedBmp.toBytes()
                     LogContext.log.w(logTag,
-                        "toARGBBytes cost=${System.currentTimeMillis() - st3}ms")
+                        "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
 
                     oriBmp.recycledSafety()
                     processedBmp.recycledSafety()

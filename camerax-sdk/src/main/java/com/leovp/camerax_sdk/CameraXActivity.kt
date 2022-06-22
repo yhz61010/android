@@ -10,6 +10,7 @@ import com.leovp.camerax_sdk.databinding.ActivityCameraxMainBinding
 import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.CameraFragment
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
+import com.leovp.camerax_sdk.listeners.impl.SimpleCaptureImageListener
 import com.leovp.lib_common_android.exts.hideNavigationBar
 import com.leovp.lib_common_android.exts.requestFullScreenAfterVisible
 import com.leovp.lib_common_android.exts.requestFullScreenBeforeSetContentView
@@ -37,7 +38,9 @@ open class CameraXActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCameraxMainBinding
 
-    open var captureImageListener: CaptureImageListener? = null
+    open fun getCaptureListener(): CaptureImageListener {
+        return SimpleCaptureImageListener()
+    }
 
     open fun getOutputCapturedImageStrategy(): CapturedImageStrategy = CapturedImageStrategy.FILE
 
@@ -46,7 +49,7 @@ open class CameraXActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraxMainBinding.inflate(layoutInflater).apply { setContentView(root) }
         getCameraFragment()?.let { fragment ->
-            fragment.captureImageListener = this@CameraXActivity.captureImageListener
+            fragment.captureImageListener = getCaptureListener()
             fragment.outputCapturedImageStrategy = getOutputCapturedImageStrategy()
         }
 

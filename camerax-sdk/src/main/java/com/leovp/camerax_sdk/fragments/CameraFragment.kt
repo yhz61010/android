@@ -506,6 +506,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory, startCaptureTimestamp) { savedImage, exc ->
+                            enableUI(true)
                             if (exc != null) {
                                 captureImageListener?.onSavedImageUri(null, exc)
                                 return@captureForOutputFile
@@ -519,7 +520,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // }
                             // LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
 
-                            // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 // Update the gallery thumbnail with latest picture taken
                                 setGalleryThumbnail(savedImage.fileUri,
@@ -545,7 +545,6 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             //                                arrayOf(mimeType)) { path, uri ->
                             //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             //                            }
-                            enableUI(true)
                             captureImageListener?.onSavedImageUri(savedImage, null)
                         }
                     } else {

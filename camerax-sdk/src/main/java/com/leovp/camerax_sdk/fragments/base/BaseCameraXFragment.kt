@@ -196,50 +196,69 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         super.onDestroy()
     }
 
+    /**
+     * @param onImageSaved It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     */
     protected fun captureForBytes(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         startTimestamp: Long,
-        onImageSaved: (savedImage: CaptureImage.ImageBytes) -> Unit) {
+        onImageSaved: (savedImage: CaptureImage.ImageBytes?, exc: Exception?) -> Unit) {
         imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
                 LogContext.log.w(logTag,
                     "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms")
-                showShutterAnimation(viewFinder)
-                soundManager.playShutterSound()
 
-                val st0 = System.currentTimeMillis()
-                // For takePicture, the ImageProxy only contains one plane AKA Y plane.
-                val imageBuffer = image.planes[0].buffer
-                //                val width = image.width
-                //                val height = image.height
-                val oriImageBytes = imageBuffer.toByteArray()
-                LogContext.log.w(logTag,
-                    "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
+                try {
+                    showShutterAnimation(viewFinder)
+                    soundManager.playShutterSound()
 
-                // DO NOT forget for close Image object
-                image.close()
-
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-                    val st1 = System.currentTimeMillis()
-                    val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
-                    val st2 = System.currentTimeMillis()
-                    LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-                    val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
-                    val st3 = System.currentTimeMillis()
-                    LogContext.log.w(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
-                    val finalWidth = processedBmp.width
-                    val finalHeight = processedBmp.height
-                    val imageBytes: ByteArray = processedBmp.toBytes()
+                    val st0 = System.currentTimeMillis()
+                    // For takePicture, the ImageProxy only contains one plane AKA Y plane.
+                    val imageBuffer = image.planes[0].buffer
+                    //                val width = image.width
+                    //                val height = image.height
+                    val oriImageBytes = imageBuffer.toByteArray()
                     LogContext.log.w(logTag,
-                        "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
+                        "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
 
-                    oriBmp.recycledSafety()
-                    processedBmp.recycledSafety()
+                    // DO NOT forget for close Image object
+                    image.close()
 
-                    withContext(Dispatchers.Main) {
-                        onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                        val st1 = System.currentTimeMillis()
+                        val oriBmp =
+                                BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                        val st2 = System.currentTimeMillis()
+                        LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
+                        val processedBmp =
+                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                        val st3 = System.currentTimeMillis()
+                        LogContext.log.w(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
+                        val finalWidth = processedBmp.width
+                        val finalHeight = processedBmp.height
+                        val imageBytes: ByteArray = processedBmp.toBytes()
+                        LogContext.log.w(logTag,
+                            "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
+
+                        oriBmp.recycledSafety()
+                        processedBmp.recycledSafety()
+
+                        LogContext.log.w(logTag, "After recycledSafety()")
+
+                        withContext(Dispatchers.Main) {
+                            onImageSaved(CaptureImage.ImageBytes(imageBytes,
+                                finalWidth,
+                                finalHeight),
+                                null)
+                        }
                     }
+                } catch (e: Exception) {
+                    LogContext.log.e(logTag, "Process onCaptureSuccess() error", e)
+                    requireActivity().runOnUiThread { onImageSaved(null, e) }
                 }
             }
 
@@ -247,15 +266,22 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 LogContext.log.e(logTag,
                     "ImageCapturedCallback - Photo capture failed: ${exc.message}",
                     exc)
+                requireActivity().runOnUiThread { onImageSaved(null, exc) }
             }
         })
     }
 
+    /**
+     * @param onImageSaved It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     */
     protected fun captureForOutputFile(viewFinder: PreviewView,
         imageCapture: ImageCapture,
         outputDirectory: File,
         startTimestamp: Long,
-        onImageSaved: (savedImage: CaptureImage.ImageUri) -> Unit) {
+        onImageSaved: (savedImage: CaptureImage.ImageUri?, exc: Exception?) -> Unit) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -280,32 +306,40 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     LogContext.log.e(logTag,
                         "ImageSavedCallback - Photo capture failed: ${exc.message}",
                         exc)
+                    requireActivity().runOnUiThread { onImageSaved(null, exc) }
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     LogContext.log.w(logTag,
                         "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms")
-                    showShutterAnimation(viewFinder)
-                    soundManager.playShutterSound()
-                    val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
-                    //                val tmpRotation = cameraRotationInDegree - 90
-                    //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
+                    try {
+                        showShutterAnimation(viewFinder)
+                        soundManager.playShutterSound()
+                        val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
+                        //                val tmpRotation = cameraRotationInDegree - 90
+                        //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val st1 = System.currentTimeMillis()
-                        val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
-                        val st2 = System.currentTimeMillis()
-                        LogContext.log.w(logTag, "Decode bitmap file cost=${st2 - st1}ms")
-                        adjustBitmapRotation(oriBmp,
-                            mirror,
-                            cameraRotationInDegree).run {
-                            writeToFile(photoFile)
-                            recycledSafety()
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            val st1 = System.currentTimeMillis()
+                            val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                            val st2 = System.currentTimeMillis()
+                            LogContext.log.w(logTag, "Decode bitmap file cost=${st2 - st1}ms")
+                            adjustBitmapRotation(oriBmp,
+                                mirror,
+                                cameraRotationInDegree).run {
+                                writeToFile(photoFile)
+                                recycledSafety()
+                            }
+                            val st3 = System.currentTimeMillis()
+                            LogContext.log.w(logTag, "Mirror and rotate cost=${st3 - st2}ms")
+                            requireActivity().runOnUiThread {
+                                onImageSaved(CaptureImage.ImageUri(savedUri), null)
+                            }
                         }
-                        val st3 = System.currentTimeMillis()
-                        LogContext.log.w(logTag, "Mirror and rotate cost=${st3 - st2}ms")
+                    } catch (e: Exception) {
+                        LogContext.log.e(logTag, "Process onImageSaved() error", e)
+                        requireActivity().runOnUiThread { onImageSaved(null, e) }
                     }
-                    requireActivity().runOnUiThread { onImageSaved(CaptureImage.ImageUri(savedUri)) }
                 }
             })
     }

@@ -497,6 +497,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
                 LogContext.log.w(logTag, "Click capture photo button.")
+                enableUI(false)
                 val startCaptureTimestamp: Long = System.currentTimeMillis()
                 startCountdown()
                 // Get a stable reference of the modifiable image capture use case
@@ -504,13 +505,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputPictureDirectory, startCaptureTimestamp) { savedImage ->
-                            //                             LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
-                            //                            val cost = measureTimeMillis {
-                            //                                ExifUtil.saveExif(savedImage.fileUri.path!!,
-                            //                                    savedImage = savedImage)
-                            //                            }
-                            //                            LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
+                            outputPictureDirectory, startCaptureTimestamp) { savedImage, exc ->
+                            if (exc != null) {
+                                captureImageListener?.onSavedImageUri(null, exc)
+                                return@captureForOutputFile
+                            }
+                            if (savedImage == null) throw IllegalArgumentException("savedImage can't be null")
+
+                            //  LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
+                            // val cost = measureTimeMillis {
+                            //     ExifUtil.saveExif(savedImage.fileUri.path!!,
+                            //         savedImage = savedImage)
+                            // }
+                            // LogContext.log.i(ITAG, "Save Exif cost=${cost}ms")
 
                             // We can only change the foreground Drawable using API level 23+ API
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -538,13 +545,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             //                                arrayOf(mimeType)) { path, uri ->
                             //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             //                            }
-                            captureImageListener?.onSavedImageUri(savedImage)
+                            enableUI(true)
+                            captureImageListener?.onSavedImageUri(savedImage, null)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder,
-                            imageCapture, startCaptureTimestamp) { savedImage ->
+                            imageCapture, startCaptureTimestamp) { savedImage, exc ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
-                            captureImageListener?.onSavedImageBytes(savedImage)
+                            enableUI(true)
+                            captureImageListener?.onSavedImageBytes(savedImage, exc)
                         }
                     }
                 }
@@ -558,19 +567,45 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             // Listener for button used to switch cameras. Only called if the button is enabled
             switchBtn.setOnClickListener {
-                it.isEnabled = false
+                //                it.isEnabled = false
+                enableUI(false)
                 switchBtn.animate()
                     .rotationBy(-180f)
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
-                            Handler(Looper.getMainLooper()).postDelayed({ it.isEnabled = true },
-                                500)
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                //                                it.isEnabled = true
+                                enableUI(true)
+                            }, 500)
                         }
                     })
                 switchCameraSelector()
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
             }
+        }
+    }
+
+    private fun enableUI(enable: Boolean) {
+        arrayOf(
+            cameraUiContainerTopBinding.btnTimer,
+            cameraUiContainerTopBinding.btnGrid,
+            cameraUiContainerTopBinding.btnFlash,
+            cameraUiContainerTopBinding.btnRatio,
+            cameraUiContainerTopBinding.btnHdr,
+            cameraUiContainerTopBinding.btnExposure,
+
+            cameraUiContainerBottomBinding.cameraCaptureButton,
+            cameraUiContainerBottomBinding.cameraSwitchButton,
+            cameraUiContainerBottomBinding.photoViewButton,
+        ).forEach {
+            it.isEnabled = enable
+        }
+
+        // Disable the resolution list if no resolution to switch.
+        if (!hasBackCamera() || !hasFrontCamera()) {
+            cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled =
+                    false
         }
     }
 

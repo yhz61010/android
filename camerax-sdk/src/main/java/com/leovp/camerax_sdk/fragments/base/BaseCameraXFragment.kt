@@ -217,8 +217,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 image.close()
 
                 val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                val st1 = System.currentTimeMillis()
                 val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                val st2 = System.currentTimeMillis()
+                LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
                 val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                LogContext.log.w(logTag,
+                    "Mirror and rotate bitmap cost=${System.currentTimeMillis() - st2}ms")
                 val finalWidth = processedBmp.width
                 val finalHeight = processedBmp.height
                 val imageBytes: ByteArray = processedBmp.toARGBBytes()

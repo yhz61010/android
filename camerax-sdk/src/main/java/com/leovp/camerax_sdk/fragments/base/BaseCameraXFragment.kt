@@ -332,9 +332,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             }
                             val st3 = System.currentTimeMillis()
                             LogContext.log.w(logTag, "Mirror and rotate cost=${st3 - st2}ms")
-                            requireActivity().runOnUiThread {
-                                onImageSaved(CaptureImage.ImageUri(savedUri), null)
-                            }
+                        }
+                        requireActivity().runOnUiThread {
+                            onImageSaved(CaptureImage.ImageUri(savedUri), null)
                         }
                     } catch (e: Exception) {
                         LogContext.log.e(logTag, "Process onImageSaved() error", e)

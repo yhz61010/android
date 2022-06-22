@@ -9,9 +9,30 @@ import com.leovp.camerax_sdk.listeners.CaptureImageListener
  * Author: Michael Leo
  * Date: 2022/4/25 15:34
  */
-class SimpleCaptureImageListener : CaptureImageListener {
-    override fun onSavedImageUri(savedImage: CaptureImage.ImageUri) {}
+open class SimpleCaptureImageListener : CaptureImageListener {
+    /**
+     * @param savedImage It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     *
+     * @param exc It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     */
+    override fun onSavedImageUri(savedImage: CaptureImage.ImageUri?, exc: Exception?) {}
 
-    override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
-    }
+    /**
+     * @param savedImage It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     *
+     * @param exc It guarantees that if the exc property in this function is not null,
+     * the savedImage property must be null.
+     * On the contrary, if the savedImage property in this function is not null,
+     * the exc property must be null.
+     */
+    override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes?, exc: Exception?) {}
 }

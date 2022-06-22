@@ -27,6 +27,7 @@ cmake -G"Unix Makefiles" \
   -DANDROID_ARM_MODE=${AOSP_ARM_MODE} \
   -DANDROID_PLATFORM=android-${AOSP_API} \
   -DANDROID_TOOLCHAIN=${TOOLCHAIN} \
+  -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_ASM_FLAGS="--target=${AOSP_TARGET}}" \
   -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \

@@ -48,77 +48,82 @@ class CameraXDemoActivity : CameraXActivity() {
     override fun getOutputCapturedImageStrategy() = CapturedImageStrategy.FILE
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
-    override var captureImageListener: CaptureImageListener? = object : CaptureImageListener {
-        override fun onSavedImageUri(savedImage: CaptureImage.ImageUri) {
-            LogContext.log.w(ITAG,
-                "onSavedImageUri uri=${savedImage.fileUri} path=${savedImage.fileUri.path}")
+    override fun getCaptureListener(): CaptureImageListener {
+        return object : CaptureImageListener {
+            override fun onSavedImageUri(savedImage: CaptureImage.ImageUri?, exc: Exception?) {
+                LogContext.log.w(ITAG,
+                    "onSavedImageUri uri=${savedImage?.fileUri} path=${savedImage?.fileUri?.path} Exc: $exc")
 
-            // To verify the original bitmap orientation.
-            //            val filePath: String = savedImage.fileUri.path!!
-            //            val bmp = BitmapFactory.decodeFile(filePath)
-            //                .apply { rotate(savedImage.rotationDegrees.toFloat()) }
-            //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
-            //            bmp.writeToFile(File(newFile, "new.jpg"))
-        }
+                if (savedImage == null) return
 
-        override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
-            LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
-
-            savedImage.imgBytes.toBitmapFromBytes(savedImage.width,
-                savedImage.height,
-                Bitmap.Config.ARGB_8888)?.apply {
-                val oriOutFile = File(getBaseDirString("Leo"), "${
-                    SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
-                }.jpg")
-                writeToFile(oriOutFile)
-                recycle()
-                LogContext.log.w(ITAG, "oriOutFile=${oriOutFile.absolutePath}")
+                // To verify the original bitmap orientation.
+                //            val filePath: String = savedImage.fileUri.path!!
+                //            val bmp = BitmapFactory.decodeFile(filePath)
+                //                .apply { rotate(savedImage.rotationDegrees.toFloat()) }
+                //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
+                //            bmp.writeToFile(File(newFile, "new.jpg"))
             }
 
-            //            val outUri: Uri? =
-            //                    getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
-            //            LogContext.log.i(ITAG, "outUri=$outUri")
-            //            outUri?.let { uri ->
-            //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
-            //            }
+            override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes?, exc: Exception?) {
+                LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage Exc: $exc")
+                if (savedImage == null) return
 
-            //            ExifUtil.saveExif(outFile.absolutePath, savedImage.width, savedImage.height, savedImage)
+                savedImage.imgBytes.toBitmapFromBytes(savedImage.width,
+                    savedImage.height,
+                    Bitmap.Config.ARGB_8888)?.apply {
+                    val oriOutFile = File(getBaseDirString("Leo"), "${
+                        SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
+                    }.jpg")
+                    writeToFile(oriOutFile)
+                    recycle()
+                    LogContext.log.w(ITAG, "oriOutFile=${oriOutFile.absolutePath}")
+                }
+
+                //            val outUri: Uri? =
+                //                    getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
+                //            LogContext.log.i(ITAG, "outUri=$outUri")
+                //            outUri?.let { uri ->
+                //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
+                //            }
+
+                //            ExifUtil.saveExif(outFile.absolutePath, savedImage.width, savedImage.height, savedImage)
+            }
         }
-    }
 
-    //    /**
-    //     * @param fileUri the media store file uri
-    //     * @param orientation in degrees 0, 90, 180, 270
-    //     * @param context
-    //     * @return
-    //     */
-    //    fun setOrientation(fileUri: Uri, orientation: Int, context: Context): Boolean {
-    //        val values = ContentValues()
-    //        values.put(MediaStore.Images.Media.ORIENTATION, orientation)
-    //        val rowsUpdated: Int = context.contentResolver.update(fileUri, values, null, null)
-    //        return rowsUpdated > 0
-    //    }
-    //
-    //    /**
-    //     * Get content uri for the file path
-    //     *
-    //     * @param path
-    //     * @param context
-    //     * @return
-    //     */
-    //    fun getContentUriForFilePath(path: String, context: Context): Uri? {
-    //        val projection = arrayOf(MediaStore.Images.Media._ID)
-    //        var result: Uri? = null
-    //        context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-    //            projection,
-    //            MediaStore.Images.Media.DATA + " = ?",
-    //            arrayOf(path),
-    //            null)?.use { cursor ->
-    //            if (cursor.moveToNext()) {
-    //                val mediaId: Long = cursor.getLong(0)
-    //                result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
-    //            }
-    //        }
-    //        return result
-    //    }
+        //    /**
+        //     * @param fileUri the media store file uri
+        //     * @param orientation in degrees 0, 90, 180, 270
+        //     * @param context
+        //     * @return
+        //     */
+        //    fun setOrientation(fileUri: Uri, orientation: Int, context: Context): Boolean {
+        //        val values = ContentValues()
+        //        values.put(MediaStore.Images.Media.ORIENTATION, orientation)
+        //        val rowsUpdated: Int = context.contentResolver.update(fileUri, values, null, null)
+        //        return rowsUpdated > 0
+        //    }
+        //
+        //    /**
+        //     * Get content uri for the file path
+        //     *
+        //     * @param path
+        //     * @param context
+        //     * @return
+        //     */
+        //    fun getContentUriForFilePath(path: String, context: Context): Uri? {
+        //        val projection = arrayOf(MediaStore.Images.Media._ID)
+        //        var result: Uri? = null
+        //        context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        //            projection,
+        //            MediaStore.Images.Media.DATA + " = ?",
+        //            arrayOf(path),
+        //            null)?.use { cursor ->
+        //            if (cursor.moveToNext()) {
+        //                val mediaId: Long = cursor.getLong(0)
+        //                result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
+        //            }
+        //        }
+        //        return result
+        //    }
+    }
 }

@@ -498,8 +498,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             lifecycleScope.launch(Dispatchers.Main) {
                 LogContext.log.w(logTag, "Click capture photo button.")
                 enableUI(false)
-                val startCaptureTimestamp: Long = System.currentTimeMillis()
                 startCountdown()
+                val startCaptureTimestamp: Long = System.currentTimeMillis()
                 // Get a stable reference of the modifiable image capture use case
                 imageCapture?.let { imageCapture ->
                     if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {

@@ -221,7 +221,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     //                val width = image.width
                     //                val height = image.height
                     val oriImageBytes = imageBuffer.toByteArray()
-                    LogContext.log.w(logTag,
+                    LogContext.log.i(logTag,
                         "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
 
                     // DO NOT forget for close Image object
@@ -233,21 +233,19 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         val oriBmp =
                                 BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
                         val st2 = System.currentTimeMillis()
-                        LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
+                        LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
                         val processedBmp =
                                 adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
                         val st3 = System.currentTimeMillis()
-                        LogContext.log.w(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
+                        LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
                         val finalWidth = processedBmp.width
                         val finalHeight = processedBmp.height
                         val imageBytes: ByteArray = processedBmp.toBytes()
-                        LogContext.log.w(logTag,
+                        LogContext.log.i(logTag,
                             "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
 
                         oriBmp.recycledSafety()
                         processedBmp.recycledSafety()
-
-                        LogContext.log.w(logTag, "After recycledSafety()")
 
                         withContext(Dispatchers.Main) {
                             onImageSaved(CaptureImage.ImageBytes(imageBytes,
@@ -323,7 +321,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val st1 = System.currentTimeMillis()
                             val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
                             val st2 = System.currentTimeMillis()
-                            LogContext.log.w(logTag, "Decode bitmap file cost=${st2 - st1}ms")
+                            LogContext.log.i(logTag, "Decode bitmap file cost=${st2 - st1}ms")
                             adjustBitmapRotation(oriBmp,
                                 mirror,
                                 cameraRotationInDegree).run {
@@ -331,7 +329,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                                 recycledSafety()
                             }
                             val st3 = System.currentTimeMillis()
-                            LogContext.log.w(logTag, "Mirror and rotate cost=${st3 - st2}ms")
+                            LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
                         }
                         requireActivity().runOnUiThread {
                             onImageSaved(CaptureImage.ImageUri(savedUri), null)

@@ -179,4 +179,5 @@ ext {
     coilKtVersion = '2.1.0'
     netVersion = '3.4.6'
     brvVersion = '1.3.62'
+    scaleImageViewVersion = '3.10.0'
 }

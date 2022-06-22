@@ -6,7 +6,7 @@ apply plugin: 'androidx.navigation.safeargs.kotlin'
 
 android {
     compileSdk rootProject.ext.compileSdkVersion
-    
+
     defaultConfig {
         minSdk rootProject.ext.minSdkVersion
         targetSdk rootProject.ext.targetSdkVersion
@@ -76,10 +76,11 @@ dependencies {
     api project(':log-sdk')
     api project(':pref-sdk')
 
-    api "com.github.getActivity:XXPermissions:$xxPermissionVersion"
-
     implementation "io.coil-kt:coil:$coilKtVersion"
     implementation "io.coil-kt:coil-video:$coilKtVersion"
+
+    api "com.github.getActivity:XXPermissions:$xxPermissionVersion"
+    implementation "com.davemorrissey.labs:subsampling-scale-image-view-androidx:$scaleImageViewVersion"
 }
 
 afterEvaluate {

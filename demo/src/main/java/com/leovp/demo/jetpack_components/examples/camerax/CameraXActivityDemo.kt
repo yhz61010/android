@@ -1,11 +1,12 @@
 package com.leovp.demo.jetpack_components.examples.camerax
 
+import android.graphics.Bitmap
 import com.leovp.camerax_sdk.CameraXActivity
 import com.leovp.camerax_sdk.bean.CaptureImage
 import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
 import com.leovp.lib_common_android.exts.getBaseDirString
-import com.leovp.lib_image.toBitmapFromARGBBytes
+import com.leovp.lib_image.toBitmapFromBytes
 import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
@@ -63,7 +64,9 @@ class CameraXDemoActivity : CameraXActivity() {
         override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes) {
             LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
 
-            savedImage.imgBytes.toBitmapFromARGBBytes(savedImage.width, savedImage.height)?.apply {
+            savedImage.imgBytes.toBitmapFromBytes(savedImage.width,
+                savedImage.height,
+                Bitmap.Config.ARGB_8888)?.apply {
                 val oriOutFile = File(getBaseDirString("Leo"), "${
                     SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
                 }.jpg")

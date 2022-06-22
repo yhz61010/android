@@ -57,6 +57,7 @@ import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,7 +65,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
-import kotlin.system.measureTimeMillis
 
 /**
  * Author: Michael Leo
@@ -207,31 +207,40 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 showShutterAnimation(viewFinder)
                 soundManager.playShutterSound()
 
+                val st0 = System.currentTimeMillis()
                 // For takePicture, the ImageProxy only contains one plane AKA Y plane.
                 val imageBuffer = image.planes[0].buffer
                 //                val width = image.width
                 //                val height = image.height
                 val oriImageBytes = imageBuffer.toByteArray()
+                LogContext.log.w(logTag,
+                    "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
 
                 // DO NOT forget for close Image object
                 image.close()
 
-                val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-                val st1 = System.currentTimeMillis()
-                val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
-                val st2 = System.currentTimeMillis()
-                LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-                val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
-                LogContext.log.w(logTag,
-                    "Mirror and rotate bitmap cost=${System.currentTimeMillis() - st2}ms")
-                val finalWidth = processedBmp.width
-                val finalHeight = processedBmp.height
-                val imageBytes: ByteArray = processedBmp.toARGBBytes()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                    val st1 = System.currentTimeMillis()
+                    val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                    val st2 = System.currentTimeMillis()
+                    LogContext.log.w(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
+                    val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                    val st3 = System.currentTimeMillis()
+                    LogContext.log.w(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
+                    val finalWidth = processedBmp.width
+                    val finalHeight = processedBmp.height
+                    val imageBytes: ByteArray = processedBmp.toARGBBytes()
+                    LogContext.log.w(logTag,
+                        "toARGBBytes cost=${System.currentTimeMillis() - st3}ms")
 
-                oriBmp.recycledSafety()
-                processedBmp.recycledSafety()
+                    oriBmp.recycledSafety()
+                    processedBmp.recycledSafety()
 
-                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
+                    withContext(Dispatchers.Main) {
+                        onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight))
+                    }
+                }
             }
 
             override fun onError(exc: ImageCaptureException) {
@@ -262,7 +271,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         //                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-        val cameraSensorOrientationDegree: Int = cameraRotationInDegree
 
         // Setup image capture listener which is triggered after photo has been taken
         imageCapture.takePicture(outputOptions,
@@ -284,16 +292,18 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
                     lifecycleScope.launch(Dispatchers.IO) {
-                        val processCost = measureTimeMillis {
-                            val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
-                            adjustBitmapRotation(oriBmp,
-                                mirror,
-                                cameraSensorOrientationDegree).run {
-                                writeToFile(photoFile)
-                                recycledSafety()
-                            }
+                        val st1 = System.currentTimeMillis()
+                        val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                        val st2 = System.currentTimeMillis()
+                        LogContext.log.w(logTag, "Decode bitmap file cost=${st2 - st1}ms")
+                        adjustBitmapRotation(oriBmp,
+                            mirror,
+                            cameraRotationInDegree).run {
+                            writeToFile(photoFile)
+                            recycledSafety()
                         }
-                        LogContext.log.w(logTag, "Process bitmap cost=${processCost}ms")
+                        val st3 = System.currentTimeMillis()
+                        LogContext.log.w(logTag, "Mirror and rotate cost=${st3 - st2}ms")
                     }
                     requireActivity().runOnUiThread { onImageSaved(CaptureImage.ImageUri(savedUri)) }
                 }
@@ -801,7 +811,7 @@ Supported profile/level for HEVC=${
     }
 
     companion object {
-        internal const val FILENAME = "yyyyMMdd-HHmmss-SSS"
+        internal const val FILENAME = "yyyyMMdd_HHmmss_SSS"
 
         internal const val BASE_FOLDER_NAME = "CameraX"
 

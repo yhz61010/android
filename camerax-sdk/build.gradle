@@ -81,6 +81,9 @@ dependencies {
 
     api "com.github.getActivity:XXPermissions:$xxPermissionVersion"
     implementation "com.davemorrissey.labs:subsampling-scale-image-view-androidx:$scaleImageViewVersion"
+    // This is the enhanced version of [subsampling-scale-image-view-androidx]
+//    implementation "com.github.piasy:BigImageViewer:$bigImageViewerVersion"
+
 }
 
 afterEvaluate {

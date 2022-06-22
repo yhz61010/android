@@ -538,15 +538,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             //                                arrayOf(mimeType)) { path, uri ->
                             //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
                             //                            }
-                            LogContext.log.w(logTag,
-                                "Final total capture image cost=${System.currentTimeMillis() - startCaptureTimestamp}ms")
                             captureImageListener?.onSavedImageUri(savedImage)
                         }
                     } else {
                         captureForBytes(incPreviewGridBinding.viewFinder,
                             imageCapture, startCaptureTimestamp) { savedImage ->
-                            LogContext.log.w(logTag,
-                                "Final total capture bytes cost=${System.currentTimeMillis() - startCaptureTimestamp}ms")
                             // LogContext.log.w(logTag, "Saved image=savedImage")
                             captureImageListener?.onSavedImageBytes(savedImage)
                         }

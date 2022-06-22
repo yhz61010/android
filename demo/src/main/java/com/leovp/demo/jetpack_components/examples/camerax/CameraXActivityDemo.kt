@@ -10,6 +10,8 @@ import com.leovp.lib_image.writeToFile
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -38,6 +40,10 @@ import java.io.File
  * Date: 2022/4/25 14:50
  */
 class CameraXDemoActivity : CameraXActivity() {
+    companion object {
+        private const val FILENAME = "yyyyMMdd_HHmmss_SSS"
+    }
+
     override fun getOutputCapturedImageStrategy() = CapturedImageStrategy.FILE
 
     /** You can implement `CaptureImageListener` or `SimpleCaptureImageListener` */
@@ -58,7 +64,9 @@ class CameraXDemoActivity : CameraXActivity() {
             LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage")
 
             savedImage.imgBytes.toBitmapFromARGBBytes(savedImage.width, savedImage.height)?.apply {
-                val oriOutFile = File(getBaseDirString("Leo"), "ori.jpg")
+                val oriOutFile = File(getBaseDirString("Leo"), "${
+                    SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
+                }.jpg")
                 writeToFile(oriOutFile)
                 recycle()
                 LogContext.log.w(ITAG, "oriOutFile=${oriOutFile.absolutePath}")

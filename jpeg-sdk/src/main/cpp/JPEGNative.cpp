@@ -40,12 +40,12 @@ METHODDEF(void) my_error_exit(j_common_ptr cinfo) {
 int write_JPEG_file(BYTE *data, uint32_t w, uint32_t h, int quality,
                     const char *outFilename, jboolean optimize) {
     //jpeg的结构体，保存的比如宽、高、位深、图片格式等信息
-    struct jpeg_compress_struct cinfo;
+    struct jpeg_compress_struct cinfo{};
 
     /* Step 1: allocate and initialize JPEG compression object */
 
     /* We set up the normal JPEG error routines, then override error_exit. */
-    struct my_error_mgr jem;
+    struct my_error_mgr jem{};
     cinfo.err = jpeg_std_error(&jem.pub);
     jem.pub.error_exit = my_error_exit;
     /* Establish the setjmp return context for my_error_exit to use. */
@@ -98,7 +98,6 @@ int write_JPEG_file(BYTE *data, uint32_t w, uint32_t h, int quality,
     //设置质量
     jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
 
-
     /* Step 4: Start compressor */
 
     jpeg_start_compress(&cinfo, TRUE);
@@ -108,7 +107,7 @@ int write_JPEG_file(BYTE *data, uint32_t w, uint32_t h, int quality,
     /*           jpeg_write_scanlines(...); */
 
     JSAMPROW row_pointer[1];
-    int row_stride;
+    uint32_t row_stride;
     //一行的RGB数量
     row_stride = cinfo.image_width * 3; /* JSAMPLEs per row in image_buffer */
     //一行一行遍历
@@ -122,7 +121,6 @@ int write_JPEG_file(BYTE *data, uint32_t w, uint32_t h, int quality,
     jpeg_finish_compress(&cinfo);
     /* After finish_compress, we can close the output file. */
     fclose(outfile);
-    outfile = nullptr;
 
     /* Step 7: release JPEG compression object */
 
@@ -144,6 +142,8 @@ JNIEXPORT jint JNICALL compressBitmap(JNIEnv *env, __attribute__((unused)) jobje
     //获取bitmap的 宽，高，format
     uint32_t w = android_bitmap_info.width;
     uint32_t h = android_bitmap_info.height;
+
+//    LOGE("bitmap w=%d h=%d", w, h);
 
     //读取Bitmap所有像素信息
     BYTE *pixelsColor;

@@ -100,9 +100,14 @@ android {
                            'lib/armeabi-v7a/libadpcm-ima-qt.so',
                            'lib/armeabi-v7a/libc++_shared.so',
                            'lib/arm64-v8a/libavutil.so',
+                           'lib/armeabi-v7a/libjpeg.so',
+                           'lib/armeabi-v7a/libturbojpeg.so',
+                           'lib/arm64-v8a/libjpeg.so',
+                           'lib/arm64-v8a/libturbojpeg.so',
                            'lib/arm64-v8a/libavcodec.so',
                            'lib/arm64-v8a/libadpcm-ima-qt.so',
-                           'lib/arm64-v8a/libc++_shared.so']
+                           'lib/arm64-v8a/libc++_shared.so',
+            ]
         }
         resources {
             excludes += ['META-INF/atomicfu.kotlin_module']
@@ -138,7 +143,8 @@ android {
                            'META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json',
                            'META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json',
                            'META-INF/INDEX.LIST',
-                           'META-INF/io.netty.versions.properties']
+                           'META-INF/io.netty.versions.properties',
+            ]
         }
     }
 
@@ -248,6 +254,7 @@ dependencies {
     implementation project(':circle-progressbar-sdk')
     implementation project(':opengl-sdk')
     implementation project(':camerax-sdk')
+    implementation project(':jpeg-sdk')
 
     implementation project(':lib-network')
     implementation project(':lib-exception')

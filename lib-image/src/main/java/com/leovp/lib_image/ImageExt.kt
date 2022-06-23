@@ -2,6 +2,7 @@
 
 package com.leovp.lib_image
 
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -12,9 +13,12 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.media.Image
 import android.os.Build
+import androidx.annotation.DrawableRes
+import androidx.annotation.Keep
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.nio.ByteBuffer
 
 
@@ -22,6 +26,42 @@ import java.nio.ByteBuffer
  * Author: Michael Leo
  * Date: 2021/7/30 10:10
  */
+
+// ====================
+@Keep
+data class ImageInfo(val width: Int, val height: Int, val type: String)
+
+// https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
+fun getImageInfo(resources: Resources, @DrawableRes resId: Int): ImageInfo {
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+    BitmapFactory.decodeResource(resources, resId, options)
+    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
+}
+
+/**
+ * @param t Supported following type:
+ * - String: File path name
+ * - ByteArray: Image bytes
+ * - InputStream: Image input stream
+ *
+ * https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
+ */
+inline fun <reified T> getImageInfo(t: T & Any): ImageInfo {
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+    when (t) {
+        is String      -> BitmapFactory.decodeFile(t, options) // t is pathName
+        is ByteArray   -> BitmapFactory.decodeByteArray(t, 0, t.size, options)
+        is InputStream -> BitmapFactory.decodeStream(t, null, options)
+        else           -> throw IllegalArgumentException("Unsupported type ${t::class.java}")
+    }
+    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
+}
+
+// ====================
 
 fun Bitmap?.recycledSafety() {
     if (this != null && !this.isRecycled) this.recycle()

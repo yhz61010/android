@@ -29,9 +29,7 @@ $ sh copy_necessary_files_from_jpeg_burbo.sh
 ```
 
 ## How to compile `jpeg-sdk`
-
-First, copy `include` folder from `libyuv/jni` to `yuv-sdk/main/cpp`. Then, you have three ways to
-compile `yuv-sdk` module:
+You have three ways to compile `jpeg-sdk` module:
 
 - Compile with `gradlew` command.
 

@@ -322,14 +322,18 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap file cost=${st2 - st1}ms")
-                            adjustBitmapRotation(oriBmp,
-                                mirror,
-                                cameraRotationInDegree).run {
+
+                            val rotatedBmp =
+                                    adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val st3 = System.currentTimeMillis()
+                            LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
+
+                            rotatedBmp.run {
                                 writeToFile(photoFile)
                                 recycledSafety()
                             }
-                            val st3 = System.currentTimeMillis()
-                            LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
+                            val st4 = System.currentTimeMillis()
+                            LogContext.log.d(logTag, "Write bitmap file cost=${st4 - st3}ms")
                         }
                         requireActivity().runOnUiThread {
                             onImageSaved(CaptureImage.ImageUri(savedUri), null)

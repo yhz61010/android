@@ -75,6 +75,7 @@ dependencies {
     api project(':lib-exif')
     api project(':log-sdk')
     api project(':pref-sdk')
+//    implementation project(":jpeg-sdk")
 
     implementation "io.coil-kt:coil:$coilKtVersion"
     implementation "io.coil-kt:coil-video:$coilKtVersion"

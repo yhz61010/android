@@ -179,7 +179,7 @@ JNIEXPORT jint JNICALL compressBitmap(JNIEnv *env, __attribute__((unused)) jobje
     AndroidBitmap_unlockPixels(env, bitmap);
 
     char *path = (char *) env->GetStringUTFChars(outFilPath, nullptr);
-    LOGE("path=%s", path);
+//    LOGE("path=%s", path);
 
     // Libjpeg进行压缩
     int resultCode = write_JPEG_file(tempData, w, h, quality, path, optimize);

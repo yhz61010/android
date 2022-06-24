@@ -104,6 +104,7 @@
         <entry key="demo/src/main/res/layout/activity_aidl.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_app_settings.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_audio.xml" value="0.67" />
+        <entry key="demo/src/main/res/layout/activity_bitmap_native.xml" value="0.46153846153846156" />
         <entry key="demo/src/main/res/layout/activity_bluetooth_server.xml" value="0.46153846153846156" />
         <entry key="demo/src/main/res/layout/activity_camera2_live.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_change_app_language.xml" value="0.22962962962962963" />

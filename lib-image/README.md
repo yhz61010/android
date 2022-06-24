@@ -1,6 +1,8 @@
-Generate so file with jni file In Android Studio, just build project, you will get so files. Or
-execute the following command
-under `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/lib-image` folder:
+## Generate `so` files with jni file
+
+In Android Studio, just build project, you will get `so` files. Or execute the following command
+under
+`/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/lib-image` folder:
 
 ```shell
 % ndk-build

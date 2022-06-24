@@ -735,10 +735,26 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 LogContext.log.i(logTag,
                     "$cameraName cameraSensorOrientation changed to: $cameraRotation-${DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]}")
                 cameraRotationInDegree = cameraRotation
-                //                deviceOrientationListener?.invoke(cameraRotation)
+                // deviceOrientationListener?.invoke(cameraRotation)
 
-//                imageAnalyzer?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
-//                imageCapture?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
+//                val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+//                val surfaceOrientation = if (mirror) {
+//                    when (cameraRotationInDegree) {
+//                        0    -> Surface.ROTATION_90
+//                        90   -> Surface.ROTATION_180
+//                        180  -> Surface.ROTATION_270
+//                        else -> /* 270 */ Surface.ROTATION_0
+//                    }
+//                } else {
+//                    when (cameraRotationInDegree) {
+//                        0    -> Surface.ROTATION_90
+//                        90   -> Surface.ROTATION_0
+//                        180  -> Surface.ROTATION_270
+//                        else -> /* 270 */ Surface.ROTATION_180
+//                    }
+//                }
+//                imageAnalyzer?.targetRotation = surfaceOrientation
+//                imageCapture?.targetRotation = surfaceOrientation
             }
         }
     }

@@ -71,12 +71,11 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
             bitmapByteBuffer?.let { cropBitmap(it, left, top, right, bottom) }
 
     val bitmap: Bitmap? get() = bitmapByteBuffer?.let { getBitmapFromSavedBitmapData(it) }
-    val bitmapAndFree: Bitmap?
-        get() {
-            val bmp = bitmap
-            free()
-            return bmp
-        }
+    fun getBitmapAndFree(): Bitmap? {
+        val bmp = bitmap
+        free()
+        return bmp
+    }
 
     fun scaleBitmap(newWidth: Int,
         newHeight: Int,

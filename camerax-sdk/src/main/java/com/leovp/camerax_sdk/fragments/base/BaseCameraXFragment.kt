@@ -50,10 +50,7 @@ import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
-import com.leovp.lib_image.flipRotate
-import com.leovp.lib_image.recycledSafety
-import com.leovp.lib_image.toBytes
-import com.leovp.lib_image.writeToFile
+import com.leovp.lib_image.*
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -349,16 +346,41 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private fun adjustBitmapRotation(bitmap: Bitmap,
         mirror: Boolean,
         cameraSensorOrientationDegree: Int): Bitmap {
-        val imageRotationDegree: Int = if (mirror) {
-            when (cameraSensorOrientationDegree) {
-                0             -> 0
-                270           -> 90
-                180           -> 180
-                else /* 90 */ -> 270
-            }
-        } else cameraSensorOrientationDegree
 
-        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())
+        var bmpProcessor: BitmapProcessor? = null
+        if (0 != cameraSensorOrientationDegree) {
+            bmpProcessor = BitmapProcessor(bitmap)
+            if (mirror) bmpProcessor.flipBitmapHorizontal()
+        }
+        return when (cameraSensorOrientationDegree) {
+            0             -> bitmap.flipRotate(mirror, false, 0f)
+            270           -> bmpProcessor!!.run { rotateBitmapCcw90();getBitmapAndFree()!! }
+            180           -> bmpProcessor!!.run { rotateBitmap180();getBitmapAndFree()!! }
+            else /* 90 */ -> bmpProcessor!!.run { rotateBitmapCw90();getBitmapAndFree()!! }
+        }
+
+
+        //        val bmpProcessor = BitmapProcessor(bitmap)
+        //        if (mirror) bmpProcessor.flipBitmapHorizontal()
+        //
+        //        when (cameraSensorOrientationDegree) {
+        //            0             -> Unit
+        //            270           -> bmpProcessor.rotateBitmapCw90()
+        //            180           -> bmpProcessor.rotateBitmap180()
+        //            else /* 90 */ -> bmpProcessor.rotateBitmapCcw90()
+        //        }
+        //        return bmpProcessor.getBitmapAndFree()!!
+
+
+        //        val imageRotationDegree: Int = if (mirror) {
+        //            when (cameraSensorOrientationDegree) {
+        //                0             -> 0
+        //                270           -> 90
+        //                180           -> 180
+        //                else /* 90 */ -> 270
+        //            }
+        //        } else cameraSensorOrientationDegree
+        //        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())
     }
 
     private fun showShutterAnimation(viewFinder: PreviewView) {

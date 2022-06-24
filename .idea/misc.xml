@@ -54,9 +54,9 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_resume.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_share.xml" value="0.583" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter.xml" value="0.583" />
-        <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.239" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_focused.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_normal.xml" value="0.239" />
-        <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_pressed.xml" value="0.569" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_shutter_pressed.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_start.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_stop.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_switch.xml" value="0.569" />

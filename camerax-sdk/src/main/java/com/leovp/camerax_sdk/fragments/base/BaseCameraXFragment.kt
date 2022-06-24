@@ -144,10 +144,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val cameraName = if (cameraId == "0") "BACK" else "FRONT"
-        LogContext.log.d(logTag,
-            "updateOrientationLiveData cameraId: $cameraName")
-        val characteristics: CameraCharacteristics =
-                cameraManager.getCameraCharacteristics(cameraId)
+        LogContext.log.d(logTag, "updateOrientationLiveData cameraId: $cameraName")
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
         cameraRotationInDegree = characteristics.cameraSensorOrientation()
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {

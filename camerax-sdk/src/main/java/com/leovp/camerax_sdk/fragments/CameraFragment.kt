@@ -737,8 +737,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 cameraRotationInDegree = cameraRotation
                 //                deviceOrientationListener?.invoke(cameraRotation)
 
-                imageAnalyzer?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
-                imageCapture?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
+//                imageAnalyzer?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
+//                imageCapture?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
             }
         }
     }

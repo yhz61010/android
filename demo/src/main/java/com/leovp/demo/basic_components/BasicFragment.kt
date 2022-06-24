@@ -100,6 +100,7 @@ class BasicFragment : Fragment() {
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
+            Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)

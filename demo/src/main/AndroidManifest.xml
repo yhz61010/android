@@ -15,8 +15,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Request legacy Bluetooth permissions on older devices. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- Request legacy Bluetooth permissions on older devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <!--
@@ -43,6 +42,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".basic_components.examples.BitmapNativeActivity" android:exported="false" />
         <activity android:name=".basic_components.examples.NetActivity" android:exported="false" />
         <activity android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"

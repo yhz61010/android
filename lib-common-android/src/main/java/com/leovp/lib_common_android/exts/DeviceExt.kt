@@ -34,6 +34,7 @@ const val VENDOR_OPPO = "OPPO"
 const val VENDOR_VIVO = "vivo"
 const val VENDOR_ONE_PLUS = "OnePlus"
 const val VENDOR_SAMSUNG = "samsung"
+const val VENDOR_GOOGLE = "Google"
 const val VENDOR_OTHER = "other"
 
 val Context.isHuaWei: Boolean
@@ -48,6 +49,8 @@ val Context.isVivo: Boolean
     get() = VENDOR_VIVO.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 val Context.isSamsung: Boolean
     get() = VENDOR_SAMSUNG.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
+val Context.isGoogle: Boolean
+    get() = VENDOR_GOOGLE.equals(DeviceUtil.getInstance(this).manufacturer, ignoreCase = true)
 
 val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
 val Context.density get(): Float = this.resources.displayMetrics.density

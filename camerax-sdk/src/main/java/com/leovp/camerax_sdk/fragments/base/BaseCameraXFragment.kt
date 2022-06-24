@@ -255,15 +255,15 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
         // Setup image capture metadata
-        //        val metadata = ImageCapture.Metadata().apply {
-        //            // Mirror image when using the front camera
-        //            isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
-        //        }
+        val metadata = ImageCapture.Metadata().apply {
+            // Mirror image when using the front camera
+            isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
+        }
 
         // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        //        val outputOptions =
-        //                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
+        //        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        val outputOptions =
+                ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
 
@@ -285,9 +285,20 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         showShutterAnimation(viewFinder)
                         soundManager.playShutterSound()
                         val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
-                        //                val tmpRotation = cameraRotationInDegree - 90
-                        //                val imageRotation = if (tmpRotation < 0) 270 else tmpRotation
 
+                        /**
+                         * Note that, for image rotation, you can set image rotation with:
+                         * Please check `CameraFragment.kt` file.
+                         * ```
+                         * imageAnalyzer.targetRotation = surfaceOrientation
+                         * imageCapture.targetRotation = surfaceOrientation
+                         * ```
+                         * this will set exif information in generated file NOT.
+                         * So that the image looks like
+                         *
+                         * Or else, rotate the original bitmap file as below:
+                         * (Attention: rotate the generated file directly will take more time.)
+                         */
                         lifecycleScope.launch(Dispatchers.IO) {
                             val st1 = System.currentTimeMillis()
                             val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)

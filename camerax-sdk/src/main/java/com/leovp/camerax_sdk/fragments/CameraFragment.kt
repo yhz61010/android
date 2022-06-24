@@ -32,10 +32,7 @@ import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
-import com.leovp.camerax_sdk.utils.SURFACE_ORIENTATIONS_TO_DEGREE
-import com.leovp.camerax_sdk.utils.cameraSensorOrientation
-import com.leovp.camerax_sdk.utils.getCameraSupportedSize
-import com.leovp.camerax_sdk.utils.toggleButton
+import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
@@ -116,11 +113,18 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     override fun onResume() {
         super.onResume()
+        updateOrientationLiveData()
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
         if (!XXPermissions.isGranted(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
             navController.navigate(CameraFragmentDirections.actionCameraToPermissions())
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        relativeOrientation?.removeObservers(viewLifecycleOwner)
+        relativeOrientation = null
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -579,6 +583,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         }
                     })
                 switchCameraSelector()
+                updateOrientationLiveData()
                 // Re-bind use cases to update selected camera
                 bindCameraUseCases()
             }
@@ -707,6 +712,34 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         incRatioBinding.llRatioOptions.circularClose(cameraUiContainerTopBinding.btnRatio) {
             selectedRatio = ratio
             bindCameraUseCases()
+        }
+    }
+
+    // ------------------------------
+
+    /** Live data listener for changes in the device orientation relative to the camera */
+    private var relativeOrientation: OrientationLiveData? = null
+
+    private fun updateOrientationLiveData() {
+        relativeOrientation?.removeObservers(viewLifecycleOwner)
+        relativeOrientation = null
+
+        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+        val cameraName = if (cameraId == "0") "BACK" else "FRONT"
+        LogContext.log.d(logTag, "updateOrientationLiveData cameraId: $cameraName")
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+        cameraRotationInDegree = characteristics.cameraSensorOrientation()
+        // Used to rotate the output media to match device orientation
+        relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
+            observe(viewLifecycleOwner) { cameraRotation ->
+                LogContext.log.i(logTag,
+                    "$cameraName cameraSensorOrientation changed to: $cameraRotation-${DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]}")
+                cameraRotationInDegree = cameraRotation
+                //                deviceOrientationListener?.invoke(cameraRotation)
+
+                imageAnalyzer?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
+                imageCapture?.targetRotation = DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]!!
+            }
         }
     }
 }

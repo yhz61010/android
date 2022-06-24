@@ -124,9 +124,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var cameraRotationInDegree = -1
     //    var deviceOrientationListener: OrientationListener? = null
 
-    /** Live data listener for changes in the device orientation relative to the camera */
-    private var relativeOrientation: OrientationLiveData? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         LogContext.log.w(logTag, "=====> onViewCreated <=====")
         super.onViewCreated(view, savedInstanceState)
@@ -136,26 +133,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         // Determine the output directory
         outputPictureDirectory = getOutputPictureDirectory(requireContext())
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
-    }
-
-    private fun updateOrientationLiveData() {
-        relativeOrientation?.removeObservers(viewLifecycleOwner)
-        relativeOrientation = null
-
-        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val cameraName = if (cameraId == "0") "BACK" else "FRONT"
-        LogContext.log.d(logTag, "updateOrientationLiveData cameraId: $cameraName")
-        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-        cameraRotationInDegree = characteristics.cameraSensorOrientation()
-        // Used to rotate the output media to match device orientation
-        relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
-            observe(viewLifecycleOwner) { cameraRotation ->
-                LogContext.log.i(logTag,
-                    "$cameraName cameraSensorOrientation changed to: $cameraRotation")
-                cameraRotationInDegree = cameraRotation
-                //                deviceOrientationListener?.invoke(cameraRotation)
-            }
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -170,13 +147,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     override fun onResume() {
         LogContext.log.w(logTag, "=====> onResume() <=====")
         super.onResume()
-        updateOrientationLiveData()
     }
 
     override fun onPause() {
+        LogContext.log.w(logTag, "=====> onPause() <=====")
         super.onPause()
-        relativeOrientation?.removeObservers(viewLifecycleOwner)
-        relativeOrientation = null
     }
 
     override fun onDestroyView() {
@@ -741,7 +716,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             }
         }
         saveCameraLensFacing()
-        updateOrientationLiveData()
     }
 
     private fun saveCameraLensFacing() {

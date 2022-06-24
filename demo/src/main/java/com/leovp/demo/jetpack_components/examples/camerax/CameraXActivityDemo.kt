@@ -57,11 +57,9 @@ class CameraXDemoActivity : CameraXActivity() {
                 if (savedImage == null) return
 
                 // To verify the original bitmap orientation.
-                //            val filePath: String = savedImage.fileUri.path!!
-                //            val bmp = BitmapFactory.decodeFile(filePath)
-                //                .apply { rotate(savedImage.rotationDegrees.toFloat()) }
-                //            val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
-                //            bmp.writeToFile(File(newFile, "new.jpg"))
+                // val bmp = BitmapFactory.decodeFile(savedImage.fileUri.path!!)
+                // val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
+                // bmp.writeToFile(File(newFile, "new.jpg"))
             }
 
             override fun onSavedImageBytes(savedImage: CaptureImage.ImageBytes?, exc: Exception?) {

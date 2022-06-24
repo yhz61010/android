@@ -24,22 +24,34 @@ If your want to import this module by other projects, you can make a wrapper mod
 ```
 Unzip it into the following folder:
 > # -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
+
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
 % tar xvJf ffmpeg-5.0.tar.xz
 ```
+
 2. Compile and get static library
+
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
 % ./build_ffmpeg_all.sh
 ```
-3. Generate so file with jni file
-In Android Studio, just build project, you will get so files. Or execute the following command under `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni` folder:
+
+3. Generate `so` files with jni file In Android Studio, just build project, you will get `so` files.
+   Or execute the following command under
+   `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni`
+   folder:
+
 ```shell
 % ndk-build
 ```
+
 or execute command with full parameters:
+
 ```shell
 % ndk-build NDK_PROJECT_PATH=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni APP_PLATFORM=android-21 NDK_APPLICATION_MK=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Application.mk APP_BUILD_SCRIPT=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Android.mk
 ```
-Then you will get each generate `so` file in `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/libs` folder.
+
+Then you will get each generate `so` file
+in `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/libs`
+folder.

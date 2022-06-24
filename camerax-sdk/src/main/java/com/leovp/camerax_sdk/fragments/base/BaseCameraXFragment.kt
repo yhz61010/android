@@ -47,6 +47,7 @@ import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.dp2px
 import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.isSamsung
 import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
@@ -347,37 +348,81 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         mirror: Boolean,
         cameraSensorOrientationDegree: Int): Bitmap {
 
-        var bmpProcessor: BitmapProcessor? = null
-        if (0 != cameraSensorOrientationDegree) {
-            bmpProcessor = BitmapProcessor(bitmap)
-            if (mirror) bmpProcessor.flipBitmapHorizontal()
-        }
         return when (cameraSensorOrientationDegree) {
-            0             -> bitmap.flipRotate(mirror, false, 0f)
-            270           -> bmpProcessor!!.run { rotateBitmapCcw90();getBitmapAndFree()!! }
-            180           -> bmpProcessor!!.run { rotateBitmap180();getBitmapAndFree()!! }
-            else /* 90 */ -> bmpProcessor!!.run { rotateBitmapCw90();getBitmapAndFree()!! }
+            0    -> { // by android
+                // Android method is the fastest.
+                bitmap.flipRotate(mirror, false, 0f)
+            }
+            90   -> { // Samsung by native // Pixel by Android
+                // On Samsung, native method is faster than android method.
+                // On Google Pixel, android method is faster than native method.
+                when {
+                    requireContext().isSamsung -> {
+                        BitmapProcessor(bitmap).run {
+                            if (mirror) {
+                                flipBitmapHorizontal()
+                                rotateBitmapCcw90()
+                            } else {
+                                rotateBitmapCw90()
+                            }
+                            getBitmapAndFree()!!
+                        }
+                    }
+                    else                       -> {
+                        val imageRotate = if (mirror) 270f else 90f
+                        bitmap.flipRotate(mirror, false, imageRotate)
+                    }
+                }
+            }
+            180  -> { // by native
+                // Native method is the fastest.
+                BitmapProcessor(bitmap).run {
+                    if (mirror) flipBitmapHorizontal()
+                    rotateBitmap180()
+                    getBitmapAndFree()!!
+                }
+            }
+            else -> /* 270 */ { // Samsung by native // Pixel by Android
+                // On Samsung, native method is faster than android method.
+                // On Google Pixel, android method is faster than native method.
+                when {
+                    requireContext().isSamsung -> {
+                        BitmapProcessor(bitmap).run {
+                            if (mirror) {
+                                flipBitmapHorizontal()
+                                rotateBitmapCw90()
+                            } else {
+                                rotateBitmapCcw90()
+                            }
+                            getBitmapAndFree()!!
+                        }
+                    }
+                    else                       -> {
+                        val imageRotate = if (mirror) 90f else 270f
+                        bitmap.flipRotate(mirror, false, imageRotate)
+                    }
+                }
+            }
         }
 
 
         //        val bmpProcessor = BitmapProcessor(bitmap)
         //        if (mirror) bmpProcessor.flipBitmapHorizontal()
-        //
         //        when (cameraSensorOrientationDegree) {
-        //            0             -> Unit
-        //            270           -> bmpProcessor.rotateBitmapCw90()
-        //            180           -> bmpProcessor.rotateBitmap180()
-        //            else /* 90 */ -> bmpProcessor.rotateBitmapCcw90()
+        //            0   -> Unit
+        //            90  -> bmpProcessor.rotateBitmapCw90()
+        //            180 -> bmpProcessor.rotateBitmap180()
+        //            270 -> bmpProcessor.rotateBitmapCcw90()
         //        }
         //        return bmpProcessor.getBitmapAndFree()!!
 
 
         //        val imageRotationDegree: Int = if (mirror) {
         //            when (cameraSensorOrientationDegree) {
-        //                0             -> 0
-        //                270           -> 90
-        //                180           -> 180
-        //                else /* 90 */ -> 270
+        //                0    -> 0
+        //                90   -> 270
+        //                180  -> 180
+        //                else -> 90 /* 270 */
         //            }
         //        } else cameraSensorOrientationDegree
         //        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())

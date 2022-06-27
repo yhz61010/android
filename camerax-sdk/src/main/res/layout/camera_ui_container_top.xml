@@ -200,8 +200,8 @@
 
         <ImageView
             android:id="@+id/ivExposureMinus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/exposure_minus_plus_icon_size"
+            android:layout_height="@dimen/exposure_minus_plus_icon_size"
             android:src="@drawable/ic_minus"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -210,8 +210,8 @@
 
         <ImageView
             android:id="@+id/ivExposurePlus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/exposure_minus_plus_icon_size"
+            android:layout_height="@dimen/exposure_minus_plus_icon_size"
             android:src="@drawable/ic_plus"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -223,18 +223,24 @@
             android:id="@+id/sliderExposure"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            tools:value="0.25"
+            android:layout_marginStart="@dimen/exposure_slider_margin"
+            android:layout_marginEnd="@dimen/exposure_slider_margin"
             android:value="0"
+            app:haloColor="#00ffffff"
+            app:labelBehavior="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/ivExposurePlus"
-            app:layout_constraintStart_toEndOf="@+id/ivExposureMinus"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:thumbColor="@color/slider_color"
-            app:haloColor="#00ffffff"
+            app:thumbColor="#ffffffff"
+            app:thumbElevation="2dp"
+            app:thumbRadius="8dp"
+            app:thumbStrokeColor="#ffffff"
+            app:thumbStrokeWidth="2dp"
             app:tickColor="@color/slider_color"
             app:trackColor="@color/slider_color"
-            app:labelBehavior="gone" />
+            app:trackHeight="2dp"
+            tools:value="0.25" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout

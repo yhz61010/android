@@ -9,7 +9,9 @@ interface CameraXTouchListener {
     fun onFocusSuccess()
     fun onFocusFail()
 
-    fun onDoubleTap(x: Float, y: Float)
+    fun onDoubleTap(x: Float, y: Float, zoomRatio: Float)
+
+    fun onZoomBegin(ratio: Float)
     fun onZoom(ratio: Float)
-    fun onScale(scale: Float)
+    fun onZoomEnd(ratio: Float)
 }

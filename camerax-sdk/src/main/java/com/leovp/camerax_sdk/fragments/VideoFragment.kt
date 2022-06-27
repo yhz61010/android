@@ -80,7 +80,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     // Selector showing which flash mode is selected (on, off)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
-        val flashDrawable = if (new == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off
+        val flashDrawable =
+                if (new == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off
         binding.btnFlash.setImageResource(flashDrawable)
     }
 
@@ -141,18 +142,24 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private suspend fun setUpCamera() {
         configCamera()
         touchListener = object : CameraXTouchListener {
-            override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
+            override fun onStartFocusing(x: Float, y: Float) =
+                    binding.focusView.startFocus(x.toInt(), y.toInt())
 
             override fun onFocusSuccess() = binding.focusView.focusSuccess()
 
             override fun onFocusFail() = binding.focusView.focusFail()
 
-            override fun onDoubleTap(x: Float, y: Float) {}
+            override fun onDoubleTap(x: Float, y: Float, zoomRatio: Float) {
+                LogContext.log.w(logTag, "Double click at ($x,$y) to zoom to $zoomRatio.")
+            }
+
+            override fun onZoomBegin(ratio: Float) {
+            }
 
             override fun onZoom(ratio: Float) {
             }
 
-            override fun onScale(scale: Float) {
+            override fun onZoomEnd(ratio: Float) {
             }
         }
 
@@ -192,13 +199,15 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
         val qualitySelector =
-                QualitySelector.from(selectedQuality, FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
+                QualitySelector.from(selectedQuality,
+                    FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
         LogContext.log.w(logTag,
             "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality")
 
         incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
-            val ratioString = selectedQuality.getAspectRatioString((orientation == Configuration.ORIENTATION_PORTRAIT))
+            val ratioString =
+                    selectedQuality.getAspectRatioString((orientation == Configuration.ORIENTATION_PORTRAIT))
             when (ratioString) {
                 "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
                 "V,3:4"  -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
@@ -244,7 +253,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             )
 
             val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
-            val cameraName = if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
+            val cameraName =
+                    if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
             LogContext.log.i(logTag, "$cameraName camera support flash: $hasFlash")
             binding.btnFlash.visibility = if (hasFlash) View.VISIBLE else View.GONE
 
@@ -269,7 +279,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * to VideoRecordEvent for the current recording status.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
+    private fun startRecording(saveInGallery: Boolean = true,
+        baseFolderName: String = BASE_FOLDER_NAME) {
         val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION)
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
@@ -290,7 +301,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
             val outputOptions =
-                    FileOutputOptions.Builder(File(getOutputVideoDirectory(requireContext(), baseFolderName),
+                    FileOutputOptions.Builder(File(getOutputVideoDirectory(requireContext(),
+                        baseFolderName),
                         outFileName.absolutePath)).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }
@@ -298,7 +310,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         currentRecording = pendingRecording.apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
-        LogContext.log.w(logTag, "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
+        LogContext.log.w(logTag,
+            "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
     }
 
     /**
@@ -309,14 +322,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             whenCreated {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
                 provider.unbindAll()
-                for (camSelector in arrayOf(CameraSelector.DEFAULT_BACK_CAMERA, CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                for (camSelector in arrayOf(CameraSelector.DEFAULT_BACK_CAMERA,
+                    CameraSelector.DEFAULT_FRONT_CAMERA)) {
                     try {
                         // just get the camera.cameraInfo to query capabilities
                         // we are not binding anything here.
                         if (provider.hasCamera(camSelector)) {
                             val camera = provider.bindToLifecycle(requireActivity(), camSelector)
-                            val supportedQualities = QualitySelector.getSupportedQualities(camera.cameraInfo)
-                            val camName = if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
+                            val supportedQualities =
+                                    QualitySelector.getSupportedQualities(camera.cameraInfo)
+                            val camName =
+                                    if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
                             LogContext.log.w(logTag,
                                 "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}")
                             supportedQualities.filter { quality ->
@@ -422,16 +438,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     /** Turns on or off the flashlight */
-    private fun toggleFlash() = binding.btnFlash.toggleButton(flag = flashMode == ImageCapture.FLASH_MODE_ON,
-        rotationAngle = 360f,
-        firstIcon = R.drawable.ic_flash_off,
-        secondIcon = R.drawable.ic_flash_on) { flag ->
-        LogContext.log.w(logTag,
-            "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash")
-        torchEnabled = flag
-        flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
-        camera?.cameraControl?.enableTorch(flag)
-    }
+    private fun toggleFlash() =
+            binding.btnFlash.toggleButton(flag = flashMode == ImageCapture.FLASH_MODE_ON,
+                rotationAngle = 360f,
+                firstIcon = R.drawable.ic_flash_off,
+                secondIcon = R.drawable.ic_flash_on) { flag ->
+                LogContext.log.w(logTag,
+                    "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash")
+                torchEnabled = flag
+                flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+                camera?.cameraControl?.enableTorch(flag)
+            }
 
     private fun showResolutionLayer() = binding.llResolution.circularReveal(binding.btnResolution)
 
@@ -496,7 +513,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         when (event) {
             is VideoRecordEvent.Status   -> { // Recording in progress
                 val s = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
-                binding.tvRecTime.text = getString(R.string.record_default_time, s / 3600, (s % 3600) / 60, s % 60)
+                binding.tvRecTime.text =
+                        getString(R.string.record_default_time, s / 3600, (s % 3600) / 60, s % 60)
             }
             is VideoRecordEvent.Start    -> {
                 soundManager.playCameraStartSound()
@@ -517,7 +535,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
 
         if (event is VideoRecordEvent.Finalize) {
-            val state = if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
+            val state =
+                    if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
             val stats = event.recordingStats
             val size = stats.numBytesRecorded
             val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)

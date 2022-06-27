@@ -1,5 +1,6 @@
 package com.leovp.camerax_sdk.fragments.base
 
+import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
@@ -94,6 +95,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var preview: Preview? = null
     protected var camera: Camera? = null
     protected var cameraProvider: ProcessCameraProvider? = null
+
+    private var isScaling = false
 
     /** Blocking camera operations are performed using this executor */
     protected val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -432,100 +435,114 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     protected fun initCameraGesture(viewFinder: PreviewView, camera: Camera) {
-        val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        val scaleListener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1F
+                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 1f
                 val delta = detector.scaleFactor
                 camera.cameraControl.setZoomRatio(currentZoomRatio * delta)
-                LogContext.log.w(logTag,
-                    "currentZoomRatio=$currentZoomRatio delta=$delta New zoomRatio=${currentZoomRatio * delta}")
+                val currentNewZoomRatio = camera.cameraInfo.zoomState.value?.zoomRatio ?: 0f
+                touchListener?.onZoom(currentNewZoomRatio)
+                return true
+            }
+
+            override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                isScaling = true
+                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 0f
+                touchListener?.onZoomBegin(currentZoomRatio)
+                return true
+            }
+
+            override fun onScaleEnd(detector: ScaleGestureDetector) {
+                val currentZoomRatio: Float = camera.cameraInfo.zoomState.value?.zoomRatio ?: 0f
+                touchListener?.onZoomEnd(currentZoomRatio)
+            }
+        }
+
+        val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
+                val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
+                val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
+                if (currentZoomRatio > minZoomRatio) {
+                    camera.cameraControl.setLinearZoom(0f)
+                } else {
+                    camera.cameraControl.setLinearZoom(0.5f)
+                }
+                touchListener?.onDoubleTap(e.x, e.y, zoomState.value?.linearZoom ?: 0f)
+                return true
+            }
+
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                val factory = viewFinder.meteringPointFactory
+                val point = factory.createPoint(e.x, e.y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                    .build()
+                touchListener?.onStartFocusing(e.rawX, e.rawY)
+                val focusFuture: ListenableFuture<FocusMeteringResult> =
+                        camera.cameraControl.startFocusAndMetering(action)
+                focusFuture.addListener({
+                    runCatching {
+                        // Get focus result
+                        val result = focusFuture.get() as FocusMeteringResult
+                        if (result.isFocusSuccessful) {
+                            touchListener?.onFocusSuccess()
+                        } else {
+                            touchListener?.onFocusFail()
+                        }
+                    }
+                }, ContextCompat.getMainExecutor(requireContext()))
+                return true
+            }
+
+            // ====================
+
+            override fun onFling(e1: MotionEvent,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float): Boolean {
+                val deltaX = e1.x - e2.x
+                val deltaXAbs = abs(deltaX)
+                LogContext.log.e(logTag, "isScaling=$isScaling")
+                if (isScaling) return true
+
+                if (deltaXAbs >= MIN_SWIPE_DISTANCE) {
+                    if (deltaX > 0) {
+                        swipeCallback?.onLeftSwipe()
+                    } else {
+                        swipeCallback?.onRightSwipe()
+                    }
+                }
+
+                val deltaY = e1.y - e2.y
+                val deltaYAbs = abs(deltaY)
+
+                // LogContext.log.v(logTag, "deltaX=$deltaX deltaY=$deltaY")
+
+                if (deltaYAbs >= MIN_SWIPE_DISTANCE) {
+                    if (deltaY > 0) {
+                        swipeCallback?.onUpSwipe()
+                    } else {
+                        swipeCallback?.onDownSwipe()
+                    }
+                }
+
                 return true
             }
         }
 
-        val gestureListener: GestureDetector.SimpleOnGestureListener =
-                object : GestureDetector.SimpleOnGestureListener() {
-                    override fun onDoubleTap(e: MotionEvent): Boolean {
-                        LogContext.log.w(logTag, "Double click[${e.x},${e.y}] to zoom.")
-                        val zoomState: LiveData<ZoomState> = camera.cameraInfo.zoomState
-                        val currentZoomRatio: Float = zoomState.value?.zoomRatio ?: 0f
-                        val minZoomRatio: Float = zoomState.value?.minZoomRatio ?: 0f
-                        if (currentZoomRatio > minZoomRatio) {
-                            camera.cameraControl.setLinearZoom(0f)
-                        } else {
-                            camera.cameraControl.setLinearZoom(0.5f)
-                        }
-                        return true
-                    }
-
-                    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                        LogContext.log.w(logTag, "Single tap[${e.x},${e.y}] to focus.")
-                        val factory = viewFinder.meteringPointFactory
-                        val point = factory.createPoint(e.x, e.y)
-                        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-                            .setAutoCancelDuration(5, TimeUnit.SECONDS)
-                            .build()
-                        touchListener?.onStartFocusing(e.rawX, e.rawY)
-                        val focusFuture: ListenableFuture<FocusMeteringResult> =
-                                camera.cameraControl.startFocusAndMetering(action)
-                        focusFuture.addListener({
-                            runCatching {
-                                // Get focus result
-                                val result = focusFuture.get() as FocusMeteringResult
-                                if (result.isFocusSuccessful) {
-                                    LogContext.log.w(logTag, "Focus successfully.")
-                                    touchListener?.onFocusSuccess()
-                                } else {
-                                    LogContext.log.w(logTag, "Focus failed.")
-                                    touchListener?.onFocusFail()
-                                }
-                            }
-                        }, ContextCompat.getMainExecutor(requireContext()))
-                        return true
-                    }
-
-                    // ====================
-
-                    override fun onFling(e1: MotionEvent,
-                        e2: MotionEvent,
-                        velocityX: Float,
-                        velocityY: Float): Boolean {
-                        val deltaX = e1.x - e2.x
-                        val deltaXAbs = abs(deltaX)
-
-                        if (deltaXAbs >= MIN_SWIPE_DISTANCE) {
-                            if (deltaX > 0) {
-                                swipeCallback?.onLeftSwipe()
-                            } else {
-                                swipeCallback?.onRightSwipe()
-                            }
-                        }
-
-                        val deltaY = e1.y - e2.y
-                        val deltaYAbs = abs(deltaY)
-
-                        // LogContext.log.v(logTag, "deltaX=$deltaX deltaY=$deltaY")
-
-                        if (deltaYAbs >= MIN_SWIPE_DISTANCE) {
-                            if (deltaY > 0) {
-                                swipeCallback?.onUpSwipe()
-                            } else {
-                                swipeCallback?.onDownSwipe()
-                            }
-                        }
-
-                        return true
-                    }
-                }
-
-        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, listener)
+        val scaleGestureDetector = ScaleGestureDetector(viewFinder.context, scaleListener)
         val gestureDetector = GestureDetector(viewFinder.context, gestureListener)
 
-        viewFinder.setOnTouchListener { view, event ->
+        viewFinder.setOnTouchListener { _, event ->
+            val action = event.action
             scaleGestureDetector.onTouchEvent(event)
             if (!scaleGestureDetector.isInProgress) gestureDetector.onTouchEvent(event)
-            view.performClick()
+            if (MotionEvent.ACTION_CANCEL == action || MotionEvent.ACTION_UP == action) {
+                isScaling = false
+            }
             true
         }
     }

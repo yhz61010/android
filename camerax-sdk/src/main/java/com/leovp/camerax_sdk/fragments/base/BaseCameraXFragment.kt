@@ -505,7 +505,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 velocityY: Float): Boolean {
                 val deltaX = e1.x - e2.x
                 val deltaXAbs = abs(deltaX)
-                LogContext.log.e(logTag, "isScaling=$isScaling")
                 if (isScaling) return true
 
                 if (deltaXAbs >= MIN_SWIPE_DISTANCE) {

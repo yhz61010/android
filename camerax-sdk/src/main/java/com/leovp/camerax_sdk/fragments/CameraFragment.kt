@@ -177,18 +177,36 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private suspend fun setUpCamera() {
         configCamera()
         touchListener = object : CameraXTouchListener {
-            override fun onStartFocusing(x: Float, y: Float) =
-                    cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
+            override fun onStartFocusing(x: Float, y: Float) {
+                LogContext.log.w(logTag, "Single tap at ($x,$y) to start focusing.")
+                cameraUiContainerTopBinding.focusView.startFocus(x.toInt(), y.toInt())
+            }
 
-            override fun onFocusSuccess() = cameraUiContainerTopBinding.focusView.focusSuccess()
+            override fun onFocusSuccess() {
+                LogContext.log.w(logTag, "Focus successfully.")
+                cameraUiContainerTopBinding.focusView.focusSuccess()
+            }
 
-            override fun onFocusFail() = cameraUiContainerTopBinding.focusView.focusFail()
+            override fun onFocusFail() {
+                LogContext.log.e(logTag, "Focus failed.")
+                cameraUiContainerTopBinding.focusView.focusFail()
+            }
 
-            override fun onDoubleTap(x: Float, y: Float) = Unit
+            override fun onDoubleTap(x: Float, y: Float, zoomRatio: Float) {
+                LogContext.log.w(logTag, "Double click at ($x,$y) to zoom to $zoomRatio.")
+            }
 
-            override fun onZoom(ratio: Float) = Unit
+            override fun onZoomBegin(ratio: Float) {
+                LogContext.log.w(logTag, "onZoomBegin ratio=$ratio")
+            }
 
-            override fun onScale(scale: Float) = Unit
+            override fun onZoom(ratio: Float) {
+//                LogContext.log.d(logTag, "onZoom ratio=$ratio")
+            }
+
+            override fun onZoomEnd(ratio: Float) {
+                LogContext.log.w(logTag, "onZoomEnd ratio=$ratio")
+            }
         }
 
         // Enable or disable switching between cameras
@@ -737,24 +755,24 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 cameraRotationInDegree = cameraRotation
                 // deviceOrientationListener?.invoke(cameraRotation)
 
-//                val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-//                val surfaceOrientation = if (mirror) {
-//                    when (cameraRotationInDegree) {
-//                        0    -> Surface.ROTATION_90
-//                        90   -> Surface.ROTATION_180
-//                        180  -> Surface.ROTATION_270
-//                        else -> /* 270 */ Surface.ROTATION_0
-//                    }
-//                } else {
-//                    when (cameraRotationInDegree) {
-//                        0    -> Surface.ROTATION_90
-//                        90   -> Surface.ROTATION_0
-//                        180  -> Surface.ROTATION_270
-//                        else -> /* 270 */ Surface.ROTATION_180
-//                    }
-//                }
-//                imageAnalyzer?.targetRotation = surfaceOrientation
-//                imageCapture?.targetRotation = surfaceOrientation
+                //                val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+                //                val surfaceOrientation = if (mirror) {
+                //                    when (cameraRotationInDegree) {
+                //                        0    -> Surface.ROTATION_90
+                //                        90   -> Surface.ROTATION_180
+                //                        180  -> Surface.ROTATION_270
+                //                        else -> /* 270 */ Surface.ROTATION_0
+                //                    }
+                //                } else {
+                //                    when (cameraRotationInDegree) {
+                //                        0    -> Surface.ROTATION_90
+                //                        90   -> Surface.ROTATION_0
+                //                        180  -> Surface.ROTATION_270
+                //                        else -> /* 270 */ Surface.ROTATION_180
+                //                    }
+                //                }
+                //                imageAnalyzer?.targetRotation = surfaceOrientation
+                //                imageCapture?.targetRotation = surfaceOrientation
             }
         }
     }

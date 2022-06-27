@@ -351,13 +351,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     cameraUiContainerTopBinding.sliderExposure.run {
                         LogContext.log.i(logTag,
                             "Exposure[${lower}, $upper]=$exposureCompensationIndex")
-                        valueFrom = lower / 10f
-                        valueTo = upper / 10f
-                        stepSize = 1f / 10
-                        value = exposureCompensationIndex / 10f
+                        valueFrom = lower
+                        valueTo = upper
+//                        stepSize = 1f / 10
+                        value = exposureCompensationIndex.toFloat()
                         addOnChangeListener { _, value, _ ->
-                            LogContext.log.i(logTag, "Exposure change to ${value * 10}")
-                            cameraControl.setExposureCompensationIndex((value * 10).toInt())
+                            val finalValue = value.toInt()
+                            LogContext.log.d(logTag, "Exposure change to $finalValue")
+                            cameraControl.setExposureCompensationIndex(finalValue)
                         }
                     }
                 }

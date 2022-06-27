@@ -20,6 +20,8 @@
     <color name="icPressed">#AAFFFFFF</color>
     <color name="icPressedX">#99DDDDDD</color>
 
+    <color name="slider_color">#AAFFFFFF</color>
+
     <color name="cameraXColorPrimary">#1a1a18</color>
     <color name="cameraXColorPrimaryDark">#80000000</color>
     <color name="cameraXColorAccent">#e7a942</color>

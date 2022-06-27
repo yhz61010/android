@@ -28,6 +28,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_microphone.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_microphone_mute.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_microphone_off.xml" value="0.5555" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_minus.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_no_picture.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outer_circle.xml" value="0.569" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_enhance.xml" value="0.5555" />
@@ -35,6 +36,7 @@
         <entry key="camerax-sdk/src/main/res/drawable/ic_outline_camera_rear.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_pause.xml" value="0.4385" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_photo.xml" value="0.325" />
+        <entry key="camerax-sdk/src/main/res/drawable/ic_plus.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9.xml" value="0.5555" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_16v9_on.xml" value="0.346" />
         <entry key="camerax-sdk/src/main/res/drawable/ic_ratio_1v1.xml" value="0.346" />

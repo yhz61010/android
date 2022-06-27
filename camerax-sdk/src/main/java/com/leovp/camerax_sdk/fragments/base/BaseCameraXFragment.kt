@@ -923,7 +923,7 @@ Supported profile/level for HEVC=${
         internal const val KEY_HDR = "camerax-hdr"
         internal const val KEY_LENS_FACING = "camerax-lens-facing"
 
-        internal const val MIN_SWIPE_DISTANCE = 300
+        internal const val MIN_SWIPE_DISTANCE = 260
 
         /** Milliseconds used for UI animations */
         internal const val ANIMATION_SLOW_MILLIS = 100L

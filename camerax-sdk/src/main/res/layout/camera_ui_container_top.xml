@@ -184,13 +184,13 @@
     <include
         layout="@layout/inc_ratio_options" android:layout_width="match_parent" android:layout_height="wrap_content" />
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/flExposure"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
         android:elevation="3dp"
-        android:orientation="horizontal"
-        android:padding="@dimen/double_margin"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -198,20 +198,44 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
+        <ImageView
+            android:id="@+id/ivExposureMinus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_minus"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/ivExposurePlus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_plus"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+
         <com.google.android.material.slider.Slider
             android:id="@+id/sliderExposure"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="@dimen/fab_margin"
-            android:background="@drawable/bg_options"
-            android:paddingHorizontal="@dimen/fab_margin"
-            android:paddingVertical="@dimen/double_margin"
-            android:progressBackgroundTint="@android:color/white"
+            tools:value="0.25"
             android:value="0"
-            app:haloColor="@color/cameraXColorAccent"
-            app:thumbColor="@color/cameraXColorAccent" />
-    </FrameLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/ivExposurePlus"
+            app:layout_constraintStart_toEndOf="@+id/ivExposureMinus"
+            app:layout_constraintTop_toTopOf="parent"
+            app:thumbColor="@color/slider_color"
+            app:haloColor="#00ffffff"
+            app:tickColor="@color/slider_color"
+            app:trackColor="@color/slider_color"
+            app:labelBehavior="gone" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:layout_width="0dp"

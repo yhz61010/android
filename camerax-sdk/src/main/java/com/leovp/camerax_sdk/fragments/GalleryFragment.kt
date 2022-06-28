@@ -89,7 +89,7 @@ class GalleryFragment internal constructor() : Fragment() {
             fragmentGalleryBinding.shareButton.isEnabled = false
         }
 
-        // Populate the ViewPager and implement a cache of two media items
+        // Populate the ViewPager2 and implement a cache of two media items
         fragmentGalleryBinding.photoViewPager.apply {
             offscreenPageLimit = 2
             adapter = MediaPagerAdapter(childFragmentManager, lifecycle)
@@ -146,8 +146,8 @@ class GalleryFragment internal constructor() : Fragment() {
                             mediaFile.delete()
 
                             // Send relevant broadcast to notify other apps of deletion
-                            MediaScannerConnection.scanFile(
-                                view.context, arrayOf(mediaFile.absolutePath), null, null)
+                            MediaScannerConnection.scanFile(view.context,
+                                arrayOf(mediaFile.absolutePath), null, null)
 
                             // Notify our view pager
                             mediaList.removeAt(fragmentGalleryBinding.photoViewPager.currentItem)

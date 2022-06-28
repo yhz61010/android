@@ -39,6 +39,20 @@ class GalleryFragment internal constructor() : Fragment() {
 
     private lateinit var mediaList: MutableList<File>
 
+    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+        private var previousPosition = 0
+        override fun onPageSelected(position: Int) {
+            LogContext.log.d(TAG, "Current position=$position previous=$previousPosition")
+            if (previousPosition != position) {
+                val photoFragment =
+                        childFragmentManager.fragments[previousPosition] as? PhotoFragment
+                val iv = photoFragment?.view as? SubsamplingScaleImageView
+                iv?.setScaleAndCenter(0f, PointF(0f, 0f))
+            }
+            previousPosition = position
+        }
+    }
+
     /** Adapter class used to present a fragment containing one photo or video as a page */
     inner class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
@@ -102,21 +116,7 @@ class GalleryFragment internal constructor() : Fragment() {
             offscreenPageLimit = 2
             adapter = MediaPagerAdapter(this@GalleryFragment)
             currentItem = 0
-            registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                private var previousPosition = 0
-                override fun onPageSelected(position: Int) {
-                    val fragmentSize = childFragmentManager.fragments.size
-                    LogContext.log.d(TAG,
-                        "[$fragmentSize] Current position=$position previous=$previousPosition")
-                    if (previousPosition != position) {
-                        val photoFragment =
-                                childFragmentManager.findFragmentByTag("f$previousPosition") as? PhotoFragment
-                        val iv = photoFragment?.view as? SubsamplingScaleImageView
-                        iv?.setScaleAndCenter(0f, PointF(0f, 0f))
-                    }
-                    previousPosition = position
-                }
-            })
+            registerOnPageChangeCallback(pageChangeCallback)
         }
 
         // Make sure that the cutout "safe area" avoids the screen notch if any
@@ -145,7 +145,9 @@ class GalleryFragment internal constructor() : Fragment() {
 
         // Handle delete button press
         fragmentGalleryBinding.deleteButton.setOnClickListener {
-            mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)
+            val photoViewPager = fragmentGalleryBinding.photoViewPager
+            val currentItemPos = photoViewPager.currentItem
+            mediaList.getOrNull(currentItemPos)
                 ?.let { mediaFile ->
                     AlertDialog.Builder(view.context)
                         .setTitle(getString(R.string.delete_title))
@@ -160,8 +162,8 @@ class GalleryFragment internal constructor() : Fragment() {
                                 arrayOf(mediaFile.absolutePath), null, null)
 
                             // Notify our view pager
-                            mediaList.removeAt(fragmentGalleryBinding.photoViewPager.currentItem)
-                            fragmentGalleryBinding.photoViewPager.adapter?.notifyDataSetChanged()
+                            mediaList.removeAt(currentItemPos)
+                            photoViewPager.adapter?.notifyItemRemoved(currentItemPos)
 
                             // If all photos have been deleted, return to camera
                             if (mediaList.isEmpty()) {
@@ -177,6 +179,7 @@ class GalleryFragment internal constructor() : Fragment() {
     }
 
     override fun onDestroyView() {
+        fragmentGalleryBinding.photoViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
         _fragmentGalleryBinding = null
         super.onDestroyView()
     }

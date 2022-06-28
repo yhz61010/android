@@ -18,7 +18,8 @@
     <dimen name="margin_small">32dp</dimen>
     <dimen name="margin_medium">48dp</dimen>
     <dimen name="margin_large">56dp</dimen>
-    <dimen name="margin_xlarge">92dp</dimen>
+    <dimen name="margin_xlarge">84dp</dimen>
+    <dimen name="margin_xxlarge">92dp</dimen>
     <dimen name="margin_extra_xlarge">136dp</dimen>
 
     <dimen name="spacing_small">4dp</dimen>

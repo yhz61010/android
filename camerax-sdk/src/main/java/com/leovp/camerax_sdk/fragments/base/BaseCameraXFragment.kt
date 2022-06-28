@@ -278,7 +278,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     LogContext.log.e(logTag,
                         "ImageSavedCallback - Photo capture failed: ${exc.message}",
                         exc)
-                    requireActivity().runOnUiThread { onImageSaved(null, exc) }
+                    onImageSaved(null, exc)
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
@@ -320,12 +320,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val st4 = System.currentTimeMillis()
                             LogContext.log.d(logTag, "Write bitmap file cost=${st4 - st3}ms")
                         }
-                        requireActivity().runOnUiThread {
-                            onImageSaved(CaptureImage.ImageUri(savedUri), null)
-                        }
+                        onImageSaved(CaptureImage.ImageUri(savedUri), null)
                     } catch (e: Exception) {
                         LogContext.log.e(logTag, "Process onImageSaved() error", e)
-                        requireActivity().runOnUiThread { onImageSaved(null, e) }
+                        onImageSaved(null, e)
                     }
                 }
             })

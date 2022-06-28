@@ -162,6 +162,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     override fun onDestroyView() {
         LogContext.log.w(logTag, "=====> onDestroyView() in concrete CameraFragment <=====")
+        relativeOrientation?.removeObservers(viewLifecycleOwner)
+        relativeOrientation = null
+        cameraUiContainerTopBinding.sliderExposure.clearOnChangeListeners()
+        _cameraUiContainerTopBinding = null
+        _cameraUiContainerBottomBinding = null
         //        displayManager.unregisterDisplayListener(displayListener)
         super.onDestroyView()
     }

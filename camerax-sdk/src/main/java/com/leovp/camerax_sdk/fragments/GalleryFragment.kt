@@ -42,13 +42,24 @@ class GalleryFragment internal constructor() : Fragment() {
     private lateinit var mediaList: MutableList<File>
 
     /** Adapter class used to present a fragment containing one photo or video as a page */
-    inner class MediaPagerAdapter(fm: FragmentManager, lifecycle: Lifecycle) : FragmentStateAdapter(
-        fm,
-        lifecycle) {
+    inner class MediaPagerAdapter(fm: FragmentManager, lifecycle: Lifecycle) :
+        FragmentStateAdapter(fm, lifecycle) {
 
         override fun getItemCount(): Int = mediaList.size
 
         override fun createFragment(position: Int) = PhotoFragment.create(mediaList[position])
+
+        // When you call [Adapter#notifyDataSetChanged] method, you should [containsItem] method
+        // to check whether the item exists in List.
+        // You'd better to override the [getItemId] method at the same time.
+        override fun getItemId(position: Int): Long = mediaList[position].hashCode().toLong()
+
+        // When you call [Adapter#notifyDataSetChanged] method, you should [containsItem] method
+        // to check whether the item exists in List.
+        // You'd better to override the [getItemId] method at the same time.
+        override fun containsItem(itemId: Long): Boolean {
+            return mediaList.firstOrNull { it.hashCode().toLong() == itemId } != null
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,12 +108,14 @@ class GalleryFragment internal constructor() : Fragment() {
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 private var previousPosition = 0
                 override fun onPageSelected(position: Int) {
-                    LogContext.log.d(TAG, "Current position=$position previous=$previousPosition")
+                    val fragmentSize = childFragmentManager.fragments.size
+                    LogContext.log.d(TAG,
+                        "[$fragmentSize] Current position=$position previous=$previousPosition")
                     if (previousPosition != position) {
                         val photoFragment =
-                                childFragmentManager.findFragmentByTag("f$previousPosition") as PhotoFragment
-                        val iv = photoFragment.view as SubsamplingScaleImageView
-                        iv.setScaleAndCenter(0f, PointF(0f, 0f))
+                                childFragmentManager.findFragmentByTag("f$previousPosition") as? PhotoFragment
+                        val iv = photoFragment?.view as? SubsamplingScaleImageView
+                        iv?.setScaleAndCenter(0f, PointF(0f, 0f))
                     }
                     previousPosition = position
                 }

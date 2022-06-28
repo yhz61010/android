@@ -201,7 +201,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             }
 
             override fun onZoom(ratio: Float) {
-//                LogContext.log.d(logTag, "onZoom ratio=$ratio")
+                //                LogContext.log.d(logTag, "onZoom ratio=$ratio")
             }
 
             override fun onZoomEnd(ratio: Float) {
@@ -288,7 +288,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // ImageCapture
         imageCapture =
-                ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                     // Set capture flash
                     .setFlashMode(flashMode)
                     // We request aspect ratio but no resolution to match preview config, but letting
@@ -353,7 +353,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             "Exposure[${lower}, $upper]=$exposureCompensationIndex")
                         valueFrom = lower
                         valueTo = upper
-//                        stepSize = 1f / 10
+                        //                        stepSize = 1f / 10
                         value = exposureCompensationIndex.toFloat()
                         addOnChangeListener { _, value, _ ->
                             val finalValue = value.toInt()
@@ -521,6 +521,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             lifecycleScope.launch(Dispatchers.Main) {
                 LogContext.log.w(logTag, "Click capture photo button.")
                 enableUI(false)
+                cameraUiContainerBottomBinding.cameraCaptureButton.isEnabled = true
                 startCountdown()
                 val startCaptureTimestamp: Long = System.currentTimeMillis()
                 // Get a stable reference of the modifiable image capture use case
@@ -529,7 +530,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         captureForOutputFile(incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory, startCaptureTimestamp) { savedImage, exc ->
-                            enableUI(true)
+                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
                             if (exc != null) {
                                 captureImageListener?.onSavedImageUri(null, exc)
                                 return@captureForOutputFile
@@ -574,7 +575,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         captureForBytes(incPreviewGridBinding.viewFinder,
                             imageCapture, startCaptureTimestamp) { savedImage, exc ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
-                            enableUI(true)
+                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
                             captureImageListener?.onSavedImageBytes(savedImage, exc)
                         }
                     }

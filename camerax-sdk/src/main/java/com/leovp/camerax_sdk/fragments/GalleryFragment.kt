@@ -10,8 +10,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -42,8 +40,7 @@ class GalleryFragment internal constructor() : Fragment() {
     private lateinit var mediaList: MutableList<File>
 
     /** Adapter class used to present a fragment containing one photo or video as a page */
-    inner class MediaPagerAdapter(fm: FragmentManager, lifecycle: Lifecycle) :
-        FragmentStateAdapter(fm, lifecycle) {
+    inner class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
         override fun getItemCount(): Int = mediaList.size
 
@@ -103,7 +100,7 @@ class GalleryFragment internal constructor() : Fragment() {
         // Populate the ViewPager2 and implement a cache of two media items
         fragmentGalleryBinding.photoViewPager.apply {
             offscreenPageLimit = 2
-            adapter = MediaPagerAdapter(childFragmentManager, lifecycle)
+            adapter = MediaPagerAdapter(this@GalleryFragment)
             currentItem = 0
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 private var previousPosition = 0

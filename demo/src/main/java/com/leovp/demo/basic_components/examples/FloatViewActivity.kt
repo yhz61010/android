@@ -18,19 +18,22 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import java.util.*
 
-class FloatViewActivity : BaseDemonstrationActivity() {
+class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityFloatViewBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFloatViewBinding {
+        return ActivityFloatViewBinding.inflate(layoutInflater)
+    }
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFloatViewBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         binding.btnChange.setOnSingleClickListener {
-            FloatView.getCustomLayout("f1")?.findViewById<TextView>(R.id.tvText)?.text = "I'm f1 in ${Random().nextInt(100)}"
-            FloatView.getCustomLayout("f2")?.findViewById<TextView>(R.id.tvText)?.text = "I'm f2 in ${Random().nextInt(100)}"
+            FloatView.getCustomLayout("f1")?.findViewById<TextView>(R.id.tvText)?.text =
+                    "I'm f1 in ${Random().nextInt(100)}"
+            FloatView.getCustomLayout("f2")?.findViewById<TextView>(R.id.tvText)?.text =
+                    "I'm f2 in ${Random().nextInt(100)}"
         }
 
         FloatView.with(this)

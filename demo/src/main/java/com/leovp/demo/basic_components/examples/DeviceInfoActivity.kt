@@ -18,14 +18,15 @@ import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class DeviceInfoActivity : BaseDemonstrationActivity() {
+class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityDeviceInfoBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDeviceInfoBinding {
+        return ActivityDeviceInfoBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDeviceInfoBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }

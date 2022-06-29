@@ -31,12 +31,13 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 @SuppressLint("SetTextI18n")
-class BluetoothScanActivity : BaseDemonstrationActivity() {
+class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBinding>() {
 
     override fun getTagName(): String = ITAG
 
-    private var _binding: ActivityBluetoothScanBinding? = null
-    private val binding get() = _binding!!
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothScanBinding {
+        return ActivityBluetoothScanBinding.inflate(layoutInflater)
+    }
 
     private var adapter: DeviceAdapter? = null
     private val bluetoothDeviceMap = mutableMapOf<String, DeviceModel>()
@@ -47,9 +48,6 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityBluetoothScanBinding.inflate(layoutInflater).apply {
-            setContentView(this.root)
-        }
 
         initReceiver()
         initView()
@@ -89,7 +87,6 @@ class BluetoothScanActivity : BaseDemonstrationActivity() {
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null
         bluetooth.release()
         unregisterReceiver(bluetoothReceiver)
     }

@@ -11,6 +11,7 @@ android {
         minSdk rootProject.ext.minSdkVersion
         targetSdk rootProject.ext.targetSdkVersion
 
+        multiDexEnabled true
 
         consumerProguardFiles 'consumer-rules.pro'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -59,6 +60,8 @@ dependencies {
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
 
+    implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
+
     // ViewModel
     api "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.ext.archLifecycleVersion"
     // LiveData
@@ -98,6 +101,8 @@ dependencies {
 
     // https://github.com/hyuwah/DraggableView
 //    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
+
+    implementation "org.greenrobot:eventbus:$eventbusVersion"
 }
 
 afterEvaluate {

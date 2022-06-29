@@ -3,9 +3,8 @@ package com.leovp.demo
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
-import androidx.multidex.MultiDex
-import androidx.multidex.MultiDexApplication
 import com.leovp.androidbase.exts.android.buildConfigInDebug
+import com.leovp.androidbase.framework.BaseApplication
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.demo.basic_components.examples.koin.*
 import com.leovp.lib_common_android.utils.LangUtil
@@ -23,7 +22,7 @@ import org.koin.dsl.module
  * Author: Michael Leo
  * Date: 20-5-18 下午5:33
  */
-class CustomApplication : MultiDexApplication() {
+class CustomApplication : BaseApplication() {
     companion object {
         private const val TAG_PREFIX = "LEO"
     }
@@ -66,14 +65,12 @@ class CustomApplication : MultiDexApplication() {
 
     override fun attachBaseContext(base: Context) {
         Log.i("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
-        super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
+        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
         Reflection.unseal(base)
-        MultiDex.install(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         Log.i("LEO-Application", "=====> onConfigurationChanged setLocale()")
-        LangUtil.getInstance(this).setLocale(this)
     }
 }

@@ -23,21 +23,23 @@ import kotlin.random.Random
  * BounceInterpolator 结束时Q弹一下
  * CycleInterpolator 来回循环
  */
-class PropertyAnimActivity : BaseDemonstrationActivity() {
+class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityPropertyAnimBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPropertyAnimBinding {
+        return ActivityPropertyAnimBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityPropertyAnimBinding.inflate(layoutInflater).apply { setContentView(root) }
         title = "Property Animation"
 
         binding.btnAlpha.setOnSingleClickListener {
-//            binding.ivBeauty.animate().alpha(Random.nextFloat()).duration = 1000
+            //            binding.ivBeauty.animate().alpha(Random.nextFloat()).duration = 1000
 
-            ObjectAnimator.ofFloat(binding.ivBeauty, "alpha", 1.0f, Random.nextFloat(), 1.0f).apply {
-                duration = 2000
+            ObjectAnimator.ofFloat(binding.ivBeauty, "alpha", 1.0f, Random.nextFloat(), 1.0f)
+                .apply {
+                    duration = 2000
                 start()
             }
         }

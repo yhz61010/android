@@ -9,14 +9,17 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFingerPaintBinding
 import com.leovp.log_sdk.base.ITAG
 
-class FingerPaintActivity : BaseDemonstrationActivity(), SeekBar.OnSeekBarChangeListener, View.OnClickListener {
+class FingerPaintActivity : BaseDemonstrationActivity<ActivityFingerPaintBinding>(),
+    SeekBar.OnSeekBarChangeListener,
+    View.OnClickListener {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityFingerPaintBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFingerPaintBinding {
+        return ActivityFingerPaintBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFingerPaintBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         binding.close.setOnClickListener(this)
         binding.save.setOnClickListener(this)

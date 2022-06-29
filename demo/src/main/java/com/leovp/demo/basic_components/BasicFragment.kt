@@ -7,11 +7,11 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.exts.kotlin.sleep
+import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.ColorBaseAdapter
 import com.leovp.demo.R
 import com.leovp.demo.basic_components.examples.*
@@ -42,13 +42,20 @@ import com.leovp.demo.basic_components.examples.socket.eventbus_bridge.EventBusB
 import com.leovp.demo.basic_components.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.demo.basic_components.examples.socket.websocket.WebSocketServerActivity
 import com.leovp.demo.basic_components.examples.wifi.WifiActivity
+import com.leovp.demo.databinding.FragmentBasicBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import kotlin.concurrent.thread
 
-class BasicFragment : Fragment() {
+class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic) {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? = inflater.inflate(R.layout.fragment_basic, container, false)
+    override fun getTagName() = ITAG
+
+    override fun getViewBinding(inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): FragmentBasicBinding {
+        return FragmentBasicBinding.inflate(inflater, container, false)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -60,7 +67,8 @@ class BasicFragment : Fragment() {
             Pair("Socket Client", SocketClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Play H265 Video File by MediaCodec", PlayH265VideoByMediaCodecActivity::class.java),
+            Pair("Play H265 Video File by MediaCodec",
+                PlayH265VideoByMediaCodecActivity::class.java),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("FFMPEG Raw H264", FFMpegH264Activity::class.java),
             Pair("FFMPEG Raw H265", FFMpegH265Activity::class.java),
@@ -92,7 +100,8 @@ class BasicFragment : Fragment() {
             Pair("AIDL", AidlActivity::class.java),
             Pair("Provider", ProviderActivity::class.java),
             Pair("Animation", AnimationActivity::class.java),
-            Pair(getString(R.string.act_title_change_app_lang), ChangeAppLanguageActivity::class.java),
+            Pair(getString(R.string.act_title_change_app_lang),
+                ChangeAppLanguageActivity::class.java),
             Pair("Toast", ToastActivity::class.java),
             Pair("FloatView", FloatViewActivity::class.java),
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
@@ -106,7 +115,8 @@ class BasicFragment : Fragment() {
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                startActivity(featureList[position].second, { intent -> intent.putExtra("title", featureList[position].first) })
+                startActivity(featureList[position].second,
+                    { intent -> intent.putExtra("title", featureList[position].first) })
             }
         }
         view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {

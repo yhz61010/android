@@ -23,15 +23,18 @@ import org.greenrobot.eventbus.EventBus
  * - If you set language in `zh_CN`, you should create `values-zh-rCN` folder in `values` folder.
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  */
-class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
+class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>() {
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityChangeAppLanguageBinding {
+        return ActivityChangeAppLanguageBinding.inflate(layoutInflater)
+    }
 
     private val langUtil: LangUtil by lazy { LangUtil.getInstance(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         title = getString(R.string.act_title_change_app_lang)
-        val binding = ActivityChangeAppLanguageBinding.inflate(layoutInflater).apply { setContentView(root) }
         val itemList = resources.getStringArray(R.array.lang_list)
         LogContext.log.w("itemList=${itemList.toJsonString()}")
         val itemCodeList = resources.getStringArray(R.array.lang_code_list)
@@ -46,7 +49,9 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity() {
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
                     LogContext.log.e(ITAG, "=====> MaterialAlertDialogBuilder setLocale()")
-                    langUtil.setLocale(this@ChangeAppLanguageActivity.applicationContext, langUtil.getLocale(langCode)!!, refreshUI = true) { refreshUi ->
+                    langUtil.setAppLanguage(this@ChangeAppLanguageActivity.applicationContext,
+                        langUtil.getLocale(langCode)!!,
+                        refreshUI = true) { refreshUi ->
                         if (refreshUi) EventBus.getDefault().post(LangChangeEvent())
                     }
                     dlg.dismiss()
@@ -63,7 +68,7 @@ class ChangeAppTestService : Service() {
 
     override fun attachBaseContext(base: Context) {
         LogContext.log.e(ITAG, "=====> ChangeAppTestService setLocale()")
-        super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
+        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
     }
 
     override fun onCreate() {

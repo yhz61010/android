@@ -13,10 +13,13 @@ import com.leovp.demo.databinding.ActivityOpenGles20Binding
 import com.leovp.log_sdk.base.ITAG
 import java.io.Serializable
 
-class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickListener {
+class OpenGLES20Activity : BaseDemonstrationActivity<ActivityOpenGles20Binding>(),
+    AdapterView.OnItemClickListener {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityOpenGles20Binding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGles20Binding {
+        return ActivityOpenGles20Binding.inflate(layoutInflater)
+    }
 
     private lateinit var simpleAdapter: ArrayAdapter<Item>
 
@@ -49,7 +52,6 @@ class OpenGLES20Activity : BaseDemonstrationActivity(), AdapterView.OnItemClickL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityOpenGles20Binding.inflate(layoutInflater).apply { setContentView(root) }
 
         simpleAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, items)
         binding.list.adapter = simpleAdapter

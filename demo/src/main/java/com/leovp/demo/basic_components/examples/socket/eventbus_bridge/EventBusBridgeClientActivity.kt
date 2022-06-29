@@ -4,8 +4,8 @@ import android.os.Bundle
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityEventBusBridgeClientBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.socket_sdk.eventbus.handler.EventBusHandler
@@ -33,9 +33,13 @@ import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
 
-class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
+class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusBridgeClientBinding>() {
 
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityEventBusBridgeClientBinding {
+        return ActivityEventBusBridgeClientBinding.inflate(layoutInflater)
+    }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -59,7 +63,6 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_event_bus_bridge_client)
 
         val wsUrl = "wss://your websocket address"
         val cookies = mapOf(
@@ -67,11 +70,15 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
             HttpHeaderNames.COOKIE.toString() to "your cookie",
             HttpHeaderNames.REFERER.toString() to "your referer"
         )
-        webSocket = EventBusBridgeSocketClient(URI(wsUrl), connectionListener, ConstantRetry(), cookies).apply {
-            webSocketHandler = EventBusBridgeSocketHandler(this)
-            initHandler(webSocketHandler)
-            ioScope.launch { this@apply.connect() }
-        }
+        webSocket =
+                EventBusBridgeSocketClient(URI(wsUrl),
+                    connectionListener,
+                    ConstantRetry(),
+                    cookies).apply {
+                    webSocketHandler = EventBusBridgeSocketHandler(this)
+                    initHandler(webSocketHandler)
+                    ioScope.launch { this@apply.connect() }
+                }
     }
 
     override fun onDestroy() {
@@ -109,41 +116,44 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity() {
                     val receivedByteBuf = (msg as WebSocketFrame).content().retain()
 
                     val receivedBytes = ByteBufUtil.getBytes(receivedByteBuf)
-//                val showDebugData = if (receivedBytes.size >= 80) receivedBytes.toHexStringLE().substring(0, 80) else receivedBytes.toHexStringLE()
-//                if (LogContext.enableLog && GlobalConstants.DEBUG) LogContext.log.e(LogTag.TAG_PT, "ORI_VID[${receivedBytes.size}][${msg.isFinalFragment}]=$showDebugData")
+                    //                val showDebugData = if (receivedBytes.size >= 80) receivedBytes.toHexStringLE().substring(0, 80) else receivedBytes.toHexStringLE()
+                    //                if (LogContext.enableLog && GlobalConstants.DEBUG) LogContext.log.e(LogTag.TAG_PT, "ORI_VID[${receivedBytes.size}][${msg.isFinalFragment}]=$showDebugData")
 
                     val savedByteArray = totalFrameData.get()
                     var totalByteArray = ByteUtil.mergeBytes(savedByteArray, receivedBytes)
                     totalFrameData.compareAndSet(savedByteArray, totalByteArray)
 
                     if (msg.isFinalFragment) {
-//                    if (LogContext.enableLog) LogContext.log.w(TAG, "Found FinalFragment.")
+                        //                    if (LogContext.enableLog) LogContext.log.w(TAG, "Found FinalFragment.")
                         totalByteArray = totalFrameData.get()
                         totalFrameData.set(ByteArray(0))
                         receivedByteBuf.release()
                     } else {
-//                    if (LogContext.enableLog) LogContext.log.d(TAG, "Found ContinuationWebSocketFrame.")
+                        //                    if (LogContext.enableLog) LogContext.log.d(TAG, "Found ContinuationWebSocketFrame.")
                         receivedByteBuf.release()
                         return
                     }
 
-                    if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
+                    if (LogContext.enableLog) LogContext.log.i(TAG,
+                        "totalByteArray=${totalByteArray.decodeToString()}")
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
-//                    replyAddress?.let { replyAddress ->
-////                        LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
-//                        EventBus.processReplyHandler(replyAddress) { h ->
-//                            h.handle(totalFrameData)
-//                        }
-//                    }
-//                    address?.let { address ->
-//                        EventBus.processHandlers(address) { idx, h ->
-////                            LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
-//                            h.handle(totalFrameData)
-//                        }
-//                    }
+                    //                    replyAddress?.let { replyAddress ->
+                    ////                        LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
+                    //                        EventBus.processReplyHandler(replyAddress) { h ->
+                    //                            h.handle(totalFrameData)
+                    //                        }
+                    //                    }
+                    //                    address?.let { address ->
+                    //                        EventBus.processHandlers(address) { idx, h ->
+                    ////                            LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
+                    //                            h.handle(totalFrameData)
+                    //                        }
+                    //                    }
                 }
-                else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
+                else                                                   -> if (LogContext.enableLog) LogContext.log.i(
+                    TAG,
+                    "Invalid message type=[${msg::class.simpleName}]")
             }
         }
 

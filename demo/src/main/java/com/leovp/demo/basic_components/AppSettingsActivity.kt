@@ -12,11 +12,7 @@ import com.leovp.demo.databinding.ActivityAppSettingsBinding
 import com.leovp.lib_common_android.exts.packageUri
 import com.leovp.log_sdk.base.ITAG
 
-class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding>({
-    fullscreen = false
-    hideNavigationBar = false
-    autoHideSoftKeyboard = true
-}) {
+class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding>() {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAppSettingsBinding {

@@ -12,26 +12,36 @@ import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityCamera2LiveBinding
 import com.leovp.lib_common_android.exts.hideNavigationBar
 import com.leovp.lib_common_android.exts.requestFullScreenAfterVisible
 import com.leovp.lib_common_android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-class Camera2LiveActivity : BaseDemonstrationActivity() {
+class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding>() {
     override fun getTagName(): String = ITAG
 
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2LiveBinding {
+        return ActivityCamera2LiveBinding.inflate(layoutInflater)
+    }
+
     private val cameraViewFragment = Camera2LiveFragment()
+
+    override fun onCreateBeginning() {
+        window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
-        window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        setContentView(R.layout.activity_camera2_live)
 
         CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC)
             .forEach { LogContext.log.i(TAG, "H264 Encoder: ${it.name}") }
-        val hasTopazEncoder = CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+        val hasTopazEncoder =
+                CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC,
+                    "OMX.IMG.TOPAZ.VIDEO.Encoder")
         LogContext.log.d(TAG, "hasTopazEncoder=$hasTopazEncoder")
 
         onBackPressedDispatcher.addCallback(this, true) {

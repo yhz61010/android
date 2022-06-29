@@ -42,11 +42,12 @@ import com.leovp.log_sdk.base.ITAG
  * The same throttling limits from Android 9 apply.
  * There is a new developer option to toggle the throttling off for local testing (under Developer Options > Networking > Wi-Fi scan throttling).
  */
-class WifiActivity : BaseDemonstrationActivity() {
+class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>() {
     override fun getTagName(): String = ITAG
 
-    private var _binding: ActivityWifiBinding? = null
-    private val binding get() = _binding!!
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWifiBinding {
+        return ActivityWifiBinding.inflate(layoutInflater)
+    }
 
     private var adapter: WifiAdapter? = null
     private val wifi: WifiUtil by lazy { WifiUtil.getInstance(this) }
@@ -65,9 +66,6 @@ class WifiActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityWifiBinding.inflate(layoutInflater).apply {
-            setContentView(this.root)
-        }
         initView()
         initReceiver()
         initData()
@@ -149,7 +147,6 @@ class WifiActivity : BaseDemonstrationActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null
         unregisterReceiver(wifiScanReceiver)
     }
 

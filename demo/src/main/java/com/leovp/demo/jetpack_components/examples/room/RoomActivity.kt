@@ -18,20 +18,24 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityRoomBinding
 import com.leovp.demo.jetpack_components.examples.room.entity.Word
 import com.leovp.log_sdk.base.ITAG
 
-class RoomActivity : BaseDemonstrationActivity() {
+class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
 
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRoomBinding {
+        return ActivityRoomBinding.inflate(layoutInflater)
+    }
 
     private lateinit var wordViewModel: WordViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_room)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
+        val recyclerView = binding.recyclerview
         val adapter = WordListAdapter(this)
         adapter.onItemClickListener = object : WordListAdapter.OnItemClickListener {
             @SuppressLint("CheckResult")

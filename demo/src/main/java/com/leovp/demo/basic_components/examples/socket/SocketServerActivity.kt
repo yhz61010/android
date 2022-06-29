@@ -29,14 +29,16 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 21-1-25 上午11:43
  */
-class SocketServerActivity : BaseDemonstrationActivity() {
+class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         private const val PORT = 10020
     }
 
-    private lateinit var binding: ActivitySocketServerBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketServerBinding {
+        return ActivitySocketServerBinding.inflate(layoutInflater)
+    }
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -90,7 +92,6 @@ class SocketServerActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySocketServerBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         binding.tvServerIp.text = NetworkUtil.getIp()[0]
 

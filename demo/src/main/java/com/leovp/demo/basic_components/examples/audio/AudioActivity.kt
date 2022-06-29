@@ -29,18 +29,27 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URI
 
-class AudioActivity : BaseDemonstrationActivity() {
+class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(16000, 32000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo =
+                AudioEncoderInfo(16000,
+                    32000,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo =
+                AudioDecoderInfo(16000,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT)
     }
 
-    private lateinit var binding: ActivityAudioBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding {
+        return ActivityAudioBinding.inflate(layoutInflater)
+    }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -58,7 +67,6 @@ class AudioActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAudioBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
@@ -132,32 +140,34 @@ class AudioActivity : BaseDemonstrationActivity() {
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
                         AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
-                        else -> Unit
+                        else          -> Unit
                     }
-                    micRecorder = MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
-                        override fun onRecording(data: ByteArray) {
-                            when (type) {
-                                AudioType.PCM -> runCatching {
-                                    LogContext.log.d(TAG, "PCM data[${data.size}]")
-                                    pcmOs?.write(data)
-                                }.onFailure { it.printStackTrace() }
-                                AudioType.AAC -> {
-                                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
-                                    runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
+                    micRecorder =
+                            MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
+                                override fun onRecording(data: ByteArray) {
+                                    when (type) {
+                                        AudioType.PCM -> runCatching {
+                                            LogContext.log.d(TAG, "PCM data[${data.size}]")
+                                            pcmOs?.write(data)
+                                        }.onFailure { it.printStackTrace() }
+                                        AudioType.AAC -> {
+                                            LogContext.log.i(TAG,
+                                                "Get encoded AAC Data[${data.size}]")
+                                            runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
+                                        }
+                                        else          -> Unit
+                                    }
                                 }
-                                else -> Unit
-                            }
-                        }
 
-                        override fun onStop(stopResult: Boolean) {
-                            runCatching {
-                                pcmOs?.flush()
-                                pcmOs?.close()
-                                aacOs?.flush()
-                                aacOs?.close()
-                            }.onFailure { it.printStackTrace() }
-                        }
-                    }, type)
+                                override fun onStop(stopResult: Boolean) {
+                                    runCatching {
+                                        pcmOs?.flush()
+                                        pcmOs?.close()
+                                        aacOs?.flush()
+                                        aacOs?.close()
+                                    }.onFailure { it.printStackTrace() }
+                                }
+                            }, type)
                     micRecorder?.startRecord()
                 }
 

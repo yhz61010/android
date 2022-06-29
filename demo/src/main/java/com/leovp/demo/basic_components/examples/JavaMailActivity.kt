@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityJavaMailBinding
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.lib_common_android.exts.toFile
 import com.leovp.log_sdk.LogContext
@@ -21,7 +22,7 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
 
-class JavaMailActivity : BaseDemonstrationActivity() {
+class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -40,17 +41,19 @@ class JavaMailActivity : BaseDemonstrationActivity() {
         private const val EMAIL_SMTP_SSL = true
     }
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_java_mail)
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityJavaMailBinding {
+        return ActivityJavaMailBinding.inflate(layoutInflater)
     }
+
+    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     // smtp port 25, ssl port 465
     // pop3 port 110, ssl port 995
     // imap port 143, ssl port 993
-    private fun getServerProperties(protocol: String, mailHost: String, port: Int, enableSsl: Boolean = false): Properties {
+    private fun getServerProperties(protocol: String,
+        mailHost: String,
+        port: Int,
+        enableSsl: Boolean = false): Properties {
         return Properties().apply {
             setProperty("mail.transport.protocol", protocol)
             setProperty("mail.$protocol.host", mailHost)

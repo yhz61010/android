@@ -1,8 +1,9 @@
 package com.leovp.demo.jetpack_components.examples.navigation
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.demo.databinding.ActivityNavigationMainBinding
+import com.leovp.log_sdk.base.ITAG
 
 /**
  * ```xml
@@ -29,20 +30,23 @@ import com.leovp.demo.databinding.ActivityNavigationMainBinding
  * }
  * ```
  */
-class NavigationMainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityNavigationMainBinding
+class NavigationMainActivity : BaseActivity<ActivityNavigationMainBinding>() {
+    override fun getTagName(): String = ITAG
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityNavigationMainBinding.inflate(layoutInflater).apply { setContentView(root) }
-
-//        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-//        val navController = navHostFragment.navController
-        // setupBottomNavMenu(navController)
-
-//        val bundle = Bundle()
-//        bundle.putString("param1", "Parameter One")
-//        bundle.putString("param2", "Parameter Two")
-//        navController.navigate(R.id.fragmentForNavFirst, bundle)
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNavigationMainBinding {
+        return ActivityNavigationMainBinding.inflate(layoutInflater)
     }
+
+    //    override fun onCreate(savedInstanceState: Bundle?) {
+    //        super.onCreate(savedInstanceState)
+    //
+    ////        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+    ////        val navController = navHostFragment.navController
+    //        // setupBottomNavMenu(navController)
+    //
+    ////        val bundle = Bundle()
+    ////        bundle.putString("param1", "Parameter One")
+    ////        bundle.putString("param2", "Parameter Two")
+    ////        navController.navigate(R.id.fragmentForNavFirst, bundle)
+    //    }
 }

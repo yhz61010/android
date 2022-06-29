@@ -27,7 +27,7 @@ import java.util.*
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
-class BluetoothServerActivity : BaseDemonstrationActivity() {
+class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServerBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -43,8 +43,9 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
         var CHARACTERISTIC_WRITE_UUID = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
     }
 
-    private var _binding: ActivityBluetoothServerBinding? = null
-    private val binding get() = _binding!!
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothServerBinding {
+        return ActivityBluetoothServerBinding.inflate(layoutInflater)
+    }
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 
@@ -68,9 +69,6 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityBluetoothServerBinding.inflate(layoutInflater).apply {
-            setContentView(this.root)
-        }
 
         initView()
         initBleServer()
@@ -80,7 +78,6 @@ class BluetoothServerActivity : BaseDemonstrationActivity() {
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null
         bluetooth.stopAdvertising(advertiseCallback)
         disconnect()
     }

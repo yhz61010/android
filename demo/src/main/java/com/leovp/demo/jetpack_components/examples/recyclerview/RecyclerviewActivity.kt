@@ -25,17 +25,18 @@ import com.leovp.demo.jetpack_components.examples.recyclerview.base.SimpleItemTo
 import com.leovp.log_sdk.base.ITAG
 
 
-class RecyclerviewActivity : BaseDemonstrationActivity() {
+class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityRecyclerviewBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRecyclerviewBinding {
+        return ActivityRecyclerviewBinding.inflate(layoutInflater)
+    }
 
     private lateinit var simpleAdapter: SimpleAdapter
     private lateinit var itemTouchHandler: SimpleItemTouchCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityRecyclerviewBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         val featureList = mutableListOf<ItemBean>()
         for (i in 0 until 300) {
@@ -52,7 +53,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
         simpleAdapter.onItemClickListener = object : SimpleAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 toast("You click position: $position")
-                findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
+                findViewById<TextView>(R.id.tv_select_num).text =
+                        "${simpleAdapter.selectedItems.size}"
             }
 
             override fun onItemLongClick(view: View, position: Int) {
@@ -60,8 +62,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             }
         }
         binding.recyclerView.run {
-//            setHasFixedSize(true)
-//            layoutManager = LinearLayoutManager(requireActivity())
+            //            setHasFixedSize(true)
+            //            layoutManager = LinearLayoutManager(requireActivity())
             adapter = simpleAdapter
         }
 
@@ -69,7 +71,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val adapter = binding.recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.bindingAdapterPosition)
-                findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.selectedItems.size}"
+                findViewById<TextView>(R.id.tv_select_num).text =
+                        "${simpleAdapter.selectedItems.size}"
                 binding.rootLL.snack("Undo last delete?") {
                     action("Undo") { adapter.undo() }
                 }
@@ -85,7 +88,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
 
         findViewById<Button>(R.id.select_all).setOnClickListener {
             it.tag = (!((it.tag as? Boolean) ?: false))
-            findViewById<TextView>(R.id.tv_select_num).text = "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
+            findViewById<TextView>(R.id.tv_select_num).text =
+                    "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
         }
         findViewById<Button>(R.id.btn_delete).setOnClickListener {
             simpleAdapter.multipleDelete()
@@ -125,8 +129,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home -> finish()
-            R.id.add_item -> {
+            android.R.id.home      -> finish()
+            R.id.add_item          -> {
                 simpleAdapter.insertAdd(
                     0,
                     ItemBean(
@@ -143,12 +147,18 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 if (simpleAdapter.editMode) {
                     YoYo.with(Techniques.SlideInUp)
                         .duration(400)
-                        .onStart { binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility = View.VISIBLE }
+                        .onStart {
+                            binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility =
+                                    View.VISIBLE
+                        }
                         .playOn(binding.llMycollectionBottomDialog.llRvBottomSheetSelect)
                 } else {
                     YoYo.with(Techniques.SlideOutDown)
                         .duration(400)
-                        .onEnd { binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility = View.GONE }
+                        .onEnd {
+                            binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility =
+                                    View.GONE
+                        }
                         .playOn(binding.llMycollectionBottomDialog.llRvBottomSheetSelect)
                 }
             }
@@ -167,14 +177,17 @@ class RecyclerviewActivity : BaseDemonstrationActivity() {
                 binding.recyclerView.layoutManager = LinearLayoutManager(this)
             }
             SimpleAdapter.STYLE_GRID -> {
-                binding.recyclerView.layoutManager = GridLayoutManager(this, resources.getInteger(R.integer.grid_columns))
+                binding.recyclerView.layoutManager =
+                        GridLayoutManager(this, resources.getInteger(R.integer.grid_columns))
             }
         }
     }
 }
 
 @Keep
-data class ItemBean(val id: Long, val title: String, val imageUrl: String) : BaseMultipleCheckedItem()
+data class ItemBean(val id: Long,
+    val title: String,
+    val imageUrl: String) : BaseMultipleCheckedItem()
 
 open class BaseMultipleCheckedItem {
     var checked = false

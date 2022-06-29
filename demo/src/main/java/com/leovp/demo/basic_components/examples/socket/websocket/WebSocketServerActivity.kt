@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import java.nio.charset.Charset
 
 @SuppressLint("SetTextI18n")
-class WebSocketServerActivity : BaseDemonstrationActivity() {
+class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServerBinding>() {
 
     override fun getTagName(): String = ITAG
 
@@ -33,7 +33,9 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
         private const val PORT = 10010
     }
 
-    private lateinit var binding: ActivityWebsocketServerBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketServerBinding {
+        return ActivityWebsocketServerBinding.inflate(layoutInflater)
+    }
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -86,7 +88,6 @@ class WebSocketServerActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWebsocketServerBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         binding.tvServerIp.text = NetworkUtil.getIp()[0]
 

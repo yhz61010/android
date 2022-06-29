@@ -22,7 +22,12 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 
-class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>() {
+class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
+    trafficConfig.run {
+        allowToOutputDefaultWifiTrafficInfo = true
+        frequencyInSecond = 3
+    }
+}) {
 
     override fun getTagName(): String = ITAG
 
@@ -34,7 +39,6 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -144,6 +148,16 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>() {
             LogContext.log.w(ITAG, "online=$isConnected")
             toast("online=$isConnected")
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startTrafficNetwork("leovp.com")
+    }
+
+    override fun onPause() {
+        stopTrafficMonitor()
+        super.onPause()
     }
 
     override fun onDestroy() {

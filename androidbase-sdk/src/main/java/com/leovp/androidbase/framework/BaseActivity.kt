@@ -12,16 +12,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.viewbinding.ViewBinding
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
+import com.leovp.androidbase.exts.android.toast
+import com.leovp.androidbase.utils.network.InternetUtil
+import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.lib_common_android.exts.hideNavigationBar
 import com.leovp.lib_common_android.exts.requestFullScreenAfterVisible
 import com.leovp.lib_common_android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.lib_common_android.utils.LangUtil
+import com.leovp.lib_common_android.utils.NetworkUtil
+import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * This class has already enabled Custom Language feature.
@@ -52,7 +58,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     @Suppress("WeakerAccess")
     protected val tag: String by lazy { getTagName() }
 
-    var defaultConfig = ActivityConfig()
+    private var defaultConfig = ActivityConfig()
 
     init {
         init?.let { defaultConfig.it() }
@@ -63,6 +69,8 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
 
     @Suppress("WeakerAccess")
     protected lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
+
+    private var networkMonitor: AtomicReference<NetworkMonitor>? = null
 
     open fun onCreateBeginning() {
 
@@ -133,10 +141,15 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     override fun onStop() {
         LogContext.log.w(tag, "=====> onStop <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
         super.onStop()
+        if (networkMonitor != null) {
+            LogContext.log.w(tag,
+                "Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor() if you don't need it anymore.")
+        }
     }
 
     override fun onDestroy() {
         LogContext.log.w(tag, "=====> onDestroy <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        stopTrafficMonitor()
         EventBus.getDefault().unregister(this)
         super.onDestroy()
     }
@@ -181,8 +194,71 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     data class ActivityConfig(
         var fullscreen: Boolean = false,
         var hideNavigationBar: Boolean = false,
-        var autoHideSoftKeyboard: Boolean = true
+        var autoHideSoftKeyboard: Boolean = true,
+        var trafficConfig: TrafficConfig = TrafficConfig()
     )
+
+    data class TrafficConfig(
+        var allowToOutputDefaultWifiTrafficInfo: Boolean = false,
+        var frequencyInSecond: Int = 3,
+    )
+
+    // ==============================
+
+    fun stopTrafficMonitor() {
+        networkMonitor?.get()?.stopMonitor()
+        networkMonitor = null
+    }
+
+    fun startTrafficNetwork(domain: String,
+        callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null) {
+        LogContext.log.i(tag, "Monitor domain=$domain")
+        InternetUtil.getIpsByHost(domain) { socketIps ->
+            if (socketIps.isEmpty()) {
+                LogContext.log.e(tag, "Can not get ip by host[$domain].")
+                toast("Can not get ip by host[$domain].", debug = true)
+                return@getIpsByHost
+            }
+            val socketIp = socketIps[0]
+            LogContext.log.i(tag, "socketIp=$socketIp")
+
+            if (networkMonitor?.get() != null) {
+                LogContext.log.w(tag, "networkMonitor had already exist! Do NOT create it again.")
+                return@getIpsByHost
+            }
+            networkMonitor = AtomicReference(NetworkMonitor(this@BaseActivity, socketIp) { info ->
+                callback?.let { runOnUiThread { it(info) } }
+
+                if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) return@NetworkMonitor
+
+                val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
+                val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
+
+                val latencyStatus = when (info.showPingTips) {
+                    NetworkUtil.NETWORK_PING_DELAY_HIGH      -> "Latency High"
+                    NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
+                    else                                     -> null
+                }
+
+                val wifiSignalStatus = when (info.showWifiSig) {
+                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD      -> "Signal Bad"
+                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
+                    else                                         -> null
+                }
+                val infoStr = String.format(
+                    "↓%s\t↑%s\t%sms\t%dMbps\tR:%d %d %d%s",
+                    downloadSpeedStr, uploadSpeedStr,
+                    if (latencyStatus.isNullOrBlank()) "${info.ping}" else "${info.ping}($latencyStatus)",
+                    info.linkSpeed,
+                    info.rssi, info.wifiScoreIn5, info.wifiScore,
+                    if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
+                )
+                LogContext.log.i(tag, infoStr)
+            }).also {
+                it.get().startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+            }
+        }
+    }
 
     // ==============================
 }

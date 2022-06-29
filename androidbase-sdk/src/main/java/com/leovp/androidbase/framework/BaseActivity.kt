@@ -212,6 +212,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
 
     fun startTrafficNetwork(domain: String,
         callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null) {
+        if (networkMonitor?.get() != null) {
+            LogContext.log.w(tag, "networkMonitor had already existed! Do NOT create it again!")
+            return
+        }
         LogContext.log.i(tag, "Monitor domain=$domain")
         InternetUtil.getIpsByHost(domain) { socketIps ->
             if (socketIps.isEmpty()) {
@@ -223,7 +227,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
             LogContext.log.i(tag, "socketIp=$socketIp")
 
             if (networkMonitor?.get() != null) {
-                LogContext.log.w(tag, "networkMonitor had already exist! Do NOT create it again.")
+                LogContext.log.e(tag, "networkMonitor had already existed! Do NOT create it again!")
                 return@getIpsByHost
             }
             networkMonitor = AtomicReference(NetworkMonitor(this@BaseActivity, socketIp) { info ->

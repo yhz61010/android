@@ -18,15 +18,15 @@ import com.leovp.opengl_sdk.BaseRenderer
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class OpenGLESPlaygroundActivity : BaseDemonstrationActivity() {
+class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityOpenGlesplaygroundBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGlesplaygroundBinding {
+        return ActivityOpenGlesplaygroundBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityOpenGlesplaygroundBinding.inflate(layoutInflater)
-            .apply { setContentView(root) }
 
         val item: OpenGLES20Activity.Item = intent.getSerializableExtraOrNull("item")!!
         title = item.title

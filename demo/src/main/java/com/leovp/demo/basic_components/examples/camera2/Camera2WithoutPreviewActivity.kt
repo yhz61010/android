@@ -20,14 +20,16 @@ import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
+class Camera2WithoutPreviewActivity : BaseDemonstrationActivity<ActivityCamera2WithoutPreviewBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }
 
-    private lateinit var binding: ActivityCamera2WithoutPreviewBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2WithoutPreviewBinding {
+        return ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater)
+    }
 
     private lateinit var camera2Helper: Camera2ComponentHelper
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK
@@ -35,7 +37,6 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
     @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         XXPermissions.with(this)
             .permission(Permission.CAMERA)
@@ -76,7 +77,9 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity() {
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(
-                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/, characteristics, SurfaceHolder::class.java
+                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                characteristics,
+                SurfaceHolder::class.java
             ) // To ensure that size is set, initialize camera in the view's thread
             runCatching {
                 LogContext.log.i(ITAG, "Prepare to call initializeCamera. previewSize=$previewSize")

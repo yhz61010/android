@@ -8,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.lifecycle.lifecycleScope
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityBitmapNativeBinding
 import com.leovp.jpeg_sdk.JPEGUtil
 import com.leovp.lib_common_android.exts.createFile
 import com.leovp.lib_common_kotlin.exts.round
@@ -18,12 +19,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.system.measureNanoTime
 
-class BitmapNativeActivity : BaseDemonstrationActivity() {
+class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>() {
     override fun getTagName(): String = ITAG
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bitmap_native)
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBitmapNativeBinding {
+        return ActivityBitmapNativeBinding.inflate(layoutInflater)
     }
 
     override fun onResume() {

@@ -26,14 +26,11 @@ import retrofit2.http.*
 import java.io.File
 
 
-class HttpActivity : BaseDemonstrationActivity() {
+class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityHttpBinding
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityHttpBinding.inflate(layoutInflater).apply { setContentView(root) }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityHttpBinding {
+        return ActivityHttpBinding.inflate(layoutInflater)
     }
 
     interface CommonService {
@@ -47,7 +44,8 @@ class HttpActivity : BaseDemonstrationActivity() {
 
         @Multipart
         @POST("/fileTransfer/uploadFile")
-        fun uploadFile(@QueryMap parameters: Map<String, String>, @Part file: MultipartBody.Part): Observable<String>
+        fun uploadFile(@QueryMap parameters: Map<String, String>,
+            @Part file: MultipartBody.Part): Observable<String>
 
         @Streaming
         @GET("/{urlPath}")
@@ -103,7 +101,10 @@ class HttpActivity : BaseDemonstrationActivity() {
             }
         }
 
-        val fileFullPath = saveRawResourceToFile(R.raw.tears_400_x265, getExternalFilesDir(null)!!.absolutePath, "h265.mp4")
+        val fileFullPath =
+                saveRawResourceToFile(R.raw.tears_400_x265,
+                    getExternalFilesDir(null)!!.absolutePath,
+                    "h265.mp4")
         val sourceFile = File(fileFullPath)
         val mimeType = getMimeType(sourceFile)
         if (mimeType == null) {
@@ -112,7 +113,9 @@ class HttpActivity : BaseDemonstrationActivity() {
         }
         val requestBody: RequestBody =
                 MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("file", sourceFile.name, sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
+                    .addFormDataPart("file",
+                        sourceFile.name,
+                        sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
                     .build()
         val body: MultipartBody.Part = MultipartBody.Part.create(requestBody)
 
@@ -128,19 +131,20 @@ class HttpActivity : BaseDemonstrationActivity() {
     @SuppressLint("SetTextI18n")
     fun onDownloadClick(@Suppress("UNUSED_PARAMETER") view: View) {
         binding.txtResult.text = "Downloading..."
-        val observer: ObserverOnNextListener<ResponseBody> = object : ObserverOnNextListener<ResponseBody?> {
-            override fun onNext(t: ResponseBody?) {
-                val filePath = this@HttpActivity.createFile("download.pdf").absolutePath
-                t!!.byteStream().toFile(filePath)
-                LogContext.log.w(tag, "Downloaded to $filePath")
-                binding.txtResult.text = "Downloaded to $filePath"
-            }
+        val observer: ObserverOnNextListener<ResponseBody> =
+                object : ObserverOnNextListener<ResponseBody?> {
+                    override fun onNext(t: ResponseBody?) {
+                        val filePath = this@HttpActivity.createFile("download.pdf").absolutePath
+                        t!!.byteStream().toFile(filePath)
+                        LogContext.log.w(tag, "Downloaded to $filePath")
+                        binding.txtResult.text = "Downloaded to $filePath"
+                    }
 
-            override fun onError(code: Int, msg: String, e: Throwable) {
-                LogContext.log.w(tag, "Download error. code=$code msg=$msg")
-                binding.txtResult.text = "Download error. code=$code msg=$msg"
-            }
-        }
+                    override fun onError(code: Int, msg: String, e: Throwable) {
+                        LogContext.log.w(tag, "Download error. code=$code msg=$msg")
+                        binding.txtResult.text = "Download error. code=$code msg=$msg"
+                    }
+                }
         val service = ApiService.getService("http://temp.leovp.com", CommonService::class.java)
         ApiSubscribe.subscribe(
             service.downloadFile("%E6%96%B0%E4%B8%9C%E6%96%B9%E6%89%98%E4%B8%9A%E8%80%83%E8%AF%95%E5%AE%98%E6%96%B9%E6%8C%87%E5%8D%97.pdf"),

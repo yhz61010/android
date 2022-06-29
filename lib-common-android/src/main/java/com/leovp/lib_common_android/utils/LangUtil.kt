@@ -80,7 +80,7 @@ import java.util.*
  *
  * When you want to change app language, it's easy:
  * ```kotlin
- * LangUtil.setLocale(context, LangUtil.getLocale("zh_CN")!!, refreshUI = true) { refreshUi ->
+ * LangUtil.setAppLanguage(context, LangUtil.getLocale("zh_CN")!!, refreshUI = true) { refreshUi ->
  *     if (refreshUi) EventBus.getDefault().post(LangChangeEvent())
  * }
  * ```
@@ -106,11 +106,11 @@ class LangUtil private constructor(private val ctx: Context) {
      * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
     @Synchronized
-    fun setLocale(ctx: Context,
-                  targetLocale: Locale = getAppLanguage(),
-                  refreshUI: Boolean = false,
-                  callback: ((Boolean) -> Unit)? = null): Context {
-        saveLanguage(targetLocale)
+    fun setAppLanguage(ctx: Context,
+        targetLocale: Locale = getAppLanguage(),
+        refreshUI: Boolean = false,
+        callback: ((Boolean) -> Unit)? = null): Context {
+        saveLanguageToPref(targetLocale)
         val context = updateResources(ctx, targetLocale)
         callback?.invoke(refreshUI)
         return context
@@ -212,7 +212,7 @@ class LangUtil private constructor(private val ctx: Context) {
     fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
 
     @Synchronized
-    fun saveLanguage(language: Locale) {
+    private fun saveLanguageToPref(language: Locale) {
         // Use commit() instead of apply(), because sometimes we kill the application process
         // immediately that prevents apply() from finishing
         // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java

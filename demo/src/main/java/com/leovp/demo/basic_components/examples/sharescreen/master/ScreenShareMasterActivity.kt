@@ -55,7 +55,7 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import java.util.*
 
-class ScreenShareMasterActivity : BaseDemonstrationActivity() {
+class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareMasterBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -72,7 +72,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         const val CMD_TOUCH_DRAG: Int = 10
     }
 
-    private lateinit var binding: ActivityScreenShareMasterBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareMasterBinding {
+        return ActivityScreenShareMasterBinding.inflate(layoutInflater)
+    }
+
     private var fingerPaintView: FingerPaintView? = null
 
     private val cs = CoroutineScope(Dispatchers.IO)
@@ -121,39 +124,40 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityScreenShareMasterBinding.inflate(layoutInflater).apply { setContentView(root) }
         currentRealResolution = getRealResolution()
         if (!AccessibilityUtil.isAccessibilityEnabled()) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
 
-        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                LogContext.log.w(ITAG, "Prepare to record...")
-                startServer()
-                checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
-                mediaProjectService?.setData(result.resultCode,
-                    result.data ?: exception("Intent data is null. Can not capture screen!"))
-                val screenInfo = getAvailableResolution()
-                val setting = ScreenShareSetting(
-                    // Round the value to the nearest multiple of 16.
-                    (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
-                    // Round the value to the nearest multiple of 16.
-                    (screenInfo.height * 0.8F + 8).toInt() and 0xF.inv(), densityDpi)
-                setting.fps = 30F
-                setting.bitrate = screenInfo.width * screenInfo.height * 2
-                // setting.bitrate = setting.width * setting.height
-                // !!! Attention !!!
-                // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
-                // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-                // setting.keyFrameRate = 2
-                // setting.iFrameInterval = 3
-                mediaProjectService?.startScreenShare(setting)
-            } else {
-                LogContext.log.w(ITAG, "Permission denied!")
-                toast("Permission denied!", error = true)
-            }
-        }
+        activityResultLauncher =
+                registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                    if (result.resultCode == RESULT_OK) {
+                        LogContext.log.w(ITAG, "Prepare to record...")
+                        startServer()
+                        checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
+                        mediaProjectService?.setData(result.resultCode,
+                            result.data
+                                ?: exception("Intent data is null. Can not capture screen!"))
+                        val screenInfo = getAvailableResolution()
+                        val setting = ScreenShareSetting(
+                            // Round the value to the nearest multiple of 16.
+                            (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
+                            // Round the value to the nearest multiple of 16.
+                            (screenInfo.height * 0.8F + 8).toInt() and 0xF.inv(), densityDpi)
+                        setting.fps = 30F
+                        setting.bitrate = screenInfo.width * screenInfo.height * 2
+                        // setting.bitrate = setting.width * setting.height
+                        // !!! Attention !!!
+                        // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec configure will be crashed.
+                        // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+                        // setting.keyFrameRate = 2
+                        // setting.iFrameInterval = 3
+                        mediaProjectService?.startScreenShare(setting)
+                    } else {
+                        LogContext.log.w(ITAG, "Permission denied!")
+                        toast("Permission denied!", error = true)
+                    }
+                }
 
         binding.txtInfo.text = NetworkUtil.getIp()[0]
 
@@ -167,7 +171,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                val mediaProjectionManager =
+                        getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
                 val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
                 activityResultLauncher.launch(captureIntent)
             } else {
@@ -187,7 +192,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             @SuppressLint("NewApi")
             override fun run() {
                 runCatching {
-                    @Suppress("DEPRECATION") val currentScreenRotation =
+                    @Suppress("DEPRECATION")
+                    val currentScreenRotation =
                             if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
                     //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
@@ -254,9 +260,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
     private var clientChannel: Channel? = null
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port,
-        connectionListener,
-        true) {
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) :
+        BaseNettyServer(port,
+            connectionListener,
+            true) {
         override fun getTagName() = "SSMA-WS"
 
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
@@ -265,7 +272,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
     }
 
     @ChannelHandler.Sharable
-    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+    class WebSocketServerHandler(private val netty: BaseNettyServer) :
+        BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             //            val receivedString: String?
             //            val frame = msg as WebSocketFrame
@@ -289,7 +297,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 receivedByteBuf.getBytes(6, bodyBytes)
                 receivedByteBuf.release()
 
-                netty.connectionListener.onReceivedData(netty, ctx.channel(), bodyBytes.decodeToString())
+                netty.connectionListener.onReceivedData(netty,
+                    ctx.channel(),
+                    bodyBytes.decodeToString())
             }
         }
 
@@ -300,7 +310,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
             val contentLen = (cId.size + protoVer.size + data.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, data)
 
-            return netty.executeCommand(clientChannel, command, "sendVideoData", "$cmdId", showContent = false)
+            return netty.executeCommand(clientChannel,
+                command,
+                "sendVideoData",
+                "$cmdId",
+                showContent = false)
         }
 
         override fun release() {
@@ -319,7 +333,9 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(ITAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             cs.launch {
-                webSocketServerHandler.sendVideoData(clientChannel, CMD_GRAPHIC_CSD, mediaProjectService?.vpsSpsPps!!)
+                webSocketServerHandler.sendVideoData(clientChannel,
+                    CMD_GRAPHIC_CSD,
+                    mediaProjectService?.vpsSpsPps!!)
                 mediaProjectService?.triggerIFrame()
                 this@ScreenShareMasterActivity.clientChannel = clientChannel
             }
@@ -327,7 +343,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
 
         var clientScreenInfo: Size? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
+        override fun onReceivedData(netty: BaseNettyServer,
+            clientChannel: Channel,
+            data: Any?,
+            action: Int) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
                 val stringData = data as String
@@ -335,8 +354,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                 when (cmdBean.cmdId) {
                     CMD_TOUCH_EVENT        -> {
                         val touchBean = cmdBean.touchBean!!
-                        touchBean.x = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * touchBean.x
-                        touchBean.y = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * touchBean.y
+                        touchBean.x =
+                                currentRealResolution.width / clientScreenInfo!!.width.toFloat() * touchBean.x
+                        touchBean.y =
+                                currentRealResolution.height / clientScreenInfo!!.height.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
                     CMD_TOUCH_DRAG         -> EventBus.getDefault().post(cmdBean.touchBean!!)
@@ -358,15 +379,19 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                         }
 
                         withContext(Dispatchers.Main) {
-                            val calX = currentRealResolution.width / clientScreenInfo!!.width.toFloat() * paintBean.x
-                            val calY = currentRealResolution.height / clientScreenInfo!!.height.toFloat() * paintBean.y
+                            val calX =
+                                    currentRealResolution.width / clientScreenInfo!!.width.toFloat() * paintBean.x
+                            val calY =
+                                    currentRealResolution.height / clientScreenInfo!!.height.toFloat() * paintBean.y
                             when (paintBean.touchType) {
                                 ScreenShareClientActivity.TouchType.DOWN  -> userPath.add(Path().also {
                                     it.moveTo(calX, calY)
                                 } to Paint(pathPaint))
-                                ScreenShareClientActivity.TouchType.MOVE  -> userPath.lastOrNull()?.first?.lineTo(calX,
+                                ScreenShareClientActivity.TouchType.MOVE  -> userPath.lastOrNull()?.first?.lineTo(
+                                    calX,
                                     calY)
-                                ScreenShareClientActivity.TouchType.UP    -> userPath.lastOrNull()?.first?.lineTo(calX,
+                                ScreenShareClientActivity.TouchType.UP    -> userPath.lastOrNull()?.first?.lineTo(
+                                    calX,
                                     calY)
                                 ScreenShareClientActivity.TouchType.CLEAR -> {
                                     userPath.clear()
@@ -378,7 +403,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity() {
                                     userPath = fingerPaintView?.getPaths()!!
                                     return@withContext
                                 }
-                                else                                      -> throw IllegalArgumentException("Unknown touch type[${paintBean.touchType}]")
+                                else                                      -> throw IllegalArgumentException(
+                                    "Unknown touch type[${paintBean.touchType}]")
                             }
                             fingerPaintView?.drawUserPath(userPath)
                         }

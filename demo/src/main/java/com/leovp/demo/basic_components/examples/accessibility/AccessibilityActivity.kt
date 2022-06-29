@@ -15,14 +15,15 @@ import com.leovp.lib_common_android.exts.id
 import com.leovp.log_sdk.base.ITAG
 import org.greenrobot.eventbus.EventBus
 
-class AccessibilityActivity : BaseDemonstrationActivity() {
+class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityAccessibilityBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAccessibilityBinding {
+        return ActivityAccessibilityBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAccessibilityBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         val items = mutableListOf<String>()
         for (i in 0 until 50) {

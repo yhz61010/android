@@ -4,16 +4,15 @@ import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.exts.android.cancelToast
 import com.leovp.androidbase.exts.android.toast
-import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.log_sdk.base.ITAG
 
-class ToastActivity : BaseDemonstrationActivity() {
+class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     override fun getTagName(): String = ITAG
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_toast)
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityToastBinding {
+        return ActivityToastBinding.inflate(layoutInflater)
     }
 
     fun onNormalToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

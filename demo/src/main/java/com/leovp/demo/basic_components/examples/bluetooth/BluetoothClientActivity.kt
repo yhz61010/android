@@ -39,11 +39,12 @@ import com.leovp.log_sdk.base.ITAG
  * @see <a href="https://www.jianshu.com/p/a27f3ca027e3">BLE Develop</a>
  * @see <a href="https://www.jianshu.com/p/71116665fd08">FAQ</a>
  */
-class BluetoothClientActivity : BaseDemonstrationActivity() {
+class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClientBinding>() {
     override fun getTagName(): String = ITAG
 
-    private var _binding: ActivityBluetoothClientBinding? = null
-    private val binding get() = _binding!!
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothClientBinding {
+        return ActivityBluetoothClientBinding.inflate(layoutInflater)
+    }
 
     private var device: BluetoothDevice? = null
     private var bluetoothGatt: BluetoothGatt? = null
@@ -52,9 +53,6 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
     @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityBluetoothClientBinding.inflate(layoutInflater).apply {
-            setContentView(this.root)
-        }
 
         initView()
         initData()
@@ -64,7 +62,6 @@ class BluetoothClientActivity : BaseDemonstrationActivity() {
     @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null
         disconnect()
     }
 

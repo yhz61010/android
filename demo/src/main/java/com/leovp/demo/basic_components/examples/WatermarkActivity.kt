@@ -12,14 +12,15 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 
-class WatermarkActivity : BaseDemonstrationActivity() {
+class WatermarkActivity : BaseDemonstrationActivity<ActivityWatermarkBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityWatermarkBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWatermarkBinding {
+        return ActivityWatermarkBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWatermarkBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         // You can config global setting if you want
         Watermark.defaultConfig {

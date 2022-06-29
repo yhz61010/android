@@ -9,21 +9,23 @@ import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.base.ITAG
 
 
-class ViewAnimActivity : BaseDemonstrationActivity() {
+class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityViewAnimBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityViewAnimBinding {
+        return ActivityViewAnimBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityViewAnimBinding.inflate(layoutInflater).apply { setContentView(root) }
         title = "View Animation"
         initView()
     }
 
     private fun initView() {
         binding.btnAlpha.setOnSingleClickListener {
-            val loadAnimation: Animation = AnimationUtils.loadAnimation(this, R.anim.view_anim_alpha)
+            val loadAnimation: Animation =
+                    AnimationUtils.loadAnimation(this, R.anim.view_anim_alpha)
             binding.ivBeauty.startAnimation(loadAnimation)
         }
 

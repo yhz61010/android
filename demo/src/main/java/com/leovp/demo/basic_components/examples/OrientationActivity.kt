@@ -9,12 +9,17 @@ import android.view.OrientationEventListener
 import android.widget.TextView
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityOrientationBinding
 import com.leovp.lib_common_android.exts.*
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-class OrientationActivity : BaseDemonstrationActivity() {
+class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>() {
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOrientationBinding {
+        return ActivityOrientationBinding.inflate(layoutInflater)
+    }
 
     private lateinit var tvOrientation: TextView
     private lateinit var tvDirection: TextView
@@ -25,7 +30,6 @@ class OrientationActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_orientation)
 
         tvOrientation = findViewById(R.id.tvOrientation)
         tvDirection = findViewById(R.id.tvDirection)

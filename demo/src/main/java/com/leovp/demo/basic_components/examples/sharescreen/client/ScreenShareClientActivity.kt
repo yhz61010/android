@@ -55,14 +55,16 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
-class ScreenShareClientActivity : BaseDemonstrationActivity() {
+class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareClientBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         private const val CLICK_THRESHOLD = 8
     }
 
-    private lateinit var binding: ActivityScreenShareClientBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareClientBinding {
+        return ActivityScreenShareClientBinding.inflate(layoutInflater)
+    }
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -86,7 +88,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
-        binding = ActivityScreenShareClientBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         screenInfo = getRealResolution()
         //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)

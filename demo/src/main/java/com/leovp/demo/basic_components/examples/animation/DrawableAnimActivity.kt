@@ -8,12 +8,15 @@ import com.leovp.demo.databinding.ActivityDrawableAnimBinding
 import com.leovp.log_sdk.base.ITAG
 
 
-class DrawableAnimActivity : BaseDemonstrationActivity() {
+class DrawableAnimActivity : BaseDemonstrationActivity<ActivityDrawableAnimBinding>() {
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDrawableAnimBinding {
+        return ActivityDrawableAnimBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityDrawableAnimBinding.inflate(layoutInflater).apply { setContentView(root) }
         title = "Drawable Animation"
 
         // Load the ImageView that will host the animation and
@@ -25,6 +28,5 @@ class DrawableAnimActivity : BaseDemonstrationActivity() {
 
         // Start the animation (looped playback by default).
         frameAnimation.start()
-
     }
 }

@@ -25,10 +25,12 @@ import java.net.URI
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicInteger
 
-class WebSocketClientActivity : BaseDemonstrationActivity() {
+class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClientBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityWebsocketClientBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketClientBinding {
+        return ActivityWebsocketClientBinding.inflate(layoutInflater)
+    }
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -37,11 +39,6 @@ class WebSocketClientActivity : BaseDemonstrationActivity() {
     private val constantRetry = ConstantRetry(10, 2000)
 
     private val retryTimes = AtomicInteger(0)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityWebsocketClientBinding.inflate(layoutInflater).apply { setContentView(root) }
-    }
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(

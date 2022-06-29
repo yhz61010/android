@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SocketClientActivity : BaseDemonstrationActivity() {
+class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBinding>() {
     override fun getTagName(): String = ITAG
 
     private val cs = CoroutineScope(Dispatchers.IO)
@@ -29,7 +29,9 @@ class SocketClientActivity : BaseDemonstrationActivity() {
     private lateinit var socketClient: SocketClient
     private lateinit var socketClientHandler: SocketClientHandler
 
-    private lateinit var binding: ActivitySocketClientBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketClientBinding {
+        return ActivitySocketClientBinding.inflate(layoutInflater)
+    }
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
@@ -52,11 +54,6 @@ class SocketClientActivity : BaseDemonstrationActivity() {
             LogContext.log.w(TAG, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivitySocketClientBinding.inflate(layoutInflater).apply { setContentView(root) }
     }
 
     private fun createSocket(): SocketClient {

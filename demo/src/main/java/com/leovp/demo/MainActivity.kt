@@ -8,13 +8,13 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityMainBinding
 import com.leovp.lib_bytes.toHexString
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_json.toJsonString
@@ -22,16 +22,18 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 
-class MainActivity : BaseDemonstrationActivity() {
+class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>() {
 
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityMainBinding {
+        return ActivityMainBinding.inflate(layoutInflater)
+    }
 
     private val connectionLiveData by lazy { ConnectionLiveData(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val navView: BottomNavigationView = findViewById(R.id.nav_view)
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
@@ -39,7 +41,7 @@ class MainActivity : BaseDemonstrationActivity() {
         val appBarConfiguration =
                 AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
         setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+        binding.navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
             .permission(Permission.MANAGE_EXTERNAL_STORAGE,

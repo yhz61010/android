@@ -2,8 +2,8 @@ package com.leovp.demo.basic_components.examples.log
 
 import android.os.Bundle
 import android.util.Log
-import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityLogBinding
 import com.leovp.lib_common_android.utils.DeviceUtil
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
@@ -16,12 +16,15 @@ import com.leovp.log_sdk.base.ITAG
  * LogContext.log.w(ITAG, "Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
  * ```
  */
-class LogActivity : BaseDemonstrationActivity() {
+class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>() {
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityLogBinding {
+        return ActivityLogBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_log)
 
         LogContext.log.v("Hello v", outputType = 1)
         LogContext.log.d("Hello d", outputType = 2)
@@ -37,7 +40,9 @@ class LogActivity : BaseDemonstrationActivity() {
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
 
-        LogContext.log.w(ITAG, "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}", outputType = 13)
+        LogContext.log.w(ITAG,
+            "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}",
+            outputType = 13)
 
         LogContext.enableLog = false
         LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
@@ -53,7 +58,10 @@ class LogActivity : BaseDemonstrationActivity() {
         }
         val string = sb.toString()
         LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = 16)
-        LogContext.log.w(TAG, "Long Log[${string.length}][full]=$string", fullOutput = true, outputType = 17)
+        LogContext.log.w(TAG,
+            "Long Log[${string.length}][full]=$string",
+            fullOutput = true,
+            outputType = 17)
 
         if (LogContext.isLogInitialized()) {
             Log.w(TAG, "Log is initialized.")
@@ -62,14 +70,14 @@ class LogActivity : BaseDemonstrationActivity() {
         }
     }
 
-//    override fun onStop() {
-////        (LogContext.log as CLog).flushLog()
-//        super.onStop()
-//    }
+    //    override fun onStop() {
+    ////        (LogContext.log as CLog).flushLog()
+    //        super.onStop()
+    //    }
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "=====> onDestroy <=====")
-//        (LogContext.log as CLog).closeLog()
+        //        (LogContext.log as CLog).closeLog()
         super.onDestroy()
     }
 

@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.RecyclerView
 import com.leovp.androidbase.exts.android.startActivity
+import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.ColorBaseAdapter
 import com.leovp.demo.R
+import com.leovp.demo.databinding.FragmentJetpackBinding
 import com.leovp.demo.jetpack_components.examples.camerax.CameraXDemoActivity
 import com.leovp.demo.jetpack_components.examples.navigation.NavigationMainActivity
 import com.leovp.demo.jetpack_components.examples.recyclerview.RecyclerviewActivity
@@ -17,23 +17,26 @@ import com.leovp.demo.jetpack_components.examples.room.RoomActivity
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-class JetpackFragment : Fragment() {
+class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_jetpack) {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
+    override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_jetpack, container, false)
+        savedInstanceState: Bundle?): FragmentJetpackBinding {
+        return FragmentJetpackBinding.inflate(inflater, container, false)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                startActivity(featureList[position].second, { intent -> intent.putExtra("title", featureList[position].first) })
+                startActivity(featureList[position].second,
+                    { intent -> intent.putExtra("title", featureList[position].first) })
             }
         }
-        view.findViewById<RecyclerView>(R.id.recyclerView).run {
+        binding.recyclerView.run {
             setHasFixedSize(true)
             //            layoutManager = LinearLayoutManager(requireActivity())
             adapter = colorBaseAdapter

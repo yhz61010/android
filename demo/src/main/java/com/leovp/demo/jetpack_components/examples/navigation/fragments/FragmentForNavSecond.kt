@@ -5,24 +5,31 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
+import com.leovp.androidbase.framework.BaseFragment
+import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentForNavSecondBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.log_sdk.base.ITAG
 
-class FragmentForNavSecond : Fragment() {
-    private var _binding: FragmentForNavSecondBinding? = null
+class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.fragment_for_nav_second) {
+    override fun getTagName(): String = ITAG
 
-    // This property is only valid between onCreateView and onDestroyView.
-    private val binding get() = _binding!!
+    override fun getViewBinding(inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): FragmentForNavSecondBinding {
+        return FragmentForNavSecondBinding.inflate(inflater, container, false)
+    }
 
     private val args by navArgs<FragmentForNavSecondArgs>()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentForNavSecondBinding.inflate(inflater, container, false)
+    override fun onCreateView(inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): View {
         binding.btnGotoForthActivity.setOnSingleClickListener {
-            val forthAction = FragmentForNavSecondDirections.actionFragmentForNavSecondToFragmentForNavForth()
+            val forthAction =
+                    FragmentForNavSecondDirections.actionFragmentForNavSecondToFragmentForNavForth()
             it.findNavController().navigate(forthAction)
         }
         return binding.root
@@ -35,10 +42,5 @@ class FragmentForNavSecond : Fragment() {
         val param2: String = args.param2
         val paramDefault: String = args.paramDefault
         binding.tvArgs.text = "param1=$param1 param2=$param2 default=$paramDefault"
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

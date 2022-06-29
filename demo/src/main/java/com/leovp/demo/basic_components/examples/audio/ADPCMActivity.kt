@@ -10,6 +10,7 @@ import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityADPCMBinding
 import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtDecoder
 import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder
 import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
@@ -21,7 +22,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
-class ADPCMActivity : BaseDemonstrationActivity() {
+class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -30,12 +31,11 @@ class ADPCMActivity : BaseDemonstrationActivity() {
         private const val AUDIO_CHANNELS = 2
     }
 
-    private var player: AudioPlayer? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_a_d_p_c_m)
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityADPCMBinding {
+        return ActivityADPCMBinding.inflate(layoutInflater)
     }
+
+    private var player: AudioPlayer? = null
 
     fun onEncodeToADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val inputStream = resources.openRawResource(R.raw.raw_pcm_44100_2ch_s16le)
@@ -61,12 +61,14 @@ class ADPCMActivity : BaseDemonstrationActivity() {
 
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val decoderInfo =
-            AudioDecoderInfo(AUDIO_SAMPLE_RATE, if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+                AudioDecoderInfo(AUDIO_SAMPLE_RATE,
+                    if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT)
         player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
         val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
         thread {
-//            val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
+            //            val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
             val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
             val inputStream = FileInputStream(inFile)
             val musicBytes = inputStream.readBytes()

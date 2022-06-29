@@ -18,15 +18,15 @@ import kotlin.concurrent.thread
  * Author: Michael Leo
  * Date: 2021/9/30 14:07
  */
-class CircleProgressbarActivity : BaseDemonstrationActivity() {
+class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgressbarBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityCircleProgressbarBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding {
+        return ActivityCircleProgressbarBinding.inflate(layoutInflater)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCircleProgressbarBinding.inflate(layoutInflater)
-            .apply { setContentView(root) }
 
         binding.btnDownload.setOnSingleClickListener { btn ->
             btn.isEnabled = false

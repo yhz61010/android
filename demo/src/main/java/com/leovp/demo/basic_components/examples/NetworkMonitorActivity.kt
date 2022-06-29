@@ -23,18 +23,18 @@ import com.leovp.log_sdk.base.ITAG
  * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
  * ```
  */
-class NetworkMonitorActivity : BaseDemonstrationActivity() {
+class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorBinding>() {
 
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityNetworkMonitorBinding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetworkMonitorBinding {
+        return ActivityNetworkMonitorBinding.inflate(layoutInflater)
+    }
 
     private var networkMonitor: NetworkMonitor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding =
-                ActivityNetworkMonitorBinding.inflate(layoutInflater).apply { setContentView(root) }
 
         InternetUtil.getIpsByHost("leovp.com") { ipList ->
             LogContext.log.i(ITAG, "ipList=${ipList.toJsonString()}")

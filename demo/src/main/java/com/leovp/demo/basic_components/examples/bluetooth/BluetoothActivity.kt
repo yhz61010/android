@@ -25,11 +25,12 @@ import com.leovp.log_sdk.base.ITAG
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
-class BluetoothActivity : BaseDemonstrationActivity() {
+class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>() {
     override fun getTagName(): String = ITAG
 
-    private var _binding: ActivityBluetoothBinding? = null
-    private val binding get() = _binding!!
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothBinding {
+        return ActivityBluetoothBinding.inflate(layoutInflater)
+    }
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 
@@ -37,9 +38,6 @@ class BluetoothActivity : BaseDemonstrationActivity() {
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityBluetoothBinding.inflate(layoutInflater).apply {
-            setContentView(this.root)
-        }
 
         XXPermissions.with(this)
             .permission(
@@ -75,11 +73,6 @@ class BluetoothActivity : BaseDemonstrationActivity() {
             }
         }
         binding.tvInfo.text = msg
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
     }
 
     @SuppressLint("InlinedApi")

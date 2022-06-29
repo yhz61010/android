@@ -25,14 +25,16 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
+class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265
     }
 
-    private lateinit var binding: ActivityScreenshotRecordH264Binding
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenshotRecordH264Binding {
+        return ActivityScreenshotRecordH264Binding.inflate(layoutInflater)
+    }
 
     private lateinit var videoH26xOsForDebug: BufferedOutputStream
 
@@ -54,7 +56,6 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityScreenshotRecordH264Binding.inflate(layoutInflater).apply { setContentView(root) }
 
         val file = getBaseDirString("output")
         val dstFile = File(

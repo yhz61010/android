@@ -16,20 +16,22 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import kotlinx.coroutines.*
 
-class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity() {
+class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity<ActivityPlayVideoBinding>() {
 
     override fun getTagName(): String = ITAG
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPlayVideoBinding {
+        return ActivityPlayVideoBinding.inflate(layoutInflater)
+    }
 
     private val uiScope = CoroutineScope(Dispatchers.Main + Job())
     private val decoderManager = DecodeH265RawFile()
 
-    private lateinit var binding: ActivityPlayVideoBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
-        binding = ActivityPlayVideoBinding.inflate(layoutInflater).apply { setContentView(root) }
-        CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
+        CodecUtil.getAllSupportedCodecList()
+            .forEach { LogContext.log.i(ITAG, "Codec name=${it.name}") }
 
         val videoSurfaceView = binding.surfaceView
         val surface = videoSurfaceView.holder.surface

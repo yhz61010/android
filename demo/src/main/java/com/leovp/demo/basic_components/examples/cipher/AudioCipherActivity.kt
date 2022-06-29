@@ -7,6 +7,7 @@ import com.leovp.androidbase.exts.android.toast
 import com.leovp.androidbase.utils.cipher.AESUtil
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityAudioCipherBinding
 import com.leovp.log_sdk.base.ITAG
 import java.io.BufferedOutputStream
 import java.io.File
@@ -14,11 +15,15 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import javax.crypto.SecretKey
 
-class AudioCipherActivity : BaseDemonstrationActivity() {
+class AudioCipherActivity : BaseDemonstrationActivity<ActivityAudioCipherBinding>() {
     override fun getTagName(): String = ITAG
 
     companion object {
         private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
+    }
+
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioCipherBinding {
+        return ActivityAudioCipherBinding.inflate(layoutInflater)
     }
 
     private lateinit var secretKey: SecretKey
@@ -27,7 +32,6 @@ class AudioCipherActivity : BaseDemonstrationActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_audio_cipher)
         secretKey = AESUtil.generateKey()
     }
 

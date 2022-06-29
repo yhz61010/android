@@ -8,14 +8,11 @@ import com.leovp.demo.databinding.ActivityClipboardBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-class ClipboardActivity : BaseDemonstrationActivity() {
+class ClipboardActivity : BaseDemonstrationActivity<ActivityClipboardBinding>() {
     override fun getTagName(): String = ITAG
 
-    private lateinit var binding: ActivityClipboardBinding
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityClipboardBinding.inflate(layoutInflater).apply { setContentView(root) }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityClipboardBinding {
+        return ActivityClipboardBinding.inflate(layoutInflater)
     }
 
     override fun onResume() {

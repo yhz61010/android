@@ -21,10 +21,10 @@ import android.hardware.camera2.CameraCharacteristics
 import android.view.OrientationEventListener
 import android.view.Surface
 import androidx.lifecycle.LiveData
-import com.leovp.lib_common_android.exts.isNormalLandscapeByDegree
-import com.leovp.lib_common_android.exts.isNormalPortraitByDegree
-import com.leovp.lib_common_android.exts.isReverseLandscapeByDegree
-import com.leovp.lib_common_android.exts.isReversePortraitByDegree
+import com.leovp.lib_common_android.exts.isNormalLandscape
+import com.leovp.lib_common_android.exts.isNormalPortrait
+import com.leovp.lib_common_android.exts.isReverseLandscape
+import com.leovp.lib_common_android.exts.isReversePortrait
 
 
 /**
@@ -37,11 +37,11 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
             val deviceSurfaceRotation = when {
-                isNormalPortraitByDegree(orientation)   -> Surface.ROTATION_0
-                isReverseLandscapeByDegree(orientation) -> Surface.ROTATION_90
-                isReversePortraitByDegree(orientation)  -> Surface.ROTATION_180
-                isNormalLandscapeByDegree(orientation)  -> Surface.ROTATION_270
-                else                                    -> return
+                isNormalPortrait(orientation)   -> Surface.ROTATION_0
+                isReverseLandscape(orientation) -> Surface.ROTATION_90
+                isReversePortrait(orientation)  -> Surface.ROTATION_180
+                isNormalLandscape(orientation)  -> Surface.ROTATION_270
+                else                            -> return
             }
             val relative = computeRelativeRotation(characteristics, deviceSurfaceRotation)
             if (relative != value) postValue(relative)

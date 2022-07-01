@@ -25,7 +25,7 @@ import org.robolectric.shadows.ShadowLog
  */
 @RunWith(RobolectricTestRunner::class)
 @PrepareForTest(Log::class)
-@Config(shadows = [ShadowLog::class])
+@Config(sdk = [32], shadows = [ShadowLog::class])
 class Pref4Kotlin {
     private val context: Application = ApplicationProvider.getApplicationContext()
 

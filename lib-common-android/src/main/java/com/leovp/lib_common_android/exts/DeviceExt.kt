@@ -58,55 +58,57 @@ val Context.density get(): Float = this.resources.displayMetrics.density
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
  */
-fun Context.getAvailableResolution(): Size {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val metrics = windowManager.currentWindowMetrics
-        // Gets all excluding insets
-        val windowInsets = metrics.windowInsets
-        val insets =
-                windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+val Context.screenAvailableResolution: Size
+    get() {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = windowManager.currentWindowMetrics
+            // Gets all excluding insets
+            val windowInsets = metrics.windowInsets
+            val insets =
+                    windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
 
-        val insetsWidth = insets.right + insets.left
-        val insetsHeight = insets.top + insets.bottom
+            val insetsWidth = insets.right + insets.left
+            val insetsHeight = insets.top + insets.bottom
 
-        // Legacy size that Display#getSize reports
-        val bounds = metrics.bounds
-        Size(bounds.width() - insetsWidth, bounds.height() - insetsHeight)
-    } else {
-        //            val display = wm.defaultDisplay
-        //            val size = Point()
-        //            display.getSize(size)
-        //            size
+            // Legacy size that Display#getSize reports
+            val bounds = metrics.bounds
+            Size(bounds.width() - insetsWidth, bounds.height() - insetsHeight)
+        } else {
+            //            val display = wm.defaultDisplay
+            //            val size = Point()
+            //            display.getSize(size)
+            //            size
 
-        //            val display = wm.defaultDisplay
-        //            val displayMetrics = DisplayMetrics()
-        //            display.getMetrics(displayMetrics)
-        //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
-        val displayMetrics = resources.displayMetrics
-        return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+            //            val display = wm.defaultDisplay
+            //            val displayMetrics = DisplayMetrics()
+            //            display.getMetrics(displayMetrics)
+            //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
+            val displayMetrics = resources.displayMetrics
+            return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+        }
     }
-}
 
-fun Context.getRealResolution(): Size {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        //        this.display?.getRealSize(size)
-        val bounds = windowManager.currentWindowMetrics.bounds
-        Size(bounds.width(), bounds.height())
-    } else {
-        val displayMetrics = DisplayMetrics()
-        @Suppress("DEPRECATION") windowManager.defaultDisplay.getRealMetrics(displayMetrics)
-        Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+val Context.screenRealResolution: Size
+    get() {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            //        this.display?.getRealSize(size)
+            val bounds = windowManager.currentWindowMetrics.bounds
+            Size(bounds.width(), bounds.height())
+        } else {
+            val displayMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION") windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+        }
     }
-}
 
-fun Context.getScreenWidth() = getRealResolution().width
+val Context.screenWidth: Int get() = screenRealResolution.width
 
-fun Context.getScreenRealHeight() = getRealResolution().height
+val Context.screenRealHeight: Int get() = screenRealResolution.height
 
 /**
  * This height includes the height of status bar but excludes the height of navigation bar.
  */
-fun Context.getScreenAvailableHeight() = getAvailableResolution().height
+val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 
 val Context.statusBarHeight
     @SuppressLint("DiscouragedApi") get() : Int {
@@ -155,7 +157,7 @@ private fun Context.getNavigationBarName(): String {
  */
 val Context.isNavigationBarShown
     get() : Boolean {
-        return getScreenRealHeight() - getScreenAvailableHeight() > 0
+        return screenRealHeight - screenAvailableHeight > 0
         ////        val view = activity.findViewById<View>(android.R.id.navigationBarBackground) ?: return false
         ////        val visible = view.visibility
         ////        return !(visible == View.GONE || visible == View.INVISIBLE)
@@ -214,11 +216,11 @@ val Context.navigationBarHeight
         //        }
         //        return result
 
-        return getScreenRealHeight() - getScreenAvailableHeight()
+        return screenRealHeight - screenAvailableHeight
     }
 
 fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
-    val screenSize = act.getRealResolution()
+    val screenSize = act.screenRealResolution
     val screenWidth = screenSize.width
     val screenHeight = screenSize.height
     val left: Int
@@ -241,7 +243,7 @@ fun calculateNotchRect(act: Activity, notchWidth: Int, notchHeight: Int): Rect {
 
 val Context.screenRatio
     get(): Float {
-        val p = getRealResolution()
+        val p = screenRealResolution
         return 1.0f * max(p.width, p.height) / min(p.width, p.height)
     }
 
@@ -264,6 +266,7 @@ fun getImei(ctx: Context, slotId: Int): String? {
     }
 }
 
+@SuppressLint("DiscouragedApi")
 fun Context.getDimenInPixel(name: String): Int {
     val resourceId = resources.getIdentifier(name, "dimen", "android")
     return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else -1
@@ -382,7 +385,7 @@ fun getScreenOrientation(@IntRange(from = 0, to = 359) degree: Int,
  * - Surface.ROTATION_270
  */
 @Suppress("DEPRECATION")
-fun Context.getDeviceSurfaceRotation(): Int =
+val Context.deviceSurfaceRotation: Int
+    get() =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
-
 // =================

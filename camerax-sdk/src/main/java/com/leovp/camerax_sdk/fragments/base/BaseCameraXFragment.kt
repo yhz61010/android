@@ -47,8 +47,8 @@ import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
 import com.leovp.lib_common_android.exts.dp2px
-import com.leovp.lib_common_android.exts.getRealResolution
 import com.leovp.lib_common_android.exts.isSamsung
+import com.leovp.lib_common_android.exts.screenRealResolution
 import com.leovp.lib_common_android.exts.topMargin
 import com.leovp.lib_common_kotlin.exts.getRatio
 import com.leovp.lib_common_kotlin.exts.round
@@ -643,7 +643,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         ratio: CameraRatio,
         previewView: PreviewView,
         ratioBtn: ImageButton? = null) {
-        val metrics = requireContext().getRealResolution()
+        val metrics = requireContext().screenRealResolution
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics =
@@ -712,7 +712,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     protected fun getMaxPreviewSize(camSelector: CameraSelector): Size {
-        val screenMetrics = requireContext().getRealResolution()
+        val screenMetrics = requireContext().screenRealResolution
         return if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
             val characteristics: CameraCharacteristics =

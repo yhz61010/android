@@ -42,7 +42,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
         override fun onOrientationChanged(orientation: Int) {
             LogContext.log.d("orientation=$orientation")
             binding.tvOrientationDegree.text = orientation.toString()
-            binding.tvScreenWidth.text = ctx.getScreenWidth().toString()
+            binding.tvScreenWidth.text = ctx.screenWidth.toString()
             val newOrientation = getScreenOrientation(orientation)
             if (orientation == ORIENTATION_UNKNOWN || newOrientation == ORIENTATION_UNKNOWN) {
                 LogContext.log.w("ORIENTATION_UNKNOWN")
@@ -50,9 +50,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
                 return
             }
             //            if (currentScreenOrientation == newOrientation) return
-            @Suppress("DEPRECATION")
-            val currentScreenSurfaceRotation = getDeviceSurfaceRotation()
-            binding.tvSurfaceRotation.text = currentScreenSurfaceRotation.toString()
+            binding.tvSurfaceRotation.text = deviceSurfaceRotation.toString()
 
             when {
                 isNormalPortrait(orientation)   -> {

@@ -24,7 +24,7 @@ class FFMpegH265Activity : BaseDemonstrationActivity<ActivityFfmpegH265Binding>(
 
         glSurfaceView = findViewById(R.id.glSurfaceView)
         glSurfaceView.setKeepRatio(true)
-        //        glSurfaceView.updateDimension(getScreenWidth(), getScreenAvailableHeight())
+        //        glSurfaceView.updateDimension(screenWidth, getScreenAvailableHeight())
         val rawFileFullPath =
                 saveRawResourceToFile(R.raw.tears_400_x265_raw,
                     getExternalFilesDir(null)!!.absolutePath,

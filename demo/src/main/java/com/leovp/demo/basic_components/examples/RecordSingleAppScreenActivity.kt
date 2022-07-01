@@ -12,8 +12,8 @@ import com.leovp.demo.basic_components.examples.sharescreen.master.ScreenShareSe
 import com.leovp.demo.databinding.ActivityScreenshotRecordH264Binding
 import com.leovp.lib_bytes.toHexString
 import com.leovp.lib_common_android.exts.densityDpi
-import com.leovp.lib_common_android.exts.getAvailableResolution
 import com.leovp.lib_common_android.exts.getBaseDirString
+import com.leovp.lib_common_android.exts.screenAvailableResolution
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture
@@ -67,7 +67,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
         videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
         LogContext.log.i("dstFile=${dstFile.absolutePath}")
 
-        val screenInfo = application.getAvailableResolution()
+        val screenInfo = application.screenAvailableResolution
         val setting = ScreenShareSetting(
             (screenInfo.width * 0.8F / 16).toInt() * 16,
             (screenInfo.height * 0.8F / 16).toInt() * 16,

@@ -13,8 +13,8 @@ import androidx.core.view.children
 import com.leovp.floatview_sdk.base.AutoDock
 import com.leovp.floatview_sdk.base.DefaultConfig
 import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.floatview_sdk.util.getScreenAvailableHeight
-import com.leovp.floatview_sdk.util.getScreenWidth
+import com.leovp.floatview_sdk.util.screenAvailableHeight
+import com.leovp.floatview_sdk.util.screenWidth
 import com.leovp.floatview_sdk.util.statusBarHeight
 import kotlin.math.abs
 
@@ -23,7 +23,7 @@ import kotlin.math.abs
  * Date: 2021/8/30 10:56
  */
 internal class FloatViewImpl(private val context: Activity, internal var config: DefaultConfig) {
-    private val windowManager: WindowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+    private val windowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     private lateinit var layoutParams: WindowManager.LayoutParams
 
     private var lastX: Int = 0
@@ -48,25 +48,26 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         val totalDeltaY = lastY - firstY
 
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN                                                      -> {
+            MotionEvent.ACTION_DOWN    -> {
                 lastX = event.rawX.toInt()
                 lastY = event.rawY.toInt()
                 firstX = lastX
                 firstY = lastY
                 isClickGesture = true
-//                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
+                //                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
                 touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
-//                view.performClick()
-//                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_UP isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} isClickGesture=$isClickGesture $view")
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL,
+            MotionEvent.ACTION_OUTSIDE -> {
+                //                view.performClick()
+                //                if (GlobalConstants.DEBUG) LogContext.log.e("ACTION_UP isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} isClickGesture=$isClickGesture $view")
                 if (!consumeIsAlwaysFalse && config.autoDock != AutoDock.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.autoDock)
                 }
-                touchConsumedByMove =
-                        config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
+                touchConsumedByMove = config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
             }
-            MotionEvent.ACTION_MOVE                                                      -> {
+            MotionEvent.ACTION_MOVE    -> {
                 val deltaX = event.rawX.toInt() - lastX
                 val deltaY = event.rawY.toInt() - lastY
                 lastX = event.rawX.toInt()
@@ -87,10 +88,9 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                     isClickGesture = true
                     touchConsumedByMove = false
                 }
-                touchConsumedByMove =
-                        config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
+                touchConsumedByMove = config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
             }
-            else                                                                         -> Unit
+            else                       -> Unit
         }
         if (consumeIsAlwaysFalse) touchConsumedByMove = false
         touchConsumedByMove
@@ -139,22 +139,22 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 AutoDock.TOP        -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                 AutoDock.BOTTOM     -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                 AutoDock.LEFT_RIGHT -> {
-                    if (floatViewCenterX <= context.getScreenWidth() / 2) {
+                    if (floatViewCenterX <= context.screenWidth / 2) {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                     }
                 }
                 AutoDock.TOP_BOTTOM -> {
-                    if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) {
+                    if (floatViewCenterY <= context.screenAvailableHeight / 2) {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
                 AutoDock.FULL       -> {
-                    if (floatViewCenterX <= context.getScreenWidth() / 2) { // On left screen
-                        if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) { // On top screen // Top left
+                    if (floatViewCenterX <= context.screenWidth / 2) { // On left screen
+                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top left
                             if (left <= top - drawHeightOffset) { // Animate to left
                                 animateDirectionForDockFull = AutoDock.LEFT
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
@@ -163,7 +163,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             }
                         } else { // On bottom screen // Bottom left
-                            if (left <= context.getScreenAvailableHeight() - getFloatViewBottomLeftPos().y) { // Animate to left
+                            if (left <= context.screenAvailableHeight - getFloatViewBottomLeftPos().y) { // Animate to left
                                 animateDirectionForDockFull = AutoDock.LEFT
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                             } else { // Animate to bottom
@@ -172,8 +172,8 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                             }
                         }
                     } else { // On right screen
-                        if (floatViewCenterY <= context.getScreenAvailableHeight() / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - drawHeightOffset <= context.getScreenWidth() - getFloatViewTopRightPos().x) { // Animate to top
+                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top right
+                            if (getFloatViewTopRightPos().y - drawHeightOffset <= context.screenWidth - getFloatViewTopRightPos().x) { // Animate to top
                                 animateDirectionForDockFull = AutoDock.TOP
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             } else { // Animate to right
@@ -181,7 +181,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                             }
                         } else { // On bottom screen // Bottom right
-                            if (context.getScreenAvailableHeight() - getFloatViewBottomRightPos().y <= context.getScreenWidth() - getFloatViewBottomRightPos().x) { // Animate to bottom
+                            if (context.screenAvailableHeight - getFloatViewBottomRightPos().y <= context.screenWidth - getFloatViewBottomRightPos().x) { // Animate to bottom
                                 animateDirectionForDockFull = AutoDock.BOTTOM
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                             } else { // Animate to right
@@ -196,14 +196,23 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 start()
             }?.addUpdateListener {
                 when (autoDock) {
-                    AutoDock.NONE                                      -> Unit
-                    AutoDock.LEFT, AutoDock.RIGHT, AutoDock.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
-                    AutoDock.TOP, AutoDock.BOTTOM, AutoDock.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
-                    AutoDock.FULL                                      -> {
+                    AutoDock.NONE       -> Unit
+                    AutoDock.LEFT,
+                    AutoDock.RIGHT,
+                    AutoDock.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
+
+                    AutoDock.TOP,
+                    AutoDock.BOTTOM,
+                    AutoDock.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
+
+                    AutoDock.FULL       -> {
                         when (animateDirectionForDockFull) {
-                            AutoDock.LEFT, AutoDock.RIGHT -> layoutParams.x = it.animatedValue as Int
-                            AutoDock.TOP, AutoDock.BOTTOM -> layoutParams.y = it.animatedValue as Int
-                            else                          -> Unit
+                            AutoDock.LEFT,
+                            AutoDock.RIGHT  -> layoutParams.x = it.animatedValue as Int
+
+                            AutoDock.TOP,
+                            AutoDock.BOTTOM -> layoutParams.y = it.animatedValue as Int
+                            else            -> Unit
                         }
                     }
                 }
@@ -263,25 +272,25 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
     private fun adjustPosX(x: Int, minValue: Int): Int {
         if (x < minValue || x <= 0) return minValue
         return if ((x + (config.customView?.width
-                ?: 0) + minValue) >= context.getScreenWidth()
-        ) context.getScreenWidth() - (config.customView?.width ?: 0) - minValue else x
+                ?: 0) + minValue) >= context.screenWidth
+        ) context.screenWidth - (config.customView?.width ?: 0) - minValue else x
     }
 
     private fun adjustPosY(y: Int, minValue: Int): Int {
         if (y <= minValue + drawHeightOffset) return minValue + drawHeightOffset
         return if ((y + (config.customView?.height
-                ?: 0) + minValue) >= context.getScreenAvailableHeight()
-        ) context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - minValue
+                ?: 0) + minValue) >= context.screenAvailableHeight
+        ) context.screenAvailableHeight - (config.customView?.height ?: 0) - minValue
         else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
     private fun getFloatViewRightMaxMargin(): Int =
-            context.getScreenWidth() - (config.customView?.width ?: 0) - config.edgeMargin
+            context.screenWidth - (config.customView?.width ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopMinMargin(): Int = drawHeightOffset + config.edgeMargin
     private fun getFloatViewBottomMaxMargin(): Int =
-            context.getScreenAvailableHeight() - (config.customView?.height ?: 0) - config.edgeMargin
+            context.screenAvailableHeight - (config.customView?.height ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
     private fun getFloatViewTopRightPos(): Point =
@@ -291,7 +300,8 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
 
     private fun getFloatViewBottomRightPos(): Point =
-            Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y + (config.customView?.height ?: 0))
+            Point(layoutParams.x + (config.customView?.width ?: 0),
+                layoutParams.y + (config.customView?.height ?: 0))
 
     private fun setWindowLayoutParams() {
         drawHeightOffset = if (config.canDragOverStatusBar) 0 else context.statusBarHeight
@@ -328,16 +338,16 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private fun addTouchListenerToView(view: View, touchListener: View.OnTouchListener) {
         if (view is ViewGroup) {
-//                if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+            //                if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-//                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+                //                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
             view.children.forEach { child -> addTouchListenerToView(child, touchListener) }
         } else {
-//                if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+            //                if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-//                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+                //                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
         }

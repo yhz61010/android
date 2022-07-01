@@ -89,7 +89,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
 
-        screenInfo = getRealResolution()
+        screenInfo = screenRealResolution
         //        binding.surfaceView.holder.setFixedSize(screenInfo.x, screenInfo.y)
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -186,7 +186,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         this.sps = sps
         this.pps = pps
 
-        val screenInfo = getAvailableResolution()
+        val screenInfo = screenAvailableResolution
         val format = MediaFormat.createVideoFormat(
             when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
@@ -442,7 +442,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
 
             override fun onConnected(netty: BaseNettyClient) {
                 LogContext.log.i(ITAG, "onConnected")
-                webSocketClientHandler?.sendDeviceScreenInfoToServer(getRealResolution())
+                webSocketClientHandler?.sendDeviceScreenInfoToServer(screenRealResolution)
             }
 
             @SuppressLint("SetTextI18n")

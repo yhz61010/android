@@ -10,7 +10,7 @@ import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDeviceInfoBinding
-import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.screenRealResolution
 import com.leovp.lib_common_android.utils.DeviceUtil
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
@@ -42,7 +42,7 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
                     LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
                     binding.tv2.text = "notchScreenInfo: ${notchScreenInfo.toJsonString()}"
                     notchScreenInfo.notchRects?.let {
-                        val halfScreenWidth = getRealResolution().width / 2
+                        val halfScreenWidth = screenRealResolution.width / 2
                         if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
                             LogContext.log.i(TAG, "Notch in Middle")
                             binding.tv2.text = "Notch in Middle"

@@ -124,7 +124,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        currentRealResolution = getRealResolution()
+        currentRealResolution = screenRealResolution
         if (!AccessibilityUtil.isAccessibilityEnabled()) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
@@ -138,7 +138,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                         mediaProjectService?.setData(result.resultCode,
                             result.data
                                 ?: exception("Intent data is null. Can not capture screen!"))
-                        val screenInfo = getAvailableResolution()
+                        val screenInfo = screenAvailableResolution
                         val setting = ScreenShareSetting(
                             // Round the value to the nearest multiple of 16.
                             (screenInfo.width * 0.8F + 8).toInt() and 0xF.inv(),
@@ -452,7 +452,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
         Handler(Looper.getMainLooper()).postDelayed({
-            mediaProjectService?.takeScreenshot(getScreenWidth(), getScreenRealHeight())
+            mediaProjectService?.takeScreenshot(screenWidth, screenRealHeight)
         }, 3000)
     }
 }

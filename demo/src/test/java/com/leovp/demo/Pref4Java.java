@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @RunWith(RobolectricTestRunner.class)
 @PrepareForTest(Log.class)
-@Config(shadows = {ShadowLog.class})
+@Config(sdk = {32}, shadows = {ShadowLog.class})
 public class Pref4Java {
     private final Application context = ApplicationProvider.getApplicationContext();
 

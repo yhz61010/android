@@ -178,8 +178,8 @@ class DeviceUtil private constructor(private val ctx: Context) {
         return runCatching {
             val st = SystemClock.elapsedRealtime()
             val memInfo = getMemInfoInBytes()
-            val screenSize = ctx.getRealResolution()
-            val availableSize = ctx.getAvailableResolution()
+            val screenSize = ctx.screenRealResolution
+            val availableSize = ctx.screenAvailableResolution
             val statusBarHeight = ctx.statusBarHeight
             val navBarHeight = ctx.navigationBarHeight
             val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo

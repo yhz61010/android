@@ -5,7 +5,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.os.Build
 import android.util.Range
-import com.leovp.lib_common_android.exts.getAvailableResolution
+import com.leovp.lib_common_android.exts.screenAvailableResolution
 import com.leovp.lib_common_android.exts.windowManager
 import kotlin.math.max
 import kotlin.math.min
@@ -15,16 +15,14 @@ import kotlin.math.min
  * Date: 2022/4/26 13:55
  */
 
-private const val TAG = "CameraExt"
-
 // Camera2 API supported the MAX width and height
 fun Context.getPreviewViewMaxWidth(): Int {
-    val screenSize = getAvailableResolution()
+    val screenSize = screenAvailableResolution
     return max(screenSize.width, screenSize.height)
 }
 
 fun Context.getPreviewViewMaxHeight(): Int {
-    val screenSize = getAvailableResolution()
+    val screenSize = screenAvailableResolution
     return min(screenSize.width, screenSize.height)
 }
 

@@ -27,7 +27,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import com.leovp.lib_common_android.exts.SmartSize
 import com.leovp.lib_common_android.exts.getRatio
-import com.leovp.lib_common_android.exts.getRealResolution
+import com.leovp.lib_common_android.exts.screenRealResolution
 
 /** Screen size for pictures and video */
 val SIZE_SD_576P: SmartSize = SmartSize(720, 576)
@@ -39,7 +39,7 @@ val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(7680, 4320) // TV format in Japa
 
 /** Returns a [SmartSize] object for the given [Display] */
 fun getDisplaySmartSize(ctx: Context): SmartSize {
-    val outSize = ctx.getRealResolution()
+    val outSize = ctx.screenRealResolution
     return SmartSize(outSize.width, outSize.height)
 }
 

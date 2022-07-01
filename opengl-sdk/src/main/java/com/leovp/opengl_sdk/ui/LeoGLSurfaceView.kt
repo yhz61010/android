@@ -5,15 +5,16 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
-import com.leovp.lib_common_android.exts.getScreenAvailableHeight
-import com.leovp.lib_common_android.exts.getScreenWidth
+import com.leovp.lib_common_android.exts.screenAvailableHeight
+import com.leovp.lib_common_android.exts.screenWidth
 import com.leovp.lib_common_android.utils.TouchHelper
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.GLRenderer
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
-class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
+class LeoGLSurfaceView(context: Context,
+    attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
     companion object {
         private const val TAG = "LGLSV"
     }
@@ -73,7 +74,10 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : G
      */
     fun setVideoDimension(videoWidth: Int, videoHeight: Int) {
         LogContext.log.d(TAG, "setVideoDimension: $videoWidth*$videoHeight")
-        renderer.setVideoDimension(videoWidth, videoHeight, context.getScreenWidth(), context.getScreenAvailableHeight())
+        renderer.setVideoDimension(videoWidth,
+            videoHeight,
+            context.screenWidth,
+            context.screenAvailableHeight)
     }
 
     /**

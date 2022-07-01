@@ -30,7 +30,7 @@ import com.leovp.lib_common_kotlin.utils.SingletonHolder
  *     override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
  *         LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
  *         notchScreenInfo.notchRects?.let {
- *             val halfScreenWidth = getRealResolution().x / 2
+ *             val halfScreenWidth = screenRealResolution.x / 2
  *             if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
  *                 LogContext.log.i(TAG, "Notch in Middle")
  *             } else if (halfScreenWidth < it[0].left) {

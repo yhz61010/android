@@ -235,7 +235,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
 
         // Get screen metrics used to setup camera for full screen resolution
-        val metrics = requireContext().getRealResolution()
+        val metrics = requireContext().screenRealResolution
         //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"

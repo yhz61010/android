@@ -285,21 +285,25 @@ fun Context.isTablet(): Boolean {
 
 // ================================
 
-fun isPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
+fun isPortrait(@IntRange(from = 0, to = 359) degree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalPortraitByDegree(orientationInDegree,
-        thresholdInDegree) || isReversePortraitByDegree(orientationInDegree, thresholdInDegree)
+    return isNormalPortrait(degree,
+        thresholdInDegree) || isReversePortrait(degree, thresholdInDegree)
 }
 
-fun isLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
+fun isLandscape(@IntRange(from = 0, to = 359) degree: Int,
     @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalLandscapeByDegree(orientationInDegree,
-        thresholdInDegree) || isReverseLandscapeByDegree(orientationInDegree, thresholdInDegree)
+    return isNormalLandscape(degree,
+        thresholdInDegree) || isReverseLandscape(degree, thresholdInDegree)
 }
 
 // ---------------
 
 /**
+ * **Attention:**
+ * Only if the device is in portrait mode regardless of **Normal Portrait** or **Reverse Portrait**,
+ * `true` will be returned.
+ *
  * @param surfaceRotation The value may be
  * Surface.ROTATION_0 (no rotation),
  * Surface.ROTATION_90,
@@ -310,6 +314,10 @@ fun isPortrait(surfaceRotation: Int): Boolean =
         Surface.ROTATION_0 == surfaceRotation || Surface.ROTATION_180 == surfaceRotation
 
 /**
+ * **Attention:**
+ * Only if the device is in landscape mode regardless of **Normal Landscape** or **Reverse Landscape**,
+ * `true` will be returned.
+ *
  * @param surfaceRotation The value may be
  * Surface.ROTATION_0 (no rotation),
  * Surface.ROTATION_90,
@@ -321,41 +329,60 @@ fun isLandscape(surfaceRotation: Int): Boolean =
 
 // ---------------
 
-fun isNormalPortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return (orientationInDegree in 0..thresholdInDegree) || (orientationInDegree in (360 - thresholdInDegree)..359)
+/** Only if the device is just in **Normal Portrait** mode, `true` will be returned. */
+fun isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int,
+    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
+    return (degree in 0..threshold) || (degree in (360 - threshold)..359)
 }
 
-fun isReversePortraitByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return orientationInDegree in (180 - thresholdInDegree)..(180 + thresholdInDegree)
+/** Only if the device is just in **Reverse Portrait** mode, `true` will be returned. */
+fun isReversePortrait(@IntRange(from = 0, to = 359) degree: Int,
+    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
+    return degree in (180 - threshold)..(180 + threshold)
 }
 
-fun isNormalLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return orientationInDegree in (270 - thresholdInDegree)..(270 + thresholdInDegree)
+/** Only if the device is just in **Normal Landscape** mode, `true` will be returned. */
+fun isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int,
+    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
+    return degree in (270 - threshold)..(270 + threshold)
 }
 
-fun isReverseLandscapeByDegree(@IntRange(from = 0, to = 359) orientationInDegree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return orientationInDegree in (90 - thresholdInDegree)..(90 + thresholdInDegree)
+/** Only if the device is just in **Reverse Landscape** mode, `true` will be returned. */
+fun isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
+    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
+    return degree in (90 - threshold)..(90 + threshold)
 }
 
 // ---------------
 
-fun getOrientationByDegree(@IntRange(from = 0, to = 359) degree: Int,
+/**
+ * @return The result is one of the following value:
+ * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+ * - OrientationEventListener.ORIENTATION_UNKNOWN
+ */
+fun getScreenOrientation(@IntRange(from = 0, to = 359) degree: Int,
     @IntRange(from = 0, to = 45) threshold: Int = 30): Int {
     return when {
-        isNormalPortraitByDegree(degree, threshold)   -> SCREEN_ORIENTATION_PORTRAIT
-        isReversePortraitByDegree(degree, threshold)  -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        isNormalLandscapeByDegree(degree, threshold)  -> SCREEN_ORIENTATION_LANDSCAPE
-        isReverseLandscapeByDegree(degree, threshold) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        else                                          -> OrientationEventListener.ORIENTATION_UNKNOWN
+        isNormalPortrait(degree, threshold)   -> SCREEN_ORIENTATION_PORTRAIT
+        isReversePortrait(degree, threshold)  -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        isNormalLandscape(degree, threshold)  -> SCREEN_ORIENTATION_LANDSCAPE
+        isReverseLandscape(degree, threshold) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+        else                                  -> OrientationEventListener.ORIENTATION_UNKNOWN
     }
 }
 
+/**
+ * @return The result is one of the following value:
+ * - Surface.ROTATION_0
+ * - Surface.ROTATION_90
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270
+ */
 @Suppress("DEPRECATION")
-fun Context.getDeviceOrientation(): Int =
+fun Context.getDeviceSurfaceRotation(): Int =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
 
 // =================

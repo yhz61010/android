@@ -11,13 +11,13 @@ import java.io.Serializable
  * Author: Michael Leo
  * Date: 2022/1/28 15:12
  */
-inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T =
+internal inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T =
         px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
 
-inline fun <reified T : Number> Resources.sp2px(spValue: Float): T =
+internal inline fun <reified T : Number> Resources.sp2px(spValue: Float): T =
         px(TypedValue.COMPLEX_UNIT_SP, spValue)
 
-inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT_DIP,
+internal inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT_DIP,
     value: Float): T {
     val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
     return when (T::class) {
@@ -27,7 +27,7 @@ inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT
     }
 }
 
-inline fun <reified T : Serializable> Bundle.getSerializableOrNull(key: String): T? =
+internal inline fun <reified T : Serializable> Bundle.getSerializableOrNull(key: String): T? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getSerializable(key, T::class.java)
         } else {
@@ -35,7 +35,7 @@ inline fun <reified T : Serializable> Bundle.getSerializableOrNull(key: String):
             getSerializable(key) as? T
         }
 
-inline fun <reified T : Parcelable> Bundle.getParcelableOrNull(key: String): T? =
+internal inline fun <reified T : Parcelable> Bundle.getParcelableOrNull(key: String): T? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getParcelable(key, T::class.java)
         } else {

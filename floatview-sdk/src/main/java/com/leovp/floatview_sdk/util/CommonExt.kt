@@ -13,13 +13,13 @@ import android.view.WindowManager
  * Author: Michael Leo
  * Date: 2022/6/14 16:46
  */
-val Context.canDrawOverlays: Boolean
+internal val Context.canDrawOverlays: Boolean
     get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
  */
-val Context.screenAvailableResolution: Size
+internal val Context.screenAvailableResolution: Size
     get() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val metrics =
@@ -50,7 +50,7 @@ val Context.screenAvailableResolution: Size
         }
     }
 
-val Context.screenRealResolution: Size
+internal val Context.screenRealResolution: Size
     get() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //        this.display?.getRealSize(size)
@@ -65,14 +65,14 @@ val Context.screenRealResolution: Size
         }
     }
 
-val Context.screenWidth: Int get() = screenRealResolution.width
+internal val Context.screenWidth: Int get() = screenRealResolution.width
 
 /**
  * This height includes the height of status bar but excludes the height of navigation bar.
  */
-val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
+internal val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 
-val Context.statusBarHeight
+internal val Context.statusBarHeight
     @SuppressLint("DiscouragedApi")
     get() : Int {
         var result = 0

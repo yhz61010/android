@@ -133,7 +133,7 @@ ext {
     coreKtxVersion = '1.8.0'
     activityVersion = '1.5.0'
     fragmentVersion = '1.5.0'
-    archLifecycleVersion = '2.4.1'
+    archLifecycleVersion = '2.5.0'
     appcompatVersion = '1.4.2'
     swiperefreshlayoutVersion = '1.1.0'
     recyclerviewVersion = '1.2.1'

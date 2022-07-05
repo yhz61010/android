@@ -49,7 +49,9 @@ class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 simpleActivityLauncher.launch(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                    this.packageUri))
+                    this.packageUri)) { result ->
+                    toast("Result in AppSettingsActivity: ${result.resultCode}")
+                }
             }
         }
     }

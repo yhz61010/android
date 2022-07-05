@@ -5,7 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.widget.ImageButton
 import androidx.annotation.DrawableRes
 
-fun ImageButton.toggleButton(
+internal fun ImageButton.toggleButton(
     flag: Boolean, rotationAngle: Float, @DrawableRes firstIcon: Int, @DrawableRes secondIcon: Int,
     action: (Boolean) -> Unit
 ) {

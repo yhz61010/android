@@ -35,21 +35,22 @@ android {
 }
 
 dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     // api group: 'io.netty', name: 'netty-all', version: "$rootProject.ext.nettyVersion"
 //    api group: 'io.netty', name: 'netty-handler', version: "$rootProject.ext.nettyVersion"
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     api "io.netty:netty-codec-http:$rootProject.ext.nettyVersion"
 
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
-    api project(':log-sdk')
-    api project(':lib-bytes')
-    api project(':lib-network')
 
     // No need to use this library when adding pipeline however we indeed need its library.
     // So what's the magic?
     // https://mvnrepository.com/artifact/com.jcraft/jzlib
     api group: 'com.jcraft', name: 'jzlib', version: "$jzlibVersion"
+
+    implementation project(':log-sdk')
+    implementation project(':lib-bytes')
+    implementation project(':lib-network')
 }
 
 afterEvaluate {

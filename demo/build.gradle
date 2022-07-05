@@ -233,19 +233,12 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
     implementation project(':androidbase-sdk')
+    implementation project(':log-sdk')
     implementation project(':http-sdk')
     implementation project(':audio-sdk')
     implementation project(':pref-sdk')
     implementation project(':lib-json')
-    // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
-//    implementation project(':ffmpeg-sdk')
-//    implementation project(':ffmpeg-javacpp-sdk')
-
-    // You can enable only one of the following three modules.
-//    implementation project(':adpcm-ima-qt-codec-sdk')
-//    implementation project(':h264-hevc-decoder-sdk')
     implementation project(':adpcm-ima-qt-codec-h264-hevc-decoder-sdk')
-
     implementation project(':basenetty-sdk')
     implementation project(':camera2live-sdk')
     implementation project(':screencapture-sdk')
@@ -255,15 +248,21 @@ dependencies {
     implementation project(':opengl-sdk')
     implementation project(':camerax-sdk')
     implementation project(':jpeg-sdk')
-
     implementation project(':lib-network')
     implementation project(':lib-exception')
-    // The flollowing libraries have already included in 'androidbase-sdk' library.
-//    implementation project(':log-sdk')
-//    implementation project(':lib-bytes')
-//    implementation project(':lib-image')
-//    implementation project(':lib-common-android')
-//    implementation project(':lib-common-kotlin')
+    implementation project(':lib-common-android')
+    implementation project(':lib-common-kotlin')
+    implementation project(':log-sdk')
+    implementation project(':lib-bytes')
+    implementation project(':lib-image')
+    // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
+//    implementation project(':ffmpeg-sdk')
+//    implementation project(':ffmpeg-javacpp-sdk')
+
+    // You can enable only one of the following three modules.
+//    implementation project(':adpcm-ima-qt-codec-sdk')
+//    implementation project(':h264-hevc-decoder-sdk')
+//    implementation project(':adpcm-ima-qt-codec-h264-hevc-decoder-sdk')
 
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"

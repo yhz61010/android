@@ -80,4 +80,5 @@ dependencies {
     implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
 
     implementation project(':androidbase-sdk')
+    implementation project(':log-sdk')
 }

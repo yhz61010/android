@@ -30,21 +30,21 @@ import com.leovp.lib_common_android.exts.getRatio
 import com.leovp.lib_common_android.exts.screenRealResolution
 
 /** Screen size for pictures and video */
-val SIZE_SD_576P: SmartSize = SmartSize(720, 576)
-val SIZE_HD_720P: SmartSize = SmartSize(1280, 720) // 16:9
-val SIZE_FHD_1080P: SmartSize = SmartSize(1920, 1080) // 16:9
-val SIZE_4K_UHD_2160P_TV: SmartSize = SmartSize(3840, 2160) // 16:9
-val SIZE_4K_DCI_2160P: SmartSize = SmartSize(4096, 2160) // Used by Digital Cinemas (DCI)
-val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(7680, 4320) // TV format in Japan from 2020 on
+internal val SIZE_SD_576P: SmartSize = SmartSize(720, 576)
+internal val SIZE_HD_720P: SmartSize = SmartSize(1280, 720) // 16:9
+internal val SIZE_FHD_1080P: SmartSize = SmartSize(1920, 1080) // 16:9
+internal val SIZE_4K_UHD_2160P_TV: SmartSize = SmartSize(3840, 2160) // 16:9
+internal val SIZE_4K_DCI_2160P: SmartSize = SmartSize(4096, 2160) // Used by Digital Cinemas (DCI)
+internal val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(7680, 4320) // TV format in Japan from 2020 on
 
 /** Returns a [SmartSize] object for the given [Display] */
-fun getDisplaySmartSize(ctx: Context): SmartSize {
+internal fun getDisplaySmartSize(ctx: Context): SmartSize {
     val outSize = ctx.screenRealResolution
     return SmartSize(outSize.width, outSize.height)
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
-fun getDisplaySmartSize(designSize: Size): SmartSize {
+internal fun getDisplaySmartSize(designSize: Size): SmartSize {
     return SmartSize(designSize.width, designSize.height)
 }
 
@@ -63,7 +63,7 @@ fun getDisplaySmartSize(designSize: Size): SmartSize {
  * - [android.view.TextureView]
  * @param format an image format from either `ImageFormat` or `PixelFormat`
  */
-fun <T> getPreviewOutputSize(
+internal fun <T> getPreviewOutputSize(
     designSize: Size,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
@@ -98,7 +98,7 @@ fun <T> getPreviewOutputSize(
     }
 }
 
-fun <T> getPreviewOutputSize(
+internal fun <T> getPreviewOutputSize(
     ctx: Context,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
@@ -111,17 +111,17 @@ fun <T> getPreviewOutputSize(
         format)
 }
 
-fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
+internal fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
     return getConfigMap().getOutputSizes(SurfaceHolder::class.java)
         .map { SmartSize(it.width, it.height) }
         .toTypedArray()
 }
 
-fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
+internal fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
     return getCameraSupportedSize().groupBy { getRatio(it) }
 }
 
-fun getSpecificPreviewOutputSize(context: Context,
+internal fun getSpecificPreviewOutputSize(context: Context,
     desiredVideoWidth: Int,
     desiredVideoHeight: Int,
     characteristics: CameraCharacteristics): Size {
@@ -177,7 +177,7 @@ fun getSpecificPreviewOutputSize(context: Context,
     return previewSize
 }
 
-fun CameraCharacteristics.getCameraSizeMapForOutput(): Map<String, List<SmartSize>> {
+internal fun CameraCharacteristics.getCameraSizeMapForOutput(): Map<String, List<SmartSize>> {
     val outputSizeMap = HashMap<String, List<SmartSize>>()
     this.getCameraSupportedSizeMap().onEach { (ratio, sizeList) ->
         // Get available sizes and sort them by area from smallest to largest

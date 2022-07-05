@@ -50,9 +50,9 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
     api "androidx.annotation:annotation:$annotationVersion"
-    api project(':log-sdk')
-    api project(':lib-bytes')
-    api project(':lib-compress')
+    implementation project(':log-sdk')
+    implementation project(':lib-bytes')
+    implementation project(':lib-compress')
 }
 
 afterEvaluate {

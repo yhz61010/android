@@ -36,7 +36,8 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+
     implementation project(':lib-exception')
     implementation project(':lib-json')
 }

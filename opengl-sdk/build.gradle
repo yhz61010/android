@@ -37,10 +37,12 @@ android {
 
 dependencies {
 //    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    api project(':log-sdk')
-    api project(':lib-exception')
-    api project(':lib-common-android')
-    implementation "androidx.annotation:annotation:$annotationVersion"
+    api "androidx.annotation:annotation:$annotationVersion"
+
+    implementation project(':log-sdk')
+    implementation project(':lib-exception')
+    implementation project(':lib-common-android')
+    implementation project(':lib-common-kotlin')
 }
 
 afterEvaluate {

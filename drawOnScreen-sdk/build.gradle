@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
 }
 
 afterEvaluate {

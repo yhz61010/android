@@ -45,41 +45,42 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
-    implementation "com.google.android.material:material:$rootProject.ext.materialVersion"
+    api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
+    api "com.google.android.material:material:$rootProject.ext.materialVersion"
 //    api "com.google.android.material.transition:$rootProject.ext.transitionVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
-    implementation "androidx.concurrent:concurrent-futures-ktx:$androidxConcurrentVersion"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
+    api "androidx.concurrent:concurrent-futures-ktx:$androidxConcurrentVersion"
 
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
+    api "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintlayoutVersion"
     // LiveData
 //    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$rootProject.ext.archLifecycleVersion"
     // Lifecycles only (without ViewModel or LiveData)
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
+    api "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.ext.archLifecycleVersion"
 
     // Navigation library
-    implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
-    implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
+    api "androidx.navigation:navigation-fragment-ktx:$navVersion"
+    api "androidx.navigation:navigation-ui-ktx:$navVersion"
 
     // CameraX core library
-    implementation "androidx.camera:camera-core:$cameraVersion"
+    api "androidx.camera:camera-core:$cameraVersion"
     // CameraX Camera2 extensions
-    implementation "androidx.camera:camera-camera2:$cameraVersion"
-    implementation "androidx.camera:camera-video:$cameraVersion"
+    api "androidx.camera:camera-camera2:$cameraVersion"
+    api "androidx.camera:camera-video:$cameraVersion"
     // CameraX Lifecycle library
-    implementation "androidx.camera:camera-lifecycle:$cameraVersion"
+    api "androidx.camera:camera-lifecycle:$cameraVersion"
     // CameraX View class
-    implementation "androidx.camera:camera-view:$cameraVersion"
+    api "androidx.camera:camera-view:$cameraVersion"
     // CameraX VideoCapture library
-//    implementation "androidx.camera:camera-video:$cameraVersion"
+//    api "androidx.camera:camera-video:$cameraVersion"
     // CameraX Extensions library
-    implementation "androidx.camera:camera-extensions:$cameraVersion"
+    api "androidx.camera:camera-extensions:$cameraVersion"
 
-    api project(':lib-common-android')
-    api project(':lib-image')
-    api project(':lib-exif')
-    api project(':log-sdk')
-    api project(':pref-sdk')
+    implementation project(':lib-common-android')
+    implementation project(':lib-common-kotlin')
+    implementation project(':lib-image')
+    implementation project(':lib-exif')
+    implementation project(':log-sdk')
+    implementation project(':pref-sdk')
 //    implementation project(":jpeg-sdk")
 
     implementation "io.coil-kt:coil:$coilKtVersion"

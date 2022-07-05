@@ -41,6 +41,7 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
     override fun onCreateView(inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?): View {
+        super.onCreateView(inflater, container, savedInstanceState)
         LogContext.log.w("FragmentForNavFirst")
         binding.gotoSecondActivity.setOnSingleClickListener {
             val secondAction =

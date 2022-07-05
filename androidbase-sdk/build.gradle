@@ -56,11 +56,11 @@ android {
 }
 
 dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.coroutines_version"
 
-    implementation "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
+    api "androidx.multidex:multidex:$rootProject.ext.multidexVersion"
 
     // ViewModel
     api "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.ext.archLifecycleVersion"
@@ -89,20 +89,20 @@ dependencies {
     testImplementation "org.powermock:powermock-core:$rootProject.ext.powermockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$rootProject.ext.powermockVersion"
 
-    api project(':log-sdk')
-//    api project(':pref-sdk')
-    api project(':lib-json')
-    api project(':lib-bytes')
-    api project(':lib-image')
-//    api project(':lib-network')
-//    api project(':lib-exception')
-    api project(':lib-common-android') // 'lib-common-kotlin' has already included in this library.
-//    api project(':lib-common-kotlin')
+    implementation project(':log-sdk')
+    implementation project(':lib-json')
+    implementation project(':lib-bytes')
+    implementation project(':lib-image')
+    implementation project(':lib-exception')
+    implementation project(':lib-common-android')
+    implementation project(':lib-common-kotlin')
+//    implementation project(':pref-sdk')
+//    implementation project(':lib-network')
 
     // https://github.com/hyuwah/DraggableView
 //    api "com.github.hyuwah:DraggableView:$draggableViewVersion"
 
-    implementation "org.greenrobot:eventbus:$eventbusVersion"
+    api "org.greenrobot:eventbus:$eventbusVersion"
 }
 
 afterEvaluate {

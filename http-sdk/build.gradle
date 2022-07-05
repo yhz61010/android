@@ -36,8 +36,8 @@ android {
 }
 
 dependencies {
-    api project(':lib-network')
-    api project(':log-sdk')
+    implementation project(':lib-network')
+    implementation project(':log-sdk')
 
     api group: 'com.squareup.okhttp3', name: 'okhttp', version: "$rootProject.ext.okhttpVersion"
 //    api group: 'io.reactivex.rxjava2', name: 'rxjava', version: "$rootProject.ext.rxjava2RxjavaVersion"

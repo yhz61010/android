@@ -1,4 +1,4 @@
-package com.leovp.floatview_sdk.util
+package com.leovp.floatview_sdk.utils
 
 import android.annotation.SuppressLint
 import android.content.Context

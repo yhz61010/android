@@ -176,7 +176,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
                 activityResultLauncher.launch(captureIntent)
             } else {
-                FloatView.clear()
+                FloatView.clearAll()
                 stopServer()
                 mediaProjectService?.stopScreenShare()
             }
@@ -207,10 +207,16 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
     }
 
     private fun createFloatView() {
-        FloatView.with(this).setLayout(R.layout.component_screen_share_float_canvas) { v ->
-            fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
-        }.setTouchable(false) // We must set this value to false. Check that method comment.
-            .setEnableDrag(false).setEnableFullScreenFloatView(true).build()
+        FloatView.with(this)
+            .meta {
+                // We must set this value to false. Check that method comment.
+                touchable = false
+                enableDrag = false
+                fullScreenFloatView = true
+            }
+            .layout(R.layout.component_screen_share_float_canvas) { v ->
+                fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
+            }.build()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -230,7 +236,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 simpleActivityLauncher.launch(it) {
                     if (canDrawOverlays) {
                         if (FloatView.exist()) {
-                            FloatView.clear()
+                            FloatView.clearAll()
                             createFloatView()
                         }
                     } else {
@@ -243,7 +249,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
-        FloatView.clear()
+        FloatView.clearAll()
         stopServer()
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {
@@ -427,14 +433,14 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
             this@ScreenShareMasterActivity.clientChannel = null
             runOnUiThread {
                 binding.toggleButton.isChecked = false
-                FloatView.clear()
+                FloatView.clearAll()
             }
             stopServer()
         }
     }
 
     private fun startServer() {
-        FloatView.show()
+        FloatView.default().show()
         cs.launch {
             webSocketServer = WebSocketServer(10086, connectionListener)
             webSocketServerHandler = WebSocketServerHandler(webSocketServer)

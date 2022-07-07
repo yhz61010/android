@@ -3,15 +3,11 @@
 package com.leovp.floatview_sdk
 
 import android.app.Activity
-import android.graphics.Point
-import android.util.Size
-import android.view.LayoutInflater
 import android.view.View
-import androidx.annotation.LayoutRes
-import com.leovp.floatview_sdk.base.AutoDock
-import com.leovp.floatview_sdk.base.DefaultConfig
-import com.leovp.floatview_sdk.base.StickyEdge
-import com.leovp.floatview_sdk.util.canDrawOverlays
+import com.leovp.floatview_sdk.entities.DefaultConfig
+import com.leovp.floatview_sdk.entities.FloatViewAttribute
+import com.leovp.floatview_sdk.entities.GlobalConfig
+import com.leovp.floatview_sdk.framework.FloatViewManager
 
 /**
  * Author: Michael Leo
@@ -27,193 +23,63 @@ import com.leovp.floatview_sdk.util.canDrawOverlays
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-class FloatView private constructor(private val context: Activity) {
+class FloatView internal constructor(internal val context: Activity) {
 
     companion object {
+        /** Create new FloatView. */
         fun with(context: Activity): FloatViewCreator = FloatViewCreator(FloatView(context))
-        fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean = FloatViewManager.exist(tag)
-        fun getCustomLayout(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): View? =
-                FloatViewManager.getConfig(tag)?.customView
 
-        fun setEnableDrag(enable: Boolean, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
-            FloatViewManager.getConfig(tag)?.enableDrag = enable
+        fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean =
+                FloatViewManager.exist(tag)
+
+        /** Get the the specified FloatView by tag name in order to change its attribute. */
+        fun with(tag: String, init: (FloatViewAttribute.() -> Unit)? = null): FloatViewAttribute {
+            val attr = FloatViewAttribute(tag)
+            init?.let { attr.init() }
+            return attr
         }
 
-        /**
-         * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
-         * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
-         * In this case, you should set touchable status to `false`.
-         */
-        fun setTouchable(touchable: Boolean, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
-            FloatViewManager.getConfig(tag)?.touchable = touchable
-            show(tag)
-        }
+        /** Get the default FloatView with default tag name in order to change its attribute. */
+        fun default(): FloatViewAttribute = with(DefaultConfig.DEFAULT_FLOAT_VIEW_TAG)
 
-        /**
-         * Show a float view with specific tag.
-         * Attention: The float view should be exist which is created by calling `build()` method like this [FloatView.with(ctx).build()]
-         */
-        fun show(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) {
-            if (FloatViewManager.exist(tag)) {
-                FloatViewManager.show(tag)
-            }
-        }
-
-        /**
-         *  **Destroy** the specific float view.
-         */
-        fun dismiss(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.dismiss(tag)
-
-        /**
-         * Make float view be visible. Note that, the target float view should be created before.
-         */
-        fun visible(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.visible(tag, true)
-
-        /**
-         * Make float view be invisible. Note that, the target float view should be created before.
-         */
-        fun invisible(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) = FloatViewManager.visible(tag, false)
-        fun isShowing(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean =
-                FloatViewManager.getConfig(tag)?.isShowing ?: false
+        fun visibleAll() = FloatViewManager.visibleAll(true)
+        fun invisibleAll() = FloatViewManager.visibleAll(false)
 
         /**
          * **Destroy** all float views.
          */
-        fun clear() = FloatViewManager.clear()
+        fun clearAll() = FloatViewManager.clear()
 
-        fun getX(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
-                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.x ?: 0
+        internal var globalConfig = GlobalConfig()
 
-        fun getY(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
-                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.y ?: 0
-
-        fun getPosition(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Point =
-                FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition() ?: Point(0, 0)
-
-        /**
-         * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         */
-        fun setX(x: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
-                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, null)
-
-        /**
-         * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         */
-        fun setY(y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
-                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, y)
-
-        /**
-         * @param x If `x` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         * @param y If `y` value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         */
-        fun setPosition(x: Int, y: Int, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
-                FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(x, y)
-
-        fun setStickyEdge(stickyEdge: StickyEdge, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
-                FloatViewManager.getFloatViewImpl(tag)?.updateStickyEdge(stickyEdge)
-
-        fun setAutoDock(autoDock: AutoDock, tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG) =
-                FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(autoDock)
-
-        fun getFloatViewWidth(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
-                FloatViewManager.getFloatViewWidth(tag)
-
-        fun getFloatViewHeight(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Int =
-                FloatViewManager.getFloatViewHeight(tag)
-
-        fun getFloatViewSize(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Size =
-                Size(getFloatViewWidth(tag), getFloatViewHeight(tag))
-    }
-
-    class FloatViewCreator internal constructor(floatingView: FloatView) {
-        private val context = floatingView.context
-        private val config = DefaultConfig()
-
-//        fun asFloatView(): FloatView = floatingView
-
-        fun setLayout(@LayoutRes layoutId: Int, handle: (view: View) -> Unit) = apply {
-            config.customView = LayoutInflater.from(context).inflate(layoutId, null)
-            handle.invoke(config.customView!!)
-        }
-
-        fun setTag(tag: String) = apply { config.floatViewTag = tag }
-        fun setEnableDrag(enable: Boolean) = apply { config.enableDrag = enable }
-        fun setEnableFullScreenFloatView(enable: Boolean) = apply { config.fullScreenFloatView = enable }
-        fun setDragOverStatusBar(enable: Boolean) = apply { config.canDragOverStatusBar = enable }
-        fun setTouchToleranceInPx(value: Int) = apply { config.touchToleranceInPx = value }
-
-        /**
-         * @param x It's better to set a proper value in here. Otherwise if this value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         */
-        fun setX(x: Int) = apply { config.x = x }
-
-        /**
-         * @param y It's better to set a proper value in here. Otherwise if this value is out of screen dimension, it will be modified to proper value after float view has already been shown.
-         */
-        fun setY(y: Int) = apply { config.y = y }
-
-        /**
-         * Sets the edge margin. The default margin is 0px.
-         */
-        fun setEdgeMargin(margin: Int) = apply { config.edgeMargin = margin }
-        fun setStickyEdge(stickyEdge: StickyEdge) = apply { config.stickyEdge = stickyEdge }
-        fun setAutoDock(autoDock: AutoDock) = apply { config.autoDock = autoDock }
-
-        /**
-         * Sets the length of the animation. The default duration is 200 milliseconds.
-         */
-        fun setDockAnimDuration(duration: Long) = apply { config.dockAnimDuration = duration }
-
-        /**
-         * If the [setTouchable] is `false`, this listener will not be triggered.
-         * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom layer.
-         * So the float layer itself can not be touched anymore.
-         */
-        fun setTouchEventListener(touchEventListener: TouchEventListener) =
-                apply { config.touchEventListener = touchEventListener }
-
-        /**
-         * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
-         * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
-         * In this case, you should set touchable status to `false`.
-         */
-        fun setTouchable(touchable: Boolean) = apply { config.touchable = touchable }
-
-        /**
-         * Create float view but don't add it to the window manager.
-         */
-        fun build(): Unit = FloatViewManager.create(context, config)
-
-        /**
-         * **Create** a float view with specific tag and show it on screen.
-         */
-        fun show() {
-            if (context.canDrawOverlays) {
-                build()
-                FloatViewManager.show(config.floatViewTag)
-            }
+        fun defaultConfig(init: GlobalConfig.() -> Unit) {
+            globalConfig.init()
         }
     }
 
     interface TouchEventListener {
         /**
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * the return result will be ignored. It'll always `false`.
          */
         fun touchDown(view: View, x: Int, y: Int): Boolean = false
 
         /**
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * the return result will be ignored. It'll always `false`.
          */
         fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
 
         /**
-         * Generally, if [isClickGesture] is `false` that means before touch up being triggered, user is just moving the view.
-         * At this time, we should consume this touch event so the click listener that use set should NOT be triggered.
+         * Generally, if [isClickGesture] is `false` that means before touch up being triggered,
+         * user is just moving the view. At this time, we should consume this touch event
+         * so the click listener that use set should NOT be triggered.
          *
          * In contrast, if [isClickGesture] is `true` that means user triggers the click event,
          * so this touch event should not be consumed.
          *
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`, the return result will be ignored. It'll always `false`.
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * the return result will be ignored. It'll always `false`.
          */
         fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = !isClickGesture
     }

@@ -16,7 +16,7 @@ buildscript {
     ext.androidBaseSdkVersion = '5.5.0'
     ext.baseNettySdkVersion = '5.5.0'
     ext.circleProgressbarSdkVersion = '5.5.0'
-    ext.floatViewSdkVersion = '5.5.0'
+    ext.floatViewSdkVersion = '5.5.1'
     ext.audioSdkVersion = '5.5.0'
     ext.screenCaptureSdkVersion = '5.5.0'
     ext.drawOnScreenSdkVersion = '5.5.0'

@@ -34,7 +34,7 @@ class FloatViewAttribute(private val tag: String) {
     var y: Int
         get() = FloatViewManager.getFloatViewImpl(tag)?.getFloatViewPosition()?.y ?: 0
         set(value) {
-            FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, value)
+            FloatViewManager.getFloatViewImpl(tag)?.updateFloatViewPosition(null, value, true)
         }
 
     /**

@@ -9,6 +9,8 @@ import androidx.annotation.Keep
 import com.leovp.floatview_sdk.framework.FloatViewManager
 
 /**
+ * Note that, all the attributes here can be modified after FloatView is created.
+ *
  * Author: Michael Leo
  * Date: 2022/7/7 16:23
  */

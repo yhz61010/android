@@ -368,13 +368,15 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 // However the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
-            type = when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else                                           -> @Suppress("DEPRECATION") {
-                    WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+            if (config.systemWindow) {
+                type = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else                                           -> @Suppress("DEPRECATION") {
+                        WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                    }
+                    // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
+                    // android.view.WindowManager${WindowManager.BadTokenException}: Unable to add window -- token null is not valid; is your activity running?
                 }
-                // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                // android.view.WindowManager${WindowManager.BadTokenException}: Unable to add window -- token null is not valid; is your activity running?
             }
 
             gravity = Gravity.TOP or Gravity.START // Default value: Gravity.CENTER

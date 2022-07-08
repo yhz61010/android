@@ -39,6 +39,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         FloatView.with(this)
             .meta {
                 tag = "f1"
+                systemWindow = true
                 immersiveMode = false
                 x = 50
                 y = 220
@@ -123,6 +124,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         FloatView.with(this)
             .meta {
                 tag = "floatView_touchable"
+                systemWindow = true
                 immersiveMode = true
                 touchable = false
                 enableDrag = false
@@ -155,32 +157,32 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
             .show()
 
         binding.rgSticky.setOnCheckedChangeListener { _, checkedId ->
-            when (checkedId) {
-                R.id.rbStickyNone   -> FloatView.with("f1").stickyEdge = StickyEdge.NONE
-                R.id.rbStickyLeft   -> FloatView.with("f1").stickyEdge = StickyEdge.LEFT
-                R.id.rbStickyRight  -> FloatView.with("f1").stickyEdge = StickyEdge.RIGHT
-                R.id.rbStickyTop    -> FloatView.with("f1").stickyEdge = StickyEdge.TOP
-                R.id.rbStickyBottom -> FloatView.with("f1").stickyEdge = StickyEdge.BOTTOM
+            FloatView.with("f1").stickyEdge = when (checkedId) {
+                R.id.rbStickyNone   -> StickyEdge.NONE
+                R.id.rbStickyLeft   -> StickyEdge.LEFT
+                R.id.rbStickyRight  -> StickyEdge.RIGHT
+                R.id.rbStickyTop    -> StickyEdge.TOP
+                R.id.rbStickyBottom -> StickyEdge.BOTTOM
+                else -> throw IllegalAccessException("Unknown resource id: $checkedId")
             }
+            val tv = FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)
+            tv?.text = "f1\nImmersive:OFF\nSticky:${FloatView.with("f1").stickyEdge}"
         }
 
         binding.rgAutoDock.setOnCheckedChangeListener { _, checkedId ->
-            when (checkedId) {
-                R.id.rbAutoDockNone      -> FloatView.with("f2").dockEdge = DockEdge.NONE
-                R.id.rbAutoDockLeft      -> FloatView.with("f2").dockEdge = DockEdge.LEFT
-                R.id.rbAutoDockRight     -> {
-                    FloatView.with("f2").dockEdge = DockEdge.RIGHT
-                    FloatView.with("f2").customView?.let { v ->
-                        v.findViewById<TextView>(R.id.tvText).text =
-                                "f2\nImmersive:OFF\nDock:${FloatView.with("f2").dockEdge}"
-                    }
-                }
-                R.id.rbAutoDockTop       -> FloatView.with("f2").dockEdge = DockEdge.TOP
-                R.id.rbAutoDockBottom    -> FloatView.with("f2").dockEdge = DockEdge.BOTTOM
-                R.id.rbAutoDockLeftRight -> FloatView.with("f2").dockEdge = DockEdge.LEFT_RIGHT
-                R.id.rbAutoDockTopBottom -> FloatView.with("f2").dockEdge = DockEdge.TOP_BOTTOM
-                R.id.rbAutoDockFull      -> FloatView.with("f2").dockEdge = DockEdge.FULL
+            FloatView.with("f2").dockEdge = when (checkedId) {
+                R.id.rbAutoDockNone      ->  DockEdge.NONE
+                R.id.rbAutoDockLeft      -> DockEdge.LEFT
+                R.id.rbAutoDockRight     -> DockEdge.RIGHT
+                R.id.rbAutoDockTop       -> DockEdge.TOP
+                R.id.rbAutoDockBottom    -> DockEdge.BOTTOM
+                R.id.rbAutoDockLeftRight -> DockEdge.LEFT_RIGHT
+                R.id.rbAutoDockTopBottom -> DockEdge.TOP_BOTTOM
+                R.id.rbAutoDockFull      -> DockEdge.FULL
+                else -> throw IllegalAccessException("Unknown resource id: $checkedId")
             }
+            val tv = FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)
+            tv?.text = "f2\nImmersive:OFF\nDock:${FloatView.with("f2").dockEdge}"
         }
 
         binding.rgEnableDrag.setOnCheckedChangeListener { _, checkedId ->

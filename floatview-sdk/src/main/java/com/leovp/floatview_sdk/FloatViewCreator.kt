@@ -45,9 +45,15 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
      * **Create** a float view with specific tag and show it on screen.
      */
     fun show() {
-        if (context.canDrawOverlays) {
-            build()
-            FloatViewManager.show(config.tag)
+        if (config.systemWindow) {
+            if (context.canDrawOverlays) createAndShowFloatView()
+        } else {
+            createAndShowFloatView()
         }
+    }
+
+    private fun createAndShowFloatView() {
+        build()
+        FloatViewManager.show(config.tag)
     }
 }

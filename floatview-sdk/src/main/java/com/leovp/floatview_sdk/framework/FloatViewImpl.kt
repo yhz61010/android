@@ -35,11 +35,6 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
 
     private var isClickGesture = true
 
-    /**
-     * If [config#canDragOverStatusBar] is false, this values is the height of status bar.
-     */
-    private var drawHeightOffset = 0
-
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
         val consumeIsAlwaysFalse = !config.enableDrag || config.fullScreenFloatView
@@ -179,7 +174,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                 DockEdge.FULL       -> {
                     if (floatViewCenterX <= context.screenWidth / 2) { // On left screen
                         if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top left
-                            if (left <= top - drawHeightOffset) { // Animate to left
+                            if (left <= top - getDrawHeightOffset()) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(v,
                                     "translationX",
@@ -209,7 +204,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                         }
                     } else { // On right screen
                         if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - drawHeightOffset <= context.screenWidth - getFloatViewTopRightPos().x) { // Animate to top
+                            if (getFloatViewTopRightPos().y - getDrawHeightOffset() <= context.screenWidth - getFloatViewTopRightPos().x) { // Animate to top
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(v,
                                     "translationY",
@@ -272,7 +267,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         }
     }
 
-    fun updateFloatViewPosition(x: Int?, y: Int?) {
+    fun updateFloatViewPosition(x: Int?, y: Int?, accumulateY: Boolean = false) {
         config.customView?.let { v ->
             runCatching {
                 x?.let {
@@ -281,7 +276,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
                     config.x = finalX
                 }
                 y?.let {
-                    val finalY = adjustPosY(y, config.edgeMargin)
+                    val finalY = adjustPosY(y, config.edgeMargin, accumulateY)
                     layoutParams.y = finalY
                     config.y = finalY
                 }
@@ -317,18 +312,23 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
         config.customView?.setOnTouchListener(onTouchListener)
     }
 
-    private fun adjustPosX(x: Int, minValue: Int): Int {
-        if (x < minValue || x <= 0) return minValue
-        return if ((x + (config.customView?.width
-                ?: 0) + minValue) >= context.screenWidth
-        ) context.screenWidth - (config.customView?.width ?: 0) - minValue else x
+    private fun adjustPosX(x: Int, edgeMargin: Int): Int {
+        if (x < edgeMargin || x <= 0) return edgeMargin
+        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= context.screenWidth)
+            context.screenWidth - (config.customView?.width ?: 0) - edgeMargin else x
     }
 
-    private fun adjustPosY(y: Int, minValue: Int): Int {
-        if (y <= minValue + drawHeightOffset) return minValue + drawHeightOffset
-        return if ((y + (config.customView?.height
-                ?: 0) + minValue) >= context.screenAvailableHeight
-        ) context.screenAvailableHeight - (config.customView?.height ?: 0) - minValue
+    /**
+     * @param considerY When it is true, if the `y` is less equal then the minimum value,
+     * the result will accumulate `y`.
+     */
+    private fun adjustPosY(y: Int, edgeMargin: Int, considerY: Boolean = false): Int {
+        val drawHeightOffset = getDrawHeightOffset()
+        if (y <= edgeMargin + drawHeightOffset)
+            return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
+        return if (
+            (y + (config.customView?.height ?: 0) + edgeMargin) >= context.screenAvailableHeight
+        ) context.screenAvailableHeight - (config.customView?.height ?: 0) - edgeMargin
         else y
     }
 
@@ -336,7 +336,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
     private fun getFloatViewRightMaxMargin(): Int =
             context.screenWidth - (config.customView?.width ?: 0) - config.edgeMargin
 
-    private fun getFloatViewTopMinMargin(): Int = drawHeightOffset + config.edgeMargin
+    private fun getFloatViewTopMinMargin(): Int = getDrawHeightOffset() + config.edgeMargin
     private fun getFloatViewBottomMaxMargin(): Int =
             context.screenAvailableHeight - (config.customView?.height ?: 0) - config.edgeMargin
 
@@ -351,8 +351,9 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             Point(layoutParams.x + (config.customView?.width ?: 0),
                 layoutParams.y + (config.customView?.height ?: 0))
 
+    private fun getDrawHeightOffset() = if (config.immersiveMode) 0 else context.statusBarHeight
+
     private fun setWindowLayoutParams() {
-        drawHeightOffset = if (config.immersiveMode) 0 else context.statusBarHeight
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = if (config.touchable) {

@@ -31,9 +31,9 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         binding.btnChange.setOnSingleClickListener {
             FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                    "I'm f1 and change my text to: ${Random().nextInt(100)}"
+                    "I'm f1: ${Random().nextInt(100)}"
             FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                    "I'm f2 and change my text to: ${Random().nextInt(100)}"
+                    "I'm f2: ${Random().nextInt(100)}"
         }
 
         FloatView.with(this)
@@ -202,15 +202,15 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        FloatView.visibleAll()
-    }
-
-    override fun onStop() {
-        FloatView.invisibleAll()
-        super.onStop()
-    }
+    //    override fun onResume() {
+    //        super.onResume()
+    //        FloatView.visibleAll()
+    //    }
+    //
+    //    override fun onStop() {
+    //        FloatView.invisibleAll()
+    //        super.onStop()
+    //    }
 
     override fun onDestroy() {
         FloatView.clearAll()

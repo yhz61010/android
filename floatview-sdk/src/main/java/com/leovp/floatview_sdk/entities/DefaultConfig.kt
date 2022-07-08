@@ -6,6 +6,11 @@ import com.leovp.floatview_sdk.FloatView
 import com.leovp.floatview_sdk.entities.GlobalConfig.Companion.DEFAULT_EDGE_MARGIN
 
 /**
+ * Note that, all the configurations here can only be set when construct FloatView.
+ *
+ * If you want to change some properties value, see the [FloatViewAttribute]
+ * in where you can find all the values can be modified.
+ *
  * Author: Michael Leo
  * Date: 2021/8/30 10:58
  */
@@ -14,6 +19,12 @@ data class DefaultConfig(
     internal var customView: View? = null,
 
     var tag: String = DEFAULT_FLOAT_VIEW_TAG,
+
+    /**
+     * If set this property to `true`, the float view can be shown over system.
+     */
+    var systemWindow: Boolean = false,
+
     /**
      * It's better to set a proper value in here.
      * Otherwise if this value is out of screen dimension,

@@ -93,7 +93,6 @@ dependencies {
     implementation project(':lib-json')
     implementation project(':lib-bytes')
     implementation project(':lib-image')
-    implementation project(':lib-exception')
     implementation project(':lib-common-android')
     implementation project(':lib-common-kotlin')
 //    implementation project(':pref-sdk')

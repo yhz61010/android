@@ -46,7 +46,6 @@ dependencies {
 
     implementation project(':log-sdk')
     implementation project(':lib-bytes')
-    implementation project(':lib-exception')
     implementation project(':lib-image')
 }
 

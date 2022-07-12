@@ -3,7 +3,7 @@ package com.leovp.androidbase.utils.ui
 import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
-import com.leovp.lib_exception.fail
+import com.leovp.lib_common_kotlin.exts.fail
 
 /**
  * Author: Michael Leo

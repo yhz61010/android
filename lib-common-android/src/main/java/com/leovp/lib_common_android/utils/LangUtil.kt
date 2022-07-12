@@ -9,8 +9,8 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.RequiresApi
 import com.leovp.lib_common_android.exts.sharedPrefs
+import com.leovp.lib_common_kotlin.exts.fail
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
-import com.leovp.lib_exception.fail
 import java.util.*
 
 /**

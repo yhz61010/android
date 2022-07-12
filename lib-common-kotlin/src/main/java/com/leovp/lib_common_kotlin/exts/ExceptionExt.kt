@@ -1,4 +1,4 @@
-package com.leovp.lib_exception
+package com.leovp.lib_common_kotlin.exts
 
 fun fail(message: String): Nothing {
     throw IllegalArgumentException(message)

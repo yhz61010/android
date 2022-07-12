@@ -16,9 +16,9 @@ import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Process
-import com.leovp.androidbase.utils.file.FileDocumentUtil
 import com.leovp.lib_common_android.exts.getCompatContextInfo
 import com.leovp.lib_common_android.exts.inputMethodManager
+import com.leovp.lib_common_android.utils.FileDocumentUtil
 import com.leovp.log_sdk.LogContext
 import java.io.File
 import kotlin.system.exitProcess

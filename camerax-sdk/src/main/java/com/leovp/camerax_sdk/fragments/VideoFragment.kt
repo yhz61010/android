@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
+import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -13,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -45,6 +45,7 @@ import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.circularClose
 import com.leovp.lib_common_android.exts.circularReveal
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.lib_common_android.utils.FileDocumentUtil
 import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
 import com.leovp.log_sdk.LogContext
 import kotlinx.coroutines.Deferred
@@ -62,6 +63,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     // https://stackoverflow.com/a/64858848/1685062
     private lateinit var incPreviewGridBinding: IncPreviewGridBinding
     private lateinit var incRatioBinding: IncRatioOptionsBinding
+
+    private var videoOutFile: File? = null
+    private var videoOutUri: Uri? = null
 
     override fun getViewBinding(inflater: LayoutInflater,
         container: ViewGroup?,
@@ -296,14 +300,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
                     Environment.DIRECTORY_MOVIES + File.separator + baseFolderName)
             }
+            LogContext.log.w(logTag, "Save video in gallery: $contentValues")
             val outputOptions = MediaStoreOutputOptions.Builder(requireActivity().contentResolver,
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
-            val outputOptions =
-                    FileOutputOptions.Builder(File(getOutputVideoDirectory(requireContext(),
-                        baseFolderName),
-                        outFileName.absolutePath)).build()
+            videoOutFile = File(getOutputVideoDirectory(requireContext(), baseFolderName),
+                outFileName.absolutePath)
+            val outFile = videoOutFile!!
+            LogContext.log.i(logTag, "Save video in file: ${outFile.absolutePath}")
+            val outputOptions = FileOutputOptions.Builder(outFile).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         }
 
@@ -341,7 +347,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                                 cameraCapabilities[camSelector] = it
                             }
                         }
-                    } catch (exc: java.lang.Exception) {
+                    } catch (exc: Exception) {
                         LogContext.log.e(logTag, "Camera Face $camSelector is not supported")
                     }
                 }
@@ -403,14 +409,27 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         updateQualitySelectionUI(selectedQuality)
 
         binding.btnGallery.setOnClickListener {
-            Toast.makeText(requireContext(), "Click Gallery button.", Toast.LENGTH_SHORT).show()
             // Display the captured video
-            //            lifecycleScope.launch {
-            //                navController.navigate(
-            //                    // FIXME We need Uri not string
-            //                    VideoFragmentDirections.actionVideoFragmentToGalleryFragment(event.outputResults.outputUri.path!!)
-            //                )
-            //            }
+            lifecycleScope.launch {
+                if (videoOutUri != null) {
+                    videoOutUri?.let {
+                        val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)
+                        LogContext.log.i(logTag,
+                            "Click Gallery button with uri=$it | Real path=$fileRealPath")
+                        navController.navigate(
+                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(it.toString())
+                        )
+                    }
+                } else if (videoOutFile != null) {
+                    videoOutFile?.let {
+                        LogContext.log.i(logTag,
+                            "Click Gallery button with file=${it.absolutePath}")
+                        navController.navigate(
+                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(it.absolutePath)
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -540,8 +559,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             val stats = event.recordingStats
             val size = stats.numBytesRecorded
             val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)
+            videoOutUri = event.outputResults.outputUri
             val recordInfo =
-                    "${state}. ${size.humanReadableByteCount()}[$size] in ${time}s. Save to: ${event.outputResults.outputUri}"
+                    "$state ${size.humanReadableByteCount()}[$size] in ${time}s. Save to: $videoOutUri"
             LogContext.log.w(logTag, "Recorded result: $recordInfo")
         }
     }
@@ -576,7 +596,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     @SuppressLint("MissingPermission")
     private fun showUI(state: RecordUiState, status: String = "idle") {
-        LogContext.log.w(logTag, "showUI state=$state status=$status")
+        LogContext.log.i(logTag, "showUI state=$state status=$status")
         binding.let {
             when (state) {
                 RecordUiState.IDLE      -> {

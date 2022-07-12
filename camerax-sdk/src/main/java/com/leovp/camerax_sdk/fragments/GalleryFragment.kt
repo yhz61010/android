@@ -91,6 +91,8 @@ class GalleryFragment internal constructor() : Fragment() {
         mediaList = rootDirectory.listFiles { file ->
             EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
         }?.sortedDescending()?.toMutableList() ?: mutableListOf()
+
+        LogContext.log.d(TAG, "mediaList=$mediaList")
     }
 
     override fun onCreateView(

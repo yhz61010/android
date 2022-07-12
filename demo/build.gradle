@@ -249,7 +249,6 @@ dependencies {
     implementation project(':camerax-sdk')
     implementation project(':jpeg-sdk')
     implementation project(':lib-network')
-    implementation project(':lib-exception')
     implementation project(':lib-common-android')
     implementation project(':lib-common-kotlin')
     implementation project(':log-sdk')

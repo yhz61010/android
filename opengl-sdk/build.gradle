@@ -40,7 +40,6 @@ dependencies {
     api "androidx.annotation:annotation:$annotationVersion"
 
     implementation project(':log-sdk')
-    implementation project(':lib-exception')
     implementation project(':lib-common-android')
     implementation project(':lib-common-kotlin')
 }

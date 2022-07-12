@@ -84,7 +84,7 @@ class FloatViewAttribute(private val tag: String) {
      */
     fun invisible() = FloatViewManager.visible(tag, false)
 
-    fun isShowing(): Boolean = FloatViewManager.getConfig(tag)?.isDisplaying ?: false
+    fun isDisplaying(): Boolean = FloatViewManager.getConfig(tag)?.isDisplaying ?: false
 
     /**
      * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.

@@ -8,7 +8,7 @@ buildscript {
     ext.navVersion = '2.5.0'
     ext.sonarqube_version = '3.3'
 
-//    ext.leoVersion = '5.5.5'
+//    ext.leoVersion = '5.5.6'
 
     // ===============================
     // ===== Leo modules version =====
@@ -16,7 +16,7 @@ buildscript {
     ext.androidBaseSdkVersion = '5.5.5'
     ext.baseNettySdkVersion = '5.5.0'
     ext.circleProgressbarSdkVersion = '5.5.0'
-    ext.floatViewSdkVersion = '5.5.4'
+    ext.floatViewSdkVersion = '5.5.6'
     ext.audioSdkVersion = '5.5.0'
     ext.screenCaptureSdkVersion = '5.5.5'
     ext.drawOnScreenSdkVersion = '5.5.0'

@@ -4,36 +4,60 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.MediaController
+import android.widget.VideoView
 import androidx.fragment.app.Fragment
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.leovp.camerax_sdk.R
+import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment.Companion.VIDEO_EXTENSION
 import java.io.File
 
 /** Fragment used for each individual page showing a photo inside of [GalleryFragment] */
 class PhotoFragment internal constructor() : Fragment() {
 
+    private var isVideo = true
+    private var mediaFile: File? = null
+    private var mc: MediaController? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?) = SubsamplingScaleImageView(context)
+        savedInstanceState: Bundle?): View {
+        val args = arguments ?: throw IllegalAccessException("Arguments can't be null.")
+        mediaFile = args.getString(FILE_NAME_KEY)?.let {
+            isVideo = it.endsWith(VIDEO_EXTENSION, true)
+            File(it)
+        }
+        return if (isVideo) VideoView(context) else SubsamplingScaleImageView(context)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val args = arguments ?: return
-        val iv: SubsamplingScaleImageView = view as SubsamplingScaleImageView
-        val imgFile: File? = args.getString(FILE_NAME_KEY)?.let { File(it) }
-        if (imgFile == null) {
-            iv.setImage(ImageSource.resource(R.drawable.ic_photo))
+        if (isVideo) {
+            mc = MediaController(requireContext())
+            (view as VideoView).apply {
+                setVideoPath(mediaFile!!.absolutePath)
+                setMediaController(mc)
+                requestFocus()
+            }
         } else {
-            iv.setImage(ImageSource.uri(imgFile.absolutePath))
+            val iv: SubsamplingScaleImageView = view as SubsamplingScaleImageView
+            mediaFile?.let { iv.setImage(ImageSource.uri(it.absolutePath)) }
+                ?: iv.setImage(ImageSource.resource(R.drawable.ic_photo))
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (view as VideoView).start()
+        mc?.show(0)
     }
 
     companion object {
         private const val FILE_NAME_KEY = "file_name"
 
-        fun create(image: File) = PhotoFragment().apply {
+        fun create(mediaFile: File) = PhotoFragment().apply {
             arguments = Bundle().apply {
-                putString(FILE_NAME_KEY, image.absolutePath)
+                putString(FILE_NAME_KEY, mediaFile.absolutePath)
             }
         }
     }

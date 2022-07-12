@@ -150,13 +150,14 @@ object FileDocumentUtil {
                 if (isGoogleDriveUri(uri)) {
                     return getDriveFilePath(context, uri)
                 }
-                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // return getFilePathFromURI(context,uri);
-                    copyFileToInternalStorage(context,
-                        uri,
-                        "userfiles") // return getRealPathFromURI(context,uri);
-                } else {
-                    getDataColumn(context, uri, null, null)
-                }
+                //                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // return getFilePathFromURI(context,uri);
+                //                    copyFileToInternalStorage(context,
+                //                        uri,
+                //                        "userfiles") // return getRealPathFromURI(context,uri);
+                //                } else {
+                //                    getDataColumn(context, uri, null, null)
+                //                }
+                return getDataColumn(context, uri, null, null)
             }
             if ("file".equals(uri.scheme, ignoreCase = true)) {
                 return uri.path
@@ -336,8 +337,8 @@ object FileDocumentUtil {
         uri: Uri,
         selection: String?,
         selectionArgs: Array<String>?): String? {
-        val column =
-                MediaStore.Images.Media.DATA // MediaStore.Images.Media.DATA // MediaStore.Images.Media._ID
+        // MediaStore.Images.Media.DATA // MediaStore.Images.Media._ID
+        val column = MediaStore.Images.Media.DATA
         val projection = arrayOf(column)
         context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use {
             if (it.moveToFirst()) return it.getString(it.getColumnIndexOrThrow(column))

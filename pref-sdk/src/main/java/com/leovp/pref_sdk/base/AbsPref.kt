@@ -1,7 +1,6 @@
 package com.leovp.pref_sdk.base
 
 import com.google.gson.reflect.TypeToken
-import com.leovp.lib_exception.fail
 import com.leovp.lib_json.toJsonString
 import com.leovp.lib_json.toObject
 
@@ -34,7 +33,7 @@ abstract class AbsPref {
             is Boolean -> internalPutBool(key, v)
             is Float   -> internalPutFloat(key, v)
             is String? -> internalPutString(key, v)
-            is Set<*>  -> fail("Use putSet(key: String, v: Set<String>?) instead.")
+            is Set<*>  -> throw IllegalArgumentException("Use putSet(key: String, v: Set<String>?) instead.")
             else       -> internalPutString(key, v.toJsonString())
         }
     }
@@ -60,7 +59,7 @@ abstract class AbsPref {
             Boolean::class.java -> internalPutBool(key, v as Boolean)
             Float::class.java   -> internalPutFloat(key, v as Float)
             String::class.java  -> internalPutString(key, v as String?)
-            Set::class.java     -> fail("Use putSet(key: String, v: Set<String>?) instead.")
+            Set::class.java     -> throw IllegalArgumentException("Use putSet(key: String, v: Set<String>?) instead.")
             else                -> internalPutString(key, v.toJsonString())
         }
     }
@@ -79,7 +78,8 @@ abstract class AbsPref {
     /**
      * Get object
      */
-    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    inline fun <reified T> getObject(key: String): T? =
+            internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
     //    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject()
 
     /**
@@ -95,9 +95,9 @@ abstract class AbsPref {
             is Long    -> internalGetLong(key, default) as T
             is Boolean -> internalGetBool(key, default) as T
             is Float   -> internalGetFloat(key, default) as T
-            is String  -> fail("Use getString(key: String, default: String? = null) instead.")
-            is Set<*>  -> fail("Use getStringSet(key: String, default: Set<String>? = null) instead.")
-            else       -> fail("To get object use getObject(key: String) instead.")
+            is String  -> throw IllegalArgumentException("Use getString(key: String, default: String? = null) instead.")
+            is Set<*>  -> throw IllegalArgumentException("Use getStringSet(key: String, default: Set<String>? = null) instead.")
+            else       -> throw IllegalArgumentException("To get object use getObject(key: String) instead.")
         }
     }
 
@@ -108,7 +108,8 @@ abstract class AbsPref {
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
      */
-    fun <T> getObject4Java(key: String): T? = internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    fun <T> getObject4Java(key: String): T? =
+            internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
 
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
@@ -126,9 +127,9 @@ abstract class AbsPref {
             Long::class.java    -> internalGetLong(key, default as Long) as T
             Boolean::class.java -> internalGetBool(key, default as Boolean) as T
             Float::class.java   -> internalGetFloat(key, default as Float) as T
-            String::class.java  -> fail("Use getString(key: String, default: String? = null) instead.")
-            Set::class.java     -> fail("Use getStringSet(key: String, default: Set<String>? = null) instead.")
-            else                -> fail("To get object use getObject4Java(key: String, clazz: Class<T>) instead.")
+            String::class.java  -> throw IllegalArgumentException("Use getString(key: String, default: String? = null) instead.")
+            Set::class.java     -> throw IllegalArgumentException("Use getStringSet(key: String, default: Set<String>? = null) instead.")
+            else                -> throw IllegalArgumentException("To get object use getObject4Java(key: String, clazz: Class<T>) instead.")
         }
     }
 

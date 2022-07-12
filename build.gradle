@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.7.0'
+    ext.kotlin_version = '1.7.10'
     ext.coroutines_version = '1.6.3'
     ext.gradle_plugin_version = '7.2.1'
     ext.java_version = JavaVersion.VERSION_11
@@ -13,25 +13,24 @@ buildscript {
     // ===============================
     // ===== Leo modules version =====
     // ===============================
-    ext.androidBaseSdkVersion = '5.5.0'
+    ext.androidBaseSdkVersion = '5.5.1'
     ext.baseNettySdkVersion = '5.5.0'
     ext.circleProgressbarSdkVersion = '5.5.0'
     ext.floatViewSdkVersion = '5.5.4'
     ext.audioSdkVersion = '5.5.0'
-    ext.screenCaptureSdkVersion = '5.5.0'
+    ext.screenCaptureSdkVersion = '5.5.1'
     ext.drawOnScreenSdkVersion = '5.5.0'
-    ext.camera2LiveSdkVersion = '5.5.0'
-    ext.cameraxLiveSdkVersion = '5.5.0'
+    ext.camera2LiveSdkVersion = '5.5.1'
+    ext.cameraxLiveSdkVersion = '5.5.1'
     ext.httpSdkVersion = '5.5.0'
     ext.logSdkVersion = '5.5.0'
-    ext.prefSdkVersion = '5.5.0'
+    ext.prefSdkVersion = '5.5.1'
     // -----
     ext.libBytesVersion = '5.5.0'
     ext.libJsonVersion = '5.5.0'
-    ext.libCommonAndroidVersion = '5.5.0'
-    ext.libCommonKotlinVersion = '5.5.0'
+    ext.libCommonAndroidVersion = '5.5.1'
+    ext.libCommonKotlinVersion = '5.5.1'
     ext.libCompressVersion = '5.5.0'
-    ext.libExceptionVersion = '5.5.0'
     ext.libImageVersion = '5.5.0'
     ext.libNetworkVersion = '5.5.0'
     ext.libExifVersion = '5.5.0'
@@ -43,7 +42,7 @@ buildscript {
     ext.ffmpegJavacppSdkVersion = '5.5.0'
     ext.dexSdkVersion = '5.5.0'
     ext.jpegSdkVersion = '5.5.0'
-    ext.openglSdkVersion = '5.5.0'
+    ext.openglSdkVersion = '5.5.1'
     ext.yuvSdkVersion = '5.5.0'
     // ==============================
 

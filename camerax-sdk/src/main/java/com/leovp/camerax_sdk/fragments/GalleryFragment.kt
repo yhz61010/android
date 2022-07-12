@@ -24,7 +24,7 @@ import com.leovp.log_sdk.LogContext
 import java.io.File
 import java.util.*
 
-val EXTENSION_WHITELIST = arrayOf("JPG")
+val EXTENSION_WHITELIST = arrayOf("JPG", "MP4")
 
 /** Fragment used to present the user with a gallery of photos taken */
 class GalleryFragment internal constructor() : Fragment() {

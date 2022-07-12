@@ -305,8 +305,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
-            videoOutFile = File(getOutputVideoDirectory(requireContext(), baseFolderName),
-                outFileName.absolutePath)
+            videoOutFile = outFileName
             val outFile = videoOutFile!!
             LogContext.log.i(logTag, "Save video in file: ${outFile.absolutePath}")
             val outputOptions = FileOutputOptions.Builder(outFile).build()
@@ -413,11 +412,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             lifecycleScope.launch {
                 if (videoOutUri != null) {
                     videoOutUri?.let {
-                        val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)
+                        val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)!!
+                        val filePath = fileRealPath.substringBeforeLast('/')
                         LogContext.log.i(logTag,
-                            "Click Gallery button with uri=$it | Real path=$fileRealPath")
+                            "Click Gallery button with uri=$it | real file path=$fileRealPath | real path=$filePath")
                         navController.navigate(
-                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(it.toString())
+                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(filePath)
                         )
                     }
                 } else if (videoOutFile != null) {

@@ -48,7 +48,7 @@ afterEvaluate {
             // Creates a Maven publication called "release".
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.leovp.LeoAndroidBaseUtilProject-Kotlin'
+                groupId = "$module_groupId"
                 artifactId = 'lib-common-kotlin'
                 version = "$rootProject.ext.libCommonKotlinVersion"
             }

@@ -1,7 +1,3 @@
-# Deprecated
-This project has been deprecated.
-All the modules have been separated into isolate github project.
-
 [![Leo Version](https://jitpack.io/v/yhz61010/LeoAndroidBaseUtilProject-Kotlin.svg)](https://jitpack.io/#yhz61010/LeoAndroidBaseUtilProject-Kotlin)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.7.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-7.2.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)

@@ -29,4 +29,6 @@
         <item>zh_TW</item>
         <item>ja</item>
     </string-array>
+
+    <string name="cmn_chooser_gallery">Choose Photo</string>
 </resources>

@@ -48,7 +48,7 @@ class PhotoFragment internal constructor() : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        (view as VideoView).start()
+        (view as? VideoView)?.start()
         mc?.show(0)
     }
 

@@ -45,7 +45,7 @@ afterEvaluate {
             // Creates a Maven publication called "release".
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                groupId = "$module_groupId"
                 artifactId = 'floatview-sdk'
                 version = "$rootProject.ext.floatViewSdkVersion"
             }

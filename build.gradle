@@ -8,6 +8,7 @@ buildscript {
     ext.navVersion = '2.5.0'
     ext.sonarqube_version = '3.3'
 
+    // com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin
     ext.module_groupId = "com.leovp"
     ext.leoVersion = '5.7.3'
 

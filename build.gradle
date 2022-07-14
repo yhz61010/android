@@ -8,42 +8,42 @@ buildscript {
     ext.navVersion = '2.5.0'
     ext.sonarqube_version = '3.3'
 
-//    ext.leoVersion = '5.5.6'
+    ext.leoVersion = '5.7.0'
 
     // ===============================
     // ===== Leo modules version =====
     // ===============================
-    ext.androidBaseSdkVersion = '5.5.5'
-    ext.baseNettySdkVersion = '5.5.0'
-    ext.circleProgressbarSdkVersion = '5.5.0'
-    ext.floatViewSdkVersion = '5.5.6'
-    ext.audioSdkVersion = '5.5.0'
-    ext.screenCaptureSdkVersion = '5.5.5'
-    ext.drawOnScreenSdkVersion = '5.5.0'
-    ext.camera2LiveSdkVersion = '5.5.5'
-    ext.cameraxLiveSdkVersion = '5.5.5'
-    ext.httpSdkVersion = '5.5.0'
-    ext.logSdkVersion = '5.5.0'
-    ext.prefSdkVersion = '5.5.5'
+    ext.androidBaseSdkVersion = ext.leoVersion
+    ext.baseNettySdkVersion = ext.leoVersion
+    ext.circleProgressbarSdkVersion = ext.leoVersion
+    ext.floatViewSdkVersion = ext.leoVersion
+    ext.audioSdkVersion = ext.leoVersion
+    ext.screenCaptureSdkVersion = ext.leoVersion
+    ext.drawOnScreenSdkVersion = ext.leoVersion
+    ext.camera2LiveSdkVersion = ext.leoVersion
+    ext.cameraxLiveSdkVersion = ext.leoVersion
+    ext.httpSdkVersion = ext.leoVersion
+    ext.logSdkVersion = ext.leoVersion
+    ext.prefSdkVersion = ext.leoVersion
     // -----
-    ext.libBytesVersion = '5.5.0'
-    ext.libJsonVersion = '5.5.0'
-    ext.libCommonAndroidVersion = '5.5.5'
-    ext.libCommonKotlinVersion = '5.5.5'
-    ext.libCompressVersion = '5.5.0'
-    ext.libImageVersion = '5.5.0'
-    ext.libNetworkVersion = '5.5.0'
-    ext.libExifVersion = '5.5.0'
+    ext.libBytesVersion = ext.leoVersion
+    ext.libJsonVersion = ext.leoVersion
+    ext.libCommonAndroidVersion = ext.leoVersion
+    ext.libCommonKotlinVersion = ext.leoVersion
+    ext.libCompressVersion = ext.leoVersion
+    ext.libImageVersion = ext.leoVersion
+    ext.libNetworkVersion = ext.leoVersion
+    ext.libExifVersion = ext.leoVersion
     // -----
-    ext.adpcmImaQtCodecSdkVersion = '5.5.0'
-    ext.h264HevcDecoderSdkVersion = '5.5.0'
-    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = '5.5.0'
-//    ext.ffmpegSdkVersion = '5.5.0'
-    ext.ffmpegJavacppSdkVersion = '5.5.0'
-    ext.dexSdkVersion = '5.5.0'
-    ext.jpegSdkVersion = '5.5.0'
-    ext.openglSdkVersion = '5.5.5'
-    ext.yuvSdkVersion = '5.5.0'
+    ext.adpcmImaQtCodecSdkVersion = ext.leoVersion
+    ext.h264HevcDecoderSdkVersion = ext.leoVersion
+    ext.adpcmImaQtCodecH264HevcDecoderSdkVersion = ext.leoVersion
+//    ext.ffmpegSdkVersion = ext.leoVersion
+    ext.ffmpegJavacppSdkVersion = ext.leoVersion
+    ext.dexSdkVersion = ext.leoVersion
+    ext.jpegSdkVersion = ext.leoVersion
+    ext.openglSdkVersion = ext.leoVersion
+    ext.yuvSdkVersion = ext.leoVersion
     // ==============================
 
     repositories {

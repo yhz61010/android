@@ -7,7 +7,7 @@ If your want to import this module by other projects, you can make a wrapper mod
 ### Compile Environment：
 - OS：macOS 11.6
 - NDK：22.1.7171670
-- FFmpeg 5.0 "Lorentz"(5.0 was released on 2022-01-17)
+- FFmpeg 5.0.1 "Lorentz"(5.0.1 was released on 2022-04-04)
 - cmake: 3.20.3
 - gcc:
   Configured with: --prefix=/Library/Developer/CommandLineTools/usr --with-gxx-include-dir=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/4.2.1
@@ -17,25 +17,32 @@ If your want to import this module by other projects, you can make a wrapper mod
   InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 
 ### How to compile ffmpeg and generate so file for Android - Only with `adpcm_ima_qt` decoder
+You can download from official website and scroll to the **Releases** section:
 1. Get ffmpeg source
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% wget -c https://www.ffmpeg.org/releases/ffmpeg-5.0.tar.xz
+% wget -c https://www.ffmpeg.org/releases/ffmpeg-5.0.1.tar.xz
 ```
 Unzip it into the following folder:
 > # -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
 
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% tar xvJf ffmpeg-5.0.tar.xz
+% tar xvJf ffmpeg-5.0.1.tar.xz
 ```
 
 2. Compile and get static library
 
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% ./build_ffmpeg_all.sh
 ```
+Run any one of the following scripts as you want:
+```shell
+% ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
+% ./build_ffmpeg_adpcm_ima_qt_codec.sh
+% ./build_ffmpeg_h264_hevc_decoder.sh
+```
+
 
 3. Generate `so` files with jni file In Android Studio, just build project, you will get `so` files.
    Or execute the following command under

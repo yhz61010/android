@@ -110,7 +110,7 @@ afterEvaluate {
             // Creates a Maven publication called "release".
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                groupId = "$module_groupId"
                 artifactId = 'androidbase-sdk'
                 version = "$rootProject.ext.androidBaseSdkVersion"
             }

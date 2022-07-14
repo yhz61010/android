@@ -80,7 +80,7 @@ afterEvaluate {
             // Creates a Maven publication called "release".
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                groupId = "$module_groupId"
                 artifactId = 'adpcm-ima-qt-codec-h264-hevc-decoder-sdk'
                 version = "$rootProject.ext.adpcmImaQtCodecH264HevcDecoderSdkVersion"
             }

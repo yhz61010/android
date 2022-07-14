@@ -65,7 +65,7 @@ afterEvaluate {
             // Creates a Maven publication called "release".
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin'
+                groupId = "$module_groupId"
                 artifactId = 'camera2live-sdk'
                 version = "$rootProject.ext.camera2LiveSdkVersion"
             }

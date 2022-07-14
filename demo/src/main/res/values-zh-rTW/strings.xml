@@ -19,4 +19,5 @@
         <item>zh_TW</item>
         <item>ja</item>
     </string-array>
+    <string name="cmn_chooser_gallery">選擇照片</string>
 </resources>

@@ -36,12 +36,12 @@ import java.util.*
  * Add these codes in your custom Application:
  * ```kotlin
  * override fun attachBaseContext(base: Context) {
- *      super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
+ *      super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
  * }
  *
  * override fun onConfigurationChanged(newConfig: Configuration) {
  *      super.onConfigurationChanged(newConfig)
- *      LangUtil.getInstance(this).setLocale(this)
+ *      LangUtil.getInstance(this).setAppLanguage(this)
  * }
  * ```
  *
@@ -57,7 +57,7 @@ import java.util.*
  * }
  *
  * override fun attachBaseContext(base: Context) {
- *      super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
+ *      super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
  * }
  *
  * override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +74,7 @@ import java.util.*
  * If you use text string in your `Service`, add these lines in it:
  * ```kotlin
  * override fun attachBaseContext(base: Context) {
- *     super.attachBaseContext(LangUtil.getInstance(base).setLocale(base))
+ *     super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
  * }
  * ```
  *

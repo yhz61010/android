@@ -23,7 +23,6 @@ class TakeScreenshotActivity : BaseDemonstrationActivity<ActivityTakeScreenshotB
             val screenshotFile = File(getExternalFilesDir(null), "screenshot.jpg")
             it.writeToFile(screenshotFile, 100)
             toast("Screenshot is saved in ${screenshotFile.absolutePath}")
-            toast("Screenshot is saved in ${screenshotFile.absolutePath}", normal = true)
         }
     }
 }

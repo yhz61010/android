@@ -91,7 +91,9 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
         cs.launch {
             if (::socketClientHandler.isInitialized) {
                 val result = socketClientHandler.sendMsgToServer(binding.editText.text.toString())
-                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) toast("Send command error", error = true, debug = true) }
+                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) toast("Send command error",
+                    debug = true,
+                    error = true) }
             }
         }
     }

@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basic_components.examples.sharescreen.master.ScreenShareSetting
 import com.leovp.demo.databinding.ActivityScreenshotRecordH264Binding

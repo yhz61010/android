@@ -88,7 +88,8 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                         camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
                         LogContext.log.e(TAG, "=====> Finally openCamera error <=====")
-                        activity?.toast("Initialized camera error. Please try again later.", error = true)
+                        activity?.toast("Initialized camera error. Please try again later.",
+                            error = true)
                     }
                 }
             }

@@ -26,48 +26,84 @@ import com.leovp.lib_common_android.utils.API
 /**
  * Whether the host project is working in `DEBUG` mode.
  *
- * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app. For example in your custom Application.
+ * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
+ * For example in your custom Application.
  */
 var buildConfigInDebug: Boolean = false
 
 /**
- * @param normal On Android 11+(Android R+), this parameter will be ignored.
- * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
+ * @param origin `true` to show Android original toast. `false` to show custom toast.
+ *               On Android 11+(Android R+), this parameter will be ignored.
+ * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param error `true` will use `ERROR_BG_COLOR` as background.
+ *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
-fun Context.toast(@StringRes resId: Int, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String? = null) {
-    toast(getString(resId), longDuration, error, debug, normal, errorColor)
+fun Context.toast(@StringRes resId: Int,
+    longDuration: Boolean = false,
+    origin: Boolean = false,
+    debug: Boolean = false,
+    bgColor: String? = null,
+    error: Boolean = false) {
+    toast(getString(resId), longDuration, origin, debug, bgColor, error)
 }
 
 /**
- * @param normal On Android 11+(Android R+), this parameter will be ignored.
- * @param errorColor Hex color value with prefix '#'. Example: "#ff0000"
+ * @param origin `true` to show Android original toast. `false` to show custom toast.
+ *               On Android 11+(Android R+), this parameter will be ignored.
+ * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param error `true` will use `ERROR_BG_COLOR` as background.
+ *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
-fun Context.toast(msg: String?, longDuration: Boolean = false, error: Boolean = false, debug: Boolean = false, normal: Boolean = false, errorColor: String? = null) {
+fun Context.toast(msg: String?,
+    longDuration: Boolean = false,
+    origin: Boolean = false,
+    debug: Boolean = false,
+    bgColor: String? = null,
+    error: Boolean = false) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(this, msg, longDuration, error, debug, normal, errorColor)
+        showToast(this, msg, longDuration, origin, debug, bgColor, error)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post { showToast(this, msg, longDuration, error, debug, normal, errorColor) }
+        Handler(Looper.getMainLooper()).post {
+            showToast(this, msg, longDuration, origin, debug, bgColor, error)
+        }
     }
 }
 
 
 // ==========
 
+private const val NORMAL_BG_COLOR = "#e6212122"
+private const val ERROR_BG_COLOR = "#e6e65432"
+
 private var toast: Toast? = null
 
+/**
+ * @param origin `true` to show Android original toast. `false` to show custom toast.
+ *               On Android 11+(Android R+), this parameter will be ignored.
+ * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param error `true` will use `ERROR_BG_COLOR` as background.
+ *              However, if you also set `bgColor`, `error` parameter will be ignored.
+ */
 @SuppressLint("InflateParams")
-private fun showToast(ctx: Context?, msg: String?, longDuration: Boolean = false, error: Boolean, debug: Boolean, normal: Boolean, errorColor: String?) {
+private fun showToast(ctx: Context?,
+    msg: String?,
+    longDuration: Boolean = false,
+    origin: Boolean,
+    debug: Boolean,
+    bgColor: String?,
+    error: Boolean) {
     if ((debug && !buildConfigInDebug) || ctx == null) {
         // Debug log only be shown in DEBUG flavor
         return
     }
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String? = if (debug) "DEBUG: $msg" else msg
-    if (normal || API.ABOVE_R) {
-        if (error) {
-            val errorMsgColor = errorColor ?: "#e65432"
-            Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>", HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+    if (origin || API.ABOVE_R) {
+        if (error || bgColor != null) {
+            val errorMsgColor = bgColor ?: ERROR_BG_COLOR
+            Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
+                HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
         } else {
             Toast.makeText(ctx, message, duration).show()
         }
@@ -79,17 +115,16 @@ private fun showToast(ctx: Context?, msg: String?, longDuration: Boolean = false
                 tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
                 tv.text = message
             }
-            if (error) {
-                if (errorColor == null) {
-                    v.setBackgroundResource(R.drawable.toast_bg_error)
-                } else {
-                    val errorDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources, R.drawable.toast_bg_error, null)!!
-                    val errorDrawableWrapper = DrawableCompat.wrap(errorDrawable).mutate()
-                    v.background = errorDrawableWrapper
-                    DrawableCompat.setTint(errorDrawableWrapper, Color.parseColor(errorColor))
-                }
-            } else {
-                v.setBackgroundResource(R.drawable.toast_bg_normal)
+            val defaultDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
+                R.drawable.toast_bg_normal, null)!!
+            if (!error && bgColor == null) {
+                v.background = defaultDrawable
+            } else { // with error or with bgColor
+                val customDrawableWrapper = DrawableCompat.wrap(defaultDrawable).mutate()
+                v.background = customDrawableWrapper
+                val defaultBgColor: String =
+                        bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
+                DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defaultBgColor))
             }
         }
 

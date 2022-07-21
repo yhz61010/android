@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityChangeAppLanguageBinding

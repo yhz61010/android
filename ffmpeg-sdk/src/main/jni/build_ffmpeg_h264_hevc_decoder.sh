@@ -1,10 +1,7 @@
 #!/bin/bash
 
-FFMPEG_FOLDER=ffmpeg-5.0.1
-NDK_PATH=~/Library/Android/sdk/ndk/22.1.7171670
-# linux-x86_64
-HOST_TAG=darwin-x86_64
-MIN_SDK_VER=21
+# 初始化环境变量
+source config.sh
 
 # ==================================
 
@@ -103,3 +100,5 @@ build_one
 #export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
 #export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
 #build_one
+
+sh ndk-build-and-copy-to-module_ffmpeg_h264_hevc_decoder.sh

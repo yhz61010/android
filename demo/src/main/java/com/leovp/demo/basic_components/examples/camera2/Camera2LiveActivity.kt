@@ -7,7 +7,7 @@ import androidx.activity.addCallback
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
 import com.leovp.demo.R

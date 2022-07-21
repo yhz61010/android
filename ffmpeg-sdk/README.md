@@ -5,18 +5,17 @@ This means, do not include `ffmpeg-sdk` module in `settings.gradle` if you push 
 If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
 
 ### Compile Environment：
-- OS：macOS 11.6
-- NDK：22.1.7171670
+- OS：macOS 12.4
+- NDK：21.1.6352462
 - FFmpeg 5.0.1 "Lorentz"(5.0.1 was released on 2022-04-04)
-- cmake: 3.20.3
+- cmake: 3.23.0
 - gcc:
-  Configured with: --prefix=/Library/Developer/CommandLineTools/usr --with-gxx-include-dir=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/4.2.1
-  Apple clang version 13.0.0 (clang-1300.0.29.3)
-  Target: x86_64-apple-darwin20.6.0
+  Apple clang version 13.1.6 (clang-1316.0.21.2.5)
+  Target: x86_64-apple-darwin21.5.0
   Thread model: posix
   InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 
-### How to compile ffmpeg and generate so file for Android - Only with `adpcm_ima_qt` decoder
+### How to compile ffmpeg and generate so file for Android
 You can download from official website and scroll to the **Releases** section:
 1. Get ffmpeg source
 ```shell
@@ -42,7 +41,6 @@ Run any one of the following scripts as you want:
 % ./build_ffmpeg_adpcm_ima_qt_codec.sh
 % ./build_ffmpeg_h264_hevc_decoder.sh
 ```
-
 
 3. Generate `so` files with jni file In Android Studio, just build project, you will get `so` files.
    Or execute the following command under

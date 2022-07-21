@@ -2,7 +2,7 @@ package com.leovp.demo.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.demo.base.BaseDemonstrationActivity

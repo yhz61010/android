@@ -12,7 +12,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.device.WifiUtil
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basic_components.examples.wifi.base.WifiAdapter

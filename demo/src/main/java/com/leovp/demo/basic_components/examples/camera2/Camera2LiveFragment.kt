@@ -14,7 +14,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.media.CameraUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.ui.BetterActivityResult

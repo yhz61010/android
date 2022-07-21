@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.demo.base.BaseDemonstrationActivity

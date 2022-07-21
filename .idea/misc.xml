@@ -141,6 +141,10 @@
         <entry key="demo/src/main/res/layout/fragment_for_nav_second.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/fragment_for_nav_third.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/fragment_jetpack.xml" value="0.5765625" />
+        <entry key="lib-common-android/src/main/res/drawable/toast_bg_error.xml" value="0.5555" />
+        <entry key="lib-common-android/src/main/res/drawable/toast_bg_normal.xml" value="0.5555" />
+        <entry key="lib-common-android/src/main/res/layout-ldltr/toast.xml" value="0.46153846153846156" />
+        <entry key="lib-common-android/src/main/res/layout/toast_tools_layout.xml" value="0.46153846153846156" />
       </map>
     </option>
   </component>

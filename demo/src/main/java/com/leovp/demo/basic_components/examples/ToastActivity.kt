@@ -16,7 +16,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onAndroidToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is Android toast.", normal = true)
+        toast("This is Android toast.", origin = true)
     }
 
     fun onNormalToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -28,7 +28,11 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is custom error color toast.", error = true, errorColor = "#711CDE")
+        toast("This is custom error color toast.", bgColor = "#711CDE", error = true)
+    }
+
+    fun onCustomToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("This is custom error color toast.", bgColor = "#FF00FF")
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

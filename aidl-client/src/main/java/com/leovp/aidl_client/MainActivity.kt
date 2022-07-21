@@ -8,9 +8,9 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.leovp.androidbase.exts.android.toast
 import com.leovp.demo.basic_components.examples.aidl.ILocalLogService
 import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
 

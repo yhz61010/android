@@ -3,7 +3,7 @@ package com.leovp.demo
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
-import com.leovp.androidbase.exts.android.buildConfigInDebug
+import com.leovp.lib_common_android.exts.buildConfigInDebug
 import com.leovp.androidbase.framework.BaseApplication
 import com.leovp.androidbase.utils.ui.ForegroundComponent
 import com.leovp.demo.basic_components.examples.koin.*

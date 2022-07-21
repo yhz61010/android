@@ -1,4 +1,4 @@
-package com.leovp.androidbase.exts.android
+package com.leovp.lib_common_android.exts
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,8 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.HtmlCompat
-import com.leovp.androidbase.R
-import com.leovp.lib_common_android.exts.dp2px
+import com.leovp.lib_common_android.R
 import com.leovp.lib_common_android.utils.API
 
 /**
@@ -97,7 +96,7 @@ private fun showToast(ctx: Context?, msg: String?, longDuration: Boolean = false
         toast = Toast(ctx).apply {
             @Suppress("DEPRECATION")
             this.view = view
-            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, ctx.resources.dp2px(50F))
+            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, ctx.resources.dp2px(64F))
             this.duration = duration
             show()
         }

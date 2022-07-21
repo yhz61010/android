@@ -3,7 +3,7 @@ package com.leovp.demo.basic_components.examples.cipher
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.cipher.AESUtil
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity

@@ -17,7 +17,7 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.leovp.androidbase.exts.android.startActivity
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.device.ScanDeviceCallback
 import com.leovp.demo.base.BaseDemonstrationActivity

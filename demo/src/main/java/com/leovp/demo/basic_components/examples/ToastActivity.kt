@@ -2,10 +2,10 @@ package com.leovp.demo.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.lib_common_android.exts.cancelToast
-import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
+import com.leovp.lib_common_android.exts.cancelToast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.log_sdk.base.ITAG
 
 class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
@@ -33,6 +33,10 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
 
     fun onCustomToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
         toast("This is custom error color toast.", bgColor = "#FF00FF")
+    }
+
+    fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        toast("Error Toast with error.", debug = true, error = true)
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

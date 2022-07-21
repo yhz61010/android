@@ -2,7 +2,7 @@ package com.leovp.demo.basic_components.examples
 
 import android.os.Bundle
 import android.view.View
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityTakeScreenshotBinding
 import com.leovp.lib_image.writeToFile
@@ -23,6 +23,7 @@ class TakeScreenshotActivity : BaseDemonstrationActivity<ActivityTakeScreenshotB
             val screenshotFile = File(getExternalFilesDir(null), "screenshot.jpg")
             it.writeToFile(screenshotFile, 100)
             toast("Screenshot is saved in ${screenshotFile.absolutePath}")
+            toast("Screenshot is saved in ${screenshotFile.absolutePath}", normal = true)
         }
     }
 }

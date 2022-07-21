@@ -3,7 +3,7 @@ package com.leovp.demo.basic_components.examples.aidl
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext

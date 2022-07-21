@@ -7,16 +7,27 @@
     tools:context=".basic_components.examples.ToastActivity">
 
     <Button
-        android:id="@+id/btnNormalToast"
+        android:id="@+id/btnAndroidToast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Normal Toast"
-        android:onClick="onNormalToastClick"
+        android:text="Android Toast"
+        android:onClick="onAndroidToastClick"
         tools:ignore="UsingOnClickInXml"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <Button
+        android:id="@+id/btnNormalToast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:layout_marginTop="16dp"
+        android:onClick="onNormalToastClick"
+        android:text="Normal Toast"
+        app:layout_constraintStart_toStartOf="@+id/btnAndroidToast"
+        app:layout_constraintTop_toBottomOf="@+id/btnAndroidToast"
+        tools:ignore="UsingOnClickInXml" />
 
     <Button
         android:id="@+id/btnErrorToast"

@@ -2,7 +2,7 @@ package com.leovp.demo.basic_components.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.demo.BuildConfig

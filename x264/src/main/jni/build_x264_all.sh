@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NDK_PATH=~/Library/Android/sdk/ndk/22.1.7171670
+NDK_PATH=~/Library/Android/sdk/ndk/21.1.6352462
 # linux-x86_64
 HOST_TAG=darwin-x86_64
 MIN_SDK_VER=21

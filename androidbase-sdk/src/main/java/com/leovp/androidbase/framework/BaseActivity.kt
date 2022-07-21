@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.viewbinding.ViewBinding
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
-import com.leovp.androidbase.exts.android.toast
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.ui.BetterActivityResult

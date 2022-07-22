@@ -52,9 +52,7 @@ class FloatView internal constructor(internal val context: Context) {
 
         internal var globalConfig = GlobalConfig()
 
-        fun defaultConfig(init: GlobalConfig.() -> Unit) {
-            globalConfig.init()
-        }
+        fun defaultConfig(init: GlobalConfig.() -> Unit) = globalConfig.init()
     }
 
     interface TouchEventListener {

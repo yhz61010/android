@@ -1,7 +1,6 @@
 package com.leovp.floatview_sdk.framework
 
 import android.content.Context
-import android.util.Size
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import java.util.concurrent.ConcurrentHashMap
 
@@ -22,8 +21,7 @@ internal object FloatViewManager {
 
     fun exist(tag: String): Boolean = windowMap[tag] != null
 
-    fun show(tag: String, customViewSizeCallback: ((Size) -> Unit)? = null) =
-            windowMap[tag]?.show(customViewSizeCallback)
+    fun show(tag: String) = windowMap[tag]?.show()
 
     fun dismiss(tag: String) {
         windowMap[tag]?.dismiss()

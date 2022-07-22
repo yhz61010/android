@@ -18,7 +18,6 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
-import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.demo.R
@@ -208,7 +207,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
     private fun createFloatView() {
         FloatView.with(this)
-            .meta {
+            .meta { _, _ ->
                 // We must set this value to false. Check that method comment.
                 touchable = false
                 enableDrag = false

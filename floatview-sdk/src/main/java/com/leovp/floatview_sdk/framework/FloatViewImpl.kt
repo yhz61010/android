@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
-import android.util.Size
 import android.view.*
 import androidx.annotation.IdRes
 import androidx.core.view.children
@@ -424,7 +423,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun getResourceEntryName(@IdRes id: Int): String =
             runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
-    fun show(customViewSizeCallback: ((Size) -> Unit)? = null) {
+    fun show() {
         runCatching {
             init()
             dismiss()
@@ -433,10 +432,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-            config.customView!!.post {
-                customViewSizeCallback?.invoke(Size(config.customView!!.width,
-                    config.customView!!.height))
-            }
         }.onFailure {
             it.printStackTrace()
         }

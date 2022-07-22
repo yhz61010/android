@@ -21,4 +21,6 @@ interface IBaseConfig {
     var dockAnimDuration: Long
 
     var touchToleranceInPx: Int
+
+    var enableAlphaAnimation: Boolean
 }

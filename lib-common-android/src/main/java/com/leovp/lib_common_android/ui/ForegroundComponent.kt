@@ -1,4 +1,4 @@
-package com.leovp.androidbase.utils.ui
+package com.leovp.lib_common_android.ui
 
 import android.app.Activity
 import android.app.Application
@@ -6,7 +6,6 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import com.leovp.log_sdk.LogContext
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -24,27 +23,29 @@ import java.util.concurrent.CopyOnWriteArrayList
  * or
  *
  * 2.b) Register to be notified (useful in Service or other non-UI components):
- *
- * ForegroundComponent.AppStateListener myListener = new ForegroundComponent.AppStateListener(){
- * public void onBecameForeground(){
- * // ... whatever you want to do
- * }
- * public void onBecameBackground(){
- * // ... whatever you want to do
- * }
+ * ```
+ * ForegroundComponent.AppStateListener listener = new ForegroundComponent.AppStateListener() {
+ *      public void onBecameForeground() {
+ *           // ... whatever you want to do
+ *      }
+ *      public void onBecameBackground() {
+ *           // ... whatever you want to do
+ *      }
  * }
  *
  * public void onCreate(){
- * super.onCreate();
- * ForegroundComponent.get(this).addListener(listener);
+ *      super.onCreate();
+ *      ForegroundComponent.get(this).addListener(listener);
  * }
  *
  * public void onDestroy(){
- * super.onCreate();
- * ForegroundComponent.get(this).removeListener(listener);
+ *      super.onCreate();
+ *      ForegroundComponent.get(this).removeListener(listener);
  * }
+ * ```
  */
-class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) : ActivityLifecycleCallbacks {
+class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) :
+    ActivityLifecycleCallbacks {
     @Suppress("WeakerAccess")
     var isForeground = false
         private set
@@ -81,25 +82,26 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         checkRunnable?.let { handler.removeCallbacks(checkRunnable!!) }
 
         if (wasBackground) {
-            LogContext.log.i(TAG, "Went FG")
+            //            LogContext.log.i(TAG, "Went FG")
             // As of API level 24
-//            listeners.forEach {
-//                try {
-//                    it.onBecameForeground()
-//                } catch (e: Exception) {
-//                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
-//                }
-//            }
+            //            listeners.forEach {
+            //                try {
+            //                    it.onBecameForeground()
+            //                } catch (e: Exception) {
+            //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+            //                }
+            //            }
             for (listener in listeners) {
                 try {
                     listener.onBecameForeground()
                 } catch (e: Exception) {
-                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+                    //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+                    e.printStackTrace()
                 }
             }
-        } else {
+        } /*else {
             LogContext.log.i(TAG, "Still FG")
-        }
+        }*/
     }
 
     override fun onActivityPaused(activity: Activity) {
@@ -110,25 +112,26 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         handler.postDelayed(Runnable {
             if (isForeground && paused) {
                 isForeground = false
-                LogContext.log.i(TAG, "Went BG")
+                //                LogContext.log.i(TAG, "Went BG")
                 // As of API level 24
-//                listeners.forEach {
-//                    try {
-//                        it.onBecameBackground()
-//                    } catch (e: Exception) {
-//                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
-//                    }
-//                }
+                //                listeners.forEach {
+                //                    try {
+                //                        it.onBecameBackground()
+                //                    } catch (e: Exception) {
+                //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                //                    }
+                //                }
                 for (lis in listeners) {
                     try {
                         lis.onBecameBackground()
                     } catch (e: Exception) {
-                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                        //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                        e.printStackTrace()
                     }
                 }
-            } else {
+            } /*else {
                 LogContext.log.i(TAG, "Still BG")
-            }
+            }*/
         }.also { checkRunnable = it }, becameBackgroundDelay)
     }
 
@@ -138,15 +141,15 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
     override fun onActivityDestroyed(activity: Activity) {
-        try {
-            LogContext.log.i(TAG, "=====> onActivityDestroyed($activity) <=====")
-        } catch (e: Exception) {
-            LogContext.log.e(TAG, "onActivityDestroyed error=${e.message}")
-        }
+        //        try {
+        //            LogContext.log.i(TAG, "=====> onActivityDestroyed($activity) <=====")
+        //        } catch (e: Exception) {
+        //            LogContext.log.e(TAG, "onActivityDestroyed error=${e.message}")
+        //        }
     }
 
     companion object {
-        private const val TAG = "FC"
+        //        private const val TAG = "FC"
         private const val CHECK_DELAY: Long = 500
 
         @Volatile
@@ -161,7 +164,8 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
          * @param application The application object
          * @return an initialised Foreground instance
          */
-        fun init(application: Application, becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
+        fun init(application: Application,
+            becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
             if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
                     if (instance == null) {

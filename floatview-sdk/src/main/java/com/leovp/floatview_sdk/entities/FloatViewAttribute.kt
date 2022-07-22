@@ -104,14 +104,20 @@ class FloatViewAttribute(private val tag: String) {
             FloatViewManager.getConfig(tag)?.enableDrag = value
         }
 
+    var enableAlphaAnimation: Boolean
+        get() = FloatViewManager.getConfig(tag)?.enableAlphaAnimation ?: false
+        set(value) {
+            FloatViewManager.getConfig(tag)?.enableAlphaAnimation = value
+        }
+
     var stickyEdge: StickyEdge
-        get() = FloatViewManager.getFloatViewImpl(tag)?.config?.stickyEdge ?: StickyEdge.NONE
+        get() = FloatViewManager.getConfig(tag)?.stickyEdge ?: StickyEdge.NONE
         set(value) {
             FloatViewManager.getFloatViewImpl(tag)?.updateStickyEdge(value)
         }
 
     var dockEdge: DockEdge
-        get() = FloatViewManager.getFloatViewImpl(tag)?.config?.dockEdge ?: DockEdge.NONE
+        get() = FloatViewManager.getConfig(tag)?.dockEdge ?: DockEdge.NONE
         set(value) {
             FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(value)
         }

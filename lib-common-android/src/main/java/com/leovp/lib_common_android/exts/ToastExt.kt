@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
@@ -95,7 +94,7 @@ fun Context.toast(msg: String?,
 // ==========
 
 private const val NORMAL_BG_COLOR = "#646464"
-private const val ERROR_BG_COLOR = "#e6e65432"
+private const val ERROR_BG_COLOR = "#F16C4C"
 
 private var toast: Toast? = null
 private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
@@ -120,13 +119,11 @@ private fun showToast(ctx: Context?,
         return
     }
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
-    val message: String? = if (debug) "DEBUG: $msg" else msg
+    val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
     when {
         origin      -> Toast.makeText(ctx, message, duration).show()
         API.ABOVE_R -> {
             try {
-                Log.e("LEO-float-view",
-                    "isBackground=${ForegroundComponent.get().isBackground} canDrawOverlays=${ctx.canDrawOverlays}")
                 if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
                     Toast.makeText(ctx, message, duration).show()
                     return
@@ -146,9 +143,7 @@ private fun showToast(ctx: Context?,
             FloatView.with(FLOAT_VIEW_TAG).remove()
             FloatView.with(ctx)
                 .layout(R.layout.toast_tools_layout) { v ->
-                    val tv = v as TextView
-                    tv.text = message
-                    setTextIcon(ctx, tv)
+                    decorateToast(ctx, v as TextView, message, bgColor, error)
                 }
                 .meta { viewWidth, _ ->
                     tag = FLOAT_VIEW_TAG
@@ -167,25 +162,7 @@ private fun showToast(ctx: Context?,
 
             val view = LayoutInflater.from(ctx)
                 .inflate(R.layout.toast_tools_layout, null)
-                .also { v ->
-                    v.findViewById<TextView>(R.id.tv_text)
-                        .let { tv ->
-                            tv.setTextColor(ContextCompat.getColor(tv.context,
-                                android.R.color.white))
-                            tv.text = message
-                            setTextIcon(ctx, tv)
-                        }
-                    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
-                        R.drawable.toast_bg_normal, null)!!
-                    if (!error && bgColor == null) {
-                        v.background = defaultBgDrawable
-                    } else { // with error or with bgColor
-                        val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
-                        v.background = customDrawableWrapper
-                        val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
-                        DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
-                    }
-                }
+                .also { v -> decorateToast(ctx, v as TextView, message, bgColor, error) }
 
             toast = Toast(ctx).apply {
                 @Suppress("DEPRECATION")
@@ -213,5 +190,24 @@ private fun setTextIcon(ctx: Context, tv: TextView) {
         iconDrawable?.setBounds(0, 0, 20.px, 20.px)
         tv.compoundDrawablePadding = 8.px
         tv.setCompoundDrawables(iconDrawable, null, null, null)
+    }
+}
+
+private fun decorateToast(ctx: Context, tv: TextView, message: String, bgColor: String? = null,
+    error: Boolean = false) {
+    tv.text = message
+    tv.setTextColor(ContextCompat.getColor(tv.context,
+        android.R.color.white))
+    setTextIcon(ctx, tv)
+
+    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
+        R.drawable.toast_bg_normal, null)!!
+    if (!error && bgColor == null) {
+        tv.background = defaultBgDrawable
+    } else { // with error or with bgColor
+        val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
+        tv.background = customDrawableWrapper
+        val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
+        DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
     }
 }

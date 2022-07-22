@@ -22,7 +22,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
         toastIcon = R.mipmap.ic_launcher_round
 
         Handler(Looper.getMainLooper()).postDelayed({
-            toast("Custom toast in background test.")
+            toast("Custom toast in background test.", error = true)
         }, 2000)
     }
 

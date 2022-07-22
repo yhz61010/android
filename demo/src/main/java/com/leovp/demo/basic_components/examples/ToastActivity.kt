@@ -32,11 +32,11 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onCustomToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is custom error color toast.", bgColor = "#FF00FF")
+        toast("This is custom color toast.", bgColor = "#FF00FF")
     }
 
     fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("Error Toast with error.", debug = true, error = true)
+        toast("Debug toast.", debug = true, error = true)
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

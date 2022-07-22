@@ -8,6 +8,8 @@ import android.graphics.Point
 import android.os.Build
 import android.view.*
 import androidx.annotation.IdRes
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import androidx.core.view.children
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import com.leovp.floatview_sdk.entities.DockEdge
@@ -22,6 +24,11 @@ import kotlin.math.abs
  * Date: 2021/8/30 10:56
  */
 internal class FloatViewImpl(private val context: Context, internal var config: DefaultConfig) {
+    companion object {
+        private const val ANIMATION_DURATION_START = 350L
+        private const val ANIMATION_DURATION_END = 500L
+    }
+
     private val windowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     private lateinit var layoutParams: WindowManager.LayoutParams
 
@@ -439,19 +446,56 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     fun remove() {
         if (config.isDisplaying) {
-            visible(false)
-            windowManager.removeView(config.customView)
+            visible(false) {
+                windowManager.removeView(config.customView)
+            }
         }
     }
 
-    fun visible(show: Boolean) {
-        config.customView?.visibility = if (show) {
-            config.isDisplaying = true
-            View.VISIBLE
-        } else {
-            config.isDisplaying = false
-            View.GONE
+    fun visible(show: Boolean, hideCallback: (() -> Unit)? = null) {
+        config.customView?.let { v ->
+            if (show) {
+                if (!config.enableAlphaAnimation) {
+                    showCustomView(v)
+                    return
+                }
+                ObjectAnimator.ofFloat(v, "alpha", 0.0f, 1.0f)
+                    .apply {
+                        duration = ANIMATION_DURATION_START
+                        removeAllListeners()
+                        doOnStart { showCustomView(v) }
+                        setAutoCancel(true)
+                        start()
+                    }
+            } else {
+                if (!config.enableAlphaAnimation) {
+                    hideCustomView(v)
+                    hideCallback?.invoke()
+                    return
+                }
+                ObjectAnimator.ofFloat(v, "alpha", 1.0f, 0.0f)
+                    .apply {
+                        duration = ANIMATION_DURATION_END
+                        removeAllListeners()
+                        setAutoCancel(true)
+                        doOnEnd {
+                            hideCustomView(v)
+                            hideCallback?.invoke()
+                        }
+                        start()
+                    }
+            }
         }
+    }
+
+    private fun showCustomView(view: View) {
+        view.visibility = View.VISIBLE
+        config.isDisplaying = true
+    }
+
+    private fun hideCustomView(view: View) {
+        view.visibility = View.GONE
+        config.isDisplaying = false
     }
 
     //    private fun setCustomViewVisibility(show: Boolean) {

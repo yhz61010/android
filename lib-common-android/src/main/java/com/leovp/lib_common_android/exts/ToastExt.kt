@@ -1,22 +1,28 @@
 package com.leovp.lib_common_android.exts
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.text.HtmlCompat
+import com.leovp.floatview_sdk.FloatView
 import com.leovp.lib_common_android.R
+import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.API
+
 
 /**
  * Author: Michael Leo
@@ -27,9 +33,24 @@ import com.leovp.lib_common_android.utils.API
  * Whether the host project is working in `DEBUG` mode.
  *
  * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
+ * Otherwise, the `debug` feature doesn't work.
  * For example in your custom Application.
  */
 var buildConfigInDebug: Boolean = false
+
+/**
+ * This method must be called for Android R(Android 11) or above.
+ * Otherwise, the custom toast doesn't work when app in background.
+ */
+@RequiresApi(API.R)
+fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
+    ForegroundComponent.init(app, delay)
+}
+
+@DrawableRes
+var toastIcon: Int? = null
+
+private val mainHandler = Handler(Looper.getMainLooper())
 
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
@@ -64,7 +85,7 @@ fun Context.toast(msg: String?,
         showToast(this, msg, longDuration, origin, debug, bgColor, error)
     } else {
         // Be sure toast can be shown in thread
-        Handler(Looper.getMainLooper()).post {
+        mainHandler.post {
             showToast(this, msg, longDuration, origin, debug, bgColor, error)
         }
     }
@@ -73,10 +94,11 @@ fun Context.toast(msg: String?,
 
 // ==========
 
-private const val NORMAL_BG_COLOR = "#e6212122"
+private const val NORMAL_BG_COLOR = "#646464"
 private const val ERROR_BG_COLOR = "#e6e65432"
 
 private var toast: Toast? = null
+private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
 
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
@@ -99,41 +121,79 @@ private fun showToast(ctx: Context?,
     }
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String? = if (debug) "DEBUG: $msg" else msg
-    if (origin || API.ABOVE_R) {
-        if (error || bgColor != null) {
-            val errorMsgColor = bgColor ?: ERROR_BG_COLOR
-            Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
-                HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
-        } else {
-            Toast.makeText(ctx, message, duration).show()
-        }
-    } else {
-        toast?.cancel()
-
-        val view = LayoutInflater.from(ctx).inflate(R.layout.toast_tools_layout, null).also { v ->
-            v.findViewById<TextView>(R.id.tv_text).let { tv ->
-                tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
-                tv.text = message
+    when {
+        origin      -> Toast.makeText(ctx, message, duration).show()
+        API.ABOVE_R -> {
+            try {
+                Log.e("LEO-float-view",
+                    "isBackground=${ForegroundComponent.get().isBackground} canDrawOverlays=${ctx.canDrawOverlays}")
+                if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
+                    Toast.makeText(ctx, message, duration).show()
+                    return
+                }
+            } catch (e: Exception) {
+                Toast.makeText(ctx, message, duration).show()
+                return
             }
-            val defaultDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
-                R.drawable.toast_bg_normal, null)!!
-            if (!error && bgColor == null) {
-                v.background = defaultDrawable
-            } else { // with error or with bgColor
-                val customDrawableWrapper = DrawableCompat.wrap(defaultDrawable).mutate()
-                v.background = customDrawableWrapper
-                val defaultBgColor: String =
-                        bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
-                DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defaultBgColor))
-            }
+            //        if (error || bgColor != null) {
+            //            val errorMsgColor = bgColor ?: ERROR_BG_COLOR
+            //            Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
+            //                HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+            //        } else {
+            //            Toast.makeText(ctx, message, duration).show()
+            //        }
+            mainHandler.removeCallbacksAndMessages(null)
+            FloatView.with(FLOAT_VIEW_TAG).remove()
+            FloatView.with(ctx)
+                .layout(R.layout.toast_tools_layout) { v ->
+                    val tv = v as TextView
+                    tv.text = message
+                    setTextIcon(ctx, tv)
+                }
+                .meta { viewWidth, _ ->
+                    tag = FLOAT_VIEW_TAG
+                    enableAlphaAnimation = true
+                    enableDrag = false
+                    systemWindow = ctx.canDrawOverlays
+                    x = (ctx.screenWidth - viewWidth) / 2
+                    y = ctx.screenRealHeight - 109.px
+                }
+                .show()
+            mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() },
+                if (longDuration) 3500 else 2000)
         }
+        else        -> {
+            toast?.cancel()
 
-        toast = Toast(ctx).apply {
-            @Suppress("DEPRECATION")
-            this.view = view
-            setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, ctx.resources.dp2px(64F))
-            this.duration = duration
-            show()
+            val view = LayoutInflater.from(ctx)
+                .inflate(R.layout.toast_tools_layout, null)
+                .also { v ->
+                    v.findViewById<TextView>(R.id.tv_text)
+                        .let { tv ->
+                            tv.setTextColor(ContextCompat.getColor(tv.context,
+                                android.R.color.white))
+                            tv.text = message
+                            setTextIcon(ctx, tv)
+                        }
+                    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
+                        R.drawable.toast_bg_normal, null)!!
+                    if (!error && bgColor == null) {
+                        v.background = defaultBgDrawable
+                    } else { // with error or with bgColor
+                        val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
+                        v.background = customDrawableWrapper
+                        val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
+                        DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
+                    }
+                }
+
+            toast = Toast(ctx).apply {
+                @Suppress("DEPRECATION")
+                this.view = view
+                setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, 64.px)
+                this.duration = duration
+                show()
+            }
         }
     }
 }
@@ -143,4 +203,15 @@ private fun showToast(ctx: Context?,
  */
 fun cancelToast() {
     toast?.cancel()
+    FloatView.with(FLOAT_VIEW_TAG).remove()
+}
+
+private fun setTextIcon(ctx: Context, tv: TextView) {
+    toastIcon?.let { iconRes ->
+        // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
+        val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
+        iconDrawable?.setBounds(0, 0, 20.px, 20.px)
+        tv.compoundDrawablePadding = 8.px
+        tv.setCompoundDrawables(iconDrawable, null, null, null)
+    }
 }

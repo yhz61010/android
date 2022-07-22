@@ -17,30 +17,39 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * 1. Get the ForegroundComponent Singleton, passing a Context or Application object unless you
  * are sure that the Singleton has definitely already been initialised elsewhere.
+ * ```
+ * ForegroundComponent.init(application, 500)
+ * ```
  *
- * 2.a) Perform a direct, synchronous check: ForegroundComponent.isForeground() / .isBackground()
+ * 2.a) Perform a direct, synchronous check:
+ * ```
+ *  ForegroundComponent.get().isForeground
+ *  // or
+ *  ForegroundComponent.get().isBackground
+ * ```
  *
  * or
  *
  * 2.b) Register to be notified (useful in Service or other non-UI components):
  * ```
- * ForegroundComponent.AppStateListener listener = new ForegroundComponent.AppStateListener() {
- *      public void onBecameForeground() {
- *           // ... whatever you want to do
+ * private val listener = object: ForegroundComponent.AppStateListener {
+ *      override fun onBecameForeground() {
+ *          // ... whatever you want to do
  *      }
- *      public void onBecameBackground() {
- *           // ... whatever you want to do
+ *
+ *      override fun onBecameBackground() {
+ *          // ... whatever you want to do
  *      }
  * }
  *
- * public void onCreate(){
- *      super.onCreate();
- *      ForegroundComponent.get(this).addListener(listener);
+ * override fun onCreate(savedInstanceState: Bundle?) {
+ *      super.onCreate(savedInstanceState)
+ *      ForegroundComponent.get().addListener(listener)
  * }
  *
- * public void onDestroy(){
- *      super.onCreate();
- *      ForegroundComponent.get(this).removeListener(listener);
+ * override fun onDestroy() {
+ *      ForegroundComponent.get().removeListener(listener)
+ *      super.onDestroy()
  * }
  * ```
  */

@@ -48,7 +48,7 @@ class FloatView internal constructor(internal val context: Context) {
         /**
          * **Destroy** all float views.
          */
-        fun clearAll() = FloatViewManager.clear()
+        fun removeAll() = FloatViewManager.remove()
 
         internal var globalConfig = GlobalConfig()
 

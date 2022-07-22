@@ -175,7 +175,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
                 activityResultLauncher.launch(captureIntent)
             } else {
-                FloatView.clearAll()
+                FloatView.removeAll()
                 stopServer()
                 mediaProjectService?.stopScreenShare()
             }
@@ -235,7 +235,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 simpleActivityLauncher.launch(it) {
                     if (canDrawOverlays) {
                         if (FloatView.exist()) {
-                            FloatView.clearAll()
+                            FloatView.removeAll()
                             createFloatView()
                         }
                     } else {
@@ -248,7 +248,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
-        FloatView.clearAll()
+        FloatView.removeAll()
         stopServer()
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {
@@ -432,7 +432,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
             this@ScreenShareMasterActivity.clientChannel = null
             runOnUiThread {
                 binding.toggleButton.isChecked = false
-                FloatView.clearAll()
+                FloatView.removeAll()
             }
             stopServer()
         }

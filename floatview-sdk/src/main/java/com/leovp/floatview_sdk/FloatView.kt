@@ -2,7 +2,7 @@
 
 package com.leovp.floatview_sdk
 
-import android.app.Activity
+import android.content.Context
 import android.view.View
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import com.leovp.floatview_sdk.entities.FloatViewAttribute
@@ -23,11 +23,11 @@ import com.leovp.floatview_sdk.framework.FloatViewManager
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
  */
-class FloatView internal constructor(internal val context: Activity) {
+class FloatView internal constructor(internal val context: Context) {
 
     companion object {
         /** Create new FloatView. */
-        fun with(context: Activity): FloatViewCreator = FloatViewCreator(FloatView(context))
+        fun with(context: Context): FloatViewCreator = FloatViewCreator(FloatView(context))
 
         fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean =
                 FloatViewManager.exist(tag)

@@ -1,5 +1,6 @@
 package com.leovp.floatview_sdk
 
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.LayoutRes
@@ -44,16 +45,18 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     /**
      * **Create** a float view with specific tag and show it on screen.
      */
-    fun show() {
+    fun show(customViewSizeCallback: ((Size) -> Unit)? = null) {
         if (config.systemWindow) {
-            if (context.canDrawOverlays) createAndShowFloatView()
+            if (context.canDrawOverlays) {
+                createAndShowFloatView(customViewSizeCallback)
+            }
         } else {
-            createAndShowFloatView()
+            createAndShowFloatView(customViewSizeCallback)
         }
     }
 
-    private fun createAndShowFloatView() {
+    private fun createAndShowFloatView(customViewSizeCallback: ((Size) -> Unit)? = null) {
         build()
-        FloatViewManager.show(config.tag)
+        FloatViewManager.show(config.tag, customViewSizeCallback)
     }
 }

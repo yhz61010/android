@@ -2,11 +2,11 @@ package com.leovp.floatview_sdk.framework
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
+import android.util.Size
 import android.view.*
 import androidx.annotation.IdRes
 import androidx.core.view.children
@@ -22,7 +22,7 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 2021/8/30 10:56
  */
-internal class FloatViewImpl(private val context: Activity, internal var config: DefaultConfig) {
+internal class FloatViewImpl(private val context: Context, internal var config: DefaultConfig) {
     private val windowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     private lateinit var layoutParams: WindowManager.LayoutParams
 
@@ -424,7 +424,7 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
     private fun getResourceEntryName(@IdRes id: Int): String =
             runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
-    fun show() {
+    fun show(customViewSizeCallback: ((Size) -> Unit)? = null) {
         runCatching {
             init()
             dismiss()
@@ -433,7 +433,13 @@ internal class FloatViewImpl(private val context: Activity, internal var config:
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-        }.onFailure { it.printStackTrace() }
+            config.customView!!.post {
+                customViewSizeCallback?.invoke(Size(config.customView!!.width,
+                    config.customView!!.height))
+            }
+        }.onFailure {
+            it.printStackTrace()
+        }
     }
 
     fun dismiss() {

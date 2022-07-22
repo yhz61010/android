@@ -215,7 +215,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
     //    }
 
     override fun onDestroy() {
-        FloatView.clearAll()
+        FloatView.removeAll()
         super.onDestroy()
     }
 

@@ -27,6 +27,7 @@ buildscript {
     ext.httpSdkVersion = ext.leoVersion
     ext.logSdkVersion = ext.leoVersion
     ext.prefSdkVersion = ext.leoVersion
+    ext.enhancedToastSdk = ext.leoVersion
     // -----
     ext.libBytesVersion = ext.leoVersion
     ext.libJsonVersion = ext.leoVersion

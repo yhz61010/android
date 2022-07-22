@@ -41,6 +41,7 @@ dependencies {
     api "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
 
     implementation project(':lib-common-kotlin')
+    implementation project(':floatview-sdk')
 }
 
 afterEvaluate {

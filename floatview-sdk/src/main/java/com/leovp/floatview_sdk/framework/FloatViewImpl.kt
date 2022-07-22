@@ -426,7 +426,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     fun show() {
         runCatching {
             init()
-            dismiss()
+            remove()
             addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
             visible(true)
@@ -437,7 +437,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }
     }
 
-    fun dismiss() {
+    fun remove() {
         if (config.isDisplaying) {
             visible(false)
             windowManager.removeView(config.customView)
@@ -453,4 +453,14 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             View.GONE
         }
     }
+
+    //    private fun setCustomViewVisibility(show: Boolean) {
+    //        config.customView?.visibility = if (show) {
+    //            config.isDisplaying = true
+    //            View.VISIBLE
+    //        } else {
+    //            config.isDisplaying = false
+    //            View.GONE
+    //        }
+    //    }
 }

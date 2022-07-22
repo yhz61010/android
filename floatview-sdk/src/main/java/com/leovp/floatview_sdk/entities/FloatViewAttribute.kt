@@ -72,7 +72,7 @@ class FloatViewAttribute(private val tag: String) {
     /**
      *  **Destroy** the specific float view.
      */
-    fun remove() = FloatViewManager.dismiss(tag)
+    fun remove() = FloatViewManager.remove(tag)
 
     /**
      * Make float view be visible. Note that, the target float view should be created before.

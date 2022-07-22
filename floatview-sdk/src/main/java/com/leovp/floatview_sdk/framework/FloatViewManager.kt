@@ -23,8 +23,8 @@ internal object FloatViewManager {
 
     fun show(tag: String) = windowMap[tag]?.show()
 
-    fun dismiss(tag: String) {
-        windowMap[tag]?.dismiss()
+    fun remove(tag: String) {
+        windowMap[tag]?.remove()
         windowMap.remove(tag)
     }
 
@@ -38,11 +38,11 @@ internal object FloatViewManager {
         }
     }
 
-    fun clear() {
+    fun remove() {
         //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
         //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
         for ((_, floatViewImpl) in windowMap) {
-            floatViewImpl.dismiss()
+            floatViewImpl.remove()
         }
         windowMap.clear()
     }

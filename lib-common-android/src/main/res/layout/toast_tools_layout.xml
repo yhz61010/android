@@ -6,12 +6,12 @@
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
     android:background="@drawable/toast_bg_normal"
-    android:elevation="1dp"
+    android:elevation="2dp"
     android:gravity="center_vertical"
     android:maxWidth="300dp"
     android:orientation="horizontal"
-    android:paddingStart="22dp"
-    android:paddingEnd="22dp">
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
 
     <TextView
         android:id="@+id/tv_text"
@@ -25,6 +25,7 @@
         android:textColor="#ffffff"
         android:textSize="14sp"
         android:textStyle="normal"
+        android:gravity="center_vertical"
         tools:text="Hello World" />
 </LinearLayout>
 

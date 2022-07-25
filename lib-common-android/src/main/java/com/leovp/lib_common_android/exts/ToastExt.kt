@@ -53,7 +53,7 @@ var toastIcon: Int? = null
 /**
  * Unit: px
  */
-var toastIconSize: Int = 20.px
+var toastIconSize: Int = 24.px
 
 private val mainHandler = Handler(Looper.getMainLooper())
 

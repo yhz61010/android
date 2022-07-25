@@ -12,13 +12,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.viewbinding.ViewBinding
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
-import com.leovp.lib_common_android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.lib_common_android.exts.hideNavigationBar
 import com.leovp.lib_common_android.exts.requestFullScreenAfterVisible
 import com.leovp.lib_common_android.exts.requestFullScreenBeforeSetContentView
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
@@ -220,7 +220,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         InternetUtil.getIpsByHost(domain) { socketIps ->
             if (socketIps.isEmpty()) {
                 LogContext.log.e(tag, "Can not get ip by host[$domain].")
-                toast("Can not get ip by host[$domain].", debug = true)
+                toast("Can't get ip by host[$domain].", debug = true)
                 return@getIpsByHost
             }
             val socketIp = socketIps[0]

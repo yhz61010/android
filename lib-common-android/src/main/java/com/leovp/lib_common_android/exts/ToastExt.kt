@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
@@ -48,6 +49,11 @@ fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
 
 @DrawableRes
 var toastIcon: Int? = null
+
+/**
+ * Unit: px
+ */
+var toastIconSize: Int = 20.px
 
 private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -143,7 +149,7 @@ private fun showToast(ctx: Context?,
             FloatView.with(FLOAT_VIEW_TAG).remove()
             FloatView.with(ctx)
                 .layout(R.layout.toast_tools_layout) { v ->
-                    decorateToast(ctx, v as TextView, message, bgColor, error)
+                    decorateToast(ctx, v, message, bgColor, error)
                 }
                 .meta { viewWidth, _ ->
                     tag = FLOAT_VIEW_TAG
@@ -151,7 +157,7 @@ private fun showToast(ctx: Context?,
                     enableDrag = false
                     systemWindow = ctx.canDrawOverlays
                     x = (ctx.screenWidth - viewWidth) / 2
-                    y = ctx.screenRealHeight - 109.px
+                    y = ctx.screenRealHeight - 108.px
                 }
                 .show()
             mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() },
@@ -162,7 +168,9 @@ private fun showToast(ctx: Context?,
 
             val view = LayoutInflater.from(ctx)
                 .inflate(R.layout.toast_tools_layout, null)
-                .also { v -> decorateToast(ctx, v as TextView, message, bgColor, error) }
+                .also { v ->
+                    decorateToast(ctx, v, message, bgColor, error)
+                }
 
             toast = Toast(ctx).apply {
                 @Suppress("DEPRECATION")
@@ -183,30 +191,30 @@ fun cancelToast() {
     FloatView.with(FLOAT_VIEW_TAG).remove()
 }
 
-private fun setTextIcon(ctx: Context, tv: TextView) {
+private fun setDrawableIcon(ctx: Context, tv: TextView) {
     toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
-        iconDrawable?.setBounds(0, 0, 20.px, 20.px)
+        iconDrawable?.setBounds(0, 0, toastIconSize, toastIconSize)
         tv.compoundDrawablePadding = 8.px
         tv.setCompoundDrawables(iconDrawable, null, null, null)
     }
 }
 
-private fun decorateToast(ctx: Context, tv: TextView, message: String, bgColor: String? = null,
+private fun decorateToast(ctx: Context, rootView: View, message: String, bgColor: String? = null,
     error: Boolean = false) {
+    val tv: TextView = rootView.findViewById(R.id.tv_text)
     tv.text = message
-    tv.setTextColor(ContextCompat.getColor(tv.context,
-        android.R.color.white))
-    setTextIcon(ctx, tv)
+    //    tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
+    setDrawableIcon(ctx, tv)
 
     val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
         R.drawable.toast_bg_normal, null)!!
     if (!error && bgColor == null) {
-        tv.background = defaultBgDrawable
+        rootView.background = defaultBgDrawable
     } else { // with error or with bgColor
         val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
-        tv.background = customDrawableWrapper
+        rootView.background = customDrawableWrapper
         val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
         DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
     }

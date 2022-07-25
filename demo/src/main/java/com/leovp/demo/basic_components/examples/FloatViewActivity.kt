@@ -106,18 +106,19 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
             .show()
 
         FloatView.with(this)
-            .layout(R.layout.floatview) { v ->
-                v.findViewById<TextView>(R.id.tvText).text = "f4\nImmersive:ON\nDock:LEFT"
-                v.findViewById<View>(R.id.floatViewBtn)
-                    .setOnSingleClickListener { toast("Win4 Button") }
-                v.findViewById<View>(R.id.linearLayout)
-                    .setOnSingleClickListener { toast("Win4 Image") }
+            .layout(TextView(this)) { v ->
+                (v as TextView).run {
+                    text = "f4\nImmersive:ON\nDock:LEFT"
+                    setBackgroundColor(Color.parseColor("#711CDE"))
+                    setTextColor(Color.WHITE)
+                }
             }
-            .meta { _, _ ->
+            .meta { viewWidth, viewHeight ->
                 tag = "f4"
                 immersiveMode = true
                 y = 900
                 dockEdge = DockEdge.LEFT
+                LogContext.log.w(ITAG, "f4 width=$viewWidth height=$viewHeight")
             }
             .show()
 

@@ -51,7 +51,10 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("Debug toast.", debug = true, error = true)
+        toast("Debug long toast. Debug long toast. Debug long toast. Debug long toast. " +
+                "Debug long toast.",
+            debug = true,
+            error = true)
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

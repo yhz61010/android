@@ -44,6 +44,10 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
         }
     }
 
+    fun layout(view: View, handle: (view: View) -> Unit): FloatViewCreator = apply {
+        config.customView = view.also { handle.invoke(it) }
+    }
+
     //    fun meta(init: DefaultConfig.() -> Unit): FloatViewCreator = apply { config.init() }
 
     fun meta(init: DefaultConfig.(viewWidth: Int, viewHeight: Int) -> Unit): FloatViewCreator {

@@ -4,6 +4,6 @@
     <!-- 填充颜色 -->
     <solid android:color="#646464" />
     <!-- 矩形的圆角半径 -->
-    <corners android:radius="22dp" />
+    <corners android:radius="24dp" />
 
 </shape>

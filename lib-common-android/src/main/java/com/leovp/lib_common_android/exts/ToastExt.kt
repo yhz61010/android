@@ -30,15 +30,6 @@ import com.leovp.lib_common_android.utils.API
  */
 
 /**
- * Whether the host project is working in `DEBUG` mode.
- *
- * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
- * Otherwise, the `debug` feature doesn't work.
- * For example in your custom Application.
- */
-var buildConfigInDebug: Boolean = false
-
-/**
  * This method must be called for Android R(Android 11) or above.
  * Otherwise, the custom toast doesn't work when app in background.
  */
@@ -47,13 +38,24 @@ fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
     ForegroundComponent.init(app, delay)
 }
 
-@DrawableRes
-var toastIcon: Int? = null
+data class ToastConfig(
+    /**
+     * Whether the host project is working in `DEBUG` mode.
+     *
+     * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
+     * Otherwise, the `debug` feature doesn't work.
+     * For example in your custom Application.
+     */
+    var buildConfigInDebug: Boolean = false,
 
-/**
- * Unit: px
- */
-var toastIconSize: Int = 24.px
+    @DrawableRes
+    var toastIcon: Int? = null,
+
+    /** Unit: px */
+    var toastIconSize: Int = 24.px,
+)
+
+val toastConfig = ToastConfig()
 
 private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -120,7 +122,7 @@ private fun showToast(ctx: Context?,
     debug: Boolean,
     bgColor: String?,
     error: Boolean) {
-    if ((debug && !buildConfigInDebug) || ctx == null) {
+    if ((debug && !toastConfig.buildConfigInDebug) || ctx == null) {
         // Debug log only be shown in DEBUG flavor
         return
     }
@@ -157,7 +159,7 @@ private fun showToast(ctx: Context?,
                     enableDrag = false
                     systemWindow = ctx.canDrawOverlays
                     x = (ctx.screenWidth - viewWidth) / 2
-                    y = ctx.screenRealHeight - 108.px
+                    y = ctx.screenAvailableHeight - 96.px
                 }
                 .show()
             mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() },
@@ -192,10 +194,10 @@ fun cancelToast() {
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {
-    toastIcon?.let { iconRes ->
+    toastConfig.toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
-        iconDrawable?.setBounds(0, 0, toastIconSize, toastIconSize)
+        iconDrawable?.setBounds(0, 0, toastConfig.toastIconSize, toastConfig.toastIconSize)
         tv.compoundDrawablePadding = 8.px
         tv.setCompoundDrawables(iconDrawable, null, null, null)
     }

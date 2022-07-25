@@ -26,7 +26,7 @@
         android:textSize="14sp"
         android:textStyle="normal"
         android:gravity="center_vertical"
-        tools:text="Hello World" />
+        tools:text="Hello Michael Leo." />
 </LinearLayout>
 
 <!--

@@ -439,17 +439,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-        }.onFailure {
-            it.printStackTrace()
-        }
+        }.onFailure { it.printStackTrace() }
     }
 
     fun remove() {
-        if (config.isDisplaying) {
-            visible(false) {
-                windowManager.removeView(config.customView)
-            }
-        }
+        if (config.isDisplaying) visible(false) { windowManager.removeView(config.customView) }
     }
 
     fun visible(show: Boolean, hideCallback: (() -> Unit)? = null) {

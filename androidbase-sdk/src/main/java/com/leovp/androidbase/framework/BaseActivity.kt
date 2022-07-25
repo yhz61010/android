@@ -250,9 +250,9 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
                     else                                         -> null
                 }
                 val infoStr = String.format(
-                    "↓%s\t↑%s\t%sms\t%dMbps\tR:%d %d %d%s",
+                    "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                     downloadSpeedStr, uploadSpeedStr,
-                    if (latencyStatus.isNullOrBlank()) "${info.ping}" else "${info.ping}($latencyStatus)",
+                    if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
                     info.linkSpeed,
                     info.rssi, info.wifiScoreIn5, info.wifiScore,
                     if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"

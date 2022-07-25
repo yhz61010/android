@@ -10,7 +10,7 @@ import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.lib_common_android.exts.cancelToast
 import com.leovp.lib_common_android.exts.initForegroundComponentForToast
 import com.leovp.lib_common_android.exts.toast
-import com.leovp.lib_common_android.exts.toastIcon
+import com.leovp.lib_common_android.exts.toastConfig
 import com.leovp.log_sdk.base.ITAG
 
 class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
@@ -19,7 +19,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initForegroundComponentForToast(application)
-        toastIcon = R.mipmap.ic_launcher_round
+        toastConfig.toastIcon = R.mipmap.ic_launcher_round
 
         Handler(Looper.getMainLooper()).postDelayed({
             toast("Custom toast in background test.", error = true)

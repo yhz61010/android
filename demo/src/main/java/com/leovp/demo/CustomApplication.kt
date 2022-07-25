@@ -5,7 +5,7 @@ import android.content.res.Configuration
 import android.util.Log
 import com.leovp.androidbase.framework.BaseApplication
 import com.leovp.demo.basic_components.examples.koin.*
-import com.leovp.lib_common_android.exts.buildConfigInDebug
+import com.leovp.lib_common_android.exts.toastConfig
 import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LLog
@@ -41,7 +41,7 @@ class CustomApplication : BaseApplication() {
 
     override fun onCreate() {
         super.onCreate()
-        buildConfigInDebug = BuildConfig.DEBUG
+        toastConfig.buildConfigInDebug = BuildConfig.DEBUG
 
         startKoin {
             //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)

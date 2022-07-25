@@ -146,7 +146,7 @@
         <entry key="lib-common-android/src/main/res/drawable/toast_bg_normal.xml" value="0.5555" />
         <entry key="lib-common-android/src/main/res/drawable/toast_bg_red.xml" value="0.5515" />
         <entry key="lib-common-android/src/main/res/layout-ldltr/toast.xml" value="0.46153846153846156" />
-        <entry key="lib-common-android/src/main/res/layout/toast_tools_layout.xml" value="0.3685185185185185" />
+        <entry key="lib-common-android/src/main/res/layout/toast_tools_layout.xml" value="0.67" />
       </map>
     </option>
   </component>

@@ -57,6 +57,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
                 config.init(DefaultConfig.DEFAULT_X_POS, DefaultConfig.DEFAULT_Y_POS)
             } else {
                 customView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                // customView.layout(0, 0, customView.measuredWidth, customView.measuredHeight)
                 config.init(customView.measuredWidth, customView.measuredHeight)
             }
         }

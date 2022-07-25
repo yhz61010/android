@@ -33,17 +33,13 @@ internal object FloatViewManager {
     }
 
     fun visibleAll(show: Boolean) {
-        for ((_, floatViewImpl) in windowMap) {
-            floatViewImpl.visible(show)
-        }
+        for ((_, floatViewImpl) in windowMap) floatViewImpl.visible(show)
     }
 
     fun remove() {
         //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
         //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
-        for ((_, floatViewImpl) in windowMap) {
-            floatViewImpl.remove()
-        }
+        for ((_, floatViewImpl) in windowMap) floatViewImpl.remove()
         windowMap.clear()
     }
 

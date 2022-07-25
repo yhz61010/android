@@ -135,6 +135,7 @@
         <entry key="demo/src/main/res/layout/activity_socket_server.xml" value="0.5911458333333334" />
         <entry key="demo/src/main/res/layout/activity_toast.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/activity_websocket_server.xml" value="0.5" />
+        <entry key="demo/src/main/res/layout/floatview.xml" value="0.46153846153846156" />
         <entry key="demo/src/main/res/layout/fragment_basic.xml" value="0.5765625" />
         <entry key="demo/src/main/res/layout/fragment_for_nav_first.xml" value="0.30385852090032156" />
         <entry key="demo/src/main/res/layout/fragment_for_nav_forth.xml" value="0.5765625" />
@@ -145,7 +146,7 @@
         <entry key="lib-common-android/src/main/res/drawable/toast_bg_normal.xml" value="0.5555" />
         <entry key="lib-common-android/src/main/res/drawable/toast_bg_red.xml" value="0.5515" />
         <entry key="lib-common-android/src/main/res/layout-ldltr/toast.xml" value="0.46153846153846156" />
-        <entry key="lib-common-android/src/main/res/layout/toast_tools_layout.xml" value="0.46153846153846156" />
+        <entry key="lib-common-android/src/main/res/layout/toast_tools_layout.xml" value="0.3685185185185185" />
       </map>
     </option>
   </component>

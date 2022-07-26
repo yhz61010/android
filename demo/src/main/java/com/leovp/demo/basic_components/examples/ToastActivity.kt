@@ -26,11 +26,11 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onAndroidToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is Android toast.", origin = true)
+        toast("DEBUG: onClientDisconnected: 127.0.0.1:42542", origin = true)
     }
 
     fun onNormalToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is normal toast. This is normal toast. This is normal toast.")
+        toast("DEBUG: onClientDisconnected: 127.0.0.1:42542")
     }
 
     fun onErrorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -46,8 +46,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("Debug long toast. Debug long toast. Debug long toast. Debug long toast. " +
-                "Debug long toast. Debug long toast.", debug = true, error = true)
+        toast("I have a dream. A song to sing. To help me cope with anything.", debug = true, error = true)
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

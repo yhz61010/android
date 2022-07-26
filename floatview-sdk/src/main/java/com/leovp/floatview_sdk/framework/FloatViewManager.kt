@@ -21,10 +21,12 @@ internal object FloatViewManager {
 
     fun exist(tag: String): Boolean = windowMap[tag] != null
 
+    fun allFloatViewTags(): List<String> = windowMap.map { it.key }
+
     fun show(tag: String) = windowMap[tag]?.show()
 
-    fun remove(tag: String) {
-        windowMap[tag]?.remove()
+    fun remove(tag: String, immediately: Boolean = false) {
+        windowMap[tag]?.remove(immediately)
         windowMap.remove(tag)
     }
 
@@ -36,10 +38,10 @@ internal object FloatViewManager {
         for ((_, floatViewImpl) in windowMap) floatViewImpl.visible(show)
     }
 
-    fun remove() {
+    fun remove(immediately: Boolean = false) {
         //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
         //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
-        for ((_, floatViewImpl) in windowMap) floatViewImpl.remove()
+        for ((_, floatViewImpl) in windowMap) floatViewImpl.remove(immediately)
         windowMap.clear()
     }
 

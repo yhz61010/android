@@ -158,10 +158,11 @@ private fun showToast(ctx: Context?,
                     enableAlphaAnimation = true
                     enableDrag = false
                     systemWindow = ctx.canDrawOverlays
-                    val vw = if (viewWidth >= ctx.screenWidth) {
-                        ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width) +
-                        ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
-                    } else viewWidth
+                    val toastMaxWidth = ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
+                    val toastMargin =
+                            ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
+                    val toastWidthThreshold = toastMaxWidth + toastMargin
+                    val vw = if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
                     x = (ctx.screenWidth - vw) / 2
                     y = ctx.screenAvailableHeight - 96.px
                 }

@@ -234,7 +234,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 Uri.parse("package:${applicationContext.packageName}")).let {
                 simpleActivityLauncher.launch(it) {
                     if (canDrawOverlays) {
-                        if (FloatView.exist()) {
+                        if (FloatView.default().exist()) {
                             FloatView.removeAll()
                             createFloatView()
                         }

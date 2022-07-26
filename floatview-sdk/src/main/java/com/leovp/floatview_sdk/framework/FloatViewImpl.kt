@@ -8,6 +8,7 @@ import android.graphics.Point
 import android.os.Build
 import android.view.*
 import androidx.annotation.IdRes
+import androidx.core.animation.doOnCancel
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.children
@@ -432,8 +433,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     fun show() {
         runCatching {
+            remove(true)
             init()
-            remove()
             addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
             visible(true)
@@ -442,8 +443,17 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }.onFailure { it.printStackTrace() }
     }
 
-    fun remove() {
-        if (config.isDisplaying) visible(false) { windowManager.removeView(config.customView) }
+    fun remove(immediately: Boolean = false) {
+        if (immediately) {
+            config.customView?.let { v ->
+                hideCustomView(v)
+                if (v.windowToken != null) windowManager.removeViewImmediate(v)
+            }
+        } else visible(false) {
+            config.customView?.let { v ->
+                if (v.windowToken != null) windowManager.removeViewImmediate(v)
+            }
+        }
     }
 
     fun visible(show: Boolean, hideCallback: (() -> Unit)? = null) {
@@ -473,6 +483,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         removeAllListeners()
                         setAutoCancel(true)
                         doOnEnd {
+                            hideCustomView(v)
+                            hideCallback?.invoke()
+                        }
+                        doOnCancel {
                             hideCustomView(v)
                             hideCallback?.invoke()
                         }

@@ -29,9 +29,6 @@ class FloatView internal constructor(internal val context: Context) {
         /** Create new FloatView. */
         fun with(context: Context): FloatViewCreator = FloatViewCreator(FloatView(context))
 
-        fun exist(tag: String = DefaultConfig.DEFAULT_FLOAT_VIEW_TAG): Boolean =
-                FloatViewManager.exist(tag)
-
         /** Get the the specified FloatView by tag name in order to change its attribute. */
         fun with(tag: String, init: (FloatViewAttribute.() -> Unit)? = null): FloatViewAttribute {
             val attr = FloatViewAttribute(tag)
@@ -45,10 +42,12 @@ class FloatView internal constructor(internal val context: Context) {
         fun visibleAll() = FloatViewManager.visibleAll(true)
         fun invisibleAll() = FloatViewManager.visibleAll(false)
 
+        fun allFloatViewTags() = FloatViewManager.allFloatViewTags()
+
         /**
          * **Destroy** all float views.
          */
-        fun removeAll() = FloatViewManager.remove()
+        fun removeAll(immediately: Boolean = false) = FloatViewManager.remove(immediately)
 
         internal var globalConfig = GlobalConfig()
 

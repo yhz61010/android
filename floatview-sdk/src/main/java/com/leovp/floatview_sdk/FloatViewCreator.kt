@@ -38,11 +38,12 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
 
     private var config = DefaultConfig(globalConfig = FloatView.globalConfig.copy())
 
-    fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
-        config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
-            handle?.invoke(it)
-        }
-    }
+    fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator =
+            apply {
+                config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
+                    handle?.invoke(it)
+                }
+            }
 
     fun layout(view: View, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
         config.customView = view.also { handle?.invoke(it) }
@@ -95,4 +96,18 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
         build()
         FloatViewManager.show(config.tag)
     }
+
+    //    /**
+    //     * Get the view height before rendering.
+    //     * @param view The View to measure.
+    //     * @return The height of the view.
+    //     */
+    //    private fun getViewHeight(view: View): Int {
+    //        val deviceWidth = context.screenWidth
+    //        val widthMeasureSpec =
+    //                View.MeasureSpec.makeMeasureSpec(deviceWidth, View.MeasureSpec.AT_MOST)
+    //        val heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    //        view.measure(widthMeasureSpec, heightMeasureSpec)
+    //        return view.measuredHeight
+    //    }
 }

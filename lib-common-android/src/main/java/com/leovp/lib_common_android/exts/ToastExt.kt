@@ -148,9 +148,9 @@ private fun showToast(ctx: Context?,
             //            Toast.makeText(ctx, message, duration).show()
             //        }
             mainHandler.removeCallbacksAndMessages(null)
-            FloatView.with(FLOAT_VIEW_TAG).remove()
+            FloatView.with(FLOAT_VIEW_TAG).remove(true)
             FloatView.with(ctx)
-                .layout(R.layout.toast_tools_layout) { v ->
+                .layout(R.layout.toast_layout) { v ->
                     decorateToast(ctx, v, message, bgColor, error)
                 }
                 .meta { viewWidth, _ ->
@@ -158,7 +158,11 @@ private fun showToast(ctx: Context?,
                     enableAlphaAnimation = true
                     enableDrag = false
                     systemWindow = ctx.canDrawOverlays
-                    x = (ctx.screenWidth - viewWidth) / 2
+                    val vw = if (viewWidth >= ctx.screenWidth) {
+                        ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width) +
+                        ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
+                    } else viewWidth
+                    x = (ctx.screenWidth - vw) / 2
                     y = ctx.screenAvailableHeight - 96.px
                 }
                 .show()
@@ -169,7 +173,7 @@ private fun showToast(ctx: Context?,
             toast?.cancel()
 
             val view = LayoutInflater.from(ctx)
-                .inflate(R.layout.toast_tools_layout, null)
+                .inflate(R.layout.toast_layout, null)
                 .also { v ->
                     decorateToast(ctx, v, message, bgColor, error)
                 }

@@ -113,12 +113,11 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
                     setTextColor(Color.WHITE)
                 }
             }
-            .meta { viewWidth, viewHeight ->
+            .meta { _, _ ->
                 tag = "f4"
                 immersiveMode = true
                 y = 900
                 dockEdge = DockEdge.LEFT
-                LogContext.log.w(ITAG, "f4 width=$viewWidth height=$viewHeight")
             }
             .show()
 

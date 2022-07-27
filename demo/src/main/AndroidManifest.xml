@@ -67,7 +67,7 @@
         <activity android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity" android:exported="false" />
         <activity android:name=".basic_components.examples.koin.KoinActivity" android:exported="false" />
         <activity android:name=".basic_components.examples.OrientationActivity"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:exported="true" />
         <activity android:name=".basic_components.AppSettingsActivity" android:exported="true" />
         <activity android:name=".basic_components.examples.CircleProgressbarActivity"

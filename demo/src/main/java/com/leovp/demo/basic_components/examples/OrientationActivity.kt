@@ -24,17 +24,13 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        screenOrientationEventListener = ScreenOrientationListener(this)
-    }
-
-    override fun onResume() {
-        super.onResume()
+        screenOrientationEventListener = ScreenOrientationListener(applicationContext)
         screenOrientationEventListener?.enable()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroy() {
         screenOrientationEventListener?.disable()
+        super.onDestroy()
     }
 
     inner class ScreenOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
@@ -54,22 +50,22 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             when {
                 isNormalPortrait(orientation)   -> {
-                    LogContext.log.w("Orientation=Portrait")
+                    LogContext.log.w("Orientation=Portrait deviceSurfaceRotation=$deviceSurfaceRotation")
                     binding.tvDirection.text = "Portrait"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
                 isReversePortrait(orientation)  -> {
-                    LogContext.log.w("Orientation=ReversePortrait")
+                    LogContext.log.w("Orientation=ReversePortrait deviceSurfaceRotation=$deviceSurfaceRotation")
                     binding.tvDirection.text = "ReversePortrait"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
                 }
                 isNormalLandscape(orientation)  -> {
-                    LogContext.log.w("Orientation=Landscape")
+                    LogContext.log.w("Orientation=Landscape deviceSurfaceRotation=$deviceSurfaceRotation")
                     binding.tvDirection.text = "Landscape"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
                 isReverseLandscape(orientation) -> {
-                    LogContext.log.w("Orientation=ReverseLandscape")
+                    LogContext.log.w("Orientation=ReverseLandscape deviceSurfaceRotation=$deviceSurfaceRotation")
                     binding.tvDirection.text = "ReverseLandscape"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
                 }

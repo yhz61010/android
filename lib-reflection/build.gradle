@@ -26,7 +26,7 @@ android {
     kotlinOptions {
         jvmTarget = "$rootProject.ext.java_version"
     }
-    namespace 'com.leovp.floatview_sdk'
+    namespace 'com.leovp.lib_reflection'
 
     publishing {
         // Publishes "release" build variant with "release" component created by
@@ -36,8 +36,8 @@ android {
 }
 
 dependencies {
-    api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    implementation project(':lib-reflection')
+//    implementation "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
+    api "com.github.tiann:FreeReflection:$freeReflectionVersion"
 }
 
 afterEvaluate {
@@ -47,8 +47,8 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = "$module_groupId"
-                artifactId = 'floatview-sdk'
-                version = "$rootProject.ext.floatViewSdkVersion"
+                artifactId = 'lib_reflection'
+                version = "$rootProject.ext.libReflectionVersion"
             }
         }
     }

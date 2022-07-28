@@ -23,4 +23,15 @@ interface IBaseConfig {
     var touchToleranceInPx: Int
 
     var enableAlphaAnimation: Boolean
+
+    /**
+     * **Recommend** to initialise the proper screen orientation when create float view.
+     * Otherwise, the float view may display at unexpected position on Android 12+.
+     *
+     * Surface.ROTATION_0
+     * Surface.ROTATION_90
+     * Surface.ROTATION_180
+     * Surface.ROTATION_270
+     */
+    var screenOrientation: Int
 }

@@ -48,9 +48,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.jcraft/jzlib
     api group: 'com.jcraft', name: 'jzlib', version: "$jzlibVersion"
 
-    implementation project(':log-sdk')
-    implementation project(':lib-bytes')
-    implementation project(':lib-network')
+    api project(':log-sdk')
+    api project(':lib-bytes')
+    api project(':lib-network')
 }
 
 afterEvaluate {

@@ -37,6 +37,7 @@ buildscript {
     ext.libImageVersion = ext.leoVersion
     ext.libNetworkVersion = ext.leoVersion
     ext.libExifVersion = ext.leoVersion
+    ext.libReflectionVersion = ext.leoVersion
     // -----
     ext.adpcmImaQtCodecSdkVersion = ext.leoVersion
     ext.h264HevcDecoderSdkVersion = ext.leoVersion

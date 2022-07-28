@@ -254,6 +254,7 @@ dependencies {
     implementation project(':log-sdk')
     implementation project(':lib-bytes')
     implementation project(':lib-image')
+    implementation project(':lib-reflection')
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
 //    implementation project(':ffmpeg-sdk')
 //    implementation project(':ffmpeg-javacpp-sdk')

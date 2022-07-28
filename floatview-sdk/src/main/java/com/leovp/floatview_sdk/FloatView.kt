@@ -68,7 +68,7 @@ class FloatView internal constructor(internal val context: Context) {
         fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
 
         /**
-         * Generally, if [isClickGesture] is `false` that means before touch up being triggered,
+         * Generally, if [isClickGesture] is `false` that mea ns before touch up being triggered,
          * user is just moving the view. At this time, we should consume this touch event
          * so the click listener that use set should NOT be triggered.
          *

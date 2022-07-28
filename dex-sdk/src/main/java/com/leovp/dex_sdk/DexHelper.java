@@ -1,5 +1,6 @@
 package com.leovp.dex_sdk;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -12,6 +13,7 @@ import android.os.IBinder;
 import android.os.IInterface;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
 
 import com.leovp.dex_sdk.util.CmnUtil;
 
@@ -168,6 +170,7 @@ public class DexHelper {
         return null;
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     public boolean isWifiActive() {
         try {
             ConnectivityManager cm = getConnectivityManager();

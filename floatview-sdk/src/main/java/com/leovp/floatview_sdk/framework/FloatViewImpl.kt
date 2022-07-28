@@ -15,10 +15,12 @@ import androidx.core.view.children
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import com.leovp.floatview_sdk.entities.DockEdge
 import com.leovp.floatview_sdk.entities.StickyEdge
-import com.leovp.floatview_sdk.utils.screenAvailableHeight
-import com.leovp.floatview_sdk.utils.screenWidth
+import com.leovp.floatview_sdk.utils.screenAvailableResolution
 import com.leovp.floatview_sdk.utils.statusBarHeight
+import com.leovp.lib_reflection.wrappers.ServiceManager
+import java.lang.Integer.min
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Author: Michael Leo
@@ -41,6 +43,34 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private var touchConsumedByMove = false
 
     private var isClickGesture = true
+
+    private var screenAvailableResolution = context.screenAvailableResolution
+    private var currentScreenOrientationWidth = screenAvailableResolution.width
+    private var currentScreenOrientationAvailableHeight = screenAvailableResolution.height
+    private var lastScreenOrientation = -1
+    private val rotationWatcher = object : IRotationWatcher.Stub() {
+        override fun onRotationChanged(rotation: Int) {
+            if (rotation != lastScreenOrientation) {
+                when (rotation) {
+                    Surface.ROTATION_0, Surface.ROTATION_180  -> {
+                        currentScreenOrientationWidth = min(screenAvailableResolution.width,
+                            screenAvailableResolution.height)
+                        currentScreenOrientationAvailableHeight =
+                                max(screenAvailableResolution.width,
+                                    screenAvailableResolution.height)
+                    }
+                    Surface.ROTATION_90, Surface.ROTATION_270 -> {
+                        currentScreenOrientationWidth = max(screenAvailableResolution.width,
+                            screenAvailableResolution.height)
+                        currentScreenOrientationAvailableHeight =
+                                min(screenAvailableResolution.width,
+                                    screenAvailableResolution.height)
+                    }
+                }
+                lastScreenOrientation = rotation
+            }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
@@ -165,22 +195,22 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     top,
                     getFloatViewBottomMaxMargin())
                 DockEdge.LEFT_RIGHT -> {
-                    if (floatViewCenterX <= context.screenWidth / 2) {
+                    if (floatViewCenterX <= currentScreenOrientationWidth / 2) {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                     }
                 }
                 DockEdge.TOP_BOTTOM -> {
-                    if (floatViewCenterY <= context.screenAvailableHeight / 2) {
+                    if (floatViewCenterY <= currentScreenOrientationAvailableHeight / 2) {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
                 DockEdge.FULL       -> {
-                    if (floatViewCenterX <= context.screenWidth / 2) { // On left screen
-                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top left
+                    if (floatViewCenterX <= currentScreenOrientationWidth / 2) { // On left screen
+                        if (floatViewCenterY <= currentScreenOrientationAvailableHeight / 2) { // On top screen // Top left
                             if (left <= top - getDrawHeightOffset()) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(v,
@@ -195,7 +225,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                     getFloatViewTopMinMargin())
                             }
                         } else { // On bottom screen // Bottom left
-                            if (left <= context.screenAvailableHeight - getFloatViewBottomLeftPos().y) { // Animate to left
+                            if (left <= currentScreenOrientationAvailableHeight - getFloatViewBottomLeftPos().y) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(v,
                                     "translationX",
@@ -210,8 +240,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                             }
                         }
                     } else { // On right screen
-                        if (floatViewCenterY <= context.screenAvailableHeight / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - getDrawHeightOffset() <= context.screenWidth - getFloatViewTopRightPos().x) { // Animate to top
+                        if (floatViewCenterY <= currentScreenOrientationAvailableHeight / 2) { // On top screen // Top right
+                            if (getFloatViewTopRightPos().y - getDrawHeightOffset() <= currentScreenOrientationWidth - getFloatViewTopRightPos().x) { // Animate to top
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(v,
                                     "translationY",
@@ -225,7 +255,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                     getFloatViewRightMaxMargin())
                             }
                         } else { // On bottom screen // Bottom right
-                            if (context.screenAvailableHeight - getFloatViewBottomRightPos().y <= context.screenWidth - getFloatViewBottomRightPos().x) { // Animate to bottom
+                            if (currentScreenOrientationAvailableHeight - getFloatViewBottomRightPos().y <= currentScreenOrientationWidth - getFloatViewBottomRightPos().x) { // Animate to bottom
                                 animateDirectionForDockFull = DockEdge.BOTTOM
                                 ObjectAnimator.ofInt(v,
                                     "translationY",
@@ -321,8 +351,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun adjustPosX(x: Int, edgeMargin: Int): Int {
         if (x < edgeMargin || x <= 0) return edgeMargin
-        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= context.screenWidth)
-            context.screenWidth - (config.customView?.width ?: 0) - edgeMargin else x
+        return if ((x + (config.customView?.width
+                ?: 0) + edgeMargin) >= currentScreenOrientationWidth
+        )
+            currentScreenOrientationWidth - (config.customView?.width ?: 0) - edgeMargin else x
     }
 
     /**
@@ -334,18 +366,20 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         if (y <= edgeMargin + drawHeightOffset)
             return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
         return if (
-            (y + (config.customView?.height ?: 0) + edgeMargin) >= context.screenAvailableHeight
-        ) context.screenAvailableHeight - (config.customView?.height ?: 0) - edgeMargin
+            (y + (config.customView?.height
+                ?: 0) + edgeMargin) >= currentScreenOrientationAvailableHeight
+        ) currentScreenOrientationAvailableHeight - (config.customView?.height ?: 0) - edgeMargin
         else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
     private fun getFloatViewRightMaxMargin(): Int =
-            context.screenWidth - (config.customView?.width ?: 0) - config.edgeMargin
+            currentScreenOrientationWidth - (config.customView?.width ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopMinMargin(): Int = getDrawHeightOffset() + config.edgeMargin
     private fun getFloatViewBottomMaxMargin(): Int =
-            context.screenAvailableHeight - (config.customView?.height ?: 0) - config.edgeMargin
+            currentScreenOrientationAvailableHeight - (config.customView?.height
+                ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
     private fun getFloatViewTopRightPos(): Point =
@@ -434,16 +468,21 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     fun show() {
         runCatching {
             remove(true)
+            ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
             init()
             addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-        }.onFailure { it.printStackTrace() }
+        }.onFailure {
+            ServiceManager.windowManager?.removeRotationWatcher(rotationWatcher)
+            it.printStackTrace()
+        }
     }
 
     fun remove(immediately: Boolean = false) {
+        ServiceManager.windowManager?.removeRotationWatcher(rotationWatcher)
         if (immediately) {
             config.customView?.let { v ->
                 hideCustomView(v)

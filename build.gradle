@@ -10,7 +10,7 @@ buildscript {
 
     // com.github.yhz61010.LeoAndroidBaseUtilProject-Kotlin
     ext.module_groupId = "com.leovp"
-    ext.leoVersion = '5.8.6'
+    ext.leoVersion = '5.8.7'
 
     // ===============================
     // ===== Leo modules version =====

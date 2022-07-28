@@ -45,17 +45,17 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     api "androidx.appcompat:appcompat:$rootProject.ext.appcompatVersion"
 
-    implementation project(':androidbase-sdk')
-    implementation project(':yuv-sdk')
-    implementation project(':lib-exif')
+    api project(':androidbase-sdk')
+    api project(':yuv-sdk')
+    api project(':lib-exif')
 
     // ===== The following dependencies are needed in [androidbase-sdk] module =====
-    implementation project(':log-sdk')
-    implementation project(':lib-json')
-    implementation project(':lib-bytes')
-    implementation project(':lib-image')
-    implementation project(':lib-common-android')
-    implementation project(':lib-common-kotlin')
+    api project(':log-sdk')
+    api project(':lib-json')
+    api project(':lib-bytes')
+    api project(':lib-image')
+    api project(':lib-common-android')
+    api project(':lib-common-kotlin')
     // ==============================
 }
 

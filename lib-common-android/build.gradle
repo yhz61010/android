@@ -40,7 +40,7 @@ dependencies {
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api "androidx.annotation:annotation:$rootProject.ext.annotationVersion"
 
-    implementation project(':lib-common-kotlin')
+    api project(':lib-common-kotlin')
     implementation project(':floatview-sdk')
 }
 

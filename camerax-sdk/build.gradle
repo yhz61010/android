@@ -75,12 +75,12 @@ dependencies {
     // CameraX Extensions library
     api "androidx.camera:camera-extensions:$cameraVersion"
 
-    implementation project(':lib-common-android')
-    implementation project(':lib-common-kotlin')
-    implementation project(':lib-image')
-    implementation project(':lib-exif')
-    implementation project(':log-sdk')
-    implementation project(':pref-sdk')
+    api project(':lib-common-android')
+    api project(':lib-common-kotlin')
+    api project(':lib-image')
+    api project(':lib-exif')
+    api project(':log-sdk')
+    api project(':pref-sdk')
 //    implementation project(":jpeg-sdk")
 
     implementation "io.coil-kt:coil:$coilKtVersion"

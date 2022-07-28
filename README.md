@@ -1,10 +1,10 @@
-[![Leo Version](https://jitpack.io/v/yhz61010/LeoAndroidBaseUtilProject-Kotlin.svg)](https://jitpack.io/#yhz61010/LeoAndroidBaseUtilProject-Kotlin)
+[![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.7.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-7.2.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-7.5-green)](https://gradle.org)
 
-[![codebeat badge](https://codebeat.co/badges/e657f36f-48ab-466c-9dae-36da4241b675)](https://codebeat.co/projects/github-com-yhz61010-leoandroidbaseutilproject-kotlin-master)
-[![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin/badge)](https://www.codefactor.io/repository/github/yhz61010/leoandroidbaseutilproject-kotlin)
+[![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
+[![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 
 # Upload to bintray(Maven and jcenter)
 

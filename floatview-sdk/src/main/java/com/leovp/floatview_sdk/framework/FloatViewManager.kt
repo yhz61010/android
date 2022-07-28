@@ -30,19 +30,19 @@ internal object FloatViewManager {
         windowMap.remove(tag)
     }
 
+    fun remove(immediately: Boolean = false) {
+        //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
+        //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
+        for ((tag, _) in windowMap) remove(tag, immediately)
+        windowMap.clear()
+    }
+
     fun visible(tag: String, show: Boolean) {
         windowMap[tag]?.visible(show)
     }
 
     fun visibleAll(show: Boolean) {
-        for ((_, floatViewImpl) in windowMap) floatViewImpl.visible(show)
-    }
-
-    fun remove(immediately: Boolean = false) {
-        //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
-        //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
-        for ((_, floatViewImpl) in windowMap) floatViewImpl.remove(immediately)
-        windowMap.clear()
+        for ((tag, _) in windowMap) visible(tag, show)
     }
 
     fun getFloatViewWidth(tag: String): Int = getConfig(tag)?.customView?.width ?: 0

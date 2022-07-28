@@ -124,6 +124,17 @@ class FloatViewAttribute(private val tag: String) {
             FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(value)
         }
 
+    /**
+     * You must set the proper screen orientation to float view.
+     * Otherwise, the float view may display at unexpected position on Android 12+.
+     */
+    var screenOrientation: Int
+        get() = FloatViewManager.getConfig(tag)?.screenOrientation ?: -1
+        set(value) {
+//            Log.e("LEO-float-view", "$tag screenOrientation rotation=$value")
+            FloatViewManager.getFloatViewImpl(tag)?.updateScreenOrientation(value)
+        }
+
     val floatViewWidth: Int = FloatViewManager.getFloatViewWidth(tag)
     val floatViewHeight: Int = FloatViewManager.getFloatViewHeight(tag)
     val floatViewSize: Size = Size(floatViewWidth, floatViewHeight)

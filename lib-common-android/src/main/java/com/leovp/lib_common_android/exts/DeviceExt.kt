@@ -424,3 +424,30 @@ val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS = mapOf(
     SCREEN_ORIENTATION_REVERSE_PORTRAIT to Surface.ROTATION_180,
     SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270
 )
+
+val Int.screenOrientationName: String
+    get() = when (this) {
+        SCREEN_ORIENTATION_PORTRAIT          -> "Portrait"
+        SCREEN_ORIENTATION_LANDSCAPE         -> "Landscape"
+        SCREEN_ORIENTATION_REVERSE_PORTRAIT  -> "Reverse Portrait"
+        SCREEN_ORIENTATION_REVERSE_LANDSCAPE -> "Reverse Landscape"
+        else                                 -> "Unknown"
+    }
+
+val Int.surfaceRotationLiteralName: String
+    get() = when (this) {
+        Surface.ROTATION_0   -> "ROTATION_0"
+        Surface.ROTATION_90  -> "ROTATION_90"
+        Surface.ROTATION_180 -> "ROTATION_180"
+        Surface.ROTATION_270 -> "ROTATION_270"
+        else                 -> "Unknown"
+    }
+
+val Int.surfaceRotationName: String
+    get() = when (this) {
+        Surface.ROTATION_0   -> "Portrait"
+        Surface.ROTATION_90  -> "Landscape"
+        Surface.ROTATION_180 -> "Reverse Portrait"
+        Surface.ROTATION_270 -> "Reverse Landscape"
+        else                 -> "Unknown"
+    }

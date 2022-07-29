@@ -126,7 +126,14 @@ class FloatViewAttribute(private val tag: String) {
 
     /**
      * You must set the proper screen orientation to float view.
-     * Otherwise, the float view may display at unexpected position on Android 12+.
+     * Otherwise, the float view may display at unexpected position on Android 12+
+     * when your app in background or the float view is just created after screen orientation changed.
+     *
+     * Available values:
+     * - Surface.ROTATION_0
+     * - Surface.ROTATION_90
+     * - Surface.ROTATION_180
+     * - Surface.ROTATION_270
      */
     var screenOrientation: Int
         get() = FloatViewManager.getConfig(tag)?.screenOrientation ?: -1

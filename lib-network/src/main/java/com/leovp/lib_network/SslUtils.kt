@@ -98,7 +98,7 @@ object SslUtils {
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->
-        requireNotNull(hostnames, { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" })
+        requireNotNull(hostnames) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
         hostnames!!.contains(hostname)
 //        else {
 //            val hv = HttpsURLConnection.getDefaultHostnameVerifier()

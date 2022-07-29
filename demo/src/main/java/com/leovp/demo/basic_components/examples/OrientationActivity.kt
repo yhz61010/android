@@ -62,26 +62,26 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
                 return
             }
             //            if (currentScreenOrientation == newOrientation) return
-            binding.tvSurfaceRotation.text = deviceSurfaceRotation.toString()
+            binding.tvSurfaceRotation.text = screenSurfaceRotation.toString()
 
             when {
                 isNormalPortrait(orientation)   -> {
-                    LogContext.log.w("Orientation=Portrait deviceSurfaceRotation=$deviceSurfaceRotation")
+                    LogContext.log.w("Orientation=Portrait deviceSurfaceRotation=$screenSurfaceRotation")
                     binding.tvDirection.text = "Portrait"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
                 isReversePortrait(orientation)  -> {
-                    LogContext.log.w("Orientation=ReversePortrait deviceSurfaceRotation=$deviceSurfaceRotation")
+                    LogContext.log.w("Orientation=ReversePortrait deviceSurfaceRotation=$screenSurfaceRotation")
                     binding.tvDirection.text = "ReversePortrait"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
                 }
                 isNormalLandscape(orientation)  -> {
-                    LogContext.log.w("Orientation=Landscape deviceSurfaceRotation=$deviceSurfaceRotation")
+                    LogContext.log.w("Orientation=Landscape deviceSurfaceRotation=$screenSurfaceRotation")
                     binding.tvDirection.text = "Landscape"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
                 isReverseLandscape(orientation) -> {
-                    LogContext.log.w("Orientation=ReverseLandscape deviceSurfaceRotation=$deviceSurfaceRotation")
+                    LogContext.log.w("Orientation=ReverseLandscape deviceSurfaceRotation=$screenSurfaceRotation")
                     binding.tvDirection.text = "ReverseLandscape"
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
                 }

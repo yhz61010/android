@@ -32,7 +32,10 @@ import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.base.BaseCameraXFragment
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.listeners.CaptureImageListener
-import com.leovp.camerax_sdk.utils.*
+import com.leovp.camerax_sdk.utils.OrientationLiveData
+import com.leovp.camerax_sdk.utils.cameraSensorOrientation
+import com.leovp.camerax_sdk.utils.getCameraSupportedSize
+import com.leovp.camerax_sdk.utils.toggleButton
 import com.leovp.lib_common_android.exts.*
 import com.leovp.lib_common_kotlin.exts.round
 import com.leovp.log_sdk.LogContext
@@ -263,7 +266,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         LogContext.log.w(logTag,
             "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] | targetSize=$targetSize[${
                 getRatio(targetSize)
-            }] | deviceOrientation=${SURFACE_ORIENTATIONS_TO_DEGREE[deviceRotation]} | cameraOrientation=$cameraOrientation")
+            }] | deviceOrientation=${SURFACE_ROTATION_TO_DEGREE[deviceRotation]} | cameraOrientation=$cameraOrientation")
 
         //        characteristics.getCameraSupportedSizeMap().forEach { (ratio, sizeList) ->
         //            LogContext.log.w(logTag, "$ratio -> ${
@@ -758,7 +761,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner) { cameraRotation ->
                 LogContext.log.i(logTag,
-                    "$cameraName cameraSensorOrientation changed to: $cameraRotation-${DEGREE_TO_SURFACE_ORIENTATIONS[cameraRotation]}")
+                    "$cameraName cameraSensorOrientation changed to: $cameraRotation-${DEGREE_TO_SURFACE_ROTATION[cameraRotation]}")
                 cameraRotationInDegree = cameraRotation
                 // deviceOrientationListener?.invoke(cameraRotation)
 

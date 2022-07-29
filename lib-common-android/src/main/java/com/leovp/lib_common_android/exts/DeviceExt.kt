@@ -375,6 +375,7 @@ fun isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
 
 /**
  * @return The result is one of the following value:
+ *
  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -393,14 +394,33 @@ fun getScreenOrientation(@IntRange(from = 0, to = 359) degree: Int,
 }
 
 /**
- * @return The result is one of the following value:
+ * @return Return the screen rotation(**NOT** device rotation).
+ *         The result is one of the following value:
+ *
  * - Surface.ROTATION_0
  * - Surface.ROTATION_90
  * - Surface.ROTATION_180
  * - Surface.ROTATION_270
  */
-@Suppress("DEPRECATION")
-val Context.deviceSurfaceRotation: Int
+val Context.screenSurfaceRotation: Int
+    @Suppress("DEPRECATION")
     get() =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
 // =================
+
+val SURFACE_ROTATION_TO_DEGREE = mapOf(Surface.ROTATION_0 to 0,
+    Surface.ROTATION_90 to 90,
+    Surface.ROTATION_180 to 180,
+    Surface.ROTATION_270 to 270)
+
+val DEGREE_TO_SURFACE_ROTATION = mapOf(0 to Surface.ROTATION_0,
+    90 to Surface.ROTATION_90,
+    180 to Surface.ROTATION_180,
+    270 to Surface.ROTATION_270)
+
+val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS = mapOf(
+    SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
+    SCREEN_ORIENTATION_LANDSCAPE to Surface.ROTATION_90,
+    SCREEN_ORIENTATION_REVERSE_PORTRAIT to Surface.ROTATION_180,
+    SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270
+)

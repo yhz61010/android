@@ -167,7 +167,8 @@ private fun showToast(ctx: Context?,
                     val vw =
                             if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
                     x = (ctx.getScreenWidth(currentScreenOrientation) - vw) / 2
-                    y = ctx.getScreenAvailableHeight(currentScreenOrientation) - 96.px
+                    y = ctx.getScreenAvailableHeight(currentScreenOrientation) -
+                            if (isPortrait(currentScreenOrientation)) 60.px else 88.px // 128 / 104
                     screenOrientation = currentScreenOrientation
                 }
                 .show()

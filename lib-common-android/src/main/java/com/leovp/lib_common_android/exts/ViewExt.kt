@@ -25,22 +25,10 @@ const val ANIMATION_SLOW_MILLIS = 100L
 
 val Context.layoutInflater: LayoutInflater get() = LayoutInflater.from(this)
 
-var View.topMargin: Int
-    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).topMargin
+var View.startMargin: Int
+    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).marginStart
     set(value) {
-        updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin = value }
-    }
-
-var View.topPadding: Int
-    get() = paddingTop
-    set(value) {
-        updateLayoutParams { setPaddingRelative(paddingStart, value, paddingEnd, paddingBottom) }
-    }
-
-var View.bottomMargin: Int
-    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
-    set(value) {
-        updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = value }
+        updateLayoutParams<ViewGroup.MarginLayoutParams> { marginStart = value }
     }
 
 var View.endMargin: Int
@@ -49,16 +37,40 @@ var View.endMargin: Int
         updateLayoutParams<ViewGroup.MarginLayoutParams> { marginEnd = value }
     }
 
-var View.startMargin: Int
-    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).marginStart
+var View.topMargin: Int
+    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).topMargin
     set(value) {
-        updateLayoutParams<ViewGroup.MarginLayoutParams> { marginStart = value }
+        updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin = value }
+    }
+
+var View.bottomMargin: Int
+    get() = (this.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+    set(value) {
+        updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = value }
     }
 
 var View.startPadding: Int
     get() = paddingStart
     set(value) {
         updateLayoutParams { setPaddingRelative(value, paddingTop, paddingEnd, paddingBottom) }
+    }
+
+var View.endPadding: Int
+    get() = paddingEnd
+    set(value) {
+        updateLayoutParams { setPaddingRelative(paddingStart, paddingTop, value, paddingBottom) }
+    }
+
+var View.topPadding: Int
+    get() = paddingTop
+    set(value) {
+        updateLayoutParams { setPaddingRelative(paddingStart, value, paddingEnd, paddingBottom) }
+    }
+
+var View.bottomPadding: Int
+    get() = paddingBottom
+    set(value) {
+        updateLayoutParams { setPaddingRelative(paddingStart, paddingTop, paddingEnd, value) }
     }
 
 // -------------------

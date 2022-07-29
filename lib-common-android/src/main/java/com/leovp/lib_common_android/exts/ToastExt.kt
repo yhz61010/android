@@ -148,7 +148,9 @@ private fun showToast(ctx: Context?,
             //            Toast.makeText(ctx, message, duration).show()
             //        }
             mainHandler.removeCallbacksAndMessages(null)
+            //            Log.e("LEO-float-view", "ctx.screenSurfaceRotation=${ctx.screenSurfaceRotation} ctx.screenWidth=${ctx.screenWidth}")
             FloatView.with(FLOAT_VIEW_TAG).remove(true)
+            val currentScreenOrientation = ctx.screenSurfaceRotation
             FloatView.with(ctx)
                 .layout(R.layout.toast_layout) { v ->
                     decorateToast(ctx, v, message, bgColor, error)
@@ -162,9 +164,11 @@ private fun showToast(ctx: Context?,
                     val toastMargin =
                             ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
                     val toastWidthThreshold = toastMaxWidth + toastMargin
-                    val vw = if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
-                    x = (ctx.screenWidth - vw) / 2
-                    y = ctx.screenAvailableHeight - 96.px
+                    val vw =
+                            if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
+                    x = (ctx.getScreenWidth(currentScreenOrientation) - vw) / 2
+                    y = ctx.getScreenAvailableHeight(currentScreenOrientation) - 96.px
+                    screenOrientation = currentScreenOrientation
                 }
                 .show()
             mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() },

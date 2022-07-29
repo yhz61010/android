@@ -119,7 +119,7 @@ val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
  * or Surface.ROTATION_270.
  *
  * @return The screen width in current screen orientation. If parameter `surfaceRotation`
- *         is not a valid value, `-1` will be returned.
+ *         is not a valid value, return available height according to the context.
  */
 fun Context.getScreenWidth(surfaceRotation: Int): Int {
     return when (surfaceRotation) {
@@ -127,7 +127,7 @@ fun Context.getScreenWidth(surfaceRotation: Int): Int {
         Surface.ROTATION_180 -> min(screenWidth, screenRealHeight)
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> max(screenWidth, screenRealHeight)
-        else                 -> -1
+        else                 -> screenWidth
     }
 }
 
@@ -140,7 +140,7 @@ fun Context.getScreenWidth(surfaceRotation: Int): Int {
  * or Surface.ROTATION_270.
  *
  * @return The screen height in current screen orientation. If parameter `surfaceRotation`
- *         is not a valid value, `-1` will be returned.
+ *         is not a valid value, return available height according to the context.
  */
 fun Context.getScreenHeight(surfaceRotation: Int): Int {
     return when (surfaceRotation) {
@@ -148,7 +148,7 @@ fun Context.getScreenHeight(surfaceRotation: Int): Int {
         Surface.ROTATION_180 -> max(screenWidth, screenRealHeight)
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> min(screenWidth, screenRealHeight)
-        else                 -> -1
+        else                 -> screenRealHeight
     }
 }
 
@@ -161,7 +161,7 @@ fun Context.getScreenHeight(surfaceRotation: Int): Int {
  * or Surface.ROTATION_270.
  *
  * @return The available screen height in current screen orientation. If parameter `surfaceRotation`
- *         is not a valid value, `-1` will be returned.
+ *         is not a valid value, return available height according to the context.
  */
 fun Context.getScreenAvailableHeight(surfaceRotation: Int): Int {
     return when (surfaceRotation) {
@@ -169,7 +169,7 @@ fun Context.getScreenAvailableHeight(surfaceRotation: Int): Int {
         Surface.ROTATION_180 -> max(screenWidth, screenAvailableHeight)
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> min(screenWidth, screenAvailableHeight)
-        else                 -> -1
+        else                 -> screenAvailableHeight
     }
 }
 

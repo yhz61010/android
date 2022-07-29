@@ -79,22 +79,19 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             when {
                 isNormalPortrait(orientation)   -> {
-                    LogContext.log.w("Orientation=Portrait deviceSurfaceRotation=$screenSurfaceRotation")
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
                 isReversePortrait(orientation)  -> {
-                    LogContext.log.w("Orientation=ReversePortrait deviceSurfaceRotation=$screenSurfaceRotation")
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
                 }
                 isNormalLandscape(orientation)  -> {
-                    LogContext.log.w("Orientation=Landscape deviceSurfaceRotation=$screenSurfaceRotation")
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
                 isReverseLandscape(orientation) -> {
-                    LogContext.log.w("Orientation=ReverseLandscape deviceSurfaceRotation=$screenSurfaceRotation")
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
                 }
             }
+            LogContext.log.w("Screen Orientation=${currentScreenOrientation.screenOrientationName} deviceSurfaceRotation=$screenSurfaceRotation")
             binding.tvDeviceOrientation.text = currentScreenOrientation.screenOrientationName
         }
     }

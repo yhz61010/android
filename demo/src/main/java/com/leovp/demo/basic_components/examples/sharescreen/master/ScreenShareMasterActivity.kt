@@ -29,7 +29,6 @@ import com.leovp.floatview_sdk.FloatView
 import com.leovp.lib_bytes.asByteAndForceToBytes
 import com.leovp.lib_bytes.toBytesLE
 import com.leovp.lib_common_android.exts.*
-import com.leovp.lib_common_android.utils.API
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.lib_common_kotlin.exts.exception
 import com.leovp.lib_json.toJsonString
@@ -191,9 +190,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
             @SuppressLint("NewApi")
             override fun run() {
                 runCatching {
-                    @Suppress("DEPRECATION")
-                    val currentScreenRotation =
-                            if (API.ABOVE_R) display!!.rotation else windowManager.defaultDisplay.rotation
+                    val currentScreenRotation = screenSurfaceRotation
                     //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation

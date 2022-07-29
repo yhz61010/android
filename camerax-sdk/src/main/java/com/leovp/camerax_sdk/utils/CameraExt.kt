@@ -52,11 +52,16 @@ internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
 internal fun CameraCharacteristics.cameraSensorOrientation(): Int =
         get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
-internal fun Context.getDeviceRotation(): Int {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        display?.rotation ?: -1
-    } else {
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.rotation
-    }
-}
+/**
+ * @return Return the screen rotation(**NOT** device rotation).
+ *         The result is one of the following value:
+ *
+ * - Surface.ROTATION_0
+ * - Surface.ROTATION_90
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270
+ */
+internal val Context.screenSurfaceRotation: Int
+    @Suppress("DEPRECATION")
+    get() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation

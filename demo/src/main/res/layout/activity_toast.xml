@@ -1,94 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".basic_components.examples.ToastActivity">
 
-    <Button
-        android:id="@+id/btnAndroidToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onAndroidToastClick"
-        android:text="Android Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="UsingOnClickInXml" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btnAndroidToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="onAndroidToastClick"
+            android:text="Android Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="UsingOnClickInXml" />
 
 
-    <Button
-        android:id="@+id/btnNormalToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onNormalToastClick"
-        android:text="Normal Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnAndroidToast"
-        app:layout_constraintTop_toBottomOf="@+id/btnAndroidToast"
-        tools:ignore="UsingOnClickInXml" />
+        <Button
+            android:id="@+id/btnNormalToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onNormalToastClick"
+            android:text="Normal Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnAndroidToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnAndroidToast"
+            tools:ignore="UsingOnClickInXml" />
 
-    <Button
-        android:id="@+id/btnErrorToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onErrorToastClick"
-        android:text="Error Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnNormalToast"
-        app:layout_constraintTop_toBottomOf="@+id/btnNormalToast"
-        tools:ignore="UsingOnClickInXml" />
+        <Button
+            android:id="@+id/btnErrorToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onErrorToastClick"
+            android:text="Error Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnNormalToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnNormalToast"
+            tools:ignore="UsingOnClickInXml" />
 
-    <Button
-        android:id="@+id/btnCustomErrorColorToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onCustomErrorColorToastClick"
-        android:text="Custom Error and Color Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnErrorToast"
-        app:layout_constraintTop_toBottomOf="@+id/btnErrorToast"
-        tools:ignore="UsingOnClickInXml" />
+        <Button
+            android:id="@+id/btnCustomErrorColorToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomErrorColorToastClick"
+            android:text="Custom Error and Color Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnErrorToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnErrorToast"
+            tools:ignore="UsingOnClickInXml" />
 
-    <Button
-        android:id="@+id/btnCancelToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onCancelToastClick"
-        android:text="Cancel Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
-        app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
-        tools:ignore="OnClick,UsingOnClickInXml" />
+        <Button
+            android:id="@+id/btnCancelToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCancelToastClick"
+            android:text="Cancel Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
+            app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
+            tools:ignore="OnClick,UsingOnClickInXml" />
 
-    <Button
-        android:id="@+id/btnCustomColor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onCustomToastClick"
-        android:text="Custom Color Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnCustomErrorColorToast"
-        app:layout_constraintTop_toBottomOf="@+id/btnCustomErrorColorToast"
-        tools:ignore="UsingOnClickInXml" />
+        <Button
+            android:id="@+id/btnCustomColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomToastClick"
+            android:text="Custom Color Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomErrorColorToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomErrorColorToast"
+            tools:ignore="UsingOnClickInXml" />
 
-    <Button
-        android:id="@+id/btnDebugToast"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onDebugToastClick"
-        android:text="Debug Toast"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
-        app:layout_constraintTop_toBottomOf="@+id/btnCustomColor"
-        tools:ignore="UsingOnClickInXml" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/btnDebugToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onDebugToastClick"
+            android:text="Debug Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomColor"
+            tools:ignore="UsingOnClickInXml" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

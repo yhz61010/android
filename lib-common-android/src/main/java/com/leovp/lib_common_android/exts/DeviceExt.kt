@@ -110,6 +110,69 @@ val Context.screenRealHeight: Int get() = screenRealResolution.height
  */
 val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 
+/**
+ * @param surfaceRotation The value may be:
+ *
+ * Surface.ROTATION_0 (no rotation),
+ * Surface.ROTATION_90,
+ * Surface.ROTATION_180,
+ * or Surface.ROTATION_270.
+ *
+ * @return The screen width in current screen orientation. If parameter `surfaceRotation`
+ *         is not a valid value, `-1` will be returned.
+ */
+fun Context.getScreenWidth(surfaceRotation: Int): Int {
+    return when (surfaceRotation) {
+        Surface.ROTATION_0,
+        Surface.ROTATION_180 -> min(screenWidth, screenRealHeight)
+        Surface.ROTATION_90,
+        Surface.ROTATION_270 -> max(screenWidth, screenRealHeight)
+        else                 -> -1
+    }
+}
+
+/**
+ * @param surfaceRotation The value may be:
+ *
+ * Surface.ROTATION_0 (no rotation),
+ * Surface.ROTATION_90,
+ * Surface.ROTATION_180,
+ * or Surface.ROTATION_270.
+ *
+ * @return The screen height in current screen orientation. If parameter `surfaceRotation`
+ *         is not a valid value, `-1` will be returned.
+ */
+fun Context.getScreenHeight(surfaceRotation: Int): Int {
+    return when (surfaceRotation) {
+        Surface.ROTATION_0,
+        Surface.ROTATION_180 -> max(screenWidth, screenRealHeight)
+        Surface.ROTATION_90,
+        Surface.ROTATION_270 -> min(screenWidth, screenRealHeight)
+        else                 -> -1
+    }
+}
+
+/**
+ * @param surfaceRotation The value may be:
+ *
+ * Surface.ROTATION_0 (no rotation),
+ * Surface.ROTATION_90,
+ * Surface.ROTATION_180,
+ * or Surface.ROTATION_270.
+ *
+ * @return The available screen height in current screen orientation. If parameter `surfaceRotation`
+ *         is not a valid value, `-1` will be returned.
+ */
+fun Context.getScreenAvailableHeight(surfaceRotation: Int): Int {
+    return when (surfaceRotation) {
+        Surface.ROTATION_0,
+        Surface.ROTATION_180 -> max(screenWidth, screenAvailableHeight)
+        Surface.ROTATION_90,
+        Surface.ROTATION_270 -> min(screenWidth, screenAvailableHeight)
+        else                 -> -1
+    }
+}
+
 val Context.statusBarHeight
     @SuppressLint("DiscouragedApi") get() : Int {
         var result = 0

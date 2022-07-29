@@ -128,7 +128,7 @@ internal fun getSpecificPreviewOutputSize(context: Context,
     // Generally, if the device is in portrait(Surface.ROTATION_0),
     // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
     // Example: deviceRotation: 0
-    val deviceRotation = context.getDeviceRotation()
+    val deviceRotation = context.screenSurfaceRotation
     // Example: cameraSensorOrientation: 90
     val cameraSensorOrientation = characteristics.cameraSensorOrientation()
     var swapDimension = false

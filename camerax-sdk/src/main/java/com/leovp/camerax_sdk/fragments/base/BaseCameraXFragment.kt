@@ -785,7 +785,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
                     val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
-         deviceRotation=${requireContext().getDeviceRotation()}
+         deviceRotation=${requireContext().screenSurfaceRotation}
 cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
        isFlashSupported=$isFlashSupported
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]

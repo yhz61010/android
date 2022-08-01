@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.IRotationWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
@@ -19,24 +20,19 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.leovp.floatview_sdk.FloatView
+import com.leovp.floatview_sdk.utils.getScreenSize
 import com.leovp.lib_common_android.R
 import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.API
+import com.leovp.lib_common_kotlin.exts.fail
+import com.leovp.lib_common_kotlin.utils.SingletonHolder
+import com.leovp.lib_reflection.wrappers.ServiceManager
 
 
 /**
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:52
  */
-
-/**
- * This method must be called for Android R(Android 11) or above.
- * Otherwise, the custom toast doesn't work when app in background.
- */
-@RequiresApi(API.R)
-fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
-    ForegroundComponent.init(app, delay)
-}
 
 data class ToastConfig(
     /**
@@ -55,7 +51,75 @@ data class ToastConfig(
     var toastIconSize: Int = 24.px,
 )
 
-val toastConfig = ToastConfig()
+/**
+ * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
+ *
+ * ```
+ * LeoToast.getInstance(ctx).apply {
+ *      config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+ *      initForegroundComponentForToast(application)
+ * }
+ * ```
+ *
+ * Don't forget to call `removeToastRotationWatcher()` when you don't need custom toast anymore.
+ * ```
+ * LeoToast.getInstance(this).removeToastRotationWatcher()
+ * ```
+ */
+class LeoToast private constructor(private val ctx: Context) {
+    companion object : SingletonHolder<LeoToast, Context>(::LeoToast)
+
+    var config: ToastConfig? = null
+
+    private val toastRotationWatcher = object : IRotationWatcher.Stub() {
+        override fun onRotationChanged(rotation: Int) {
+            if (FloatView.with(FLOAT_VIEW_TAG).exist()
+                && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()
+            ) {
+                mainHandler.post {
+                    FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
+                    val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
+                    val toastMaxWidth =
+                            ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
+                    val toastMargin =
+                            ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
+                    val toastWidthThreshold = toastMaxWidth + toastMargin
+                    val scrAvailSz = ctx.getScreenSize(rotation,
+                        ctx.screenAvailableResolution)
+                    val vw =
+                            if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
+                    val x = (scrAvailSz.width - vw) / 2
+                    val y =
+                            scrAvailSz.height - if (isPortrait(rotation)) 60.px else 88.px // 128 / 104
+                    //                Log.e("LEO-float-view",
+                    //                    "toast onRotationChanged rotation=$rotation scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$viewWidth x=$x y=$y")
+                    FloatView.with(FLOAT_VIEW_TAG).setPosition(x, y)
+                }
+            }
+        }
+    }
+
+    /**
+     * This method must be called for Android R(Android 11) or above.
+     * Otherwise, the custom toast doesn't work when app in background.
+     */
+    @RequiresApi(API.R)
+    fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
+        ForegroundComponent.init(app, delay)
+    }
+
+    private fun registerToastRotationWatcher() {
+        ServiceManager.windowManager?.registerRotationWatcher(toastRotationWatcher)
+    }
+
+    fun removeToastRotationWatcher() {
+        ServiceManager.windowManager?.removeRotationWatcher(toastRotationWatcher)
+    }
+
+    init {
+        registerToastRotationWatcher()
+    }
+}
 
 private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -122,10 +186,14 @@ private fun showToast(ctx: Context?,
     debug: Boolean,
     bgColor: String?,
     error: Boolean) {
-    if ((debug && !toastConfig.buildConfigInDebug) || ctx == null) {
+    if (ctx == null) return
+    val toastCfg = LeoToast.getInstance(ctx).config ?: fail("Toast config can't be null.")
+
+    if ((debug && !toastCfg.buildConfigInDebug)) {
         // Debug log only be shown in DEBUG flavor
         return
     }
+
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
     when {
@@ -164,10 +232,13 @@ private fun showToast(ctx: Context?,
                     val toastMargin =
                             ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
                     val toastWidthThreshold = toastMaxWidth + toastMargin
+                    val scrAvailSz = ctx.getScreenSize(currentScreenOrientation,
+                        ctx.screenAvailableResolution)
+                    //                    Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz")
                     val vw =
                             if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
-                    x = (ctx.getScreenWidth(currentScreenOrientation) - vw) / 2
-                    y = ctx.getScreenAvailableHeight(currentScreenOrientation) -
+                    x = (scrAvailSz.width - vw) / 2
+                    y = scrAvailSz.height -
                             if (isPortrait(currentScreenOrientation)) 60.px else 88.px // 128 / 104
                     screenOrientation = currentScreenOrientation
                 }
@@ -204,10 +275,11 @@ fun cancelToast() {
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {
-    toastConfig.toastIcon?.let { iconRes ->
+    val toastCfg = LeoToast.getInstance(ctx).config ?: fail("Toast config can't be null.")
+    toastCfg.toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
-        iconDrawable?.setBounds(0, 0, toastConfig.toastIconSize, toastConfig.toastIconSize)
+        iconDrawable?.setBounds(0, 0, toastCfg.toastIconSize, toastCfg.toastIconSize)
         tv.compoundDrawablePadding = 8.px
         tv.setCompoundDrawables(iconDrawable, null, null, null)
     }

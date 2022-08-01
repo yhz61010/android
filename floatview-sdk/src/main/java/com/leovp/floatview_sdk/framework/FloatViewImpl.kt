@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
+import android.util.Size
 import android.view.*
 import androidx.annotation.IdRes
 import androidx.core.animation.doOnCancel
@@ -15,8 +16,9 @@ import androidx.core.view.children
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import com.leovp.floatview_sdk.entities.DockEdge
 import com.leovp.floatview_sdk.entities.StickyEdge
-import com.leovp.floatview_sdk.utils.getScreenHeight
-import com.leovp.floatview_sdk.utils.getScreenWidth
+import com.leovp.floatview_sdk.utils.getScreenSize
+import com.leovp.floatview_sdk.utils.screenRealResolution
+import com.leovp.floatview_sdk.utils.screenSurfaceRotation
 import com.leovp.floatview_sdk.utils.statusBarHeight
 import com.leovp.lib_reflection.wrappers.ServiceManager
 import kotlin.math.abs
@@ -43,17 +45,25 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private var isClickGesture = true
 
-    private var lastScreenOrientation = config.screenOrientation
     private val rotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            //            Log.e("LEO-float-view", "onRotationChanged rotation=$rotation")
-            if (rotation != lastScreenOrientation) updateScreenOrientation(rotation)
+            //            Log.e("LEO-float-view",
+            //                "tag=${config.tag} onRotationChanged rotation=$rotation lastScreenOrientation=$lastScrOri config.screenOrientation=${config.screenOrientation}")
+            if (rotation != lastScrOri) updateScreenOrientation(rotation)
         }
     }
 
-    private var curScreenOrientationWidth = context.getScreenWidth(lastScreenOrientation)
-    private var curScreenOrientationHeight =
-            context.getScreenHeight(lastScreenOrientation) - getDrawHeightOffset()
+    private fun getScreenOrientationSize(orientation: Int): Size {
+        val curScreenOrientationSize =
+                context.getScreenSize(orientation, context.screenRealResolution)
+        //        Log.e("LEO-float-view", "getScreenOrientationSize()=$sz")
+        return Size(curScreenOrientationSize.width,
+            curScreenOrientationSize.height - getDrawHeightOffset())
+    }
+
+    private var lastScrOri = context.screenSurfaceRotation.takeIf { config.screenOrientation == -1 }
+        ?: config.screenOrientation
+    private var scrOriSz: Size = getScreenOrientationSize(lastScrOri)
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
@@ -186,22 +196,22 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     getFloatViewBottomMaxMargin()
                 )
                 DockEdge.LEFT_RIGHT -> {
-                    if (floatViewCenterX <= curScreenOrientationWidth / 2) {
+                    if (floatViewCenterX <= scrOriSz.width / 2) {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                     }
                 }
                 DockEdge.TOP_BOTTOM -> {
-                    if (floatViewCenterY <= curScreenOrientationHeight / 2) {
+                    if (floatViewCenterY <= scrOriSz.height / 2) {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                     } else {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
                 DockEdge.FULL       -> {
-                    if (floatViewCenterX <= curScreenOrientationWidth / 2) { // On left screen
-                        if (floatViewCenterY <= curScreenOrientationHeight / 2) { // On top screen // Top left
+                    if (floatViewCenterX <= scrOriSz.width / 2) { // On left screen
+                        if (floatViewCenterY <= scrOriSz.height / 2) { // On top screen // Top left
                             if (left <= top - getDrawHeightOffset()) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(
@@ -220,7 +230,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                 )
                             }
                         } else { // On bottom screen // Bottom left
-                            if (left <= curScreenOrientationHeight - getFloatViewBottomLeftPos().y) { // Animate to left
+                            if (left <= scrOriSz.height - getFloatViewBottomLeftPos().y) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(
                                     v,
@@ -239,8 +249,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                             }
                         }
                     } else { // On right screen
-                        if (floatViewCenterY <= curScreenOrientationHeight / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - getDrawHeightOffset() <= curScreenOrientationWidth - getFloatViewTopRightPos().x) { // Animate to top
+                        if (floatViewCenterY <= scrOriSz.height / 2) { // On top screen // Top right
+                            if (getFloatViewTopRightPos().y - getDrawHeightOffset() <= scrOriSz.width - getFloatViewTopRightPos().x) { // Animate to top
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(
                                     v,
@@ -258,7 +268,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                 )
                             }
                         } else { // On bottom screen // Bottom right
-                            if (curScreenOrientationHeight - getFloatViewBottomRightPos().y <= curScreenOrientationWidth - getFloatViewBottomRightPos().x) { // Animate to bottom
+                            if (scrOriSz.height - getFloatViewBottomRightPos().y <= scrOriSz.width - getFloatViewBottomRightPos().x) { // Animate to bottom
                                 animateDirectionForDockFull = DockEdge.BOTTOM
                                 ObjectAnimator.ofInt(
                                     v,
@@ -324,6 +334,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     layoutParams.y = finalY
                     config.y = finalY
                 }
+                //                Log.e("LEO-float-view", "updateFloatViewPosition x=$x y=$y layoutParams=${layoutParams.x}x${layoutParams.y}")
                 windowManager.updateViewLayout(v, layoutParams)
             }.onFailure { e ->
                 e.printStackTrace()
@@ -360,10 +371,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun adjustPosX(x: Int, edgeMargin: Int): Int {
         if (x < edgeMargin || x <= 0) return edgeMargin
-        return if ((x + (config.customView?.width
-                ?: 0) + edgeMargin) >= curScreenOrientationWidth
-        )
-            curScreenOrientationWidth - (config.customView?.width ?: 0) - edgeMargin else x
+        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= scrOriSz.width)
+            scrOriSz.width - (config.customView?.width ?: 0) - edgeMargin else x
     }
 
     /**
@@ -374,20 +383,18 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         val drawHeightOffset = getDrawHeightOffset()
         if (y <= edgeMargin + drawHeightOffset)
             return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
-        return if ((y + (config.customView?.height
-                ?: 0) + edgeMargin) >= curScreenOrientationHeight
-        )
-            curScreenOrientationHeight - (config.customView?.height ?: 0) - edgeMargin
+        return if ((y + (config.customView?.height ?: 0) + edgeMargin) >= scrOriSz.height)
+            scrOriSz.height - (config.customView?.height ?: 0) - edgeMargin
         else y
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
     private fun getFloatViewRightMaxMargin(): Int =
-            curScreenOrientationWidth - (config.customView?.width ?: 0) - config.edgeMargin
+            scrOriSz.width - (config.customView?.width ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopMinMargin(): Int = getDrawHeightOffset() + config.edgeMargin
     private fun getFloatViewBottomMaxMargin(): Int =
-            curScreenOrientationHeight - (config.customView?.height
+            scrOriSz.height - (config.customView?.height
                 ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
@@ -473,16 +480,12 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     fun updateScreenOrientation(orientation: Int) {
-        lastScreenOrientation = orientation
+        lastScrOri = orientation
         config.screenOrientation = orientation
-        curScreenOrientationWidth = context.getScreenWidth(orientation)
-        curScreenOrientationHeight = context.getScreenHeight(orientation) - getDrawHeightOffset()
-        //        Log.e(
-        //            "LEO-float-view",
-        //            "${config.tag} updateScreenOrientation rotation=$orientation " +
-        //                    "lastScreenOrientation=$lastScreenOrientation " +
-        //                    "currentScreenOrientationWidth=$currentScreenOrientationWidth currentScreenOrientationHeight=$currentScreenOrientationHeight"
-        //        )
+        scrOriSz = getScreenOrientationSize(orientation)
+        updateAutoDock(config.dockEdge)
+        updateStickyEdge(config.stickyEdge)
+        //        Log.e("LEO-float-view", "lastScrOri=$lastScrOri config.screenOrientation=$orientation")
     }
 
     @Suppress("unused")

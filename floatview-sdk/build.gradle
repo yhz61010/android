@@ -37,7 +37,7 @@ android {
 
 dependencies {
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
-    implementation project(':lib-reflection')
+    api project(':lib-reflection')
 }
 
 afterEvaluate {

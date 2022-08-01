@@ -138,7 +138,7 @@ class FloatViewAttribute(private val tag: String) {
     var screenOrientation: Int
         get() = FloatViewManager.getConfig(tag)?.screenOrientation ?: -1
         set(value) {
-//            Log.e("LEO-float-view", "$tag screenOrientation rotation=$value")
+            //            Log.e("LEO-float-view", "$tag screenOrientation rotation=$value")
             FloatViewManager.getFloatViewImpl(tag)?.updateScreenOrientation(value)
         }
 

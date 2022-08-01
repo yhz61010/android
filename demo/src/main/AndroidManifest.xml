@@ -74,7 +74,8 @@
             android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.FloatViewActivity" />
         <activity android:name=".basic_components.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
-        <activity android:name=".basic_components.examples.ToastActivity" />
+        <activity android:name=".basic_components.examples.ToastActivity"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"/>
         <activity android:name=".basic_components.examples.ChangeAppLanguageActivity"
             android:configChanges="orientation|screenSize" />
         <activity android:name=".basic_components.examples.audio.ADPCMActivity" />

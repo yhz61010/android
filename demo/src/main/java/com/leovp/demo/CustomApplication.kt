@@ -5,8 +5,8 @@ import android.content.res.Configuration
 import android.util.Log
 import com.leovp.androidbase.framework.BaseApplication
 import com.leovp.demo.basic_components.examples.koin.*
-import com.leovp.lib_common_android.exts.initForegroundComponentForToast
-import com.leovp.lib_common_android.exts.toastConfig
+import com.leovp.lib_common_android.exts.LeoToast
+import com.leovp.lib_common_android.exts.ToastConfig
 import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.LangUtil
 import com.leovp.log_sdk.LLog
@@ -43,11 +43,10 @@ class CustomApplication : BaseApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        toastConfig.run {
-            buildConfigInDebug = BuildConfig.DEBUG
-            toastIcon = R.mipmap.ic_launcher_round
+        LeoToast.getInstance(this).apply {
+            config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+            initForegroundComponentForToast(this@CustomApplication)
         }
-        initForegroundComponentForToast(this)
 
         startKoin {
             //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)

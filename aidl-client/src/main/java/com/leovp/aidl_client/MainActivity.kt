@@ -10,6 +10,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.demo.basic_components.examples.aidl.ILocalLogService
 import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
+import com.leovp.lib_common_android.exts.LeoToast
 import com.leovp.lib_common_android.exts.toast
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
@@ -36,6 +37,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         bindService(serviceConnection)
+    }
+
+    override fun onDestroy() {
+        LeoToast.getInstance(this).removeToastRotationWatcher()
+        super.onDestroy()
     }
 
     private fun bindService(serviceConnection: ServiceConnection) {

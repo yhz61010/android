@@ -67,10 +67,6 @@ internal val Context.screenRealResolution: Size
         }
     }
 
-internal val Context.screenWidth: Int get() = screenRealResolution.width
-
-internal val Context.screenRealHeight: Int get() = screenRealResolution.height
-
 ///**
 // * This height includes the height of status bar but excludes the height of navigation bar.
 // */
@@ -84,60 +80,36 @@ internal val Context.screenRealHeight: Int get() = screenRealResolution.height
  * Surface.ROTATION_180,
  * or Surface.ROTATION_270.
  *
- * @return The screen width in current screen orientation. If parameter `surfaceRotation`
+ * @return The screen size in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
  */
-internal fun Context.getScreenWidth(surfaceRotation: Int): Int {
+fun Context.getScreenSize(surfaceRotation: Int, screenSize: Size = screenRealResolution): Size {
     return when (surfaceRotation) {
         Surface.ROTATION_0,
-        Surface.ROTATION_180 -> min(screenWidth, screenRealHeight)
+        Surface.ROTATION_180 -> Size(min(screenSize.width, screenSize.height),
+            max(screenSize.width, screenSize.height))
         Surface.ROTATION_90,
-        Surface.ROTATION_270 -> max(screenWidth, screenRealHeight)
-        else                 -> screenWidth
+        Surface.ROTATION_270 -> Size(max(screenSize.width, screenSize.height),
+            min(screenSize.width, screenSize.height))
+        else                 -> Size(min(screenSize.width, screenSize.height),
+            max(screenSize.width, screenSize.height))
     }
 }
 
 /**
- * @param surfaceRotation The value may be:
+ * @return Return the screen rotation(**NOT** device rotation).
+ *         The result is one of the following value:
  *
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
- *
- * @return The screen height in current screen orientation. If parameter `surfaceRotation`
- *         is not a valid value, return available height according to the context.
+ * - Surface.ROTATION_0
+ * - Surface.ROTATION_90
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270
  */
-internal fun Context.getScreenHeight(surfaceRotation: Int): Int {
-    return when (surfaceRotation) {
-        Surface.ROTATION_0,
-        Surface.ROTATION_180 -> max(screenWidth, screenRealHeight)
-        Surface.ROTATION_90,
-        Surface.ROTATION_270 -> min(screenWidth, screenRealHeight)
-        else                 -> screenRealHeight
-    }
-}
-
-///**
-// * @param surfaceRotation The value may be:
-// *
-// * Surface.ROTATION_0 (no rotation),
-// * Surface.ROTATION_90,
-// * Surface.ROTATION_180,
-// * or Surface.ROTATION_270.
-// *
-// * @return The available screen height in current screen orientation. If parameter `surfaceRotation`
-// *         is not a valid value, return available height according to the context.
-// */
-//internal fun Context.getScreenAvailableHeight(surfaceRotation: Int): Int {
-//    return when (surfaceRotation) {
-//        Surface.ROTATION_0,
-//        Surface.ROTATION_180 -> max(screenWidth, screenAvailableHeight)
-//        Surface.ROTATION_90,
-//        Surface.ROTATION_270 -> min(screenWidth, screenAvailableHeight)
-//        else                 -> screenAvailableHeight
-//    }
-//}
+internal val Context.screenSurfaceRotation: Int
+    @Suppress("DEPRECATION")
+    get() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else (getSystemService(
+            Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
 
 internal val Context.statusBarHeight
     @SuppressLint("DiscouragedApi")

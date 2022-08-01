@@ -394,8 +394,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun getFloatViewTopMinMargin(): Int = getDrawHeightOffset() + config.edgeMargin
     private fun getFloatViewBottomMaxMargin(): Int =
-            scrOriSz.height - (config.customView?.height
-                ?: 0) - config.edgeMargin
+            scrOriSz.height - (config.customView?.height ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
     private fun getFloatViewTopRightPos(): Point =
@@ -405,10 +404,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
 
     private fun getFloatViewBottomRightPos(): Point =
-            Point(
-                layoutParams.x + (config.customView?.width ?: 0),
-                layoutParams.y + (config.customView?.height ?: 0)
-            )
+            Point(layoutParams.x + (config.customView?.width ?: 0),
+                layoutParams.y + (config.customView?.height ?: 0))
 
     private fun getDrawHeightOffset() = if (config.immersiveMode) 0 else context.statusBarHeight
 

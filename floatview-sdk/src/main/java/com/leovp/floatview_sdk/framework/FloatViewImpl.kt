@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Size
 import android.view.*
 import androidx.annotation.IdRes
+import androidx.annotation.MainThread
 import androidx.core.animation.doOnCancel
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -49,7 +50,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         override fun onRotationChanged(rotation: Int) {
             //            Log.e("LEO-float-view",
             //                "tag=${config.tag} onRotationChanged rotation=$rotation lastScreenOrientation=$lastScrOri config.screenOrientation=${config.screenOrientation}")
-            if (rotation != lastScrOri) updateScreenOrientation(rotation)
+            if (rotation != lastScrOri) {
+                config.customView?.post { updateScreenOrientation(rotation) }
+            }
         }
     }
 
@@ -462,20 +465,25 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }
     }
 
+    @MainThread
     fun updateAutoDock(dockEdge: DockEdge) {
         config.dockEdge = dockEdge
         val floatViewTopLeft = getFloatViewTopLeftPos()
         startDockAnim(floatViewTopLeft.x, floatViewTopLeft.y, dockEdge)
     }
 
+    @MainThread
     fun updateStickyEdge(stickyEdge: StickyEdge) {
         config.stickyEdge = stickyEdge
         updateLayoutForSticky(0, 0)
         runCatching {
-            windowManager.updateViewLayout(config.customView, layoutParams)
+            if (config.customView?.windowToken != null) {
+                windowManager.updateViewLayout(config.customView, layoutParams)
+            }
         }.onFailure { e -> e.printStackTrace() }
     }
 
+    @MainThread
     fun updateScreenOrientation(orientation: Int) {
         lastScrOri = orientation
         config.screenOrientation = orientation

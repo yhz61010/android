@@ -6,6 +6,7 @@ import android.graphics.Point
 import android.util.Size
 import android.view.View
 import androidx.annotation.Keep
+import androidx.annotation.MainThread
 import com.leovp.floatview_sdk.framework.FloatViewManager
 
 /**
@@ -137,7 +138,7 @@ class FloatViewAttribute(private val tag: String) {
      */
     var screenOrientation: Int
         get() = FloatViewManager.getConfig(tag)?.screenOrientation ?: -1
-        set(value) {
+        @MainThread set(value) {
             //            Log.e("LEO-float-view", "$tag screenOrientation rotation=$value")
             FloatViewManager.getFloatViewImpl(tag)?.updateScreenOrientation(value)
         }

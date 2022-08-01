@@ -133,7 +133,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      * @param height 高度
      */
     fun setVideoDimension(width: Int, height: Int, screenWidth: Int, screenAvailableHeight: Int) {
-        LogContext.log.i(tag, "setVideoDimension width=$width x $width screen=$screenWidth x $screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.i(tag, "setVideoDimension width=${width}x$height screen=${screenWidth}x$screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
             pointCoord = createCustomFloatBuffer(width, height, keepRatio, screenWidth, screenAvailableHeight)

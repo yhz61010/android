@@ -84,8 +84,7 @@ class LeoToast private constructor(private val ctx: Context) {
                     val toastMargin =
                             ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
                     val toastWidthThreshold = toastMaxWidth + toastMargin
-                    val scrAvailSz = ctx.getScreenSize(rotation,
-                        ctx.screenAvailableResolution)
+                    val scrAvailSz = ctx.getScreenSize(rotation, ctx.screenAvailableResolution)
                     val vw =
                             if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
                     val x = (scrAvailSz.width - vw) / 2

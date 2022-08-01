@@ -4,6 +4,7 @@ package com.leovp.lib_common_android.exts
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Service
 import android.content.Context
 import android.content.pm.ActivityInfo.*
 import android.content.res.Configuration
@@ -13,6 +14,7 @@ import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Size
+import android.view.Display
 import android.view.OrientationEventListener
 import android.view.Surface
 import android.view.WindowInsets
@@ -470,8 +472,22 @@ fun getScreenOrientation(@IntRange(from = 0, to = 359) degree: Int,
  */
 val Context.screenSurfaceRotation: Int
     @Suppress("DEPRECATION")
-    get() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (this is Service) {
+            // On Android 11+, we can't get `display` directly from Service, it will cause
+            // the following exception:
+            // Tried to obtain display from a Context not associated with one.
+            // Only visual Contexts (such as Activity or one created with Context#createWindowContext)
+            // or ones created with Context#createDisplayContext are associated with displays.
+            // Other types of Contexts are typically related to background entities
+            // and may return an arbitrary display.
+            //
+            // So we need to get screen rotation from `DisplayManager`.
+            displayManager.getDisplay(Display.DEFAULT_DISPLAY).rotation
+        } else {
+            display!!.rotation
+        }
+    } else windowManager.defaultDisplay.rotation
 // =================
 
 val SURFACE_ROTATION_TO_DEGREE = mapOf(Surface.ROTATION_0 to 0,

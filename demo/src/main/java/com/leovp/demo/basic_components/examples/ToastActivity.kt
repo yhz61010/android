@@ -1,13 +1,17 @@
 package com.leovp.demo.basic_components.examples
 
+import android.app.Service
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.view.View
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.lib_common_android.exts.cancelToast
 import com.leovp.lib_common_android.exts.toast
+import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
 class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
@@ -19,6 +23,18 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
         Handler(Looper.getMainLooper()).postDelayed({
             toast("Custom toast in background test.", error = true)
         }, 2000)
+
+        startService(Intent(this, TestService::class.java))
+    }
+
+    class TestService : Service() {
+        override fun onBind(intent: Intent): IBinder? = null
+
+        override fun onCreate() {
+            super.onCreate()
+            LogContext.log.e(ITAG, "=====>>>>> TestService created <<<<<=====")
+            toast("TestService created.")
+        }
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityToastBinding {

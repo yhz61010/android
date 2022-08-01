@@ -164,6 +164,7 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
         <service android:name=".basic_components.examples.ChangeAppTestService" android:exported="false" />
+        <service android:name=".basic_components.examples.ToastActivity$TestService" android:exported="false" />
 
         <receiver android:name="com.leovp.androidbase.utils.system.KeepAlive$KeepAliveReceiver"
             android:enabled="true"

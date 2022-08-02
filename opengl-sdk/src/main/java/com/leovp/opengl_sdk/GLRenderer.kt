@@ -73,8 +73,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.d(tag, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 
-    private fun createCustomFloatBuffer(videoWidth: Int, videoHeight: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatBuffer {
-        return createFloatBuffer(createKeepRatioFloatArray(videoWidth, videoHeight, keepRatio, screenWidth, screenHeight))
+    private fun createCustomFloatBuffer(videoWidth: Int, videoHeight: Int, keepRatio: Boolean, renderWidth: Int, renderHeight: Int): FloatBuffer {
+        return createFloatBuffer(createKeepRatioFloatArray(videoWidth, videoHeight, keepRatio, renderWidth, renderHeight))
     }
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
@@ -132,11 +132,11 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      * @param width 宽度
      * @param height 高度
      */
-    fun setVideoDimension(width: Int, height: Int, screenWidth: Int, screenAvailableHeight: Int) {
-        LogContext.log.i(tag, "setVideoDimension width=${width}x$height screen=${screenWidth}x$screenAvailableHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+    fun setVideoDimension(width: Int, height: Int, renderWidth: Int, renderHeight: Int) {
+        LogContext.log.i(tag, "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
         if (width > 0 && height > 0) {
             // 调整比例
-            pointCoord = createCustomFloatBuffer(width, height, keepRatio, screenWidth, screenAvailableHeight)
+            pointCoord = createCustomFloatBuffer(width, height, keepRatio, renderWidth, renderHeight)
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width

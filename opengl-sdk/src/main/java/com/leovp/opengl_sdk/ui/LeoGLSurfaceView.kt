@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.opengl_sdk.ui
 
 import android.content.Context
@@ -5,8 +7,6 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewGroup
-import com.leovp.lib_common_android.exts.screenAvailableHeight
-import com.leovp.lib_common_android.exts.screenWidth
 import com.leovp.lib_common_android.utils.TouchHelper
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
@@ -72,12 +72,9 @@ class LeoGLSurfaceView(context: Context,
      * @param videoWidth 宽度
      * @param videoHeight 高度
      */
-    fun setVideoDimension(videoWidth: Int, videoHeight: Int) {
+    fun setVideoDimension(videoWidth: Int, videoHeight: Int, renderWidth: Int, renderHeight: Int) {
         LogContext.log.d(TAG, "setVideoDimension: $videoWidth*$videoHeight")
-        renderer.setVideoDimension(videoWidth,
-            videoHeight,
-            context.screenWidth,
-            context.screenAvailableHeight)
+        renderer.setVideoDimension(videoWidth, videoHeight, renderWidth, renderHeight)
     }
 
     /**

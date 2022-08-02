@@ -4,6 +4,7 @@ import android.os.SystemClock
 import com.leovp.androidbase.exts.kotlin.truncate
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.lib_bytes.toHexStringLE
+import com.leovp.lib_common_android.exts.screenAvailableResolution
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
@@ -48,17 +49,20 @@ class DecodeH264RawFileByFFMpeg {
 
         videoInfo = initDecoder(sps, pps)
         //            glSurfaceView.setVideoDimension(videoInfo.width, videoInfo.height)
-        glSurfaceView.setVideoDimension(1920, 800)
+        val renderSize = glSurfaceView.context.screenAvailableResolution
+        glSurfaceView.setVideoDimension(1920, 800, renderSize.width, renderSize.height)
         decodeVideo(csd0)
     }
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray): H264HevcDecoder.DecodeVideoInfo {
-        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder.init(null, sps, pps, null, null)
+        val videoInfo: H264HevcDecoder.DecodeVideoInfo =
+                videoDecoder.init(null, sps, pps, null, null)
         LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
+            videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -151,7 +155,8 @@ class DecodeH264RawFileByFFMpeg {
                             val st1 = SystemClock.elapsedRealtime()
                             var st3: Long
                             try {
-                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = decodeVideo(frame)
+                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
+                                        decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =

@@ -27,18 +27,18 @@ abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
      * @param width 图像宽度
      * @param height 图像高度
      */
-    protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, screenWidth: Int, screenHeight: Int): FloatArray {
+    protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, renderWidth: Int, renderHeight: Int): FloatArray {
         val floatArray: FloatArray =
                 if (!keepRatio) {
                     VerticesUtil.VERTICES_COORD
                 } else {
-                    if (screenWidth > 0 && screenHeight > 0) {
-                        val screenRatio = screenHeight.toFloat() / screenWidth.toFloat()
+                    if (renderWidth > 0 && renderHeight > 0) {
+                        val renderRatio = renderHeight.toFloat() / renderWidth.toFloat()
                         val specificRatio = height.toFloat() / width.toFloat()
                         when {
-                            screenRatio == specificRatio -> VerticesUtil.VERTICES_COORD
-                            screenRatio < specificRatio  -> {
-                                val widthScale = screenRatio / specificRatio
+                            renderRatio == specificRatio -> VerticesUtil.VERTICES_COORD
+                            renderRatio < specificRatio  -> {
+                                val widthScale = renderRatio / specificRatio
                                 floatArrayOf(
                                     -widthScale, -1.0f,
                                     widthScale, -1.0f,
@@ -47,7 +47,7 @@ abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
                                 )
                             }
                             else                         -> {
-                                val heightScale = specificRatio / screenRatio
+                                val heightScale = specificRatio / renderRatio
                                 floatArrayOf(
                                     -1.0f, -heightScale,
                                     1.0f, -heightScale,

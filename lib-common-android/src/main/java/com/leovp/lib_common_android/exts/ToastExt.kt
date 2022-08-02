@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
@@ -79,20 +80,10 @@ class LeoToast private constructor(private val ctx: Context) {
                 mainHandler.post {
                     FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
                     val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
-                    val toastMaxWidth =
-                            ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
-                    val toastMargin =
-                            ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
-                    val toastWidthThreshold = toastMaxWidth + toastMargin
-                    val scrAvailSz = ctx.getScreenSize(rotation, ctx.screenAvailableResolution)
-                    val vw =
-                            if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
-                    val x = (scrAvailSz.width - vw) / 2
-                    val y =
-                            scrAvailSz.height - if (isPortrait(rotation)) 60.px else 88.px // 128 / 104
+                    val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
                     //                Log.e("LEO-float-view",
                     //                    "toast onRotationChanged rotation=$rotation scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$viewWidth x=$x y=$y")
-                    FloatView.with(FLOAT_VIEW_TAG).setPosition(x, y)
+                    FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
                 }
             }
         }
@@ -227,18 +218,9 @@ private fun showToast(ctx: Context?,
                     enableAlphaAnimation = true
                     enableDrag = false
                     systemWindow = ctx.canDrawOverlays
-                    val toastMaxWidth = ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
-                    val toastMargin =
-                            ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
-                    val toastWidthThreshold = toastMaxWidth + toastMargin
-                    val scrAvailSz = ctx.getScreenSize(currentScreenOrientation,
-                        ctx.screenAvailableResolution)
-                    //                    Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz")
-                    val vw =
-                            if (viewWidth >= toastWidthThreshold) toastWidthThreshold else viewWidth
-                    x = (scrAvailSz.width - vw) / 2
-                    y = scrAvailSz.height -
-                            if (isPortrait(currentScreenOrientation)) 60.px else 88.px // 128 / 104
+                    val toastPos = calculateToastPosition(ctx, currentScreenOrientation, viewWidth)
+                    x = toastPos.x
+                    y = toastPos.y
                     screenOrientation = currentScreenOrientation
                 }
                 .show()
@@ -301,4 +283,18 @@ private fun decorateToast(ctx: Context, rootView: View, message: String, bgColor
         val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
         DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
     }
+}
+
+private fun calculateToastPosition(ctx: Context, curScreenOrientation: Int, viewWidth: Int): Point {
+    val toastMaxWidth = ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
+    val toastMargin = ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
+    val toastFinalWidth = toastMaxWidth + toastMargin
+    val scrAvailSz = ctx.getScreenSize(curScreenOrientation, ctx.screenAvailableResolution)
+    val vw = if (viewWidth >= toastFinalWidth) toastFinalWidth else viewWidth
+    // Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz " +
+    //         "toastMaxWidth=$toastMaxWidth toastMargin=$toastMargin toastFinalWidth=$toastFinalWidth " +
+    //         "viewWidth=$viewWidth vw=$vw")
+    val x = (scrAvailSz.width - vw) / 2
+    val y = scrAvailSz.height - if (isPortrait(curScreenOrientation)) 60.px else 88.px // 128 / 104
+    return Point(x, y)
 }

@@ -38,6 +38,7 @@ object NetworkUtil {
     const val TYPE_CELLULAR = "Cellular"
     const val TYPE_ETHERNET = "Ethernet"
     const val TYPE_VPN = "VPN"
+    const val TYPE_BLUETOOTH = "Bluetooth"
 
     const val NETWORK_PING_DELAY_NORMAL = 80
     const val NETWORK_PING_DELAY_HIGH = 130
@@ -57,7 +58,8 @@ object NetworkUtil {
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOnline(ctx: Context): Boolean =
-            isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) || isVpnActive(ctx)
+            isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx)
+                    || isVpnActive(ctx) || isBluetoothActive(ctx)
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
@@ -69,17 +71,9 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isWifiActive(ctx: Context): Boolean {
-        val cm = ctx.connectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val nw = cm.activeNetwork ?: return false
-            val nc = cm.getNetworkCapabilities(nw) ?: return false
-            nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-        } else {
-            @Suppress("DEPRECATION")
-            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_WIFI
-        }
-    }
+    fun isWifiActive(ctx: Context): Boolean = isTypeActive(ctx,
+        NetworkCapabilities.TRANSPORT_WIFI,
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_WIFI)
 
     /**
      * Need following permission:
@@ -88,17 +82,9 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isEthernetActive(ctx: Context): Boolean {
-        val cm = ctx.connectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val nw = cm.activeNetwork ?: return false
-            val nc = cm.getNetworkCapabilities(nw) ?: return false
-            nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-        } else {
-            @Suppress("DEPRECATION")
-            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_ETHERNET
-        }
-    }
+    fun isEthernetActive(ctx: Context): Boolean = isTypeActive(ctx,
+        NetworkCapabilities.TRANSPORT_ETHERNET,
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_ETHERNET)
 
     /**
      * Need following permission:
@@ -107,17 +93,9 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isCellularActive(ctx: Context): Boolean {
-        val cm = ctx.connectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val nw = cm.activeNetwork ?: return false
-            val nc = cm.getNetworkCapabilities(nw) ?: return false
-            nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-        } else {
-            @Suppress("DEPRECATION")
-            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_MOBILE
-        }
-    }
+    fun isCellularActive(ctx: Context): Boolean = isTypeActive(ctx,
+        NetworkCapabilities.TRANSPORT_CELLULAR,
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_MOBILE)
 
     /**
      * Need following permission:
@@ -126,15 +104,37 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isVpnActive(ctx: Context): Boolean {
+    fun isVpnActive(ctx: Context): Boolean = isTypeActive(ctx,
+        NetworkCapabilities.TRANSPORT_VPN,
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_VPN)
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    fun isBluetoothActive(ctx: Context): Boolean = isTypeActive(ctx,
+        NetworkCapabilities.TRANSPORT_BLUETOOTH,
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_BLUETOOTH)
+
+    /**
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    private fun isTypeActive(ctx: Context, transportType: Int, connType: Int): Boolean {
         val cm = ctx.connectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val nw = cm.activeNetwork ?: return false
             val nc = cm.getNetworkCapabilities(nw) ?: return false
-            nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+            nc.hasTransport(transportType)
         } else {
             @Suppress("DEPRECATION")
-            cm.activeNetworkInfo?.type == ConnectivityManager.TYPE_VPN
+            cm.activeNetworkInfo?.type == connType
         }
     }
 
@@ -237,7 +237,7 @@ object NetworkUtil {
             val networkCallback = object : ConnectivityManager.NetworkCallback() {
                 @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
                 override fun onCapabilitiesChanged(network: Network,
-                                                   networkCapabilities: NetworkCapabilities) {
+                    networkCapabilities: NetworkCapabilities) {
                     val wifiInfo: WifiInfo =
                             networkCapabilities.transportInfo as? WifiInfo ?: return
                     if (isWifiActive(ctx)) {

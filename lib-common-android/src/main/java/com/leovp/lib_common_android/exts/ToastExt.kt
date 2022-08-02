@@ -8,10 +8,7 @@ import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
-import android.view.IRotationWatcher
-import android.view.LayoutInflater
-import android.view.View
+import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
@@ -28,6 +25,7 @@ import com.leovp.lib_common_android.utils.API
 import com.leovp.lib_common_kotlin.exts.fail
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.lib_reflection.wrappers.ServiceManager
+import kotlin.math.max
 
 
 /**
@@ -285,16 +283,26 @@ private fun decorateToast(ctx: Context, rootView: View, message: String, bgColor
     }
 }
 
-private fun calculateToastPosition(ctx: Context, curScreenOrientation: Int, viewWidth: Int): Point {
+private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: Int): Point {
     val toastMaxWidth = ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
     val toastMargin = ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
     val toastFinalWidth = toastMaxWidth + toastMargin
-    val scrAvailSz = ctx.getScreenSize(curScreenOrientation, ctx.screenAvailableResolution)
+    val scrAvailSz = ctx.getScreenSize(orientation, ctx.screenAvailableResolution)
+    val scrSz = ctx.getScreenSize(orientation, ctx.screenRealResolution)
+    val widthDiff = when {
+        ctx.isGoogle -> {
+            if (Surface.ROTATION_90 == orientation)
+                max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)
+            else 0
+        }
+        else         -> 0
+    }
+    //    Log.e("LEO-float-view", "curScreenOrientation=$orientation viewWidth=$viewWidth")
     val vw = if (viewWidth >= toastFinalWidth) toastFinalWidth else viewWidth
-    // Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz " +
-    //         "toastMaxWidth=$toastMaxWidth toastMargin=$toastMargin toastFinalWidth=$toastFinalWidth " +
-    //         "viewWidth=$viewWidth vw=$vw")
-    val x = (scrAvailSz.width - vw) / 2
-    val y = scrAvailSz.height - if (isPortrait(curScreenOrientation)) 60.px else 88.px // 128 / 104
+    //    Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$vw " +
+    //            "toastMaxWidth=$toastMaxWidth toastMargin=$toastMargin toastFinalWidth=$toastFinalWidth " +
+    //            "statusBarHeight=${ctx.statusBarHeight} widthDiff=$widthDiff")
+    val x = (scrAvailSz.width - vw) / 2 + widthDiff
+    val y = scrAvailSz.height - if (isPortrait(orientation)) 60.px else 88.px // 128 / 104
     return Point(x, y)
 }

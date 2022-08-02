@@ -63,8 +63,10 @@
             android:exported="false" />
         <activity android:name=".basic_components.examples.opengl.OpenGLES20Activity" android:exported="false" />
         <activity android:name=".basic_components.examples.adb.AdbCommunication" android:exported="false" />
-        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity" android:exported="false" />
-        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity" android:exported="false" />
+        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH265Activity" android:exported="false"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".basic_components.examples.ffmpeg.FFMpegH264Activity" android:exported="false"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"/>
         <activity android:name=".basic_components.examples.koin.KoinActivity" android:exported="false" />
         <activity android:name=".basic_components.examples.OrientationActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
@@ -115,9 +117,11 @@
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketServerActivity" />
         <activity android:name=".basic_components.examples.HttpActivity" />
         <activity android:name=".basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity"
-            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.NoActionBar"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"/>
         <activity android:name=".basic_components.examples.media_player.PlayH265VideoByMediaCodecActivity"
-            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.NoActionBar"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"/>
         <activity android:name=".basic_components.examples.socket.websocket.WebSocketClientActivity" />
         <activity android:name=".basic_components.examples.ClipboardActivity" />
         <activity android:name=".basic_components.examples.socket.SocketServerActivity" />

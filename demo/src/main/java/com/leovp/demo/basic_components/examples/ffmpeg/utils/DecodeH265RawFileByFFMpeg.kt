@@ -4,6 +4,7 @@ import android.os.SystemClock
 import com.leovp.androidbase.exts.kotlin.truncate
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.lib_bytes.toHexStringLE
+import com.leovp.lib_common_android.exts.screenAvailableResolution
 import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
@@ -144,19 +145,28 @@ class DecodeH265RawFileByFFMpeg {
         csd0Size = csd0.size
         currentIndex = csd0Size.toLong()
 
-
         videoInfo = initDecoder(vps, sps, pps, psei, ssei)
-        glSurfaceView.setVideoDimension(videoInfo.width, videoInfo.height)
+        val renderSize = glSurfaceView.context.screenAvailableResolution
+        glSurfaceView.setVideoDimension(videoInfo.width,
+            videoInfo.height,
+            renderSize.width,
+            renderSize.height)
         decodeVideo(csd0)
     }
 
-    private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
-        val videoInfo: H264HevcDecoder.DecodeVideoInfo = videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
+    private fun initDecoder(vps: ByteArray?,
+        sps: ByteArray,
+        pps: ByteArray,
+        prefixSei: ByteArray?,
+        suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
+        val videoInfo: H264HevcDecoder.DecodeVideoInfo =
+                videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
         LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
+            videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -249,7 +259,8 @@ class DecodeH265RawFileByFFMpeg {
                             val st1 = SystemClock.elapsedRealtime()
                             var st3: Long
                             try {
-                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? = decodeVideo(frame)
+                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
+                                        decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =

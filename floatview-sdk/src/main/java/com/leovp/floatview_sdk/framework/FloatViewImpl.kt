@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
+import android.util.Log
 import android.util.Size
 import android.view.*
 import androidx.annotation.IdRes
@@ -19,7 +20,6 @@ import com.leovp.floatview_sdk.entities.DockEdge
 import com.leovp.floatview_sdk.entities.StickyEdge
 import com.leovp.floatview_sdk.utils.*
 import com.leovp.lib_reflection.wrappers.ServiceManager
-import com.leovp.log_sdk.LogContext
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -440,7 +440,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     fun show() {
         runCatching {
             if (config.systemWindow && !context.canDrawOverlays) {
-                LogContext.log.w(TAG,
+                Log.w(TAG,
                     "FloatView tag=${config.tag} is setting as SystemWindow. However, app doesn't have [DrawOverlays] permission.")
             }
 

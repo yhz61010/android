@@ -290,9 +290,10 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
     val scrSz = ctx.getScreenSize(orientation, ctx.screenRealResolution)
     val widthDiff = when {
         ctx.isGoogle -> {
-            if (Surface.ROTATION_90 == orientation)
-                max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)
-            else 0
+            if (Surface.ROTATION_90 == orientation) {
+                (max(scrSz.width, scrSz.height) - max(scrAvailSz.width,
+                    scrAvailSz.height)) / (if (ctx.navigationBarHeight > 0) 1 else 2)
+            } else 0
         }
         else         -> 0
     }
@@ -300,7 +301,7 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
     val vw = if (viewWidth >= toastFinalWidth) toastFinalWidth else viewWidth
     //    Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$vw " +
     //            "toastMaxWidth=$toastMaxWidth toastMargin=$toastMargin toastFinalWidth=$toastFinalWidth " +
-    //            "statusBarHeight=${ctx.statusBarHeight} widthDiff=$widthDiff")
+    //            "statusBarHeight=${ctx.statusBarHeight} widthDiff=$widthDiff navigationHeight=${ctx.navigationBarHeight}")
     val x = (scrAvailSz.width - vw) / 2 + widthDiff
     val y = scrAvailSz.height - if (isPortrait(orientation)) 60.px else 88.px // 128 / 104
     return Point(x, y)

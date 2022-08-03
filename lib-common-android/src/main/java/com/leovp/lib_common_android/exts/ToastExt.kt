@@ -18,7 +18,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.leovp.floatview_sdk.FloatView
-import com.leovp.floatview_sdk.utils.getScreenSize
 import com.leovp.lib_common_android.R
 import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.API

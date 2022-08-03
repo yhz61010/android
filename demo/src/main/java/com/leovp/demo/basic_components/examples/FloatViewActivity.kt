@@ -48,7 +48,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
             .meta { _, _ ->
                 tag = "f1"
                 systemWindow = true
-                immersiveMode = false
+                immersiveMode = true
                 x = 50
                 y = 220
             }

@@ -8,7 +8,6 @@ import androidx.annotation.LayoutRes
 import com.leovp.floatview_sdk.entities.DefaultConfig
 import com.leovp.floatview_sdk.framework.FloatViewManager
 import com.leovp.floatview_sdk.utils.FloatViewScopeMarker
-import com.leovp.floatview_sdk.utils.canDrawOverlays
 
 /**
  * Attention:
@@ -82,15 +81,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     /**
      * **Create** a float view with specific tag and show it on screen.
      */
-    fun show() {
-        if (config.systemWindow) {
-            if (context.canDrawOverlays) {
-                createAndShowFloatView()
-            }
-        } else {
-            createAndShowFloatView()
-        }
-    }
+    fun show() = createAndShowFloatView()
 
     private fun createAndShowFloatView() {
         build()

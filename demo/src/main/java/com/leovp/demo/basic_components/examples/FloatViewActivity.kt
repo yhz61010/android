@@ -39,7 +39,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         FloatView.with(this)
             .layout(R.layout.floatview) { v ->
                 v.findViewById<TextView>(R.id.tvText).text =
-                        "f1\nImmersive:OFF\nStick:${FloatView.with("f1").stickyEdge}"
+                        "f1\nImmersive:ON\nStick:${FloatView.with("f1").stickyEdge}"
                 v.findViewById<View>(R.id.floatViewBtn)
                     .setOnSingleClickListener { toast("Win1 Button") }
                 v.findViewById<View>(R.id.linearLayout)

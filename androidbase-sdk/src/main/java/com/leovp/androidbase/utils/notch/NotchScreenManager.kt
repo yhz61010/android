@@ -19,7 +19,7 @@ import com.leovp.lib_common_kotlin.utils.SingletonHolder
 /**
  * Example1: Allow to render on notch area
  * ```kotlin
- * NotchScreenManager.setDisplayInNotch(activity)
+ * NotchScreenManager.getInstance(activity).setDisplayInNotch()
  * ```
  *
  *

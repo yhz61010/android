@@ -22,7 +22,6 @@ import com.leovp.lib_common_kotlin.utils.SingletonHolder
  * NotchScreenManager.getInstance(activity).setDisplayInNotch()
  * ```
  *
- *
  * Example2:
  * Get notch information
  * ```kotlin

@@ -83,3 +83,4 @@ lint/tmp/
 
 /debug.keystore
 /libyuv/
+/.idea/other.xml

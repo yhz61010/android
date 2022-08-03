@@ -38,6 +38,7 @@ android {
 dependencies {
     api "androidx.core:core-ktx:$rootProject.ext.coreKtxVersion"
     api project(':lib-reflection')
+    api project(':log-sdk')
 }
 
 afterEvaluate {

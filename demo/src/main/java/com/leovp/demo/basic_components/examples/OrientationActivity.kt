@@ -26,10 +26,9 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
     private var currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var deviceOrientationEventListener: DeviceOrientationListener? = null
 
-    private var lastScreenOrientation = -1
     private val rotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            if (rotation != lastScreenOrientation) toast("${rotation.surfaceRotationName}[$rotation]")
+            toast("${rotation.surfaceRotationName}[$rotation]")
         }
     }
 
@@ -52,8 +51,8 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
      */
     private fun getScreenOrientation(): Int {
         val dm: DisplayMetrics = resources.displayMetrics // Screen rotation effected
-//        LogContext.log.w(ITAG,
-//            "dm.widthPixels=${dm.widthPixels} dm.heightPixels=${dm.heightPixels}")
+        //        LogContext.log.w(ITAG,
+        //            "dm.widthPixels=${dm.widthPixels} dm.heightPixels=${dm.heightPixels}")
         return if (dm.widthPixels > dm.heightPixels)
             Configuration.ORIENTATION_LANDSCAPE
         else Configuration.ORIENTATION_PORTRAIT
@@ -63,8 +62,8 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(orientation: Int) {
             val portraitOrLandscape = getScreenOrientation()
-//            val confOrientation = resources.configuration.orientation
-//            LogContext.log.d("orientation=$orientation confOrientation=$confOrientation screenWidth=${ctx.screenWidth}")
+            //            val confOrientation = resources.configuration.orientation
+            //            LogContext.log.d("orientation=$orientation confOrientation=$confOrientation screenWidth=${ctx.screenWidth}")
             binding.tvOrientationDegree.text = orientation.toString()
             binding.tvScreenWidth.text = ctx.screenWidth.toString()
             val newOrientation = getDeviceOrientation(orientation)

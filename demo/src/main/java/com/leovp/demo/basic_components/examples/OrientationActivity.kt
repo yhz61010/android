@@ -52,8 +52,8 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
      */
     private fun getScreenOrientation(): Int {
         val dm: DisplayMetrics = resources.displayMetrics // Screen rotation effected
-        LogContext.log.w(ITAG,
-            "dm.widthPixels=${dm.widthPixels} dm.heightPixels=${dm.heightPixels}")
+//        LogContext.log.w(ITAG,
+//            "dm.widthPixels=${dm.widthPixels} dm.heightPixels=${dm.heightPixels}")
         return if (dm.widthPixels > dm.heightPixels)
             Configuration.ORIENTATION_LANDSCAPE
         else Configuration.ORIENTATION_PORTRAIT
@@ -62,12 +62,12 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
     inner class DeviceOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(orientation: Int) {
-            getScreenOrientation()
-            val confOrientation = resources.configuration.orientation
-            LogContext.log.d("orientation=$orientation confOrientation=$confOrientation screenWidth=${ctx.screenWidth}")
+            val portraitOrLandscape = getScreenOrientation()
+//            val confOrientation = resources.configuration.orientation
+//            LogContext.log.d("orientation=$orientation confOrientation=$confOrientation screenWidth=${ctx.screenWidth}")
             binding.tvOrientationDegree.text = orientation.toString()
             binding.tvScreenWidth.text = ctx.screenWidth.toString()
-            val newOrientation = getScreenOrientation(orientation)
+            val newOrientation = getDeviceOrientation(orientation)
             if (orientation == ORIENTATION_UNKNOWN || newOrientation == ORIENTATION_UNKNOWN) {
                 LogContext.log.w("ORIENTATION_UNKNOWN")
                 binding.tvDeviceOrientation.text = "ORIENTATION_UNKNOWN"
@@ -91,7 +91,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
                     currentScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
                 }
             }
-            LogContext.log.w("Screen Orientation=${currentScreenOrientation.screenOrientationName} deviceSurfaceRotation=$screenSurfaceRotation")
+            LogContext.log.w("Screen Orientation=${currentScreenOrientation.screenOrientationName} screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} portraitOrLandscape=$portraitOrLandscape")
             binding.tvDeviceOrientation.text = currentScreenOrientation.screenOrientationName
         }
     }

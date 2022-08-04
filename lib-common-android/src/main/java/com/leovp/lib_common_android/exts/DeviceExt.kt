@@ -451,7 +451,7 @@ fun isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - OrientationEventListener.ORIENTATION_UNKNOWN
  */
-fun getScreenOrientation(@IntRange(from = 0, to = 359) degree: Int,
+fun getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int,
     @IntRange(from = 0, to = 45) threshold: Int = 30): Int {
     return when {
         isNormalPortrait(degree, threshold)   -> SCREEN_ORIENTATION_PORTRAIT

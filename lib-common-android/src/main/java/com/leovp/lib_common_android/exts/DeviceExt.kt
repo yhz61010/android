@@ -389,10 +389,10 @@ fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int,
  * `true` will be returned.
  *
  * @param surfaceRotation The value may be
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
+ * - Surface.ROTATION_0 (no rotation),
+ * - Surface.ROTATION_90,
+ * - Surface.ROTATION_180,
+ * - Surface.ROTATION_270.
  */
 fun isPortrait(surfaceRotation: Int): Boolean =
         Surface.ROTATION_0 == surfaceRotation || Surface.ROTATION_180 == surfaceRotation
@@ -403,10 +403,10 @@ fun isPortrait(surfaceRotation: Int): Boolean =
  * `true` will be returned.
  *
  * @param surfaceRotation The value may be
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
+ * - Surface.ROTATION_0 (no rotation),
+ * - Surface.ROTATION_90,
+ * - Surface.ROTATION_180,
+ * - Surface.ROTATION_270.
  */
 fun isLandscape(surfaceRotation: Int): Boolean =
         Surface.ROTATION_90 == surfaceRotation || Surface.ROTATION_270 == surfaceRotation
@@ -415,6 +415,13 @@ fun isLandscape(surfaceRotation: Int): Boolean =
 
 /**
  * Only if the device is just in **Normal Portrait** mode, `true` will be returned.
+ *
+ * @param prevOrientation The previous orientation value:
+ * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+ * - Any other value will be ignored.
  */
 fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int,
     prevOrientation: Int = -1): Boolean {
@@ -442,6 +449,13 @@ fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int,
 
 /**
  * Only if the device is just in **Normal Landscape** mode, `true` will be returned.
+ *
+ * @param prevOrientation The previous orientation value:
+ * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+ * - Any other value will be ignored.
  */
 fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int,
     prevOrientation: Int = -1): Boolean {
@@ -459,6 +473,13 @@ fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int,
 
 /**
  * Only if the device is just in **Reverse Landscape** mode, `true` will be returned.
+ *
+ * @param prevOrientation The previous orientation value:
+ * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+ * - Any other value will be ignored.
  */
 fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
     prevOrientation: Int = -1): Boolean {
@@ -476,6 +497,13 @@ fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
 
 /**
  * Only if the device is just in **Reverse Portrait** mode, `true` will be returned.
+ *
+ * @param prevOrientation The previous orientation value:
+ * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+ * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+ * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+ * - Any other value will be ignored.
  */
 fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int,
     prevOrientation: Int = -1): Boolean {

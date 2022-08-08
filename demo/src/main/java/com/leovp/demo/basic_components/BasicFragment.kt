@@ -32,6 +32,7 @@ import com.leovp.demo.basic_components.examples.log.LogActivity
 import com.leovp.demo.basic_components.examples.media_player.PlayH265VideoByMediaCodecActivity
 import com.leovp.demo.basic_components.examples.media_player.PlayRawH265ByMediaCodecActivity
 import com.leovp.demo.basic_components.examples.opengl.OpenGLES20Activity
+import com.leovp.demo.basic_components.examples.orientation.OrientationActivity
 import com.leovp.demo.basic_components.examples.pref.PrefActivity
 import com.leovp.demo.basic_components.examples.provider.ProviderActivity
 import com.leovp.demo.basic_components.examples.sharescreen.client.ScreenShareClientActivity

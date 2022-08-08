@@ -554,7 +554,7 @@ fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int,
  * @return Return the screen rotation(**NOT** device rotation).
  *         The result is one of the following value:
  *
- * - Surface.ROTATION_0
+ * - Surface.ROTATION_0 (no rotation)
  * - Surface.ROTATION_90
  * - Surface.ROTATION_180
  * - Surface.ROTATION_270

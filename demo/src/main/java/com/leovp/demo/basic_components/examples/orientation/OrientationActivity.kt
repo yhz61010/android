@@ -75,21 +75,21 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
                 return
             }
 
-            val screenPortraitOrLandscape = getScreenOrientation()
             binding.tvSurfaceRotation.text =
                     "${screenSurfaceRotation.surfaceRotationLiteralName}($screenSurfaceRotation) " +
                             screenSurfaceRotation.surfaceRotationName
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
+            val screenPortraitOrLandscape = getScreenOrientation()
             val screenPortraitOrLandscapeName =
                     if (Configuration.ORIENTATION_PORTRAIT == screenPortraitOrLandscape) {
                         "Portrait"
                     } else {
                         "Landscape"
                     }
-            //            LogContext.log.w("Device Orientation=${currentDeviceOrientation.screenOrientationName} " +
-            //                    "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} " +
-            //                    "screenPortraitOrLandscape=$screenPortraitOrLandscapeName")
+            LogContext.log.w("Device Orientation=${currentDeviceOrientation.screenOrientationName} " +
+                    "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} " +
+                    "screenPortraitOrLandscape=$screenPortraitOrLandscapeName")
             binding.tvDeviceOrientation.text = currentDeviceOrientation.screenOrientationName
         }
     }

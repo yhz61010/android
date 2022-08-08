@@ -15,7 +15,6 @@ import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Size
 import android.view.Display
-import android.view.OrientationEventListener
 import android.view.Surface
 import android.view.WindowInsets
 import androidx.annotation.IntRange
@@ -372,16 +371,14 @@ fun Context.isTablet(): Boolean {
 
 // ================================
 
-fun isPortrait(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalPortrait(degree,
-        thresholdInDegree) || isReversePortrait(degree, thresholdInDegree)
+fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    return isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
 }
 
-fun isLandscape(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) thresholdInDegree: Int = 30): Boolean {
-    return isNormalLandscape(degree,
-        thresholdInDegree) || isReverseLandscape(degree, thresholdInDegree)
+fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    return isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
 }
 
 // ---------------
@@ -416,53 +413,116 @@ fun isLandscape(surfaceRotation: Int): Boolean =
 
 // ---------------
 
-/** Only if the device is just in **Normal Portrait** mode, `true` will be returned. */
-fun isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
-    return (degree in 0..threshold) || (degree in (360 - threshold)..359)
+/**
+ * Only if the device is just in **Normal Portrait** mode, `true` will be returned.
+ */
+fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    // If device is already in normal portrait mode, the wide range is:
+    // [300, 359], [0, 60]
+
+    // The narrow range is used to check the device real orientation.
+    // [330, 359], [0, 30]
+
+    return if (Surface.ROTATION_0 == screenSurfaceRotation || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
+        (degree in 301..359) || (degree in 0 until 60) // wide range
+    } else
+        (degree in 330..359) || (degree in 0..30) // narrow range
+
+    //    val ssr = screenSurfaceRotation
+    //    return if (Surface.ROTATION_0 == ssr || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
+    //        if (Surface.ROTATION_270 == ssr || Surface.ROTATION_90 == ssr)
+    //            Surface.ROTATION_270 == ssr && degree == 60
+    //        else if (300 == ssr || Surface.ROTATION_0 == ssr) true
+    //        else
+    //            (degree in 301..359) || (degree in 0..60) // wide range
+    //    } else
+    //        (degree in 330..359) || (degree in 0..30) // narrow range
 }
 
-/** Only if the device is just in **Reverse Portrait** mode, `true` will be returned. */
-fun isReversePortrait(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
-    return degree in (180 - threshold)..(180 + threshold)
+/**
+ * Only if the device is just in **Normal Landscape** mode, `true` will be returned.
+ */
+fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    // If device is already in normal landscape mode, the wide range is:
+    // [210, 270], [270, 330]
+
+    // The narrow range is used to check the device real orientation.
+    // [240, 270], [270, 300]
+
+    return if (Surface.ROTATION_90 == screenSurfaceRotation || SCREEN_ORIENTATION_LANDSCAPE == prevOrientation) {
+        degree in 211 until 330 // wide range
+    } else
+        degree in 240..300 // narrow range
 }
 
-/** Only if the device is just in **Normal Landscape** mode, `true` will be returned. */
-fun isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
-    return degree in (270 - threshold)..(270 + threshold)
+/**
+ * Only if the device is just in **Reverse Landscape** mode, `true` will be returned.
+ */
+fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    // If device is already in reverse landscape mode, the wide range is:
+    // [30, 90], [90, 150]
+
+    // The narrow range is used to check the device real orientation.
+    // [60, 90], [90, 120]
+
+    return if (Surface.ROTATION_270 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation) {
+        degree in 31 until 150 // wide range
+    } else
+        degree in 60..120 // narrow range
 }
 
-/** Only if the device is just in **Reverse Landscape** mode, `true` will be returned. */
-fun isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) threshold: Int = 30): Boolean {
-    return degree in (90 - threshold)..(90 + threshold)
+/**
+ * Only if the device is just in **Reverse Portrait** mode, `true` will be returned.
+ */
+fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Boolean {
+    // If device is already in reverse portrait mode, the wide range is:
+    // [120, 180], [180, 240]
+
+    // The narrow range is used to check the device real orientation.
+    // [150, 180], [180, 210]
+
+    return if (Surface.ROTATION_180 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+        degree in 121 until 240 // wide range
+    } else
+        degree in 150..210 // narrow range
+
+    //    val ssr = screenSurfaceRotation
+    //    return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+    //        if (Surface.ROTATION_180 == ssr && degree == 240) true
+    //        else if (Surface.ROTATION_90 == ssr) false
+    //        else degree in 121 until 240 // wide range
+    //    } else
+    //        degree in 150..210 // narrow range
 }
 
 // ---------------
 
 /**
  * @return The result is one of the following value:
- *
  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
- * - OrientationEventListener.ORIENTATION_UNKNOWN
+ * - -1 means unknown or the orientation is not changed.
  */
-fun getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int,
-    @IntRange(from = 0, to = 45) threshold: Int = 30): Int {
+fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1): Int {
     return when {
-        isNormalPortrait(degree, threshold)   -> SCREEN_ORIENTATION_PORTRAIT
-        isReversePortrait(degree, threshold)  -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        isNormalLandscape(degree, threshold)  -> SCREEN_ORIENTATION_LANDSCAPE
-        isReverseLandscape(degree, threshold) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        else                                  -> OrientationEventListener.ORIENTATION_UNKNOWN
+        isNormalPortrait(degree, prevOrientation)   -> SCREEN_ORIENTATION_PORTRAIT
+        isReversePortrait(degree, prevOrientation)  -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        isNormalLandscape(degree, prevOrientation)  -> SCREEN_ORIENTATION_LANDSCAPE
+        isReverseLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+        else                                        -> -1
     }
 }
 
 /**
+ * The context can only be either Activity(Fragment) or Service.
+ *
  * @return Return the screen rotation(**NOT** device rotation).
  *         The result is one of the following value:
  *

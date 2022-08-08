@@ -27,11 +27,11 @@ class OrientationService : BaseService() {
             when (newConfig.orientation) {
                 Configuration.ORIENTATION_LANDSCAPE -> {
                     // toast("Device is in Landscape mode.", debug = true)
-//                    LogContext.log.w(ITAG, "Device is in Landscape mode.")
+                    LogContext.log.w(ITAG, "Device is in Landscape mode.")
                 }
                 Configuration.ORIENTATION_PORTRAIT  -> {
                     // toast("Device is in Portrait mode.", debug = true)
-//                    LogContext.log.w(ITAG, "Device is in Portrait mode.")
+                    LogContext.log.w(ITAG, "Device is in Portrait mode.")
                 }
             }
             lastOrientation = newConfig.orientation

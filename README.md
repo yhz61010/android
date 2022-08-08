@@ -1,6 +1,6 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.7.10-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-7.2.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![AGP](https://img.shields.io/badge/AGP-7.2.2-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-7.5-green)](https://gradle.org)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)

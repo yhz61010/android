@@ -1,4 +1,4 @@
-package com.leovp.aidl_client
+package com.leovp.aidl.client
 
 import android.content.ComponentName
 import android.content.Context
@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.leovp.demo.basic_components.examples.aidl.ILocalLogService
 import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
 import com.leovp.lib_common_android.exts.LeoToast
+import com.leovp.lib_common_android.exts.ToastConfig
 import com.leovp.lib_common_android.exts.toast
 import com.leovp.log_sdk.LLog
 import com.leovp.log_sdk.LogContext
@@ -21,6 +22,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        LeoToast.getInstance(this).apply {
+            config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+            initForegroundComponentForToast(application)
+        }
 
         LogContext.setLogImp(LLog("LEO-AIDL-CLIENT"))
 
@@ -48,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         // Intent action is configured in AndroidManifest.xml
         val intent = Intent("service.name")
         // It's necessary on Android 5.0+
-        intent.setPackage("com.leovp.demo")
+        intent.setPackage("com.leovp.demo.dev")
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 

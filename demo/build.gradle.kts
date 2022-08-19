@@ -61,13 +61,6 @@ android {
         create("develop")
     }
 
-    testOptions {
-        unitTests {
-            isReturnDefaultValues = true
-            isIncludeAndroidResources = true
-        }
-    }
-
     packagingOptions {
         jniLibs {
             pickFirsts += setOf(

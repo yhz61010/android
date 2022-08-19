@@ -1,5 +1,6 @@
 // https://github.com/twilio/twilio-verify-android/blob/main/jacoco.gradle.kts
 // https://medium.com/@ranjeetsinha/jacoco-with-kotlin-dsl-f1f067e42cd0
+// https://github.com/th-deng/jacoco-on-gradle-sample/blob/master/build.gradle.kts
 tasks.withType<Test> {
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
@@ -81,7 +82,6 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     setDirectories()
 }
 
-val minimumCoverage = "0.3".toBigDecimal()
 tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     group = jacocoGroup
     description = "Code coverage verification for Android both Android and Unit tests."
@@ -89,12 +89,14 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     violationRules {
         rule {
             limit {
-                counter = "INSTRUCTIONAL"
+                //                counter = "INSTRUCTIONAL"
                 value = "COVEREDRATIO"
-                minimum = minimumCoverage
+                minimum = "0.3".toBigDecimal()
             }
         }
         rule {
+            enabled = true
+
             element = "CLASS"
             excludes = listOf(
                 "**.FactorFacade.Builder",
@@ -103,7 +105,19 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
                 "**.Task"
             )
             limit {
-                minimum = minimumCoverage
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.4".toBigDecimal()
+            }
+            limit {
+                counter = "LINE"
+                value = "TOTALCOUNT"
+                maximum = "200".toBigDecimal()
             }
         }
     }

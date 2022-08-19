@@ -17,7 +17,7 @@ import com.leovp.demo.R
 import com.leovp.demo.basic_components.examples.*
 import com.leovp.demo.basic_components.examples.accessibility.AccessibilityActivity
 import com.leovp.demo.basic_components.examples.adb.AdbCommunication
-import com.leovp.demo.basic_components.examples.aidl.AidlActivity
+import com.leovp.demo.basic_components.examples.AidlActivity
 import com.leovp.demo.basic_components.examples.animation.AnimationActivity
 import com.leovp.demo.basic_components.examples.audio.ADPCMActivity
 import com.leovp.demo.basic_components.examples.audio.AudioActivity

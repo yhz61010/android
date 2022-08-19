@@ -8,8 +8,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.leovp.demo.basic_components.examples.aidl.ILocalLogService
-import com.leovp.demo.basic_components.examples.aidl.model.LocalLog
+import com.leovp.aidl.client.model.LocalLog
 import com.leovp.lib_common_android.exts.LeoToast
 import com.leovp.lib_common_android.exts.ToastConfig
 import com.leovp.lib_common_android.exts.toast

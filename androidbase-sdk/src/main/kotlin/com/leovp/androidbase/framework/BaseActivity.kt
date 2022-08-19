@@ -24,10 +24,10 @@ import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.lib_common_kotlin.exts.humanReadableByteCount
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
+import java.util.concurrent.atomic.AtomicReference
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * This class has already enabled Custom Language feature.

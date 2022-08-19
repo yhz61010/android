@@ -12,8 +12,11 @@ import android.media.MediaCodecList
  * Date: 20-5-20 上午9:48
  */
 object CodecUtil {
-    fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS) // MediaCodecList.ALL_CODECS
-        .codecInfos.filter { it.isEncoder == encoder }.filter { it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1 }
+    // MediaCodecList.ALL_CODECS
+    fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> =
+        MediaCodecList(MediaCodecList.REGULAR_CODECS)
+            .codecInfos.filter { it.isEncoder == encoder }
+            .filter { it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1 }
 
     fun hasCodecByName(mimeType: String, codecName: String, encoder: Boolean = true): Boolean =
         getCodecListByMimeType(mimeType, encoder).indexOfFirst { it.name.equals(codecName, true) } > -1
@@ -31,8 +34,12 @@ object CodecUtil {
     fun getSupportedProfileLevels(codec: MediaCodec, mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
         getSupportedProfileLevels(codec.codecInfo.getCapabilitiesForType(mime))
 
-    fun getSupportedProfileLevelsForEncoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createEncoderByType(mime), mime)
-    fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
+    fun getSupportedProfileLevelsForEncoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
+        getSupportedProfileLevels(MediaCodec.createEncoderByType(mime), mime)
+
+    fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
+        getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
+
     private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
 
     fun isSoftwareCodec(codecName: String): Boolean {

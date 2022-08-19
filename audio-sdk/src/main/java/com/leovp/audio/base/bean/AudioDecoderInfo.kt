@@ -26,6 +26,6 @@ data class AudioDecoderInfo(val sampleRate: Int, val channelConfig: Int, val aud
     val channelCount: Int = when (channelConfig) {
         android.media.AudioFormat.CHANNEL_OUT_MONO -> 1
         android.media.AudioFormat.CHANNEL_OUT_STEREO -> 2
-        else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=${channelConfig}")
+        else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=$channelConfig")
     }
 }

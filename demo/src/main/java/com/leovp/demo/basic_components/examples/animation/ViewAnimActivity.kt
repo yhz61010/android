@@ -8,7 +8,6 @@ import com.leovp.demo.databinding.ActivityViewAnimBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.base.ITAG
 
-
 class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
     override fun getTagName(): String = ITAG
 
@@ -25,7 +24,7 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
     private fun initView() {
         binding.btnAlpha.setOnSingleClickListener {
             val loadAnimation: Animation =
-                    AnimationUtils.loadAnimation(this, R.anim.view_anim_alpha)
+                AnimationUtils.loadAnimation(this, R.anim.view_anim_alpha)
             binding.ivBeauty.startAnimation(loadAnimation)
         }
 
@@ -87,12 +86,10 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
 
                 override fun onAnimationEnd(animation: Animation) {
                     binding.ivBeauty.startAnimation(alphaAnim)
-
                 }
 
                 override fun onAnimationRepeat(animation: Animation) {
                 }
-
             })
         }
 
@@ -115,6 +112,5 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
             }
             binding.ivBeauty.startAnimation(shakeAnim)
         }
-
     }
 }

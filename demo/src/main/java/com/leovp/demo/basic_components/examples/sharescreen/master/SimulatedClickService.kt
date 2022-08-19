@@ -48,7 +48,7 @@ class SimulatedClickService : AccessibilityService() {
                         LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
                     }
                 }
-                else                                     -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
+                else -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
             }
         } else {
             LogContext.log.w(TAG, "Simulate click only available as of Android 7.0")

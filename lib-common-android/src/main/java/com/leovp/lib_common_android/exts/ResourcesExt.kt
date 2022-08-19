@@ -27,10 +27,12 @@ fun Context.readAssetsFileAsString(@RawRes rawId: Int): String {
     return resources.openRawResource(rawId).use { it.readBytes().toString(StandardCharsets.UTF_8) }
 }
 
-fun Context.saveRawResourceToFile(@RawRes id: Int,
+fun Context.saveRawResourceToFile(
+    @RawRes id: Int,
     storagePath: String,
     outFileName: String,
-    force: Boolean = false): String {
+    force: Boolean = false
+): String {
     val inputStream: InputStream = resources.openRawResource(id)
     val file = File(storagePath)
     if (!file.exists()) {
@@ -40,10 +42,12 @@ fun Context.saveRawResourceToFile(@RawRes id: Int,
     return storagePath + File.separatorChar + outFileName
 }
 
-fun Context.saveAssetToFile(assetFileName: String,
+fun Context.saveAssetToFile(
+    assetFileName: String,
     storagePath: String,
     outFileName: String,
-    force: Boolean = false): Boolean {
+    force: Boolean = false
+): Boolean {
     return runCatching {
         assets.open(assetFileName).toFile(File(storagePath, outFileName).absolutePath, force = force)
         true
@@ -52,7 +56,6 @@ fun Context.saveAssetToFile(assetFileName: String,
         false
     }
 }
-
 
 // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
 // (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
@@ -76,8 +79,8 @@ inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
     val result: Float = pxValue * 1.0f / displayMetrics.density + 0.5f
     return when (T::class) {
         Float::class -> result as T
-        Int::class   -> result.toInt() as T
-        else         -> fail("Type not supported")
+        Int::class -> result.toInt() as T
+        else -> fail("Type not supported")
     }
 }
 
@@ -112,7 +115,7 @@ inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT
     val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
     return when (T::class) {
         Float::class -> result as T
-        Int::class   -> result.toInt() as T
-        else         -> fail("Type not supported")
+        Int::class -> result.toInt() as T
+        else -> fail("Type not supported")
     }
 }

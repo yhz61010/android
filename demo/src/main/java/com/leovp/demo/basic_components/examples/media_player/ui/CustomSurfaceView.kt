@@ -43,9 +43,10 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
         var finalWidth = widthMeasureSpec
         var finalHeight = heightMeasureSpec
         LogContext.log.d(
-            TAG, "onMeasure target=" + aspectRatio +
-                    " width=[" + MeasureSpec.toString(widthMeasureSpec) +
-                    "] height=[" + MeasureSpec.toString(heightMeasureSpec) + "]"
+            TAG,
+            "onMeasure target=" + aspectRatio +
+                " width=[" + MeasureSpec.toString(widthMeasureSpec) +
+                "] height=[" + MeasureSpec.toString(heightMeasureSpec) + "]"
         )
 
         // Target aspect ratio will be < 0 if it hasn't been set yet.  In that case,
@@ -69,8 +70,9 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                 // 1280x720 to scaled 1280x719 because of some floating-point round-off error,
                 // so if we're really close just leave it alone.
                 LogContext.log.d(
-                    TAG, "aspect ratio is good (target=" + aspectRatio +
-                            ", view=" + initialWidth + "x" + initialHeight + ")"
+                    TAG,
+                    "aspect ratio is good (target=" + aspectRatio +
+                        ", view=" + initialWidth + "x" + initialHeight + ")"
                 )
             } else {
                 if (aspectDiff > 0) {
@@ -81,8 +83,9 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                     initialWidth = (initialHeight * aspectRatio).toInt()
                 }
                 LogContext.log.d(
-                    TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
-                            horizPadding + "x" + vertPadding
+                    TAG,
+                    "new size=" + initialWidth + "x" + initialHeight + " + padding " +
+                        horizPadding + "x" + vertPadding
                 )
                 initialWidth += horizPadding
                 initialHeight += vertPadding
@@ -91,10 +94,10 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             }
         }
 
-        //LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
+        // LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
         //        "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
 
-        //LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
+        // LogContext.log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
         //        "] height=[" + View.MeasureSpec.toString(heightMeasureSpec) + "]");
         super.onMeasure(finalWidth, finalHeight)
     }

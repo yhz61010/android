@@ -20,7 +20,12 @@ import com.leovp.log_sdk.LogContext
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
-class AudioPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo, private val type: AudioType = AudioType.COMPRESSED_PCM, minPlayBufferSizeRatio: Int = 1) {
+class AudioPlayer(
+    ctx: Context,
+    private val audioDecoderInfo: AudioDecoderInfo,
+    private val type: AudioType = AudioType.COMPRESSED_PCM,
+    minPlayBufferSizeRatio: Int = 1
+) {
     companion object {
         private const val TAG = "AudioPlayer"
     }
@@ -59,13 +64,16 @@ class AudioPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo, 
             LogContext.log.w(TAG, "AAC Decoder")
             aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
         } else {
-            decoderWrapper = AudioDecoderManager.getWrapper(type, audioDecoderInfo, object : OutputCallback {
-                override fun output(out: ByteArray) {
-                    val st = SystemClock.elapsedRealtime()
-                    audioTrack.write(out.toShortArrayLE(), 0, out.size / 2)
-                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+            decoderWrapper = AudioDecoderManager.getWrapper(
+                type, audioDecoderInfo,
+                object : OutputCallback {
+                    override fun output(out: ByteArray) {
+                        val st = SystemClock.elapsedRealtime()
+                        audioTrack.write(out.toShortArrayLE(), 0, out.size / 2)
+                        if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+                    }
                 }
-            })
+            )
             LogContext.log.w(TAG, "decoderWrapper=$decoderWrapper")
         }
     }

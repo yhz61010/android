@@ -16,21 +16,25 @@ import com.leovp.log_sdk.base.ITAG
 class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.fragment_for_nav_second) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentForNavSecondBinding {
+        savedInstanceState: Bundle?
+    ): FragmentForNavSecondBinding {
         return FragmentForNavSecondBinding.inflate(inflater, container, false)
     }
 
     private val args by navArgs<FragmentForNavSecondArgs>()
 
-    override fun onCreateView(inflater: LayoutInflater,
+    override fun onCreateView(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): View {
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         binding.btnGotoForthActivity.setOnSingleClickListener {
             val forthAction =
-                    FragmentForNavSecondDirections.actionFragmentForNavSecondToFragmentForNavForth()
+                FragmentForNavSecondDirections.actionFragmentForNavSecondToFragmentForNavForth()
             it.findNavController().navigate(forthAction)
         }
         return binding.root

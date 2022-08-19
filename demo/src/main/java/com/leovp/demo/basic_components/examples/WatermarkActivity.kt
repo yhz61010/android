@@ -11,7 +11,6 @@ import com.leovp.demo.databinding.ActivityWatermarkBinding
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-
 class WatermarkActivity : BaseDemonstrationActivity<ActivityWatermarkBinding>() {
     override fun getTagName(): String = ITAG
 

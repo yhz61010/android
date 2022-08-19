@@ -106,10 +106,12 @@ class LangUtil private constructor(private val ctx: Context) {
      * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
     @Synchronized
-    fun setAppLanguage(ctx: Context,
+    fun setAppLanguage(
+        ctx: Context,
         targetLocale: Locale = getAppLanguage(),
         refreshUI: Boolean = false,
-        callback: ((Boolean) -> Unit)? = null): Context {
+        callback: ((Boolean) -> Unit)? = null
+    ): Context {
         saveLanguageToPref(targetLocale)
         val context = updateResources(ctx, targetLocale)
         callback?.invoke(refreshUI)

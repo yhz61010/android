@@ -100,8 +100,10 @@ class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBin
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     bluetooth.cancelDiscovery()
                     startActivity<BluetoothClientActivity>({ intent ->
-                        intent.putExtra("device",
-                            item.device)
+                        intent.putExtra(
+                            "device",
+                            item.device
+                        )
                     })
                 }
             }
@@ -208,9 +210,9 @@ class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBin
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                BluetoothDevice.ACTION_FOUND               -> {
+                BluetoothDevice.ACTION_FOUND -> {
                     val device: BluetoothDevice =
-                            intent.getParcelableExtraOrNull(BluetoothDevice.EXTRA_DEVICE) ?: return
+                        intent.getParcelableExtraOrNull(BluetoothDevice.EXTRA_DEVICE) ?: return
                     val model = DeviceModel(device, device.name, device.address, null)
                     LogContext.log.w("Found device: ${model.toJsonString()}")
                     bluetoothDeviceMap[device.address] = model
@@ -219,7 +221,7 @@ class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBin
                     list.sortByDescending { it.name }
                     adapter?.clearAndAddList(list)
                 }
-                BluetoothAdapter.ACTION_DISCOVERY_STARTED  -> {
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     LogContext.log.w("Bluetooth discovery started")
                     toast("Discovery started")
                 }
@@ -227,15 +229,15 @@ class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBin
                     LogContext.log.w("Bluetooth discovery finished")
                     toast("Discovery done")
                 }
-                BluetoothDevice.ACTION_ACL_CONNECTED       -> {
+                BluetoothDevice.ACTION_ACL_CONNECTED -> {
                     LogContext.log.w("Device connected")
                     toast("ACTION_ACL_CONNECTED")
                 }
-                BluetoothDevice.ACTION_ACL_DISCONNECTED    -> {
+                BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     LogContext.log.w("Device disconnected")
                     toast("ACTION_ACL_DISCONNECTED")
                 }
-                else                                       -> {
+                else -> {
                     LogContext.log.e("Bluetooth discovery unknown error.")
                     toast("Bluetooth discovery unknown error.")
                 }

@@ -73,7 +73,6 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     private var networkMonitor: AtomicReference<NetworkMonitor>? = null
 
     open fun onCreateBeginning() {
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,8 +82,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         super.onCreate(savedInstanceState)
         binding = getViewBinding(savedInstanceState).apply { setContentView(root) }
         simpleActivityLauncher =
-                BetterActivityResult.registerForActivityResult(this,
-                    ActivityResultContracts.StartActivityForResult())
+            BetterActivityResult.registerForActivityResult(
+                this,
+                ActivityResultContracts.StartActivityForResult()
+            )
         EventBus.getDefault().register(this)
 
         supportActionBar?.apply {
@@ -105,8 +106,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
      * for activity on `AndroidManifest`, this method will be called.
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
-        LogContext.log.w(tag,
-            "=====> onConfigurationChanged <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(
+            tag,
+            "=====> onConfigurationChanged <=====", outputType = OUTPUT_TYPE_FRAMEWORK
+        )
         super.onConfigurationChanged(newConfig)
     }
 
@@ -142,8 +145,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         LogContext.log.w(tag, "=====> onStop <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
         super.onStop()
         if (networkMonitor != null) {
-            LogContext.log.w(tag,
-                "Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor() if you don't need it anymore.")
+            LogContext.log.w(
+                tag,
+                "Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor() if you don't need it anymore."
+            )
         }
     }
 
@@ -171,8 +176,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
                 }
             }
         } catch (e: Exception) {
-            LogContext.log.e(tag,
-                "dispatchTouchEvent() exception.", e, outputType = OUTPUT_TYPE_FRAMEWORK)
+            LogContext.log.e(
+                tag,
+                "dispatchTouchEvent() exception.", e, outputType = OUTPUT_TYPE_FRAMEWORK
+            )
         }
         return ret
     }
@@ -210,8 +217,10 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         networkMonitor = null
     }
 
-    fun startTrafficNetwork(domain: String,
-        callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null) {
+    fun startTrafficNetwork(
+        domain: String,
+        callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null
+    ) {
         if (networkMonitor?.get() != null) {
             LogContext.log.w(tag, "networkMonitor had already existed! Do NOT create it again!")
             return
@@ -230,35 +239,37 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
                 LogContext.log.e(tag, "networkMonitor had already existed! Do NOT create it again!")
                 return@getIpsByHost
             }
-            networkMonitor = AtomicReference(NetworkMonitor(this@BaseActivity, socketIp) { info ->
-                callback?.let { runOnUiThread { it(info) } }
+            networkMonitor = AtomicReference(
+                NetworkMonitor(this@BaseActivity, socketIp) { info ->
+                    callback?.let { runOnUiThread { it(info) } }
 
-                if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) return@NetworkMonitor
+                    if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) return@NetworkMonitor
 
-                val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
-                val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
+                    val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
+                    val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
 
-                val latencyStatus = when (info.showPingTips) {
-                    NetworkUtil.NETWORK_PING_DELAY_HIGH      -> "Latency High"
-                    NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
-                    else                                     -> null
+                    val latencyStatus = when (info.showPingTips) {
+                        NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
+                        NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
+                        else -> null
+                    }
+
+                    val wifiSignalStatus = when (info.showWifiSig) {
+                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
+                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
+                        else -> null
+                    }
+                    val infoStr = String.format(
+                        "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
+                        downloadSpeedStr, uploadSpeedStr,
+                        if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
+                        info.linkSpeed,
+                        info.rssi, info.wifiScoreIn5, info.wifiScore,
+                        if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
+                    )
+                    LogContext.log.i(tag, infoStr)
                 }
-
-                val wifiSignalStatus = when (info.showWifiSig) {
-                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD      -> "Signal Bad"
-                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
-                    else                                         -> null
-                }
-                val infoStr = String.format(
-                    "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
-                    downloadSpeedStr, uploadSpeedStr,
-                    if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
-                    info.linkSpeed,
-                    info.rssi, info.wifiScoreIn5, info.wifiScore,
-                    if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
-                )
-                LogContext.log.i(tag, infoStr)
-            }).also {
+            ).also {
                 it.get().startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
             }
         }

@@ -21,7 +21,6 @@ import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 
-
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {
         allowToOutputDefaultWifiTrafficInfo = true
@@ -43,19 +42,21 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         val appBarConfiguration =
-                AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
+            AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
-            .permission(Permission.MANAGE_EXTERNAL_STORAGE,
+            .permission(
+                Permission.MANAGE_EXTERNAL_STORAGE,
                 Permission.CAMERA,
                 Permission.RECORD_AUDIO,
                 Permission.ACCESS_FINE_LOCATION,
                 Permission.ACCESS_COARSE_LOCATION,
                 Permission.SYSTEM_ALERT_WINDOW,
                 Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT, Permission.BLUETOOTH_SCAN)
+                Permission.BLUETOOTH_CONNECT, Permission.BLUETOOTH_SCAN
+            )
             .request(object : OnPermissionCallback {
                 override fun onGranted(granted: MutableList<String>?, all: Boolean) {
                 }
@@ -127,8 +128,10 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         val signatures: List<ByteArray> = getApplicationSignatures()
         if (signatures.isNotEmpty()) {
             for (i in signatures.indices) {
-                LogContext.log.i(ITAG,
-                    "signatures:" + i + "=" + signatures[i].toHexString(true, ""))
+                LogContext.log.i(
+                    ITAG,
+                    "signatures:" + i + "=" + signatures[i].toHexString(true, "")
+                )
             }
         }
 

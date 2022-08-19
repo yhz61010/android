@@ -13,7 +13,12 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 20-6-18 下午2:05
  */
-class AacEncoder(private val sampleRate: Int, private val bitrate: Int, private val channelCount: Int, callback: AacEncodeCallback) {
+class AacEncoder(
+    private val sampleRate: Int,
+    private val bitrate: Int,
+    private val channelCount: Int,
+    callback: AacEncodeCallback
+) {
     companion object {
         private const val TAG = "AacEn"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC

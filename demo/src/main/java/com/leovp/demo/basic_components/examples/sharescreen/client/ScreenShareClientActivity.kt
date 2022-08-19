@@ -191,7 +191,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
             when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
-            }, screenInfo.width, screenInfo.height
+            },
+            screenInfo.width, screenInfo.height
         )
 
         //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
@@ -258,19 +259,19 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 outputBuffer?.let {
                     //                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
                             LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexStringLE()}]")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME     -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
-                        else                                 -> {
+                        else -> {
                             // Do nothing
                         }
                     }
@@ -297,7 +298,12 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
     private var webSocketClient: WebSocketClient? = null
     private var webSocketClientHandler: WebSocketClientHandler? = null
 
-    class WebSocketClient(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, trustAllServers: Boolean, retryStrategy: RetryStrategy) :
+    class WebSocketClient(
+        webSocketUri: URI,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        trustAllServers: Boolean,
+        retryStrategy: RetryStrategy
+    ) :
         BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "ScreenShareClientActivity"
 
@@ -360,9 +366,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
             val touchBean = TouchBean(type, x, y)
             val cmdId = when (type) {
                 TouchType.RECENT -> ScreenShareMasterActivity.CMD_TOUCH_RECENT
-                TouchType.HOME   -> ScreenShareMasterActivity.CMD_TOUCH_HOME
-                TouchType.BACK   -> ScreenShareMasterActivity.CMD_TOUCH_BACK
-                else             -> CMD_TOUCH_EVENT
+                TouchType.HOME -> ScreenShareMasterActivity.CMD_TOUCH_HOME
+                TouchType.BACK -> ScreenShareMasterActivity.CMD_TOUCH_BACK
+                else -> CMD_TOUCH_EVENT
             }
             val touchArray = CmdBean(cmdId, null, null, touchBean).toJsonString().encodeToByteArray()
             val cId = cmdId.asByteAndForceToBytes()
@@ -452,7 +458,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
 
                 when (action) {
                     CMD_DEVICE_SCREEN_INFO -> Unit
-                    CMD_GRAPHIC_CSD        -> {
+                    CMD_GRAPHIC_CSD -> {
                         foundCsd.set(true)
                         queue.offer(dataArray)
                         LogContext.log.w(ITAG, "csd=${dataArray.toHexStringLE()}")
@@ -508,7 +514,6 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 }.onFailure { it.printStackTrace() }
                 cs.launch { webSocketClient?.disconnectManually() }
                 runOnUiThread { binding.toggleButton.isChecked = false }
-
             }
         }
 
@@ -576,7 +581,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 touchDownStartTime = SystemClock.currentThreadTimeMillis()
             }
             MotionEvent.ACTION_MOVE -> Unit
-            MotionEvent.ACTION_UP   -> {
+            MotionEvent.ACTION_UP -> {
                 touchUpRawX = event.rawX
                 touchUpRawY = event.rawY
                 touchUpStartTime = SystemClock.currentThreadTimeMillis()

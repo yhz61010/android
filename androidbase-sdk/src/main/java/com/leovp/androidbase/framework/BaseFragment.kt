@@ -43,12 +43,17 @@ abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Frag
      */
     protected val binding get() = _binding!!
 
-    abstract fun getViewBinding(inflater: LayoutInflater,
+    abstract fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): B
+        savedInstanceState: Bundle?
+    ): B
 
-    override fun onCreateView(inflater: LayoutInflater,
-        container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         _binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
     }

@@ -52,9 +52,11 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
 
     override fun getTagName() = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentBasicBinding {
+        savedInstanceState: Bundle?
+    ): FragmentBasicBinding {
         return FragmentBasicBinding.inflate(inflater, container, false)
     }
 
@@ -68,8 +70,10 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Socket Client", SocketClientActivity::class.java),
             Pair("WebSocket Server", WebSocketServerActivity::class.java),
             Pair("WebSocket Client", WebSocketClientActivity::class.java),
-            Pair("Play H265 Video File by MediaCodec",
-                PlayH265VideoByMediaCodecActivity::class.java),
+            Pair(
+                "Play H265 Video File by MediaCodec",
+                PlayH265VideoByMediaCodecActivity::class.java
+            ),
             Pair("Play Raw H265 by MediaCodec", PlayRawH265ByMediaCodecActivity::class.java),
             Pair("FFMPEG Raw H264", FFMpegH264Activity::class.java),
             Pair("FFMPEG Raw H265", FFMpegH265Activity::class.java),
@@ -101,8 +105,10 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("AIDL", AidlActivity::class.java),
             Pair("Provider", ProviderActivity::class.java),
             Pair("Animation", AnimationActivity::class.java),
-            Pair(getString(R.string.act_title_change_app_lang),
-                ChangeAppLanguageActivity::class.java),
+            Pair(
+                getString(R.string.act_title_change_app_lang),
+                ChangeAppLanguageActivity::class.java
+            ),
             Pair("Toast", ToastActivity::class.java),
             Pair("FloatView", FloatViewActivity::class.java),
             Pair("CircleProgressBar", CircleProgressbarActivity::class.java),
@@ -116,8 +122,10 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                startActivity(featureList[position].second,
-                    { intent -> intent.putExtra("title", featureList[position].first) })
+                startActivity(
+                    featureList[position].second,
+                    { intent -> intent.putExtra("title", featureList[position].first) }
+                )
             }
         }
         view.findViewById<SwipeRefreshLayout>(R.id.refreshLayout)?.let {

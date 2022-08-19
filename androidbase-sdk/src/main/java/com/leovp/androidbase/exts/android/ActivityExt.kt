@@ -22,42 +22,80 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean {
 // ============================================================================
 
 /** Launch a Activity */
-fun Context.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+fun Context.startActivity(
+    cls: Class<*>,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) {
     val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
     this.startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity */
-fun Context.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-        startActivity(kcls.java, extras, flags, options)
+fun Context.startActivity(
+    kcls: KClass<*>,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) =
+    startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity */
-fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-        startActivity(Class.forName(clsStr), extras, flags, options)
+fun Context.startActivity(
+    clsStr: String,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) =
+    startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity */
-inline fun <reified T : Context> Context.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+inline fun <reified T : Context> Context.startActivity(
+    noinline extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) {
     startActivity(T::class.java, extras, flags, options)
 }
 
 // --------------------
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+fun Fragment.startActivity(
+    cls: Class<*>,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) {
     val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
     startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+fun Fragment.startActivity(
+    kcls: KClass<*>,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) =
     startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+fun Fragment.startActivity(
+    clsStr: String,
+    extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) =
     startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity in Fragment */
-inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+inline fun <reified T : Fragment> Fragment.startActivity(
+    noinline extras: ((intent: Intent) -> Intent)? = null,
+    flags: Int? = null,
+    options: Bundle? = null
+) {
     startActivity(T::class.java, extras, flags, options)
 }
 
@@ -76,15 +114,15 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+// )
+// fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
 //    val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
 //    startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
-//}
+// }
 
 /**
  * Launch a Activity
@@ -99,12 +137,12 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// )
+// fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
@@ -120,12 +158,12 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// )
+// fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
 // -----
@@ -143,15 +181,15 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+// )
+// fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
 //    val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
 //    startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
-//}
+// }
 
 /**
  * Launch a Activity in Fragment
@@ -166,12 +204,12 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// )
+// fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
@@ -187,12 +225,12 @@ inline fun <reified T : Fragment> Fragment.startActivity(noinline extras: ((inte
  *
  * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
  */
-//@JvmOverloads
-//@Deprecated(
+// @JvmOverloads
+// @Deprecated(
 //    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-//)
-//fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// )
+// fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
 // ============================================================
@@ -236,10 +274,10 @@ fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? =
  * Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-//@JvmOverloads
-//fun Fragment.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
+// @JvmOverloads
+// fun Fragment.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
 //    startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri), requestCode, options)
-//}
+// }
 
 // --------------------------------------------------
 
@@ -280,10 +318,10 @@ fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle?
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-//@JvmOverloads
-//fun Fragment.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
+// @JvmOverloads
+// fun Fragment.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
 //    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri), requestCode, options)
-//}
+// }
 
 // --------------------------------------------------
 
@@ -330,12 +368,12 @@ fun Activity.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-//@JvmOverloads
-//fun Fragment.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
+// @JvmOverloads
+// fun Fragment.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
 //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //        startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.requireContext().packageUri), requestCode, options)
 //    }
-//}
+// }
 
 // --------------------------------------------------
 
@@ -382,11 +420,11 @@ fun Activity.startUnitySettingPage(action: String, requestCode: Int, options: Bu
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-//@JvmOverloads
-//fun Fragment.startUnitySettingPage(action: String, requestCode: Int, options: Bundle? = null) {
+// @JvmOverloads
+// fun Fragment.startUnitySettingPage(action: String, requestCode: Int, options: Bundle? = null) {
 //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //        startActivityForResult(Intent(action, this.requireContext().packageUri), requestCode, options)
 //    }
-//}
+// }
 
 // --------------------------------------------------

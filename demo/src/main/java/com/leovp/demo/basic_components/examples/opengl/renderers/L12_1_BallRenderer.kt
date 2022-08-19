@@ -82,14 +82,18 @@ class L12_1_BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
         // 计算宽高比
         val ratio: Float = width.toFloat() / height
         // 设置透视投影
-        Matrix.frustumM(projectMatrix, 0,
+        Matrix.frustumM(
+            projectMatrix, 0,
             -ratio, ratio, -1f, 1f,
-            3f, 20f)
+            3f, 20f
+        )
         // 设置相机位置
-        Matrix.setLookAtM(viewMatrix, 0,
+        Matrix.setLookAtM(
+            viewMatrix, 0,
             1.0f, -10.0f, -4.0f,
             0f, 0f, 0f,
-            0f, 1.0f, 0.0f)
+            0f, 1.0f, 0.0f
+        )
         // 计算变换矩阵
         Matrix.multiplyMM(mvpMatrix, 0, projectMatrix, 0, viewMatrix, 0)
     }
@@ -110,14 +114,15 @@ class L12_1_BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, THREE_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBuffer)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation, THREE_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexBuffer
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // GLES20.GL_TRIANGLE_STRIP
         // GLES20.GL_TRIANGLES
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, pointData.size / THREE_DIMEN_POS_COMPONENT_COUNT)
         GLES20.glDisableVertexAttribArray(aPositionLocation)
-
     }
 }

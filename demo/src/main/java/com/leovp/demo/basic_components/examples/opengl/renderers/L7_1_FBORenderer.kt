@@ -150,8 +150,10 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
         // 2.2 绑定纹理对象
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture[0])
         // 2.3 设置纹理对象的相关信息：颜色模式，大小
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, textureBean.width, textureBean.height,
-            0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null)
+        GLES20.glTexImage2D(
+            GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, textureBean.width, textureBean.height,
+            0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null
+        )
         // 2.4 纹理过滤参数设置
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST.toFloat())
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
@@ -165,8 +167,10 @@ class L7_1_FBORenderer(@Suppress("unused") private val ctx: Context) : L7_BaseRe
         // 1. 绑定 FrameBuffer 到当前的绘制环境上
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0])
         // 2. 将纹理对象挂载到 FrameBuffer 上，存储颜色信息
-        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
-            GLES20.GL_TEXTURE_2D, texture[0], 0)
+        GLES20.glFramebufferTexture2D(
+            GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+            GLES20.GL_TEXTURE_2D, texture[0], 0
+        )
     }
 
     private fun drawTexture() {

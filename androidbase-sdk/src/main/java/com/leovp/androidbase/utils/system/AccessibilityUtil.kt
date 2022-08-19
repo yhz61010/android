@@ -11,7 +11,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.leovp.log_sdk.LogContext
 import java.lang.ref.WeakReference
 
-
 /**
  * `AccessibilityUtil` must be initialized in your custom `AccessibilityService`.
  *

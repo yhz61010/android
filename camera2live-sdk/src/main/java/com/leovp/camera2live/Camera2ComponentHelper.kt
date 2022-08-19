@@ -65,9 +65,11 @@ import kotlin.math.min
  * Date: 20-6-24 下午5:05
  */
 @Suppress("unused")
-class Camera2ComponentHelper(private val context: FragmentActivity,
+class Camera2ComponentHelper(
+    private val context: FragmentActivity,
     private var lensFacing: Int,
-    private val cameraView: View? = null) {
+    private val cameraView: View? = null
+) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
     var enableGallery = true
@@ -77,8 +79,8 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
     var previewHeight: Int = 0
         private set
 
-    private var supportFlash = false   // Support flash
-    private var torchOn = false        // Flash continuously on
+    private var supportFlash = false // Support flash
+    private var torchOn = false // Flash continuously on
 
     private lateinit var cameraId: String
     private var lensSwitchListener: LensSwitchListener? = null
@@ -96,7 +98,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
      */
     lateinit var characteristics: CameraCharacteristics
 
-    /////// Recording - Start ///////////////////////////////////////////////////////////
+    // ///// Recording - Start ///////////////////////////////////////////////////////////
     private var recordDuration: Int = 0
     var isRecording = false
         private set
@@ -109,7 +111,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         val minute = duration / 60 % 60
         val hour = duration / 3600 % 60
         cameraView?.findViewById<TextView>(R.id.txtRecordTime)?.text =
-                "%02d:%02d:%02d".format(hour, minute, second)
+            "%02d:%02d:%02d".format(hour, minute, second)
         accumulateRecordTime()
     }
     private lateinit var builder: Builder
@@ -179,13 +181,13 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         bitrateMode: Int
     ) {
         cameraEncoder =
-                CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
+            CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
         dataProcessContext = if (
-            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
-            || CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
+            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder") ||
+            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder") ||
+            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC") ||
+            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
@@ -204,12 +206,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         //        }
 
         cameraEncoder.setDataUpdateCallback(object :
-            CallbackListener {
-            override fun onCallback(h264Data: ByteArray) {
-                encodeListener?.onUpdate(h264Data)
-                if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
-            }
-        })
+                CallbackListener {
+                override fun onCallback(h264Data: ByteArray) {
+                    encodeListener?.onUpdate(h264Data)
+                    if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
+                }
+            })
     }
 
     /**
@@ -219,7 +221,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         try {
             if (outputH264ForDebug || outputYuvForDebug) {
                 baseOutputFolderForDebug =
-                        context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
+                    context.getExternalFilesDir(null)!!.absolutePath + File.separator + "leo-media"
                 val folder = File(baseOutputFolderForDebug!!)
                 if (!folder.exists()) {
                     val mkdirStatus = folder.mkdirs()
@@ -271,22 +273,28 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation =
-                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
         var swapDimension = false
-        LogContext.log.w(TAG,
-            "deviceRotation: $deviceRotation")                   // deviceRotation: 0
-        LogContext.log.w(TAG,
-            "cameraSensorOrientation: $cameraSensorOrientation") // cameraSensorOrientation: 90
+        LogContext.log.w(
+            TAG,
+            "deviceRotation: $deviceRotation"
+        ) // deviceRotation: 0
+        LogContext.log.w(
+            TAG,
+            "cameraSensorOrientation: $cameraSensorOrientation"
+        ) // cameraSensorOrientation: 90
         when (deviceRotation) {
-            Surface.ROTATION_0, Surface.ROTATION_180  -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+            Surface.ROTATION_0, Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
                 LogContext.log.w(TAG, "swapDimension set true")
                 swapDimension = true
             }
             Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
                 swapDimension = true
             }
-            else                                      -> LogContext.log.e(TAG,
-                "Display rotation is invalid: $deviceRotation")
+            else -> LogContext.log.e(
+                TAG,
+                "Display rotation is invalid: $deviceRotation"
+            )
         }
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
@@ -305,29 +313,37 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             cameraHeight = desiredVideoHeight
         }
         if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth =
-                cameraSupportedMaxPreviewHeight
+            cameraSupportedMaxPreviewHeight
         if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight =
-                cameraSupportedMaxPreviewWidth
+            cameraSupportedMaxPreviewWidth
         LogContext.log.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Calculate ImageReader input preview size from supported size list by camera.
         // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
         // Attention: The returned value is in camera orientation. NOT in device orientation.
         selectedSizeFromCamera =
-                getPreviewOutputSize(Size(cameraWidth, cameraHeight),
-                    characteristics,
-                    SurfaceHolder::class.java)
+            getPreviewOutputSize(
+                Size(cameraWidth, cameraHeight),
+                characteristics,
+                SurfaceHolder::class.java
+            )
         // Take care of the result value. It's in camera orientation.
-        LogContext.log.w(TAG,
-            "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}")
+        LogContext.log.w(
+            TAG,
+            "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}"
+        )
         // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
         previewSize =
-                if (swapDimension) Size(selectedSizeFromCamera.height,
-                    selectedSizeFromCamera.width) else {
-                    selectedSizeFromCamera
-                }
-        LogContext.log.w(TAG,
-            "previewSize width=${previewSize!!.width} height=${previewSize!!.height}")
+            if (swapDimension) Size(
+                selectedSizeFromCamera.height,
+                selectedSizeFromCamera.width
+            ) else {
+                selectedSizeFromCamera
+            }
+        LogContext.log.w(
+            TAG,
+            "previewSize width=${previewSize!!.width} height=${previewSize!!.height}"
+        )
     }
 
     // ===== Debug code =======================
@@ -344,7 +360,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
     private var videoH264OsForDebug: BufferedOutputStream? = null
     private var baseOutputFolderForDebug: String? = null
     // =========================================
-    /////// Recording - End ///////////////////////////////////////////////////////////
+    // ///// Recording - End ///////////////////////////////////////////////////////////
 
     init {
         initializeParameters()
@@ -366,13 +382,17 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
 
         // Get camera supported fps. It will be used to create CaptureRequest
         cameraSupportedFpsRanges =
-                characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
-        LogContext.log.w(TAG,
-            "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}")
+            characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+        LogContext.log.w(
+            TAG,
+            "cameraSupportedFpsRanges=${cameraSupportedFpsRanges.contentToString()}"
+        )
 
         val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-        LogContext.log.w(TAG,
-            "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}")
+        LogContext.log.w(
+            TAG,
+            "highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}"
+        )
         val highSpeedVideoSizes = configMap.highSpeedVideoSizes
         LogContext.log.w(TAG, "highSpeedVideoSizes=${highSpeedVideoSizes?.contentToString()}")
     }
@@ -423,13 +443,15 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
 
         /** [previewSize] is initialized in [initializeRecordingParameters] */
         val usedBitrate =
-                if (autoBitrate) (previewSize!!.width * previewSize!!.height * builder.quality).toInt() else bitrate
-        initCameraEncoder(previewSize!!.width,
+            if (autoBitrate) (previewSize!!.width * previewSize!!.height * builder.quality).toInt() else bitrate
+        initCameraEncoder(
+            previewSize!!.width,
             previewSize!!.height,
             usedBitrate,
             builder.videoFps,
             builder.iFrameInterval,
-            builder.bitrateMode)
+            builder.bitrateMode
+        )
     }
 
     fun setImageReaderForRecording() {
@@ -449,10 +471,12 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         //        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
         //            .maxBy { it.height * it.width }!!
         imageReader =
-                ImageReader.newInstance(previewWidth,
-                    previewHeight,
-                    ImageFormat.JPEG,
-                    IMAGE_BUFFER_SIZE)
+            ImageReader.newInstance(
+                previewWidth,
+                previewHeight,
+                ImageFormat.JPEG,
+                IMAGE_BUFFER_SIZE
+            )
     }
 
     suspend fun setPreviewRepeatingRequest() {
@@ -469,22 +493,25 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
 
         // Capture request holds references to target surfaces
         capturePreviewRequestBuilder =
-                session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                    cameraView?.let {
-                        // Add the preview surface target
-                        addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
-                    }
-                    // Auto focus
-                    set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                    // Auto exposure. The flash will be open automatically in dark.
-                    set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)
-                    // AWB
-                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
+            session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                cameraView?.let {
+                    // Add the preview surface target
+                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
                 }
+                // Auto focus
+                set(
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                )
+                // Auto exposure. The flash will be open automatically in dark.
+                set(
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
+                )
+                // AWB
+                //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+            }
         // This will keep sending the capture request as frequently as possible until the
         // session is torn down or session.stopRepeating() is called
         session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
@@ -499,26 +526,32 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
     fun initializeCamera(previewWidth: Int, previewHeight: Int) =
-            context.lifecycleScope.launch(Dispatchers.Main) {
-                LogContext.log.i(TAG,
-                    "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <=====")
-                this@Camera2ComponentHelper.previewWidth = previewWidth
-                this@Camera2ComponentHelper.previewHeight = previewHeight
-                initializeParameters()
+        context.lifecycleScope.launch(Dispatchers.Main) {
+            LogContext.log.i(
+                TAG,
+                "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
+            )
+            this@Camera2ComponentHelper.previewWidth = previewWidth
+            this@Camera2ComponentHelper.previewHeight = previewHeight
+            initializeParameters()
 
-                // Open the selected camera
-                camera = openCamera(cameraManager, cameraId, cameraHandler)
+            // Open the selected camera
+            camera = openCamera(cameraManager, cameraId, cameraHandler)
 
-                if (enableTakePhotoFeature) {
-                    val st = SystemClock.elapsedRealtime()
-                    setImageReaderForPhoto(previewWidth, previewHeight)
-                    LogContext.log.d(TAG,
-                        "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}")
-                    setPreviewRepeatingRequest()
-                    LogContext.log.d(TAG,
-                        "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}")
-                }
+            if (enableTakePhotoFeature) {
+                val st = SystemClock.elapsedRealtime()
+                setImageReaderForPhoto(previewWidth, previewHeight)
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+                setPreviewRepeatingRequest()
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
             }
+        }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -527,36 +560,40 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         cameraId: String,
         handler: Handler? = null
     ): CameraDevice = suspendCancellableCoroutine { cont ->
-        manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
-            override fun onOpened(device: CameraDevice) = cont.resume(device)
+        manager.openCamera(
+            cameraId,
+            object : CameraDevice.StateCallback() {
+                override fun onOpened(device: CameraDevice) = cont.resume(device)
 
-            override fun onDisconnected(device: CameraDevice) {
-                LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
-                // TODO In some cases, call this method will cause crash
-                //                context.requireActivity().finish()
-            }
-
-            override fun onClosed(camera: CameraDevice) {
-                LogContext.log.w(TAG, "Camera $cameraId has been closed")
-                super.onClosed(camera)
-            }
-
-            override fun onError(device: CameraDevice, error: Int) {
-                val msg = when (error) {
-                    ERROR_CAMERA_DEVICE      -> "Fatal (device)"
-                    ERROR_CAMERA_DISABLED    -> "Device policy"
-                    ERROR_CAMERA_IN_USE      -> "Camera in use"
-                    ERROR_CAMERA_SERVICE     -> "Fatal (service)"
-                    ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                    else                     -> "Unknown"
+                override fun onDisconnected(device: CameraDevice) {
+                    LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+                    // TODO In some cases, call this method will cause crash
+                    //                context.requireActivity().finish()
                 }
-                device.close()
-                val exc =
+
+                override fun onClosed(camera: CameraDevice) {
+                    LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                    super.onClosed(camera)
+                }
+
+                override fun onError(device: CameraDevice, error: Int) {
+                    val msg = when (error) {
+                        ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                        ERROR_CAMERA_DISABLED -> "Device policy"
+                        ERROR_CAMERA_IN_USE -> "Camera in use"
+                        ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                        ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                        else -> "Unknown"
+                    }
+                    device.close()
+                    val exc =
                         IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
-                LogContext.log.e(TAG, exc.message, exc)
-                if (cont.isActive) cont.resumeWithException(exc)
-            }
-        }, handler)
+                    LogContext.log.e(TAG, exc.message, exc)
+                    if (cont.isActive) cont.resumeWithException(exc)
+                }
+            },
+            handler
+        )
     }
 
     /**
@@ -580,7 +617,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val outputs: List<OutputConfiguration> = targets.map { OutputConfiguration(it) }
             val config =
-                    SessionConfiguration(SESSION_REGULAR, outputs, singleExecutor, stateCallback)
+                SessionConfiguration(SESSION_REGULAR, outputs, singleExecutor, stateCallback)
             device.createCaptureSession(config)
         } else {
             // Create a capture session using the predefined targets; this also involves defining the
@@ -675,8 +712,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
                 )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {
-                        LogContext.log.v(TAG,
-                            "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}")
+                        LogContext.log.v(
+                            TAG,
+                            "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}"
+                        )
                     }
                 }
             }
@@ -711,9 +750,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             //            cameraHandler.post {
             runCatching {
                 val cameraSensorOrientation =
-                        characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+                    characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
                 val rotatedYuv420Data =
-                        dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
+                    dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
                 cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
             }.onFailure { it.printStackTrace() }.also {
                 image.close()
@@ -738,13 +777,15 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
                     // Sets user requested FPS for all targets
                     set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
                     // Auto focus
-                    set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+                    set(
+                        CaptureRequest.CONTROL_AF_MODE,
+                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
+                    )
                     // AWB
                     //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
                     //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-
-                }.build(), null, cameraHandler
+                }.build(),
+                null, cameraHandler
             )
         }
     }
@@ -761,9 +802,9 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation =
-                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
         val jpegOrientation =
-                (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
+            (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
         LogContext.log.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }
@@ -795,104 +836,110 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             addTarget(imageReader.surface)
             set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation())
         }
-        session.capture(captureRequest.build(), object : CameraCaptureSession.CaptureCallback() {
-            override fun onCaptureStarted(
-                session: CameraCaptureSession,
-                request: CaptureRequest,
-                timestamp: Long,
-                frameNumber: Long
-            ) {
-                super.onCaptureStarted(session, request, timestamp, frameNumber)
-                cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
-                    ?.post(animationTask)
-            }
+        session.capture(
+            captureRequest.build(),
+            object : CameraCaptureSession.CaptureCallback() {
+                override fun onCaptureStarted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    timestamp: Long,
+                    frameNumber: Long
+                ) {
+                    super.onCaptureStarted(session, request, timestamp, frameNumber)
+                    cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
+                        ?.post(animationTask)
+                }
 
-            override fun onCaptureCompleted(
-                session: CameraCaptureSession,
-                request: CaptureRequest,
-                result: TotalCaptureResult
-            ) {
-                super.onCaptureCompleted(session, request, result)
-                val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
+                override fun onCaptureCompleted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: TotalCaptureResult
+                ) {
+                    super.onCaptureCompleted(session, request, result)
+                    val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
+                    LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
 
-                // Set a timeout in case image captured is dropped from the pipeline
-                val exc = TimeoutException("Image dequeuing took too long")
-                val timeoutRunnable = Runnable { cont.resumeWithException(exc) }
-                imageReaderHandler.postDelayed(timeoutRunnable, IMAGE_CAPTURE_TIMEOUT_MILLIS)
+                    // Set a timeout in case image captured is dropped from the pipeline
+                    val exc = TimeoutException("Image dequeuing took too long")
+                    val timeoutRunnable = Runnable { cont.resumeWithException(exc) }
+                    imageReaderHandler.postDelayed(timeoutRunnable, IMAGE_CAPTURE_TIMEOUT_MILLIS)
 
-                // Loop in the coroutine's context until an image with matching timestamp comes
-                // We need to launch the coroutine context again because the callback is done in
-                //  the handler provided to the `capture` method, not in our coroutine context
-                @Suppress("BlockingMethodInNonBlockingContext")
-                context.lifecycleScope.launch(cont.context) {
-                    while (true) {
-                        // Dequeue images while timestamps don't match
-                        val image = imageQueue.take()
-                        // if (image.timestamp != resultTimestamp) continue
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                            image.format != ImageFormat.DEPTH_JPEG &&
-                            image.timestamp != resultTimestamp
-                        ) continue
-                        LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
+                    // Loop in the coroutine's context until an image with matching timestamp comes
+                    // We need to launch the coroutine context again because the callback is done in
+                    //  the handler provided to the `capture` method, not in our coroutine context
+                    @Suppress("BlockingMethodInNonBlockingContext")
+                    context.lifecycleScope.launch(cont.context) {
+                        while (true) {
+                            // Dequeue images while timestamps don't match
+                            val image = imageQueue.take()
+                            // if (image.timestamp != resultTimestamp) continue
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                                image.format != ImageFormat.DEPTH_JPEG &&
+                                image.timestamp != resultTimestamp
+                            ) continue
+                            LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
 
-                        // Unset the image reader listener
-                        imageReaderHandler.removeCallbacks(timeoutRunnable)
-                        imageReader.setOnImageAvailableListener(null, null)
+                            // Unset the image reader listener
+                            imageReaderHandler.removeCallbacks(timeoutRunnable)
+                            imageReader.setOnImageAvailableListener(null, null)
 
-                        // Clear the queue of images, if there are left
-                        while (imageQueue.size > 0) {
-                            imageQueue.take().close()
-                        }
+                            // Clear the queue of images, if there are left
+                            while (imageQueue.size > 0) {
+                                imageQueue.take().close()
+                            }
 
-                        val buffer = image.planes[0].buffer
-                        val width = image.width
-                        val height = image.height
-                        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
-                        // DO NOT forget for close Image object
-                        image.close()
+                            val buffer = image.planes[0].buffer
+                            val width = image.width
+                            val height = image.height
+                            val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+                            // DO NOT forget for close Image object
+                            image.close()
 
-                        val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            context.display?.rotation ?: -1
-                        } else {
-                            @Suppress("DEPRECATION")
-                            context.windowManager.defaultDisplay.rotation
-                        }
-                        val cameraSensorOrientation =
+                            val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                context.display?.rotation ?: -1
+                            } else {
+                                @Suppress("DEPRECATION")
+                                context.windowManager.defaultDisplay.rotation
+                            }
+                            val cameraSensorOrientation =
                                 characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-                        // Compute EXIF orientation metadata
-                        // TODO Maybe you want to use rotation in someday
-                        val rotation = 0
-                        //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
-                        val mirrored =
+                            // Compute EXIF orientation metadata
+                            // TODO Maybe you want to use rotation in someday
+                            val rotation = 0
+                            //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
+                            val mirrored =
                                 characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
-                        val exifOrientation =
+                            val exifOrientation =
                                 computeExifOrientation(cameraSensorOrientation, mirrored)
-                        LogContext.log.d(
-                            TAG,
-                            "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
-                        )
-                        LogContext.log.d(TAG,
-                            "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}")
-
-                        // Build the result and resume progress
-                        cont.resume(
-                            CombinedCaptureResult(
-                                imageBytes,
-                                width,
-                                height,
-                                result,
-                                exifOrientation,
-                                mirrored,
-                                imageReader.imageFormat
+                            LogContext.log.d(
+                                TAG,
+                                "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                             )
-                        )
+                            LogContext.log.d(
+                                TAG,
+                                "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}"
+                            )
 
-                        // There is no need to break out of the loop, this coroutine will suspend
+                            // Build the result and resume progress
+                            cont.resume(
+                                CombinedCaptureResult(
+                                    imageBytes,
+                                    width,
+                                    height,
+                                    result,
+                                    exifOrientation,
+                                    mirrored,
+                                    imageReader.imageFormat
+                                )
+                            )
+
+                            // There is no need to break out of the loop, this coroutine will suspend
+                        }
                     }
                 }
-            }
-        }, cameraHandler)
+            },
+            cameraHandler
+        )
     }
 
     // ===========================================================
@@ -906,8 +953,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be on.
-        capturePreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-            CaptureRequest.CONTROL_AE_MODE_ON)
+        capturePreviewRequestBuilder.set(
+            CaptureRequest.CONTROL_AE_MODE,
+            CaptureRequest.CONTROL_AE_MODE_ON
+        )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
         torchOn = try {
@@ -932,8 +981,10 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
         // Otherwise the flash will not be off.
-        capturePreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-            CaptureRequest.CONTROL_AE_MODE_ON)
+        capturePreviewRequestBuilder.set(
+            CaptureRequest.CONTROL_AE_MODE,
+            CaptureRequest.CONTROL_AE_MODE_ON
+        )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
         torchOn = try {
@@ -1017,7 +1068,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
                 context.lifecycleScope.launch(Dispatchers.IO) {
                     // TODO The buffer that is just the JPEG data not the original camera image.
                     // So I can not mirror image in the general way like this below:
-                    //if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
+                    // if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
                     try {
                         val output = context.createImageFile("jpg")
                         FileOutputStream(output).use { it.write(result.imageBytes) }
@@ -1043,7 +1094,7 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
             //            }
 
             // No other formats are supported by this sample
-            else                                     -> {
+            else -> {
                 val exc = RuntimeException("Unknown image format: ${result.format}")
                 LogContext.log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
@@ -1141,16 +1192,16 @@ class Camera2ComponentHelper(private val context: FragmentActivity,
         val CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL = Size(360, 640)
 
         @JvmField
-        val CAMERA_FPS_VERY_HIGH = Range(30, 30)    // [30, 30]
+        val CAMERA_FPS_VERY_HIGH = Range(30, 30) // [30, 30]
 
         @JvmField
-        val CAMERA_FPS_HIGH = Range(24, 24)         // [24, 24]
+        val CAMERA_FPS_HIGH = Range(24, 24) // [24, 24]
 
         @JvmField
-        val CAMERA_FPS_NORMAL = Range(20, 20)       // [20, 20]
+        val CAMERA_FPS_NORMAL = Range(20, 20) // [20, 20]
 
         @JvmField
-        val CAMERA_FPS_LOW = Range(15, 15)          // [15, 15]
+        val CAMERA_FPS_LOW = Range(15, 15) // [15, 15]
 
         const val VIDEO_FPS_VERY_HIGH = 25
         const val VIDEO_FPS_FREQUENCY_HIGH = 20

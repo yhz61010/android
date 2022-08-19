@@ -25,26 +25,28 @@ fun watchRotationByReflection(onRotationChanged: (rotation: Int) -> Unit) {
     try {
         val serviceManager = Class.forName("android.os.ServiceManager")
         val serviceBinder =
-                serviceManager.getMethod("getService", String::class.java)
-                    .invoke(serviceManager, "window") as IBinder
+            serviceManager.getMethod("getService", String::class.java)
+                .invoke(serviceManager, "window") as IBinder
         val stub = Class.forName("android.view.IWindowManager\$Stub")
         windowManagerService =
-                stub.getMethod("asInterface", IBinder::class.java).invoke(stub, serviceBinder)!!
+            stub.getMethod("asInterface", IBinder::class.java).invoke(stub, serviceBinder)!!
         // API 26
         val watchRotation: Method =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) windowManagerService.javaClass.getMethod(
-                    "watchRotation",
-                    IRotationWatcher::class.java,
-                    Int::class.javaPrimitiveType
-                ) else windowManagerService.javaClass.getMethod(
-                    "watchRotation",
-                    IRotationWatcher::class.java
-                )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) windowManagerService.javaClass.getMethod(
+                "watchRotation",
+                IRotationWatcher::class.java,
+                Int::class.javaPrimitiveType
+            ) else windowManagerService.javaClass.getMethod(
+                "watchRotation",
+                IRotationWatcher::class.java
+            )
 
         try {
             removeRotationWatcher =
-                    windowManagerService.javaClass.getMethod("removeRotationWatcher",
-                        IRotationWatcher::class.java)
+                windowManagerService.javaClass.getMethod(
+                    "removeRotationWatcher",
+                    IRotationWatcher::class.java
+                )
         } catch (ignored: NoSuchMethodException) {
             ignored.printStackTrace()
         }
@@ -57,9 +59,11 @@ fun watchRotationByReflection(onRotationChanged: (rotation: Int) -> Unit) {
 
         // Start monitoring for changes
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) // API 26
-            watchRotation.invoke(windowManagerService,
+            watchRotation.invoke(
+                windowManagerService,
                 screenRotationChanged,
-                Display.DEFAULT_DISPLAY)
+                Display.DEFAULT_DISPLAY
+            )
         else
             watchRotation.invoke(windowManagerService, screenRotationChanged)
     } catch (ignored: Exception) {

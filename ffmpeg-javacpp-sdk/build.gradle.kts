@@ -48,7 +48,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
     // api group: 'org.bytedeco', name: 'ffmpeg-platform', version: "$ffmpegVersion"
-
 }
 
 afterEvaluate {

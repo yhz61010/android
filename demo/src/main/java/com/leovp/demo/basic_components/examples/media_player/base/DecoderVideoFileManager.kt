@@ -62,7 +62,6 @@ class DecoderVideoFileManager {
                     break
                 }
             }
-
         }.onFailure { it.printStackTrace() }
     }
 

@@ -46,13 +46,13 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(tag, "onStarted on port: $PORT")
             toast("onStarted on port: $PORT", debug = true)
-            runOnUiThread { binding.txtResponse.text = "Server started on port: $PORT";binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "Server started on port: $PORT"; binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onStopped() {
             LogContext.log.i(tag, "onStop")
             toast("onStop", debug = true)
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped";binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped"; binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -66,7 +66,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             LogContext.log.i(tag, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data";binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"; binding.sv.fullScroll(View.FOCUS_DOWN) }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
@@ -82,7 +82,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(tag, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg";binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg"; binding.sv.fullScroll(View.FOCUS_DOWN) }
         }
     }
 

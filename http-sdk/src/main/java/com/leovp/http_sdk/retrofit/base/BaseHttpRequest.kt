@@ -50,15 +50,15 @@ abstract class BaseHttpRequest {
 //                .log(Platform.INFO)
 //                .request("Request")
 //                .response("Response")
-////                .addHeader("version", BuildConfig.VERSION_NAME)
-////                .addQueryParam("query", "0")
-////              .logger(new Logger() {
-////                  @Override
-////                  public void log(int level, String tag, String msg) {
-////                      Log.w(tag, msg);
-////                  }
-////              })
-////              .executor(Executors.newSingleThreadExecutor())
+// //                .addHeader("version", BuildConfig.VERSION_NAME)
+// //                .addQueryParam("query", "0")
+// //              .logger(new Logger() {
+// //                  @Override
+// //                  public void log(int level, String tag, String msg) {
+// //                      Log.w(tag, msg);
+// //                  }
+// //              })
+// //              .executor(Executors.newSingleThreadExecutor())
 //                .build();
         }
 

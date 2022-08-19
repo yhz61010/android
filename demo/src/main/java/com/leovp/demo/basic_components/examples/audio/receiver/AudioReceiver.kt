@@ -84,16 +84,20 @@ class AudioReceiver {
         }
 
         private fun startMicRecording() {
-            micRecorder = MicRecorder(AudioActivity.audioEncoderInfo, object : MicRecorder.RecordCallback {
-                override fun onRecording(data: ByteArray) {
-                    recAudioQueue.offer(data)
-                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
+            micRecorder = MicRecorder(
+                AudioActivity.audioEncoderInfo,
+                object : MicRecorder.RecordCallback {
+                    override fun onRecording(data: ByteArray) {
+                        recAudioQueue.offer(data)
+                        if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
 //                    runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
-                }
+                    }
 
-                override fun onStop(stopResult: Boolean) {
-                }
-            }, defaultAudioType).apply { startRecord() }
+                    override fun onStop(stopResult: Boolean) {
+                    }
+                },
+                defaultAudioType
+            ).apply { startRecord() }
         }
 
         private fun sendRecAudioThread() {

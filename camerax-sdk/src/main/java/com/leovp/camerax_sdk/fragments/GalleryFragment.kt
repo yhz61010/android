@@ -45,7 +45,7 @@ class GalleryFragment internal constructor() : Fragment() {
             LogContext.log.d(TAG, "Current position=$position previous=$previousPosition")
             if (previousPosition != position) {
                 val photoFragment =
-                        childFragmentManager.fragments[previousPosition] as? PhotoFragment
+                    childFragmentManager.fragments[previousPosition] as? PhotoFragment
                 val iv = photoFragment?.view as? SubsamplingScaleImageView
                 iv?.setScaleAndCenter(0f, PointF(0f, 0f))
             }
@@ -138,9 +138,11 @@ class GalleryFragment internal constructor() : Fragment() {
             mediaList.getOrNull(fragmentGalleryBinding.photoViewPager.currentItem)
                 ?.let { mediaFile ->
                     val uri =
-                            FileProvider.getUriForFile(view.context,
-                                view.context.packageName + ".provider",
-                                mediaFile)
+                        FileProvider.getUriForFile(
+                            view.context,
+                            view.context.packageName + ".provider",
+                            mediaFile
+                        )
                     share(uri, getString(R.string.share_hint))
                 }
         }
@@ -160,8 +162,10 @@ class GalleryFragment internal constructor() : Fragment() {
                             mediaFile.delete()
 
                             // Send relevant broadcast to notify other apps of deletion
-                            MediaScannerConnection.scanFile(view.context,
-                                arrayOf(mediaFile.absolutePath), null, null)
+                            MediaScannerConnection.scanFile(
+                                view.context,
+                                arrayOf(mediaFile.absolutePath), null, null
+                            )
 
                             // Notify our view pager
                             mediaList.removeAt(currentItemPos)
@@ -169,10 +173,11 @@ class GalleryFragment internal constructor() : Fragment() {
 
                             // If all photos have been deleted, return to camera
                             if (mediaList.isEmpty()) {
-                                Navigation.findNavController(requireActivity(),
-                                    R.id.fragment_container_camerax).navigateUp()
+                                Navigation.findNavController(
+                                    requireActivity(),
+                                    R.id.fragment_container_camerax
+                                ).navigateUp()
                             }
-
                         }
                         .setNegativeButton(android.R.string.cancel, null)
                         .create().showImmersive()

@@ -49,9 +49,11 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLan
                 .setItems(itemList) { dlg, which ->
                     val langCode = itemCodeList[which]
                     LogContext.log.e(ITAG, "=====> MaterialAlertDialogBuilder setLocale()")
-                    langUtil.setAppLanguage(this@ChangeAppLanguageActivity.applicationContext,
+                    langUtil.setAppLanguage(
+                        this@ChangeAppLanguageActivity.applicationContext,
                         langUtil.getLocale(langCode)!!,
-                        refreshUI = true) { refreshUi ->
+                        refreshUI = true
+                    ) { refreshUi ->
                         if (refreshUi) EventBus.getDefault().post(LangChangeEvent())
                     }
                     dlg.dismiss()

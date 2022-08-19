@@ -15,28 +15,27 @@ class TextureRenderer {
 
     private val vertexShaderCode =
         "precision highp float;\n" +
-                "attribute vec3 vertexPosition;\n" +
-                "attribute vec2 uvs;\n" +
-                "varying vec2 varUvs;\n" +
-                "uniform mat4 mvp;\n" +
-                "\n" +
-                "void main()\n" +
-                "{\n" +
-                "\tvarUvs = uvs;\n" +
-                "\tgl_Position = mvp * vec4(vertexPosition, 1.0);\n" +
-                "}"
+            "attribute vec3 vertexPosition;\n" +
+            "attribute vec2 uvs;\n" +
+            "varying vec2 varUvs;\n" +
+            "uniform mat4 mvp;\n" +
+            "\n" +
+            "void main()\n" +
+            "{\n" +
+            "\tvarUvs = uvs;\n" +
+            "\tgl_Position = mvp * vec4(vertexPosition, 1.0);\n" +
+            "}"
 
     private val fragmentShaderCode =
         "precision mediump float;\n" +
-                "\n" +
-                "varying vec2 varUvs;\n" +
-                "uniform sampler2D texSampler;\n" +
-                "\n" +
-                "void main()\n" +
-                "{\t\n" +
-                "\tgl_FragColor = texture2D(texSampler, varUvs);\n" +
-                "}"
-
+            "\n" +
+            "varying vec2 varUvs;\n" +
+            "uniform sampler2D texSampler;\n" +
+            "\n" +
+            "void main()\n" +
+            "{\t\n" +
+            "\tgl_FragColor = texture2D(texSampler, varUvs);\n" +
+            "}"
 
     private var vertices = floatArrayOf(
         // x, y, z, u, v

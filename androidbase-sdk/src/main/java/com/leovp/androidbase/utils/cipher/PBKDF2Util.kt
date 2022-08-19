@@ -44,10 +44,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: CharArray,
-            salt: ByteArray,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA512)
 
     /**
@@ -55,7 +55,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: CharArray, salt: String, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        salt: String,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA512(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
@@ -63,7 +66,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: String, salt: String, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        salt: String,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
@@ -71,7 +77,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: String, salt: ByteArray, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
@@ -79,10 +88,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: CharArray,
-            saltLength: Int = DEFAULT_SALT_LENGTH,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        saltLength: Int = DEFAULT_SALT_LENGTH,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA512(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
@@ -90,10 +99,10 @@ object PBKDF2Util {
      */
     @RequiresApi(api = API.O)
     fun generateKeyWithSHA512(
-            plainPassphrase: String,
-            saltLength: Int = DEFAULT_SALT_LENGTH,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        saltLength: Int = DEFAULT_SALT_LENGTH,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
 
     // ===== ALGORITHM_SHA512 - End ================================================================
@@ -104,51 +113,60 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: CharArray,
-            salt: ByteArray,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKey(plainPassphrase, salt, iterations, outputKeyLengthInBits, ALGORITHM_SHA1)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: CharArray, salt: String, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        salt: String,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA1(plainPassphrase, salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: String, salt: String, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        salt: String,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: String, salt: ByteArray, iterations: Int = DEFAULT_ITERATIONS, @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt, iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: CharArray,
-            saltLength: Int = DEFAULT_SALT_LENGTH,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: CharArray,
+        saltLength: Int = DEFAULT_SALT_LENGTH,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA1(plainPassphrase, generateSalt(saltLength), iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
      */
     fun generateKeyWithSHA1(
-            plainPassphrase: String,
-            saltLength: Int = DEFAULT_SALT_LENGTH,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
+        plainPassphrase: String,
+        saltLength: Int = DEFAULT_SALT_LENGTH,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
     ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), saltLength, iterations, outputKeyLengthInBits)
 
     // ===== ALGORITHM_SHA1 - End ================================================================
@@ -176,11 +194,11 @@ object PBKDF2Util {
      * @return The encrypted byte array. To get string result, just call ```toHexStringLE(true, "")```
      */
     private fun generateKey(
-            plainPassphrase: CharArray,
-            salt: ByteArray,
-            iterations: Int = DEFAULT_ITERATIONS,
-            @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3,
-            algorithm: String
+        plainPassphrase: CharArray,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_ITERATIONS,
+        @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3,
+        algorithm: String
     ): SecretKey {
         return runCatching { //            LogContext.log.w(ITAG, "salt=${salt.toHexStringLE()} iterations=$iterations outputKeyLengthInBits=$outputKeyLengthInBits")
 
@@ -205,10 +223,10 @@ object PBKDF2Util {
     //        SecureRandom().nextBytes(suffixSalt)
     //        val suffixSaltHex = suffixSalt.toHexStringLE(true, "")
     //
-    ////        LogContext.log.w(ITAG, "encrypt preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
+    // //        LogContext.log.w(ITAG, "encrypt preSaltHex=$preSaltHex suffixSaltHex=$suffixSaltHex")
     //
     //        val onlyHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt, DEFAULT_ITERATIONS).toHexStringLE(true, "")
-    ////        LogContext.log.w(ITAG, "encrypt onlyHash=$onlyHash")
+    // //        LogContext.log.w(ITAG, "encrypt onlyHash=$onlyHash")
     //
     //        return "$preSaltHex$onlyHash$suffixSaltHex"
     //    }
@@ -224,13 +242,13 @@ object PBKDF2Util {
     //     * @param plainText The hex plain text should be padded.
     //     */
     //    fun validate(plainText: String, encryptedHash: String): Boolean {
-    ////        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
+    // //        LogContext.log.w(ITAG, "encryptedHash=encryptedHash")
     //        val preSalt = encryptedHash.substring(0, DEFAULT_PRE_SALT_LENGTH * 2)
-    ////        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
+    // //        LogContext.log.w(ITAG, "preSalt=$preSalt | ${preSalt.hexToByteArray().toJsonString()}")
     //        val onlyHash = encryptedHash.substring(DEFAULT_PRE_SALT_LENGTH * 2, encryptedHash.length - DEFAULT_SUFFIX_SALT_LENGTH * 2)
-    ////        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
+    // //        LogContext.log.w(ITAG, "onlyHash=$onlyHash")
     //        val testHash = generateKeyWithSHA512(plainText.toCharArray(), preSalt.hexToByteArray(), DEFAULT_ITERATIONS).toHexStringLE(true, "")
-    ////        LogContext.log.w(ITAG, "testHash=$testHash")
+    // //        LogContext.log.w(ITAG, "testHash=$testHash")
     //        return onlyHash == testHash
     //    }
 }

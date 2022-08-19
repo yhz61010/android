@@ -17,15 +17,15 @@ object YuvUtil {
     const val NV12 = 3
     const val YUY2 = 4
 
-    const val Rotate_0 = 0     // No rotation.
-    const val Rotate_90 = 90   // Rotate 90 degrees clockwise.
+    const val Rotate_0 = 0 // No rotation.
+    const val Rotate_90 = 90 // Rotate 90 degrees clockwise.
     const val Rotate_180 = 180 // Rotate 180 degrees.
     const val Rotate_270 = 270 // Rotate 270 degrees clockwise.
 
-    const val SCALE_FILTER_NONE = 0     // Point sample; Fastest.
-    const val SCALE_FILTER_LINEAR = 1   // Filter horizontally only.
+    const val SCALE_FILTER_NONE = 0 // Point sample; Fastest.
+    const val SCALE_FILTER_LINEAR = 1 // Filter horizontally only.
     const val SCALE_FILTER_BILINEAR = 2 // Faster than box, but lower quality scaling down.
-    const val SCALE_FILTER_BOX = 3      // Highest quality.
+    const val SCALE_FILTER_BOX = 3 // Highest quality.
 
     /**
      * Maybe the [convertToI420] method is what you want. Otherwise I find a way to get [pixelStrideUV] automatically.
@@ -34,7 +34,14 @@ object YuvUtil {
      *                      1: I420
      *                      2: NV21/NV12
      */
-    external fun android420ToI420(srcYuvByteArray: ByteArray, pixelStrideUV: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int = Rotate_0): ByteArray?
+    external fun android420ToI420(
+        srcYuvByteArray: ByteArray,
+        pixelStrideUV: Int,
+        width: Int,
+        height: Int,
+        verticallyFlip: Boolean,
+        degree: Int = Rotate_0
+    ): ByteArray?
 
     /**
      * Convert specified YUV data to I420 with vertically flipping and rotating at the same time.
@@ -60,7 +67,14 @@ object YuvUtil {
      *                270: Rotate 270 degrees clockwise.
      * ```
      */
-    external fun convertToI420(srcYuvByteArray: ByteArray, format: Int, width: Int, height: Int, verticallyFlip: Boolean, degree: Int = Rotate_0): ByteArray?
+    external fun convertToI420(
+        srcYuvByteArray: ByteArray,
+        format: Int,
+        width: Int,
+        height: Int,
+        verticallyFlip: Boolean,
+        degree: Int = Rotate_0
+    ): ByteArray?
 
     /**
      * @param width The original video width before rotation.
@@ -94,7 +108,14 @@ object YuvUtil {
      *              kFilterBilinear = 2, // Faster than box, but lower quality scaling down.
      *              kFilterBox = 3       // Highest quality.
      */
-    external fun scaleI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
+    external fun scaleI420(
+        i420ByteArray: ByteArray,
+        srcWidth: Int,
+        srcHeight: Int,
+        dstWidth: Int,
+        dstHeight: Int,
+        mode: Int = SCALE_FILTER_NONE
+    ): ByteArray
 
     /**
      * @param srcWidth The original video width.
@@ -104,7 +125,15 @@ object YuvUtil {
      * @param left The left position of cropping. Must be an even number.
      * @param top The top position of cropping. Must be an even number.
      **/
-    external fun cropI420(i420ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, left: Int, top: Int): ByteArray?
+    external fun cropI420(
+        i420ByteArray: ByteArray,
+        srcWidth: Int,
+        srcHeight: Int,
+        dstWidth: Int,
+        dstHeight: Int,
+        left: Int,
+        top: Int
+    ): ByteArray?
 
     external fun i420ToNv21(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
@@ -134,7 +163,14 @@ object YuvUtil {
      *              kFilterBilinear = 2, // Faster than box, but lower quality scaling down.
      *              kFilterBox = 3       // Highest quality.
      */
-    external fun scaleNv12(nv12ByteArray: ByteArray, srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int, mode: Int = SCALE_FILTER_NONE): ByteArray
+    external fun scaleNv12(
+        nv12ByteArray: ByteArray,
+        srcWidth: Int,
+        srcHeight: Int,
+        dstWidth: Int,
+        dstHeight: Int,
+        mode: Int = SCALE_FILTER_NONE
+    ): ByteArray
 
     external fun nv21ToNv12(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 

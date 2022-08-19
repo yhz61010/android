@@ -24,7 +24,6 @@ import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
 import java.util.concurrent.CopyOnWriteArrayList
 
-
 /**
  * Author: Michael Leo
  * Date: 2020/9/11 上午11:24
@@ -48,8 +47,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val view =
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.recyclerview_demo_item, parent, false)
+            LayoutInflater.from(parent.context)
+                .inflate(R.layout.recyclerview_demo_item, parent, false)
         return ItemViewHolder(view)
     }
 
@@ -57,8 +56,10 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.bindingAdapterPosition]
-        LogContext.log.d(ITAG,
-            "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}")
+        LogContext.log.d(
+            ITAG,
+            "Current item text=${currentItem.title}    Reuse tag=${holder.txtView.tag}"
+        )
         // In some cases, it will prevent unexpected situations
         holder.selectBtn.setOnCheckedChangeListener(null)
         holder.selectBtn.isChecked = currentItem.checked
@@ -100,7 +101,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         val animDuration = 200L
         if (editMode) {
             val translationX =
-                    ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, translationXOffset)
+                ObjectAnimator.ofFloat(holder.primaryLL, "translationX", 0F, translationXOffset)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 0F, 1F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
@@ -118,7 +119,7 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
         }
         if (shouldRunEditCancelAnimation) {
             val translationX =
-                    ObjectAnimator.ofFloat(holder.primaryLL, "translationX", translationXOffset, 0F)
+                ObjectAnimator.ofFloat(holder.primaryLL, "translationX", translationXOffset, 0F)
             val alpha = ObjectAnimator.ofFloat(holder.selectBtn, "alpha", 1F, 0F)
             AnimatorSet().apply {
                 play(translationX).with(alpha)
@@ -144,10 +145,13 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
 
     override fun onViewRecycled(holder: ItemViewHolder) {
         @Suppress("DEPRECATION")
-        LogContext.log.d(ITAG, "onViewRecycled text=${holder.txtView.text}  " +
+        LogContext.log.d(
+            ITAG,
+            "onViewRecycled text=${holder.txtView.text}  " +
                 "adapterPosition=${holder.adapterPosition}  " +
                 "bindingAdapterPosition=${holder.bindingAdapterPosition}  " +
-                "tag=${holder.txtView.tag}")
+                "tag=${holder.txtView.tag}"
+        )
         super.onViewRecycled(holder)
     }
 
@@ -217,8 +221,10 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) : RecyclerView
             for (i in dataArray.size - 1 downTo 0) {
                 val currentItem = dataArray[i]
                 if (currentItem.id == itemBean.id) {
-                    LogContext.log.w(ITAG,
-                        "To be deleted dataArray ${currentItem.id}:${currentItem.title}")
+                    LogContext.log.w(
+                        ITAG,
+                        "To be deleted dataArray ${currentItem.id}:${currentItem.title}"
+                    )
                     dataArray.removeAt(i)
                     break
                 }

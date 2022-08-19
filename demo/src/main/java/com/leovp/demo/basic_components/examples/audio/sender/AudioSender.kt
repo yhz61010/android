@@ -18,7 +18,6 @@ import kotlinx.coroutines.*
 import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue
 
-
 /**
  * Author: Michael Leo
  * Date: 2020/9/17 下午6:00
@@ -79,15 +78,19 @@ class AudioSender {
             }
         }
 
-        micRecorder = MicRecorder(AudioActivity.audioEncoderInfo, object : MicRecorder.RecordCallback {
-            override fun onRecording(data: ByteArray) {
-                recAudioQueue.offer(data)
-                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
-            }
+        micRecorder = MicRecorder(
+            AudioActivity.audioEncoderInfo,
+            object : MicRecorder.RecordCallback {
+                override fun onRecording(data: ByteArray) {
+                    recAudioQueue.offer(data)
+                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
+                }
 
-            override fun onStop(stopResult: Boolean) {
-            }
-        }, defaultAudioType).apply { startRecord() }
+                override fun onStop(stopResult: Boolean) {
+                }
+            },
+            defaultAudioType
+        ).apply { startRecord() }
     }
 
     private fun sendRecAudioThread() {

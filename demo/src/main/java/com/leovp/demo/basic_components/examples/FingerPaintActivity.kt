@@ -9,7 +9,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFingerPaintBinding
 import com.leovp.log_sdk.base.ITAG
 
-class FingerPaintActivity : BaseDemonstrationActivity<ActivityFingerPaintBinding>(),
+class FingerPaintActivity :
+    BaseDemonstrationActivity<ActivityFingerPaintBinding>(),
     SeekBar.OnSeekBarChangeListener,
     View.OnClickListener {
     override fun getTagName(): String = ITAG
@@ -53,10 +54,10 @@ class FingerPaintActivity : BaseDemonstrationActivity<ActivityFingerPaintBinding
                 binding.finger.strokeColor = color
                 binding.colorPreview.setBackgroundColor(color)
             }
-            binding.tolerance.id                              -> {
+            binding.tolerance.id -> {
                 binding.finger.touchTolerance = progress.toFloat()
             }
-            binding.width.id                                  -> {
+            binding.width.id -> {
                 binding.finger.strokeWidth = progress.toFloat()
             }
         }
@@ -64,12 +65,12 @@ class FingerPaintActivity : BaseDemonstrationActivity<ActivityFingerPaintBinding
 
     override fun onClick(v: View?) {
         when (v) {
-            binding.undo   -> binding.finger.undo()
-            binding.clear  -> binding.finger.clear()
-            binding.close  -> hidePreview()
-            binding.save   -> showPreview()
+            binding.undo -> binding.finger.undo()
+            binding.clear -> binding.finger.clear()
+            binding.close -> hidePreview()
+            binding.save -> showPreview()
 //            binding.emboss -> binding.finger.emboss()
-            binding.blur   -> binding.finger.blur()
+            binding.blur -> binding.finger.blur()
             binding.normal -> binding.finger.normal()
         }
     }

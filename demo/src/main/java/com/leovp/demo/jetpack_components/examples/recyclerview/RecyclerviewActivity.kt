@@ -24,7 +24,6 @@ import com.leovp.demo.jetpack_components.examples.recyclerview.base.SimpleAdapte
 import com.leovp.demo.jetpack_components.examples.recyclerview.base.SimpleItemTouchCallback
 import com.leovp.log_sdk.base.ITAG
 
-
 class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>() {
     override fun getTagName(): String = ITAG
 
@@ -54,7 +53,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
             override fun onItemClick(view: View, position: Int) {
                 toast("You click position: $position")
                 findViewById<TextView>(R.id.tv_select_num).text =
-                        "${simpleAdapter.selectedItems.size}"
+                    "${simpleAdapter.selectedItems.size}"
             }
 
             override fun onItemLongClick(view: View, position: Int) {
@@ -72,7 +71,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
                 val adapter = binding.recyclerView.adapter as SimpleAdapter
                 adapter.removeAt(viewHolder.bindingAdapterPosition)
                 findViewById<TextView>(R.id.tv_select_num).text =
-                        "${simpleAdapter.selectedItems.size}"
+                    "${simpleAdapter.selectedItems.size}"
                 binding.rootLL.snack("Undo last delete?") {
                     action("Undo") { adapter.undo() }
                 }
@@ -89,7 +88,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
         findViewById<Button>(R.id.select_all).setOnClickListener {
             it.tag = (!((it.tag as? Boolean) ?: false))
             findViewById<TextView>(R.id.tv_select_num).text =
-                    "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
+                "${simpleAdapter.toggleSelectAll(!((it.tag) as Boolean))}"
         }
         findViewById<Button>(R.id.btn_delete).setOnClickListener {
             simpleAdapter.multipleDelete()
@@ -129,8 +128,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home      -> finish()
-            R.id.add_item          -> {
+            android.R.id.home -> finish()
+            R.id.add_item -> {
                 simpleAdapter.insertAdd(
                     0,
                     ItemBean(
@@ -149,7 +148,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
                         .duration(400)
                         .onStart {
                             binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility =
-                                    View.VISIBLE
+                                View.VISIBLE
                         }
                         .playOn(binding.llMycollectionBottomDialog.llRvBottomSheetSelect)
                 } else {
@@ -157,7 +156,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
                         .duration(400)
                         .onEnd {
                             binding.llMycollectionBottomDialog.llRvBottomSheetSelect.visibility =
-                                    View.GONE
+                                View.GONE
                         }
                         .playOn(binding.llMycollectionBottomDialog.llRvBottomSheetSelect)
                 }
@@ -178,16 +177,18 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
             }
             SimpleAdapter.STYLE_GRID -> {
                 binding.recyclerView.layoutManager =
-                        GridLayoutManager(this, resources.getInteger(R.integer.grid_columns))
+                    GridLayoutManager(this, resources.getInteger(R.integer.grid_columns))
             }
         }
     }
 }
 
 @Keep
-data class ItemBean(val id: Long,
+data class ItemBean(
+    val id: Long,
     val title: String,
-    val imageUrl: String) : BaseMultipleCheckedItem()
+    val imageUrl: String
+) : BaseMultipleCheckedItem()
 
 open class BaseMultipleCheckedItem {
     var checked = false

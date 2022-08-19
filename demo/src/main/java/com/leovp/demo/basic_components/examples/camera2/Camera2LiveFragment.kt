@@ -44,15 +44,20 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         enableTakePhotoFeature = true
 
         activityResultLauncher =
-                BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
+            BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
 
-        LogContext.log.w(TAG, "Supported image format for avc encoder: ${
+        LogContext.log.w(
+            TAG,
+            "Supported image format for avc encoder: ${
             CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
-        }")
+            }"
+        )
 
         CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach {
-            LogContext.log.w(TAG,
-                "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}")
+            LogContext.log.w(
+                TAG,
+                "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}"
+            )
         }
     }
 
@@ -75,10 +80,14 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     .forEach { LogContext.log.i(TAG, "Encoder: ${it.name}") }
 
                 // Selects appropriate preview size and configures camera surface
-                val previewSize = getPreviewOutputSize(Size(DESIGNED_CAMERA_SIZE.width,
-                    DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                val previewSize = getPreviewOutputSize(
+                    Size(
+                        DESIGNED_CAMERA_SIZE.width,
+                        DESIGNED_CAMERA_SIZE.height
+                    )/*cameraView.display*/,
                     camera2Helper.characteristics,
-                    SurfaceHolder::class.java)
+                    SurfaceHolder::class.java
+                )
                 LogContext.log.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
                 LogContext.log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
@@ -88,8 +97,10 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                         camera2Helper.initializeCamera(previewSize.width, previewSize.height)
                     }.getOrElse {
                         LogContext.log.e(TAG, "=====> Finally openCamera error <=====")
-                        activity?.toast("Initialized camera error. Please try again later.",
-                            error = true)
+                        activity?.toast(
+                            "Initialized camera error. Please try again later.",
+                            error = true
+                        )
                     }
                 }
             }

@@ -118,30 +118,33 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         if (checkRunnable != null) {
             handler.removeCallbacks(checkRunnable!!)
         }
-        handler.postDelayed(Runnable {
-            if (isForeground && paused) {
-                isForeground = false
-                //                LogContext.log.i(TAG, "Went BG")
-                // As of API level 24
-                //                listeners.forEach {
-                //                    try {
-                //                        it.onBecameBackground()
-                //                    } catch (e: Exception) {
-                //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
-                //                    }
-                //                }
-                for (lis in listeners) {
-                    try {
-                        lis.onBecameBackground()
-                    } catch (e: Exception) {
-                        //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
-                        e.printStackTrace()
+        handler.postDelayed(
+            Runnable {
+                if (isForeground && paused) {
+                    isForeground = false
+                    //                LogContext.log.i(TAG, "Went BG")
+                    // As of API level 24
+                    //                listeners.forEach {
+                    //                    try {
+                    //                        it.onBecameBackground()
+                    //                    } catch (e: Exception) {
+                    //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                    //                    }
+                    //                }
+                    for (lis in listeners) {
+                        try {
+                            lis.onBecameBackground()
+                        } catch (e: Exception) {
+                            //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                            e.printStackTrace()
+                        }
                     }
-                }
-            } /*else {
+                } /*else {
                 LogContext.log.i(TAG, "Still BG")
             }*/
-        }.also { checkRunnable = it }, becameBackgroundDelay)
+            }.also { checkRunnable = it },
+            becameBackgroundDelay
+        )
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
@@ -173,8 +176,10 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
          * @param application The application object
          * @return an initialised Foreground instance
          */
-        fun init(application: Application,
-            becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
+        fun init(
+            application: Application,
+            becameBackgroundDelay: Long = CHECK_DELAY
+        ): ForegroundComponent {
             if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
                     if (instance == null) {

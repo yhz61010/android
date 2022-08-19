@@ -40,9 +40,11 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>() {
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
 
-        LogContext.log.w(ITAG,
+        LogContext.log.w(
+            ITAG,
             "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}",
-            outputType = 13)
+            outputType = 13
+        )
 
         LogContext.enableLog = false
         LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
@@ -58,10 +60,12 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>() {
         }
         val string = sb.toString()
         LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = 16)
-        LogContext.log.w(TAG,
+        LogContext.log.w(
+            TAG,
             "Long Log[${string.length}][full]=$string",
             fullOutput = true,
-            outputType = 17)
+            outputType = 17
+        )
 
         if (LogContext.isLogInitialized()) {
             Log.w(TAG, "Log is initialized.")
@@ -71,7 +75,7 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>() {
     }
 
     //    override fun onStop() {
-    ////        (LogContext.log as CLog).flushLog()
+    // //        (LogContext.log as CLog).flushLog()
     //        super.onStop()
     //    }
 

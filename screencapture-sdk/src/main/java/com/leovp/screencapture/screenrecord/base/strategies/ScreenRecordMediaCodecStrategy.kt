@@ -51,9 +51,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             //            LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec,
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
             outputBufferId: Int,
-            info: MediaCodec.BufferInfo) {
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 //                    LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
@@ -121,7 +123,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
         fun setGoogleEncoder(useGoogleEncoder: Boolean) =
-                apply { this.useGoogleEncoder = useGoogleEncoder }
+            apply { this.useGoogleEncoder = useGoogleEncoder }
 
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
@@ -141,14 +143,17 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             when (builder.encodeType) {
                 EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
-            }, builder.width, builder.height
+            },
+            builder.width, builder.height
         )
 
         with(format) {
             // MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
             // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
-            setInteger(MediaFormat.KEY_COLOR_FORMAT,
-                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+            setInteger(
+                MediaFormat.KEY_COLOR_FORMAT,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+            )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
@@ -164,11 +169,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
             //            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
-            ////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
-            ////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
-            ////                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
+            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
             //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
-            ////                .maxByOrNull { it.profile }
+            // //                .maxByOrNull { it.profile }
             //            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
             //            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
             //            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -287,10 +292,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendThread = null
     }
 
-    private fun onSendAvcFrame(bb: ByteBuffer,
+    private fun onSendAvcFrame(
+        bb: ByteBuffer,
         flags: Int,
         bufferSize: Int,
-        presentationTimeUs: Long) {
+        presentationTimeUs: Long
+    ) {
         //        var naluIndex = 4
         //        if (bb[2].toInt() == 0x01) {
         //            naluIndex = 3
@@ -303,10 +310,14 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         if (MediaCodec.BUFFER_FLAG_CODEC_CONFIG == flags) {
             vpsSpsPpsBuf = bytes.copyOf()
             when (builder.encodeType) {
-                EncodeType.H264 -> LogContext.log.w(TAG,
-                    "Found SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}")
-                EncodeType.H265 -> LogContext.log.w(TAG,
-                    "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}")
+                EncodeType.H264 -> LogContext.log.w(
+                    TAG,
+                    "Found SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}"
+                )
+                EncodeType.H265 -> LogContext.log.w(
+                    TAG,
+                    "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}"
+                )
             }
         }
 
@@ -333,9 +344,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         //        }
 
         videoDataSendHandler?.post {
-            builder.screenDataListener.onDataUpdate(bytes,
+            builder.screenDataListener.onDataUpdate(
+                bytes,
                 flags,
-                presentationTimeUs)
+                presentationTimeUs
+            )
         }
     }
 
@@ -346,12 +359,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         val finalHeight = height ?: builder.height
         // TODO PixelFormat.RGBA_8888 is a wrong constant? Using ImageFormat instead.
         val imageReader: ImageReader =
-                ImageReader.newInstance(finalWidth, finalHeight, PixelFormat.RGBA_8888, 3)
+            ImageReader.newInstance(finalWidth, finalHeight, PixelFormat.RGBA_8888, 3)
         val virtualDisplayForImageReader: VirtualDisplay? =
-                builder.mediaProjection!!.createVirtualDisplay(
-                    "screen-record", finalWidth, finalHeight, builder.dpi,
-                    DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, imageReader.surface, null, null
-                )
+            builder.mediaProjection!!.createVirtualDisplay(
+                "screen-record", finalWidth, finalHeight, builder.dpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, imageReader.surface, null, null
+            )
         imageReader.setOnImageAvailableListener({ reader ->
             //            LogContext.log.e(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")
             val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener

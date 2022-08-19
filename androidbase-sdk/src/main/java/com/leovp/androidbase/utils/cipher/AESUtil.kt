@@ -10,7 +10,6 @@ import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
-
 /**
  * Author: Michael Leo
  * Date: 20-12-21 下午5:39

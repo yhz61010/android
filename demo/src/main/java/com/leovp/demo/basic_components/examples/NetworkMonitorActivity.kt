@@ -46,17 +46,18 @@ class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorB
                     val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
 
                     val latencyStatus = when (info.showPingTips) {
-                        NetworkUtil.NETWORK_PING_DELAY_HIGH      -> "Latency High"
+                        NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
                         NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
-                        else                                     -> null
+                        else -> null
                     }
 
                     val wifiSignalStatus = when (info.showWifiSig) {
-                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD      -> "Signal Bad"
+                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
                         NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
-                        else                                         -> null
+                        else -> null
                     }
-                    val infoStr = String.format("↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
+                    val infoStr = String.format(
+                        "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr,
                         uploadSpeedStr,
                         if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
@@ -64,7 +65,8 @@ class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorB
                         info.rssi,
                         info.wifiScoreIn5,
                         info.wifiScore,
-                        if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)")
+                        if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
+                    )
                     LogContext.log.i(ITAG, infoStr)
                     runOnUiThread { binding.txtNetworkStatus.text = infoStr }
                     binding.scrollView2.post { binding.scrollView2.fullScroll(View.FOCUS_DOWN) }

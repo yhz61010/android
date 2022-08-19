@@ -19,7 +19,6 @@ fun createFloatBuffer(array: FloatArray): FloatBuffer {
     return ByteBuffer.allocateDirect(array.size * Float.SIZE_BYTES)
         // Use the device hardware's native byte order
         .order(ByteOrder.nativeOrder())
-
         // Create a floating point buffer from the ByteBuffer
         .asFloatBuffer().apply {
             // Add the coordinates to the FloatBuffer
@@ -34,7 +33,6 @@ fun createShortBuffer(array: ShortArray): ShortBuffer {
     return ByteBuffer.allocateDirect(array.size * Short.SIZE_BYTES)
         // Use the device hardware's native byte order
         .order(ByteOrder.nativeOrder())
-
         // Create a short point buffer from the ByteBuffer
         .asShortBuffer().apply {
             // Add the coordinates to the FloatBuffer

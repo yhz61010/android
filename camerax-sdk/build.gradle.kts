@@ -7,13 +7,13 @@ plugins {
     `maven-publish`
 }
 
-//android {
+// android {
 //    publishing {
 //        // Publishes "release" build variant with "release" component created by
 //        // Android Gradle plugin
 //        singleVariant("release")
 //    }
-//}
+// }
 
 dependencies {
     api(libs.androidx.appcompat)
@@ -47,7 +47,6 @@ dependencies {
 
     // This is the enhanced version of [subsampling-scale-image-view-androidx]
     //    implementation "com.github.piasy:BigImageViewer:$bigImageViewerVersion"
-
 }
 
 afterEvaluate {

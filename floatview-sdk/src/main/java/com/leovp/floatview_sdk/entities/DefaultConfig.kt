@@ -30,7 +30,8 @@ data class DefaultConfig(
      */
     var y: Int = DEFAULT_Y_POS,
 
-    internal val globalConfig: GlobalConfig) : IBaseConfig by globalConfig {
+    internal val globalConfig: GlobalConfig
+) : IBaseConfig by globalConfig {
     companion object {
         const val DEFAULT_FLOAT_VIEW_TAG = "tag_default_float_view"
         internal const val DEFAULT_X_POS = DEFAULT_EDGE_MARGIN

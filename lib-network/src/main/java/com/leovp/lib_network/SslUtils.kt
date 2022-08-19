@@ -6,7 +6,6 @@ import java.security.SecureRandom
 import java.security.cert.CertificateFactory
 import javax.net.ssl.*
 
-
 /**
  * Author: Michael Leo
  * Date: 19-10-22 上午10:03

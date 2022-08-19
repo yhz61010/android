@@ -17,7 +17,11 @@ import com.google.android.material.snackbar.Snackbar
  * }
  * ```
  */
-inline fun View.snack(@StringRes messageRes: Int, length: Int = Snackbar.LENGTH_LONG, crossinline f: Snackbar.() -> Unit) {
+inline fun View.snack(
+    @StringRes messageRes: Int,
+    length: Int = Snackbar.LENGTH_LONG,
+    crossinline f: Snackbar.() -> Unit
+) {
     snack(resources.getString(messageRes), length, f)
 }
 

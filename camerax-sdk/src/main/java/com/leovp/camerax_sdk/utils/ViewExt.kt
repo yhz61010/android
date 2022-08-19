@@ -6,7 +6,10 @@ import android.widget.ImageButton
 import androidx.annotation.DrawableRes
 
 internal fun ImageButton.toggleButton(
-    flag: Boolean, rotationAngle: Float, @DrawableRes firstIcon: Int, @DrawableRes secondIcon: Int,
+    flag: Boolean,
+    rotationAngle: Float,
+    @DrawableRes firstIcon: Int,
+    @DrawableRes secondIcon: Int,
     action: (Boolean) -> Unit
 ) {
     if (flag) {

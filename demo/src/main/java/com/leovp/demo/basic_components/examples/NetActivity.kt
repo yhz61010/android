@@ -19,12 +19,20 @@ class NetActivity : BaseDemonstrationActivity<ActivityNetBinding>() {
         super.onCreate(savedInstanceState)
 
         binding.tvInfo1.setOnSingleClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://github.com/liangjingkanji/Net")))
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://github.com/liangjingkanji/Net")
+                )
+            )
         }
         binding.tvInfo2.setOnSingleClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://liangjingkanji.github.io/Net/")))
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://liangjingkanji.github.io/Net/")
+                )
+            )
         }
     }
 }

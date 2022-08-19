@@ -66,33 +66,45 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>() 
         }
 
         cs.launch { // 运行在父协程的上下文中，即 runBlocking 主协程
-            LogContext.log.e(ITAG,
-                "main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+            LogContext.log.e(
+                ITAG,
+                "main runBlocking      : I'm working in thread ${Thread.currentThread().name}"
+            )
         }
         cs.launch(Dispatchers.Unconfined) { // 不受限的——将工作在主线程中
-            LogContext.log.e(ITAG,
-                "Unconfined            : I'm working in thread ${Thread.currentThread().name}")
+            LogContext.log.e(
+                ITAG,
+                "Unconfined            : I'm working in thread ${Thread.currentThread().name}"
+            )
         }
         cs.launch(Dispatchers.Default) { // 将会获取默认调度器
-            LogContext.log.e(ITAG,
-                "Default               : I'm working in thread ${Thread.currentThread().name}")
+            LogContext.log.e(
+                ITAG,
+                "Default               : I'm working in thread ${Thread.currentThread().name}"
+            )
         }
         repeat(20) {
             cs.launch(singleContext) { // 将使它获得一个新的线程
-                LogContext.log.e(ITAG,
-                    "[$it] newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+                LogContext.log.e(
+                    ITAG,
+                    "[$it] newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}"
+                )
             }
         }
         repeat(20) {
             cs.launch(fixedContext) {
-                LogContext.log.e(ITAG,
-                    "[$it] newFixedThreadPoolContext: I'm working in thread ${Thread.currentThread().name}")
+                LogContext.log.e(
+                    ITAG,
+                    "[$it] newFixedThreadPoolContext: I'm working in thread ${Thread.currentThread().name}"
+                )
             }
         }
         repeat(20) {
             cs.launch(poolContext) {
-                LogContext.log.e(ITAG,
-                    "[$it] poolDispatcher: I'm working in thread ${Thread.currentThread().name}")
+                LogContext.log.e(
+                    ITAG,
+                    "[$it] poolDispatcher: I'm working in thread ${Thread.currentThread().name}"
+                )
             }
         }
         cs.launch(Dispatchers.Default + CoroutineName("-test")) { coroutineName() }
@@ -158,9 +170,9 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>() 
     }
 
     suspend fun fetchTwoDocs() = coroutineScope {
-        val deferreds = listOf(     // fetch two docs at the same time
-            async { fetchDoc("Book1") },  // async returns a result for the first doc
-            async { fetchDoc("Book2") }   // async returns a result for the second doc
+        val deferreds = listOf( // fetch two docs at the same time
+            async { fetchDoc("Book1") }, // async returns a result for the first doc
+            async { fetchDoc("Book2") } // async returns a result for the second doc
         )
         LogContext.log.e(ITAG, "All async done - ${Thread.currentThread().name}")
         // use awaitAll to wait for both network requests

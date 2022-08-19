@@ -47,7 +47,7 @@ object Falcon {
             writeBitmap(bitmap, toFile)
         } catch (e: Exception) {
             val message =
-                    ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
+                ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
             LogContext.log.e(TAG, message, e)
             throw UnableToTakeScreenshotException(message, e)
         } finally {
@@ -62,8 +62,10 @@ object Falcon {
      * @param activity WeakReference<Activity> of which the screenshot will be taken.
      * @return Bitmap of what is displayed in activity.
      */
-    fun takeScreenshotBitmap(activity: WeakReference<Activity>,
-        config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+    fun takeScreenshotBitmap(
+        activity: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888
+    ): Bitmap? {
         return try {
             takeBitmapUnchecked(activity, config)
         } catch (e: Exception) {
@@ -77,8 +79,10 @@ object Falcon {
     //endregion
     //region Methods
     @Throws(InterruptedException::class)
-    private fun takeBitmapUnchecked(weakAct: WeakReference<Activity>,
-        config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
+    private fun takeBitmapUnchecked(
+        weakAct: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888
+    ): Bitmap {
         val viewRoots = getRootViews(weakAct)
         if (viewRoots.isEmpty()) {
             throw UnableToTakeScreenshotException("Unable to capture any view data in $weakAct")
@@ -105,9 +109,11 @@ object Falcon {
     }
 
     @Throws(InterruptedException::class)
-    private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>,
+    private fun drawRootsToBitmapOtherThread(
+        weakAct: WeakReference<Activity>,
         viewRoots: List<ViewRootData>,
-        bitmap: Bitmap) {
+        bitmap: Bitmap
+    ) {
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
@@ -291,8 +297,10 @@ object Falcon {
      */
     class UnableToTakeScreenshotException : RuntimeException {
         internal constructor(detailMessage: String) : super(detailMessage)
-        internal constructor(detailMessage: String, exception: Throwable) : super(detailMessage,
-            extractException(exception))
+        internal constructor(detailMessage: String, exception: Throwable) : super(
+            detailMessage,
+            extractException(exception)
+        )
 
         constructor(ex: Throwable) : super(extractException(ex))
 
@@ -322,6 +330,5 @@ object Falcon {
         fun context(): Context {
             return _view.context
         }
-
     } //endregion
 }

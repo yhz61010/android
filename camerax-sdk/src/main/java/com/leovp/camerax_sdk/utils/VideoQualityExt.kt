@@ -11,8 +11,8 @@ import androidx.camera.video.Quality
 internal fun Quality.getAspectRatio(): Int {
     return when {
         arrayOf(Quality.UHD, Quality.FHD, Quality.HD).contains(this) -> AspectRatio.RATIO_16_9
-        (this == Quality.SD)                                         -> AspectRatio.RATIO_4_3
-        else                                                         -> throw UnsupportedOperationException()
+        (this == Quality.SD) -> AspectRatio.RATIO_4_3
+        else -> throw UnsupportedOperationException()
     }
 }
 
@@ -23,8 +23,8 @@ internal fun Quality.getAspectRatioString(portraitMode: Boolean): String {
     val hdQualities = arrayOf(Quality.UHD, Quality.FHD, Quality.HD)
     val ratio = when {
         hdQualities.contains(this) -> Pair(16, 9)
-        this == Quality.SD         -> Pair(4, 3)
-        else                       -> throw UnsupportedOperationException()
+        this == Quality.SD -> Pair(4, 3)
+        else -> throw UnsupportedOperationException()
     }
 
     return if (portraitMode) "V,${ratio.second}:${ratio.first}"
@@ -38,9 +38,9 @@ internal fun Quality.getNameString(): String {
     return when (this) {
         Quality.UHD -> "QUALITY_UHD(2160p)"
         Quality.FHD -> "QUALITY_FHD(1080p)"
-        Quality.HD  -> "QUALITY_HD(720p)"
-        Quality.SD  -> "QUALITY_SD(480p)"
-        else        -> throw IllegalArgumentException("Quality $this is NOT supported")
+        Quality.HD -> "QUALITY_HD(720p)"
+        Quality.SD -> "QUALITY_SD(480p)"
+        else -> throw IllegalArgumentException("Quality $this is NOT supported")
     }
 }
 
@@ -51,8 +51,8 @@ internal fun Quality.getQualityObject(name: String): Quality {
     return when (name) {
         Quality.UHD.getNameString() -> Quality.UHD
         Quality.FHD.getNameString() -> Quality.FHD
-        Quality.HD.getNameString()  -> Quality.HD
-        Quality.SD.getNameString()  -> Quality.SD
-        else                        -> throw IllegalArgumentException("Quality string $name is NOT supported")
+        Quality.HD.getNameString() -> Quality.HD
+        Quality.SD.getNameString() -> Quality.SD
+        else -> throw IllegalArgumentException("Quality string $name is NOT supported")
     }
 }

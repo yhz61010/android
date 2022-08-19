@@ -51,7 +51,7 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
         }
     }
 
-    //Derived classes should override these to respond to specific events of interest
+    // Derived classes should override these to respond to specific events of interest
     protected abstract fun onIncomingCallReceived(ctx: Context, number: String?, start: Date?)
     protected abstract fun onIncomingCallAnswered(ctx: Context, number: String?, start: Date?)
     protected abstract fun onIncomingCallEnded(
@@ -104,10 +104,10 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
                         // Ring but no pickup - a miss
                         onMissedCall(context, savedNumber, callStartTime)
                     }
-                    isIncoming                                       -> {
+                    isIncoming -> {
                         onIncomingCallEnded(context, savedNumber, callStartTime, Date())
                     }
-                    else                                             -> {
+                    else -> {
                         onOutgoingCallEnded(context, savedNumber, callStartTime, Date())
                     }
                 }
@@ -121,6 +121,6 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
         private var callStartTime: Date? = null
         private var isIncoming = false
         private var savedNumber: String? =
-                null //because the passed incoming is only valid in ringing
+            null // because the passed incoming is only valid in ringing
     }
 }

@@ -21,7 +21,6 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
-
 class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     override fun getTagName(): String = ITAG
 
@@ -50,10 +49,12 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     // smtp port 25, ssl port 465
     // pop3 port 110, ssl port 995
     // imap port 143, ssl port 993
-    private fun getServerProperties(protocol: String,
+    private fun getServerProperties(
+        protocol: String,
         mailHost: String,
         port: Int,
-        enableSsl: Boolean = false): Properties {
+        enableSsl: Boolean = false
+    ): Properties {
         return Properties().apply {
             setProperty("mail.transport.protocol", protocol)
             setProperty("mail.$protocol.host", mailHost)
@@ -70,13 +71,22 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
         }
     }
 
-    private fun getSession(protocol: String, mailHost: String, port: Int, userName: String? = null, pwd: String? = null, enableSsl: Boolean = false): Session {
-        return Session.getInstance(getServerProperties(protocol, mailHost, port, enableSsl), if (userName.isNullOrBlank()) null else
-            object : javax.mail.Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication {
-                    return PasswordAuthentication(userName, pwd)
+    private fun getSession(
+        protocol: String,
+        mailHost: String,
+        port: Int,
+        userName: String? = null,
+        pwd: String? = null,
+        enableSsl: Boolean = false
+    ): Session {
+        return Session.getInstance(
+            getServerProperties(protocol, mailHost, port, enableSsl),
+            if (userName.isNullOrBlank()) null else
+                object : javax.mail.Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication {
+                        return PasswordAuthentication(userName, pwd)
+                    }
                 }
-            }
         )
     }
 

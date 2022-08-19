@@ -95,12 +95,12 @@ class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgre
         binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar.OnStateChangedListener {
             override fun onStateChanged(newState: State.Type) {
                 val stateName = when (newState) {
-                    State.Type.STATE_IDLE          -> "Idle"
+                    State.Type.STATE_IDLE -> "Idle"
                     State.Type.STATE_INDETERMINATE -> "Indeterminate"
-                    State.Type.STATE_DETERMINATE   -> "Determinate"
-                    State.Type.STATE_FINISHED      -> "Finish"
-                    State.Type.STATE_ERROR         -> "Error"
-                    else                           -> "Unknown"
+                    State.Type.STATE_DETERMINATE -> "Determinate"
+                    State.Type.STATE_FINISHED -> "Finish"
+                    State.Type.STATE_ERROR -> "Error"
+                    else -> "Unknown"
                 }
                 toast("Current state=$stateName")
                 LogContext.log.w("Current state=$stateName")

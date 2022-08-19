@@ -13,7 +13,6 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
 
-
 /**
  * Author: Michael Leo
  * Date: 20-7-30 上午10:54
@@ -56,13 +55,13 @@ class DecodeH264RawFileByFFMpeg {
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray): H264HevcDecoder.DecodeVideoInfo {
         val videoInfo: H264HevcDecoder.DecodeVideoInfo =
-                videoDecoder.init(null, sps, pps, null, null)
+            videoDecoder.init(null, sps, pps, null, null)
         LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
 
     private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
-            videoDecoder.decode(rawVideo)
+        videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -156,17 +155,20 @@ class DecodeH264RawFileByFFMpeg {
                             var st3: Long
                             try {
                                 val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
-                                        decodeVideo(frame)
+                                    decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =
-                                            if (videoInfo.pixelFormatId < 0) BaseRenderer.Yuv420Type.I420 else BaseRenderer.Yuv420Type.getType(
-                                                videoInfo.pixelFormatId)
+                                        if (videoInfo.pixelFormatId < 0) BaseRenderer.Yuv420Type.I420 else BaseRenderer.Yuv420Type.getType(
+                                            videoInfo.pixelFormatId
+                                        )
                                     glSurfaceView.render(it.yuvBytes, yuv420Type)
                                 }
                                 st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.w(TAG,
-                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}")
+                                LogContext.log.w(
+                                    TAG,
+                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}"
+                                )
                             } catch (e: Exception) {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.e(TAG, "decode error.", e)

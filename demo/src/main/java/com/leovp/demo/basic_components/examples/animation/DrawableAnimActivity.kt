@@ -7,7 +7,6 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDrawableAnimBinding
 import com.leovp.log_sdk.base.ITAG
 
-
 class DrawableAnimActivity : BaseDemonstrationActivity<ActivityDrawableAnimBinding>() {
     override fun getTagName(): String = ITAG
 

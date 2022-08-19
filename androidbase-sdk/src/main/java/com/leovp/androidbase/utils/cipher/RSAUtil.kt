@@ -74,7 +74,7 @@ object RSAUtil {
             """
      ${encrypt(priKey, str1)}
      ${encryptStringByFragment(priKey, str2)}
-     """.trimIndent()
+            """.trimIndent()
         } else {
             encrypt(priKey, wholeText)
         }

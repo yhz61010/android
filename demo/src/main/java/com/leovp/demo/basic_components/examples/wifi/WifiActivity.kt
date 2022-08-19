@@ -119,10 +119,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>() {
                 scanResult.SSID
             }
             if (ssid.isNotBlank()) {
-                val wifiModel = WifiModel(ssid,
+                val wifiModel = WifiModel(
+                    ssid,
                     scanResult.BSSID,
                     scanResult.level,
-                    scanResult.frequency).apply { this.index = index + 1 }
+                    scanResult.frequency
+                ).apply { this.index = index + 1 }
                 wifiList.add(wifiModel)
             }
         }

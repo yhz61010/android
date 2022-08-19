@@ -203,17 +203,17 @@ class LeoTextureView @JvmOverloads constructor(
                 outputBuffer?.let {
                     // LogContext.log.i(TAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
                             LogContext.log.w(TAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME     -> {
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
                             // LogContext.log.d(TAG, "Found Key Frame[" + info.size + "]")
                         }
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-                        else                                 -> Unit
+                        else -> Unit
                     }
                 }
                 codec.releaseOutputBuffer(outputBufferId, true)

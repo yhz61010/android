@@ -5,7 +5,6 @@ plugins {
     `maven-publish`
 }
 
-
 android {
 //    publishing {
 //        // Publishes "release" build variant with "release" component created by

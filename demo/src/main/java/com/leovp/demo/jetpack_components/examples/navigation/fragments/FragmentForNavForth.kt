@@ -11,9 +11,11 @@ import com.leovp.log_sdk.base.ITAG
 class FragmentForNavForth : BaseFragment<FragmentForNavForthBinding>(R.layout.fragment_for_nav_forth) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentForNavForthBinding {
+        savedInstanceState: Bundle?
+    ): FragmentForNavForthBinding {
         return FragmentForNavForthBinding.inflate(inflater, container, false)
     }
 }

@@ -6,7 +6,8 @@ import android.view.KeyEvent
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
-import com.leovp.camerax_sdk.databinding.ActivityCameraxMainBinding
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.ActivityCameraxMainBinding
 import com.leovp.camerax_sdk.enums.CapturedImageStrategy
 import com.leovp.camerax_sdk.fragments.CameraFragment
 import com.leovp.camerax_sdk.listeners.CaptureImageListener

@@ -23,9 +23,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.hjq.permissions.XXPermissions
-import com.leovp.camerax_sdk.R
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.*
 import com.leovp.camerax_sdk.analyzer.LuminosityAnalyzer
-import com.leovp.camerax_sdk.databinding.*
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.enums.CameraTimer
 import com.leovp.camerax_sdk.enums.CapturedImageStrategy

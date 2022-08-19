@@ -39,13 +39,13 @@ import androidx.viewbinding.ViewBinding
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.google.common.util.concurrent.ListenableFuture
-import com.leovp.camerax_sdk.R
+import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.adapter.Media
 import com.leovp.camerax_sdk.bean.CaptureImage
-import com.leovp.camerax_sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax_sdk.enums.CameraRatio
 import com.leovp.camerax_sdk.listeners.CameraXTouchListener
 import com.leovp.camerax_sdk.utils.*
+import com.leovp.camerax.sdk.R
 import com.leovp.lib_common_android.exts.dp2px
 import com.leovp.lib_common_android.exts.isSamsung
 import com.leovp.lib_common_android.exts.screenRealResolution

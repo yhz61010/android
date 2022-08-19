@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.leovp.floatview_sdk.FloatView
-import com.leovp.lib_common_android.R
+import com.leovp.lib.common.android.R
 import com.leovp.lib_common_android.ui.ForegroundComponent
 import com.leovp.lib_common_android.utils.API
 import com.leovp.lib_common_kotlin.exts.fail

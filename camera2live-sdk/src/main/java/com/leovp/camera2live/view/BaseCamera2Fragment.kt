@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper
-import com.leovp.camera2live.databinding.FragmentCameraViewBinding
+import com.leovp.camera2live.sdk.databinding.FragmentCameraViewBinding
 import com.leovp.camera2live.utils.OrientationLiveData
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
 import com.leovp.log_sdk.LogContext

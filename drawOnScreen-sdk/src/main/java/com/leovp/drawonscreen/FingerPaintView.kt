@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
+import com.leovp.drawOnScreen.sdk.R
 import kotlin.math.abs
 
 /**

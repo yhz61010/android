@@ -70,7 +70,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.w(
             tag,
             "===== Channel is inactive and reached its end of lifetime | " +
-                "disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel().remoteAddress()}  ====="
+                "disconnectManually=${netty.disconnectManually} caughtException=$caughtException " +
+                "Disconnected from: ${ctx.channel().remoteAddress()}  ====="
         )
         if (netty.isWebSocket) {
             LogContext.log.i(tag, "Closing handshaker for websocket")
@@ -80,7 +81,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     }
 
     /**
-     * According to the [official example](https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime/UptimeClientHandler.java), if connection is disconnected after connecting,
+     * According to the
+     * [official example](https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime/UptimeClientHandler.java),
+     * if connection is disconnected after connecting,
      * reconnect it here.
      */
     override fun channelUnregistered(ctx: ChannelHandlerContext) {

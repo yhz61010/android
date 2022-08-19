@@ -64,8 +64,15 @@ interface ScreenProcessor {
 
     fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()
 
-    fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS) // MediaCodecList.ALL_CODECS
-        .codecInfos.filter { it.isEncoder == encoder }.filter { it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1 }
+    // MediaCodecList.ALL_CODECS
+    fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+        .codecInfos
+        .filter {
+            it.isEncoder == encoder
+        }
+        .filter {
+            it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1
+        }
 
     fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> = getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

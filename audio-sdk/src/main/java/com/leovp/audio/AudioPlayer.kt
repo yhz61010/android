@@ -37,8 +37,10 @@ class AudioPlayer(
     private var audioTrack: AudioTrack
 
     init {
-        val minBufferSize =
-            AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat) * minPlayBufferSizeRatio
+        val minBufferSize = AudioTrack.getMinBufferSize(
+            audioDecoderInfo.sampleRate,
+            audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat
+        ) * minPlayBufferSizeRatio
         LogContext.log.w(TAG, "PCM Codec=$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
@@ -82,7 +84,7 @@ class AudioPlayer(
         runCatching {
             if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
             if (AudioTrack.PLAYSTATE_PLAYING == audioTrack.playState) {
-//                val st = SystemClock.elapsedRealtime()
+                //                val st = SystemClock.elapsedRealtime()
                 when (type) {
                     AudioType.PCM -> {
                         // Play decoded audio data in PCM

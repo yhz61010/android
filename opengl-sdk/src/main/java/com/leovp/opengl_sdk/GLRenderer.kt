@@ -86,7 +86,10 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
-        LogContext.log.w(tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.w(
+            tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
+            outputType = ILog.OUTPUT_TYPE_SYSTEM
+        )
         super.onSurfaceChanged(gl, width, height)
 
         // val ratio: Float = width.toFloat() / height.toFloat()
@@ -140,7 +143,10 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      * @param height 高度
      */
     fun setVideoDimension(width: Int, height: Int, renderWidth: Int, renderHeight: Int) {
-        LogContext.log.i(tag, "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.i(
+            tag, "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight",
+            outputType = ILog.OUTPUT_TYPE_SYSTEM
+        )
         if (width > 0 && height > 0) {
             // 调整比例
             pointCoord = createCustomFloatBuffer(width, height, keepRatio, renderWidth, renderHeight)

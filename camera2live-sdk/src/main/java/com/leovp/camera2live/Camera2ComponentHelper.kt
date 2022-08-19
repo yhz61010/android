@@ -708,7 +708,8 @@ class Camera2ComponentHelper(
                 val height = image.height
                 LogContext.log.v(
                     TAG,
-                    "Image format[${image.format}]=${VideoUtil.getImageFormatName(image.format)} width=$width height=$height planes=${image.planes.size}"
+                    "Image format[${image.format}]=${VideoUtil.getImageFormatName(image.format)} " +
+                        "width=$width height=$height planes=${image.planes.size}"
                 )
                 if (image.planes.isNotEmpty()) {
                     for ((i, plane) in image.planes.withIndex()) {
@@ -913,7 +914,8 @@ class Camera2ComponentHelper(
                                 computeExifOrientation(cameraSensorOrientation, mirrored)
                             LogContext.log.d(
                                 TAG,
-                                "rotation=$rotation deviceRotation=$deviceRotation cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
+                                "rotation=$rotation deviceRotation=$deviceRotation " +
+                                    "cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
                             )
                             LogContext.log.d(
                                 TAG,

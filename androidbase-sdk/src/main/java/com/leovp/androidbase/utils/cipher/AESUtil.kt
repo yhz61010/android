@@ -33,7 +33,8 @@ object AESUtil {
      *
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun encrypt(plainText: String, secKey: String, useSHA512: Boolean = true): String = encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+    fun encrypt(plainText: String, secKey: String, useSHA512: Boolean = true): String =
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -46,7 +47,8 @@ object AESUtil {
      *
      * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String = decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+    fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
+        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
     // ==============================================================
 
@@ -68,7 +70,8 @@ object AESUtil {
      *
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun encrypt(plainText: String, secKey: SecretKey, useSHA512: Boolean = true): String = encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+    fun encrypt(plainText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -82,7 +85,8 @@ object AESUtil {
      * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      * @param secKey You must use the same SecretKey or else the decryption will be failed.
      */
-    fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String = decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+    fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
+        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
     // ==============================================================
 
@@ -108,7 +112,8 @@ object AESUtil {
      *
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun encrypt(plainText: String, secKey: ByteArray, useSHA512: Boolean = true): String = encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+    fun encrypt(plainText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -132,7 +137,8 @@ object AESUtil {
      *
      * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String = decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+    fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
+        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
     // ==============================================================
 
@@ -159,7 +165,8 @@ object AESUtil {
      *
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun encrypt(plainBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray = encrypt(plainBytes, secKey.toByteArray(), useSHA512)
+    fun encrypt(plainBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
+        encrypt(plainBytes, secKey.toByteArray(), useSHA512)
 
     /**
      * Decrypt bytes with specified secure key.
@@ -184,7 +191,8 @@ object AESUtil {
      *
      * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray = decrypt(cipherBytes, secKey.toByteArray(), useSHA512)
+    fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
+        decrypt(cipherBytes, secKey.toByteArray(), useSHA512)
 
     // ==============================================================
 
@@ -213,7 +221,8 @@ object AESUtil {
      *
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun encrypt(plainData: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray = encrypt(plainData, secKey.encoded, useSHA512)
+    fun encrypt(plainData: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
+        encrypt(plainData, secKey.encoded, useSHA512)
 
     /**
      * Decrypt bytes with specified secure key.
@@ -243,7 +252,8 @@ object AESUtil {
      *
      * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
-    fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray = decrypt(cipherBytes, secKey.encoded, useSHA512)
+    fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
+        decrypt(cipherBytes, secKey.encoded, useSHA512)
 
     // ==============================================================
     /**

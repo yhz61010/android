@@ -29,21 +29,21 @@ dependencies {
 
     // "group:name:version:classifier@extension"
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
-    implementation(libs.bytedeco.ffmpeg)
     implementation(libs.bytedeco.ffmpeg) {
         artifact {
             classifier = "android-arm"
         }
     }
+    implementation(libs.bytedeco.ffmpeg)
 
     // "group:name:version:classifier@extension"
     // https://mvnrepository.com/artifact/org.bytedeco/javacpp
-    implementation(libs.bytedeco.javacpp)
     implementation(libs.bytedeco.javacpp) {
         artifact {
             classifier = "android-arm"
         }
     }
+    implementation(libs.bytedeco.javacpp)
 
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform

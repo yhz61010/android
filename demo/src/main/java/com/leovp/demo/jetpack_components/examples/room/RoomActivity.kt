@@ -85,7 +85,9 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
         }
     }
 
-    private val newWordActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
+    private val newWordActivityLauncher = BetterActivityResult.registerForActivityResult(
+        this, ActivityResultContracts.StartActivityForResult()
+    ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getStringExtra(NewWordActivity.EXTRA_REPLY)?.let {
                 val word = Word(it)

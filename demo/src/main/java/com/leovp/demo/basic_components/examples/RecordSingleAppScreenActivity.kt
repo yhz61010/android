@@ -45,7 +45,9 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
                     ITAG,
                     "Get $VIDEO_ENCODE_TYPE data[${data.size}]=${data.toHexString()} presentationTimeUs=$presentationTimeUs"
                 )
-                MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data Key-Frame[${data.size}] presentationTimeUs=$presentationTimeUs")
+                MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
+                    LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data Key-Frame[${data.size}] presentationTimeUs=$presentationTimeUs")
+                }
                 else -> LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data[${data.size}] presentationTimeUs=$presentationTimeUs")
             }
             videoH26xOsForDebug.write(data)

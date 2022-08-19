@@ -80,7 +80,9 @@ object ScreenCapture {
         fun build(): ScreenProcessor {
             LogContext.log.i(
                 TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType " +
+                    "fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate " +
+                    "iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
                 BY_IMAGE_2_H26x -> Screenshot2H26xStrategy.Builder(width, height, dpi, screenDataListener)

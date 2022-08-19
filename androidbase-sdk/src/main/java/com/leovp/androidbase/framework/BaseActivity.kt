@@ -171,7 +171,9 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
                 focusView.getLocationOnScreen(focusViewLocationOnScreen)
                 val x = event.rawX + focusView.left - focusViewLocationOnScreen[0]
                 val y = event.rawY + focusView.top - focusViewLocationOnScreen[1]
-                if (defaultConfig.autoHideSoftKeyboard && event.action == MotionEvent.ACTION_DOWN && (x < focusView.left || x > focusView.right || y < focusView.top || y > focusView.bottom)) {
+                if (defaultConfig.autoHideSoftKeyboard && event.action == MotionEvent.ACTION_DOWN &&
+                    (x < focusView.left || x > focusView.right || y < focusView.top || y > focusView.bottom)
+                ) {
                     closeSoftKeyboard()
                 }
             }

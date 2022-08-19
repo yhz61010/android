@@ -26,7 +26,9 @@ interface ILog {
 
     // ==================================================
 
-    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = v(ITAG, message, throwable, fullOutput, outputType)
+    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        v(ITAG, message, throwable, fullOutput, outputType)
+
     fun v(
         tag: String,
         message: String?,
@@ -40,7 +42,9 @@ interface ILog {
         }
     }
 
-    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = d(ITAG, message, throwable, fullOutput, outputType)
+    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        d(ITAG, message, throwable, fullOutput, outputType)
+
     fun d(
         tag: String,
         message: String?,
@@ -49,12 +53,15 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
-            else printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
+            } else printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = i(ITAG, message, throwable, fullOutput, outputType)
+    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        i(ITAG, message, throwable, fullOutput, outputType)
+
     fun i(
         tag: String,
         message: String?,
@@ -68,7 +75,9 @@ interface ILog {
         }
     }
 
-    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = w(ITAG, message, throwable, fullOutput, outputType)
+    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        w(ITAG, message, throwable, fullOutput, outputType)
+
     fun w(
         tag: String,
         message: String?,
@@ -82,7 +91,9 @@ interface ILog {
         }
     }
 
-    fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = e(ITAG, message, throwable, fullOutput, outputType)
+    fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        e(ITAG, message, throwable, fullOutput, outputType)
+
     fun e(
         tag: String,
         message: String? = null,
@@ -96,7 +107,9 @@ interface ILog {
         }
     }
 
-    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) = f(ITAG, message, throwable, fullOutput, outputType)
+    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+        f(ITAG, message, throwable, fullOutput, outputType)
+
     fun f(
         tag: String,
         message: String?,

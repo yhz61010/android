@@ -76,24 +76,24 @@ abstract class BaseNettyServer protected constructor(
             override fun initChannel(socketChannel: SocketChannel) {
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
-//                        if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
-//                            LogContext.log.w(tag, "Working in wss mode")
-//                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
-//                            // FIXME
-// //                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
-//                        }
+                        //   if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
+                        //       LogContext.log.w(tag, "Working in wss mode")
+                        //       val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                        //       // FIXME
+                        // //   pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
+                        //   }
                         addLast(HttpServerCodec())
                         addLast(HttpObjectAggregator(65536))
                         /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
                          * neither spending a lot of memory nor getting [OutOfMemoryError]. */
                         addLast(ChunkedWriteHandler())
                         // FIXME If add this, the server can not receive client message.
-//                        addLast(WebSocketServerCompressionHandler())
+                        //                        addLast(WebSocketServerCompressionHandler())
                         addLast(WebSocketServerProtocolHandler(webSocketPath))
                     } else {
-//                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
-//                        addLast(StringDecoder())
-//                        addLast(StringEncoder())
+                        //                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+                        //                        addLast(StringDecoder())
+                        //                        addLast(StringEncoder())
                     }
                     addLastToPipeline(this)
                     defaultServerInboundHandler?.let { addLast("default-server-inbound-handler", it) }
@@ -104,9 +104,10 @@ abstract class BaseNettyServer protected constructor(
     }
 
     /**
-     * If server has already been released, call this method will throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
+     * If server has already been released, call this method will
+     * throw [java.util.concurrent.RejectedExecutionException]: event executor terminated
      */
-//    @Throws(RejectedExecutionException::class)
+    //    @Throws(RejectedExecutionException::class)
     @Synchronized
     fun startServer() {
         LogContext.log.i(tag, "===== connect() current state=${connectState.get().name} =====")
@@ -240,8 +241,9 @@ abstract class BaseNettyServer protected constructor(
         }
 
         if (isWebSocket) {
-            if (isPing) clientChannel.writeAndFlush(PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd))
-            else clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            if (isPing) clientChannel.writeAndFlush(
+                PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd)
+            ) else clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
         } else {
             clientChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
@@ -258,7 +260,10 @@ abstract class BaseNettyServer protected constructor(
         showLog: Boolean = true,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) =
-        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+        executeUnifiedCommand(
+            clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false,
+            showContent = showContent, showLog = showLog, byteOrder = byteOrder
+        )
 
     @Suppress("unused")
     @JvmOverloads
@@ -271,7 +276,10 @@ abstract class BaseNettyServer protected constructor(
         showLog: Boolean = true,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) =
-        executeUnifiedCommand(clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+        executeUnifiedCommand(
+            clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true,
+            showContent = showContent, showLog = showLog, byteOrder = byteOrder
+        )
 
     // ================================================
 }

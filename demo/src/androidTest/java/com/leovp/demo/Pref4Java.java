@@ -6,7 +6,6 @@ import android.app.Application;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-
 import com.leovp.log_sdk.LLog;
 import com.leovp.log_sdk.LogContext;
 import com.leovp.pref_sdk.LPref;

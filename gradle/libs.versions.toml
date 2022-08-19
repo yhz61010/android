@@ -296,6 +296,8 @@ subsampling-scale-image-view = { module = "com.davemorrissey.labs:subsampling-sc
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
+androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidx-test" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext" }
@@ -402,6 +404,8 @@ test = [
     "robolectric"
 ]
 android-test = [
+    "androidx-test-core",
+    "androidx-test-core-ktx",
     "androidx-test-runner",
     "androidx-test-ext-junit-ktx",
     "espresso-core"]

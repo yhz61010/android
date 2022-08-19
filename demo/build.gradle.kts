@@ -55,10 +55,25 @@ android {
         }
     }
 
-    flavorDimensions("default")
+    // https://developer.android.com/studio/build/build-variants
+    flavorDimensions += "default"
 
     productFlavors {
-        create("develop")
+        create("dev") {
+            // Assigns this product flavor to the "version" flavor dimension.
+            // If you are using only one dimension, this property is optional,
+            // and the plugin automatically assigns all the module's flavors to
+            // that dimension.
+            dimension = "default"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
+
+//        create("prod") {
+//            dimension = "version"
+////            applicationIdSuffix = ".prod"
+////            versionNameSuffix = "-prod"
+//        }
     }
 
     packagingOptions {

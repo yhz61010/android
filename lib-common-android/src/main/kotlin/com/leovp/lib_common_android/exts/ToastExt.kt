@@ -54,6 +54,7 @@ data class ToastConfig(
  * ```
  * LeoToast.getInstance(ctx).apply {
  *      config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+ *      // DO NOT forget to call the following method on Android 11 or above.
  *      initForegroundComponentForToast(application)
  * }
  * ```
@@ -86,10 +87,10 @@ class LeoToast private constructor(private val ctx: Context) {
     }
 
     /**
+     * **Attention:**
      * This method must be called for Android R(Android 11) or above.
      * Otherwise, the custom toast doesn't work when app in background.
      */
-    @RequiresApi(API.R)
     fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
         ForegroundComponent.init(app, delay)
     }

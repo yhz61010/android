@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.leovp.aidl_client"
+    namespace = "com.leovp.aidl.client"
 
     defaultConfig {
         applicationId = namespace

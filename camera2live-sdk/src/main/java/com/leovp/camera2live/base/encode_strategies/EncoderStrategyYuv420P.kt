@@ -30,7 +30,9 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
             // com.leovp.yuv_sdk.YuvUtil.rotateI420(YUVUtil.mirrorI420(yuvData, width, height), width, height, com.leovp.yuv_sdk.YuvUtil.Rotate_90)
 
             // Mirror(height only) first then do rotate
-            com.leovp.yuv_sdk.YuvUtil.convertToI420(yuvData, com.leovp.yuv_sdk.YuvUtil.I420, width, height, true, com.leovp.yuv_sdk.YuvUtil.Rotate_270)!!
+            com.leovp.yuv_sdk.YuvUtil.convertToI420(
+                yuvData, com.leovp.yuv_sdk.YuvUtil.I420, width, height, true, com.leovp.yuv_sdk.YuvUtil.Rotate_270
+            )!!
             // com.leovp.yuv_sdk.YuvUtil.android420ToI420(yuvData, 1, width, height, true, com.leovp.yuv_sdk.YuvUtil.Rotate_270)!!
         }
     }

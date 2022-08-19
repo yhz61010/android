@@ -105,8 +105,8 @@ fun Context.getApplicationSignatures(
                 }
             }
         } else {
-            @Suppress("DEPRECATION") val sig =
-                getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures
+            @Suppress("DEPRECATION")
+            val sig = getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures
             signatureList = sig.map {
                 val digest = MessageDigest.getInstance(algorithm)
                 digest.update(it.toByteArray())

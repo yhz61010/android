@@ -220,7 +220,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         }
                     } else { // On right screen
                         if (floatViewCenterY <= screenOrientSz.height / 2) { // On top screen // Top right
-                            if (getFloatViewTopRightPos().y - getTopHeightOffset() <= screenOrientSz.width - getFloatViewTopRightPos().x) { // Animate to top
+                            // Animate to top
+                            if (getFloatViewTopRightPos().y - getTopHeightOffset() <= screenOrientSz.width - getFloatViewTopRightPos().x) {
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             } else { // Animate to right
@@ -228,7 +229,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                             }
                         } else { // On bottom screen // Bottom right
-                            if (screenOrientSz.height - getFloatViewBottomRightPos().y <= screenOrientSz.width - getFloatViewBottomRightPos().x) { // Animate to bottom
+                            // Animate to bottom
+                            if (screenOrientSz.height - getFloatViewBottomRightPos().y <= screenOrientSz.width - getFloatViewBottomRightPos().x) {
                                 animateDirectionForDockFull = DockEdge.BOTTOM
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                             } else { // Animate to right
@@ -362,16 +364,20 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = if (config.touchable) {
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             } else {
                 // In ScreenShareMasterActivity demo,
                 // I just want to mask a full screen transparent float window and I can show finger paint on screen.
-                // Meanwhile, I can still touch screen and pass through the float window to the bottom layer just like no that float window.
+                // Meanwhile, I can still touch screen and pass through the float window to the bottom layer just like
+                // no that float window.
                 // In this case, I should set touchable status to `false`.
 
                 // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
                 // However the float layer itself can not be touched anymore.
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             if (config.systemWindow && context.canDrawOverlays) {
                 type = when {
@@ -380,7 +386,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
                     }
                     // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                    // android.view.WindowManager${WindowManager.BadTokenException}: Unable to add window -- token null is not valid; is your activity running?
+                    // android.view.WindowManager${WindowManager.BadTokenException}:
+                    // Unable to add window -- token null is not valid; is your activity running?
                 }
             }
 

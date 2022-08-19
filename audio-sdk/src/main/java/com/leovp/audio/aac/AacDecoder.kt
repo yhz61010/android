@@ -63,7 +63,10 @@ class AacDecoder(private val audioDecodeInfo: AudioDecoderInfo, private val call
             LogContext.log.i(TAG, "initAudioDecoder: $audioDecodeInfo")
             val csd0BB = ByteBuffer.wrap(csd0)
             audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-            val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount).apply {
+            val mediaFormat = MediaFormat.createAudioFormat(
+                MediaFormat.MIMETYPE_AUDIO_AAC,
+                audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount
+            ).apply {
                 setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
                 setInteger(MediaFormat.KEY_IS_ADTS, 1)
                 // Set ADTS decoder information.

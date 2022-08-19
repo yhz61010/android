@@ -53,7 +53,11 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
         }
 
         binding.btnScale2.setOnSingleClickListener {
-            val scaleAnim = ScaleAnimation(0f, 1f, 0f, 1f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f).apply { duration = 2000 }
+            val scaleAnim = ScaleAnimation(
+                0f, 1f, 0f, 1f,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f
+            ).apply { duration = 2000 }
             binding.ivBeauty.startAnimation(scaleAnim)
         }
 
@@ -77,7 +81,11 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
         }
 
         binding.btnSequence2.setOnSingleClickListener {
-            val scaleAnim = ScaleAnimation(0f, 1f, 0f, 1f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f).apply { duration = 2000 }
+            val scaleAnim = ScaleAnimation(
+                0f, 1f, 0f, 1f,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f
+            ).apply { duration = 2000 }
             val alphaAnim = AlphaAnimation(1.0f, 0.1f).apply { duration = 1000 }
             binding.ivBeauty.startAnimation(scaleAnim)
             scaleAnim.setAnimationListener(object : Animation.AnimationListener {

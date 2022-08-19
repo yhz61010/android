@@ -9,7 +9,8 @@ import io.netty.channel.ChannelPipeline
  * Author: Michael Leo
  * Date: 20-11-10 上午10:14
  */
-class AudioReceiverWebSocket(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, true) {
+class AudioReceiverWebSocket(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) :
+    BaseNettyServer(port, connectionListener, true) {
     override fun getTagName() = "ARWS"
 
     override fun addLastToPipeline(pipeline: ChannelPipeline) {

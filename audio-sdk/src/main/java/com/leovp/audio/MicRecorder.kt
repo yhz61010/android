@@ -45,7 +45,10 @@ class MicRecorder(
     private var encodeWrapper: AudioEncoderWrapper?
 
     init {
-        bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat) * recordMinBufferRatio
+        bufferSizeInBytes = AudioRecord.getMinBufferSize(
+            encoderInfo.sampleRate,
+            encoderInfo.channelConfig, encoderInfo.audioFormat
+        ) * recordMinBufferRatio
         LogContext.log.w(TAG, "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
 
         encodeWrapper = AudioEncoderManager.getWrapper(
@@ -93,10 +96,10 @@ class MicRecorder(
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
-//                    if (cost > 100) {
-//                        LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
-//                        continue
-//                    }
+                    //                    if (cost > 100) {
+                    //                        LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
+                    //                        continue
+                    //                    }
                     ioScope.launch { encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(pcmData.toByteArrayLE()) }
                 }
             }.onFailure {

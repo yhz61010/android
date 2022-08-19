@@ -18,8 +18,8 @@ import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
-import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.*
 
 /**
  * Require API 26 (Android 8.0+)
@@ -77,10 +77,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         vpsSpsPpsBytes = encodedBytes.copyOf()
-//                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
+                        //                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
                     }
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-//                        LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        //                        LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                     }
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                         // Do nothing
@@ -98,7 +98,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+            //            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
@@ -157,16 +157,16 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     private fun encodeImages(bitmap: Bitmap) {
-//        LogContext.log.d(TAG, "encodeImages")
+        //        LogContext.log.d(TAG, "encodeImages")
 
-//        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
-//            bitmap.width,
-//            bitmap.height
-//        )
-//        LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
+        //        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
+        //            bitmap.width,
+        //            bitmap.height
+        //        )
+        //        LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
 
         // Render the bitmap/texture here
-//            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+        //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
         renderer.draw(builder.width, builder.height, bitmap, mvp)
 
         EGLExt.eglPresentationTimeANDROID(
@@ -182,7 +182,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private fun initEgl() {
         surface = h26xEncoder?.createInputSurface()
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-        if (eglDisplay == EGL14.EGL_NO_DISPLAY) throw RuntimeException("eglDisplay == EGL14.EGL_NO_DISPLAY: ${GLUtils.getEGLErrorString(EGL14.eglGetError())}")
+        if (eglDisplay == EGL14.EGL_NO_DISPLAY) {
+            throw RuntimeException(
+                "eglDisplay == EGL14.EGL_NO_DISPLAY: ${GLUtils.getEGLErrorString(EGL14.eglGetError())}"
+            )
+        }
 
         val version = IntArray(2)
         if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1))
@@ -272,7 +276,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
             }
         }
-//        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
+        //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
         h26xEncoder = MediaCodec.createEncoderByType(
             when (builder.encodeType) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC

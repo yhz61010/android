@@ -15,6 +15,7 @@ plugins {
 
 dependencies {
     testImplementation(libs.bundles.test)
+    testImplementation(libs.bundles.powermock)
 }
 
 afterEvaluate {

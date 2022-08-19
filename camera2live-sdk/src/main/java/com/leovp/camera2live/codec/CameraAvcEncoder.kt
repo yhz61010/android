@@ -42,7 +42,8 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private fun initEncoder() {
         LogContext.log.i(
             TAG,
-            "initEncoder width=$width height=$height bitrate=$bitrate kb/s frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
+            "initEncoder width=$width height=$height bitrate=$bitrate kb/s " +
+                "frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
 
         val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)

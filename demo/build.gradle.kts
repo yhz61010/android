@@ -71,8 +71,8 @@ android {
 
 //        create("prod") {
 //            dimension = "version"
-////            applicationIdSuffix = ".prod"
-////            versionNameSuffix = "-prod"
+// //            applicationIdSuffix = ".prod"
+// //            versionNameSuffix = "-prod"
 //        }
     }
 
@@ -250,21 +250,13 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
 
     implementation(libs.bundles.androidx.full)
-
     implementation(libs.android.material)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.multidex)
-
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
-
     implementation(libs.bundles.lifecycle.simple)
-
     implementation(libs.bundles.room)
-
-    androidTestImplementation(libs.bundles.android.test)
-    androidTestImplementation(libs.bundles.powermock)
-    testImplementation(libs.bundles.test)
 
     implementation(projects.androidbaseSdk)
     implementation(projects.logSdk)
@@ -289,11 +281,9 @@ dependencies {
     implementation(projects.libBytes)
     implementation(projects.libImage)
     implementation(projects.libReflection)
-
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
     // implementation(projects.ffmpegSdk)
     // implementation(projects.ffmpegJavacppSdk)
-
     // You can enable only one of the following three modules.
     // implementation(projects.adpcmImaQtCodecSdk)
     // implementation(projects.h264HevcDecoderSdk)
@@ -303,7 +293,6 @@ dependencies {
     kapt(libs.glide.compiler)
 
     implementation(libs.bundles.java.mail)
-
     implementation(libs.mars.xlog)
     implementation(libs.mmkv)
     implementation(libs.material.dialogs)
@@ -317,9 +306,7 @@ dependencies {
     implementation(libs.xx.permissions)
     // Koin main features for Android
     implementation(libs.koin)
-
     implementation(libs.bundles.bson)
-
     implementation(libs.free.reflection)
 
     // Net - dependencies - Start
@@ -327,4 +314,8 @@ dependencies {
     implementation(libs.square.okhttp)
     implementation(libs.net)
     // Net - dependencies - End
+
+    androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.bundles.powermock)
+    androidTestImplementation(libs.bundles.test)
 }

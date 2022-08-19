@@ -594,7 +594,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
             }
         }
 
-        LogContext.log.w("Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) duration=${touchUpStartTime - touchDownStartTime}ms")
+        LogContext.log.w(
+            "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) " +
+                "duration=${touchUpStartTime - touchDownStartTime}ms"
+        )
         webSocketClientHandler?.sendDragData(touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY, touchUpStartTime - touchDownStartTime)
         return super.dispatchTouchEvent(event)
     }

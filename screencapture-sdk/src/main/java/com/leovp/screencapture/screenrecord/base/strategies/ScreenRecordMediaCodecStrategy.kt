@@ -128,7 +128,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
                 TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps " +
+                    "bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate " +
+                    "iFrameInterval=$iFrameInterval"
             )
             return ScreenRecordMediaCodecStrategy(this)
         }

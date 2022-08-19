@@ -3,10 +3,10 @@ package com.leovp.demo.basic_components.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.leovp.lib_common_android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivitySocketServerBinding
 import com.leovp.lib_common_android.exts.setOnSingleClickListener
+import com.leovp.lib_common_android.exts.toast
 import com.leovp.lib_common_android.utils.NetworkUtil
 import com.leovp.log_sdk.LogContext
 import com.leovp.log_sdk.base.ITAG
@@ -70,7 +70,10 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             LogContext.log.i(tag, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"; binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread {
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"; binding.sv.fullScroll(View.FOCUS_DOWN)
+            }
             socketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
 
@@ -86,7 +89,10 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(tag, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nStart failed $code $msg"; binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread {
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\nStart failed $code $msg"; binding.sv.fullScroll(View.FOCUS_DOWN)
+            }
         }
     }
 

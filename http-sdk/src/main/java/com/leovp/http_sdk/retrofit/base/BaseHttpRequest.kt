@@ -3,10 +3,10 @@ package com.leovp.http_sdk.retrofit.base
 import com.leovp.http_sdk.okhttp.HttpLoggingInterceptor
 import com.leovp.lib_network.SslUtils
 import com.leovp.log_sdk.LogContext
+import java.util.concurrent.TimeUnit
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.concurrent.TimeUnit
 
 /**
  * Author: Michael Leo
@@ -31,7 +31,9 @@ abstract class BaseHttpRequest {
             httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory(SslUtils.PROTOCOL), SslUtils.systemDefaultTrustManager())
         } else {
             httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
-            requireNotNull(SslUtils.certificateInputStream) { "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?" }
+            requireNotNull(SslUtils.certificateInputStream) {
+                "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?"
+            }
             val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
             httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
         }
@@ -44,22 +46,22 @@ abstract class BaseHttpRequest {
             logInterceptor.level = HttpLoggingInterceptor.Level.BODY
             return logInterceptor
 
-//        return new LoggingInterceptor.Builder()
-//                .loggable(BuildConfig.DEBUG)
-//                .setLevel(Level.BASIC)
-//                .log(Platform.INFO)
-//                .request("Request")
-//                .response("Response")
-// //                .addHeader("version", BuildConfig.VERSION_NAME)
-// //                .addQueryParam("query", "0")
-// //              .logger(new Logger() {
-// //                  @Override
-// //                  public void log(int level, String tag, String msg) {
-// //                      Log.w(tag, msg);
-// //                  }
-// //              })
-// //              .executor(Executors.newSingleThreadExecutor())
-//                .build();
+            //        return new LoggingInterceptor.Builder()
+            //                .loggable(BuildConfig.DEBUG)
+            //                .setLevel(Level.BASIC)
+            //                .log(Platform.INFO)
+            //                .request("Request")
+            //                .response("Response")
+            // //                .addHeader("version", BuildConfig.VERSION_NAME)
+            // //                .addQueryParam("query", "0")
+            // //              .logger(new Logger() {
+            // //                  @Override
+            // //                  public void log(int level, String tag, String msg) {
+            // //                      Log.w(tag, msg);
+            // //                  }
+            // //              })
+            // //              .executor(Executors.newSingleThreadExecutor())
+            //                .build();
         }
 
     private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor {

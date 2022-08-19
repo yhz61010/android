@@ -38,7 +38,7 @@ dependencies {
     api(libs.eventbus)
 
     androidTestImplementation(libs.bundles.android.test)
-    androidTestImplementation(libs.bundles.powermock)
+    testImplementation(libs.bundles.powermock)
     testImplementation(libs.bundles.test)
 
     api(projects.logSdk)

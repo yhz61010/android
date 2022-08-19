@@ -207,14 +207,17 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                     if (messageContent.isBlank()) messageContent = messageHtmlContent
 
                     // print out details of each message
-                    LogContext.log.i(ITAG, "Message(${contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)}) #" + (i + 1) + ":")
+                    LogContext.log.i(
+                        ITAG,
+                        "Message(${contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)}) #" + (i + 1) + ":"
+                    )
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")
 //                    LogContext.log.i(ITAG, "CC: $ccList")
                     LogContext.log.i(ITAG, "Subject: $subject")
                     LogContext.log.i(ITAG, "Sent Date: $sentDate")
                     LogContext.log.i(ITAG, "Message: $messageContent")
-                    LogContext.log.i(ITAG, "----------------------------------------------------------------------------------------------------------------")
+                    LogContext.log.i(ITAG, "------------------------------------------------------------------------------------------------")
                 }
 
                 // disconnect

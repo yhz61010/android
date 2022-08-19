@@ -65,7 +65,10 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
                 }
             })
 
-        LogContext.log.i("real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} status_bar=$statusBarHeight navigation_bar=$navigationBarHeight")
+        LogContext.log.i(
+            "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
+                "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
+        )
 
         LogContext.log.i(ITAG, "===================================")
         val info = getPackageInfo()

@@ -39,7 +39,10 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLan
         LogContext.log.w("itemList=${itemList.toJsonString()}")
         val itemCodeList = resources.getStringArray(R.array.lang_code_list)
 
-        LogContext.log.i("Default language: ${langUtil.getDefaultDisplayLanguage()}[${langUtil.getDefaultLanguageCountryCode()}][${langUtil.getDefaultLanguageFullCode()}]")
+        LogContext.log.i(
+            "Default language: ${langUtil.getDefaultDisplayLanguage()}" +
+                "[${langUtil.getDefaultLanguageCountryCode()}][${langUtil.getDefaultLanguageFullCode()}]"
+        )
         LogContext.log.i("Device locale: ${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]")
         LogContext.log.i("========================================================")
 

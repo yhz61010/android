@@ -50,7 +50,7 @@ allprojects {
     apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
 
     detekt {
-        config = files("$rootDir/conf/detekt.yml")
+        config = files("$rootDir/detekt.yml")
 
         parallel = true
 

@@ -15,8 +15,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.leovp.camerax_sdk.R
-import com.leovp.camerax_sdk.databinding.FragmentGalleryBinding
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.FragmentGalleryBinding
 import com.leovp.lib_common_android.exts.padWithDisplayCutout
 import com.leovp.lib_common_android.exts.share
 import com.leovp.lib_common_android.exts.showImmersive

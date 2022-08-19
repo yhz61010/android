@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
-import com.leovp.circle_progressbar.R
+import com.leovp.circle.progressbar.sdk.R
 import com.leovp.circle_progressbar.base.State
 
 /**

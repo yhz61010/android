@@ -23,7 +23,7 @@ android {
     }
 
     val debugSigning = signingConfigs.create("debugSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "../debug.keystore")
+        storeFile = File(System.getenv("KEYSTORE") ?: "${rootDir.absolutePath}/debug.keystore")
         keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
         keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
         storePassword = System.getenv("KEY_PASSWORD") ?: "android"

@@ -9,9 +9,9 @@ import com.leovp.lib_json.toJsonString
 import com.leovp.log_sdk.LogContext
 import com.leovp.opengl_sdk.BaseRenderer
 import com.leovp.opengl_sdk.ui.LeoGLSurfaceView
-import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
+import kotlinx.coroutines.*
 
 /**
  * [H265 NAL Unit Header](https://tools.ietf.org/html/rfc7798#page-13)
@@ -275,7 +275,8 @@ class DecodeH265RawFileByFFMpeg {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.w(
                                     TAG,
-                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}"
+                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] " +
+                                        "${decodeFrame?.width}x${decodeFrame?.height}"
                                 )
                             } catch (e: Exception) {
                                 st3 = SystemClock.elapsedRealtimeNanos()

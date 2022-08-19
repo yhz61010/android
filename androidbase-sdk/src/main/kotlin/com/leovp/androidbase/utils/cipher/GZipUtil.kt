@@ -23,5 +23,6 @@ object GZipUtil {
     /**
      * @param data Byte order: Little endian
      */
-    fun isGzip(data: ByteArray): Boolean = ((data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)) and 0xFFFF == GZIPInputStream.GZIP_MAGIC // 0x8b1f - in big endian
+    fun isGzip(data: ByteArray): Boolean =
+        ((data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)) and 0xFFFF == GZIPInputStream.GZIP_MAGIC // 0x8b1f - in big endian
 }

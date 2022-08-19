@@ -117,7 +117,11 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         if (netty.isWebSocket) {
             // Process the handshake from client to server
             if (msg is FullHttpResponse) {
-                LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+                LogContext.log.i(
+                    tag,
+                    "Response status=${msg.status()} " +
+                        "isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
+                )
                 handleHttpRequest(ctx, msg.retain())
                 return
             }

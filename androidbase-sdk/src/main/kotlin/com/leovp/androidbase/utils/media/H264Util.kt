@@ -151,7 +151,9 @@ object H264Util {
 
         if (DEBUG) {
             LogContext.log.d(
-                TAG, "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()},${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
+                TAG,
+                "Frame HEX data[0~4]=${data[0].toHexString()},${data[1].toHexString()}," +
+                    "${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
         return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {

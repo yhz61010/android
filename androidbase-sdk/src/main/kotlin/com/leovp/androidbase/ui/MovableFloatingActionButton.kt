@@ -11,7 +11,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Suppress("unused")
-class MovableFloatingActionButton(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FloatingActionButton(context, attrs, defStyleAttr), OnTouchListener {
+class MovableFloatingActionButton(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FloatingActionButton(context, attrs, defStyleAttr), OnTouchListener {
     init {
         setOnTouchListener(this)
     }

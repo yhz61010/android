@@ -54,13 +54,19 @@ object AccessibilityUtil {
         val accessibilityService = weakService.get() ?: return false
         var accessibilityEnabled = 0
         runCatching {
-            accessibilityEnabled = Settings.Secure.getInt(accessibilityService.applicationContext.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
+            accessibilityEnabled = Settings.Secure.getInt(
+                accessibilityService.applicationContext.contentResolver,
+                Settings.Secure.ACCESSIBILITY_ENABLED
+            )
         }.onFailure { it.printStackTrace() }
         val packageName: String = accessibilityService.packageName
         val serviceCanonicalName = "$packageName/${accessibilityService.javaClass.canonicalName}"
         LogContext.log.d("serviceCanonicalName: $serviceCanonicalName")
         if (accessibilityEnabled == 1) {
-            val settingValue: String? = Settings.Secure.getString(accessibilityService.applicationContext.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            val settingValue: String? = Settings.Secure.getString(
+                accessibilityService.applicationContext.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            )
             settingValue?.split(':', ignoreCase = true)?.forEach { value ->
                 if (value.equals(serviceCanonicalName, ignoreCase = true)) return true
             }

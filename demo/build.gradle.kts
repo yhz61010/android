@@ -21,20 +21,8 @@ android {
         }
     }
 
-    val debugSigning = signingConfigs.create("debugSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "${rootDir.absolutePath}/debug.keystore")
-        keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-        keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-        storePassword = System.getenv("KEY_PASSWORD") ?: "android"
-
-        enableV1Signing = true
-        enableV2Signing = true
-        enableV3Signing = true
-        enableV4Signing = true
-    }
-
     val releaseSigning = signingConfigs.create("releaseSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "../debug.keystore")
+        storeFile = File(System.getenv("KEYSTORE") ?: "${projectDir.absolutePath}/../debug.keystore")
         keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
         keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
         storePassword = System.getenv("KEY_PASSWORD") ?: "android"
@@ -47,7 +35,7 @@ android {
 
     buildTypes {
         getByName("debug") {
-            signingConfig = debugSigning
+            signingConfig = releaseSigning
         }
 
         getByName("release") {

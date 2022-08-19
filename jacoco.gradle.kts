@@ -1,4 +1,5 @@
 // https://github.com/twilio/twilio-verify-android/blob/main/jacoco.gradle.kts
+// https://medium.com/@ranjeetsinha/jacoco-with-kotlin-dsl-f1f067e42cd0
 tasks.withType<Test> {
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
@@ -22,12 +23,19 @@ private val classDirectoriesTree = fileTree("${project.buildDir}") {
         "**/*Test*.*",
         "android/**/*.*",
         "**/models/**",
-        "**/*\$Lambda$*.*",
-        "**/*\$inlined$*.*"
+        "**/*\$Lambda$*.*", // Jacoco can not handle several "$" in class name.
+        "**/*\$inlined$*.*" // Kotlin specific, Jacoco can not handle several "$" in class name.
     )
 }
 
-private val sourceDirectoriesTree = files("$projectDir/src/main/java")
+private val sourceDirectoriesTree = fileTree("${project.buildDir}") {
+    include(
+        "src/main/java/**",
+        "src/main/kotlin/**",
+        "src/debug/java/**",
+        "src/debug/kotlin/**"
+    )
+}
 
 private val executionDataTree = fileTree("${project.buildDir}") {
     include(
@@ -73,7 +81,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     setDirectories()
 }
 
-val minimumCoverage = "0.5".toBigDecimal()
+val minimumCoverage = "0.3".toBigDecimal()
 tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     group = jacocoGroup
     description = "Code coverage verification for Android both Android and Unit tests."
@@ -81,6 +89,8 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     violationRules {
         rule {
             limit {
+                counter = "INSTRUCTIONAL"
+                value = "COVEREDRATIO"
                 minimum = minimumCoverage
             }
         }

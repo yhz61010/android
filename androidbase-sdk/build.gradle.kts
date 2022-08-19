@@ -11,13 +11,6 @@ android {
         multiDexEnabled = true
     }
 
-    testOptions {
-        unitTests {
-            isReturnDefaultValues = true
-            isIncludeAndroidResources = true
-        }
-    }
-
     lint {
         abortOnError = false
     }

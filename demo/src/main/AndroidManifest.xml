@@ -124,7 +124,7 @@
         <activity android:name=".basic_components.examples.animation.DrawableAnimActivity" />
         <activity android:name=".basic_components.examples.animation.AnimationActivity" />
         <activity android:name=".basic_components.examples.provider.ProviderActivity" />
-        <activity android:name=".basic_components.examples.aidl.AidlActivity" />
+        <activity android:name=".basic_components.examples.AidlActivity" />
         <activity
             android:name=".basic_components.examples.accessibility.AccessibilityActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />
@@ -190,7 +190,7 @@
         <activity android:name=".basic_components.examples.DeviceInfoActivity" />
 
         <service
-            android:name=".basic_components.examples.aidl.LocalLogService"
+            android:name="com.leovp.aidl.client.LocalLogService"
             android:exported="true"
             android:permission="remote.service.permission" >
             <intent-filter>

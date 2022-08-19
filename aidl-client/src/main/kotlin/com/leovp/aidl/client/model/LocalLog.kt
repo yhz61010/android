@@ -1,4 +1,4 @@
-package com.leovp.demo.basic_components.examples.aidl.model
+package com.leovp.aidl.client.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

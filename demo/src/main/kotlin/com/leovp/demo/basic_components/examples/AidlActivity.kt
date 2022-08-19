@@ -1,4 +1,4 @@
-package com.leovp.demo.basic_components.examples.aidl
+package com.leovp.demo.basic_components.examples
 
 import android.os.Bundle
 import com.leovp.demo.base.BaseDemonstrationActivity

@@ -80,7 +80,7 @@ abstract class BaseNettyServer protected constructor(
 //                            LogContext.log.w(tag, "Working in wss mode")
 //                            val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
 //                            // FIXME
-////                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
+// //                        pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
 //                        }
                         addLast(HttpServerCodec())
                         addLast(HttpObjectAggregator(65536))

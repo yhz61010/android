@@ -68,7 +68,8 @@ class SoundManager private constructor(val ctx: Context) {
 
     private fun getSoundVolume(): Float {
         return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(
-            AudioManager.STREAM_MUSIC)
+            AudioManager.STREAM_MUSIC
+        )
     }
 
     companion object : SingletonHolder<SoundManager, Context>(::SoundManager)

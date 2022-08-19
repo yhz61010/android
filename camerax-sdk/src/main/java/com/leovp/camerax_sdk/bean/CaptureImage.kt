@@ -19,9 +19,11 @@ sealed class CaptureImage {
     data class ImageUri(val fileUri: Uri) : CaptureImage()
 
     @Keep
-    data class ImageBytes(val imgBytes: ByteArray,
+    data class ImageBytes(
+        val imgBytes: ByteArray,
         val width: Int,
-        val height: Int) : CaptureImage() {
+        val height: Int
+    ) : CaptureImage() {
 
         override fun toString(): String {
             return "CaptureImageBytes(size=${imgBytes.size}, ${width}x$height)"

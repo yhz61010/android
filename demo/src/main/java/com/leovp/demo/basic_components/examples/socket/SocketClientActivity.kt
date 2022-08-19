@@ -91,9 +91,13 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
         cs.launch {
             if (::socketClientHandler.isInitialized) {
                 val result = socketClientHandler.sendMsgToServer(binding.editText.text.toString())
-                withContext(Dispatchers.Main) { binding.editText.text.clear(); if (!result) toast("Send command error",
-                    debug = true,
-                    error = true) }
+                withContext(Dispatchers.Main) {
+                    binding.editText.text.clear(); if (!result) toast(
+                        "Send command error",
+                        debug = true,
+                        error = true
+                    )
+                }
             }
         }
     }
@@ -112,7 +116,12 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
 
     // =====================================================
 
-    class SocketClient(host: String, port: Int, connectionListener: ClientConnectListener<BaseNettyClient>, retryStrategy: RetryStrategy) :
+    class SocketClient(
+        host: String,
+        port: Int,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        retryStrategy: RetryStrategy
+    ) :
         BaseNettyClient(host, port, connectionListener, retryStrategy) {
         override fun getTagName() = "SocketClient"
     }

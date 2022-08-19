@@ -42,13 +42,17 @@ object FileDocumentUtil {
      * </provider>
      * ```
      */
-    fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(context,
+    fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(
+        context,
         "${context.applicationContext.packageName}.fileprovider",
-        file)
+        file
+    )
 
     @SuppressLint("NewApi", "ObsoleteSdkInt")
-    fun getFileRealPath(context: Context,
-        uri: Uri): String? { // check here to KITKAT or new version
+    fun getFileRealPath(
+        context: Context,
+        uri: Uri
+    ): String? { // check here to KITKAT or new version
         val aboveKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
         var selection: String? = null
         var selectionArgs: Array<String>? = null // DocumentProvider
@@ -65,11 +69,13 @@ object FileDocumentUtil {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     var cursor: Cursor? = null
                     try {
-                        cursor = context.contentResolver.query(uri,
+                        cursor = context.contentResolver.query(
+                            uri,
                             arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
                             null,
                             null,
-                            null)
+                            null
+                        )
                         if (cursor != null && cursor.moveToFirst()) {
                             val fileName = cursor.getString(0)
                             val path = Environment.getExternalStorageDirectory()
@@ -93,10 +99,12 @@ object FileDocumentUtil {
                         for (contentUriPrefix in contentUriPrefixesToTry) {
                             return try {
                                 val contentUri =
-                                        ContentUris.withAppendedId(Uri.parse(contentUriPrefix),
-                                            java.lang.Long.valueOf(id))
+                                    ContentUris.withAppendedId(
+                                        Uri.parse(contentUriPrefix),
+                                        java.lang.Long.valueOf(id)
+                                    )
                                 getDataColumn(context, contentUri, null, null)
-                            } catch (e: NumberFormatException) { //In Android 8 and Android P the id is not a number
+                            } catch (e: NumberFormatException) { // In Android 8 and Android P the id is not a number
                                 uri.path!!.replaceFirst("^/document/raw:".toRegex(), "")
                                     .replaceFirst("^raw:".toRegex(), "")
                             }
@@ -176,8 +184,10 @@ object FileDocumentUtil {
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(
             ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.resources.getResourcePackageName(
-                resId) + "/" + context.resources.getResourceTypeName(resId) + "/" + context.resources.getResourceEntryName(
-                resId)
+                resId
+            ) + "/" + context.resources.getResourceTypeName(resId) + "/" + context.resources.getResourceEntryName(
+                resId
+            )
         )
     }
 
@@ -214,7 +224,7 @@ object FileDocumentUtil {
     }
 
     private fun getDriveFilePath(context: Context, uri: Uri): String {
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->/*
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor -> /*
          * Get the column indexes of the data in the Cursor,
          *     * move to the first row in the Cursor, get the data,
          *     * and display cursor.
@@ -232,7 +242,7 @@ object FileDocumentUtil {
                     val maxBufferSize = 1 * 1024 * 1024
                     val bytesAvailable = inputStream!!.available()
 
-                    //int bufferSize = 1024;
+                    // int bufferSize = 1024;
                     val bufferSize = min(bytesAvailable, maxBufferSize)
                     val buffers = ByteArray(bufferSize)
                     while (inputStream.read(buffers).also { read = it } != -1) {
@@ -254,7 +264,7 @@ object FileDocumentUtil {
     private fun copyFileToInternalStorage(context: Context, uri: Uri, newDirName: String): String {
         context.contentResolver.query(
             uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null
-        )?.use { cursor ->/*
+        )?.use { cursor -> /*
              * Get the column indexes of the data in the Cursor,
              *     * move to the first row in the Cursor, get the data,
              *     * and display it.
@@ -333,10 +343,12 @@ object FileDocumentUtil {
         return "com.google.android.apps.docs.storage" == uri.authority || "com.google.android.apps.docs.storage.legacy" == uri.authority
     }
 
-    private fun getDataColumn(context: Context,
+    private fun getDataColumn(
+        context: Context,
         uri: Uri,
         selection: String?,
-        selectionArgs: Array<String>?): String? {
+        selectionArgs: Array<String>?
+    ): String? {
         // MediaStore.Images.Media.DATA // MediaStore.Images.Media._ID
         val column = MediaStore.Images.Media.DATA
         val projection = arrayOf(column)

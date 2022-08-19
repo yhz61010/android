@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.leovp.log_sdk.LogContext
 
-
 /**
  * You must assign `app` which means the application context first.
  * Generally, it will be assigned in you custom application or another singleton utility before using it.
@@ -76,7 +75,8 @@ class KeepAlive(
         val intent = Intent(app, KeepAliveReceiver::class.java)
 //            intent.putExtra("package", app.id)
         val pendingIntent = PendingIntent.getBroadcast(
-            app, 0, intent, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            app, 0, intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             } else {
                 PendingIntent.FLAG_UPDATE_CURRENT

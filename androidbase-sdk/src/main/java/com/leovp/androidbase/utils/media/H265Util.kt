@@ -380,32 +380,32 @@ object H265Util {
     @Suppress("unused")
     fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_VPS        -> "VPS" // 32
-            NALU_TYPE_SPS        -> "SPS" // 33
-            NALU_TYPE_PPS        -> "PPS" // 34
+            NALU_TYPE_VPS -> "VPS" // 32
+            NALU_TYPE_SPS -> "SPS" // 33
+            NALU_TYPE_PPS -> "PPS" // 34
             NALU_TYPE_PREFIX_SEI -> "PREFIX_SEI" // 39
             NALU_TYPE_SUFFIX_SEI -> "SUFFIX_SEI" // 40
 
             // NALU values in the range 16(inclusive) to 23(inclusive) are all Key Frames, AKA I Frame.
-            NALU_TYPE_BLA_W_LP   -> "I_BLA_W_LP" // 16
+            NALU_TYPE_BLA_W_LP -> "I_BLA_W_LP" // 16
             NALU_TYPE_BLA_W_RADL -> "I_BLA_W_RADL" // 17
-            NALU_TYPE_BLA_N_LP   -> "I_BLA_N_LP" // 18
+            NALU_TYPE_BLA_N_LP -> "I_BLA_N_LP" // 18
             NALU_TYPE_IDR_W_RADL -> "IDR_W_RADL" // 19
-            NALU_TYPE_IDR_N_LP   -> "IDR_N_LP" // 20
-            NALU_TYPE_CRA_NUT    -> "I_CRA_NUT" // 21
+            NALU_TYPE_IDR_N_LP -> "IDR_N_LP" // 20
+            NALU_TYPE_CRA_NUT -> "I_CRA_NUT" // 21
 
-            NALU_TRAIL_N         -> "P_TRAIL_N" // 0
-            NALU_TRAIL_R         -> "P_TRAIL_R" // 1
-            NALU_TSA_N           -> "P_TSA_N" // 2
-            NALU_TSA_R           -> "P_TSA_R" // 3
-            NALU_STSA_N          -> "P_STSA_N" // 4
-            NALU_STSA_R          -> "P_STSA_R" // 5
-            NALU_RADL_N          -> "P_RADL_N" // 6
-            NALU_RADL_R          -> "P_RADL_R" // 7
-            NALU_RASL_N          -> "P_RASL_N" // 8
-            NALU_RASL_R          -> "P_RASL_R" // 9
+            NALU_TRAIL_N -> "P_TRAIL_N" // 0
+            NALU_TRAIL_R -> "P_TRAIL_R" // 1
+            NALU_TSA_N -> "P_TSA_N" // 2
+            NALU_TSA_R -> "P_TSA_R" // 3
+            NALU_STSA_N -> "P_STSA_N" // 4
+            NALU_STSA_R -> "P_STSA_R" // 5
+            NALU_RADL_N -> "P_RADL_N" // 6
+            NALU_RADL_R -> "P_RADL_R" // 7
+            NALU_RASL_N -> "P_RASL_N" // 8
+            NALU_RASL_R -> "P_RASL_R" // 9
 
-            else                 -> "Unknown"
+            else -> "Unknown"
         }
     }
 

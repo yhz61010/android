@@ -14,7 +14,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 /**
  * Add following `<activity>` in your `<AndroidManifest.xml>`.
  *
@@ -51,8 +50,10 @@ class CameraXDemoActivity : CameraXActivity() {
     override fun getCaptureListener(): CaptureImageListener {
         return object : CaptureImageListener {
             override fun onSavedImageUri(savedImage: CaptureImage.ImageUri?, exc: Exception?) {
-                LogContext.log.w(ITAG,
-                    "onSavedImageUri uri=${savedImage?.fileUri} path=${savedImage?.fileUri?.path} Exc: $exc")
+                LogContext.log.w(
+                    ITAG,
+                    "onSavedImageUri uri=${savedImage?.fileUri} path=${savedImage?.fileUri?.path} Exc: $exc"
+                )
 
                 if (savedImage == null) return
 
@@ -66,12 +67,17 @@ class CameraXDemoActivity : CameraXActivity() {
                 LogContext.log.w(ITAG, "onSavedImageBytes=$savedImage Exc: $exc")
                 if (savedImage == null) return
 
-                savedImage.imgBytes.toBitmapFromBytes(savedImage.width,
+                savedImage.imgBytes.toBitmapFromBytes(
+                    savedImage.width,
                     savedImage.height,
-                    Bitmap.Config.ARGB_8888)?.apply {
-                    val oriOutFile = File(getBaseDirString("Leo"), "${
+                    Bitmap.Config.ARGB_8888
+                )?.apply {
+                    val oriOutFile = File(
+                        getBaseDirString("Leo"),
+                        "${
                         SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
-                    }.jpg")
+                        }.jpg"
+                    )
                     writeToFile(oriOutFile)
                     recycle()
                     LogContext.log.w(ITAG, "oriOutFile=${oriOutFile.absolutePath}")

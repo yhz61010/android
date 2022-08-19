@@ -31,15 +31,15 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         binding.btnChange.setOnSingleClickListener {
             FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                    "I'm f1: ${Random().nextInt(100)}"
+                "I'm f1: ${Random().nextInt(100)}"
             FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                    "I'm f2: ${Random().nextInt(100)}"
+                "I'm f2: ${Random().nextInt(100)}"
         }
 
         FloatView.with(this)
             .layout(R.layout.floatview) { v ->
                 v.findViewById<TextView>(R.id.tvText).text =
-                        "f1\nImmersive:ON\nStick:${FloatView.with("f1").stickyEdge}"
+                    "f1\nImmersive:ON\nStick:${FloatView.with("f1").stickyEdge}"
                 v.findViewById<View>(R.id.floatViewBtn)
                     .setOnSingleClickListener { toast("Win1 Button") }
                 v.findViewById<View>(R.id.linearLayout)
@@ -58,8 +58,12 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
                     return false
                 }
 
-                override fun touchMove(view: View, x: Int, y: Int,
-                    isClickGesture: Boolean): Boolean {
+                override fun touchMove(
+                    view: View,
+                    x: Int,
+                    y: Int,
+                    isClickGesture: Boolean
+                ): Boolean {
                     LogContext.log.w("F1", "touchMove ($x, $y) isClickGesture=$isClickGesture")
                     return false
                 }
@@ -74,7 +78,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         FloatView.with(this)
             .layout(R.layout.floatview) { v ->
                 v.findViewById<TextView>(R.id.tvText).text =
-                        "f2\nImmersive:ON\nEdge 20px\nDock:${FloatView.with("f1").dockEdge}"
+                    "f2\nImmersive:ON\nEdge 20px\nDock:${FloatView.with("f1").dockEdge}"
                 v.findViewById<View>(R.id.floatViewBtn)
                     .setOnSingleClickListener { toast("Win2 Button") }
                 v.findViewById<View>(R.id.linearLayout)
@@ -141,16 +145,24 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
                     return false
                 }
 
-                override fun touchMove(view: View, x: Int, y: Int,
-                    isClickGesture: Boolean): Boolean {
-                    LogContext.log.w("floatView_touchable",
-                        "touchMove ($x, $y) isClickGesture=$isClickGesture")
+                override fun touchMove(
+                    view: View,
+                    x: Int,
+                    y: Int,
+                    isClickGesture: Boolean
+                ): Boolean {
+                    LogContext.log.w(
+                        "floatView_touchable",
+                        "touchMove ($x, $y) isClickGesture=$isClickGesture"
+                    )
                     return false
                 }
 
                 override fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean {
-                    LogContext.log.w("floatView_touchable",
-                        "touchUp ($x, $y) isClickGesture=$isClickGesture")
+                    LogContext.log.w(
+                        "floatView_touchable",
+                        "touchUp ($x, $y) isClickGesture=$isClickGesture"
+                    )
                     return false
                 }
             })
@@ -158,12 +170,12 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         binding.rgSticky.setOnCheckedChangeListener { _, checkedId ->
             FloatView.with("f1").stickyEdge = when (checkedId) {
-                R.id.rbStickyNone   -> StickyEdge.NONE
-                R.id.rbStickyLeft   -> StickyEdge.LEFT
-                R.id.rbStickyRight  -> StickyEdge.RIGHT
-                R.id.rbStickyTop    -> StickyEdge.TOP
+                R.id.rbStickyNone -> StickyEdge.NONE
+                R.id.rbStickyLeft -> StickyEdge.LEFT
+                R.id.rbStickyRight -> StickyEdge.RIGHT
+                R.id.rbStickyTop -> StickyEdge.TOP
                 R.id.rbStickyBottom -> StickyEdge.BOTTOM
-                else                -> throw IllegalAccessException("Unknown resource id: $checkedId")
+                else -> throw IllegalAccessException("Unknown resource id: $checkedId")
             }
             val tv = FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)
             tv?.text = "f1\nImmersive:OFF\nSticky:${FloatView.with("f1").stickyEdge}"
@@ -171,15 +183,15 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         binding.rgAutoDock.setOnCheckedChangeListener { _, checkedId ->
             FloatView.with("f2").dockEdge = when (checkedId) {
-                R.id.rbAutoDockNone      -> DockEdge.NONE
-                R.id.rbAutoDockLeft      -> DockEdge.LEFT
-                R.id.rbAutoDockRight     -> DockEdge.RIGHT
-                R.id.rbAutoDockTop       -> DockEdge.TOP
-                R.id.rbAutoDockBottom    -> DockEdge.BOTTOM
+                R.id.rbAutoDockNone -> DockEdge.NONE
+                R.id.rbAutoDockLeft -> DockEdge.LEFT
+                R.id.rbAutoDockRight -> DockEdge.RIGHT
+                R.id.rbAutoDockTop -> DockEdge.TOP
+                R.id.rbAutoDockBottom -> DockEdge.BOTTOM
                 R.id.rbAutoDockLeftRight -> DockEdge.LEFT_RIGHT
                 R.id.rbAutoDockTopBottom -> DockEdge.TOP_BOTTOM
-                R.id.rbAutoDockFull      -> DockEdge.FULL
-                else                     -> throw IllegalAccessException("Unknown resource id: $checkedId")
+                R.id.rbAutoDockFull -> DockEdge.FULL
+                else -> throw IllegalAccessException("Unknown resource id: $checkedId")
             }
             val tv = FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)
             tv?.text = "f2\nImmersive:OFF\nDock:${FloatView.with("f2").dockEdge}"
@@ -187,14 +199,14 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         binding.rgEnableDrag.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
-                R.id.rbEnableDrag  -> FloatView.with("f1").enableDrag = true
+                R.id.rbEnableDrag -> FloatView.with("f1").enableDrag = true
                 R.id.rbDisableDrag -> FloatView.with("f1").enableDrag = false
             }
         }
 
         binding.rgTouchable.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
-                R.id.rbTouchable     -> {
+                R.id.rbTouchable -> {
                     FloatView.with("floatView_touchable").touchable = true
                 }
                 R.id.rbNoneTouchable -> {

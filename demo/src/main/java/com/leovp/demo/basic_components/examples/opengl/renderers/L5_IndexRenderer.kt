@@ -66,7 +66,8 @@ class L5_IndexRenderer(@Suppress("unused") private val ctx: Context) : BaseRende
             0, 1, 2,
             0, 2, 3,
             0, 4, 1,
-            3, 2, 5)
+            3, 2, 5
+        )
     }
 
     /**

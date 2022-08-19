@@ -62,8 +62,11 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     }
 
     fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("I have a dream. A song to sing. " +
-                "To help me cope with anything. If you see the wonder.", debug = true, error = true)
+        toast(
+            "I have a dream. A song to sing. " +
+                "To help me cope with anything. If you see the wonder.",
+            debug = true, error = true
+        )
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {

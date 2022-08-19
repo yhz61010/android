@@ -32,14 +32,14 @@ fun textureYUV(imageData: ByteBuffer, width: Int, height: Int, texture: Int) {
     // 获得纹理对象后，其每个像素的 r,g,b,a 值都为相同，为加载图像的像素亮度，在这里就是YUV某一平面的分量值
     GLES20.glTexImage2D(
         GLES20.GL_TEXTURE_2D,
-        0,                   // 指定要 Mipmap 的等级
-        GLES20.GL_LUMINANCE,      // GPU 内部格式，告诉 OpenGL 内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
-        width,                    // 加载的纹理宽度。最好为2的次幂
-        height,                   // 加载的纹理高度。最好为2的次幂
-        0,                 // 纹理边框
-        GLES20.GL_LUMINANCE,     // 数据的像素格式 亮度，灰度图
+        0, // 指定要 Mipmap 的等级
+        GLES20.GL_LUMINANCE, // GPU 内部格式，告诉 OpenGL 内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
+        width, // 加载的纹理宽度。最好为2的次幂
+        height, // 加载的纹理高度。最好为2的次幂
+        0, // 纹理边框
+        GLES20.GL_LUMINANCE, // 数据的像素格式 亮度，灰度图
         GLES20.GL_UNSIGNED_BYTE, // 一个像素点存储的数据类型
-        imageData                // 纹理的数据
+        imageData // 纹理的数据
     )
 }
 
@@ -58,17 +58,16 @@ fun textureNV12(imageData: ByteBuffer, width: Int, height: Int, texture: Int) {
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
     GLES20.glTexImage2D(
         GLES20.GL_TEXTURE_2D,
-        0,                    // 指定要 Mipmap 的等级
+        0, // 指定要 Mipmap 的等级
         GLES20.GL_LUMINANCE_ALPHA, // GPU 内部格式，告诉OpenGL内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
-        width,                     // 加载的纹理宽度。最好为2的次幂
-        height,                    // 加载的纹理高度。最好为2的次幂
-        0,                  // 纹理边框
+        width, // 加载的纹理宽度。最好为2的次幂
+        height, // 加载的纹理高度。最好为2的次幂
+        0, // 纹理边框
         GLES20.GL_LUMINANCE_ALPHA, // 数据的像素格式 亮度，灰度图
-        GLES20.GL_UNSIGNED_BYTE,   // 一个像素点存储的数据类型
-        imageData                  // 纹理的数据
+        GLES20.GL_UNSIGNED_BYTE, // 一个像素点存储的数据类型
+        imageData // 纹理的数据
     )
 }
-
 
 /**
  * 将图片数据绑定到纹理目标，适用于 UV 分量分开存储的（I420）
@@ -78,8 +77,15 @@ fun textureNV12(imageData: ByteBuffer, width: Int, height: Int, texture: Int) {
  * @param width YUV 图片宽度
  * @param height YUV 图片高度
  */
-fun feedTextureWithImageData(yPlane: ByteBuffer, uPlane: ByteBuffer, vPlane: ByteBuffer, width: Int, height: Int, planarTexture: IntBuffer) {
-    //根据YUV编码的特点，获得不同平面的基址
+fun feedTextureWithImageData(
+    yPlane: ByteBuffer,
+    uPlane: ByteBuffer,
+    vPlane: ByteBuffer,
+    width: Int,
+    height: Int,
+    planarTexture: IntBuffer
+) {
+    // 根据YUV编码的特点，获得不同平面的基址
     textureYUV(yPlane, width, height, planarTexture[0])
     textureYUV(uPlane, width / 2, height / 2, planarTexture[1])
     textureYUV(vPlane, width / 2, height / 2, planarTexture[2])
@@ -93,7 +99,7 @@ fun feedTextureWithImageData(yPlane: ByteBuffer, uPlane: ByteBuffer, vPlane: Byt
  * @param height YUV 图片高度
  */
 fun feedTextureWithImageData(yPlane: ByteBuffer, uvPlane: ByteBuffer, width: Int, height: Int, planarTexture: IntBuffer) {
-    //根据YUV编码的特点，获得不同平面的基址
+    // 根据YUV编码的特点，获得不同平面的基址
     textureYUV(yPlane, width, height, planarTexture[0])
     textureNV12(uvPlane, width / 2, height / 2, planarTexture[1])
 }
@@ -238,7 +244,7 @@ fun validateProgram(programObjectId: Int): Boolean {
  *            表示易变量，一般用于顶点着色器传递到片段着色器的量。
  * vec4     ：4个分量的向量：x、y、z、w
  */
-//internal const val vertexShaderCode = """
+// internal const val vertexShaderCode = """
 //    uniform mat4 uMVPMatrix;
 //    attribute vec4 a_Position; // 输入的顶点坐标，会在程序指定将数据输入到该字段
 //    attribute vec2 a_TexCoord; // 输入的纹理坐标(2个分量，S 和 T 坐标)，会在程序指定将数据输入到该字段
@@ -251,7 +257,7 @@ fun validateProgram(programObjectId: Int): Boolean {
 //        // v_TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
 //        // gl_Position = uMVPMatrix * a_Position;
 //    }
-//"""
+// """
 
 /**
  * 片段着色器程序。
@@ -266,7 +272,7 @@ fun validateProgram(programObjectId: Int): Boolean {
  * https://github.com/kenneycode/OpenGLES2.0SamplesForAndroid/blob/0864ee22db/app/src/main/java/com/kenneycode/samples/renderer/SampleVertexShaderRenderer.kt
  * https://blog.csdn.net/junzia/article/details/68952183
  */
-//internal const val fragmentShaderCode = """
+// internal const val fragmentShaderCode = """
 //    // 定义所有浮点数据类型的默认精度。
 //    // 有 lowp、mediump、highp 三种，但只有部分硬件支持片段着色器使用 highp。(顶点着色器默认 highp)
 //    // https://www.jianshu.com/p/a772bfc2276b
@@ -298,4 +304,4 @@ fun validateProgram(programObjectId: Int): Boolean {
 //        // gl_FragColor：GL中默认定义的输出变量，决定了当前片段的最终颜色
 //        gl_FragColor = color;
 //    }
-//"""
+// """

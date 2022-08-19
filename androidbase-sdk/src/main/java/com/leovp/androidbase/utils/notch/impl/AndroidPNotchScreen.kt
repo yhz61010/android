@@ -25,7 +25,7 @@ class AndroidPNotchScreen : INotchScreen {
         // 延伸显示区域到耳朵区
         val lp = window.attributes
         lp.layoutInDisplayCutoutMode =
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         window.attributes = lp
         val decorView = window.decorView
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -35,28 +35,30 @@ class AndroidPNotchScreen : INotchScreen {
                 controller.hide(WindowInsetsCompat.Type.statusBars())
                 // controller.hide(WindowInsetsCompat.Type.navigationBars())
                 controller.systemBarsBehavior =
-                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
             // 允许内容绘制到耳朵区
             @Suppress("DEPRECATION")
             decorView.systemUiVisibility =
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
     }
 
     override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
         val contentView = activity.window.decorView
-        contentView.post(Runnable {
-            val windowInsets = contentView.rootWindowInsets
-            if (windowInsets != null) {
-                val cutout = windowInsets.displayCutout
-                if (cutout != null) {
-                    callback.onResult(cutout.boundingRects)
-                    return@Runnable
+        contentView.post(
+            Runnable {
+                val windowInsets = contentView.rootWindowInsets
+                if (windowInsets != null) {
+                    val cutout = windowInsets.displayCutout
+                    if (cutout != null) {
+                        callback.onResult(cutout.boundingRects)
+                        return@Runnable
+                    }
                 }
+                callback.onResult(null)
             }
-            callback.onResult(null)
-        })
+        )
     }
 }

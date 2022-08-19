@@ -249,7 +249,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             when (builder.encodeType) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
-            }, builder.width, builder.height
+            },
+            builder.width, builder.height
         )
         with(format) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)

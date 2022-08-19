@@ -38,11 +38,11 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     private var config = DefaultConfig(globalConfig = FloatView.globalConfig.copy())
 
     fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator =
-            apply {
-                config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
-                    handle?.invoke(it)
-                }
+        apply {
+            config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
+                handle?.invoke(it)
             }
+        }
 
     fun layout(view: View, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
         config.customView = view.also { handle?.invoke(it) }
@@ -71,7 +71,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
      * So the float layer itself can not be touched anymore.
      */
     fun listener(touchListener: FloatView.TouchEventListener): FloatViewCreator =
-            apply { config.touchEventListener = touchListener }
+        apply { config.touchEventListener = touchListener }
 
     /**
      * Create float view but don't add it to the window manager.

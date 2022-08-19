@@ -1,5 +1,4 @@
 import java.io.ByteArrayOutputStream
-import org.jetbrains.kotlin.library.SkippedDeclaration.bytes
 
 plugins {
     alias(libs.plugins.android.application)

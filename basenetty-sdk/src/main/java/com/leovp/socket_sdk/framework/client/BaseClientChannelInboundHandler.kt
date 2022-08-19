@@ -16,7 +16,8 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
-abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyClient) : SimpleChannelInboundHandler<T>(),
+abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyClient) :
+    SimpleChannelInboundHandler<T>(),
     ReadSocketDataListener<T> {
     private val tag = netty.tag
 
@@ -69,7 +70,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.w(
             tag,
             "===== Channel is inactive and reached its end of lifetime | " +
-                    "disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel().remoteAddress()}  ====="
+                "disconnectManually=${netty.disconnectManually} caughtException=$caughtException Disconnected from: ${ctx.channel().remoteAddress()}  ====="
         )
         if (netty.isWebSocket) {
             LogContext.log.i(tag, "Closing handshaker for websocket")
@@ -191,7 +192,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 //                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
                 val exceptionInfo =
                     "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${
-                        msg.content().toString(CharsetUtil.UTF_8)
+                    msg.content().toString(CharsetUtil.UTF_8)
                     }) isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)

@@ -13,7 +13,8 @@ import com.leovp.demo.databinding.ActivityOpenGles20Binding
 import com.leovp.log_sdk.base.ITAG
 import java.io.Serializable
 
-class OpenGLES20Activity : BaseDemonstrationActivity<ActivityOpenGles20Binding>(),
+class OpenGLES20Activity :
+    BaseDemonstrationActivity<ActivityOpenGles20Binding>(),
     AdapterView.OnItemClickListener {
     override fun getTagName(): String = ITAG
 

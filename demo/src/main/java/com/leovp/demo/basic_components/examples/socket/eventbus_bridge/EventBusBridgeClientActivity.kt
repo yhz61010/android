@@ -71,14 +71,16 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
             HttpHeaderNames.REFERER.toString() to "your referer"
         )
         webSocket =
-                EventBusBridgeSocketClient(URI(wsUrl),
-                    connectionListener,
-                    ConstantRetry(),
-                    cookies).apply {
-                    webSocketHandler = EventBusBridgeSocketHandler(this)
-                    initHandler(webSocketHandler)
-                    ioScope.launch { this@apply.connect() }
-                }
+            EventBusBridgeSocketClient(
+                URI(wsUrl),
+                connectionListener,
+                ConstantRetry(),
+                cookies
+            ).apply {
+                webSocketHandler = EventBusBridgeSocketHandler(this)
+                initHandler(webSocketHandler)
+                ioScope.launch { this@apply.connect() }
+            }
     }
 
     override fun onDestroy() {
@@ -134,34 +136,40 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
                         return
                     }
 
-                    if (LogContext.enableLog) LogContext.log.i(TAG,
-                        "totalByteArray=${totalByteArray.decodeToString()}")
+                    if (LogContext.enableLog) LogContext.log.i(
+                        TAG,
+                        "totalByteArray=${totalByteArray.decodeToString()}"
+                    )
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
                     //                    replyAddress?.let { replyAddress ->
-                    ////                        LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
+                    // //                        LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
                     //                        EventBus.processReplyHandler(replyAddress) { h ->
                     //                            h.handle(totalFrameData)
                     //                        }
                     //                    }
                     //                    address?.let { address ->
                     //                        EventBus.processHandlers(address) { idx, h ->
-                    ////                            LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
+                    // //                            LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
                     //                            h.handle(totalFrameData)
                     //                        }
                     //                    }
                 }
-                else                                                   -> if (LogContext.enableLog) LogContext.log.i(
+                else -> if (LogContext.enableLog) LogContext.log.i(
                     TAG,
-                    "Invalid message type=[${msg::class.simpleName}]")
+                    "Invalid message type=[${msg::class.simpleName}]"
+                )
             }
         }
 
         fun sendTest(netty: BaseNettyClient) {
-            val msg = EventBus.send("your send address", handler = object : EventBusHandler {
-                override fun handle(message: Any?) {
+            val msg = EventBus.send(
+                "your send address",
+                handler = object : EventBusHandler {
+                    override fun handle(message: Any?) {
+                    }
                 }
-            })
+            )
             netty.executeCommand(serializeData(msg), "send test")
         }
 

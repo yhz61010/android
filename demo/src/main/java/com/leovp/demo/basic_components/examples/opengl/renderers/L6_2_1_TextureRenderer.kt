@@ -61,13 +61,15 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             -1.0f, -1.0f,
             -1.0f, 1.0f,
             1.0f, 1.0f,
-            1.0f, -1.0f)
+            1.0f, -1.0f
+        )
 
         private val POINT_DATA_BEAUTY = floatArrayOf(
             -0.5f, -0.5f,
             -0.5f, 0.5f,
             0.5f, 0.5f,
-            0.5f, -0.5f)
+            0.5f, -0.5f
+        )
 
         /**
          * 纹理坐标
@@ -87,7 +89,8 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             0f, 1f,
             0f, 0f,
             1f, 0f,
-            1f, 1f)
+            1f, 1f
+        )
     }
 
     private val vertexDataFireL: FloatBuffer = createFloatBuffer(POINT_DATA_FIRE_L)
@@ -139,8 +142,10 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     }
 
     private fun drawFireL() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataFireL)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexDataFireL
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 设置当前活动的纹理单元为纹理单元 0
@@ -155,8 +160,10 @@ class L6_2_1_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
     }
 
     private fun drawBeauty() {
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataBeauty)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexDataBeauty
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 绑定新的纹理 ID 到已激活的纹理单元上

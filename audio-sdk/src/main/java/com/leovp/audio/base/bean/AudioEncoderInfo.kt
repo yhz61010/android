@@ -2,7 +2,6 @@ package com.leovp.audio.base.bean
 
 import androidx.annotation.Keep
 
-
 /**
  * Author: Michael Leo
  * Date: 20-8-13 下午7:21
@@ -28,6 +27,6 @@ data class AudioEncoderInfo(val sampleRate: Int, val bitrate: Int, val channelCo
     val channelCount: Int = when (channelConfig) {
         android.media.AudioFormat.CHANNEL_IN_MONO -> 1
         android.media.AudioFormat.CHANNEL_IN_STEREO -> 2
-        else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=${channelConfig}")
+        else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=$channelConfig")
     }
 }

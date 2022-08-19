@@ -27,14 +27,20 @@ fun ByteArray.readShort(index: Int = 0): Short = (((this[index + 0].toInt() shl 
 fun ByteArray.readShortLE(index: Int = 0): Short = (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
 
 fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or (
-        this[2 + index].toInt() and 0xFF shl 8) or (
-        this[1 + index].toInt() and 0xFF shl 16) or (
-        this[0 + index].toInt() and 0xFF shl 24)
+    this[2 + index].toInt() and 0xFF shl 8
+    ) or (
+    this[1 + index].toInt() and 0xFF shl 16
+    ) or (
+    this[0 + index].toInt() and 0xFF shl 24
+    )
 
 fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or (
-        this[index + 1].toInt() and 0xFF shl 8) or (
-        this[index + 2].toInt() and 0xFF shl 16) or (
-        this[index + 3].toInt() and 0xFF shl 24)
+    this[index + 1].toInt() and 0xFF shl 8
+    ) or (
+    this[index + 2].toInt() and 0xFF shl 16
+    ) or (
+    this[index + 3].toInt() and 0xFF shl 24
+    )
 
 fun ByteArray.readLong(index: Int = 0): Long {
     var result: Long = 0
@@ -97,7 +103,7 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toInt().to
  * Attention.
  * This method is little bit slow if you want to use in it loop.
  */
-//fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
+// fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
 
 fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
     if (this.isEmpty()) return ""
@@ -140,9 +146,9 @@ fun ByteArray.toHexStringLE(addPadding: Boolean = false, delimiter: CharSequence
 }
 
 fun ByteBuffer.toByteArray(): ByteArray {
-    rewind()    // Rewind the buffer to zero
+    rewind() // Rewind the buffer to zero
     val data = ByteArray(remaining())
-    get(data)   // Copy the buffer into a byte array
+    get(data) // Copy the buffer into a byte array
     return data // Return the byte array
 }
 

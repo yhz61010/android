@@ -21,9 +21,11 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentForNavFirstBinding {
+        savedInstanceState: Bundle?
+    ): FragmentForNavFirstBinding {
         return FragmentForNavFirstBinding.inflate(inflater, container, false)
     }
 
@@ -38,20 +40,24 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
     //        }
     //    }
 
-    override fun onCreateView(inflater: LayoutInflater,
+    override fun onCreateView(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): View {
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         LogContext.log.w("FragmentForNavFirst")
         binding.gotoSecondActivity.setOnSingleClickListener {
             val secondAction =
-                    FragmentForNavFirstDirections.actionFragmentForNavFirstToFragmentForNavSecond("P-One",
-                        "P-Two")
+                FragmentForNavFirstDirections.actionFragmentForNavFirstToFragmentForNavSecond(
+                    "P-One",
+                    "P-Two"
+                )
             it.findNavController().navigate(secondAction)
         }
         binding.gotoThirdActivity.setOnSingleClickListener {
             val thirdAction =
-                    FragmentForNavFirstDirections.actionFragmentForNavFirstToFragmentForNavThird()
+                FragmentForNavFirstDirections.actionFragmentForNavFirstToFragmentForNavThird()
             it.findNavController().navigate(thirdAction)
         }
         return binding.root

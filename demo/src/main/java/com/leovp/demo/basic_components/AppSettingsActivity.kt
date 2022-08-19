@@ -21,15 +21,23 @@ class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding
 
     fun onOpenStorageClick(@Suppress("UNUSED_PARAMETER") view: View) {
         runCatching {
-            simpleActivityLauncher.launch(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
-                this.packageUri))
+            simpleActivityLauncher.launch(
+                Intent(
+                    Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+                    this.packageUri
+                )
+            )
         }
     }
 
     fun onOpenAppDetailClick(@Suppress("UNUSED_PARAMETER") view: View) {
         runCatching {
-            simpleActivityLauncher.launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                this.packageUri)) { result ->
+            simpleActivityLauncher.launch(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    this.packageUri
+                )
+            ) { result ->
                 toast("onOpenAppDetailClick result=${result.resultCode}")
             }
         }
@@ -38,8 +46,12 @@ class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding
     @RequiresApi(Build.VERSION_CODES.M)
     fun onOverlayPermissionClick(@Suppress("UNUSED_PARAMETER") view: View) {
         runCatching {
-            simpleActivityLauncher.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                this.packageUri)) { result ->
+            simpleActivityLauncher.launch(
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    this.packageUri
+                )
+            ) { result ->
                 toast("onOverlayPermissionClick result=${result.resultCode}")
             }
         }
@@ -48,8 +60,12 @@ class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding
     fun onUnitySettingClick(@Suppress("UNUSED_PARAMETER") view: View) {
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                simpleActivityLauncher.launch(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                    this.packageUri)) { result ->
+                simpleActivityLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                        this.packageUri
+                    )
+                ) { result ->
                     toast("Result in AppSettingsActivity: ${result.resultCode}")
                 }
             }

@@ -80,7 +80,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
         return ""
     }
 
-
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
         file?.name?.matches(Regex("cpu[0-9]+")) ?: false
     }?.size ?: 0
@@ -200,7 +199,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Host             : $host
             Hardware         : $hardware
             CPU              : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${
-                "%.2f".format(cpuMaxFreq / 1000_000F)
+            "%.2f".format(cpuMaxFreq / 1000_000F)
             }GHz)
             CPU Arch         : $cpuArch
             OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]

@@ -29,11 +29,11 @@ internal val Context.screenAvailableResolution: Size
     get() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val metrics =
-                    (getSystemService(Context.WINDOW_SERVICE) as WindowManager).currentWindowMetrics
+                (getSystemService(Context.WINDOW_SERVICE) as WindowManager).currentWindowMetrics
             // Gets all excluding insets
             val windowInsets = metrics.windowInsets
             val insets =
-                    windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+                windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
 
             val insetsWidth = insets.right + insets.left
             val insetsHeight = insets.top + insets.bottom
@@ -61,20 +61,21 @@ internal val Context.screenRealResolution: Size
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //        this.display?.getRealSize(size)
             val bounds =
-                    (getSystemService(Context.WINDOW_SERVICE) as WindowManager).currentWindowMetrics.bounds
+                (getSystemService(Context.WINDOW_SERVICE) as WindowManager).currentWindowMetrics.bounds
             Size(bounds.width(), bounds.height())
         } else {
             val displayMetrics = DisplayMetrics()
             @Suppress("DEPRECATION") (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.getRealMetrics(
-                displayMetrics)
+                displayMetrics
+            )
             Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
 
-///**
+// /**
 // * This height includes the height of status bar but excludes the height of navigation bar.
 // */
-//internal val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
+// internal val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 
 /**
  * @param rotation The value may be:
@@ -90,13 +91,19 @@ internal val Context.screenRealResolution: Size
 internal fun Context.getScreenSize(rotation: Int, screenSize: Size = screenRealResolution): Size {
     return when (rotation) {
         Surface.ROTATION_0,
-        Surface.ROTATION_180 -> Size(min(screenSize.width, screenSize.height),
-            max(screenSize.width, screenSize.height))
+        Surface.ROTATION_180 -> Size(
+            min(screenSize.width, screenSize.height),
+            max(screenSize.width, screenSize.height)
+        )
         Surface.ROTATION_90,
-        Surface.ROTATION_270 -> Size(max(screenSize.width, screenSize.height),
-            min(screenSize.width, screenSize.height))
-        else                 -> Size(min(screenSize.width, screenSize.height),
-            max(screenSize.width, screenSize.height))
+        Surface.ROTATION_270 -> Size(
+            max(screenSize.width, screenSize.height),
+            min(screenSize.width, screenSize.height)
+        )
+        else -> Size(
+            min(screenSize.width, screenSize.height),
+            max(screenSize.width, screenSize.height)
+        )
     }
 }
 
@@ -130,7 +137,7 @@ internal val Context.screenSurfaceRotation: Int
 
 internal val Context.statusBarHeight
     @SuppressLint("DiscouragedApi")
-    get() : Int {
+    get(): Int {
         var result = 0
         val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {

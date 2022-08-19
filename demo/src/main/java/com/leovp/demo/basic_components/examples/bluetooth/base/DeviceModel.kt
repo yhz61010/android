@@ -9,7 +9,10 @@ import androidx.annotation.Keep
  */
 @Keep
 data class DeviceModel(
-    var device: BluetoothDevice, var name: String?, var macAddress: String, var rssi: String?
+    var device: BluetoothDevice,
+    var name: String?,
+    var macAddress: String,
+    var rssi: String?
 ) {
     var index: Int = 0
 }

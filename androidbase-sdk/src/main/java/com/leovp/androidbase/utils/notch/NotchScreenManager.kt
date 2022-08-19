@@ -57,15 +57,18 @@ class NotchScreenManager private constructor(private val activity: Activity) {
     fun getNotchInfo(notchScreenCallback: NotchScreenCallback) {
         val notchScreenInfo = NotchScreenInfo()
         if (notchScreen != null && notchScreen.hasNotch(activity)) {
-            notchScreen.getNotchRect(activity, object : NotchSizeCallback {
-                override fun onResult(notchRects: List<Rect>?) {
-                    if (notchRects != null && notchRects.isNotEmpty()) {
-                        notchScreenInfo.hasNotch = true
-                        notchScreenInfo.notchRects = notchRects
+            notchScreen.getNotchRect(
+                activity,
+                object : NotchSizeCallback {
+                    override fun onResult(notchRects: List<Rect>?) {
+                        if (notchRects != null && notchRects.isNotEmpty()) {
+                            notchScreenInfo.hasNotch = true
+                            notchScreenInfo.notchRects = notchRects
+                        }
+                        notchScreenCallback.onResult(notchScreenInfo)
                     }
-                    notchScreenCallback.onResult(notchScreenInfo)
                 }
-            })
+            )
         } else {
             notchScreenCallback.onResult(notchScreenInfo)
         }
@@ -78,8 +81,8 @@ class NotchScreenManager private constructor(private val activity: Activity) {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             when {
                 activity.isHuaWei -> notchScreen = HuaweiNotchScreen()
-                activity.isOppo   -> notchScreen = OppoNotchScreen()
-                activity.isVivo   -> notchScreen = HuaweiNotchScreen()
+                activity.isOppo -> notchScreen = OppoNotchScreen()
+                activity.isVivo -> notchScreen = HuaweiNotchScreen()
                 activity.isXiaoMi -> notchScreen = MiNotchScreen()
             }
         }

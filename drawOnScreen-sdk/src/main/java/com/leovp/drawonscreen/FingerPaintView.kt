@@ -20,7 +20,12 @@ import kotlin.math.abs
  * Author: Michael Leo
  * Date: 2020/11/02 19:10
  */
-class FingerPaintView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) :
+class FingerPaintView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    defStyleRes: Int = 0
+) :
     ImageView(context, attrs, defStyleAttr) {
 
     companion object {

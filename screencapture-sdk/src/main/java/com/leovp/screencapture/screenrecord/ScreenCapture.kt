@@ -27,18 +27,20 @@ object ScreenCapture {
     /**
      * @param dpi Not used for [Screenshot2H26xStrategy] which type is [BY_IMAGE_2_H26x]
      */
-    class Builder(private val width: Int,
+    class Builder(
+        private val width: Int,
         private val height: Int,
         private val dpi: Int,
         private val mediaProjection: MediaProjection?,
         private val captureType: Int,
-        private val screenDataListener: ScreenDataListener) {
+        private val screenDataListener: ScreenDataListener
+    ) {
         // Common setting
         private var fps = 20F
 
         // H26x setting
         private var encodeType: ScreenRecordMediaCodecStrategy.EncodeType =
-                ScreenRecordMediaCodecStrategy.EncodeType.H264
+            ScreenRecordMediaCodecStrategy.EncodeType.H264
         private var bitrate = width * height
         private var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         private var keyFrameRate = 20
@@ -53,7 +55,7 @@ object ScreenCapture {
         // ===== Common For H26x
         // ==================================================
         fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
-                apply { this.encodeType = encodeType }
+            apply { this.encodeType = encodeType }
 
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
@@ -76,8 +78,10 @@ object ScreenCapture {
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
         fun build(): ScreenProcessor {
-            LogContext.log.i(TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder")
+            LogContext.log.i(
+                TAG,
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
+            )
             return when (captureType) {
                 BY_IMAGE_2_H26x -> Screenshot2H26xStrategy.Builder(width, height, dpi, screenDataListener)
                     .setEncodeType(encodeType)
@@ -89,11 +93,13 @@ object ScreenCapture {
                     .setQuality(quality)
                     .setSampleSize(sampleSize)
                     .build()
-                BY_MEDIA_CODEC  -> ScreenRecordMediaCodecStrategy.Builder(width,
+                BY_MEDIA_CODEC -> ScreenRecordMediaCodecStrategy.Builder(
+                    width,
                     height,
                     dpi,
                     mediaProjection,
-                    screenDataListener)
+                    screenDataListener
+                )
                     .setEncodeType(encodeType)
                     .setFps(fps)
                     .setBitrate(bitrate)
@@ -102,12 +108,14 @@ object ScreenCapture {
                     .setIFrameInterval(iFrameInterval)
                     .setGoogleEncoder(useGoogleEncoder)
                     .build()
-                BY_RAW_BMP      -> ScreenRecordRawBmpStrategy.Builder(width,
+                BY_RAW_BMP -> ScreenRecordRawBmpStrategy.Builder(
+                    width,
                     height,
                     dpi,
                     mediaProjection,
-                    screenDataListener).setFps(fps).build()
-                else            -> throw IllegalAccessException("Not support strategy.")
+                    screenDataListener
+                ).setFps(fps).build()
+                else -> throw IllegalAccessException("Not support strategy.")
 //                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
 //                        .setFps(fps)
 //                        .setBitrate(bitrate)

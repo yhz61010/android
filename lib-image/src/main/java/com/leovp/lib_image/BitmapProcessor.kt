@@ -44,11 +44,13 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
     private external fun rotateBitmapCw90(handler: ByteBuffer)
     private external fun rotateBitmap180(handler: ByteBuffer)
 
-    private external fun cropBitmap(handler: ByteBuffer,
+    private external fun cropBitmap(
+        handler: ByteBuffer,
         left: Int,
         top: Int,
         right: Int,
-        bottom: Int)
+        bottom: Int
+    )
 
     private external fun scaleNNBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
     private external fun scaleBIBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
@@ -68,7 +70,7 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
     fun rotateBitmap180() = bitmapByteBuffer?.let { rotateBitmap180(it) }
 
     fun cropBitmap(left: Int, top: Int, right: Int, bottom: Int) =
-            bitmapByteBuffer?.let { cropBitmap(it, left, top, right, bottom) }
+        bitmapByteBuffer?.let { cropBitmap(it, left, top, right, bottom) }
 
     val bitmap: Bitmap? get() = bitmapByteBuffer?.let { getBitmapFromSavedBitmapData(it) }
     fun getBitmapAndFree(): Bitmap? {
@@ -77,13 +79,15 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
         return bmp
     }
 
-    fun scaleBitmap(newWidth: Int,
+    fun scaleBitmap(
+        newWidth: Int,
         newHeight: Int,
-        scaleMethod: ScaleMethod = ScaleMethod.NearestNeighbour) {
+        scaleMethod: ScaleMethod = ScaleMethod.NearestNeighbour
+    ) {
         val innerHandler = bitmapByteBuffer ?: return
         when (scaleMethod) {
             ScaleMethod.BilinearInterpolation -> scaleBIBitmap(innerHandler, newWidth, newHeight)
-            ScaleMethod.NearestNeighbour      -> scaleNNBitmap(innerHandler, newWidth, newHeight)
+            ScaleMethod.NearestNeighbour -> scaleNNBitmap(innerHandler, newWidth, newHeight)
         }
     }
 
@@ -94,7 +98,7 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
      * 123    321
      * 456 => 654
      * 789    987
-    </pre> *
+     </pre> *
      */
     //
     fun flipBitmapHorizontal() = bitmapByteBuffer?.let { flipBitmapHorizontal(it) }
@@ -106,7 +110,7 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
      * 123    789
      * 456 => 456
      * 789    123
-    </pre> *
+     </pre> *
      */
     fun flipBitmapVertical() = bitmapByteBuffer?.let { flipBitmapVertical(it) }
 
@@ -124,9 +128,11 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
      */
     protected fun finalize() {
         if (bitmapByteBuffer == null) return
-        Log.w("LEO-Native",
+        Log.w(
+            "LEO-Native",
             "JNI bitmap wasn't freed manually. Free it by finalize automatically. " +
-                    "You'd better to free the bitmap as soon as you can.")
+                "You'd better to free the bitmap as soon as you can."
+        )
         free()
     }
 

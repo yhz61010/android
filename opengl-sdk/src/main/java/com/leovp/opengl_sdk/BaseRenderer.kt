@@ -27,39 +27,45 @@ abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
      * @param width 图像宽度
      * @param height 图像高度
      */
-    protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, renderWidth: Int, renderHeight: Int): FloatArray {
+    protected fun createKeepRatioFloatArray(
+        width: Int,
+        height: Int,
+        keepRatio: Boolean,
+        renderWidth: Int,
+        renderHeight: Int
+    ): FloatArray {
         val floatArray: FloatArray =
-                if (!keepRatio) {
-                    VerticesUtil.VERTICES_COORD
-                } else {
-                    if (renderWidth > 0 && renderHeight > 0) {
-                        val renderRatio = renderHeight.toFloat() / renderWidth.toFloat()
-                        val specificRatio = height.toFloat() / width.toFloat()
-                        when {
-                            renderRatio == specificRatio -> VerticesUtil.VERTICES_COORD
-                            renderRatio < specificRatio  -> {
-                                val widthScale = renderRatio / specificRatio
-                                floatArrayOf(
-                                    -widthScale, -1.0f,
-                                    widthScale, -1.0f,
-                                    -widthScale, 1.0f,
-                                    widthScale, 1.0f
-                                )
-                            }
-                            else                         -> {
-                                val heightScale = specificRatio / renderRatio
-                                floatArrayOf(
-                                    -1.0f, -heightScale,
-                                    1.0f, -heightScale,
-                                    -1.0f, heightScale,
-                                    1.0f, heightScale
-                                )
-                            }
+            if (!keepRatio) {
+                VerticesUtil.VERTICES_COORD
+            } else {
+                if (renderWidth > 0 && renderHeight > 0) {
+                    val renderRatio = renderHeight.toFloat() / renderWidth.toFloat()
+                    val specificRatio = height.toFloat() / width.toFloat()
+                    when {
+                        renderRatio == specificRatio -> VerticesUtil.VERTICES_COORD
+                        renderRatio < specificRatio -> {
+                            val widthScale = renderRatio / specificRatio
+                            floatArrayOf(
+                                -widthScale, -1.0f,
+                                widthScale, -1.0f,
+                                -widthScale, 1.0f,
+                                widthScale, 1.0f
+                            )
                         }
-                    } else {
-                        VerticesUtil.VERTICES_COORD
+                        else -> {
+                            val heightScale = specificRatio / renderRatio
+                            floatArrayOf(
+                                -1.0f, -heightScale,
+                                1.0f, -heightScale,
+                                -1.0f, heightScale,
+                                1.0f, heightScale
+                            )
+                        }
                     }
+                } else {
+                    VerticesUtil.VERTICES_COORD
                 }
+            }
         return floatArray
     }
 

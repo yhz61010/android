@@ -12,7 +12,6 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
-
 /**
  * [H265 NAL Unit Header](https://tools.ietf.org/html/rfc7798#page-13)
  *

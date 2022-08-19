@@ -10,7 +10,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
 import java.lang.reflect.Type
 
-
 /**
  * Author: Michael Leo
  * Date: 2021/8/4 11:22
@@ -57,7 +56,6 @@ class JsonUnitTest {
         type = object : TypeToken<SerializeExcludeBean2>() {}.type
         val convSerializeExcludeTypeBean2 = "{\"id\":666,\"name\":\"Name333\",\"desc\":\"I'm a cool man333!\"}".toObject<SerializeExcludeBean2>(type)!!
         Assert.assertEquals("id: 666, name: Name333, desc: I'm a cool man333!", convSerializeExcludeTypeBean2.toString())
-
 
         // ========
 

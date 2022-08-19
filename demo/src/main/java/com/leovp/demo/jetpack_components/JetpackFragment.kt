@@ -21,9 +21,11 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentJetpackBinding {
+        savedInstanceState: Bundle?
+    ): FragmentJetpackBinding {
         return FragmentJetpackBinding.inflate(inflater, container, false)
     }
 
@@ -32,8 +34,10 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
         val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-                startActivity(featureList[position].second,
-                    { intent -> intent.putExtra("title", featureList[position].first) })
+                startActivity(
+                    featureList[position].second,
+                    { intent -> intent.putExtra("title", featureList[position].first) }
+                )
             }
         }
         binding.recyclerView.run {

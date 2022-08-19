@@ -14,7 +14,7 @@ internal fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): 
     .codecInfos.filter { it.isEncoder == encoder }.filter { it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1 }
 
 internal fun hasCodecByName(mimeType: String, codecName: String, encoder: Boolean = true): Boolean =
-        getCodecListByMimeType(mimeType, encoder).indexOfFirst { it.name.equals(codecName, true) } > -1
+    getCodecListByMimeType(mimeType, encoder).indexOfFirst { it.name.equals(codecName, true) } > -1
 
 internal fun getAllSupportedCodecList(): Array<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos // MediaCodecList.ALL_CODECS
 
@@ -27,7 +27,7 @@ internal fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupp
 private fun getSupportedColorFormat(caps: MediaCodecInfo.CodecCapabilities): IntArray = caps.colorFormats
 
 internal fun getSupportedProfileLevels(codec: MediaCodec, mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
-        getSupportedProfileLevels(codec.codecInfo.getCapabilitiesForType(mime))
+    getSupportedProfileLevels(codec.codecInfo.getCapabilitiesForType(mime))
 
 internal fun getSupportedProfileLevelsForEncoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createEncoderByType(mime), mime)
 internal fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> = getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)

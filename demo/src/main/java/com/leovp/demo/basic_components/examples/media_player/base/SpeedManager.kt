@@ -61,11 +61,11 @@ class SpeedManager {
                 LogContext.log.d(TAG, "frameDelta: $frameDelta")
             }
             if (frameDelta < 0) {
-                //LogManager.w("Weird, video times went backward");
+                // LogManager.w("Weird, video times went backward");
                 frameDelta = 0
             } else if (frameDelta == 0L) {
                 // This suggests a possible bug in movie generation.
-                //LogManager.i("Warning: current frame and previous frame had same timestamp");
+                // LogManager.i("Warning: current frame and previous frame had same timestamp");
             } else if (frameDelta > 10 * ONE_MILLION) {
                 // Inter-frame times could be arbitrarily long.  For this player, we want
                 // to alert the developer that their movie might have issues (maybe they

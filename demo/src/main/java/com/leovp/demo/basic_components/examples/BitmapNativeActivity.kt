@@ -50,41 +50,61 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             androidProcessedBmp = beautyBmp.rotate(90f)
         }
         LogContext.log.w(ITAG, "android cw90 cost=${(androidCost / 1000f / 1000).round(3)}us")
-        androidProcessedBmp?.writeToFile(createFile("JPEG",
-            "11_android_cw90.jpg",
-            Environment.DIRECTORY_PICTURES))
+        androidProcessedBmp?.writeToFile(
+            createFile(
+                "JPEG",
+                "11_android_cw90.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.rotate(180f)
         }
         LogContext.log.w(ITAG, "android 180 cost=${(androidCost / 1000f / 1000).round(3)}us")
-        androidProcessedBmp?.writeToFile(createFile("JPEG",
-            "12_android_180.jpg",
-            Environment.DIRECTORY_PICTURES))
+        androidProcessedBmp?.writeToFile(
+            createFile(
+                "JPEG",
+                "12_android_180.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.rotate(270f)
         }
         LogContext.log.w(ITAG, "android ccw90 cost=${(androidCost / 1000f / 1000).round(3)}us")
-        androidProcessedBmp?.writeToFile(createFile("JPEG",
-            "13_android_ccw90.jpg",
-            Environment.DIRECTORY_PICTURES))
+        androidProcessedBmp?.writeToFile(
+            createFile(
+                "JPEG",
+                "13_android_ccw90.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.flipHorizontal()
         }
         LogContext.log.w(ITAG, "android horizontal cost=${(androidCost / 1000f / 1000).round(3)}us")
-        androidProcessedBmp?.writeToFile(createFile("JPEG",
-            "14_android_horizontal.jpg",
-            Environment.DIRECTORY_PICTURES))
+        androidProcessedBmp?.writeToFile(
+            createFile(
+                "JPEG",
+                "14_android_horizontal.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.flipVertical()
         }
         LogContext.log.w(ITAG, "android vertical cost=${(androidCost / 1000f / 1000).round(3)}ms")
-        androidProcessedBmp?.writeToFile(createFile("JPEG",
-            "15_android_vertical.jpg",
-            Environment.DIRECTORY_PICTURES))
+        androidProcessedBmp?.writeToFile(
+            createFile(
+                "JPEG",
+                "15_android_vertical.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
     }
 
     private fun bitmapProcessByNative(@Suppress("SameParameterValue") @DrawableRes resId: Int) {
@@ -98,9 +118,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native cw90 cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "01_native_cw90.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "01_native_cw90.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         cost = measureNanoTime {
             bmpFromNative = BitmapProcessor(bmp).run {
@@ -109,9 +133,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native 180 cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "02_native_180.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "02_native_180.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         cost = measureNanoTime {
             bmpFromNative = BitmapProcessor(bmp).run {
@@ -120,9 +148,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native ccw90 cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "03_native_ccw90.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "03_native_ccw90.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         cost = measureNanoTime {
             bmpFromNative = BitmapProcessor(bmp).run {
@@ -131,9 +163,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native horizontal cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "04_native_horizontal.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "04_native_horizontal.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         cost = measureNanoTime {
             bmpFromNative = BitmapProcessor(bmp).run {
@@ -142,9 +178,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native flip vertical cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "05_native_vertical.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "05_native_vertical.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         bmp = BitmapFactory.decodeResource(resources, resId)
         cost = measureNanoTime {
@@ -154,9 +194,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native crop cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "06_native_crop.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "06_native_crop.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
 
         bmp = BitmapFactory.decodeResource(resources, resId)
         cost = measureNanoTime {
@@ -166,9 +210,13 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
             }
         }
         LogContext.log.w(ITAG, "native scale cost=${(cost / 1000f / 1000).round(3)}ms")
-        bmpFromNative?.writeToFile(createFile("JPEG",
-            "07_native_scale.jpg",
-            Environment.DIRECTORY_PICTURES))
+        bmpFromNative?.writeToFile(
+            createFile(
+                "JPEG",
+                "07_native_scale.jpg",
+                Environment.DIRECTORY_PICTURES
+            )
+        )
     }
 
     private fun compressTest(@Suppress("SameParameterValue") @DrawableRes resId: Int) {

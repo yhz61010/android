@@ -26,7 +26,6 @@ import com.leovp.lib_common_kotlin.utils.SingletonHolder
 import com.leovp.lib_reflection.wrappers.ServiceManager
 import kotlin.math.max
 
-
 /**
  * Author: Michael Leo
  * Date: 2020/9/29 上午11:52
@@ -71,8 +70,8 @@ class LeoToast private constructor(private val ctx: Context) {
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            if (FloatView.with(FLOAT_VIEW_TAG).exist()
-                && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()
+            if (FloatView.with(FLOAT_VIEW_TAG).exist() &&
+                FloatView.with(FLOAT_VIEW_TAG).isDisplaying()
             ) {
                 mainHandler.post {
                     FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
@@ -117,12 +116,14 @@ private val mainHandler = Handler(Looper.getMainLooper())
  * @param error `true` will use `ERROR_BG_COLOR` as background.
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
-fun Context.toast(@StringRes resId: Int,
+fun Context.toast(
+    @StringRes resId: Int,
     longDuration: Boolean = false,
     origin: Boolean = false,
     debug: Boolean = false,
     bgColor: String? = null,
-    error: Boolean = false) {
+    error: Boolean = false
+) {
     toast(getString(resId), longDuration, origin, debug, bgColor, error)
 }
 
@@ -133,12 +134,14 @@ fun Context.toast(@StringRes resId: Int,
  * @param error `true` will use `ERROR_BG_COLOR` as background.
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
-fun Context.toast(msg: String?,
+fun Context.toast(
+    msg: String?,
     longDuration: Boolean = false,
     origin: Boolean = false,
     debug: Boolean = false,
     bgColor: String? = null,
-    error: Boolean = false) {
+    error: Boolean = false
+) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
         showToast(this, msg, longDuration, origin, debug, bgColor, error)
     } else {
@@ -148,7 +151,6 @@ fun Context.toast(msg: String?,
         }
     }
 }
-
 
 // ==========
 
@@ -166,13 +168,15 @@ private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
 @SuppressLint("InflateParams")
-private fun showToast(ctx: Context?,
+private fun showToast(
+    ctx: Context?,
     msg: String?,
     longDuration: Boolean = false,
     origin: Boolean,
     debug: Boolean,
     bgColor: String?,
-    error: Boolean) {
+    error: Boolean
+) {
     if (ctx == null) return
     val toastCfg = LeoToast.getInstance(ctx).config ?: fail("Toast config can't be null.")
 
@@ -184,7 +188,7 @@ private fun showToast(ctx: Context?,
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
     when {
-        origin      -> Toast.makeText(ctx, message, duration).show()
+        origin -> Toast.makeText(ctx, message, duration).show()
         API.ABOVE_R -> {
             try {
                 if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
@@ -221,10 +225,12 @@ private fun showToast(ctx: Context?,
                     screenOrientation = currentScreenOrientation
                 }
                 .show()
-            mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() },
-                if (longDuration) 3500 else 2000)
+            mainHandler.postDelayed(
+                { FloatView.with(FLOAT_VIEW_TAG).remove() },
+                if (longDuration) 3500 else 2000
+            )
         }
-        else        -> {
+        else -> {
             toast?.cancel()
 
             val view = LayoutInflater.from(ctx)
@@ -263,15 +269,22 @@ private fun setDrawableIcon(ctx: Context, tv: TextView) {
     }
 }
 
-private fun decorateToast(ctx: Context, rootView: View, message: String, bgColor: String? = null,
-    error: Boolean = false) {
+private fun decorateToast(
+    ctx: Context,
+    rootView: View,
+    message: String,
+    bgColor: String? = null,
+    error: Boolean = false
+) {
     val tv: TextView = rootView.findViewById(R.id.tv_text)
     tv.text = message
     //    tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
     setDrawableIcon(ctx, tv)
 
-    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(ctx.resources,
-        R.drawable.toast_bg_normal, null)!!
+    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(
+        ctx.resources,
+        R.drawable.toast_bg_normal, null
+    )!!
     if (!error && bgColor == null) {
         rootView.background = defaultBgDrawable
     } else { // with error or with bgColor
@@ -291,11 +304,15 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
     val widthDiff = when {
         ctx.isGoogle -> {
             if (Surface.ROTATION_90 == orientation) {
-                (max(scrSz.width, scrSz.height) - max(scrAvailSz.width,
-                    scrAvailSz.height)) / (if (ctx.navigationBarHeight > 0) 1 else 2)
+                (
+                    max(scrSz.width, scrSz.height) - max(
+                        scrAvailSz.width,
+                        scrAvailSz.height
+                    )
+                    ) / (if (ctx.navigationBarHeight > 0) 1 else 2)
             } else 0
         }
-        else         -> 0
+        else -> 0
     }
     //    Log.e("LEO-float-view", "curScreenOrientation=$orientation viewWidth=$viewWidth")
     val vw = if (viewWidth >= toastFinalWidth) toastFinalWidth else viewWidth

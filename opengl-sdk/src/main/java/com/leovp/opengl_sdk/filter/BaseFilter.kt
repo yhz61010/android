@@ -15,9 +15,11 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * 基础滤镜
  */
-open class BaseFilter(val ctx: Context,
+open class BaseFilter(
+    val ctx: Context,
     private val vertexShader: String = VERTEX_SHADER,
-    private val fragmentShader: String = FRAGMENT_SHADER) : AbsBaseOpenGLES() {
+    private val fragmentShader: String = FRAGMENT_SHADER
+) : AbsBaseOpenGLES() {
 
     override fun getTagName() = "BaseFilter"
 
@@ -61,13 +63,17 @@ open class BaseFilter(val ctx: Context,
         val aTexCoordLocation = getAttrib("a_TexCoord")
         uTextureUnitLocation = getUniform("u_TextureUnit")
 
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexData)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexData
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, texVertexBuffer)
+        GLES20.glVertexAttribPointer(
+            aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, texVertexBuffer
+        )
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 
         // 开启纹理透明混合，这样才能绘制透明图片

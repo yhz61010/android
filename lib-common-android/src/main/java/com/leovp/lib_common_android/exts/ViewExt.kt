@@ -123,14 +123,14 @@ fun View.onWindowInsets(action: (View, WindowInsetsCompat) -> Unit) {
  */
 @Suppress("DEPRECATION")
 const val FLAGS_FULLSCREEN =
-        View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                // More flags
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    View.SYSTEM_UI_FLAG_LOW_PROFILE or
+        View.SYSTEM_UI_FLAG_FULLSCREEN or
+        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+        // More flags
+        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
 /**
  * You should use this click listener to replace with `setOnClickListener` to avoid duplicated click on view
@@ -149,7 +149,10 @@ fun View.removeOnSingleClickListener() {
     isClickable = false
 }
 
-internal class OnSingleClickListener(private val interval: Long = INTERVAL_TIME, private val action: (view: View) -> Unit) {
+internal class OnSingleClickListener(
+    private val interval: Long = INTERVAL_TIME,
+    private val action: (view: View) -> Unit
+) {
     companion object {
         const val INTERVAL_TIME: Long = 500
     }
@@ -197,7 +200,8 @@ fun View.padWithDisplayCutout() {
         cutout.safeInsetLeft,
         cutout.safeInsetTop,
         cutout.safeInsetRight,
-        cutout.safeInsetBottom)
+        cutout.safeInsetBottom
+    )
 
     // Apply padding using the display cutout designated "safe area"
     rootWindowInsets?.displayCutout?.let { doPadding(it) }

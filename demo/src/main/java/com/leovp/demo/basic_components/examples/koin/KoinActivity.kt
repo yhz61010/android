@@ -30,7 +30,7 @@ class KoinActivity : BaseDemonstrationActivity<ActivityKoinBinding>() {
         val wheelBR: Wheel = get { parametersOf("BR") }
 
         val bmwWheels: List<Wheel> =
-                get { parametersOf(arrayListOf(wheelFL, wheelFR, wheelBL, wheelBR)) }
+            get { parametersOf(arrayListOf(wheelFL, wheelFR, wheelBL, wheelBR)) }
         val bmwEngine: Engine = get { parametersOf("bmw", "fuel") }
         val bmw: Car = get { parametersOf(bmwEngine, bmwWheels) }
 

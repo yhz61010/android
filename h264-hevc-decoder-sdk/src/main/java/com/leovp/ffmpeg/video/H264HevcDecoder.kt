@@ -16,7 +16,13 @@ class H264HevcDecoder {
         }
     }
 
-    external fun init(vpsBytes: ByteArray?, spsBytes: ByteArray, ppsBytes: ByteArray, prefixSei: ByteArray?, suffixSei: ByteArray?): DecodeVideoInfo
+    external fun init(
+        vpsBytes: ByteArray?,
+        spsBytes: ByteArray,
+        ppsBytes: ByteArray,
+        prefixSei: ByteArray?,
+        suffixSei: ByteArray?
+    ): DecodeVideoInfo
     external fun release()
 
     //    external fun decode(rawBytes: ByteArray): ByteArray
@@ -27,7 +33,12 @@ class H264HevcDecoder {
     class DecodedVideoFrame(val yuvBytes: ByteArray, val format: Int, val width: Int, val height: Int)
 
     @Keep
-    class DecodeVideoInfo(val codecId: Int, val codecName: String?,
-        val pixelFormatId: Int, val pixelFormatName: String?,
-        val width: Int, val height: Int)
+    class DecodeVideoInfo(
+        val codecId: Int,
+        val codecName: String?,
+        val pixelFormatId: Int,
+        val pixelFormatName: String?,
+        val width: Int,
+        val height: Int
+    )
 }

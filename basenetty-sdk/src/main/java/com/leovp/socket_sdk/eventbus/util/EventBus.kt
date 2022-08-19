@@ -26,7 +26,12 @@ object EventBus {
     }
 
     /** same as `consumer` */
-    fun register(address: String, headers: Map<String, Any>? = null, customFields: Map<String, Any?>? = null, handler: EventBusHandler): Map<String, Any> {
+    fun register(
+        address: String,
+        headers: Map<String, Any>? = null,
+        customFields: Map<String, Any?>? = null,
+        handler: EventBusHandler
+    ): Map<String, Any> {
         return constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
     }
 
@@ -84,8 +89,14 @@ object EventBus {
 
     // =============================================
 
-    private fun constructData(type: String, address: String, message: Any? = null, headers: Map<String, Any>? = null,
-        customFields: Map<String, Any?>? = null, handler: EventBusHandler? = null): Map<String, Any> {
+    private fun constructData(
+        type: String,
+        address: String,
+        message: Any? = null,
+        headers: Map<String, Any>? = null,
+        customFields: Map<String, Any?>? = null,
+        handler: EventBusHandler? = null
+    ): Map<String, Any> {
         //        LogContext.log.i("constructData", "[$type][$address]")
 
         val eventBusObj = mutableMapOf<String, Any>()
@@ -95,7 +106,7 @@ object EventBus {
         message?.let { eventBusObj[EventBusAttributes.BODY] = it }
 
         when (type) {
-            EventBusAttributes.TYPE_SEND     -> {
+            EventBusAttributes.TYPE_SEND -> {
                 handler?.let {
                     val replyAddress = UUID.randomUUID().toString()
                     //                    LogContext.log.i("serializeData", "replyAddress=$replyAddress")
@@ -111,7 +122,7 @@ object EventBus {
                 }
                 handler?.let { addHandler(address, it) }
             }
-            else                             -> Unit
+            else -> Unit
         }
         return eventBusObj
     }

@@ -11,7 +11,12 @@ import java.net.URI
  * Author: Michael Leo
  * Date: 20-11-10 上午10:30
  */
-class AudioSenderWebSocket(webSocketUri: URI, connectionListener: ClientConnectListener<BaseNettyClient>, trustAllServers: Boolean, retryStrategy: RetryStrategy) :
+class AudioSenderWebSocket(
+    webSocketUri: URI,
+    connectionListener: ClientConnectListener<BaseNettyClient>,
+    trustAllServers: Boolean,
+    retryStrategy: RetryStrategy
+) :
     BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
     override fun getTagName() = "AudioSenderWS"
 

@@ -13,7 +13,6 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
 
-
 /**
  * [H265 NAL Unit Header](https://tools.ietf.org/html/rfc7798#page-13)
  *
@@ -147,26 +146,30 @@ class DecodeH265RawFileByFFMpeg {
 
         videoInfo = initDecoder(vps, sps, pps, psei, ssei)
         val renderSize = glSurfaceView.context.screenAvailableResolution
-        glSurfaceView.setVideoDimension(videoInfo.width,
+        glSurfaceView.setVideoDimension(
+            videoInfo.width,
             videoInfo.height,
             renderSize.width,
-            renderSize.height)
+            renderSize.height
+        )
         decodeVideo(csd0)
     }
 
-    private fun initDecoder(vps: ByteArray?,
+    private fun initDecoder(
+        vps: ByteArray?,
         sps: ByteArray,
         pps: ByteArray,
         prefixSei: ByteArray?,
-        suffixSei: ByteArray?): H264HevcDecoder.DecodeVideoInfo {
+        suffixSei: ByteArray?
+    ): H264HevcDecoder.DecodeVideoInfo {
         val videoInfo: H264HevcDecoder.DecodeVideoInfo =
-                videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
+            videoDecoder.init(vps, sps, pps, prefixSei, suffixSei)
         LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
 
     private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
-            videoDecoder.decode(rawVideo)
+        videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -260,17 +263,20 @@ class DecodeH265RawFileByFFMpeg {
                             var st3: Long
                             try {
                                 val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
-                                        decodeVideo(frame)
+                                    decodeVideo(frame)
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =
-                                            if (videoInfo.pixelFormatId < 0) BaseRenderer.Yuv420Type.I420 else BaseRenderer.Yuv420Type.getType(
-                                                videoInfo.pixelFormatId)
+                                        if (videoInfo.pixelFormatId < 0) BaseRenderer.Yuv420Type.I420 else BaseRenderer.Yuv420Type.getType(
+                                            videoInfo.pixelFormatId
+                                        )
                                     glSurfaceView.render(it.yuvBytes, yuv420Type)
                                 }
                                 st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.w(TAG,
-                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}")
+                                LogContext.log.w(
+                                    TAG,
+                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] ${decodeFrame?.width}x${decodeFrame?.height}"
+                                )
                             } catch (e: Exception) {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.e(TAG, "decode error.", e)

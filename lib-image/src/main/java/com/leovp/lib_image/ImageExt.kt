@@ -21,7 +21,6 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.nio.ByteBuffer
 
-
 /**
  * Author: Michael Leo
  * Date: 2021/7/30 10:10
@@ -53,10 +52,10 @@ inline fun <reified T> getImageInfo(t: T & Any): ImageInfo {
         inJustDecodeBounds = true
     }
     when (t) {
-        is String      -> BitmapFactory.decodeFile(t, options) // t is pathName
-        is ByteArray   -> BitmapFactory.decodeByteArray(t, 0, t.size, options)
+        is String -> BitmapFactory.decodeFile(t, options) // t is pathName
+        is ByteArray -> BitmapFactory.decodeByteArray(t, 0, t.size, options)
         is InputStream -> BitmapFactory.decodeStream(t, null, options)
-        else           -> throw IllegalArgumentException("Unsupported type ${t::class.java}")
+        else -> throw IllegalArgumentException("Unsupported type ${t::class.java}")
     }
     return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
 }
@@ -86,9 +85,11 @@ fun Bitmap.toBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmapFromBytes(width: Int,
+fun ByteArray.toBitmapFromBytes(
+    width: Int,
     height: Int,
-    config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+    config: Bitmap.Config = Bitmap.Config.ARGB_8888
+): Bitmap? {
     return runCatching {
         Bitmap.createBitmap(width, height, config).also {
             it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
@@ -134,25 +135,31 @@ fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap 
  * Using this method will only reduce the bitmap file size NOT the bitmap size loaded in memory.
  * It's better to release the source bitmap by calling Bitmap.recycle() after calling this method.
  */
-fun Bitmap.compressBitmap(quality: Int = 100,
+fun Bitmap.compressBitmap(
+    quality: Int = 100,
     sampleSize: Int = 1,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG): Bitmap {
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
+): Bitmap {
     val compressedBmpOS = ByteArrayOutputStream()
     this.compress(imgType, quality, compressedBmpOS)
     val opt = BitmapFactory.Options()
     opt.inSampleSize = sampleSize
-    return BitmapFactory.decodeByteArray(compressedBmpOS.toByteArray(),
+    return BitmapFactory.decodeByteArray(
+        compressedBmpOS.toByteArray(),
         0,
         compressedBmpOS.size(),
-        opt)
+        opt
+    )
 }
 
 /**
  * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
  */
-fun Bitmap.writeToFile(outputFile: File,
+fun Bitmap.writeToFile(
+    outputFile: File,
     quality: Int = 100,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG) {
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
+) {
     val outputStream = FileOutputStream(outputFile)
     outputStream.use {
         this.compress(imgType, quality, outputStream)
@@ -161,7 +168,7 @@ fun Bitmap.writeToFile(outputFile: File,
 }
 
 fun File?.getBitmap(): Bitmap? =
-        if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
+    if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
 
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
@@ -194,12 +201,14 @@ fun Bitmap.flip(
     horizontal: Boolean,
     vertical: Boolean,
     x: Float = width / 2f,
-    y: Float = height / 2f): Bitmap {
+    y: Float = height / 2f
+): Bitmap {
     val matrix = Matrix().apply {
         postScale(
             if (horizontal) -1f else 1f,
             if (vertical) -1f else 1f,
-            x, y)
+            x, y
+        )
     }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
@@ -215,13 +224,15 @@ fun Bitmap.flipRotate(
     vertical: Boolean,
     degrees: Float,
     x: Float = width / 2f,
-    y: Float = height / 2f): Bitmap {
+    y: Float = height / 2f
+): Bitmap {
 
     val matrix = Matrix().apply {
         postScale(
             if (horizontal) -1f else 1f,
             if (vertical) -1f else 1f,
-            x, y)
+            x, y
+        )
         postRotate(degrees)
     }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)

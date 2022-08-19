@@ -193,7 +193,7 @@ object YuvUtil {
             j++
         }
 
-        //Cr Cb
+        // Cr Cb
         tmp = imageH + cropH / 2
         j = tmp
         while (j < tmp + newImageH / 2) {
@@ -211,7 +211,7 @@ object YuvUtil {
     // Return data in YYYYYYYYUVUV(NV12)
     fun rotateYUV420Degree90(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
         val yuv =
-                ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3) // Rotate the Y luma
+            ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3) // Rotate the Y luma
         var i = 0
         for (x in 0 until imageWidth) {
             for (y in imageHeight - 1 downTo 0) {
@@ -328,21 +328,21 @@ object YuvUtil {
 
         var n = 0
         val hw = width / 2
-        val hh = height / 2 //copy y
+        val hh = height / 2 // copy y
         for (j in 0 until width) {
             for (i in height - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * i + j]
             }
         }
 
-        //copy u
+        // copy u
         for (j in 0 until hw) {
             for (i in hh - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * height + hw * i + j]
             }
         }
 
-        //copy v
+        // copy v
         for (j in 0 until hw) {
             for (i in hh - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * height + width * height / 4 + hw * i + j]
@@ -357,21 +357,21 @@ object YuvUtil {
         val desYuv = ByteArray(width * height * 3 / 2)
         var n = 0
         val hw = width / 2
-        val hh = height / 2 //copy y
+        val hh = height / 2 // copy y
         for (j in width downTo 1) {
             for (i in 0 until height) {
                 desYuv[n++] = yuvSrc[width * i + j]
             }
         }
 
-        //copy u
+        // copy u
         for (j in hw - 1 downTo 0) {
             for (i in 0 until hh) {
                 desYuv[n++] = yuvSrc[width * height + hw * i + j]
             }
         }
 
-        //copy v
+        // copy v
         for (j in hw - 1 downTo 0) {
             for (i in 0 until hh) {
                 desYuv[n++] = yuvSrc[width * height + width * height / 4 + hw * i + j]
@@ -402,21 +402,21 @@ object YuvUtil {
 
         var n = 0
         val hw = width / 2
-        val hh = height / 2 //copy y
+        val hh = height / 2 // copy y
         for (j in 0 until height) {
             for (i in width - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * j + i]
             }
         }
 
-        //copy u
+        // copy u
         for (j in 0 until hh) {
             for (i in hw - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * height + hw * j + i]
             }
         }
 
-        //copy v
+        // copy v
         for (j in 0 until hh) {
             for (i in hw - 1 downTo 0) {
                 desYuv[n++] = yuvSrc[width * height + width * height / 4 + hw * j + i]
@@ -431,7 +431,7 @@ object YuvUtil {
     fun mirrorNv21(yuvSrc: ByteArray, w: Int, h: Int) {
         var temp: Byte
         var a: Int
-        var b: Int //mirror y
+        var b: Int // mirror y
         var i = 0
         while (i < h) {
             a = i * w
@@ -470,7 +470,7 @@ object YuvUtil {
     fun mirrorI420(yuvSrc: ByteArray, w: Int, h: Int) {
         var temp: Byte
         var a: Int
-        var b: Int //mirror y
+        var b: Int // mirror y
         for (i in 0 until h) {
             a = i * w
             b = (i + 1) * w - 1
@@ -481,8 +481,8 @@ object YuvUtil {
                 a++
                 b--
             }
-        } //mirror u
-        var index: Int = w * h //U起始位置
+        } // mirror u
+        var index: Int = w * h // U起始位置
         for (i in 0 until h / 2) {
             a = i * w / 2
             b = (i + 1) * w / 2 - 1
@@ -493,8 +493,8 @@ object YuvUtil {
                 a++
                 b--
             }
-        } //mirror v
-        index = w * h / 4 * 5 //V起始位置
+        } // mirror v
+        index = w * h / 4 * 5 // V起始位置
         for (i in 0 until h / 2) {
             a = i * w / 2
             b = (i + 1) * w / 2 - 1

@@ -32,7 +32,7 @@ class WindowManager(private val manager: IInterface) {
     private fun getFreezeRotationMethod(): Method? {
         if (freezeRotationMethod == null) {
             freezeRotationMethod =
-                    manager.javaClass.getMethod("freezeRotation", Int::class.javaPrimitiveType)
+                manager.javaClass.getMethod("freezeRotation", Int::class.javaPrimitiveType)
         }
         return freezeRotationMethod
     }
@@ -89,17 +89,21 @@ class WindowManager(private val manager: IInterface) {
         }
     }
 
-    fun registerRotationWatcher(rotationWatcher: IRotationWatcher,
-        displayId: Int = Display.DEFAULT_DISPLAY) {
+    fun registerRotationWatcher(
+        rotationWatcher: IRotationWatcher,
+        displayId: Int = Display.DEFAULT_DISPLAY
+    ) {
         try {
             val cls: Class<*> = manager.javaClass
             try {
                 // display parameter added since this commit:
                 // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
                 // API 26 or above
-                cls.getMethod("watchRotation",
+                cls.getMethod(
+                    "watchRotation",
                     IRotationWatcher::class.java,
-                    Int::class.javaPrimitiveType).invoke(manager, rotationWatcher, displayId)
+                    Int::class.javaPrimitiveType
+                ).invoke(manager, rotationWatcher, displayId)
             } catch (e: NoSuchMethodException) {
                 // old version
                 cls.getMethod("watchRotation", IRotationWatcher::class.java)

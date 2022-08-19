@@ -74,7 +74,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.d(tag, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
     }
 
-    private fun createCustomFloatBuffer(videoWidth: Int, videoHeight: Int, keepRatio: Boolean, renderWidth: Int, renderHeight: Int): FloatBuffer {
+    private fun createCustomFloatBuffer(
+        videoWidth: Int,
+        videoHeight: Int,
+        keepRatio: Boolean,
+        renderWidth: Int,
+        renderHeight: Int
+    ): FloatBuffer {
         return createFloatBuffer(createKeepRatioFloatArray(videoWidth, videoHeight, keepRatio, renderWidth, renderHeight))
     }
 

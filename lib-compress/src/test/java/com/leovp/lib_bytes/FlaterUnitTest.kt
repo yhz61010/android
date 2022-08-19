@@ -10,7 +10,6 @@ import org.junit.runner.RunWith
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
 
-
 /**
  * Author: Michael Leo
  * Date: 20-8-3 上午11:37

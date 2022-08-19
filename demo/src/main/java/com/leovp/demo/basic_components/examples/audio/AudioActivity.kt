@@ -37,14 +37,18 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
         val audioEncoderInfo =
-                AudioEncoderInfo(16000,
-                    32000,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT)
+            AudioEncoderInfo(
+                16000,
+                32000,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
         val audioDecoderInfo =
-                AudioDecoderInfo(16000,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT)
+            AudioDecoderInfo(
+                16000,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding {
@@ -76,7 +80,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                 }
 
                 override fun onDenied(denied: MutableList<String>?, never: Boolean) {
-                    toast("Deny record permission");finish()
+                    toast("Deny record permission"); finish()
                 }
             })
 
@@ -140,10 +144,12 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
                         AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
-                        else          -> Unit
+                        else -> Unit
                     }
                     micRecorder =
-                            MicRecorder(audioEncoderInfo, object : MicRecorder.RecordCallback {
+                        MicRecorder(
+                            audioEncoderInfo,
+                            object : MicRecorder.RecordCallback {
                                 override fun onRecording(data: ByteArray) {
                                     when (type) {
                                         AudioType.PCM -> runCatching {
@@ -151,11 +157,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                                             pcmOs?.write(data)
                                         }.onFailure { it.printStackTrace() }
                                         AudioType.AAC -> {
-                                            LogContext.log.i(TAG,
-                                                "Get encoded AAC Data[${data.size}]")
+                                            LogContext.log.i(
+                                                TAG,
+                                                "Get encoded AAC Data[${data.size}]"
+                                            )
                                             runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
                                         }
-                                        else          -> Unit
+                                        else -> Unit
                                     }
                                 }
 
@@ -167,7 +175,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                                         aacOs?.close()
                                     }.onFailure { it.printStackTrace() }
                                 }
-                            }, type)
+                            },
+                            type
+                        )
                     micRecorder?.startRecord()
                 }
 

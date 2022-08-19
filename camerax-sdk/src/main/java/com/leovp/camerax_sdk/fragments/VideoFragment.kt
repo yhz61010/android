@@ -67,9 +67,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var videoOutFile: File? = null
     private var videoOutUri: Uri? = null
 
-    override fun getViewBinding(inflater: LayoutInflater,
+    override fun getViewBinding(
+        inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): FragmentVideoBinding {
+        savedInstanceState: Bundle?
+    ): FragmentVideoBinding {
         val rootBinding = FragmentVideoBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
         incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
@@ -203,10 +205,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // create the user required QualitySelector (video resolution): we know this is
         // supported, a valid qualitySelector will be created.
         val qualitySelector =
-            QualitySelector.from(selectedQuality,
-                FallbackStrategy.higherQualityOrLowerThan(Quality.HD))
-        LogContext.log.w(logTag,
-            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality")
+            QualitySelector.from(
+                selectedQuality,
+                FallbackStrategy.higherQualityOrLowerThan(Quality.HD)
+            )
+        LogContext.log.w(
+            logTag,
+            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality"
+        )
 
         incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
@@ -214,7 +220,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 selectedQuality.getAspectRatioString((orientation == Configuration.ORIENTATION_PORTRAIT))
             when (ratioString) {
                 "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
-                "V,3:4"  -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
+                "V,3:4" -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
             }
             dimensionRatio = ratioString
         }
@@ -250,7 +256,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
 
-            camera = camProvider.bindToLifecycle(viewLifecycleOwner, // current lifecycle owner
+            camera = camProvider.bindToLifecycle(
+                viewLifecycleOwner, // current lifecycle owner
                 lensFacing, // either front or back facing
                 videoCapture, // video capture use case
                 preview // camera preview use case
@@ -283,8 +290,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * to VideoRecordEvent for the current recording status.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun startRecording(saveInGallery: Boolean = true,
-        baseFolderName: String = BASE_FOLDER_NAME) {
+    private fun startRecording(
+        saveInGallery: Boolean = true,
+        baseFolderName: String = BASE_FOLDER_NAME
+    ) {
         val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION)
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
@@ -297,12 +306,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // As of Android Q
                 // File will be saved in /sdcard/Movies/CameraX
-                contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_MOVIES + File.separator + baseFolderName)
+                contentValues.put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_MOVIES + File.separator + baseFolderName
+                )
             }
             LogContext.log.w(logTag, "Save video in gallery: $contentValues")
-            val outputOptions = MediaStoreOutputOptions.Builder(requireActivity().contentResolver,
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build()
+            val outputOptions = MediaStoreOutputOptions.Builder(
+                requireActivity().contentResolver,
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            ).setContentValues(contentValues).build()
             videoCapture.output.prepareRecording(requireActivity(), outputOptions)
         } else { // Save in app internal folder (Android/data)
             videoOutFile = outFileName
@@ -315,8 +328,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         currentRecording = pendingRecording.apply { if (audioEnabled) withAudioEnabled() }
             .start(mainThreadExecutor, captureListener)
 
-        LogContext.log.w(logTag,
-            "Recording started with audio ${if (audioEnabled) "on" else "off"}...")
+        LogContext.log.w(
+            logTag,
+            "Recording started with audio ${if (audioEnabled) "on" else "off"}..."
+        )
     }
 
     /**
@@ -327,8 +342,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             whenCreated {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
                 provider.unbindAll()
-                for (camSelector in arrayOf(CameraSelector.DEFAULT_BACK_CAMERA,
-                    CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                for (
+                    camSelector in arrayOf(
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        CameraSelector.DEFAULT_FRONT_CAMERA
+                    )
+                ) {
                     try {
                         // just get the camera.cameraInfo to query capabilities
                         // we are not binding anything here.
@@ -338,8 +357,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                                 QualitySelector.getSupportedQualities(camera.cameraInfo)
                             val camName =
                                 if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
-                            LogContext.log.w(logTag,
-                                "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}")
+                            LogContext.log.w(
+                                logTag,
+                                "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}"
+                            )
                             supportedQualities.filter { quality ->
                                 listOf(Quality.UHD, Quality.FHD, Quality.HD).contains(quality)
                             }.also {
@@ -363,17 +384,19 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private fun updateCameraUi() {
         resetSwitchCameraIcon()
 
-        setSwipeCallback(left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
+        setSwipeCallback(
+            left = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
             right = { navController.navigate(R.id.action_video_fragment_to_camera_fragment) },
             up = { binding.btnSwitchCamera.performClick() },
-            down = { binding.btnSwitchCamera.performClick() })
+            down = { binding.btnSwitchCamera.performClick() }
+        )
 
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
             setOnClickListener {
                 if (!this@VideoFragment::recordingState.isInitialized || recordingState is VideoRecordEvent.Finalize) {
                     LogContext.log.i(logTag, "Start recording...")
-                    enableUI(false)  // Our eventListener will turn on the Recording UI.
+                    enableUI(false) // Our eventListener will turn on the Recording UI.
                     startRecording()
                 } else {
                     if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
@@ -414,16 +437,20 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     videoOutUri?.let {
                         val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)!!
                         val filePath = fileRealPath.substringBeforeLast('/')
-                        LogContext.log.i(logTag,
-                            "Click Gallery button with uri=$it | real file path=$fileRealPath | real path=$filePath")
+                        LogContext.log.i(
+                            logTag,
+                            "Click Gallery button with uri=$it | real file path=$fileRealPath | real path=$filePath"
+                        )
                         navController.navigate(
                             VideoFragmentDirections.actionVideoFragmentToGalleryFragment(filePath)
                         )
                     }
                 } else if (videoOutFile != null) {
                     videoOutFile?.let {
-                        LogContext.log.i(logTag,
-                            "Click Gallery button with file=${it.absolutePath}")
+                        LogContext.log.i(
+                            logTag,
+                            "Click Gallery button with file=${it.absolutePath}"
+                        )
                         navController.navigate(
                             VideoFragmentDirections.actionVideoFragmentToGalleryFragment(it.absolutePath)
                         )
@@ -433,10 +460,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
     }
 
-    private fun toggleAudio() = binding.btnMicrophone.toggleButton(flag = audioEnabled,
+    private fun toggleAudio() = binding.btnMicrophone.toggleButton(
+        flag = audioEnabled,
         rotationAngle = 180f,
         firstIcon = R.drawable.ic_microphone_off,
-        secondIcon = R.drawable.ic_microphone_on) { flag ->
+        secondIcon = R.drawable.ic_microphone_on
+    ) { flag ->
         audioEnabled = flag
         LogContext.log.w(logTag, "Enable audio: $audioEnabled")
     }
@@ -458,12 +487,16 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     /** Turns on or off the flashlight */
     private fun toggleFlash() =
-        binding.btnFlash.toggleButton(flag = flashMode == ImageCapture.FLASH_MODE_ON,
+        binding.btnFlash.toggleButton(
+            flag = flashMode == ImageCapture.FLASH_MODE_ON,
             rotationAngle = 360f,
             firstIcon = R.drawable.ic_flash_off,
-            secondIcon = R.drawable.ic_flash_on) { flag ->
-            LogContext.log.w(logTag,
-                "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash")
+            secondIcon = R.drawable.ic_flash_on
+        ) { flag ->
+            LogContext.log.w(
+                logTag,
+                "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash"
+            )
             torchEnabled = flag
             flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
             camera?.cameraControl?.enableTorch(flag)
@@ -496,16 +529,18 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             when (q) {
                 Quality.UHD -> binding.btn4k.visibility = View.VISIBLE
                 Quality.FHD -> binding.btn1080p.visibility = View.VISIBLE
-                Quality.HD  -> binding.btn720p.visibility = View.VISIBLE
+                Quality.HD -> binding.btn720p.visibility = View.VISIBLE
             }
         }
 
-        binding.btnResolution.setImageResource(when (quality) {
-            Quality.UHD -> R.drawable.ic_resolution_4k
-            Quality.FHD -> R.drawable.ic_resolution_1080p
-            Quality.HD  -> R.drawable.ic_resolution_720p
-            else        -> throw IllegalArgumentException("Device does not support $quality")
-        })
+        binding.btnResolution.setImageResource(
+            when (quality) {
+                Quality.UHD -> R.drawable.ic_resolution_4k
+                Quality.FHD -> R.drawable.ic_resolution_1080p
+                Quality.HD -> R.drawable.ic_resolution_720p
+                else -> throw IllegalArgumentException("Device does not support $quality")
+            }
+        )
     }
 
     override fun onStop() {
@@ -530,12 +565,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      */
     private fun updateUI(event: VideoRecordEvent) {
         when (event) {
-            is VideoRecordEvent.Status   -> { // Recording in progress
+            is VideoRecordEvent.Status -> { // Recording in progress
                 val s = TimeUnit.NANOSECONDS.toSeconds(event.recordingStats.recordedDurationNanos)
                 binding.tvRecTime.text =
                     getString(R.string.record_default_time, s / 3600, (s % 3600) / 60, s % 60)
             }
-            is VideoRecordEvent.Start    -> {
+            is VideoRecordEvent.Start -> {
                 soundManager.playCameraStartSound()
                 showUI(RecordUiState.RECORDING, event.getNameString())
             }
@@ -543,11 +578,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 soundManager.playCameraStopSound()
                 showUI(RecordUiState.FINALIZED, event.getNameString())
             }
-            is VideoRecordEvent.Pause    -> {
+            is VideoRecordEvent.Pause -> {
                 binding.icRedDot.clearAnimation()
                 binding.btnSwitchCamera.setImageResource(R.drawable.ic_resume)
             }
-            is VideoRecordEvent.Resume   -> {
+            is VideoRecordEvent.Resume -> {
                 binding.icRedDot.startAnimation(blinkAnim)
                 binding.btnSwitchCamera.setImageResource(R.drawable.ic_pause)
             }
@@ -599,7 +634,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         LogContext.log.i(logTag, "showUI state=$state status=$status")
         binding.let {
             when (state) {
-                RecordUiState.IDLE      -> {
+                RecordUiState.IDLE -> {
                     it.btnRecordVideo.setImageResource(R.drawable.ic_start)
                     it.btnGallery.setImageResource(R.drawable.ic_photo)
                     resetSwitchCameraIcon()
@@ -646,10 +681,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     private fun doPause() {
         when (recordingState) {
-            is VideoRecordEvent.Start  -> currentRecording?.pause()
-            is VideoRecordEvent.Pause  -> currentRecording?.resume()
+            is VideoRecordEvent.Start -> currentRecording?.pause()
+            is VideoRecordEvent.Pause -> currentRecording?.resume()
             is VideoRecordEvent.Resume -> currentRecording?.pause()
-            else                       -> throw IllegalStateException("recordingState in unknown state")
+            else -> throw IllegalStateException("recordingState in unknown state")
         }
     }
 

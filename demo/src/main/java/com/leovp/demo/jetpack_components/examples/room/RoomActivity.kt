@@ -68,7 +68,6 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     wordViewModel.delete(adapter.removeAt(viewHolder.bindingAdapterPosition))
                 }
-
             }
 
         val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)

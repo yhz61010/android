@@ -30,7 +30,7 @@ import com.leovp.lib_common_android.utils.NetworkUtil
  */
 class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
     private var connectivityManager: ConnectivityManager =
-            context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private lateinit var connectivityManagerCallback: ConnectivityManager.NetworkCallback
 
@@ -44,9 +44,10 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         updateConnection()
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(
-                getConnectivityMarshmallowManagerCallback())
+                getConnectivityMarshmallowManagerCallback()
+            )
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> marshmallowNetworkAvailableRequest()
-            else                                           -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
+            else -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
         }
     }
 
@@ -57,15 +58,19 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun lollipopNetworkAvailableRequest() {
-        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(),
-            getConnectivityLollipopManagerCallback())
+        connectivityManager.registerNetworkCallback(
+            networkRequestBuilder.build(),
+            getConnectivityLollipopManagerCallback()
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun marshmallowNetworkAvailableRequest() {
-        connectivityManager.registerNetworkCallback(networkRequestBuilder.build(),
-            getConnectivityMarshmallowManagerCallback())
+        connectivityManager.registerNetworkCallback(
+            networkRequestBuilder.build(),
+            getConnectivityMarshmallowManagerCallback()
+        )
     }
 
     private fun getConnectivityLollipopManagerCallback(): ConnectivityManager.NetworkCallback {
@@ -84,10 +89,12 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
     private fun getConnectivityMarshmallowManagerCallback(): ConnectivityManager.NetworkCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(network: Network,
-                                                   networkCapabilities: NetworkCapabilities) {
-                    if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
+                ) {
+                    if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                        networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     ) {
                         postValue(true)
                     }

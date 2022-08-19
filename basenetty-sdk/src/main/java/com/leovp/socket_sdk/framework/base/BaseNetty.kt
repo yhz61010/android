@@ -65,7 +65,6 @@ enum class ClientConnectStatus {
     RELEASING
 }
 
-
 enum class ServerConnectStatus {
     /**
      * It's the default status after initializing netty server object.

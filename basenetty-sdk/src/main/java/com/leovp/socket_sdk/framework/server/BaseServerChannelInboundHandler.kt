@@ -20,7 +20,8 @@ import java.net.URI
  * Author: Michael Leo
  * Date: 20-8-5 下午8:18
  */
-abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) : SimpleChannelInboundHandler<T>(),
+abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) :
+    SimpleChannelInboundHandler<T>(),
     ReadSocketDataListener<T> {
     private val tag = netty.tag
 

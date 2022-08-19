@@ -6,13 +6,13 @@ plugins {
     `maven-publish`
 }
 
-//android {
+// android {
 //    publishing {
 //        // Publishes "release" build variant with "release" component created by
 //        // Android Gradle plugin
 //        singleVariant("release")
 //    }
-//}
+// }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))

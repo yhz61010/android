@@ -36,8 +36,12 @@ object ServiceManager {
         get() {
             if (field == null) {
                 field =
-                        DisplayManager(getService("display",
-                            "android.hardware.display.IDisplayManager"))
+                    DisplayManager(
+                        getService(
+                            "display",
+                            "android.hardware.display.IDisplayManager"
+                        )
+                    )
             }
             return field
         }
@@ -65,8 +69,12 @@ object ServiceManager {
         get() {
             if (field == null) {
                 field =
-                        StatusBarManager(getService("statusbar",
-                            "com.android.internal.statusbar.IStatusBarService"))
+                    StatusBarManager(
+                        getService(
+                            "statusbar",
+                            "com.android.internal.statusbar.IStatusBarService"
+                        )
+                    )
             }
             return field
         }
@@ -96,7 +104,7 @@ object ServiceManager {
         return try {
             val binder: IBinder = getServiceMethod!!.invoke(null, service) as IBinder
             val asInterfaceMethod: Method =
-                    Class.forName("$type\$Stub").getMethod("asInterface", IBinder::class.java)
+                Class.forName("$type\$Stub").getMethod("asInterface", IBinder::class.java)
             asInterfaceMethod.invoke(null, binder) as IInterface
         } catch (e: Exception) {
             throw AssertionError(e)

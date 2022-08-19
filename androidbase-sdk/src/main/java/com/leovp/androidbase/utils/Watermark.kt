@@ -32,7 +32,7 @@ object Watermark {
         val layout = FrameLayout(activity)
         layout.setTag(R.id.TAG_WATERMARK_LAYOUT, true)
         layout.layoutParams =
-                FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         val rootView = activity.findViewById<ViewGroup>(android.R.id.content)
         rootView.setTag(R.id.TAG_WATERMARK_IN_USE, true)
         rootView.addView(layout)
@@ -83,7 +83,8 @@ object Watermark {
         /**
          * Watermark text line word multiple
          */
-        var wordSpacerMultiple: Float = 1.3f)
+        var wordSpacerMultiple: Float = 1.3f
+    )
 }
 
 class WatermarkCreator internal constructor(private val layout: FrameLayout) {
@@ -145,8 +146,10 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
         override fun setAlpha(@IntRange(from = 0, to = 255) alpha: Int) {}
         override fun setColorFilter(colorFilter: ColorFilter?) {}
 
-        @Deprecated("Deprecated in Java. Since API level 29(Android Q|10.0).",
-            ReplaceWith("PixelFormat.TRANSLUCENT", "android.graphics.PixelFormat"))
+        @Deprecated(
+            "Deprecated in Java. Since API level 29(Android Q|10.0).",
+            ReplaceWith("PixelFormat.TRANSLUCENT", "android.graphics.PixelFormat")
+        )
         override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
     }
 }

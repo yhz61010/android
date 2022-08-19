@@ -3,7 +3,6 @@ package com.leovp.jpeg_sdk
 import android.graphics.Bitmap
 import androidx.annotation.Keep
 
-
 /**
  * Author: Michael Leo
  * Date: 2022/6/23 09:01
@@ -18,8 +17,10 @@ object JPEGUtil {
      * This method is not only slower but also generated larger file
      * than Android [Bitmap.compress] method.
      */
-    external fun compressBitmap(bitmap: Bitmap,
+    external fun compressBitmap(
+        bitmap: Bitmap,
         quality: Int,
         outFilPath: String,
-        optimize: Boolean): Int
+        optimize: Boolean
+    ): Int
 }

@@ -11,7 +11,7 @@ import com.leovp.log_sdk.LogContext
  * Date: 20-6-17 上午11:14
  */
 abstract class BaseDemonstrationActivity<B : ViewBinding>
-    (init: (ActivityConfig.() -> Unit)? = null) : BaseActivity<B>(init) {
+(init: (ActivityConfig.() -> Unit)? = null) : BaseActivity<B>(init) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")

@@ -48,11 +48,14 @@ class MicRecorder(
         bufferSizeInBytes = AudioRecord.getMinBufferSize(encoderInfo.sampleRate, encoderInfo.channelConfig, encoderInfo.audioFormat) * recordMinBufferRatio
         LogContext.log.w(TAG, "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
 
-        encodeWrapper = AudioEncoderManager.getWrapper(type, encoderInfo, object : OutputCallback {
-            override fun output(out: ByteArray) {
-                callback.onRecording(out)
+        encodeWrapper = AudioEncoderManager.getWrapper(
+            type, encoderInfo,
+            object : OutputCallback {
+                override fun output(out: ByteArray) {
+                    callback.onRecording(out)
+                }
             }
-        })
+        )
         LogContext.log.w(TAG, "encodeWrapper=$encodeWrapper")
 
         audioRecord = AudioRecord(

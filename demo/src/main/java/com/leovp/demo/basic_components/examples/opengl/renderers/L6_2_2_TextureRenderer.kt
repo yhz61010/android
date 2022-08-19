@@ -85,7 +85,8 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             -0.2f, -0.2f,
             -0.2f, 0.2f,
             0.2f, 0.2f,
-            0.2f, -0.2f)
+            0.2f, -0.2f
+        )
 
         /**
          * 纹理坐标
@@ -105,14 +106,18 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
             0f, 1f,
             0f, 0f,
             1f, 0f,
-            1f, 1f)
+            1f, 1f
+        )
     }
 
-    private val vertexBufferFireL: FloatBuffer = createFloatBuffer(floatArrayOf(
-        -1.0f, -1.0f,
-        -1.0f, 1.0f,
-        1.0f, 1.0f,
-        1.0f, -1.0f))
+    private val vertexBufferFireL: FloatBuffer = createFloatBuffer(
+        floatArrayOf(
+            -1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, -1.0f
+        )
+    )
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
     private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTextureBeauty(POINT_DATA_BEAUTY))
     private var textureLocationFireL: Int = 0
@@ -161,13 +166,17 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(texCoordLocationFireL, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferFireL)
+        GLES20.glVertexAttribPointer(
+            texCoordLocationFireL, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, textureBufferFireL
+        )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
-        GLES20.glVertexAttribPointer(texCoordLocationBeauty, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferBeauty)
+        GLES20.glVertexAttribPointer(
+            texCoordLocationBeauty, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, textureBufferBeauty
+        )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
 
@@ -178,8 +187,10 @@ class L6_2_2_TextureRenderer(@Suppress("unused") private val ctx: Context) : Bas
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBufferFireL)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT, false, 0, vertexBufferFireL
+        )
         // 通知 GL 程序使用指定的顶点属性索引
         GLES20.glEnableVertexAttribArray(aPositionLocation)
     }

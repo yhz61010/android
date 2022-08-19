@@ -61,9 +61,11 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>() {
 
     fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val decoderInfo =
-                AudioDecoderInfo(AUDIO_SAMPLE_RATE,
-                    if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT)
+            AudioDecoderInfo(
+                AUDIO_SAMPLE_RATE,
+                if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
         player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
         val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)

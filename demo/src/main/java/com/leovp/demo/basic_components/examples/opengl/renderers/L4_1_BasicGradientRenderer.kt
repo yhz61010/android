@@ -64,7 +64,8 @@ class L4_1_BasicGradientRenderer(@Suppress("unused") private val ctx: Context) :
             1f, 0.5f, 0.5f,
             1f, 0f, 1f,
             0f, 1f, 1f,
-            1f, 1f, 0f)
+            1f, 1f, 0f
+        )
     }
 
     /**

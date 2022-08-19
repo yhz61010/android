@@ -35,13 +35,19 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
              * if (viewHolder?.adapterPosition == 0) return 0
              */
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
-            LogContext.log.d(ITAG,
-                "viewHolder.adapterPosition=${viewHolder.bindingAdapterPosition}")
+            LogContext.log.d(
+                ITAG,
+                "viewHolder.adapterPosition=${viewHolder.bindingAdapterPosition}"
+            )
             super.getMovementFlags(recyclerView, viewHolder)
         } else 0
     }
 
-    override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+    override fun onMove(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+    ): Boolean {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1

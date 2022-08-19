@@ -39,7 +39,8 @@ class L3_1_OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : 
         1f, 0f, 0f, 0f,
         0f, 1f, 0f, 0f,
         0f, 0f, 1f, 0f,
-        0f, 0f, 0f, 1f)
+        0f, 0f, 0f, 1f
+    )
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
         super.onSurfaceCreated(gl, config)

@@ -26,7 +26,6 @@ import com.leovp.lib_common_android.exts.isNormalPortrait
 import com.leovp.lib_common_android.exts.isReverseLandscape
 import com.leovp.lib_common_android.exts.isReversePortrait
 
-
 /**
  * Calculates closest 90-degree orientation to compensate for the device
  * rotation relative to sensor orientation, i.e., allows user to see camera
@@ -37,11 +36,11 @@ internal class OrientationLiveData(private val context: Context, characteristics
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
             val deviceSurfaceRotation = when {
-                context.isNormalPortrait(orientation)   -> Surface.ROTATION_0
+                context.isNormalPortrait(orientation) -> Surface.ROTATION_0
                 context.isReverseLandscape(orientation) -> Surface.ROTATION_90
-                context.isReversePortrait(orientation)  -> Surface.ROTATION_180
-                context.isNormalLandscape(orientation)  -> Surface.ROTATION_270
-                else                            -> return
+                context.isReversePortrait(orientation) -> Surface.ROTATION_180
+                context.isNormalLandscape(orientation) -> Surface.ROTATION_270
+                else -> return
             }
             val relative = computeRelativeRotation(characteristics, deviceSurfaceRotation)
             if (relative != value) postValue(relative)
@@ -73,16 +72,16 @@ internal class OrientationLiveData(private val context: Context, characteristics
             val sensorOrientationDegrees = characteristics.cameraSensorOrientation()
 
             val deviceOrientationDegrees = when (deviceSurfaceRotation) {
-                Surface.ROTATION_0   -> 0
-                Surface.ROTATION_90  -> 90
+                Surface.ROTATION_0 -> 0
+                Surface.ROTATION_90 -> 90
                 Surface.ROTATION_180 -> 180
                 Surface.ROTATION_270 -> 270
-                else                 -> 0
+                else -> 0
             }
 
             // Reverse device orientation for front-facing cameras
             val sign =
-                    if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT) 1 else -1
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT) 1 else -1
 
             // Calculate desired JPEG orientation relative to camera orientation to make
             // the image upright relative to the device orientation

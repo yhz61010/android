@@ -35,7 +35,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     //    private val bluetoothManager: BluetoothManager by lazy { ctx.bluetoothManager }
     //    private val bluetoothAdapter: BluetoothAdapter by lazy {
     //        bluetoothManager.adapter
-    ////        BluetoothAdapter.getDefaultAdapter()
+    // //        BluetoothAdapter.getDefaultAdapter()
     //
     //        // TODO The following descriptions are right?
     //        // Bluetooth            -> use BluetoothAdapter#getDefaultAdapter()
@@ -69,9 +69,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Set pin
      */
-    fun setPin(bluetoothClass: Class<out BluetoothDevice>,
+    fun setPin(
+        bluetoothClass: Class<out BluetoothDevice>,
         device: BluetoothDevice,
-        str: String): Boolean {
+        str: String
+    ): Boolean {
         runCatching {
             val removeBondMethod = bluetoothClass.getDeclaredMethod("setPin", ByteArray::class.java)
             return removeBondMethod.invoke(device, str.toByteArray()) as Boolean
@@ -104,8 +106,10 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      */
     fun setPairingConfirmation(btClass: Class<*>, device: BluetoothDevice?, isConfirm: Boolean) {
         val setPairingConfirmation =
-                btClass.getDeclaredMethod("setPairingConfirmation",
-                    Boolean::class.javaPrimitiveType)
+            btClass.getDeclaredMethod(
+                "setPairingConfirmation",
+                Boolean::class.javaPrimitiveType
+            )
         setPairingConfirmation.invoke(device, isConfirm)
     }
 
@@ -144,7 +148,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
 
     // Bluetooth Low Energy
     fun isSupportBle(pm: PackageManager): Boolean =
-            pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+        pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     var isEnabled: Boolean = bluetoothAdapter.isEnabled
         private set
@@ -223,8 +227,10 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      */
     @SuppressLint("InlinedApi")
     @RequiresPermission(
-        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN]
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN
+        ]
     )
     fun scan(scanDeviceCallback: ScanDeviceCallback) {
         this.scanDeviceCallback = scanDeviceCallback
@@ -279,8 +285,10 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      */
     @SuppressLint("InlinedApi")
     @RequiresPermission(
-        allOf = [Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE]
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE
+        ]
     )
     fun startAdvertising(name: String, callback: AdvertiseCallback) {
         val settings = AdvertiseSettings.Builder()

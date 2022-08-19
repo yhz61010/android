@@ -39,7 +39,7 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
         } else {
             // Front lens
             return when (cameraSensorOrientation) {
-                90   -> {
+                90 -> {
                     // Nexus phone(like Nexus 6 and Nexus 6P), the front lens cameraSensorOrientation is 90 not 270 degrees
                     // Tested on Nexus 6 and Nexus 6P
                     YuvUtil.mirrorNv21(i420Bytes, width, height)

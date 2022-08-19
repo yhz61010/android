@@ -131,10 +131,10 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
             LogContext.log.w(tag, "onFailed code: $code e=$e message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
 
-            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION
-                || code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION
-                || code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION
-                || code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
+            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION ||
+                code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION ||
+                code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION ||
+                code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
             ) {
                 if (retryTimes.incrementAndGet() > constantRetry.getMaxTimes()) {
                     LogContext.log.e(tag, "===== Connect failed - Exceed max retry times. =====")
@@ -185,7 +185,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
                 is PongWebSocketFrame -> {
                     frame.content().toString(Charset.forName("UTF-8"))
                 }
-                else                  -> {
+                else -> {
                     null
                 }
             }
@@ -206,9 +206,13 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
         cs.launch {
             if (::webSocketClientHandler.isInitialized) {
                 val result = webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
-                withContext(Dispatchers.Main) { binding.editText.text.clear();if (!result) toast("Send command error",
-                    debug = true,
-                    error = true) }
+                withContext(Dispatchers.Main) {
+                    binding.editText.text.clear(); if (!result) toast(
+                        "Send command error",
+                        debug = true,
+                        error = true
+                    )
+                }
             }
         }
     }

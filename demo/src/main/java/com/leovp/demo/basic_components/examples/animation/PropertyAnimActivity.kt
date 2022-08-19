@@ -40,8 +40,8 @@ class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBindi
             ObjectAnimator.ofFloat(binding.ivBeauty, "alpha", 1.0f, Random.nextFloat(), 1.0f)
                 .apply {
                     duration = 2000
-                start()
-            }
+                    start()
+                }
         }
         binding.btnScale.setOnSingleClickListener {
             val scaleValue = Random.nextInt(150, 250) * 1.0F / 100

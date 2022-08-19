@@ -6,7 +6,6 @@ import java.net.ServerSocket
 import java.net.Socket
 import kotlin.concurrent.thread
 
-
 /**
  * adb forward tcp:8888 tcp:8888
  *

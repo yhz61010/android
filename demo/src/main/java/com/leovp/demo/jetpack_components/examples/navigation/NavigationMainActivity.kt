@@ -40,13 +40,13 @@ class NavigationMainActivity : BaseActivity<ActivityNavigationMainBinding>() {
     //    override fun onCreate(savedInstanceState: Bundle?) {
     //        super.onCreate(savedInstanceState)
     //
-    ////        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-    ////        val navController = navHostFragment.navController
+    // //        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+    // //        val navController = navHostFragment.navController
     //        // setupBottomNavMenu(navController)
     //
-    ////        val bundle = Bundle()
-    ////        bundle.putString("param1", "Parameter One")
-    ////        bundle.putString("param2", "Parameter Two")
-    ////        navController.navigate(R.id.fragmentForNavFirst, bundle)
+    // //        val bundle = Bundle()
+    // //        bundle.putString("param1", "Parameter One")
+    // //        bundle.putString("param2", "Parameter Two")
+    // //        navController.navigate(R.id.fragmentForNavFirst, bundle)
     //    }
 }

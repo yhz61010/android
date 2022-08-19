@@ -13,7 +13,6 @@ import com.leovp.lib_common_android.exts.connectivityManager
 import com.leovp.lib_common_android.exts.wifiManager
 import com.leovp.lib_common_kotlin.utils.SingletonHolder
 
-
 /**
  * Author: Michael Leo
  * Date: 21-3-6 下午6:24
@@ -34,7 +33,7 @@ class WifiUtil private constructor(private val ctx: Context) {
     fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WEP) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             val wifiNetworkSpecifier =
-                    WifiNetworkSpecifier.Builder().setSsid(wifiSsid).setWpa2Passphrase(wifiPwd).build()
+                WifiNetworkSpecifier.Builder().setSsid(wifiSsid).setWpa2Passphrase(wifiPwd).build()
             val networkRequest = NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .setNetworkSpecifier(wifiNetworkSpecifier)
@@ -50,15 +49,15 @@ class WifiUtil private constructor(private val ctx: Context) {
             val conf = WifiConfiguration()
             conf.SSID = ssid
             when (enc) {
-                WifiEncType.WEP  -> {
+                WifiEncType.WEP -> {
                     conf.wepKeys[0] = psd
                     conf.wepTxKeyIndex = 0
                     conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE)
                     conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40)
                 }
-                WifiEncType.WPA  -> conf.preSharedKey = psd
+                WifiEncType.WPA -> conf.preSharedKey = psd
                 WifiEncType.OPEN -> conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE)
-                else             -> Unit
+                else -> Unit
             }
             // 3. Connect to WIFI
             val wifiManager = ctx.wifiManager

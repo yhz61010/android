@@ -24,7 +24,6 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-
 class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>() {
     override fun getTagName(): String = ITAG
 
@@ -59,7 +58,8 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
 
         val file = getBaseDirString("output")
         val dstFile = File(
-            file, "screen" + when (VIDEO_ENCODE_TYPE) {
+            file,
+            "screen" + when (VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
             }

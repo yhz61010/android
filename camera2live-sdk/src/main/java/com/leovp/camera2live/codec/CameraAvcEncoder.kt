@@ -16,8 +16,10 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Date: 20-3-24 下午5:35
  */
 class CameraAvcEncoder @JvmOverloads constructor(
-    private val width: Int, private val height: Int,
-    private val bitrate: Int, private val frameRate: Int,
+    private val width: Int,
+    private val height: Int,
+    private val bitrate: Int,
+    private val frameRate: Int,
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
     private val bitrateMode: Int = DEFAULT_BITRATE_MODE
 ) {
@@ -116,18 +118,18 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     it.get(encodedBytes)
 
                     when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG  -> {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd = encodedBytes.copyOf()
                             LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexStringLE()}]")
                         }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME     -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
-                        else                                 -> {
+                        else -> {
                             // Do nothing
                         }
                     }

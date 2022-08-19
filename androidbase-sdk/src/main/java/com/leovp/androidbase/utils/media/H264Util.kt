@@ -168,11 +168,11 @@ object H264Util {
     @Suppress("unused")
     fun getNaluTypeName(naluType: Int): String {
         return when (naluType) {
-            NALU_TYPE_SPS      -> "SPS"
-            NALU_TYPE_PPS      -> "PPS"
-            NALU_TYPE_IDR      -> "I"
+            NALU_TYPE_SPS -> "SPS"
+            NALU_TYPE_PPS -> "PPS"
+            NALU_TYPE_IDR -> "I"
             NALU_TYPE_NONE_IDR -> "B/P"
-            else               -> "Unknown"
+            else -> "Unknown"
         }
     }
 

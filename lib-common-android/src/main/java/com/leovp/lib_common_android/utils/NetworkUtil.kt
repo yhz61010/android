@@ -25,7 +25,6 @@ import java.net.Socket
 import java.net.SocketAddress
 import java.util.*
 
-
 /**
  * Author: Michael Leo
  * Date: 20-6-12 上午11:37
@@ -58,8 +57,8 @@ object NetworkUtil {
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOnline(ctx: Context): Boolean =
-            isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx)
-                    || isVpnActive(ctx) || isBluetoothActive(ctx)
+        isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) ||
+            isVpnActive(ctx) || isBluetoothActive(ctx)
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
@@ -71,9 +70,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isWifiActive(ctx: Context): Boolean = isTypeActive(ctx,
+    fun isWifiActive(ctx: Context): Boolean = isTypeActive(
+        ctx,
         NetworkCapabilities.TRANSPORT_WIFI,
-        @Suppress("DEPRECATION") ConnectivityManager.TYPE_WIFI)
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_WIFI
+    )
 
     /**
      * Need following permission:
@@ -82,9 +83,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isEthernetActive(ctx: Context): Boolean = isTypeActive(ctx,
+    fun isEthernetActive(ctx: Context): Boolean = isTypeActive(
+        ctx,
         NetworkCapabilities.TRANSPORT_ETHERNET,
-        @Suppress("DEPRECATION") ConnectivityManager.TYPE_ETHERNET)
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_ETHERNET
+    )
 
     /**
      * Need following permission:
@@ -93,9 +96,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isCellularActive(ctx: Context): Boolean = isTypeActive(ctx,
+    fun isCellularActive(ctx: Context): Boolean = isTypeActive(
+        ctx,
         NetworkCapabilities.TRANSPORT_CELLULAR,
-        @Suppress("DEPRECATION") ConnectivityManager.TYPE_MOBILE)
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_MOBILE
+    )
 
     /**
      * Need following permission:
@@ -104,9 +109,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isVpnActive(ctx: Context): Boolean = isTypeActive(ctx,
+    fun isVpnActive(ctx: Context): Boolean = isTypeActive(
+        ctx,
         NetworkCapabilities.TRANSPORT_VPN,
-        @Suppress("DEPRECATION") ConnectivityManager.TYPE_VPN)
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_VPN
+    )
 
     /**
      * Need following permission:
@@ -115,9 +122,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isBluetoothActive(ctx: Context): Boolean = isTypeActive(ctx,
+    fun isBluetoothActive(ctx: Context): Boolean = isTypeActive(
+        ctx,
         NetworkCapabilities.TRANSPORT_BLUETOOTH,
-        @Suppress("DEPRECATION") ConnectivityManager.TYPE_BLUETOOTH)
+        @Suppress("DEPRECATION") ConnectivityManager.TYPE_BLUETOOTH
+    )
 
     /**
      * Need following permission:
@@ -154,13 +163,15 @@ object NetworkUtil {
         var inputLine: String?
         try {
             val pingCommand =
-                    String.format(Locale.getDefault(),
-                        "/system/bin/ping -c %d %s",
-                        numberOfPackages,
-                        ipAddress) // Execute the command on the environment interface
+                String.format(
+                    Locale.getDefault(),
+                    "/system/bin/ping -c %d %s",
+                    numberOfPackages,
+                    ipAddress
+                ) // Execute the command on the environment interface
             val process =
-                    Runtime.getRuntime()
-                        .exec(pingCommand) // Gets the input stream to get the output of the executed command
+                Runtime.getRuntime()
+                    .exec(pingCommand) // Gets the input stream to get the output of the executed command
             BufferedReader(InputStreamReader(process.inputStream)).use {
                 inputLine = it.readLine()
                 while (inputLine != null) {
@@ -178,7 +189,7 @@ object NetworkUtil {
         return try {
             val afterEqual = inputLine!!.substring(inputLine!!.indexOf("=")).trim { it <= ' ' }
             val afterFirstSlash =
-                    afterEqual.substring(afterEqual.indexOf('/') + 1).trim { it <= ' ' }
+                afterEqual.substring(afterEqual.indexOf('/') + 1).trim { it <= ' ' }
             val strAvgRtt = afterFirstSlash.substring(0, afterFirstSlash.indexOf('/'))
             strAvgRtt.toDouble()
         } catch (e: Exception) {
@@ -208,7 +219,7 @@ object NetworkUtil {
             return when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
                 // Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> Unit
-                else                                           -> {
+                else -> {
                     @Suppress("DEPRECATION")
                     getNetworkGeneration(ctx.connectivityManager.activeNetworkInfo?.subtype)
                 }
@@ -236,10 +247,12 @@ object NetworkUtil {
             val connectivityManager = ctx.connectivityManager
             val networkCallback = object : ConnectivityManager.NetworkCallback() {
                 @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-                override fun onCapabilitiesChanged(network: Network,
-                    networkCapabilities: NetworkCapabilities) {
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
+                ) {
                     val wifiInfo: WifiInfo =
-                            networkCapabilities.transportInfo as? WifiInfo ?: return
+                        networkCapabilities.transportInfo as? WifiInfo ?: return
                     if (isWifiActive(ctx)) {
                         callback(generateWifiSignal(wifiInfo))
                     }
@@ -389,7 +402,7 @@ object NetworkUtil {
             TelephonyManager.NETWORK_TYPE_EDGE,
             TelephonyManager.NETWORK_TYPE_GPRS,
             TelephonyManager.NETWORK_TYPE_IDEN,
-            TelephonyManager.NETWORK_TYPE_GSM      -> "2G"
+            TelephonyManager.NETWORK_TYPE_GSM -> "2G"
 
             TelephonyManager.NETWORK_TYPE_EHRPD,
             TelephonyManager.NETWORK_TYPE_EVDO_0,
@@ -403,10 +416,10 @@ object NetworkUtil {
             TelephonyManager.NETWORK_TYPE_TD_SCDMA -> "3G"
 
             TelephonyManager.NETWORK_TYPE_LTE,
-            TelephonyManager.NETWORK_TYPE_IWLAN    -> "4G"
+            TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
 
-            TelephonyManager.NETWORK_TYPE_NR       -> "5G"
-            else                                   -> null
+            TelephonyManager.NETWORK_TYPE_NR -> "5G"
+            else -> null
         }
     }
 
@@ -414,7 +427,7 @@ object NetworkUtil {
         return when {
             rssi <= MIN_RSSI -> 0
             rssi >= MAX_RSSI -> numLevels - 1
-            else             -> {
+            else -> {
                 val inputRange = (MAX_RSSI - MIN_RSSI).toFloat()
                 val outputRange = (numLevels - 1).toFloat()
                 ((rssi - MIN_RSSI).toFloat() * outputRange / inputRange).toInt()

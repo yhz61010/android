@@ -37,7 +37,7 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlespla
         binding.glSurfaceView.setRenderer(renderer)
         binding.glSurfaceView.renderMode = when (renderer) {
             is L8_1_FilterRenderer -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
-            else                   -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
+            else -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
         }
 
         when (renderer) {
@@ -55,8 +55,10 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlespla
     private fun readCurrentFrame(renderer: L7_BaseRenderer) {
         val imageView = ImageView(this)
         val params =
-                ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT)
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         binding.rootView.addView(imageView, params)
 
         renderer.rendererCallback = object : BaseRenderer.RendererCallback {

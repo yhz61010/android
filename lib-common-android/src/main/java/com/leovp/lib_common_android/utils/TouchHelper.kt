@@ -32,9 +32,9 @@ class TouchHelper(private val touchListener: TouchListener) {
                 touchMoveTimeInterval.put(activePointerId, 0L)
                 processTouchDown(event, activePointerId, activePressure)
             }
-            MotionEvent.ACTION_MOVE                                  -> processTouchMove(event)
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP     -> processTouchUp(event)
-            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE    -> {
+            MotionEvent.ACTION_MOVE -> processTouchMove(event)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> processTouchUp(event)
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                 processCancelTouch(event)
             }
         }

@@ -18,7 +18,8 @@ class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallbac
             override fun onEncoded(aacData: ByteArray) {
                 outputCallback.output(aacData)
             }
-        }).apply { start() }
+        }
+    ).apply { start() }
 
     override fun encode(input: ByteArray) {
         aacEncoder.queue.offer(input)

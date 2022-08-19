@@ -82,76 +82,85 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
     @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     private fun initData() {
         device = intent.getParcelableExtraOrNull("device")
-        bluetoothGatt = device!!.connectGatt(this, false, object : BluetoothGattCallback() {
-            @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-            override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-                super.onConnectionStateChange(gatt, status, newState)
-                when (newState) {
-                    BluetoothProfile.STATE_CONNECTED     -> {
-                        LogContext.log.w("STATE_CONNECTED")
-                        gatt!!.discoverServices()
-                    }
-                    BluetoothProfile.STATE_CONNECTING    -> {
-                        LogContext.log.w("STATE_CONNECTING")
-                    }
-                    BluetoothProfile.STATE_DISCONNECTED  -> {
-                        LogContext.log.w("STATE_DISCONNECTED")
-                    }
-                    BluetoothProfile.STATE_DISCONNECTING -> {
-                        LogContext.log.w("STATE_DISCONNECTING")
+        bluetoothGatt = device!!.connectGatt(
+            this, false,
+            object : BluetoothGattCallback() {
+                @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                    super.onConnectionStateChange(gatt, status, newState)
+                    when (newState) {
+                        BluetoothProfile.STATE_CONNECTED -> {
+                            LogContext.log.w("STATE_CONNECTED")
+                            gatt!!.discoverServices()
+                        }
+                        BluetoothProfile.STATE_CONNECTING -> {
+                            LogContext.log.w("STATE_CONNECTING")
+                        }
+                        BluetoothProfile.STATE_DISCONNECTED -> {
+                            LogContext.log.w("STATE_DISCONNECTED")
+                        }
+                        BluetoothProfile.STATE_DISCONNECTING -> {
+                            LogContext.log.w("STATE_DISCONNECTING")
+                        }
                     }
                 }
-            }
 
-            @SuppressLint("InlinedApi")
-            @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-            override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                LogContext.log.w("onServicesDiscovered status=$status")
-                super.onServicesDiscovered(gatt, status)
-                // Set characteristics
-                val service = bluetoothGatt!!.getService(BluetoothServerActivity.SERVICE_UUID)
-                val characteristic =
+                @SuppressLint("InlinedApi")
+                @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                    LogContext.log.w("onServicesDiscovered status=$status")
+                    super.onServicesDiscovered(gatt, status)
+                    // Set characteristics
+                    val service = bluetoothGatt!!.getService(BluetoothServerActivity.SERVICE_UUID)
+                    val characteristic =
                         service.getCharacteristic(BluetoothServerActivity.CHARACTERISTIC_READ_UUID)
-                val successFlag =
+                    val successFlag =
                         bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
-                LogContext.log.w("setCharacteristicNotification b=$successFlag")
-            }
+                    LogContext.log.w("setCharacteristicNotification b=$successFlag")
+                }
 
-            // Receive data
-            @Deprecated("Deprecated in Java. Since Android 13.")
-            @Suppress("DEPRECATION")
-            override fun onCharacteristicChanged(gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic) {
-                super.onCharacteristicChanged(gatt, characteristic)
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    val data = String(characteristic.value)
-                    LogContext.log.w("onCharacteristicChanged Below Android 13 characteristic=${characteristic.toJsonString()} data=$data")
+                // Receive data
+                @Deprecated("Deprecated in Java. Since Android 13.")
+                @Suppress("DEPRECATION")
+                override fun onCharacteristicChanged(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic
+                ) {
+                    super.onCharacteristicChanged(gatt, characteristic)
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        val data = String(characteristic.value)
+                        LogContext.log.w("onCharacteristicChanged Below Android 13 characteristic=${characteristic.toJsonString()} data=$data")
+                        toast("Received msg=$data")
+                    }
+                }
+
+                // Receive data
+                @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+                override fun onCharacteristicChanged(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    value: ByteArray
+                ) {
+                    super.onCharacteristicChanged(gatt, characteristic, value)
+                    val data = String(value)
+                    LogContext.log.w("onCharacteristicChanged Above Android 13 characteristic=${characteristic.toJsonString()} data=$data")
                     toast("Received msg=$data")
                 }
-            }
 
-            // Receive data
-            @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-            override fun onCharacteristicChanged(gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                value: ByteArray) {
-                super.onCharacteristicChanged(gatt, characteristic, value)
-                val data = String(value)
-                LogContext.log.w("onCharacteristicChanged Above Android 13 characteristic=${characteristic.toJsonString()} data=$data")
-                toast("Received msg=$data")
-            }
-
-            // SENT callback
-            override fun onCharacteristicWrite(gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                status: Int) {
-                LogContext.log.w("onCharacteristicWrite characteristic=${characteristic.toJsonString()} status=$status")
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    LogContext.log.w("Sent successfully.")
+                // SENT callback
+                override fun onCharacteristicWrite(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    status: Int
+                ) {
+                    LogContext.log.w("onCharacteristicWrite characteristic=${characteristic.toJsonString()} status=$status")
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        LogContext.log.w("Sent successfully.")
+                    }
+                    super.onCharacteristicWrite(gatt, characteristic, status)
                 }
-                super.onCharacteristicWrite(gatt, characteristic, status)
             }
-        })
+        )
     }
 
     @SuppressLint("InlinedApi")
@@ -172,12 +181,14 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
         val service = bluetoothGatt!!.getService(BluetoothServerActivity.SERVICE_UUID) ?: return
         // Get writing characteristic
         val characteristic =
-                service.getCharacteristic(BluetoothServerActivity.CHARACTERISTIC_WRITE_UUID)
+            service.getCharacteristic(BluetoothServerActivity.CHARACTERISTIC_WRITE_UUID)
         bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            bluetoothGatt!!.writeCharacteristic(characteristic,
+            bluetoothGatt!!.writeCharacteristic(
+                characteristic,
                 msg.toByteArray(),
-                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            )
         } else {
             @Suppress("DEPRECATION")
             characteristic.value = msg.toByteArray()

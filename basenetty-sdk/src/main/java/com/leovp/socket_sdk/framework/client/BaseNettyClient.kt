@@ -90,13 +90,15 @@ abstract class BaseNettyClient protected constructor(
         headers: Map<String, String>? = null,
         timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
-        webSocketUri.host, if (webSocketUri.port == -1) {
+        webSocketUri.host,
+        if (webSocketUri.port == -1) {
             when {
-                "ws".equals(webSocketUri.scheme, true)  -> 80
+                "ws".equals(webSocketUri.scheme, true) -> 80
                 "wss".equals(webSocketUri.scheme, true) -> 443
-                else                                    -> -1
+                else -> -1
             }
-        } else webSocketUri.port, connectionListener, retryStrategy, headers, timeout
+        } else webSocketUri.port,
+        connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
@@ -111,13 +113,15 @@ abstract class BaseNettyClient protected constructor(
         headers: Map<String, String>? = null,
         timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
     ) : this(
-        webSocketUri.host, if (webSocketUri.port == -1) {
+        webSocketUri.host,
+        if (webSocketUri.port == -1) {
             when {
-                "ws".equals(webSocketUri.scheme, true)  -> 80
+                "ws".equals(webSocketUri.scheme, true) -> 80
                 "wss".equals(webSocketUri.scheme, true) -> 443
-                else                                    -> -1
+                else -> -1
             }
-        } else webSocketUri.port, connectionListener, retryStrategy, headers, timeout
+        } else webSocketUri.port,
+        connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
         this.trustAllServers = trustAllServers
@@ -260,17 +264,17 @@ abstract class BaseNettyClient protected constructor(
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                ClientConnectStatus.RELEASING                                 -> {
+                ClientConnectStatus.RELEASING -> {
                     LogContext.log.w(tag, "===== Releasing now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                ClientConnectStatus.DISCONNECTING                             -> {
+                ClientConnectStatus.DISCONNECTING -> {
                     LogContext.log.w(tag, "===== Disconnecting now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
-                else                                                          -> LogContext.log.i(tag, "===== Prepare to connect to server =====")
+                else -> LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
             connectStatus.set(ClientConnectStatus.CONNECTING)
         }
@@ -536,8 +540,16 @@ abstract class BaseNettyClient protected constructor(
     /**
      * @param isPing Only works in WebSocket mode
      */
-    private fun executeUnifiedCommand(cmdTypeAndId: String, cmdDesc: String?, cmd: Any?, isPing: Boolean,
-        showContent: Boolean, showLog: Boolean = true, fullOutput: Boolean = false, byteOrder: ByteOrder): Boolean {
+    private fun executeUnifiedCommand(
+        cmdTypeAndId: String,
+        cmdDesc: String?,
+        cmd: Any?,
+        isPing: Boolean,
+        showContent: Boolean,
+        showLog: Boolean = true,
+        fullOutput: Boolean = false,
+        byteOrder: ByteOrder
+    ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
             return false
         }
@@ -546,7 +558,7 @@ abstract class BaseNettyClient protected constructor(
         val bytesCmd: ByteBuf?
         val isStringCmd: Boolean
         when (cmd) {
-            is String    -> {
+            is String -> {
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
@@ -566,7 +578,7 @@ abstract class BaseNettyClient protected constructor(
                     } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
-            else         -> throw IllegalArgumentException("Command must be either String or ByteArray")
+            else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
         if (::channel.isInitialized) {
@@ -584,14 +596,24 @@ abstract class BaseNettyClient protected constructor(
     }
 
     @JvmOverloads
-    fun executeCommand(cmd: Any?, cmdDesc: String? = null, cmdTypeAndId: String = tag,
-        showContent: Boolean = true, showLog: Boolean = true, byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    fun executeCommand(
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     @Suppress("unused")
     @JvmOverloads
-    fun executePingCommand(cmd: Any?, cmdDesc: String? = null, cmdTypeAndId: String = tag,
-        showContent: Boolean = true, showLog: Boolean = true, byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+    fun executePingCommand(
+        cmd: Any?,
+        cmdDesc: String? = null,
+        cmdTypeAndId: String = tag,
+        showContent: Boolean = true,
+        showLog: Boolean = true,
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
 
     // ================================================

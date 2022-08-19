@@ -70,7 +70,8 @@ class L1_2_PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRen
             1f, 0.5f, 0.5f,
             1f, 0f, 1f,
             0f, 1f, 1f,
-            1f, 1f, 0f)
+            1f, 1f, 0f
+        )
     }
 
     /**

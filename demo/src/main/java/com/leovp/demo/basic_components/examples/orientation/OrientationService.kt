@@ -33,7 +33,7 @@ class OrientationService : BaseService() {
                     // toast("Device is in Landscape mode.", debug = true)
                     LogContext.log.w(ITAG, "Device is in Landscape mode.")
                 }
-                Configuration.ORIENTATION_PORTRAIT  -> {
+                Configuration.ORIENTATION_PORTRAIT -> {
                     // toast("Device is in Portrait mode.", debug = true)
                     LogContext.log.w(ITAG, "Device is in Portrait mode.")
                 }

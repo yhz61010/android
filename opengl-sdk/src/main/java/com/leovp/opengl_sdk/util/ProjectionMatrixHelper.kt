@@ -15,7 +15,8 @@ class ProjectionMatrixHelper(program: Int, name: String) {
             1f, 0f, 0f, 0f,
             0f, 1f, 0f, 0f,
             0f, 0f, 1f, 0f,
-            0f, 0f, 0f, 1f)
+            0f, 0f, 0f, 1f
+        )
     }
 
     private val uMatrixLocation: Int = GLES20.glGetUniformLocation(program, name)

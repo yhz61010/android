@@ -13,12 +13,12 @@
     android:paddingStart="20dp"
     android:paddingEnd="20dp">
 
+    <!-- android:lineHeight="20sp" -->
     <TextView
         android:id="@+id/tv_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end"
-        android:lineHeight="20sp"
         android:maxLines="3"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"

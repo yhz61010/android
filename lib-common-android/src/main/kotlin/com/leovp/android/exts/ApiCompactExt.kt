@@ -2,6 +2,7 @@
 
 package com.leovp.android.exts
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Service
@@ -149,6 +150,15 @@ fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): P
     }
 }
 
+/**
+ * Add the following permission in your `AndroidManifest.xml`:
+ * ```xml
+ * <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+ * ```
+ *
+ * https://stackoverflow.com/a/64946118/1685062
+ */
+@SuppressLint("QueryPermissionsNeeded")
 fun Context.queryCompactIntentActivities(intent: Intent, flags: Int): List<ResolveInfo> {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         this.packageManager.queryIntentActivities(

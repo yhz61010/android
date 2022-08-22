@@ -25,7 +25,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         return ActivityFloatViewBinding.inflate(layoutInflater)
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint("SetTextI18n", "CutPasteId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

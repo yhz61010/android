@@ -86,6 +86,7 @@ public final class DexMain {
                 screenshot.recycle();
                 byte[] bitmapBytes = baos.toByteArray();
 
+                @SuppressLint("SdCardPath")
                 FileOutputStream fos = new FileOutputStream("/sdcard/screenshot.jpg");
                 fos.write(bitmapBytes);
                 fos.flush();

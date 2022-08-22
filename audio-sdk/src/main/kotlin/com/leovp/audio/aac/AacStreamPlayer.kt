@@ -309,15 +309,17 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
             return
         }
         val latencyInMs = (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
-        //        LogContext.log.d(
-        //            TAG,
-        //            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
-        //        )
+        // LogContext.log.d(
+        //     TAG,
+        //     "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
+        //         "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
+        // )
         if (rcvAudioDataQueue.size >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(
                 TAG,
-                "Drop[${dropFrameTimes.get()}]|full[${rcvAudioDataQueue.size}] latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
+                "Drop[${dropFrameTimes.get()}]|full[${rcvAudioDataQueue.size}] " +
+                    "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             rcvAudioDataQueue.clear()
             frameCount.set(0)
@@ -374,7 +376,8 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     @Suppress("unused")
     fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
+    private fun computePresentationTimeUs(frameIndex: Long) =
+        frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     private fun getAudioTimeUs(): Long = runCatching {
         val numFramesPlayed: Int = audioTrack?.playbackHeadPosition ?: 0

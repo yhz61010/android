@@ -85,3 +85,4 @@ lint/tmp/
 /libyuv/
 /.idea/other.xml
 /**/detekt-baseline.xml
+/.idea/shelf/

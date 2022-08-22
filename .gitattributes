@@ -8,3 +8,12 @@
 *.jpeg binary
 *.webp binary
 *.so binary
+*.wav binary
+*.mp3 binary
+*.caf binary
+*.mp4 binary
+*.h264 binary
+*.h265 binary
+*.raw binary
+*.ima4 binary
+*.pcm binary

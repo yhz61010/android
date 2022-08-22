@@ -2,6 +2,7 @@
 
 package com.leovp.android.utils.shell
 
+import android.util.Log
 import androidx.annotation.Keep
 import java.io.*
 import java.nio.charset.StandardCharsets
@@ -12,6 +13,8 @@ import java.util.*
  */
 @Suppress("WeakerAccess", "unused", "UNUSED_PARAMETER")
 object ShellUtil {
+    private const val TAG = "ShellUtil"
+
     private const val SH_BIN = "sh"
     private const val SU_BIN = "su"
     private const val MOUNT_BIN = "mount"
@@ -45,7 +48,7 @@ object ShellUtil {
         try {
             process = Runtime.getRuntime().exec(if (isRoot) SU_BIN else SH_BIN)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "execCmd exception. Message: ${e.message}")
             return CommandResult(
                 result,
                 "",
@@ -125,7 +128,7 @@ object ShellUtil {
                 }
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e(TAG, "getProcessesList exception. Message: ${e.message}")
         }
         return processes
     }
@@ -198,7 +201,7 @@ object ShellUtil {
                 }
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e(TAG, "execCmd exception. Message: ${e.message}")
             return false
         }
         return false
@@ -235,7 +238,7 @@ object ShellUtil {
                 }
             }
         } catch (e: java.lang.Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "remountFileSystem exception. Message: ${e.message}")
         }
     }
 }

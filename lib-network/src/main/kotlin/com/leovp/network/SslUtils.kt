@@ -4,7 +4,14 @@ import java.io.InputStream
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.CertificateFactory
-import javax.net.ssl.*
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.KeyManager
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 /**
  * Author: Michael Leo
@@ -46,11 +53,11 @@ import javax.net.ssl.*
  */
 @Suppress("unused")
 object SslUtils {
-//    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-//        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-//        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-//        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-//    })
+    //    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+    //        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+    //        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+    //        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+    //    })
 
     const val PROTOCOL = "TLSv1.2"
 
@@ -99,10 +106,10 @@ object SslUtils {
     val customVerifier = HostnameVerifier { hostname, _ ->
         requireNotNull(hostnames) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
         hostnames!!.contains(hostname)
-//        else {
-//            val hv = HttpsURLConnection.getDefaultHostnameVerifier()
-//            hv.verify(this.hostname, session)
-//        }
+        //        else {
+        //            val hv = HttpsURLConnection.getDefaultHostnameVerifier()
+        //            hv.verify(this.hostname, session)
+        //        }
     }
 
     fun createSocketFactory(protocol: String, km: Array<KeyManager>? = null, tm: Array<TrustManager>? = null): SSLSocketFactory =
@@ -131,14 +138,14 @@ object SslUtils {
             val trustMgrFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
                 init(keyStore)
             }
-//        val kmf: KeyManagerFactory = KeyManagerFactory.getInstance("X509")
-//        kmf.init(keyStore, null)
+            //        val kmf: KeyManagerFactory = KeyManagerFactory.getInstance("X509")
+            //        kmf.init(keyStore, null)
             // "TLSv1.1", "TLSv1.2", "TLSv1.3", "DTLSv1.2" or "DTLSv1.3"
             // It's better not to use "TLS"
             // For okhttp library:
-//            val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-//                .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
-//                .build()
+            //            val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+            //                .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
+            //                .build()
             val sslContext = SSLContext.getInstance(PROTOCOL)
             sslContext.init(null/*kmf.keyManagers*/, trustMgrFactory.trustManagers, SecureRandom())
 

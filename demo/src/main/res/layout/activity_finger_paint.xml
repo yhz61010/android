@@ -59,7 +59,8 @@
         android:layout_alignParentBottom="true"
         android:background="#515C6B"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:baselineAligned="false">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -175,8 +176,7 @@
             <TextView
                 android:id="@+id/colorPreview"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="50dp"
                 android:gravity="center"
                 android:textColor="#FFFFFF"
                 android:layout_gravity="center"/>
@@ -192,7 +192,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Normal"
-                    android:textSize="11dp"/>
+                    android:textSize="11sp" />
 
                 <RadioButton
                     android:visibility="gone"
@@ -200,14 +200,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Emboss"
-                    android:textSize="11dp"/>
+                    android:textSize="11sp" />
 
                 <RadioButton
                     android:id="@+id/blur"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Blur"
-                    android:textSize="11dp"/>
+                    android:textSize="11sp" />
 
             </RadioGroup>
 
@@ -227,13 +227,6 @@
         android:visibility="invisible">
 
         <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textColor="#FFFFFF" />
-
-        <TextView
             android:id="@+id/close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -241,6 +234,13 @@
             android:layout_margin="8dp"
             android:background="?attr/selectableItemBackground"
             android:text="Close"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:textColor="#FFFFFF" />
 
         <ImageView

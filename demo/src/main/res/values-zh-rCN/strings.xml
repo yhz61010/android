@@ -2,9 +2,11 @@
 <resources>
     <string name="title_common">Common组件</string>
     <string name="title_jetpack">Jetpack组件</string>
+    <string name="act_title_change_app_lang">更改应用语言</string>
 
     <string name="tv_i18n">这里是简体中文。</string>
     <string name="select_lang">语言选择</string>
+    <string name="start_service">启动服务</string>
     <string-array name="lang_list">
         <item>英语</item>
         <item>简体中文</item>
@@ -17,4 +19,5 @@
         <item>zh_TW</item>
         <item>ja</item>
     </string-array>
+    <string name="cmn_chooser_gallery">选择照片</string>
 </resources>

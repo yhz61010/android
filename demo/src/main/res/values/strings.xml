@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">LeoAndroidBaseUtil</string>
+    <string name="app_name">Leo Demo</string>
 
     <string name="title_common">Common</string>
     <string name="title_jetpack">Jetpack</string>
+    <string name="act_title_change_app_lang">Change App Language</string>
 
     <string name="recyclerview_demo_menu_add_item">Add Item</string>
     <string name="recyclerview_demo_menu_edit_item">Edit</string>
@@ -15,6 +16,7 @@
 
     <string name="tv_i18n">This is English text.</string>
     <string name="select_lang">Choose a language</string>
+    <string name="start_service">Start Service</string>
     <string-array name="lang_list">
         <item>English</item>
         <item>Simplified Chinese</item>
@@ -27,4 +29,6 @@
         <item>zh_TW</item>
         <item>ja</item>
     </string-array>
+
+    <string name="cmn_chooser_gallery">Choose Photo</string>
 </resources>

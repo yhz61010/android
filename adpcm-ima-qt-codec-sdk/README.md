@@ -1,5 +1,2 @@
-**All the sources in this project copy from [ffmpeg-sdk] module.**
-
-The purpose is that make this project as a library which can be imported by other projects.
-
-**[ffmpeg-sdk] module can no be imported by other projects.**
+This is the library only for [adpcm-ima-qt-codec]
+DO NOT use this library with other ffmpeg libraries. For example: [adpcm-ima-qt-codec-h264-hevc-decoder-sdk], [h264-hevc-decoder-sdk]

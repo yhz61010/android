@@ -1,13 +1,14 @@
 #!/bin/bash
 
-NDK_PATH=~/Library/Android/sdk/ndk/22.1.7171670
+NDK_PATH=~/Library/Android/sdk/ndk/21.1.6352462
 # linux-x86_64
 HOST_TAG=darwin-x86_64
-
-TOOLCHAINS=$NDK_PATH/toolchains/llvm/prebuilt/$HOST_TAG
-SYSROOT=$TOOLCHAINS/sysroot
-
 MIN_SDK_VER=21
+
+# ==================================
+
+TOOLCHAINS=${NDK_PATH}/toolchains/llvm/prebuilt/${HOST_TAG}
+SYSROOT=${TOOLCHAINS}/sysroot
 
 function build_one
 {
@@ -37,7 +38,7 @@ pushd libx264
     --host=$HOST \
     --extra-ldflags="-nostdlib" \
     --enable-pic \
-    --enable-static \
+    --enable-shared \
     --enable-strip \
     --disable-cli \
     --disable-win32thread \
@@ -50,7 +51,7 @@ pushd libx264
 
 make clean
 #make -j4 install V=1
-make -j6
+make -j$(nproc)
 make install
 popd
 }

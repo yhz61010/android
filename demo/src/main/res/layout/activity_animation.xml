@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.animation.AnimationActivity">
+    tools:context=".basiccomponents.examples.animation.AnimationActivity">
 
     <Button
         android:id="@+id/btnDrawableAnim"

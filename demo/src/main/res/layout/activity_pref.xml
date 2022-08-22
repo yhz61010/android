@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.pref.PrefActivity">
+    tools:context=".basiccomponents.examples.pref.PrefActivity">
 
     <TextView
         android:id="@+id/textView9"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Check source code in PrefActivity"
+        android:text="Check test case:\n\n[Pref4Kotlin]\n[Pref4KotlinAndroid]\n[Pref4Java]"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.accessibility.AccessibilityActivity">
+    tools:context=".basiccomponents.examples.accessibility.AccessibilityActivity">
 
     <EditText
         android:id="@+id/etDemo1"
@@ -50,7 +50,7 @@
         app:layout_constraintStart_toEndOf="@+id/btnDemo1"
         app:layout_constraintTop_toTopOf="@+id/btnDemo1" />
 
-    <Switch
+    <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/sw1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

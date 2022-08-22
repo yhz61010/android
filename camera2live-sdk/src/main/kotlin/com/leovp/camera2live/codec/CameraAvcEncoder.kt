@@ -7,8 +7,8 @@ import android.media.MediaFormat
 import android.os.Build
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.listeners.CallbackListener
-import com.leovp.lib_bytes.toHexStringLE
-import com.leovp.log_sdk.LogContext
+import com.leovp.bytes.toHexStringLE
+import com.leovp.log.LogContext
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**

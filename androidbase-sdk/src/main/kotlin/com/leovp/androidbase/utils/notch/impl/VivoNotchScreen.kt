@@ -10,8 +10,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
-import com.leovp.lib_common_android.exts.calculateNotchRect
-import com.leovp.lib_common_android.exts.densityDpi
+import com.leovp.android.exts.calculateNotchRect
+import com.leovp.android.exts.densityDpi
 
 /** vivo will not render on notch */
 @RequiresApi(Build.VERSION_CODES.O)

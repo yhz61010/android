@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include "YuvConvert.h"
 
-#define YUV_PACKAGE_BASE "com/leovp/yuv_sdk/"
+#define YUV_PACKAGE_BASE "com/leovp/yuv/"
 
 JNIEXPORT jbyteArray Android420_To_I420(JNIEnv *env, __attribute__((unused)) jobject thiz,
                                         jbyteArray src_android420, jint src_pixel_stride_uv, jint width, jint height, jboolean vertically_flip, jint degree) {

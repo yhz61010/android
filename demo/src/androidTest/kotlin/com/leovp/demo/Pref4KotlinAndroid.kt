@@ -2,10 +2,10 @@ package com.leovp.demo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.leovp.demo.basic_components.examples.pref.MMKVPref
-import com.leovp.lib_json.toJsonString
-import com.leovp.log_sdk.LogContext
-import com.leovp.pref_sdk.PrefContext
+import com.leovp.demo.basiccomponents.examples.pref.MMKVPref
+import com.leovp.json.toJsonString
+import com.leovp.log.LogContext
+import com.leovp.pref.PrefContext
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

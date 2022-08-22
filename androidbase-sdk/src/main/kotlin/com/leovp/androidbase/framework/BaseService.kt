@@ -2,7 +2,7 @@ package com.leovp.androidbase.framework
 
 import android.app.Service
 import android.content.Context
-import com.leovp.lib_common_android.utils.LangUtil
+import com.leovp.android.utils.LangUtil
 
 /**
  * This class has already enabled Custom Language feature.

@@ -39,11 +39,11 @@ import com.leovp.camera2live.sdk.BuildConfig
 import com.leovp.camera2live.sdk.R
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.CameraSurfaceView
-import com.leovp.lib_common_android.exts.createImageFile
-import com.leovp.lib_common_android.exts.screenAvailableResolution
-import com.leovp.lib_common_kotlin.exts.fail
-import com.leovp.lib_exif.computeExifOrientation
-import com.leovp.log_sdk.LogContext
+import com.leovp.android.exts.createImageFile
+import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.kotlin.exts.fail
+import com.leovp.exif.computeExifOrientation
+import com.leovp.log.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

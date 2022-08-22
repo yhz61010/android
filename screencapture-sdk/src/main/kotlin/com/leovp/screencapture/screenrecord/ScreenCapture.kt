@@ -2,7 +2,7 @@ package com.leovp.screencapture.screenrecord
 
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjection
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy

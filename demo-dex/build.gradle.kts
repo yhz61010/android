@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.leovp.demo_dex"
+    namespace = "com.leovp.dexdemo"
 
     defaultConfig {
         applicationId = namespace

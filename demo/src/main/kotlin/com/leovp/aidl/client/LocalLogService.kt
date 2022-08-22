@@ -3,10 +3,10 @@ package com.leovp.aidl.client
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.leovp.lib_common_android.exts.toast
+import com.leovp.android.exts.toast
 import com.leovp.aidl.client.model.LocalLog
-import com.leovp.lib_json.toJsonString
-import com.leovp.log_sdk.LogContext
+import com.leovp.json.toJsonString
+import com.leovp.log.LogContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

@@ -16,8 +16,8 @@ import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.sdk.databinding.FragmentCameraViewBinding
 import com.leovp.camera2live.utils.OrientationLiveData
-import com.leovp.lib_common_android.exts.setOnSingleClickListener
-import com.leovp.log_sdk.LogContext
+import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.log.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

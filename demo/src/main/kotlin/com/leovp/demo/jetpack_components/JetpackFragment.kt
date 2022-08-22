@@ -14,8 +14,8 @@ import com.leovp.demo.jetpack_components.examples.camerax.CameraXDemoActivity
 import com.leovp.demo.jetpack_components.examples.navigation.NavigationMainActivity
 import com.leovp.demo.jetpack_components.examples.recyclerview.RecyclerviewActivity
 import com.leovp.demo.jetpack_components.examples.room.RoomActivity
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 
 class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_jetpack) {
 

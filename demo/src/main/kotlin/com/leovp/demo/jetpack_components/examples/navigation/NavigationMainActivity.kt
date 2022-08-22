@@ -3,7 +3,7 @@ package com.leovp.demo.jetpack_components.examples.navigation
 import android.os.Bundle
 import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.demo.databinding.ActivityNavigationMainBinding
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.base.ITAG
 
 /**
  * ```xml

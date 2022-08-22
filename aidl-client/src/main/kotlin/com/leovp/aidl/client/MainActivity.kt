@@ -9,11 +9,11 @@ import android.os.IBinder
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.aidl.client.model.LocalLog
-import com.leovp.lib_common_android.exts.LeoToast
-import com.leovp.lib_common_android.exts.ToastConfig
-import com.leovp.lib_common_android.exts.toast
-import com.leovp.log_sdk.LLog
-import com.leovp.log_sdk.LogContext
+import com.leovp.android.exts.LeoToast
+import com.leovp.android.exts.ToastConfig
+import com.leovp.android.exts.toast
+import com.leovp.log.LLog
+import com.leovp.log.LogContext
 
 class MainActivity : AppCompatActivity() {
     private var remoteService: ILocalLogService? = null

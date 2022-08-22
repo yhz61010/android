@@ -14,10 +14,10 @@ import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
 import com.leovp.androidbase.utils.media.VideoUtil
-import com.leovp.lib_bytes.toHexStringLE
-import com.leovp.lib_common_android.exts.toast
-import com.leovp.lib_common_android.utils.TouchHelper
-import com.leovp.log_sdk.LogContext
+import com.leovp.bytes.toHexStringLE
+import com.leovp.android.exts.toast
+import com.leovp.android.utils.TouchHelper
+import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 

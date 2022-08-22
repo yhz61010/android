@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import android.view.SurfaceView
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt

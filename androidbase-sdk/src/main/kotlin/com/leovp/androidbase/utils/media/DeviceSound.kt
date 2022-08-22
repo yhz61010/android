@@ -6,7 +6,7 @@ import android.content.Context
 import android.media.MediaActionSound
 import android.media.RingtoneManager
 import android.net.Uri
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo

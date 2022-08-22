@@ -20,8 +20,8 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
 import com.leovp.demo.R
 import com.leovp.demo.jetpack_components.examples.recyclerview.ItemBean
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**

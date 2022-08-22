@@ -153,7 +153,7 @@
     public <init>(android.content.Context, android.util.AttributeSet, int);
 }
 
--keep class com.leovp.circle_progressbar.** { *; }
+-keep class com.leovp.circleprogressbar.** { *; }
 
 # 保留Parcelable序列化类不被混淆
 -keep class * implements android.os.Parcelable {

@@ -2,7 +2,7 @@ package com.leovp.androidbase
 
 import android.util.Log
 import com.leovp.androidbase.utils.cipher.GZipUtil
-import com.leovp.lib_bytes.toHexStringLE
+import com.leovp.bytes.toHexStringLE
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

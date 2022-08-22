@@ -10,11 +10,11 @@ import com.leovp.androidbase.utils.notch.impl.AndroidPNotchScreen
 import com.leovp.androidbase.utils.notch.impl.HuaweiNotchScreen
 import com.leovp.androidbase.utils.notch.impl.MiNotchScreen
 import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
-import com.leovp.lib_common_android.exts.isHuaWei
-import com.leovp.lib_common_android.exts.isOppo
-import com.leovp.lib_common_android.exts.isVivo
-import com.leovp.lib_common_android.exts.isXiaoMi
-import com.leovp.lib_common_kotlin.utils.SingletonHolder
+import com.leovp.android.exts.isHuaWei
+import com.leovp.android.exts.isOppo
+import com.leovp.android.exts.isVivo
+import com.leovp.android.exts.isXiaoMi
+import com.leovp.kotlin.utils.SingletonHolder
 
 /**
  * Example1: Allow to render on notch area

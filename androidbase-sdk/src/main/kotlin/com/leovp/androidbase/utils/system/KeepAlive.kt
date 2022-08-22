@@ -14,7 +14,7 @@ import android.os.SystemClock
 import androidx.annotation.RawRes
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 
 /**
  * You must assign `app` which means the application context first.

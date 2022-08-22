@@ -5,7 +5,7 @@ import android.content.res.Configuration
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
-import com.leovp.lib_common_android.utils.LangUtil
+import com.leovp.android.utils.LangUtil
 
 /**
  * This class has already enabled Custom Language feature.

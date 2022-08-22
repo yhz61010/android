@@ -8,7 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityNodeInfo
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import java.lang.ref.WeakReference
 
 /**

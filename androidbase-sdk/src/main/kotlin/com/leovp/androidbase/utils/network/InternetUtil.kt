@@ -2,7 +2,7 @@
 
 package com.leovp.androidbase.utils.network
 
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import java.net.InetAddress
 import kotlin.concurrent.thread
 

@@ -11,8 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.leovp.demo.R
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 
 abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.SimpleCallback(
     ItemTouchHelper.UP or ItemTouchHelper.DOWN,

@@ -23,8 +23,8 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
 import android.view.Display
-import com.leovp.lib_common_android.exts.SmartSize
-import com.leovp.lib_common_android.exts.screenRealResolution
+import com.leovp.android.exts.SmartSize
+import com.leovp.android.exts.screenRealResolution
 
 /** Standard High Definition size for pictures and video */
 internal val SIZE_1080P: SmartSize = SmartSize(1920, 1080)

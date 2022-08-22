@@ -120,7 +120,8 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
 
         initTouchableFloatView()
 
-        initView()
+        initView1()
+        initView2()
     }
 
     private fun initTouchableFloatView() {
@@ -169,7 +170,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
     }
 
     @SuppressLint("SetTextI18n", "CutPasteId")
-    private fun initView() {
+    private fun initView1() {
         binding.btnChange.setOnSingleClickListener {
             FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)?.text =
                 "I'm f1: ${Random().nextInt(100)}"
@@ -189,7 +190,10 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
             val tv = FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)
             tv?.text = "f1\nImmersive:OFF\nSticky:${FloatView.with("f1").stickyEdge}"
         }
+    }
 
+    @SuppressLint("SetTextI18n", "CutPasteId")
+    private fun initView2() {
         binding.rgAutoDock.setOnCheckedChangeListener { _, checkedId ->
             FloatView.with("f2").dockEdge = when (checkedId) {
                 R.id.rbAutoDockNone -> DockEdge.NONE

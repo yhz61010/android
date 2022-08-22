@@ -13,7 +13,7 @@ import com.leovp.demo.basiccomponents.examples.audio.sender.base.AudioSenderWebS
 import com.leovp.log.LogContext
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retry_strategy.ConstantRetry
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import kotlinx.coroutines.*
 import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue

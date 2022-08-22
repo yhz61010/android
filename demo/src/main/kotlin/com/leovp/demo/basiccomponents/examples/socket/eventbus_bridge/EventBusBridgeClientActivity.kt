@@ -13,8 +13,8 @@ import com.leovp.basenetty.eventbus.util.EventBus
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retry_strategy.ConstantRetry
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import de.undercouch.bson4jackson.BsonFactory
 import de.undercouch.bson4jackson.BsonModule
 import io.netty.buffer.ByteBufUtil
@@ -156,7 +156,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
                     //       }
                     //   }
                 }
-                else                          -> if (LogContext.enableLog) LogContext.log.i(
+                else -> if (LogContext.enableLog) LogContext.log.i(
                     TAG,
                     "Invalid message type=[${msg::class.simpleName}]"
                 )

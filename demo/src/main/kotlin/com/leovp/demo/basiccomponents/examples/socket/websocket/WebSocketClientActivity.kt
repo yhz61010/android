@@ -13,8 +13,8 @@ import com.leovp.log.base.ITAG
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retry_strategy.ConstantRetry
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame

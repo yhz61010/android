@@ -1,4 +1,4 @@
-package com.leovp.basenetty.framework.client.retry_strategy.base
+package com.leovp.basenetty.framework.client.retrystrategy.base
 
 /**
  * Author: Michael Leo

@@ -3,7 +3,7 @@ package com.leovp.demo.basiccomponents.examples.audio.sender.base
 import com.leovp.basenetty.framework.base.decoder.CustomSocketByteStreamDecoder
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import io.netty.channel.ChannelPipeline
 import java.net.URI
 

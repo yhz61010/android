@@ -1,14 +1,19 @@
 package com.leovp.basenetty.framework.client
 
-import com.leovp.log.LogContext
 import com.leovp.basenetty.framework.base.ClientConnectStatus
 import com.leovp.basenetty.framework.base.ReadSocketDataListener
+import com.leovp.log.LogContext
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.websocketx.*
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
+import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.util.CharsetUtil
 import java.io.IOException
 
@@ -100,14 +105,14 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         if (!caughtException) {
             if (netty.disconnectManually) {
                 LogContext.log.i(tag, "handlerRemoved(disconnect) manually=${netty.disconnectManually}")
-//                netty.connectState.set(ClientConnectState.DISCONNECTED)
-//                netty.connectionListener.onDisconnected(netty)
+                //                netty.connectState.set(ClientConnectState.DISCONNECTED)
+                //                netty.connectionListener.onDisconnected(netty)
             } else {
                 LogContext.log.i(tag, "Set failed exception status.")
                 netty.connectStatus.set(ClientConnectStatus.FAILED)
                 netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect exception or disconnect")
                 // For instance, "Unable to resolve host xxx" error will go into here when you connect to server without network.
-//                LogContext.log.e(tag, "=====> CHK11 <=====")
+                //                LogContext.log.e(tag, "=====> CHK11 <=====")
                 netty.doRetry()
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
@@ -116,7 +121,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
             // When network lost, you will go into here.
-//            LogContext.log.e(tag, "=====> CHK13 <=====")
+            //            LogContext.log.e(tag, "=====> CHK13 <=====")
             netty.doRetry()
         }
     }
@@ -139,12 +144,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.e(tag, "===== Caught $exceptionType =====")
         LogContext.log.e(tag, "Exception: ${cause.message}", cause)
 
-//        val channel = ctx.channel()
-//        val isChannelActive = channel.isActive
-//        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
-//        if (isChannelActive) {
-//            ctx.close()
-//        }
+        //        val channel = ctx.channel()
+        //        val isChannelActive = channel.isActive
+        //        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
+        //        if (isChannelActive) {
+        //            ctx.close()
+        //        }
         runCatching {
             ctx.close().sync()
         }.onFailure {
@@ -159,9 +164,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             LogContext.log.w(tag, "Network lost")
             // This exception will trigger handlerRemoved(), so we retry at that time.
 
-//            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-//            LogContext.log.e(tag, "=====> CHK12 <=====")
-//            netty.doRetry()
+            //            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
+            //            LogContext.log.e(tag, "=====> CHK12 <=====")
+            //            netty.doRetry()
         } else {
             netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)
@@ -191,12 +196,10 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             }
 
             if (msg is FullHttpResponse) {
-//                LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
-//                if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                val exceptionInfo =
-                    "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${
-                    msg.content().toString(CharsetUtil.UTF_8)
-                    }) isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
+                // LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
+                // if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
+                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)}) " +
+                    "isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)
             }

@@ -32,9 +32,9 @@ android {
             signingConfig = releaseSigning
         }
 
-        getByName("release") {
-            signingConfig = releaseSigning
-        }
+//        getByName("release") {
+//            signingConfig = releaseSigning
+//        }
     }
 
     lint {

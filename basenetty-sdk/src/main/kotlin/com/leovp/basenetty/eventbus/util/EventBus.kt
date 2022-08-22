@@ -98,7 +98,7 @@ object EventBus {
         param.message?.let { eventBusObj[EventBusAttributes.BODY] = it }
 
         when (param.type) {
-            EventBusAttributes.TYPE_SEND     -> {
+            EventBusAttributes.TYPE_SEND -> {
                 param.handler?.let {
                     val replyAddress = UUID.randomUUID().toString()
                     //                    LogContext.log.i("serializeData", "replyAddress=$replyAddress")
@@ -114,7 +114,7 @@ object EventBus {
                 }
                 param.handler?.let { addHandler(param.address, it) }
             }
-            else                             -> Unit
+            else -> Unit
         }
         return eventBusObj
     }

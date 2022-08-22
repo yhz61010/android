@@ -1,6 +1,6 @@
-package com.leovp.basenetty.framework.client.retry_strategy
+package com.leovp.basenetty.framework.client.retrystrategy
 
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 
 /**
  * Author: Michael Leo

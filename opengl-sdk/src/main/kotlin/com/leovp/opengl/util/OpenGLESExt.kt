@@ -188,7 +188,12 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
 
     // 6. 验证链接状态
     if (linkStatus[0] != GLES20.GL_TRUE) {
-        LogContext.log.e(TAG, "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)} linkStatus=${linkStatus[0]}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(
+            TAG,
+            "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)} " +
+                "linkStatus=${linkStatus[0]}",
+            outputType = ILog.OUTPUT_TYPE_SYSTEM
+        )
         // 链接失败则删除程序对象
         GLES20.glDeleteProgram(programObjId)
 
@@ -223,7 +228,12 @@ fun validateProgram(programObjectId: Int): Boolean {
     GLES20.glValidateProgram(programObjectId)
     val validateStatus = IntArray(1)
     GLES20.glGetProgramiv(programObjectId, GLES20.GL_VALIDATE_STATUS, validateStatus, 0)
-    LogContext.log.i(TAG, "Results of validating program: ${validateStatus[0]}\nLog:${GLES20.glGetProgramInfoLog(programObjectId)}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+    LogContext.log.i(
+        TAG,
+        "Results of validating program: ${validateStatus[0]}\n" +
+            "Log:${GLES20.glGetProgramInfoLog(programObjectId)}",
+        outputType = ILog.OUTPUT_TYPE_SYSTEM
+    )
     return validateStatus[0] != 0
 }
 

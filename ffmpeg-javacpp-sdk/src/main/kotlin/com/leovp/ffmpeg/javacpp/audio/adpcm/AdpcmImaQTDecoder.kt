@@ -29,37 +29,35 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
      * Channel data is interleaved per-chunk.
      */
     fun chunkSize(): Int {
-        return 34 * channel
+        return ENCODED_CHUNKS_SIZE * channel
     }
 
     fun decode(adpcmBytes: ByteArray): Pair<ByteArray, ByteArray>? {
         if (adpcmBytes.size != chunkSize()) {
-            throw RuntimeException(
+            throw IllegalArgumentException(
                 "Invalid ChunkSize: ${adpcmBytes.size}, required: ${chunkSize()}, " +
                     "In QuickTime, IMA is encoded by chunks of 34*channels bytes (=64 samples)"
             )
         }
-        var rtnCode: Int
         val pkt = avcodec.av_packet_alloc()
         try {
             val p = BytePointer(*adpcmBytes)
             pkt.data(p)
             pkt.size(adpcmBytes.size)
-            rtnCode = avcodec.avcodec_send_packet(ctx, pkt)
-            if (rtnCode < 0) {
+            val rtnCodeForSend = avcodec.avcodec_send_packet(ctx, pkt)
+            val frame = avutil.av_frame_alloc()
+            val rtnCodeForReceive = avcodec.avcodec_receive_frame(ctx, frame)
+            if (rtnCodeForSend < 0 || rtnCodeForReceive < 0) {
+                avutil.av_frame_free(frame)
                 avcodec.av_packet_free(pkt)
                 return null
             }
-            val frame = avutil.av_frame_alloc()
-            if (avcodec.avcodec_receive_frame(ctx, frame).also { rtnCode = it } < 0) {
-                avutil.av_frame_free(frame)
-                return null
-            }
 
-            //                if (LogContext.enableLog) LogContext.log.i(
-            //                    "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())} ch:${frame.channels()} sampleRate:${frame.sample_rate()} np_samples:${frame.nb_samples()} " +
-            //                            " linesize[0]=${frame.linesize(0)} fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
-            //                )
+            // if (LogContext.enableLog) LogContext.log.i(
+            //     "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())} ch:${frame.channels()} " +
+            //         "sampleRate:${frame.sample_rate()} np_samples:${frame.nb_samples()} " +
+            //         " linesize[0]=${frame.linesize(0)} fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
+            // )
 
             val bpLeft: BytePointer = frame.extended_data(0)
             val leftChunkBytes = ByteArray(frame.linesize(0))
@@ -84,6 +82,8 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
     }
 
     companion object {
+        private const val ENCODED_CHUNKS_SIZE = 34
+
         fun getSampleFormatName(fmt: Int): String? =
             avutil.av_get_sample_fmt_name(fmt).let { ptr -> return if (ptr != null && !ptr.isNull) ptr.string else null }
 

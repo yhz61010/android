@@ -4,7 +4,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineScope

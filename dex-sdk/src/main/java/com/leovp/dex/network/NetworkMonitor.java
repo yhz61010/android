@@ -6,6 +6,7 @@ import static android.net.NetworkCapabilities.TRANSPORT_ETHERNET;
 import static android.net.NetworkCapabilities.TRANSPORT_VPN;
 import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -17,6 +18,7 @@ import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Looper;
 
+import androidx.annotation.RequiresPermission;
 import com.leovp.dex.DexHelper;
 import com.leovp.dex.util.CmnUtil;
 
@@ -105,6 +107,7 @@ public class NetworkMonitor {
 //        String networkType = getType(network);
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private String getType(Network network) {
         try {
             NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
@@ -142,6 +145,7 @@ public class NetworkMonitor {
         return null;
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private String getSSID(String srcSSID, Network network) {
         try {
             NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);

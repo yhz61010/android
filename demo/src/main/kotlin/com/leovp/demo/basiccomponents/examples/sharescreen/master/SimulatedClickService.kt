@@ -66,7 +66,11 @@ class SimulatedClickService : AccessibilityService() {
         val st = SystemClock.elapsedRealtimeNanos()
         // FIXME Can I initialized AccessibilityUtil in onCreate()?
         AccessibilityUtil.init(this)
-        LogContext.log.i(TAG, "init cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us onAccessibilityEvent [$className]:$eventType")
+        LogContext.log.i(
+            TAG,
+            "init cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us " +
+                "onAccessibilityEvent [$className]:$eventType"
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.N)

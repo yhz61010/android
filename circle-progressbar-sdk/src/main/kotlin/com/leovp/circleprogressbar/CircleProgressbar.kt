@@ -6,7 +6,11 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Resources
 import android.content.res.TypedArray
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.CornerPathEffect
+import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Parcelable
@@ -381,9 +385,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         startAngle: Float,
         sweepAngle: Float
     ) {
-        if (State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) throw IllegalArgumentException(
+        require(State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) {
             "Illegal state. Current state=$currState"
-        )
+        }
         if (_cancelable) {
             setBgDrawable(canvas, cancelItem.backgroundDrawable, cancelItem.backgroundColor)
         } else {

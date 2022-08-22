@@ -11,9 +11,9 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
-import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.android.exts.createImageFile
 import com.leovp.android.utils.FileDocumentUtil
+import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.log.LogContext
 
 /**

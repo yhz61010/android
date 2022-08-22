@@ -16,15 +16,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.camera.core.*
+import androidx.camera.core.CameraInfoUnavailableException
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.Preview
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.hjq.permissions.XXPermissions
-import com.leovp.camerax.sdk.R
-import com.leovp.camerax.sdk.databinding.*
+import com.leovp.android.exts.DEGREE_TO_SURFACE_ROTATION
+import com.leovp.android.exts.SURFACE_ROTATION_TO_DEGREE
+import com.leovp.android.exts.SmartSize
+import com.leovp.android.exts.circularClose
+import com.leovp.android.exts.circularReveal
+import com.leovp.android.exts.getRatio
+import com.leovp.android.exts.layoutInflater
+import com.leovp.android.exts.screenRealResolution
+import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.android.exts.simulateClick
 import com.leovp.camerax.analyzer.LuminosityAnalyzer
 import com.leovp.camerax.enums.CameraRatio
 import com.leovp.camerax.enums.CameraTimer
@@ -32,20 +44,25 @@ import com.leovp.camerax.enums.CapturedImageStrategy
 import com.leovp.camerax.fragments.base.BaseCameraXFragment
 import com.leovp.camerax.listeners.CameraXTouchListener
 import com.leovp.camerax.listeners.CaptureImageListener
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.CameraUiContainerBottomBinding
+import com.leovp.camerax.sdk.databinding.CameraUiContainerTopBinding
+import com.leovp.camerax.sdk.databinding.FragmentCameraBinding
+import com.leovp.camerax.sdk.databinding.IncPreviewGridBinding
+import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
 import com.leovp.camerax.utils.OrientationLiveData
 import com.leovp.camerax.utils.cameraSensorOrientation
 import com.leovp.camerax.utils.getCameraSupportedSize
 import com.leovp.camerax.utils.toggleButton
-import com.leovp.android.exts.*
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
+import java.util.*
+import kotlin.properties.Delegates
+import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
-import kotlin.properties.Delegates
-import kotlin.system.measureTimeMillis
 
 /**
  * Main fragment for this app. Implements all camera operations including:
@@ -255,7 +272,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         val cameraOrientation = characteristics.cameraSensorOrientation()
         val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
-        val tempSupportedSize: SmartSize? = when (selectedRatio) {
+        val supportedSize: SmartSize? = when (selectedRatio) {
             CameraRatio.R16v9 -> characteristics.getCameraSupportedSize()
                 .firstOrNull { getRatio(it) == "16:9" }
             CameraRatio.R1v1 -> characteristics.getCameraSupportedSize()
@@ -268,8 +285,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 )
             }
         }
-        val supportedSize = tempSupportedSize
-            ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
+        checkNotNull(supportedSize) { "Unknown camera size $supportedSize" }
         val targetSize = Size(supportedSize.short, supportedSize.long)
 
         LogContext.log.w(
@@ -354,7 +370,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // CameraProvider
         val camProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
+        checkNotNull(camProvider) { "Camera initialization failed. Did you call configCamera() method?" }
         try {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
@@ -574,7 +590,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 captureImageListener?.onSavedImageUri(null, exc)
                                 return@captureForOutputFile
                             }
-                            if (savedImage == null) throw IllegalArgumentException("savedImage can't be null")
+                            requireNotNull(savedImage) { "savedImage can't be null" }
 
                             //  LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
                             // val cost = measureTimeMillis {

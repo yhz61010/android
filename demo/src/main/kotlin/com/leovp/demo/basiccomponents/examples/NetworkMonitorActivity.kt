@@ -1,7 +1,9 @@
 package com.leovp.demo.basiccomponents.examples
 
+import android.Manifest
 import android.os.Bundle
 import android.view.View
+import androidx.annotation.RequiresPermission
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
@@ -33,6 +35,7 @@ class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorB
 
     private var networkMonitor: NetworkMonitor? = null
 
+    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

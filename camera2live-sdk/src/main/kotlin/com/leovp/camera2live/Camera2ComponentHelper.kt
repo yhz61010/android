@@ -5,7 +5,14 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.ImageFormat
 import android.graphics.drawable.AnimationDrawable
-import android.hardware.camera2.*
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CameraMetadata
+import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CaptureResult
+import android.hardware.camera2.TotalCaptureResult
 import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
 import android.hardware.camera2.params.SessionConfiguration.SESSION_REGULAR
@@ -28,6 +35,9 @@ import androidx.annotation.RequiresPermission
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.exts.createImageFile
+import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -39,14 +49,9 @@ import com.leovp.camera2live.sdk.BuildConfig
 import com.leovp.camera2live.sdk.R
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.CameraSurfaceView
-import com.leovp.android.exts.createImageFile
-import com.leovp.android.exts.screenAvailableResolution
-import com.leovp.kotlin.exts.fail
 import com.leovp.exif.computeExifOrientation
+import com.leovp.kotlin.exts.fail
 import com.leovp.log.LogContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -59,6 +64,9 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Author: Michael Leo
@@ -206,12 +214,12 @@ class Camera2ComponentHelper(
         //        }
 
         cameraEncoder.setDataUpdateCallback(object :
-                CallbackListener {
-                override fun onCallback(h264Data: ByteArray) {
-                    encodeListener?.onUpdate(h264Data)
-                    if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
-                }
-            })
+            CallbackListener {
+            override fun onCallback(h264Data: ByteArray) {
+                encodeListener?.onUpdate(h264Data)
+                if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
+            }
+        })
     }
 
     /**
@@ -239,7 +247,7 @@ class Camera2ComponentHelper(
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogContext.log.e(TAG, "initDebugOutput() error.")
         }
     }
 
@@ -259,7 +267,7 @@ class Camera2ComponentHelper(
                 videoH264OsForDebug?.close()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogContext.log.e(TAG, "closeDebugOutput() error.")
         }
     }
 
@@ -634,11 +642,7 @@ class Camera2ComponentHelper(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 session.abortCaptures()
             }
-            try {
-                Thread.sleep(100)
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-            }
+            sleep(100)
         }
     }
 
@@ -725,7 +729,8 @@ class Camera2ComponentHelper(
                 val i420Data = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
                 val convertedYUVData = i420Data
 
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2, image.height / 2, com.leovp.yuv_sdk.YuvUtil.SCALE_FILTER_NONE)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2,
+                // image.height / 2, com.leovp.yuv_sdk.YuvUtil.SCALE_FILTER_NONE)
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.cropI420(i420Data, image.width, image.height, 400, 400, 100, 100)!!
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
                 // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)
@@ -743,7 +748,8 @@ class Camera2ComponentHelper(
                 // val scaledWidth = (image.width shr 1) and 7.inv()
                 // val scaledHeight = (image.height shr 1) and 7.inv()
                 // LogContext.log.w(message ="scaled width=$scaledWidth x $scaledHeight")
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleNv12(nv12Data, image.width, image.height, scaledWidth, scaledHeight)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleNv12(nv12Data, image.width, image.height,
+                // scaledWidth, scaledHeight)
 
                 videoYuvOsForDebug?.write(convertedYUVData)
                 image.close()
@@ -962,16 +968,14 @@ class Camera2ComponentHelper(
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
-        torchOn = try {
+        torchOn = runCatching {
             session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //                        mCameraManager.setTorchMode(mCameraId, true);
             //                    }
             LogContext.log.w(TAG, "Flash ON")
             true
-        } catch (e: Exception) {
-            false
-        }
+        }.getOrElse { false }
     }
 
     fun turnOffFlash() {
@@ -1141,7 +1145,7 @@ class Camera2ComponentHelper(
             imageReaderHandler.removeCallbacksAndMessages(null)
             imageReaderThread.quitSafely()
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogContext.log.e(TAG, "stopCameraThread() error.")
         }
         LogContext.log.i(TAG, "=====> stopCameraThread() being called <=====")
     }
@@ -1190,7 +1194,8 @@ class Camera2ComponentHelper(
 
         /**
          * This is the desired size.
-         * In order to use it for camera preview size and avc encode size, this value will be changed to a appropriate size which area is near desired size.
+         * In order to use it for camera preview size and avc encode size,
+         * this value will be changed to a appropriate size which area is near desired size.
          */
         val CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL = Size(360, 640)
 

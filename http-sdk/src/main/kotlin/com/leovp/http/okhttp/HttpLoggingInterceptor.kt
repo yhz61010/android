@@ -2,7 +2,6 @@ package com.leovp.http.okhttp
 
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
-import java.io.EOFException
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers
@@ -237,7 +236,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
          * of code points to detect unicode control characters commonly used in binary file signatures.
          */
         fun isPlaintext(buffer: Buffer): Boolean {
-            return try {
+            return runCatching {
                 val prefix = Buffer()
                 val byteCount = if (buffer.size < 64) buffer.size else 64
                 buffer.copyTo(prefix, 0, byteCount)
@@ -251,8 +250,9 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                     }
                 }
                 true
-            } catch (e: EOFException) {
-                false // Truncated UTF-8 sequence.
+            }.getOrElse {
+                // Truncated UTF-8 sequence.
+                false
             }
         }
     }

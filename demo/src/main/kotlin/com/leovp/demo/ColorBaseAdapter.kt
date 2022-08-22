@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
  * Author: Michael Leo
  * Date: 2020/9/4 上午10:56
  */
-class ColorBaseAdapter(private val dataArray: List<String>, private val colorArray: Array<Int>) :
+class ColorBaseAdapter(private val dataArray: Array<String>, private val colorArray: Array<Int>) :
     RecyclerView.Adapter<ColorBaseAdapter.ItemViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 

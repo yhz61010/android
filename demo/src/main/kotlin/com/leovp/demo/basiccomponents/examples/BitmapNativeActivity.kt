@@ -6,18 +6,22 @@ import android.os.Bundle
 import android.os.Environment
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.exts.createFile
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBitmapNativeBinding
+import com.leovp.image.BitmapProcessor
+import com.leovp.image.flipHorizontal
+import com.leovp.image.flipVertical
+import com.leovp.image.rotate
+import com.leovp.image.writeToFile
 import com.leovp.jpeg.JPEGUtil
-import com.leovp.android.exts.createFile
 import com.leovp.kotlin.exts.round
-import com.leovp.image.*
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import kotlin.system.measureNanoTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.system.measureNanoTime
 
 class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>() {
     override fun getTagName(): String = ITAG

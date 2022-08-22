@@ -25,7 +25,7 @@ class AacEncoder(
     }
 
     private var outputFormat: MediaFormat? = null
-    private lateinit var aacEncoder: MediaCodec
+    private lateinit var encoder: MediaCodec
     private var frameCount: Long = 0
 
     val queue = ArrayBlockingQueue<ByteArray>(10)
@@ -38,7 +38,7 @@ class AacEncoder(
         LogContext.log.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
 //        csd0 = getAudioEncodingCsd0(PROFILE_AAC_LC, sampleRate, channelCount)!!
 //        LogContext.log.w(TAG, "Audio csd0=${csd0.toHexStringLE()}")
-        aacEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
+        encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
         val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
         with(mediaFormat) {
             setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
@@ -46,13 +46,13 @@ class AacEncoder(
             // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024)
         }
-        aacEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        aacEncoder.setCallback(mediaCodecCallback)
-        aacEncoder.start()
+        encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        encoder.setCallback(mediaCodecCallback)
+        encoder.start()
     }
 
     fun stop() {
-        runCatching { aacEncoder.stop() }.onFailure { it.printStackTrace() }
+        runCatching { encoder.stop() }.onFailure { it.printStackTrace() }
     }
 
     /**
@@ -60,7 +60,7 @@ class AacEncoder(
      */
     fun release() {
         stop()
-        runCatching { aacEncoder.release() }.onFailure { it.printStackTrace() }
+        runCatching { encoder.release() }.onFailure { it.printStackTrace() }
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
@@ -221,7 +221,7 @@ class AacEncoder(
     // https://cloud.tencent.com/developer/ask/61404
     // FIXME
     // Has bugs!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
-    @Suppress("SameParameterValue")
+    @Suppress("SameParameterValue", "unused")
     private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
         val freqIdx = getSampleFrequencyIndex(sampleRate)
         if (freqIdx == -1) return null

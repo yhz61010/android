@@ -2,16 +2,20 @@ package com.leovp.androidbase.utils
 
 import android.app.Activity
 import android.content.res.Resources
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.ColorFilter
+import android.graphics.Paint
+import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.IntRange
 import androidx.annotation.Keep
+import com.leovp.android.exts.sp2px
 import com.leovp.androidbase.exts.kotlin.getToday
 import com.leovp.androidbase.sdk.BuildConfig
 import com.leovp.androidbase.sdk.R
-import com.leovp.android.exts.sp2px
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.*

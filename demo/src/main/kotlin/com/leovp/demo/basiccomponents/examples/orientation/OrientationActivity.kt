@@ -9,12 +9,18 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.IRotationWatcher
 import android.view.OrientationEventListener
+import com.leovp.android.exts.getDeviceOrientation
+import com.leovp.android.exts.screenOrientationName
+import com.leovp.android.exts.screenSurfaceRotation
+import com.leovp.android.exts.screenWidth
+import com.leovp.android.exts.surfaceRotationLiteralName
+import com.leovp.android.exts.surfaceRotationName
+import com.leovp.android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityOrientationBinding
-import com.leovp.android.exts.*
-import com.leovp.reflection.wrappers.ServiceManager
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.reflection.wrappers.ServiceManager
 
 class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>() {
     override fun getTagName(): String = ITAG

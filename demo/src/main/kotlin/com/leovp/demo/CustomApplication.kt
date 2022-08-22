@@ -3,12 +3,12 @@ package com.leovp.demo
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
-import com.leovp.androidbase.framework.BaseApplication
-import com.leovp.demo.basiccomponents.examples.koin.*
 import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.ToastConfig
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.LangUtil
+import com.leovp.androidbase.framework.BaseApplication
+import com.leovp.demo.basiccomponents.examples.koin.*
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
 import com.leovp.pref.LPref

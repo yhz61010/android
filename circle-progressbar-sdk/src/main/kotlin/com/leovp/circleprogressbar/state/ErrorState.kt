@@ -14,7 +14,7 @@ import com.leovp.circleprogressbar.base.State
  * Date: 2022/1/28 17:51
  */
 class ErrorState(view: View) : State(view) {
-    override fun state(): Type = Type.STATE_ERROR
+    override fun status(): Type = Type.STATE_ERROR
 
     override fun setAttributes(
         context: Context,

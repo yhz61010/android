@@ -5,16 +5,21 @@ import com.leovp.android.exts.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
 import com.leovp.audio.base.AudioType
+import com.leovp.basenetty.framework.server.BaseNettyServer
+import com.leovp.basenetty.framework.server.ServerConnectListener
 import com.leovp.demo.BuildConfig
 import com.leovp.demo.basiccomponents.examples.audio.AudioActivity
 import com.leovp.demo.basiccomponents.examples.audio.receiver.base.AudioReceiverWebSocket
 import com.leovp.demo.basiccomponents.examples.audio.receiver.base.AudioReceiverWebSocketHandler
 import com.leovp.log.LogContext
-import com.leovp.basenetty.framework.server.BaseNettyServer
-import com.leovp.basenetty.framework.server.ServerConnectListener
 import io.netty.channel.Channel
-import kotlinx.coroutines.*
 import java.util.concurrent.ArrayBlockingQueue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -33,8 +38,8 @@ class AudioReceiver {
 
     private var audioPlayer: AudioPlayer? = null
     private var micRecorder: MicRecorder? = null
-//    private var micOs: BufferedOutputStream? = null
-//    private var rcvOs: BufferedOutputStream? = null
+    //    private var micOs: BufferedOutputStream? = null
+    //    private var rcvOs: BufferedOutputStream? = null
 
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
     private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
@@ -90,7 +95,7 @@ class AudioReceiver {
                     override fun onRecording(data: ByteArray) {
                         recAudioQueue.offer(data)
                         if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
-//                    runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
+                        //                    runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
                     }
 
                     override fun onStop(stopResult: Boolean) {
@@ -105,7 +110,7 @@ class AudioReceiver {
                 while (true) {
                     ensureActive()
                     runCatching {
-//                      LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
+                        //                      LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
                         recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it) }
                         delay(10)
                     }.onFailure { it.printStackTrace() }
@@ -128,8 +133,8 @@ class AudioReceiver {
     fun startServer(ctx: Context) {
         this.ctx = ctx
         audioPlayer = AudioPlayer(ctx, AudioActivity.audioDecoderInfo, defaultAudioType)
-//        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
-//        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
+        //        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
+        //        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
 
         receiverServer = AudioReceiverWebSocket(10020, connectionListener).also {
             receiverHandler = AudioReceiverWebSocketHandler(it)
@@ -139,8 +144,8 @@ class AudioReceiver {
     }
 
     fun stopServer() {
-//        micOs?.closeQuietly()
-//        rcvOs?.closeQuietly()
+        //        micOs?.closeQuietly()
+        //        rcvOs?.closeQuietly()
         ioScope.cancel()
         // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
         // Please check the initializing of AudioTrack in [PcmPlayer]

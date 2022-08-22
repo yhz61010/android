@@ -4,19 +4,24 @@ import android.content.pm.ConfigurationInfo
 import android.content.pm.ServiceInfo
 import android.os.Bundle
 import androidx.core.content.pm.PackageInfoCompat
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.android.exts.getApplicationSignatures
+import com.leovp.android.exts.getPackageInfo
+import com.leovp.android.exts.navigationBarHeight
+import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.android.exts.screenRealResolution
+import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.network.ConnectionLiveData
+import com.leovp.bytes.toHexString
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityMainBinding
-import com.leovp.bytes.toHexString
-import com.leovp.android.exts.*
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
@@ -38,7 +43,9 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val navController = findNavController(R.id.nav_host_fragment_activity_main)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+        // val navController = findNavController(R.id.nav_host_fragment_activity_main)
+        val navController = navHostFragment.navController
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         val appBarConfiguration =

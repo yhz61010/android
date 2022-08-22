@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.kotlin.parcelize)
-    `maven-publish`
 }
 
 android {

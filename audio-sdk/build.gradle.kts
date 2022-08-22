@@ -11,11 +11,11 @@ android {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }
 
-//    publishing {
-//        // Publishes "release" build variant with "release" component created by
-//        // Android Gradle plugin
-//        singleVariant("release")
-//    }
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
 }
 
 dependencies {

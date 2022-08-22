@@ -24,6 +24,7 @@ class OrientationService : BaseService() {
 
     private var lastOrientation = -1
 
+    @SuppressLint("SwitchIntDef")
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (newConfig.orientation != lastOrientation) {

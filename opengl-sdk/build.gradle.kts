@@ -6,13 +6,13 @@ plugins {
     `maven-publish`
 }
 
-// android {
-//        publishing {
-//        // Publishes "release" build variant with "release" component created by
-//        // Android Gradle plugin
-//        singleVariant("release")
-//    }
-// }
+android {
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release")
+    }
+}
 
 dependencies {
     api(libs.androidx.annotation)

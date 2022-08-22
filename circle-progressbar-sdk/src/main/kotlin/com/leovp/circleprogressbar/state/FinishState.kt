@@ -14,7 +14,7 @@ import com.leovp.circleprogressbar.base.State
  * Date: 2022/1/28 16:33
  */
 class FinishState(view: View) : State(view) {
-    override fun state(): Type = Type.STATE_FINISHED
+    override fun status(): Type = Type.STATE_FINISHED
 
     override fun setAttributes(
         context: Context,

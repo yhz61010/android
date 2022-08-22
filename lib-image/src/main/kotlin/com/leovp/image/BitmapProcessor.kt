@@ -126,7 +126,7 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
      *
      * https://kotlinlang.org/docs/java-interop.html#finalize
      */
-    protected fun finalize() {
+    internal fun finalize() {
         if (bitmapByteBuffer == null) return
         Log.w(
             "LEO-Native",

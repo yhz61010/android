@@ -5,18 +5,23 @@ import android.content.Context
 import com.leovp.android.exts.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
+import com.leovp.basenetty.framework.client.BaseNettyClient
+import com.leovp.basenetty.framework.client.ClientConnectListener
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.demo.BuildConfig
 import com.leovp.demo.basiccomponents.examples.audio.AudioActivity
 import com.leovp.demo.basiccomponents.examples.audio.receiver.AudioReceiver.Companion.defaultAudioType
 import com.leovp.demo.basiccomponents.examples.audio.sender.base.AudioSenderWebSocket
 import com.leovp.demo.basiccomponents.examples.audio.sender.base.AudioSenderWebSocketHandler
 import com.leovp.log.LogContext
-import com.leovp.basenetty.framework.client.BaseNettyClient
-import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
-import kotlinx.coroutines.*
 import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -98,7 +103,7 @@ class AudioSender {
             while (true) {
                 ensureActive()
                 runCatching {
-//                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
+                    //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
                     recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it) }
                     delay(10)
                 }.onFailure { it.printStackTrace() }

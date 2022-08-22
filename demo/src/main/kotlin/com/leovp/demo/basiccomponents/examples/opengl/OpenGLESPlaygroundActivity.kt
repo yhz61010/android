@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import com.leovp.android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.basiccomponents.examples.opengl.renderers.L8_1_FilterRenderer
-import com.leovp.demo.basiccomponents.examples.opengl.renderers.base_L7.L7_BaseRenderer
+import com.leovp.demo.basiccomponents.examples.opengl.renderers.L8U1FilterRenderer
+import com.leovp.demo.basiccomponents.examples.opengl.renderers.baseL7.L7BaseRenderer
 import com.leovp.demo.databinding.ActivityOpenGlesplaygroundBinding
 import com.leovp.android.exts.createFile
 import com.leovp.android.exts.getSerializableExtraOrNull
@@ -36,12 +36,12 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlespla
         val renderer: GLSurfaceView.Renderer = OpenGLES20Activity.getRenderer(item.clazz, this)!!
         binding.glSurfaceView.setRenderer(renderer)
         binding.glSurfaceView.renderMode = when (renderer) {
-            is L8_1_FilterRenderer -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            is L8U1FilterRenderer -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
             else -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
         }
 
         when (renderer) {
-            is L7_BaseRenderer -> readCurrentFrame(renderer)
+            is L7BaseRenderer -> readCurrentFrame(renderer)
         }
 
         binding.glSurfaceView.setOnClickListener {
@@ -52,7 +52,7 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlespla
         }
     }
 
-    private fun readCurrentFrame(renderer: L7_BaseRenderer) {
+    private fun readCurrentFrame(renderer: L7BaseRenderer) {
         val imageView = ImageView(this)
         val params =
             ViewGroup.LayoutParams(

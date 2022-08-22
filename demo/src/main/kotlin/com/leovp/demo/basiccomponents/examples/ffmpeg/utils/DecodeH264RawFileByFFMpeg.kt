@@ -1,17 +1,22 @@
 package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 
 import android.os.SystemClock
-import com.leovp.androidbase.exts.kotlin.truncate
-import com.leovp.ffmpeg.video.H264HevcDecoder
-import com.leovp.bytes.toHexStringLE
 import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.androidbase.exts.kotlin.truncate
+import com.leovp.bytes.toHexStringLE
+import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.opengl.BaseRenderer
 import com.leovp.opengl.ui.LeoGLSurfaceView
-import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo

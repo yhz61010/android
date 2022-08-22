@@ -3,16 +3,16 @@ package com.leovp.demo.basiccomponents.examples.socket
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.databinding.ActivitySocketServerBinding
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.NetworkUtil
-import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 import com.leovp.basenetty.framework.server.BaseNettyServer
 import com.leovp.basenetty.framework.server.BaseServerChannelInboundHandler
 import com.leovp.basenetty.framework.server.ServerConnectListener
+import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivitySocketServerBinding
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -56,7 +56,10 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
         override fun onStopped() {
             LogContext.log.i(tag, "onStop")
             toast("onStop", debug = true)
-            runOnUiThread { binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped"; binding.sv.fullScroll(View.FOCUS_DOWN) }
+            runOnUiThread {
+                binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped"
+                binding.sv.fullScroll(View.FOCUS_DOWN)
+            }
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -129,7 +132,11 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
 
     // =====================================================
 
-    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(port, connectionListener, false) {
+    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(
+        port,
+        connectionListener,
+        false
+    ) {
         override fun getTagName() = "SSA-S"
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             super.addLastToPipeline(pipeline)

@@ -24,6 +24,7 @@ import com.leovp.android.utils.NetworkUtil
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -262,6 +263,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
                         else -> null
                     }
                     val infoStr = String.format(
+                        Locale.ENGLISH,
                         "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr, uploadSpeedStr,
                         if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",

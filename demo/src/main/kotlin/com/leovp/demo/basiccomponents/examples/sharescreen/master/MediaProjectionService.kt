@@ -7,12 +7,17 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.IBinder
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
+import com.leovp.android.exts.getBaseDirString
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.demo.basiccomponents.BasicFragment
-import com.leovp.android.exts.getBaseDirString
 import com.leovp.image.compressBitmap
 import com.leovp.image.writeToFile
 import com.leovp.json.toJsonString
@@ -23,10 +28,10 @@ import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import io.karn.notify.Notify
-import okhttp3.internal.closeQuietly
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import okhttp3.internal.closeQuietly
 
 /**
  * Android Q+(Android 10+) MediaProjection must be used in Service and with android:foregroundServiceType="mediaProjection" permission.
@@ -75,7 +80,7 @@ class MediaProjectionService : Service() {
                 try {
                     videoH26xOs.write(data)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    LogContext.log.e("onDataUpdate error")
                 }
             }
             //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")

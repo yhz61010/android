@@ -1,5 +1,6 @@
 package com.leovp.kotlin.exts
 
+import java.util.*
 import kotlin.math.ln
 import kotlin.math.pow
 
@@ -13,12 +14,12 @@ const val TB: Long = 1000_000_000_000
 const val PB: Long = 1000_000_000_000_000
 const val EB: Long = 1000_000_000_000_000_000
 
-const val KiB: Long = 1L shl 10
-const val MiB: Long = 1L shl 20
-const val GiB: Long = 1L shl 30
-const val TiB: Long = 1L shl 40
-const val PiB: Long = 1L shl 50
-const val EiB: Long = 1L shl 60
+const val KIB: Long = 1L shl 10
+const val MIB: Long = 1L shl 20
+const val GIB: Long = 1L shl 30
+const val TIB: Long = 1L shl 40
+const val PIB: Long = 1L shl 50
+const val EIB: Long = 1L shl 60
 
 /**
  * B -> kB
@@ -60,37 +61,37 @@ fun Long.toEB() = this * 1.0F / EB
  * B -> KiB
  * Convert Byte to KiB (1KiB = 1024B).
  */
-fun Long.toKiB() = this * 1.0F / KiB
+fun Long.toKiB() = this * 1.0F / KIB
 
 /**
  * B -> MiB
  * Convert Byte to MiB (1KiB = 1024B).
  */
-fun Long.toMiB() = this * 1.0F / MiB
+fun Long.toMiB() = this * 1.0F / MIB
 
 /**
  * B -> GiB
  * Convert Byte to GiB (1KiB = 1024B).
  */
-fun Long.toGiB() = this * 1.0F / GiB
+fun Long.toGiB() = this * 1.0F / GIB
 
 /**
  * B -> TiB
  * Convert Byte to TiB (1KiB = 1024B).
  */
-fun Long.toTiB() = this * 1.0F / TiB
+fun Long.toTiB() = this * 1.0F / TIB
 
 /**
  * B -> PiB
  * Convert Byte to PiB (1KiB = 1024B).
  */
-fun Long.toPiB() = this * 1.0F / PiB
+fun Long.toPiB() = this * 1.0F / PIB
 
 /**
  * B -> EiB
  * Convert Byte to EiB (1KiB = 1024B).
  */
-fun Long.toEiB() = this * 1.0F / EiB
+fun Long.toEiB() = this * 1.0F / EIB
 
 /**
  * B -> XiB
@@ -98,12 +99,12 @@ fun Long.toEiB() = this * 1.0F / EiB
  */
 fun Long.autoByteInBinary(precision: Int = 2): String = when {
     this < 0 -> "NA"
-    this >= EiB -> String.format("%.${precision}fEiB", toEiB())
-    this >= PiB -> String.format("%.${precision}fPiB", toPiB())
-    this >= TiB -> String.format("%.${precision}fTiB", toTiB())
-    this >= GiB -> String.format("%.${precision}fGiB", toGiB())
-    this >= MiB -> String.format("%.${precision}fMiB", toMiB())
-    this >= KiB -> String.format("%.${precision}fKiB", toKiB())
+    this >= EIB -> String.format(Locale.ENGLISH, "%.${precision}fEiB", toEiB())
+    this >= PIB -> String.format(Locale.ENGLISH, "%.${precision}fPiB", toPiB())
+    this >= TIB -> String.format(Locale.ENGLISH, "%.${precision}fTiB", toTiB())
+    this >= GIB -> String.format(Locale.ENGLISH, "%.${precision}fGiB", toGiB())
+    this >= MIB -> String.format(Locale.ENGLISH, "%.${precision}fMiB", toMiB())
+    this >= KIB -> String.format(Locale.ENGLISH, "%.${precision}fKiB", toKiB())
     else -> "${this}B"
 }
 
@@ -113,12 +114,12 @@ fun Long.autoByteInBinary(precision: Int = 2): String = when {
  */
 fun Long.autoByteInDecimal(precision: Int = 2): String = when {
     this < 0 -> "NA"
-    this >= EB -> String.format("%.${precision}fEB", toEB())
-    this >= PB -> String.format("%.${precision}fPB", toPB())
-    this >= TB -> String.format("%.${precision}fTB", toTB())
-    this >= GB -> String.format("%.${precision}fGB", toGB())
-    this >= MB -> String.format("%.${precision}fMB", toMB())
-    this >= KB -> String.format("%.${precision}fkB", toKB())
+    this >= EB -> String.format(Locale.ENGLISH, "%.${precision}fEB", toEB())
+    this >= PB -> String.format(Locale.ENGLISH, "%.${precision}fPB", toPB())
+    this >= TB -> String.format(Locale.ENGLISH, "%.${precision}fTB", toTB())
+    this >= GB -> String.format(Locale.ENGLISH, "%.${precision}fGB", toGB())
+    this >= MB -> String.format(Locale.ENGLISH, "%.${precision}fMB", toMB())
+    this >= KB -> String.format(Locale.ENGLISH, "%.${precision}fkB", toKB())
     else -> "${this}B"
 }
 

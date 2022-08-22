@@ -12,7 +12,7 @@ import okhttp3.Request
  * Author: Michael Leo
  * Date: 20-5-27 下午8:41
  */
-abstract class BaseHttpRequest {
+open class BaseHttpRequest {
     var connectTimeoutInMs = DEFAULT_CONNECTION_TIMEOUT_IN_MS
     var readTimeoutInMs = DEFAULT_READ_TIMEOUT_IN_MS
     var writeTimeoutInMs = DEFAULT_WRITE_TIMEOUT_IN_MS

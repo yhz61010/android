@@ -90,11 +90,11 @@ object Falcon {
         var maxWidth = Int.MIN_VALUE
         var maxHeight = Int.MIN_VALUE
         for (viewRoot in viewRoots) {
-            if (viewRoot._winFrame.right > maxWidth) {
-                maxWidth = viewRoot._winFrame.right
+            if (viewRoot.winFrame.right > maxWidth) {
+                maxWidth = viewRoot.winFrame.right
             }
-            if (viewRoot._winFrame.bottom > maxHeight) {
-                maxHeight = viewRoot._winFrame.bottom
+            if (viewRoot.winFrame.bottom > maxHeight) {
+                maxHeight = viewRoot.winFrame.bottom
             }
         }
         val bitmap = Bitmap.createBitmap(maxWidth, maxHeight, config)
@@ -134,14 +134,14 @@ object Falcon {
 
     private fun drawRootToBitmap(config: ViewRootData, bitmap: Bitmap) {
         // now only dim supported
-        if (config._layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND == WindowManager.LayoutParams.FLAG_DIM_BEHIND) {
+        if (config.layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND == WindowManager.LayoutParams.FLAG_DIM_BEHIND) {
             val dimCanvas = Canvas(bitmap)
-            val alpha = (255 * config._layoutParams.dimAmount).toInt()
+            val alpha = (255 * config.layoutParams.dimAmount).toInt()
             dimCanvas.drawARGB(alpha, 0, 0, 0)
         }
         val canvas = Canvas(bitmap)
-        canvas.translate(config._winFrame.left.toFloat(), config._winFrame.top.toFloat())
-        config._view.draw(canvas)
+        canvas.translate(config.winFrame.left.toFloat(), config.winFrame.top.toFloat())
+        config.view.draw(canvas)
     }
 
     @Throws(IOException::class)
@@ -220,15 +220,15 @@ object Falcon {
         var minTop = Int.MAX_VALUE
         var minLeft = Int.MAX_VALUE
         for (rootView in rootViews) {
-            if (rootView._winFrame.top < minTop) {
-                minTop = rootView._winFrame.top
+            if (rootView.winFrame.top < minTop) {
+                minTop = rootView.winFrame.top
             }
-            if (rootView._winFrame.left < minLeft) {
-                minLeft = rootView._winFrame.left
+            if (rootView.winFrame.left < minLeft) {
+                minLeft = rootView.winFrame.left
             }
         }
         for (rootView in rootViews) {
-            rootView._winFrame.offset(-minLeft, -minTop)
+            rootView.winFrame.offset(-minLeft, -minTop)
         }
     }
 
@@ -317,18 +317,18 @@ object Falcon {
         }
     }
 
-    class ViewRootData(val _view: View, val _winFrame: Rect, val _layoutParams: WindowManager.LayoutParams) {
+    class ViewRootData(val view: View, val winFrame: Rect, val layoutParams: WindowManager.LayoutParams) {
         val isDialogType: Boolean
-            get() = _layoutParams.type == WindowManager.LayoutParams.TYPE_APPLICATION
+            get() = layoutParams.type == WindowManager.LayoutParams.TYPE_APPLICATION
 
         val isActivityType: Boolean
-            get() = _layoutParams.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION
+            get() = layoutParams.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION
 
         val windowToken: IBinder?
-            get() = _layoutParams.token
+            get() = layoutParams.token
 
         fun context(): Context {
-            return _view.context
+            return view.context
         }
     } //endregion
 }

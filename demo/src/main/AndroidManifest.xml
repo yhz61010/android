@@ -61,7 +61,7 @@
             android:name=".basiccomponents.examples.NetActivity"
             android:exported="false" />
         <activity
-            android:name=".jetpack_components.examples.camerax.CameraXDemoActivity"
+            android:name=".jetpackcomponents.examples.camerax.CameraXDemoActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="false"
             android:resizeableActivity="true"
@@ -77,7 +77,7 @@
                 android:value="true" />
         </activity>
         <activity
-            android:name=".jetpack_components.examples.navigation.NavigationMainActivity"
+            android:name=".jetpackcomponents.examples.navigation.NavigationMainActivity"
             android:exported="false" />
         <activity
             android:name=".basiccomponents.examples.opengl.OpenGLESPlaygroundActivity"
@@ -111,7 +111,7 @@
             android:name=".basiccomponents.examples.CircleProgressbarActivity"
             android:configChanges="orientation|screenSize" />
         <activity android:name=".basiccomponents.examples.FloatViewActivity" />
-        <activity android:name=".basiccomponents.examples.socket.eventbus_bridge.EventBusBridgeClientActivity" />
+        <activity android:name=".basiccomponents.examples.socket.eventbusbridge.EventBusBridgeClientActivity" />
         <activity
             android:name=".basiccomponents.examples.ToastActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize" />
@@ -144,9 +144,9 @@
             android:theme="@style/Theme.MaterialComponents.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".basiccomponents.examples.camera2.Camera2WithoutPreviewActivity" />
-        <activity android:name=".jetpack_components.examples.room.NewWordActivity" />
-        <activity android:name=".jetpack_components.examples.recyclerview.RecyclerviewActivity" />
-        <activity android:name=".jetpack_components.examples.room.RoomActivity" />
+        <activity android:name=".jetpackcomponents.examples.room.NewWordActivity" />
+        <activity android:name=".jetpackcomponents.examples.recyclerview.RecyclerviewActivity" />
+        <activity android:name=".jetpackcomponents.examples.room.RoomActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true" >
@@ -160,11 +160,11 @@
         <activity android:name=".basiccomponents.examples.socket.websocket.WebSocketServerActivity" />
         <activity android:name=".basiccomponents.examples.HttpActivity" />
         <activity
-            android:name=".basiccomponents.examples.media_player.PlayRawH265ByMediaCodecActivity"
+            android:name=".basiccomponents.examples.mediaplayer.PlayRawH265ByMediaCodecActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity
-            android:name=".basiccomponents.examples.media_player.PlayH265VideoByMediaCodecActivity"
+            android:name=".basiccomponents.examples.mediaplayer.PlayH265VideoByMediaCodecActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity android:name=".basiccomponents.examples.socket.websocket.WebSocketClientActivity" />

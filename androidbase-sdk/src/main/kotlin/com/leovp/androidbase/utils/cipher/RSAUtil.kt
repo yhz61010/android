@@ -3,6 +3,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import android.util.Base64
+import com.leovp.log.LogContext
 import java.security.KeyFactory
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
@@ -61,7 +62,7 @@ object RSAUtil {
             cipher.init(Cipher.ENCRYPT_MODE, key)
             Base64.encodeToString(cipher.doFinal(plainText.toByteArray()), Base64.NO_WRAP)
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogContext.log.e(CIPHER_ALGORITHM, "encrypt error. Message: ${e.message}")
             null
         }
     }

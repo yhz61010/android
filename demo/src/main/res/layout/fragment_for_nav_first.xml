@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".jetpack_components.examples.navigation.fragments.FragmentForNavFirst">
+    tools:context=".jetpackcomponents.examples.navigation.fragments.FragmentForNavFirst">
 
     <TextView
         android:id="@+id/tvArgs"

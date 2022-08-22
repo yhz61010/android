@@ -40,11 +40,13 @@ abstract class BaseCamera2Fragment : Fragment() {
     /** Where the camera preview is displayed */
     protected lateinit var cameraView: CameraSurfaceView
 
-    protected var _binding: FragmentCameraViewBinding? = null
+    private var _binding: FragmentCameraViewBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     protected val binding get() = _binding!!
+
+    protected fun getNullableBinding(): FragmentCameraViewBinding? = _binding
 
     /** Live data listener for changes in the device orientation relative to the camera */
     lateinit var relativeOrientation: OrientationLiveData

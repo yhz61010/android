@@ -5,25 +5,31 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import com.leovp.android.exts.toast
-import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.databinding.ActivityWebsocketClientBinding
-import com.leovp.json.toJsonString
-import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityWebsocketClientBinding
+import com.leovp.json.toJsonString
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.coroutines.*
 import java.net.URI
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClientBinding>() {
     override fun getTagName(): String = ITAG

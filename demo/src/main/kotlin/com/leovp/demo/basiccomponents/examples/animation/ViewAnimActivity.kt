@@ -1,11 +1,16 @@
 package com.leovp.demo.basiccomponents.examples.animation
 
 import android.os.Bundle
-import android.view.animation.*
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.view.animation.RotateAnimation
+import android.view.animation.ScaleAnimation
+import android.view.animation.TranslateAnimation
+import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityViewAnimBinding
-import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.log.base.ITAG
 
 class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {

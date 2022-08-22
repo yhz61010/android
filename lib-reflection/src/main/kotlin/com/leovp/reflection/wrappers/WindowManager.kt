@@ -3,11 +3,15 @@
 package com.leovp.reflection.wrappers
 
 import android.os.IInterface
+import android.util.Log
 import android.view.Display
 import android.view.IRotationWatcher
 import java.lang.reflect.Method
 
 class WindowManager(private val manager: IInterface) {
+    companion object {
+        private const val TAG = "WindowManager"
+    }
 
     private var getRotationMethod: Method? = null
     private var freezeRotationMethod: Method? = null
@@ -56,7 +60,7 @@ class WindowManager(private val manager: IInterface) {
             val method = getGetRotationMethod()
             method!!.invoke(manager) as Int
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "getRotation exception.")
             0
         }
     }
@@ -66,7 +70,7 @@ class WindowManager(private val manager: IInterface) {
             val method = freezeRotationMethod
             method!!.invoke(manager, rotation)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "freezeRotation exception.")
         }
     }
 
@@ -75,7 +79,7 @@ class WindowManager(private val manager: IInterface) {
             val method = getIsRotationFrozenMethod()
             method!!.invoke(manager) as Boolean
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "isRotationFrozen exception.")
             false
         }
     }
@@ -85,7 +89,7 @@ class WindowManager(private val manager: IInterface) {
             val method = getThawRotationMethod()
             method!!.invoke(manager)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "thawRotation exception.")
         }
     }
 
@@ -123,7 +127,7 @@ class WindowManager(private val manager: IInterface) {
             cls.getMethod("removeRotationWatcher", IRotationWatcher::class.java)
                 .invoke(manager, rotationWatcher)
         } catch (ignored: NoSuchMethodException) {
-            ignored.printStackTrace()
+            Log.e(TAG, "removeRotationWatcher exception.")
         }
     }
 }

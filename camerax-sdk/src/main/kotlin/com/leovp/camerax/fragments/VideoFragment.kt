@@ -7,7 +7,11 @@ import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
@@ -19,7 +23,15 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
+import androidx.camera.video.FallbackStrategy
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.concurrent.futures.await
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -30,22 +42,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenCreated
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import com.leovp.camerax.sdk.R
-import com.leovp.camerax.sdk.databinding.FragmentVideoBinding
-import com.leovp.camerax.sdk.databinding.IncPreviewGridBinding
-import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
-import com.leovp.camerax.enums.CameraRatio
-import com.leovp.camerax.enums.RecordUiState
-import com.leovp.camerax.fragments.base.BaseCameraXFragment
-import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.utils.getAspectRatio
-import com.leovp.camerax.utils.getAspectRatioString
-import com.leovp.camerax.utils.getNameString
-import com.leovp.camerax.utils.toggleButton
 import com.leovp.android.exts.circularClose
 import com.leovp.android.exts.circularReveal
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.utils.FileDocumentUtil
+import com.leovp.camerax.enums.CameraRatio
+import com.leovp.camerax.enums.RecordUiState
+import com.leovp.camerax.fragments.base.BaseCameraXFragment
+import com.leovp.camerax.listeners.CameraXTouchListener
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.FragmentVideoBinding
+import com.leovp.camerax.sdk.databinding.IncPreviewGridBinding
+import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
+import com.leovp.camerax.utils.getAspectRatio
+import com.leovp.camerax.utils.getAspectRatioString
+import com.leovp.camerax.utils.getNameString
+import com.leovp.camerax.utils.toggleButton
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import java.io.File
@@ -251,7 +263,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         videoCapture = VideoCapture.withOutput(recorder)
 
         val camProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed. Did you call configCamera() method?")
+        checkNotNull(camProvider) { "Camera initialization failed. Did you call configCamera() method?" }
         try {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
@@ -343,12 +355,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
                 provider.unbindAll()
                 for (
-                    camSelector in arrayOf(
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        CameraSelector.DEFAULT_FRONT_CAMERA
-                    )
+                camSelector in arrayOf(
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                )
                 ) {
-                    try {
+                    runCatching {
                         // just get the camera.cameraInfo to query capabilities
                         // we are not binding anything here.
                         if (provider.hasCamera(camSelector)) {
@@ -367,7 +379,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                                 cameraCapabilities[camSelector] = it
                             }
                         }
-                    } catch (exc: Exception) {
+                    }.onFailure {
                         LogContext.log.e(logTag, "Camera Face $camSelector is not supported")
                     }
                 }
@@ -684,7 +696,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             is VideoRecordEvent.Start -> currentRecording?.pause()
             is VideoRecordEvent.Pause -> currentRecording?.resume()
             is VideoRecordEvent.Resume -> currentRecording?.pause()
-            else -> throw IllegalStateException("recordingState in unknown state")
+            else -> throw RuntimeException("recordingState in unknown state")
         }
     }
 

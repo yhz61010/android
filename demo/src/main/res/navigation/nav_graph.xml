@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_basic" />
 
     <fragment android:id="@+id/navigation_jetpack"
-        android:name="com.leovp.demo.jetpack_components.JetpackFragment"
+        android:name="com.leovp.demo.jetpackcomponents.JetpackFragment"
         android:label="@string/title_jetpack"
         tools:layout="@layout/fragment_jetpack" />
 

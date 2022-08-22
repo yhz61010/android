@@ -59,7 +59,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private val rotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            // Log.e("LEO-float-view", "tag=${config.tag} onRotationChanged rotation=$rotation lastScreenOrientation=$lastScrOri config.screenOrientation=${config.screenOrientation}")
+            // Log.e("LEO-float-view", "tag=${config.tag} onRotationChanged rotation=$rotation " +
+            //     "lastScreenOrientation=$lastScrOri config.screenOrientation=${config.screenOrientation}")
             if (rotation != lastScrOri) config.customView?.post { updateScreenOrientation(rotation) }
         }
     }
@@ -83,7 +84,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             )
         }
         val curScreenOrientationSize = context.getScreenSize(orientation, screenResolution)
-        //        Log.e("LEO-float-view", "getScreenOrientationSize()=$curScreenOrientationSize widthOffset=$widthNecessaryOffset heightNecessaryOffset=$heightNecessaryOffset heightOffset=$finalHeightNecessaryOffset statusBar=${context.statusBarHeight}")
+        // Log.e("LEO-float-view", "getScreenOrientationSize()=$curScreenOrientationSize " +
+        //     "widthOffset=$widthNecessaryOffset heightNecessaryOffset=$heightNecessaryOffset " +
+        //     "heightOffset=$finalHeightNecessaryOffset statusBar=${context.statusBarHeight}")
         return Size(curScreenOrientationSize.width, curScreenOrientationSize.height - finalHeightNecessaryOffset)
     }
 
@@ -348,7 +351,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
      */
     private fun adjustPosY(y: Int, edgeMargin: Int, considerY: Boolean = false): Int {
         val drawHeightOffset = getTopHeightOffset()
-        //        Log.e("LEO-float-view", "drawHeightOffset=$drawHeightOffset y=$y edgeMargin=$edgeMargin config.customView?.height=${config.customView?.height} screen.height=${screenOrientSz.height}")
+        // Log.e("LEO-float-view",
+        //     "drawHeightOffset=$drawHeightOffset y=$y edgeMargin=$edgeMargin " +
+        //         "config.customView?.height=${config.customView?.height} screen.height=${screenOrientSz.height}")
         if (y <= edgeMargin + drawHeightOffset) return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
         return if ((y + (config.customView?.height ?: 0) + edgeMargin) >= screenOrientSz.height)
             screenOrientSz.height - (config.customView?.height ?: 0) - edgeMargin

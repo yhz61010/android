@@ -1,186 +1,201 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.FloatViewActivity">
+    tools:context=".basiccomponents.examples.FloatViewActivity">
 
-    <RadioGroup
-        android:id="@+id/rgSticky"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/textView24"
-        app:layout_constraintTop_toBottomOf="@+id/textView24">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content">
 
-        <RadioButton
-            android:id="@+id/rbStickyNone"
+        <RadioGroup
+            android:id="@+id/rgSticky"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/textView24"
+            app:layout_constraintTop_toBottomOf="@+id/textView24">
+
+            <RadioButton
+                android:id="@+id/rbStickyNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="None" />
+
+            <RadioButton
+                android:id="@+id/rbStickyLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Left" />
+
+            <RadioButton
+                android:id="@+id/rbStickyRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Right" />
+
+            <RadioButton
+                android:id="@+id/rbStickyTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Top" />
+
+            <RadioButton
+                android:id="@+id/rbStickyBottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bottom" />
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/textView24"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="None" />
+            android:layout_marginStart="8dp"
+            android:text="Sticky Edge"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <RadioButton
-            android:id="@+id/rbStickyLeft"
+        <TextView
+            android:id="@+id/textView25"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Left" />
+            android:text="Auto Dock"
+            app:layout_constraintStart_toStartOf="@+id/textView24"
+            app:layout_constraintTop_toBottomOf="@+id/rgSticky" />
 
-        <RadioButton
-            android:id="@+id/rbStickyRight"
+        <RadioGroup
+            android:id="@+id/rgAutoDock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Right" />
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="@+id/textView25"
+            app:layout_constraintTop_toBottomOf="@+id/textView25">
 
-        <RadioButton
-            android:id="@+id/rbStickyTop"
+            <RadioButton
+                android:id="@+id/rbAutoDockNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="None" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Left" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Right" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Top" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockBottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bottom" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockLeftRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LeftRight" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockTopBottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TopBottom" />
+
+            <RadioButton
+                android:id="@+id/rbAutoDockFull"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Full" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btnChange"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Top" />
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Change FloatView Text"
+            app:layout_constraintStart_toEndOf="@+id/rgAutoDock"
+            app:layout_constraintTop_toBottomOf="@+id/rgSticky" />
 
-        <RadioButton
-            android:id="@+id/rbStickyBottom"
+        <RadioGroup
+            android:id="@+id/rgEnableDrag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bottom" />
-    </RadioGroup>
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/rgAutoDock"
+            app:layout_constraintTop_toBottomOf="@+id/btnChange">
 
-    <TextView
-        android:id="@+id/textView24"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Sticky Edge"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <RadioButton
+                android:id="@+id/rbEnableDrag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Enable Drag" />
 
-    <TextView
-        android:id="@+id/textView25"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Auto Dock"
-        app:layout_constraintStart_toStartOf="@+id/textView24"
-        app:layout_constraintTop_toBottomOf="@+id/rgSticky" />
+            <RadioButton
+                android:id="@+id/rbDisableDrag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Disable Drag" />
+        </RadioGroup>
 
-    <RadioGroup
-        android:id="@+id/rgAutoDock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintStart_toStartOf="@+id/textView25"
-        app:layout_constraintTop_toBottomOf="@+id/textView25">
-
-        <RadioButton
-            android:id="@+id/rbAutoDockNone"
+        <RadioGroup
+            android:id="@+id/rgTouchable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="None" />
+            android:layout_marginBottom="32dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
-        <RadioButton
-            android:id="@+id/rbAutoDockLeft"
+            <RadioButton
+                android:id="@+id/rbTouchable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Touchable"
+                android:textAllCaps="false" />
+
+            <RadioButton
+                android:id="@+id/rbNoneTouchable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Not Touchable"
+                android:textAllCaps="false" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btnChangePos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Left" />
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:onClick="onChangePosClick"
+            android:text="Change Position"
+            app:layout_constraintStart_toEndOf="@+id/rgAutoDock"
+            app:layout_constraintTop_toBottomOf="@+id/rgEnableDrag"
+            tools:ignore="OnClick" />
 
-        <RadioButton
-            android:id="@+id/rbAutoDockRight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Right" />
-
-        <RadioButton
-            android:id="@+id/rbAutoDockTop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Top" />
-
-        <RadioButton
-            android:id="@+id/rbAutoDockBottom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bottom" />
-
-        <RadioButton
-            android:id="@+id/rbAutoDockLeftRight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="LeftRight" />
-
-        <RadioButton
-            android:id="@+id/rbAutoDockTopBottom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TopBottom" />
-
-        <RadioButton
-            android:id="@+id/rbAutoDockFull"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Full" />
-    </RadioGroup>
-
-    <Button
-        android:id="@+id/btnChange"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="Change FloatView Text"
-        app:layout_constraintStart_toEndOf="@+id/rgAutoDock"
-        app:layout_constraintTop_toBottomOf="@+id/rgSticky" />
-
-    <RadioGroup
-        android:id="@+id/rgEnableDrag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/rgAutoDock"
-        app:layout_constraintTop_toBottomOf="@+id/btnChange">
-
-        <RadioButton
-            android:id="@+id/rbEnableDrag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Enable Drag" />
-
-        <RadioButton
-            android:id="@+id/rbDisableDrag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Disable Drag" />
-    </RadioGroup>
-
-    <RadioGroup
-        android:id="@+id/rgTouchable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <RadioButton
-            android:id="@+id/rbTouchable"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Touchable"
-            android:textAllCaps="false" />
-
-        <RadioButton
-            android:id="@+id/rbNoneTouchable"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Not Touchable"
-            android:textAllCaps="false" />
-    </RadioGroup>
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

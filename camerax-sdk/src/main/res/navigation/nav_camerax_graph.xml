@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2020 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/camera_fragment">
+
+    <fragment android:id="@+id/permissions_fragment"
+        android:name="com.leovp.camerax.fragments.PermissionsFragment"
+        android:label="PermissionsFragment">
+
+        <action android:id="@+id/action_permissions_to_camera"
+            app:destination="@id/camera_fragment"
+            app:popUpTo="@id/permissions_fragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment android:id="@+id/camera_fragment"
+        android:name="com.leovp.camerax.fragments.CameraFragment"
+        android:label="CameraFragment"
+        tools:layout="@layout/fragment_camera">
+
+        <action android:id="@+id/action_camera_to_gallery" app:destination="@id/gallery_fragment" />
+
+        <action android:id="@+id/action_camera_to_permissions"
+            app:destination="@id/permissions_fragment"
+            app:popUpTo="@id/camera_fragment"
+            app:popUpToInclusive="true" />
+        <action android:id="@+id/action_camera_fragment_to_video_fragment" app:destination="@id/video_fragment" />
+
+    </fragment>
+
+    <fragment android:id="@+id/gallery_fragment"
+        android:name="com.leovp.camerax.fragments.GalleryFragment"
+        android:label="GalleryFragment"
+        tools:layout="@layout/fragment_gallery">
+        <argument android:name="root_directory" app:argType="string" />
+    </fragment>
+
+    <fragment android:id="@+id/video_fragment"
+        android:name="com.leovp.camerax.fragments.VideoFragment"
+        android:label="fragment_video"
+        tools:layout="@layout/fragment_video">
+        <action android:id="@+id/action_video_fragment_to_camera_fragment" app:destination="@id/camera_fragment" />
+        <action android:id="@+id/action_video_fragment_to_gallery_fragment" app:destination="@id/gallery_fragment" />
+    </fragment>
+
+</navigation>

@@ -1,10 +1,26 @@
-[![Release](https://jitpack.io/v/yhz61010/LeoAndroidBaseUtilProject-Kotlin.svg)](https://jitpack.io/#yhz61010/LeoAndroidBaseUtilProject-Kotlin)
+[![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.7.10-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-7.2.2-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-7.5.1-green)](https://gradle.org)
+
+[![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
+[![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
+
+# Upload to bintray(Maven and jcenter)
+
+```sh
+./gradlew clean build bintrayUpload -PbintrayUser=yhz61010 -PbintrayKey=<Your API Key> -PdryRun=false
+```
+
+**You can get your API Key as following url [API Key](https://bintray.com/profile/edit)**
 
 # Known Issues
+
 1. ~~AudioActivity(Solved. See AacFilePlayer.kt bf1bfe248a54308cd91cfa7f516026b237413119 commit)~~
-~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
-2. AudioReceiver
-In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
+   ~~Can not play AAC file in Audio demo on OnePlus 8T device.~~
+2. AudioReceiver In realtime communication of Audio demo, if the audio codec is 8Khz/16bit/2ch, the volume of receiver is too small to hear.
+3. FFMpegH264Activity & FFMpegH265Activity When you back to previously activity while playing video, it will crash caused by ffmpeg in following place:
+   `h264_hevc_decoder_all_in_one_file.cpp` in `decode()` method, when calling `avcodec_send_packet`.
 
 # TODO List
 ~~1. Camera2Live~~(Solved)
@@ -73,6 +89,31 @@ FYI: You can use [Xlog](https://github.com/Tencent/mars) as your wrapper impleme
  `[4032, 3024][4000, 3000][3840, 2160][3288, 2480][3264, 2448][3200, 2400][2976, 2976][2592, 1944][2688, 1512][2048, 1536][1920, 1080][1600, 1200][1440, 1080][1280, 960][1280, 768][1280, 720][1024, 768][800, 600][864, 480][800, 480][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144][160, 120]`
 ##### Lens Front(Camera Sensor Orientation: 90)
 `[3264, 2448][3200, 2400][2592, 1944][2688, 1512][2048, 1536][1920, 1080][1600, 1200][1440, 1080][1280, 960][1280, 768][1280, 720][1024, 768][800, 600][864, 480][800, 480][720, 480][640, 480][640, 360][352, 288][320, 240][176, 144][160, 120]`
+
+------
+
+## Pixel
+
+------
+
+### Google Pixel 3XL(Pixel 3XL)(Android 12)
+#### Camera supported hardware level
+##### Lens Back: LEVEL_3(3)
+##### Lens Front: LEVEL_FULL(1)
+#### H.264 Encoder
+`c2.qti.avc.encoder`
+`OMX.qcom.video.encoder.avc`
+`c2.android.avc.encoder`
+#### Camera supported FPS
+##### Lens Back(Camera Sensor Orientation: 90)
+`[[15, 15], [7, 30], [15, 30], [30, 30], [15, 60], [60, 60]]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[[15, 15], [7, 30], [15, 30], [30, 30]]`
+#### Camera supported size
+##### Lens Back(Camera Sensor Orientation: 90)
+`[4032x3024, 4000x3000, 3840x2160, 4000x2000, 3264x2448, 3200x2400, 2688x1512, 2592x1944, 2560x1280, 2048x1536, 1920x1440, 1920x1080, 1600x1200, 1920x960, 1280x960, 1280x768, 1280x720, 1024x768, 800x400, 800x600, 800x480, 720x480, 640x400, 640x480, 640x360, 352x288, 320x240, 176x144, 160x120]`
+##### Lens Front(Camera Sensor Orientation: 270)
+`[3264x2448, 3200x2400, 2688x1512, 2592x1944, 2560x1280, 2048x1536, 1920x1440, 1920x1080, 1600x1200, 1920x960, 1280x960, 1280x768, 1280x720, 1024x768, 800x400, 800x600, 800x480, 720x480, 640x400, 640x480, 640x360, 352x288, 320x240, 176x144, 160x120]`
 
 ------
 

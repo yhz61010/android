@@ -1,4 +1,6 @@
-package com.leovp.ffmpeg.audio.x264
+package com.leovp.x264
+
+import androidx.annotation.Keep
 
 /**
  * Author: Michael Leo

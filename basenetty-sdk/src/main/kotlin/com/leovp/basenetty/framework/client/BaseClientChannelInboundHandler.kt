@@ -110,7 +110,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             } else {
                 LogContext.log.i(tag, "Set failed exception status.")
                 netty.connectStatus.set(ClientConnectStatus.FAILED)
-                netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect exception or disconnect")
+                netty.connectionListener.onFailed(
+                    netty,
+                    ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
+                    "Connect exception or disconnect"
+                )
                 // For instance, "Unable to resolve host xxx" error will go into here when you connect to server without network.
                 //                LogContext.log.e(tag, "=====> CHK11 <=====")
                 netty.doRetry()
@@ -198,7 +202,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             if (msg is FullHttpResponse) {
                 // LogContext.log.i(tag, "Response status=${msg.status()} isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}")
                 // if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)}) " +
+                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, " +
+                    "content=${msg.content().toString(CharsetUtil.UTF_8)}) " +
                     "isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)

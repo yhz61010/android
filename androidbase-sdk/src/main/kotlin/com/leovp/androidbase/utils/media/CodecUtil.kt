@@ -21,14 +21,18 @@ object CodecUtil {
     fun hasCodecByName(mimeType: String, codecName: String, encoder: Boolean = true): Boolean =
         getCodecListByMimeType(mimeType, encoder).indexOfFirst { it.name.equals(codecName, true) } > -1
 
-    fun getAllSupportedCodecList(): Array<MediaCodecInfo> = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos // MediaCodecList.ALL_CODECS
+    fun getAllSupportedCodecList(): Array<MediaCodecInfo> =
+        MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos // MediaCodecList.ALL_CODECS
 
     /**
      * The result is the color format defined in MediaCodecInfo.CodecCapabilities.COLOR_Formatxxx
      */
-    fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray = getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
-    fun getSupportedColorFormatForEncoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
-    fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
+    fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray =
+        getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
+    fun getSupportedColorFormatForEncoder(mime: String): IntArray =
+        getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
+    fun getSupportedColorFormatForDecoder(mime: String): IntArray =
+        getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
     private fun getSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
 
     fun getSupportedProfileLevels(codec: MediaCodec, mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
@@ -40,7 +44,8 @@ object CodecUtil {
     fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
         getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
 
-    private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
+    private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> =
+        caps.profileLevels
 
     fun isSoftwareCodec(codecName: String): Boolean {
         return codecName.startsWith("OMX.google.", ignoreCase = true) ||
@@ -56,6 +61,9 @@ object CodecUtil {
     // Find NALU prefix "00 00 00 01"
     fun findStartCode(data: ByteArray, offSet: Int = 0): Boolean {
         if (offSet < 0 || data.size < 4) return false
-        return data[offSet].toInt() == 0 && data[offSet + 1].toInt() == 0 && data[offSet + 2].toInt() == 0 && data[offSet + 3].toInt() == 1
+        return data[offSet].toInt() == 0 &&
+            data[offSet + 1].toInt() == 0 &&
+            data[offSet + 2].toInt() == 0 &&
+            data[offSet + 3].toInt() == 1
     }
 }

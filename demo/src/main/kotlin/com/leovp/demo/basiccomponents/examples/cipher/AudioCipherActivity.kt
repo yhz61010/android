@@ -65,7 +65,9 @@ class AudioCipherActivity : BaseDemonstrationActivity<ActivityAudioCipherBinding
 
     fun onDecryptAudioClick(@Suppress("UNUSED_PARAMETER") view: View) {
         val mp3File = File(getExternalFilesDir(null), ENCRYPTED_MP3_FILE_NAME)
-        runCatching { playMP3(AESUtil.decrypt(FileInputStream(mp3File).use { it.readBytes() }, secretKey)) }.onFailure { it.printStackTrace() }
+        runCatching {
+            playMP3(AESUtil.decrypt(FileInputStream(mp3File).use { it.readBytes() }, secretKey))
+        }.onFailure { it.printStackTrace() }
         toast("Play decrypted music!")
     }
 

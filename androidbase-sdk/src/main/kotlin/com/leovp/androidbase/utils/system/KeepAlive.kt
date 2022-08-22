@@ -87,7 +87,9 @@ class KeepAlive(
 
     fun release() {
         LogContext.log.w(TAG, "Release keepAlive()")
-        runCatching { LocalBroadcastManager.getInstance(app).unregisterReceiver(keepAliveArgumentReceiver) }.onFailure { it.printStackTrace() }
+        runCatching {
+            LocalBroadcastManager.getInstance(app).unregisterReceiver(keepAliveArgumentReceiver)
+        }.onFailure { it.printStackTrace() }
         runCatching { mediaPlayer?.run { release() } }.onFailure { it.printStackTrace() }
     }
 

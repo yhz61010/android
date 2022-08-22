@@ -1,8 +1,14 @@
 package com.leovp.audio.aac
 
 import android.content.Context
-import android.media.*
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
 import android.media.AudioTrack.STATE_UNINITIALIZED
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.sdk.BuildConfig
 import com.leovp.bytes.toShortArrayLE
@@ -73,8 +79,8 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
 
             // https://developer.android.com/reference/android/media/MediaCodec
             // AAC CSD: Decoder-specific information from ESDS
-//                mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
-//                mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+            //                mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
+            //                mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
             audioDecoder = MediaCodec.createDecoderByType(mime).apply {
                 configure(mediaFormat, null, null, 0)
@@ -86,12 +92,18 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
     private fun initAudioTrack(ctx: Context) {
         runCatching {
             audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize = AudioTrack.getMinBufferSize(audioDecodeInfo.sampleRate, audioDecodeInfo.channelConfig, audioDecodeInfo.audioFormat)
+            val bufferSize = AudioTrack.getMinBufferSize(
+                audioDecodeInfo.sampleRate,
+                audioDecodeInfo.channelConfig,
+                audioDecodeInfo.audioFormat
+            )
             val sessionId = audioManager!!.generateAudioSessionId()
             val audioAttributesBuilder = AudioAttributes.Builder().apply {
                 // Speaker
-                setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+                // AudioAttributes.USAGE_MEDIA AudioAttributes.USAGE_VOICE_COMMUNICATION
+                setUsage(AudioAttributes.USAGE_MEDIA)
+                // AudioAttributes.CONTENT_TYPE_MUSIC AudioAttributes.CONTENT_TYPE_SPEECH
+                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 setLegacyStreamType(AudioManager.STREAM_MUSIC)
             }
             val audioFormat = AudioFormat.Builder().setSampleRate(audioDecodeInfo.sampleRate)
@@ -132,19 +144,31 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                                 } else {
                                     sampleData = ByteArray(it.remaining())
                                     it.get(sampleData!!)
-                                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
+                                    if (BuildConfig.DEBUG) LogContext.log.d(
+                                        TAG,
+                                        "Sample aac data[${sampleData?.size}]"
+                                    )
                                 }
                             }
                         } catch (e: Exception) {
-                            if (BuildConfig.DEBUG) LogContext.log.e(TAG, "inputIndex=$inputIndex sampleSize=$sampleSize")
+                            if (BuildConfig.DEBUG) LogContext.log.e(
+                                TAG,
+                                "inputIndex=$inputIndex sampleSize=$sampleSize"
+                            )
                             e.printStackTrace()
                         }
                         if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
                         if (sampleSize < 0) {
-                            audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            audioDecoder?.queueInputBuffer(
+                                inputIndex, 0, 0, 0,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
                             isFinish = true
                         } else {
-                            audioDecoder?.queueInputBuffer(inputIndex, 0, sampleSize, mediaExtractor?.sampleTime ?: 0, 0)
+                            audioDecoder?.queueInputBuffer(
+                                inputIndex, 0, sampleSize,
+                                mediaExtractor?.sampleTime ?: 0, 0
+                            )
                             mediaExtractor?.advance()
                         }
                     }
@@ -162,7 +186,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                             clear()
                         }
                         if (chunkPCM.isNotEmpty()) {
-//                                LogContext.log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
+                            // LogContext.log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
                             shortPcmData = chunkPCM.toShortArrayLE()
                             LogContext.log.i(TAG, "Finally PCM data[${shortPcmData.size}]")
                             audioTrack?.write(shortPcmData, 0, shortPcmData.size)

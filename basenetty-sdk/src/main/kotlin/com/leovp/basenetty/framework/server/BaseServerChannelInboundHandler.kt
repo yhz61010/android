@@ -1,8 +1,8 @@
 package com.leovp.basenetty.framework.server
 
-import com.leovp.log.LogContext
 import com.leovp.basenetty.framework.base.ReadSocketDataListener
 import com.leovp.basenetty.framework.base.ServerConnectStatus
+import com.leovp.log.LogContext
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
@@ -10,7 +10,11 @@ import io.netty.channel.group.ChannelGroup
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.websocketx.*
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
+import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.util.CharsetUtil
 import io.netty.util.concurrent.GlobalEventExecutor
 import java.io.IOException
@@ -91,16 +95,20 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         LogContext.log.e(tag, "===== Caught $exceptionType =====")
         LogContext.log.e(tag, "Exception: ${cause.message}", cause)
 
-//        val channel = ctx.channel()
-//        val isChannelActive = channel.isActive
-//        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
-//        if (isChannelActive) {
-//            ctx.close()
-//        }
+        //        val channel = ctx.channel()
+        //        val isChannelActive = channel.isActive
+        //        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
+        //        if (isChannelActive) {
+        //            ctx.close()
+        //        }
         ctx.close().syncUninterruptibly()
 
         netty.connectState.set(ServerConnectStatus.FAILED)
-        netty.connectionListener.onStartFailed(netty, ServerConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Caught exception")
+        netty.connectionListener.onStartFailed(
+            netty,
+            ServerConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
+            "Caught exception"
+        )
 
         LogContext.log.e(tag, "============================")
     }
@@ -134,35 +142,35 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
                 return
             }
 
-//        val receivedData = when (frame) {
-//            is BinaryWebSocketFrame -> {
-//                frame.content().retain()
-//            }
-//            is TextWebSocketFrame -> {
-//                frame.text().retain()
-//            }
-//            is PingWebSocketFrame -> {
-//                frame.content().retain().toString(Charset.forName("UTF-8"))
-//            }
-//            is PongWebSocketFrame -> {
-//                frame.content().retain().toString(Charset.forName("UTF-8"))
-//            }
-//            else -> {
-//                null
-//            }
-//        }
+            //        val receivedData = when (frame) {
+            //            is BinaryWebSocketFrame -> {
+            //                frame.content().retain()
+            //            }
+            //            is TextWebSocketFrame -> {
+            //                frame.text().retain()
+            //            }
+            //            is PingWebSocketFrame -> {
+            //                frame.content().retain().toString(Charset.forName("UTF-8"))
+            //            }
+            //            is PongWebSocketFrame -> {
+            //                frame.content().retain().toString(Charset.forName("UTF-8"))
+            //            }
+            //            else -> {
+            //                null
+            //            }
+            //        }
 
-//            if (handshaker?.isHandshakeComplete == false) {
-//                try {
-//                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
-//                    LogContext.log.w(tag, "=====> WebSocket client connected <=====")
-//                    channelPromise?.setSuccess()
-//                } catch (e: WebSocketHandshakeException) {
-//                    LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
-//                    channelPromise?.setFailure(e)
-//                }
-//                return
-//            }
+            //            if (handshaker?.isHandshakeComplete == false) {
+            //                try {
+            //                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
+            //                    LogContext.log.w(tag, "=====> WebSocket client connected <=====")
+            //                    channelPromise?.setSuccess()
+            //                } catch (e: WebSocketHandshakeException) {
+            //                    LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
+            //                    channelPromise?.setFailure(e)
+            //                }
+            //                return
+            //            }
         }
 
         onReceivedData(ctx, msg)
@@ -183,9 +191,14 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
      * Upgrade: WebSocket
      */
     private fun handleHttpRequest(ctx: ChannelHandlerContext, msg: FullHttpResponse) {
-        if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-            if (msg.decoderResult().isFailure || !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)) {
-                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, content=${msg.content().toString(CharsetUtil.UTF_8)})"
+        if (msg.decoderResult().isFailure ||
+            !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)
+        ) {
+            if (msg.decoderResult().isFailure ||
+                !"websocket".equals(msg.headers().get("Upgrade"), ignoreCase = true)
+            ) {
+                val exceptionInfo = "Unexpected FullHttpResponse (getStatus=${msg.status()}, " +
+                    "content=${msg.content().toString(CharsetUtil.UTF_8)})"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)
             }
@@ -193,7 +206,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         }
         handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             // FIXME what about wss?
-//            msg.headers().get(HttpHeaderNames.HOST)
+            //            msg.headers().get(HttpHeaderNames.HOST)
             URI("ws://${ctx.channel()}/${netty.webSocketPath}"),
             WebSocketVersion.V13,
             null,

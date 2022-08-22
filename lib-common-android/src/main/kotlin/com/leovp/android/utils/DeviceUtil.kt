@@ -11,7 +11,23 @@ import android.os.StatFs
 import android.os.SystemClock
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
-import com.leovp.android.exts.*
+import com.leovp.android.exts.activityManager
+import com.leovp.android.exts.density
+import com.leovp.android.exts.densityDpi
+import com.leovp.android.exts.getImei
+import com.leovp.android.exts.getRatio
+import com.leovp.android.exts.isFullScreenDevice
+import com.leovp.android.exts.isNavigationBarShown
+import com.leovp.android.exts.isProbablyAnEmulator
+import com.leovp.android.exts.isTablet
+import com.leovp.android.exts.navigationBarHeight
+import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.android.exts.screenRatio
+import com.leovp.android.exts.screenRealResolution
+import com.leovp.android.exts.statusBarHeight
+import com.leovp.android.exts.toSmartSize
+import com.leovp.android.exts.versionCode
+import com.leovp.android.exts.versionName
 import com.leovp.android.utils.shell.ShellUtil
 import com.leovp.kotlin.exts.outputFormatByte
 import com.leovp.kotlin.exts.round
@@ -57,14 +73,14 @@ class DeviceUtil private constructor(private val ctx: Context) {
         Build.SUPPORTED_ABIS.contains("x86") -> "x86"
         else -> "NA"
     }
-//        runCatching {
-//        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
-//            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
-//            ""
-//        )
-//    }.getOrDefault(
-//        ""
-//    )
+    //        runCatching {
+    //        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
+    //            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
+    //            ""
+    //        )
+    //    }.getOrDefault(
+    //        ""
+    //    )
 
     fun getSerialNumber(): String {
         var serialNo = DeviceProp.getSystemProperty("ro.serialno")
@@ -87,22 +103,33 @@ class DeviceUtil private constructor(private val ctx: Context) {
     val cpuMinFreq = runCatching {
         File("/sys/devices/system/cpu/").listFiles { file: File? ->
             file?.name?.matches(Regex("cpu[0-9]+")) ?: false
-        }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_min_freq", false).successMsg.toInt() }?.maxOrNull() ?: -1
+        }?.map { file ->
+            ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_min_freq", false)
+                .successMsg.toInt()
+        }?.maxOrNull() ?: -1
     }.getOrDefault(-2)
     val cpuMaxFreq = runCatching {
         File("/sys/devices/system/cpu/").listFiles { file: File? ->
             file?.name?.matches(Regex("cpu[0-9]+")) ?: false
-        }?.map { file -> ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt() }?.maxOrNull() ?: -1
+        }?.map { file ->
+            ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false)
+                .successMsg.toInt()
+        }?.maxOrNull() ?: -1
     }.getOrDefault(-2)
 
     fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? {
         return runCatching {
-            val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false).successMsg.toInt() != 0
+            val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false)
+                .successMsg.toInt() != 0
             val minFreq: Int
             val maxFreq: Int
             if (online) {
-                minFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false).successMsg.toInt()
-                maxFreq = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false).successMsg.toInt()
+                minFreq = ShellUtil
+                    .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false)
+                    .successMsg.toInt()
+                maxFreq = ShellUtil
+                    .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false)
+                    .successMsg.toInt()
             } else {
                 minFreq = 0
                 maxFreq = 0
@@ -166,7 +193,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
             getExternalStorageInBytes().forEachIndexed { index, pair ->
                 val used = pair.second - pair.first
                 val usedPercent: Float = used * 100F / pair.second
-                sb.append("[$index]=${used.outputFormatByte()}/${pair.second.outputFormatByte()}  ${usedPercent.round()}% Used")
+                sb.append(
+                    "[$index]=${used.outputFormatByte()}/${pair.second.outputFormatByte()} ${usedPercent.round()}% Used"
+                )
                 sb.append("\n")
             }
             return sb.deleteAt(sb.length - 1).toString()
@@ -205,8 +234,12 @@ class DeviceUtil private constructor(private val ctx: Context) {
             OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]
             Supported ABIS   : ${supportedCpuArchs.contentToString()}
             Display          : $display
-            Screen           : ${screenSize.width}x${screenSize.height}(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})  (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
-            MemoryUsage      : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}  ${memInfo.third.round()}% Used
+            Screen           : ${screenSize.width}x${screenSize.height}(${getRatio(screenSize.toSmartSize())}=
+            ${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})
+            (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)
+            (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
+            MemoryUsage      : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}
+            ${memInfo.third.round()}% Used
             External Storage : $externalStorageBytesInReadable
             Fingerprint      : ${Build.FINGERPRINT}
             Tablet           : ${ctx.isTablet()}

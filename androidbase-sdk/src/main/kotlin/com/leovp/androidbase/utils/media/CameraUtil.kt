@@ -40,7 +40,8 @@ object CameraUtil {
             ) //            boolean deleteFlag = imageFile.delete();
             //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
             val imageUri =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // Above Android 7.0, we need convert File to Uri through FileProvider.
+                // Above Android 7.0, we need convert File to Uri through FileProvider.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", imageFile)
                 } else { // Below Android 7.0. Directly using Uri to convert File to Uri.
                     Uri.fromFile(imageFile)
@@ -68,7 +69,8 @@ object CameraUtil {
             //            //retrieve data on return
             //            cropIntent.putExtra("return-data", true);
             // You must grant read uri permission. Or else app will be crashed.
-            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // start the activity - we handle returning in onActivityResult
+            // start the activity - we handle returning in onActivityResult
+            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             //             startActivityForResult(cropIntent, PIC_CROP);
             val croppedImageFile = ctx.createImageFile("jpg")
             LogContext.log.w(

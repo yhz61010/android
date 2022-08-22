@@ -13,11 +13,25 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.View
 import androidx.annotation.Keep
+import com.leovp.android.exts.hideNavigationBar
+import com.leovp.android.exts.requestFullScreenAfterVisible
+import com.leovp.android.exts.requestFullScreenBeforeSetContentView
+import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.ByteUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
+import com.leovp.basenetty.framework.base.decoder.CustomSocketByteStreamDecoder
+import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
+import com.leovp.basenetty.framework.client.BaseNettyClient
+import com.leovp.basenetty.framework.client.ClientConnectListener
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.bytes.asByteAndForceToBytes
+import com.leovp.bytes.toBytesLE
+import com.leovp.bytes.toHexStringLE
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.MediaProjectionService
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
@@ -28,32 +42,22 @@ import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMas
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_TRIGGER_I_FRAME
 import com.leovp.demo.databinding.ActivityScreenShareClientBinding
 import com.leovp.drawonscreen.FingerPaintView
-import com.leovp.bytes.asByteAndForceToBytes
-import com.leovp.bytes.toBytesLE
-import com.leovp.bytes.toHexStringLE
-import com.leovp.android.exts.*
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
-import com.leovp.basenetty.framework.base.decoder.CustomSocketByteStreamDecoder
-import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
-import com.leovp.basenetty.framework.client.BaseNettyClient
-import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
-import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareClientBinding>() {
     override fun getTagName(): String = ITAG
@@ -477,7 +481,11 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                                 pps = H265Util.getPps(dataArray)
                             }
                         }
-                        LogContext.log.w(ITAG, "initDecoder with vps=${vps?.toHexStringLE()} sps=${sps?.toHexStringLE()} pps=${pps?.toHexStringLE()}")
+                        LogContext.log.w(
+                            ITAG,
+                            "initDecoder with vps=" +
+                                "${vps?.toHexStringLE()} sps=${sps?.toHexStringLE()} pps=${pps?.toHexStringLE()}"
+                        )
                         if (sps != null && pps != null) {
                             initDecoder(vps, sps, pps)
                             webSocketClientHandler?.triggerIFrame()
@@ -523,7 +531,12 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         // 2. Execute: ip a
         // Find ip like: 10.10.9.126
         val url = URI("ws://${binding.etServerIp.text}:10086/")
-        webSocketClient = WebSocketClient(url, connectionListener, true, ConstantRetry(10, 2000)).also {
+        webSocketClient = WebSocketClient(
+            url,
+            connectionListener,
+            true,
+            ConstantRetry(10, 2000)
+        ).also {
             webSocketClientHandler = WebSocketClientHandler(it)
             it.initHandler(webSocketClientHandler)
             cs.launch { it.connect() }
@@ -598,7 +611,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
             "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) " +
                 "duration=${touchUpStartTime - touchDownStartTime}ms"
         )
-        webSocketClientHandler?.sendDragData(touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY, touchUpStartTime - touchDownStartTime)
+        webSocketClientHandler?.sendDragData(
+            touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY,
+            touchUpStartTime - touchDownStartTime
+        )
         return super.dispatchTouchEvent(event)
     }
 }

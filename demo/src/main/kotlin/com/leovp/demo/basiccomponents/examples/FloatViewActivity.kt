@@ -5,6 +5,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
+import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.android.exts.toast
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFloatViewBinding
@@ -12,8 +14,6 @@ import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview.FloatView
 import com.leovp.floatview.entities.DockEdge
 import com.leovp.floatview.entities.StickyEdge
-import com.leovp.android.exts.setOnSingleClickListener
-import com.leovp.android.exts.toast
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.*
@@ -25,16 +25,9 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
         return ActivityFloatViewBinding.inflate(layoutInflater)
     }
 
-    @SuppressLint("SetTextI18n", "CutPasteId")
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding.btnChange.setOnSingleClickListener {
-            FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                "I'm f1: ${Random().nextInt(100)}"
-            FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)?.text =
-                "I'm f2: ${Random().nextInt(100)}"
-        }
 
         FloatView.with(this)
             .layout(R.layout.floatview) { v ->
@@ -125,6 +118,12 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
             }
             .show()
 
+        initTouchableFloatView()
+
+        initView()
+    }
+
+    private fun initTouchableFloatView() {
         FloatView.with(this)
             .layout(R.layout.float_view_fingerpaint_fullscreen) { v ->
                 val finger = v.findViewById(R.id.finger) as FingerPaintView
@@ -167,6 +166,16 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
                 }
             })
             .show()
+    }
+
+    @SuppressLint("SetTextI18n", "CutPasteId")
+    private fun initView() {
+        binding.btnChange.setOnSingleClickListener {
+            FloatView.with("f1").customView?.findViewById<TextView>(R.id.tvText)?.text =
+                "I'm f1: ${Random().nextInt(100)}"
+            FloatView.with("f2").customView?.findViewById<TextView>(R.id.tvText)?.text =
+                "I'm f2: ${Random().nextInt(100)}"
+        }
 
         binding.rgSticky.setOnCheckedChangeListener { _, checkedId ->
             FloatView.with("f1").stickyEdge = when (checkedId) {

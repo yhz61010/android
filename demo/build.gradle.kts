@@ -38,9 +38,9 @@ android {
             signingConfig = releaseSigning
         }
 
-        getByName("release") {
-            signingConfig = releaseSigning
-        }
+//        getByName("release") {
+//            signingConfig = releaseSigning
+//        }
     }
 
     // https://developer.android.com/studio/build/build-variants

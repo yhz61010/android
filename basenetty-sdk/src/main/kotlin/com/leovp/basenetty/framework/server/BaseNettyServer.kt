@@ -1,14 +1,18 @@
 package com.leovp.basenetty.framework.server
 
+import com.leovp.basenetty.framework.base.BaseNetty
+import com.leovp.basenetty.framework.base.ServerConnectStatus
 import com.leovp.bytes.toHexString
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
-import com.leovp.basenetty.framework.base.BaseNetty
-import com.leovp.basenetty.framework.base.ServerConnectStatus
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.netty.channel.*
+import io.netty.channel.Channel
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
+import io.netty.channel.ChannelPipeline
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -35,7 +39,7 @@ abstract class BaseNettyServer protected constructor(
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/",
     timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
-) : BaseNetty() {
+) : BaseNetty {
 
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
@@ -216,7 +220,7 @@ abstract class BaseNettyServer protected constructor(
         val isStringCmd: Boolean
         val logPrefix = if (cmdDesc.isNullOrBlank()) "exe" else "exe[$cmdDesc]"
         when (cmd) {
-            is String    -> {
+            is String -> {
                 isStringCmd = true
                 stringCmd = cmd
                 bytesCmd = null
@@ -236,7 +240,7 @@ abstract class BaseNettyServer protected constructor(
                     } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
-            else         -> throw IllegalArgumentException("Command must be either String or ByteArray")
+            else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
         if (isWebSocket) {

@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext
  * Author: Michael Leo
  * Date: 20-8-5 下午2:53
  */
-abstract class BaseNetty
+interface BaseNetty
 
 interface ReadSocketDataListener<in T> {
     fun onReceivedData(ctx: ChannelHandlerContext, msg: T)

@@ -2,15 +2,15 @@ package com.leovp.http.okhttp
 
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
+import java.io.EOFException
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.internal.http.promisesBody
 import okio.Buffer
-import java.io.EOFException
-import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 /**
  * Author: Michael Leo
@@ -119,8 +119,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         var hasBoundary = false
         logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
         var requestStartMessage = "--> ${request.method} ${request.url} $protocol"
-        if (!logHeaders && hasRequestBody) requestStartMessage =
-            "$requestStartMessage (${requestBody?.contentLength()}-byte body)"
+        if (!logHeaders && hasRequestBody) requestStartMessage = "$requestStartMessage (${requestBody?.contentLength()}-byte body)"
         logger.log(requestStartMessage)
         if (logHeaders) {
             if (hasRequestBody) {
@@ -132,24 +131,17 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                         hasBoundary = true
                     }
                 }
-                if (requestBody?.contentLength() ?: -1 != -1L) {
+                if ((requestBody?.contentLength() ?: -1) != -1L) {
                     logger.log("Content-Length: ${requestBody?.contentLength()}")
                 }
             }
             val headers = request.headers
-            var i = 0
-            val count = headers.size
-            while (i < count) {
+            for (i in 0 until headers.size) {
                 val name = headers.name(i)
                 // Skip headers from the request body as they are explicitly logged above.
-                if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(
-                        name,
-                        ignoreCase = true
-                    )
-                ) {
+                if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(name, ignoreCase = true)) {
                     logger.log("$name: ${headers.value(i)}", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 }
-                i++
             }
             if (!logBody || !hasRequestBody) {
                 logger.log("--> END ${request.method}")
@@ -194,15 +186,12 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         )
         if (logHeaders) {
             val headers = response.headers
-            var i = 0
-            val count = headers.size
             var hasInlineFile = false
-            while (i < count) {
+            for (i in 0 until headers.size) {
                 logger.log("${headers.name(i)}: ${headers.value(i)}", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 if ("Content-Disposition".contentEquals(headers.name(i)) && headers.value(i).startsWith("inline; filename")) {
                     hasInlineFile = true
                 }
-                i++
             }
             if (!logBody || !response.promisesBody()) {
                 logger.log("<-- END HTTP")

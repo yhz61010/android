@@ -65,7 +65,7 @@ dokka = "1.7.10"
 #
 #
 # Unable to load class 'com.pinterest.ktlint.core.KtLint$Params'.
-ktlint = "0.45.2" # 0.46.1
+ktlint = "0.45.2" # 0.47.0 # 0.46.1 # 0.45.2
 ktlint-gradle = "10.3.0"
 benmanes = "0.42.0"
 jacoco = "0.8.8"

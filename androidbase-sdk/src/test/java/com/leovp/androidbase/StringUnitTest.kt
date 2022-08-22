@@ -27,7 +27,13 @@ class StringUnitTest {
         assertArrayEquals(byteArrayOf(97, 98, 99, 65, 66, 67, 48, 49, 50), string.toAsciiByteArray())
 
         val hexString = "010203040506070809A0B1C2"
-        assertArrayEquals(byteArrayOf(0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA0.toByte(), 0xB1.toByte(), 0xC2.toByte()), hexString.hexToByteArray())
+        assertArrayEquals(
+            byteArrayOf(
+                0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9,
+                0xA0.toByte(), 0xB1.toByte(), 0xC2.toByte()
+            ),
+            hexString.hexToByteArray()
+        )
 
         val longString = "I have a dream. A song to sing."
         assertEquals("I have", longString.truncate(6))

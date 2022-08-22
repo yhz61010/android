@@ -2,20 +2,24 @@
 
 package com.leovp.basenetty.framework.client
 
+import com.leovp.basenetty.framework.base.BaseNetty
+import com.leovp.basenetty.framework.base.ClientConnectStatus
+import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
 import com.leovp.bytes.toHexStringLE
-import com.leovp.network.SslUtils
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
-import com.leovp.basenetty.framework.base.BaseNetty
-import com.leovp.basenetty.framework.base.ClientConnectStatus
-import com.leovp.basenetty.framework.client.retry_strategy.ConstantRetry
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.network.SslUtils
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.netty.channel.*
+import io.netty.channel.Channel
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
+import io.netty.channel.ChannelPipeline
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
@@ -44,7 +48,14 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * A thread-safe class
@@ -77,7 +88,7 @@ abstract class BaseNettyClient protected constructor(
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     private val headers: Map<String, String>? = null,
     timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
-) : BaseNetty() {
+) : BaseNetty {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
     }

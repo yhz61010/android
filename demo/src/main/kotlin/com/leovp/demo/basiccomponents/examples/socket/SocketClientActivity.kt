@@ -12,8 +12,8 @@ import com.leovp.log.base.ITAG
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
-import com.leovp.basenetty.framework.client.retry_strategy.ExponentRetry
-import com.leovp.basenetty.framework.client.retry_strategy.base.RetryStrategy
+import com.leovp.basenetty.framework.client.retrystrategy.ExponentRetry
+import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.CoroutineScope

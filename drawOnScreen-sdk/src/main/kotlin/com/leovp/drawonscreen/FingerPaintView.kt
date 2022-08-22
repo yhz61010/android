@@ -2,7 +2,14 @@ package com.leovp.drawonscreen
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -30,6 +37,13 @@ class FingerPaintView @JvmOverloads constructor(
 
     companion object {
         private const val DEF_EDIT_MODE = true
+
+        private const val DEFAULT_STROKE_COLOR = Color.RED
+        private const val DEFAULT_STROKE_WIDTH = 12f
+        private const val DEFAULT_TOUCH_TOLERANCE = 4f
+
+        private const val DEFAULT_BLUR_RADIUS = 5F
+        private const val MATRIX_SIZE = 9
     }
 
     private enum class BrushType {
@@ -37,10 +51,6 @@ class FingerPaintView @JvmOverloads constructor(
     }
 
     var touchEventCallback: TouchEventCallback? = null
-
-    private val defaultStrokeColor = Color.RED
-    private val defaultStrokeWidth = 12f
-    private val defaultTouchTolerance = 4f
     private val defaultBitmapPaint = Paint(Paint.DITHER_FLAG)
     private var brushBitmap: Bitmap? = null
     private var brushCanvas: Canvas? = null
@@ -55,29 +65,29 @@ class FingerPaintView @JvmOverloads constructor(
      *
      * > This subclass is not supported and should not be instantiated.
      */
-//    private val defaultEmboss: EmbossMaskFilter by lazy {
-//        EmbossMaskFilter(floatArrayOf(1F, 1F, 1F), 0.4F, 6F, 3.5F)
-//    }
+    //    private val defaultEmboss: EmbossMaskFilter by lazy {
+    //        EmbossMaskFilter(floatArrayOf(1F, 1F, 1F), 0.4F, 6F, 3.5F)
+    //    }
     private val defaultBlur: BlurMaskFilter by lazy {
-        BlurMaskFilter(5F, BlurMaskFilter.Blur.NORMAL)
+        BlurMaskFilter(DEFAULT_BLUR_RADIUS, BlurMaskFilter.Blur.NORMAL)
     }
 
-    var strokeColor = defaultStrokeColor
+    var strokeColor = DEFAULT_STROKE_COLOR
         set(value) {
             field = value
             pathPaint.color = value
         }
 
-    var strokeWidth = defaultStrokeWidth
+    var strokeWidth = DEFAULT_STROKE_WIDTH
         set(value) {
             field = value
             pathPaint.strokeWidth = value
         }
 
-    private val matrixValues = FloatArray(9)
+    private val matrixValues = FloatArray(MATRIX_SIZE)
         get() = field.apply { imageMatrix.getValues(this) }
 
-    var touchTolerance = defaultTouchTolerance
+    var touchTolerance = DEFAULT_TOUCH_TOLERANCE
 
     private val pathPaint = Paint().apply {
         isAntiAlias = true
@@ -97,10 +107,10 @@ class FingerPaintView @JvmOverloads constructor(
         attrs?.let {
             context.theme.obtainStyledAttributes(it, R.styleable.FingerPaintImageView, defStyleAttr, defStyleRes).run {
                 runCatching {
-                    strokeColor = getColor(R.styleable.FingerPaintImageView_strokeColor, defaultStrokeColor)
-                    strokeWidth = getDimension(R.styleable.FingerPaintImageView_strokeWidth, defaultStrokeWidth)
+                    strokeColor = getColor(R.styleable.FingerPaintImageView_strokeColor, DEFAULT_STROKE_COLOR)
+                    strokeWidth = getDimension(R.styleable.FingerPaintImageView_strokeWidth, DEFAULT_STROKE_WIDTH)
                     inEditMode = getBoolean(R.styleable.FingerPaintImageView_inEditMode, DEF_EDIT_MODE)
-                    touchTolerance = getFloat(R.styleable.FingerPaintImageView_touchTolerance, defaultTouchTolerance)
+                    touchTolerance = getFloat(R.styleable.FingerPaintImageView_touchTolerance, DEFAULT_TOUCH_TOLERANCE)
                 }.also { recycle() }
             }
         }
@@ -125,7 +135,7 @@ class FingerPaintView @JvmOverloads constructor(
             if (!isModified()) return it
 
             val inverse = Matrix().apply { imageMatrix.invert(this) }
-            val scale = FloatArray(9).apply { inverse.getValues(this) }[Matrix.MSCALE_X]
+            val scale = FloatArray(MATRIX_SIZE).apply { inverse.getValues(this) }[Matrix.MSCALE_X]
 
             runCatching {
                 // draw original bitmap
@@ -136,12 +146,12 @@ class FingerPaintView @JvmOverloads constructor(
                 val transformedPath = Path()
                 val transformedPaint = Paint()
                 // Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]
-//                paths.forEach { (path, paint) ->
-//                    path.transform(inverse, transformedPath)
-//                    transformedPaint.set(paint)
-//                    transformedPaint.strokeWidth *= scale
-//                    canvas.drawPath(transformedPath, transformedPaint)
-//                }
+                //                paths.forEach { (path, paint) ->
+                //                    path.transform(inverse, transformedPath)
+                //                    transformedPaint.set(paint)
+                //                    transformedPaint.strokeWidth *= scale
+                //                    canvas.drawPath(transformedPath, transformedPaint)
+                //                }
                 for ((path, paint) in paths) {
                     path.transform(inverse, transformedPath)
                     transformedPaint.set(paint)
@@ -243,7 +253,7 @@ class FingerPaintView @JvmOverloads constructor(
                 if (index >= countDrawn) {
                     path.second.maskFilter =
                         when (currentBrush) {
-//                        BrushType.EMBOSS -> defaultEmboss
+                            //                        BrushType.EMBOSS -> defaultEmboss
                             BrushType.BLUR -> defaultBlur
                             BrushType.NORMAL -> null
                         }
@@ -269,9 +279,9 @@ class FingerPaintView @JvmOverloads constructor(
      *
      * > This subclass is not supported and should not be instantiated.
      */
-//    fun emboss() {
-//        currentBrush = BrushType.EMBOSS
-//    }
+    //    fun emboss() {
+    //        currentBrush = BrushType.EMBOSS
+    //    }
 
     /**
      * Change brush type to blur

@@ -10,10 +10,18 @@
 *.so binary
 *.wav binary
 *.mp3 binary
-*.caf binary
 *.mp4 binary
+*.caf binary
+*.ima4 binary
 *.h264 binary
 *.h265 binary
 *.raw binary
-*.ima4 binary
 *.pcm binary
+*.zip
+*.rar
+*.tar
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+*.so
+*.a

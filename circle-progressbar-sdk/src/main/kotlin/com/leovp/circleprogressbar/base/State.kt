@@ -15,7 +15,7 @@ import com.leovp.circleprogressbar.util.dp2px
  * Date: 2022/1/28 15:06
  */
 abstract class State(private val view: View) {
-    abstract fun state(): Type
+    abstract fun status(): Type
 
     protected var internalIcon: Drawable? = null
         set(value) {

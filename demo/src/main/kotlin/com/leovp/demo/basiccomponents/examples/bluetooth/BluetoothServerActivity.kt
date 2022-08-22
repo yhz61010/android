@@ -2,18 +2,24 @@ package com.leovp.demo.basiccomponents.examples.bluetooth
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
+import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
+import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBluetoothServerBinding
-import com.leovp.android.exts.bluetoothManager
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG

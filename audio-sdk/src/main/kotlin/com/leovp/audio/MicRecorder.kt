@@ -15,7 +15,11 @@ import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.sdk.BuildConfig
 import com.leovp.bytes.toByteArrayLE
 import com.leovp.log.LogContext
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 /**
  * **Need following permission:**

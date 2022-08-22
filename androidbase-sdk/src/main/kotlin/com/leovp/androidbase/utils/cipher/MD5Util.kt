@@ -61,7 +61,7 @@ object MD5Util {
                 val md5sum = digest.digest()
                 val bigInt = BigInteger(1, md5sum)
                 val output = bigInt.toString(16)
-                String.format("%32s", output).replace(' ', '0')
+                String.format(Locale.ENGLISH, "%32s", output).replace(' ', '0')
             }
         }.getOrDefault("")
     }

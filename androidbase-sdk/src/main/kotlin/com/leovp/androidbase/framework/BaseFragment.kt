@@ -36,12 +36,14 @@ abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Frag
     /**
      * Most of time, you should use [binding] property.
      */
-    protected var _binding: B? = null
+    private var _binding: B? = null
 
     /**
      * This property is only valid between onCreateView and onDestroyView.
      */
-    protected val binding get() = _binding!!
+    protected val binding: B get() = _binding!!
+
+    protected fun getNullableBinding(): B? = _binding
 
     abstract fun getViewBinding(
         inflater: LayoutInflater,

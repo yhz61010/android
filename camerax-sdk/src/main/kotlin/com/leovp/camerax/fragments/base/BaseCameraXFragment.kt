@@ -16,11 +16,25 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Range
 import android.util.Size
-import android.view.*
+import android.view.GestureDetector
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.SurfaceHolder
+import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
-import androidx.camera.core.*
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
+import androidx.camera.core.FocusMeteringResult
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.core.ZoomState
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -39,24 +53,39 @@ import androidx.viewbinding.ViewBinding
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.google.common.util.concurrent.ListenableFuture
-import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
-import com.leovp.camerax.adapter.Media
-import com.leovp.camerax.bean.CaptureImage
-import com.leovp.camerax.enums.CameraRatio
-import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.utils.*
-import com.leovp.camerax.sdk.R
 import com.leovp.android.exts.dp2px
 import com.leovp.android.exts.isSamsung
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.topMargin
+import com.leovp.camerax.adapter.Media
+import com.leovp.camerax.bean.CaptureImage
+import com.leovp.camerax.enums.CameraRatio
+import com.leovp.camerax.listeners.CameraXTouchListener
+import com.leovp.camerax.sdk.R
+import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
+import com.leovp.camerax.utils.SharedPrefsManager
+import com.leovp.camerax.utils.SoundManager
+import com.leovp.camerax.utils.cameraSensorOrientation
+import com.leovp.camerax.utils.getCameraSizeTotalPixels
+import com.leovp.camerax.utils.getCameraSupportedSize
+import com.leovp.camerax.utils.getConfigMap
+import com.leovp.camerax.utils.getSpecificPreviewOutputSize
+import com.leovp.camerax.utils.getSupportedColorFormatForEncoder
+import com.leovp.camerax.utils.getSupportedProfileLevelsForEncoder
+import com.leovp.camerax.utils.hardwareLevel
+import com.leovp.camerax.utils.hardwareLevelName
+import com.leovp.camerax.utils.isFlashSupported
+import com.leovp.camerax.utils.screenSurfaceRotation
+import com.leovp.camerax.utils.supportedFpsRanges
+import com.leovp.camerax.utils.toByteArray
+import com.leovp.image.BitmapProcessor
+import com.leovp.image.flipRotate
+import com.leovp.image.recycledSafety
+import com.leovp.image.toBytes
+import com.leovp.image.writeToFile
 import com.leovp.kotlin.exts.getRatio
 import com.leovp.kotlin.exts.round
-import com.leovp.image.*
 import com.leovp.log.LogContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,6 +93,9 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Author: Michael Leo
@@ -639,10 +671,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             LogContext.log.i(
                 logTag,
                 "FACE RETOUCH: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing,
-                    ExtensionMode.FACE_RETOUCH
-                )
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing,
+                        ExtensionMode.FACE_RETOUCH
+                    )
                 }"
             )
             LogContext.log.i(
@@ -855,41 +887,41 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                        .joinToString(",")
                 }
  Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                        .joinToString(",")
                 }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") {
-                    "${it.width}x${it.height}(${
-                    getRatio(it.width, it.height)
-                    })"
-                }
+                    highSpeedVideoSizes?.joinToString(",") {
+                        "${it.width}x${it.height}(${
+                            getRatio(it.width, it.height)
+                        })"
+                    }
                 }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
-                allCameraSupportSize?.joinToString(",") {
-                    "${it.width}x${it.height}" +
-                        "(${getCameraSizeTotalPixels(it)}-" +
-                        "${getRatio(it.width, it.height)})"
-                }
+                    allCameraSupportSize?.joinToString(",") {
+                        "${it.width}x${it.height}" +
+                            "(${getCameraSizeTotalPixels(it)}-" +
+                            "${getRatio(it.width, it.height)})"
+                    }
                 }
                 """.trimIndent()
                 LogContext.log.i(logTag, cameraParametersString)

@@ -14,10 +14,27 @@ import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.ColorBaseAdapter
 import com.leovp.demo.R
-import com.leovp.demo.basiccomponents.examples.*
+import com.leovp.demo.basiccomponents.examples.AidlActivity
+import com.leovp.demo.basiccomponents.examples.BitmapNativeActivity
+import com.leovp.demo.basiccomponents.examples.ChangeAppLanguageActivity
+import com.leovp.demo.basiccomponents.examples.CircleProgressbarActivity
+import com.leovp.demo.basiccomponents.examples.ClipboardActivity
+import com.leovp.demo.basiccomponents.examples.CoroutineActivity
+import com.leovp.demo.basiccomponents.examples.DeviceInfoActivity
+import com.leovp.demo.basiccomponents.examples.FingerPaintActivity
+import com.leovp.demo.basiccomponents.examples.FloatViewActivity
+import com.leovp.demo.basiccomponents.examples.HttpActivity
+import com.leovp.demo.basiccomponents.examples.JavaMailActivity
+import com.leovp.demo.basiccomponents.examples.KeepAliveActivity
+import com.leovp.demo.basiccomponents.examples.NetActivity
+import com.leovp.demo.basiccomponents.examples.NetworkMonitorActivity
+import com.leovp.demo.basiccomponents.examples.RecordSingleAppScreenActivity
+import com.leovp.demo.basiccomponents.examples.SaveInstanceStateActivity
+import com.leovp.demo.basiccomponents.examples.TakeScreenshotActivity
+import com.leovp.demo.basiccomponents.examples.ToastActivity
+import com.leovp.demo.basiccomponents.examples.WatermarkActivity
 import com.leovp.demo.basiccomponents.examples.accessibility.AccessibilityActivity
 import com.leovp.demo.basiccomponents.examples.adb.AdbCommunication
-import com.leovp.demo.basiccomponents.examples.AidlActivity
 import com.leovp.demo.basiccomponents.examples.animation.AnimationActivity
 import com.leovp.demo.basiccomponents.examples.audio.ADPCMActivity
 import com.leovp.demo.basiccomponents.examples.audio.AudioActivity
@@ -29,8 +46,8 @@ import com.leovp.demo.basiccomponents.examples.ffmpeg.FFMpegH264Activity
 import com.leovp.demo.basiccomponents.examples.ffmpeg.FFMpegH265Activity
 import com.leovp.demo.basiccomponents.examples.koin.KoinActivity
 import com.leovp.demo.basiccomponents.examples.log.LogActivity
-import com.leovp.demo.basiccomponents.examples.media_player.PlayH265VideoByMediaCodecActivity
-import com.leovp.demo.basiccomponents.examples.media_player.PlayRawH265ByMediaCodecActivity
+import com.leovp.demo.basiccomponents.examples.mediaplayer.PlayH265VideoByMediaCodecActivity
+import com.leovp.demo.basiccomponents.examples.mediaplayer.PlayRawH265ByMediaCodecActivity
 import com.leovp.demo.basiccomponents.examples.opengl.OpenGLES20Activity
 import com.leovp.demo.basiccomponents.examples.orientation.OrientationActivity
 import com.leovp.demo.basiccomponents.examples.pref.PrefActivity
@@ -39,7 +56,7 @@ import com.leovp.demo.basiccomponents.examples.sharescreen.client.ScreenShareCli
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.demo.basiccomponents.examples.socket.SocketClientActivity
 import com.leovp.demo.basiccomponents.examples.socket.SocketServerActivity
-import com.leovp.demo.basiccomponents.examples.socket.eventbus_bridge.EventBusBridgeClientActivity
+import com.leovp.demo.basiccomponents.examples.socket.eventbusbridge.EventBusBridgeClientActivity
 import com.leovp.demo.basiccomponents.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.demo.basiccomponents.examples.socket.websocket.WebSocketServerActivity
 import com.leovp.demo.basiccomponents.examples.wifi.WifiActivity
@@ -63,7 +80,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val featureList = arrayOf(
+        val featureArray = arrayOf(
             Pair("ScreenShare\nMaster side", ScreenShareMasterActivity::class.java),
             Pair("ScreenShare\nClient side", ScreenShareClientActivity::class.java),
             Pair("Socket Server", SocketServerActivity::class.java),
@@ -119,12 +136,12 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
         )
 
-        val colorBaseAdapter = ColorBaseAdapter(featureList.map { it.first }, colors)
+        val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 startActivity(
-                    featureList[position].second,
-                    { intent -> intent.putExtra("title", featureList[position].first) }
+                    featureArray[position].second,
+                    { intent -> intent.putExtra("title", featureArray[position].first) }
                 )
             }
         }

@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
+import com.leovp.android.exts.createFile
+import com.leovp.android.exts.saveRawResourceToFile
+import com.leovp.android.exts.toFile
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityHttpBinding
@@ -11,19 +14,24 @@ import com.leovp.http.retrofit.ApiService
 import com.leovp.http.retrofit.ApiSubscribe
 import com.leovp.http.retrofit.iter.ObserverOnNextListener
 import com.leovp.http.retrofit.observers.NoProgressObserver
-import com.leovp.android.exts.createFile
-import com.leovp.android.exts.saveRawResourceToFile
-import com.leovp.android.exts.toFile
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import io.reactivex.Observable
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.ResponseBody
-import retrofit2.http.*
-import java.io.File
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Headers
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.Path
+import retrofit2.http.QueryMap
+import retrofit2.http.Streaming
 
 class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>() {
     override fun getTagName(): String = ITAG

@@ -6,12 +6,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.toast
+import com.leovp.android.utils.LangUtil
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityChangeAppLanguageBinding
-import com.leovp.android.exts.setOnSingleClickListener
-import com.leovp.android.utils.LangUtil
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
@@ -64,7 +64,11 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLan
                 .show()
         }
 
-        binding.btnStartService.setOnSingleClickListener { startService(Intent(this@ChangeAppLanguageActivity, ChangeAppTestService::class.java)) }
+        binding.btnStartService.setOnSingleClickListener {
+            startService(
+                Intent(this@ChangeAppLanguageActivity, ChangeAppTestService::class.java)
+            )
+        }
     }
 }
 

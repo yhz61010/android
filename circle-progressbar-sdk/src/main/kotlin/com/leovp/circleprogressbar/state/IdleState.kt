@@ -14,7 +14,7 @@ import com.leovp.circleprogressbar.base.State
  * Date: 2022/1/28 15:19
  */
 class IdleState(view: View) : State(view) {
-    override fun state(): Type = Type.STATE_IDLE
+    override fun status(): Type = Type.STATE_IDLE
 
     override fun setAttributes(
         context: Context,

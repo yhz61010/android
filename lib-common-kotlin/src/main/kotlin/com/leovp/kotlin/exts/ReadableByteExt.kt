@@ -131,7 +131,8 @@ fun Long.autoByteInDecimal(precision: Int = 2): String = when {
  *
  * @param si true -> B -> XB; false -> B -> XiB
  */
-fun Long.autoFormatByte(si: Boolean = false, precision: Int = 2): String = if (si) autoByteInDecimal(precision) else autoByteInBinary(precision)
+fun Long.autoFormatByte(si: Boolean = false, precision: Int = 2): String =
+    if (si) autoByteInDecimal(precision) else autoByteInBinary(precision)
 
 // Formatter.formatShortFileSize(ctx, bytes)
 /**

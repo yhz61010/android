@@ -21,7 +21,9 @@ class DecoderVideoFileManager {
     private var outputFormat: MediaFormat? = null
     private val mSpeedController: SpeedManager = SpeedManager()
 
-    private val outputVideoRawDataFile: FileOutputStream by lazy { FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265")) }
+    private val outputVideoRawDataFile: FileOutputStream by lazy {
+        FileOutputStream(File(Environment.getExternalStorageDirectory(), "h265.h265"))
+    }
 
     var videoWidth: Int = 0
     var videoHeight: Int = 0

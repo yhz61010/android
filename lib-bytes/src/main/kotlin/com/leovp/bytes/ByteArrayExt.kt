@@ -23,43 +23,51 @@ fun ByteArray.readBytes(length: Int, srcPos: Int = 0): ByteArray {
     return bytes
 }
 
-fun ByteArray.readShort(index: Int = 0): Short = (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
-fun ByteArray.readShortLE(index: Int = 0): Short = (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
+fun ByteArray.readShort(index: Int = 0): Short =
+    (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
+
+fun ByteArray.readShortLE(index: Int = 0): Short =
+    (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
 
 fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or (
     this[2 + index].toInt() and 0xFF shl 8
-    ) or (
-    this[1 + index].toInt() and 0xFF shl 16
-    ) or (
-    this[0 + index].toInt() and 0xFF shl 24
-    )
+    ) or
+    (this[1 + index].toInt() and 0xFF shl 16) or
+    (this[0 + index].toInt() and 0xFF shl 24)
 
 fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or (
     this[index + 1].toInt() and 0xFF shl 8
-    ) or (
-    this[index + 2].toInt() and 0xFF shl 16
-    ) or (
-    this[index + 3].toInt() and 0xFF shl 24
-    )
+    ) or
+    (this[index + 2].toInt() and 0xFF shl 16) or
+    (this[index + 3].toInt() and 0xFF shl 24)
 
 fun ByteArray.readLong(index: Int = 0): Long {
     var result: Long = 0
-    for (i in 0 until Long.SIZE_BYTES) result = result or ((this[i + index].toLong() and 0xFF) shl (Long.SIZE_BYTES - 1 - i) * 8)
+    for (i in 0 until Long.SIZE_BYTES) {
+        result = result or ((this[i + index].toLong() and 0xFF) shl (Long.SIZE_BYTES - 1 - i) * 8)
+    }
     return result
 }
 
 fun ByteArray.readLongLE(index: Int = 0): Long {
     var result: Long = 0
-    for (i in 0 until Long.SIZE_BYTES) result = result or ((this[i + index].toLong() and 0xFF) shl (i * 8))
+    for (i in 0 until Long.SIZE_BYTES) {
+        result = result or ((this[i + index].toLong() and 0xFF) shl (i * 8))
+    }
     return result
 }
 
 // =============================================
 
 fun Short.toBytes(): ByteArray =
-    ByteArray(Short.SIZE_BYTES).also { for (i in it.indices) it[i] = (this.toInt() ushr ((Short.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte() }
+    ByteArray(Short.SIZE_BYTES).also {
+        for (i in it.indices) it[i] = (this.toInt() ushr ((Short.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
+    }
 
-fun Short.toBytesLE(): ByteArray = ByteArray(Short.SIZE_BYTES).also { for (i in it.indices) it[i] = ((this.toInt() ushr i * 8) and 0xFF).toByte() }
+fun Short.toBytesLE(): ByteArray =
+    ByteArray(Short.SIZE_BYTES).also {
+        for (i in it.indices) it[i] = ((this.toInt() ushr i * 8) and 0xFF).toByte()
+    }
 
 /**
  * A big-endian system stores the most significant byte of a word at the smallest memory address
@@ -72,8 +80,9 @@ fun Short.toBytesLE(): ByteArray = ByteArray(Short.SIZE_BYTES).also { for (i in 
  *  a  a+1  a+2  a+3
  * 1A   2B   3C   4D
  */
-fun Int.toBytes(): ByteArray =
-    ByteArray(Int.SIZE_BYTES).also { for (i in it.indices) it[i] = (this ushr ((Int.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte() }
+fun Int.toBytes(): ByteArray = ByteArray(Int.SIZE_BYTES).also {
+    for (i in it.indices) it[i] = (this ushr ((Int.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
+}
 
 /**
  * A little-endian system stores the least-significant byte at the smallest memory address.
@@ -87,12 +96,18 @@ fun Int.toBytes(): ByteArray =
  *  a  a+1  a+2  a+3
  * 4D   3C   2B   1A
  */
-fun Int.toBytesLE(): ByteArray = ByteArray(Int.SIZE_BYTES).also { for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte() }
+fun Int.toBytesLE(): ByteArray = ByteArray(Int.SIZE_BYTES).also {
+    for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte()
+}
 
 fun Long.toBytes(): ByteArray =
-    ByteArray(Long.SIZE_BYTES).also { for (i in it.indices) it[i] = (this ushr ((Long.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte() }
+    ByteArray(Long.SIZE_BYTES).also {
+        for (i in it.indices) it[i] = (this ushr ((Long.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
+    }
 
-fun Long.toBytesLE(): ByteArray = ByteArray(Long.SIZE_BYTES).also { for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte() }
+fun Long.toBytesLE(): ByteArray = ByteArray(Long.SIZE_BYTES).also {
+    for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte()
+}
 
 // ==============================================
 

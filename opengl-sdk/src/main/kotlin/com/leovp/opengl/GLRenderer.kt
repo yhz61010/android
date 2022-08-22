@@ -7,9 +7,13 @@ import android.opengl.GLES20
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
 import com.leovp.opengl.sdk.R
-import com.leovp.opengl.util.*
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_STRIDE_IN_FLOAT
+import com.leovp.opengl.util.VerticesUtil
+import com.leovp.opengl.util.checkGlError
+import com.leovp.opengl.util.createFloatBuffer
+import com.leovp.opengl.util.feedTextureWithImageData
+import com.leovp.opengl.util.readAssetsFileAsString
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
@@ -132,7 +136,9 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 // Calculate the projection and view transformation
                 //                Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
-                runCatching { drawTexture(mvpMatrix, yuv420Type) }.onFailure { LogContext.log.e(tag, it, outputType = ILog.OUTPUT_TYPE_SYSTEM) }
+                runCatching {
+                    drawTexture(mvpMatrix, yuv420Type)
+                }.onFailure { LogContext.log.e(tag, it, outputType = ILog.OUTPUT_TYPE_SYSTEM) }
             }
         }
     }

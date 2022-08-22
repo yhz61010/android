@@ -218,7 +218,8 @@ abstract class BaseNettyClient protected constructor(
                         if ((webSocketUri?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
                             if (trustAllServers) {
                                 LogContext.log.w(tag, "Working in wss INSECURE mode")
-                                val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                                val sslCtx: SslContext =
+                                    SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
                                 addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
                             } else {
                                 if (certificateInputStream == null) {
@@ -409,13 +410,17 @@ abstract class BaseNettyClient protected constructor(
         }
         disconnectManually = true
 
-        // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler if connection has been connected before.
-        // However, if connection status is [CONNECTING], it ChannelHandler [channelInactive] will not be triggered.
+        // The [DISCONNECTED] status and listener will be assigned and triggered in ChannelHandler
+        // if connection has been connected before.
+        // However, if connection status is [CONNECTING],
+        // it ChannelHandler [channelInactive] will not be triggered.
         // In this case, we do not change the connect status.
 
         stopRetryHandler()
         defaultInboundHandler?.release()
-        runCatching { // Add sync() here to make sure the listener of channel disconnect method will be triggered here.
+        runCatching {
+            // Add sync() here to make sure
+            // the listener of channel disconnect method will be triggered here.
             if (::channel.isInitialized) channel.disconnect().sync().addListener { f ->
                 if (f.isSuccess) {
                     LogContext.log.w(tag, "===== disconnectManually() done =====")
@@ -425,14 +430,22 @@ abstract class BaseNettyClient protected constructor(
                 } else {
                     LogContext.log.w(tag, "===== disconnectManually() failed =====")
                     connectStatus.set(ClientConnectStatus.FAILED)
-                    connectionListener.onFailed(this, ClientConnectListener.DISCONNECT_MANUALLY_ERROR, "Disconnect manually failed")
+                    connectionListener.onFailed(
+                        this,
+                        ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
+                        "Disconnect manually failed"
+                    )
                     cont.resume(connectStatus.get())
                 }
             }
         }.onFailure {
             LogContext.log.e(tag, "disconnectManually error.", it)
             connectStatus.set(ClientConnectStatus.FAILED)
-            connectionListener.onFailed(this, ClientConnectListener.DISCONNECT_MANUALLY_EXCEPTION, "Disconnect manually exception")
+            connectionListener.onFailed(
+                this,
+                ClientConnectListener.DISCONNECT_MANUALLY_EXCEPTION,
+                "Disconnect manually exception"
+            )
             cont.resume(connectStatus.get())
         }
     }
@@ -442,11 +455,16 @@ abstract class BaseNettyClient protected constructor(
 
         retryTimes.getAndIncrement()
         if (retryTimes.get() > retryStrategy.getMaxTimes()) {
-            LogContext.log.e(tag, "===== Connect failed in doRetry() - Exceed max retry times. =====")
+            LogContext.log.e(
+                tag,
+                "===== Connect failed in doRetry() - Exceed max retry times. ====="
+            )
             stopRetryHandler()
             connectStatus.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(
-                this@BaseNettyClient, ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES, "Exceed max retry times."
+                this@BaseNettyClient,
+                ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
+                "Exceed max retry times."
             )
         } else {
             LogContext.log.w(
@@ -477,15 +495,19 @@ abstract class BaseNettyClient protected constructor(
      * Release netty client using **syncUninterruptibly** method.(Full release will cost almost 2200ms.)
      * So you'd better NOT call this method in main thread.
      *
-     * Once you call [release], you can not reconnect it again by calling [connect] simply, you must recreate netty client again.
+     * Once you call [release], you can not reconnect it again by calling [connect] simply,
+     * you must recreate netty client again.
      * If you want to reconnect it again, do not call this method, just call [disconnectManually].
      *
-     * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and any exception will be ignored.
+     * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and
+     * any exception will be ignored.
      */
     suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
         synchronized(this) {
-            if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() || ClientConnectStatus.RELEASING == connectStatus.get()) {
+            if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() ||
+                ClientConnectStatus.RELEASING == connectStatus.get()
+            ) {
                 LogContext.log.w(tag, "Releasing now or already released or not initialized")
                 cont.resume(false)
                 return@suspendCancellableCoroutine
@@ -507,8 +529,8 @@ abstract class BaseNettyClient protected constructor(
                 LogContext.log.w(tag, "Closing channel...")
                 runCatching {
                     pipeline().removeAll { true }
-                    //            closeFuture().syncUninterruptibly() // syncUninterruptibly() will stuck here. Why???
-                    //                    closeFuture()
+                    // closeFuture().syncUninterruptibly() // syncUninterruptibly() will stuck here. Why???
+                    //         closeFuture()
                     close().syncUninterruptibly()
                 }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
             }
@@ -537,7 +559,9 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.i(tag, "stopRetryHandler()")
         //        retryHandler.removeCallbacksAndMessages(null)
         //        retryThread.interrupt()
-        runCatching { retryScope.cancel() }.onFailure { LogContext.log.e(tag, "Cancel retry coroutine error.", it) }
+        runCatching { retryScope.cancel() }.onFailure {
+            LogContext.log.e(tag, "Cancel retry coroutine error.", it)
+        }
         retryTimes.set(0)
     }
 
@@ -549,18 +573,30 @@ abstract class BaseNettyClient protected constructor(
             return false
         }
         if (cmd == null) {
-            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
+            LogContext.log.e(
+                cmdTypeAndId,
+                "The command is null. Stop processing.",
+                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+            )
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
             throw IllegalArgumentException("$cmdTypeAndId: Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectStatus.get()) {
-            LogContext.log.e(cmdTypeAndId, "Socket is not connected. Can not send command.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
+            LogContext.log.e(
+                cmdTypeAndId,
+                "Socket is not connected. Can not send command.",
+                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+            )
             return false
         }
         if (::channel.isInitialized && !channel.isActive) {
-            LogContext.log.e(cmdTypeAndId, "Can not execute cmd because of Channel is not active.", outputType = OUTPUT_TYPE_CLIENT_COMMAND)
+            LogContext.log.e(
+                cmdTypeAndId,
+                "Can not execute cmd because of Channel is not active.",
+                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+            )
             return false
         }
         return true
@@ -592,7 +628,11 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd", fullOutput = fullOutput)
+                    if (showContent) LogContext.log.i(
+                        cmdTypeAndId,
+                        "$logPrefix[${cmd.length}]=$cmd",
+                        fullOutput = fullOutput
+                    )
                     else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
                 }
             }
@@ -602,8 +642,16 @@ abstract class BaseNettyClient protected constructor(
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
                     if (showContent) {
-                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
-                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]", fullOutput = fullOutput)
+                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) {
+                            cmd.toHexString()
+                        } else {
+                            cmd.toHexStringLE()
+                        }
+                        LogContext.log.i(
+                            cmdTypeAndId,
+                            "$logPrefix[${cmd.size}]=HEX[$bytesContent]",
+                            fullOutput = fullOutput
+                        )
                     } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
                 }
             }
@@ -618,7 +666,13 @@ abstract class BaseNettyClient protected constructor(
             if (isPing) channel.writeAndFlush(
                 PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd)
             )
-            else channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            else channel.writeAndFlush(
+                if (isStringCmd) {
+                    TextWebSocketFrame(stringCmd)
+                } else {
+                    BinaryWebSocketFrame(bytesCmd)
+                }
+            )
         } else {
             channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
@@ -633,7 +687,15 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
-    ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = false, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+    ) = executeUnifiedCommand(
+        cmdTypeAndId,
+        cmdDesc,
+        cmd,
+        isPing = false,
+        showContent = showContent,
+        showLog = showLog,
+        byteOrder = byteOrder
+    )
 
     @Suppress("unused")
     @JvmOverloads
@@ -644,7 +706,15 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
-    ) = executeUnifiedCommand(cmdTypeAndId, cmdDesc, cmd, isPing = true, showContent = showContent, showLog = showLog, byteOrder = byteOrder)
+    ) = executeUnifiedCommand(
+        cmdTypeAndId,
+        cmdDesc,
+        cmd,
+        isPing = true,
+        showContent = showContent,
+        showLog = showLog,
+        byteOrder = byteOrder
+    )
 
     // ================================================
 }

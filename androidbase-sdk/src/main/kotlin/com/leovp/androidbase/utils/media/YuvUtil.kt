@@ -84,7 +84,9 @@ object YuvUtil {
      *             `NV21` format `YYYYYYYY VUVU`
      */
     fun getYuvDataFromImage(image: Image, colorFormat: Int): ByteArray {
-        require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) { "Only support COLOR_FormatI420 and COLOR_FormatNV21" }
+        require(!(colorFormat != COLOR_FORMAT_I420 && colorFormat != COLOR_FORMAT_NV21)) {
+            "Only support COLOR_FormatI420 and COLOR_FormatNV21"
+        }
         if (!isImageFormatSupported(image)) {
             throw RuntimeException("Can't convert Image to byte array, format " + image.format)
         }

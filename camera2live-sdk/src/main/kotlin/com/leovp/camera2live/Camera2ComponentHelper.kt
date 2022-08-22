@@ -715,7 +715,8 @@ class Camera2ComponentHelper(
                     for ((i, plane) in image.planes.withIndex()) {
                         LogContext.log.v(
                             TAG,
-                            "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} bufferSize=${plane.buffer.remaining()}"
+                            "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} " +
+                                "bufferSize=${plane.buffer.remaining()}"
                         )
                     }
                 }

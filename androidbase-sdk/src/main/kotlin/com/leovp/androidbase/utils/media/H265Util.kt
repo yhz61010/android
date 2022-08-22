@@ -420,5 +420,6 @@ object H265Util {
         return getNaluTypeName(data)
     }
 
-    fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
+    fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> =
+        CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

@@ -180,5 +180,6 @@ object H264Util {
 
     fun getNaluTypeName(data: ByteArray): String = getNaluTypeName(getNaluType(data))
 
-    fun getAvcCodec(encoder: Boolean = true): List<MediaCodecInfo> = CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
+    fun getAvcCodec(encoder: Boolean = true): List<MediaCodecInfo> =
+        CodecUtil.getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_AVC, encoder)
 }

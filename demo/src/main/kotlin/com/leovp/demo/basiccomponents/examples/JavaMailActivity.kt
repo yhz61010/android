@@ -2,24 +2,31 @@ package com.leovp.demo.basiccomponents.examples
 
 import android.os.Bundle
 import android.view.View
+import com.leovp.android.exts.createFile
+import com.leovp.android.exts.toFile
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityJavaMailBinding
-import com.leovp.android.exts.createFile
-import com.leovp.android.exts.toFile
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
-import javax.mail.*
+import javax.mail.Address
+import javax.mail.Folder
+import javax.mail.Message
+import javax.mail.Multipart
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Store
+import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     override fun getTagName(): String = ITAG
@@ -61,13 +68,13 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
             setProperty("mail.$protocol.port", port.toString())
             setProperty("mail.$protocol.auth", "true")
             setProperty("mail.$protocol.ssl.enable", enableSsl.toString())
-//            setProperty("mail.$protocol.timeout", "10_000")
-//            setProperty("mail.debug", "true")
+            //            setProperty("mail.$protocol.timeout", "10_000")
+            //            setProperty("mail.debug", "true")
 
-//        setProperty("mail.smtp.port", "465")
-//        setProperty("mail.smtp.socketFactory.port", "465")
-//        setProperty("mail.smtp.socketFactory.fallback", "false")
-//        setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
+            //        setProperty("mail.smtp.port", "465")
+            //        setProperty("mail.smtp.socketFactory.port", "465")
+            //        setProperty("mail.smtp.socketFactory.fallback", "false")
+            //        setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
         }
     }
 
@@ -101,7 +108,14 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     fun onSendSimpleEmailClick(@Suppress("UNUSED_PARAMETER") view: View) {
         ioScope.launch {
             LogContext.log.i(ITAG, "Sending simple mail...")
-            val session: Session = getSession(EMAIL_SMTP_PROTOCOL, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, FROM, FROM_PWD, EMAIL_SMTP_SSL)
+            val session: Session = getSession(
+                EMAIL_SMTP_PROTOCOL,
+                EMAIL_SMTP_HOST,
+                EMAIL_SMTP_PORT,
+                FROM,
+                FROM_PWD,
+                EMAIL_SMTP_SSL
+            )
             runCatching {
                 val message = MimeMessage(session)
                 message.setFrom(InternetAddress(FROM))
@@ -120,7 +134,13 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
             LogContext.log.i(ITAG, "Sending attachment mail...")
             val attachment = this@JavaMailActivity.createFile("music.mp3")
             resources.openRawResource(R.raw.music).toFile(attachment.absolutePath)
-            val session: Session = getSession(EMAIL_SMTP_PROTOCOL, EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, FROM, FROM_PWD, EMAIL_SMTP_SSL)
+            val session: Session = getSession(
+                EMAIL_SMTP_PROTOCOL,
+                EMAIL_SMTP_HOST,
+                EMAIL_SMTP_PORT,
+                FROM, FROM_PWD,
+                EMAIL_SMTP_SSL
+            )
 
             val text = MimeBodyPart()
             text.setContent("<h1>Welcome Leo</h1>", "text/html;charset=UTF-8")
@@ -133,7 +153,7 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
             val message = MimeMessage(session)
             val address = InternetAddress(FROM)
             message.setFrom(address)
-//            message.addRecipient(Message.RecipientType.CC, address)
+            //            message.addRecipient(Message.RecipientType.CC, address)
             message.addRecipient(Message.RecipientType.TO, InternetAddress(TO))
 
             val mp = MimeMultipart()
@@ -156,13 +176,18 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
         ioScope.launch {
             LogContext.log.i(ITAG, "Receiving mails...")
             runCatching {
-                val session: Session = getSession(EMAIL_POP_PROTOCOL, EMAIL_POP_HOST, EMAIL_POP_PORT, enableSsl = EMAIL_POP_SSL)
+                val session: Session = getSession(
+                    EMAIL_POP_PROTOCOL,
+                    EMAIL_POP_HOST,
+                    EMAIL_POP_PORT,
+                    enableSsl = EMAIL_POP_SSL
+                )
                 session.debug = true
 
                 // connects to the message store
                 val store: Store = session.getStore(EMAIL_POP_PROTOCOL)
                 store.connect(FROM, FROM_PWD)
-//                store.connect()
+                //                store.connect()
 
                 // opens the inbox folder
                 val folderInbox = store.getFolder("INBOX")
@@ -178,7 +203,7 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                     val from = fromAddress[0].toString()
                     val subject = msg.subject
                     val toList: String = parseAddresses(msg.getRecipients(Message.RecipientType.TO))
-//                    val ccList: String = parseAddresses(msg.getRecipients(Message.RecipientType.CC))
+                    // val ccList: String = parseAddresses(msg.getRecipients(Message.RecipientType.CC))
                     val sentDate = msg.sentDate.toString()
                     val contentType = msg.contentType
                     var messageContent = ""
@@ -195,7 +220,10 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                         val numberOfParts = multiPart?.count ?: 0
                         for (partCount in 0 until numberOfParts) {
                             val part: MimeBodyPart? = multiPart?.getBodyPart(partCount) as? MimeBodyPart
-                            LogContext.log.i(ITAG, "    Part[$partCount] content type: ${part?.contentType}")
+                            LogContext.log.i(
+                                ITAG,
+                                "    Part[$partCount] content type: ${part?.contentType}"
+                            )
                             if (part?.contentType?.contains("text/plain") == true) {
                                 messageContent += part.content.toString()
                             } else if (part?.contentType?.contains("text/html") == true) {
@@ -209,15 +237,20 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                     // print out details of each message
                     LogContext.log.i(
                         ITAG,
-                        "Message(${contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)}) #" + (i + 1) + ":"
+                        "Message(${
+                        contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)
+                        }) #" + (i + 1) + ":"
                     )
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")
-//                    LogContext.log.i(ITAG, "CC: $ccList")
+                    //                    LogContext.log.i(ITAG, "CC: $ccList")
                     LogContext.log.i(ITAG, "Subject: $subject")
                     LogContext.log.i(ITAG, "Sent Date: $sentDate")
                     LogContext.log.i(ITAG, "Message: $messageContent")
-                    LogContext.log.i(ITAG, "------------------------------------------------------------------------------------------------")
+                    LogContext.log.i(
+                        ITAG,
+                        "---------------------------------------------------------------------"
+                    )
                 }
 
                 // disconnect

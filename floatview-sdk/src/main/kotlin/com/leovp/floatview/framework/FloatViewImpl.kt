@@ -8,7 +8,12 @@ import android.graphics.Point
 import android.os.Build
 import android.util.Log
 import android.util.Size
-import android.view.*
+import android.view.Gravity
+import android.view.IRotationWatcher
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.annotation.IdRes
 import androidx.annotation.MainThread
 import androidx.core.animation.doOnCancel
@@ -18,7 +23,13 @@ import androidx.core.view.children
 import com.leovp.floatview.entities.DefaultConfig
 import com.leovp.floatview.entities.DockEdge
 import com.leovp.floatview.entities.StickyEdge
-import com.leovp.floatview.utils.*
+import com.leovp.floatview.utils.canDrawOverlays
+import com.leovp.floatview.utils.getScreenSize
+import com.leovp.floatview.utils.isGoogle
+import com.leovp.floatview.utils.screenAvailableResolution
+import com.leovp.floatview.utils.screenRealResolution
+import com.leovp.floatview.utils.screenSurfaceRotation
+import com.leovp.floatview.utils.statusBarHeight
 import com.leovp.reflection.wrappers.ServiceManager
 import kotlin.math.abs
 import kotlin.math.max
@@ -56,10 +67,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun getScreenOrientationSize(orientation: Int): Size {
         // val screenResolution = if (context.canDrawOverlays) context.screenRealResolution else context.screenAvailableResolution
         val screenResolution = context.screenRealResolution
-//        val widthNecessaryOffset =
-//                abs(min(context.screenRealResolution.width, context.screenRealResolution.height)
-//                        - min(context.screenAvailableResolution.width,
-//                    context.screenAvailableResolution.height))
+        //        val widthNecessaryOffset =
+        //                abs(min(context.screenRealResolution.width, context.screenRealResolution.height)
+        //                        - min(context.screenAvailableResolution.width,
+        //                    context.screenAvailableResolution.height))
         val heightNecessaryOffset = abs(
             max(context.screenRealResolution.width, context.screenRealResolution.height) -
                 max(context.screenAvailableResolution.width, context.screenAvailableResolution.height)
@@ -230,7 +241,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                             }
                         } else { // On bottom screen // Bottom right
                             // Animate to bottom
-                            if (screenOrientSz.height - getFloatViewBottomRightPos().y <= screenOrientSz.width - getFloatViewBottomRightPos().x) {
+                            if (screenOrientSz.height - getFloatViewBottomRightPos().y <=
+                                screenOrientSz.width - getFloatViewBottomRightPos().x
+                            ) {
                                 animateDirectionForDockFull = DockEdge.BOTTOM
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                             } else { // Animate to right

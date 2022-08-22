@@ -1,16 +1,20 @@
 package com.leovp.demo.basiccomponents.examples.bluetooth
 
 import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothProfile
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBluetoothClientBinding
-import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
@@ -129,7 +133,10 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                     super.onCharacteristicChanged(gatt, characteristic)
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         val data = String(characteristic.value)
-                        LogContext.log.w("onCharacteristicChanged Below Android 13 characteristic=${characteristic.toJsonString()} data=$data")
+                        LogContext.log.w(
+                            "onCharacteristicChanged Below Android 13 characteristic=" +
+                                "${characteristic.toJsonString()} data=$data"
+                        )
                         toast("Received msg=$data")
                     }
                 }
@@ -143,7 +150,10 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                 ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
                     val data = String(value)
-                    LogContext.log.w("onCharacteristicChanged Above Android 13 characteristic=${characteristic.toJsonString()} data=$data")
+                    LogContext.log.w(
+                        "onCharacteristicChanged Above Android 13 characteristic=" +
+                            "${characteristic.toJsonString()} data=$data"
+                    )
                     toast("Received msg=$data")
                 }
 
@@ -153,7 +163,10 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                     characteristic: BluetoothGattCharacteristic,
                     status: Int
                 ) {
-                    LogContext.log.w("onCharacteristicWrite characteristic=${characteristic.toJsonString()} status=$status")
+                    LogContext.log.w(
+                        "onCharacteristicWrite characteristic=" +
+                            "${characteristic.toJsonString()} status=$status"
+                    )
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         LogContext.log.w("Sent successfully.")
                     }

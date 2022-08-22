@@ -13,13 +13,13 @@ trim_trailing_whitespace = true
 indent_size = 4
 ij_kotlin_imports_layout = *
 disabled_rules = import-ordering, no-wildcard-imports # ,indent
-# As of version 0.47.0
+# As of version 0.47.0, `disabled_rules` has renamed to `ktlint_disabled_rules`.
 # https://github.com/pinterest/ktlint/blob/master/CHANGELOG.md#editorconfig-property-disabled_rules
 ktlint_disabled_rules = import-ordering, no-wildcard-imports # ,indent
 ij_kotlin_name_count_to_use_star_import = 999
 ij_kotlin_name_count_to_use_star_import_for_members = 999
 # Use "off" (or -1) to ignore max line length or a positive number to set max line length
-max_line_length = 150
+max_line_length = 140
 
 [*.md]
 trim_trailing_whitespace = false

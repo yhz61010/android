@@ -1,7 +1,13 @@
 package com.leovp.audio.aac
 
 import android.content.Context
-import android.media.*
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
+import android.media.MediaCodec
+import android.media.MediaCodecInfo
+import android.media.MediaFormat
 import android.os.SystemClock
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.bytes.toHexStringLE
@@ -10,7 +16,13 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -46,24 +58,32 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     private fun initAudioTrack(ctx: Context) {
         runCatching {
             audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize = AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat)
+            val bufferSize =
+                AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat)
             val sessionId = audioManager!!.generateAudioSessionId()
             val audioAttributesBuilder = AudioAttributes.Builder().apply {
                 // Speaker
-                setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+                // AudioAttributes.USAGE_MEDIA  AudioAttributes.USAGE_VOICE_COMMUNICATION
+                setUsage(AudioAttributes.USAGE_MEDIA)
+                // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 setLegacyStreamType(AudioManager.STREAM_MUSIC)
 
                 // Earphone
-//                setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION) // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
-//                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
-//                setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
+                // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
+                //                setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+                //                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                //                setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
             }
             val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
                 .setEncoding(audioDecoderInfo.audioFormat)
                 .setChannelMask(audioDecoderInfo.channelConfig)
                 .build()
-            audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
+            audioTrack = AudioTrack(
+                audioAttributesBuilder.build(), audioFormat, bufferSize,
+                AudioTrack.MODE_STREAM, sessionId
+            )
 
             if (AudioTrack.STATE_INITIALIZED == audioTrack!!.state) {
                 LogContext.log.i(TAG, "Start playing audio...")
@@ -125,17 +145,17 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                 setByteBuffer("csd-0", csd0BB)
             }
             audioDecoder!!.configure(mediaFormat, null, null, 0)
-//            outputFormat = audioDecoder?.outputFormat // option B
-//            audioDecoder?.setCallback(mediaCodecCallback)
+            //            outputFormat = audioDecoder?.outputFormat // option B
+            //            audioDecoder?.setCallback(mediaCodecCallback)
             audioDecoder?.start()
             ioScope.launch {
                 runCatching {
                     while (true) {
                         ensureActive()
                         val audioData = rcvAudioDataQueue.poll()
-//                        if (frameCount.get() % 30 == 0L) {
+                        //                        if (frameCount.get() % 30 == 0L) {
                         LogContext.log.i(TAG, "Play AAC[${audioData?.size}]")
-//                        }
+                        //                        }
                         if (audioData != null && audioData.isNotEmpty()) {
                             decodeAndPlay(audioData)
                         }
@@ -147,7 +167,8 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     }
 
     /**
-     * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
+     * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20),
+     * it will not play sound due to MediaCodec state error.
      */
     private fun decodeAndPlay(audioData: ByteArray) {
         try {
@@ -190,67 +211,67 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
         }
     }
 
-//    private val mediaCodecCallback = object : MediaCodec.Callback() {
-//        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-//            try {
-//                val inputBuffer = codec.getInputBuffer(inputBufferId)
-//                // fill inputBuffer with valid data
-//                inputBuffer?.clear()
-//                val data = rcvAudioDataQueue.poll()?.also {
-//                    inputBuffer?.put(it)
-//                }
-//                val dataSize = data?.size ?: 0
-//                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-// //                if (BuildConfig.DEBUG) {
-// //                    LogContext.log.d(TAG, "Data len=$dataSize\t pts=$pts")
-// //                }
-//                codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
-//            } catch (e: Exception) {
-//                LogContext.log.e(TAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
-//            }
-//        }
-//
-//        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-//            try {
-//                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-//                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-//                // bufferFormat is equivalent to member variable outputFormat
-//                // outputBuffer is ready to be processed or rendered.
-//                outputBuffer?.let {
-//                    val decodedData = ByteArray(info.size)
-//                    it.get(decodedData)
-// //                LogContext.log.w(TAG, "PCM[${decodedData.size}]")
-//                    when (info.flags) {
-//                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-//                            LogContext.log.w(TAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
-//                        }
-//                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
-//                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-//                        else -> Unit
-//                    }
-//                    if (decodedData.isNotEmpty()) {
-//                        // Play decoded audio data in PCM
-//                        audioTrack?.write(decodedData, 0, decodedData.size)
-//                    }
-//                }
-//                codec.releaseOutputBuffer(outputBufferId, false)
-//            } catch (e: Exception) {
-//                LogContext.log.e(TAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
-//            }
-//        }
-//
-//        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-//            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
-//            // Subsequent data will conform to new format.
-//            // Can ignore if using getOutputFormat(outputBufferId)
-//            outputFormat = format // option B
-//        }
-//
-//        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-//            e.printStackTrace()
-//            LogContext.log.e(TAG, "onError e=${e.message}", e)
-//        }
-//    }
+    //    private val mediaCodecCallback = object : MediaCodec.Callback() {
+    //        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
+    //            try {
+    //                val inputBuffer = codec.getInputBuffer(inputBufferId)
+    //                // fill inputBuffer with valid data
+    //                inputBuffer?.clear()
+    //                val data = rcvAudioDataQueue.poll()?.also {
+    //                    inputBuffer?.put(it)
+    //                }
+    //                val dataSize = data?.size ?: 0
+    //                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
+    // //                if (BuildConfig.DEBUG) {
+    // //                    LogContext.log.d(TAG, "Data len=$dataSize\t pts=$pts")
+    // //                }
+    //                codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
+    //            } catch (e: Exception) {
+    //                LogContext.log.e(TAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
+    //            }
+    //        }
+    //
+    //        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+    //            try {
+    //                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+    //                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+    //                // bufferFormat is equivalent to member variable outputFormat
+    //                // outputBuffer is ready to be processed or rendered.
+    //                outputBuffer?.let {
+    //                    val decodedData = ByteArray(info.size)
+    //                    it.get(decodedData)
+    // //                LogContext.log.w(TAG, "PCM[${decodedData.size}]")
+    //                    when (info.flags) {
+    //                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+    //                            LogContext.log.w(TAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
+    //                        }
+    //                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
+    //                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
+    //                        else -> Unit
+    //                    }
+    //                    if (decodedData.isNotEmpty()) {
+    //                        // Play decoded audio data in PCM
+    //                        audioTrack?.write(decodedData, 0, decodedData.size)
+    //                    }
+    //                }
+    //                codec.releaseOutputBuffer(outputBufferId, false)
+    //            } catch (e: Exception) {
+    //                LogContext.log.e(TAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
+    //            }
+    //        }
+    //
+    //        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+    //            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
+    //            // Subsequent data will conform to new format.
+    //            // Can ignore if using getOutputFormat(outputBufferId)
+    //            outputFormat = format // option B
+    //        }
+    //
+    //        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+    //            e.printStackTrace()
+    //            LogContext.log.e(TAG, "onError e=${e.message}", e)
+    //        }
+    //    }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
         // We should use a better way to check CSD0
@@ -288,10 +309,10 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
             return
         }
         val latencyInMs = (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
-//        LogContext.log.d(
-//            TAG,
-//            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
-//        )
+        //        LogContext.log.d(
+        //            TAG,
+        //            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
+        //        )
         if (rcvAudioDataQueue.size >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(

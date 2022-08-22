@@ -5,7 +5,7 @@ package com.leovp.androidbase.utils.media
 import android.graphics.ImageFormat
 import android.media.MediaCodec
 import android.os.Bundle
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo

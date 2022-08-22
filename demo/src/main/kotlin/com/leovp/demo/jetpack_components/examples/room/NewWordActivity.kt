@@ -8,7 +8,7 @@ import android.widget.Button
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityNewWordBinding
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.base.ITAG
 
 class NewWordActivity : BaseDemonstrationActivity<ActivityNewWordBinding>() {
     override fun getTagName(): String = ITAG

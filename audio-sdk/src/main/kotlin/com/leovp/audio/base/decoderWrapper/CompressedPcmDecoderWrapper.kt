@@ -3,7 +3,7 @@ package com.leovp.audio.base.decoderWrapper
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
-import com.leovp.lib_compress.decompress
+import com.leovp.compress.decompress
 
 /**
  * Author: Michael Leo

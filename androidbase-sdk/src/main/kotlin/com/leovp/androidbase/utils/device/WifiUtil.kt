@@ -9,9 +9,9 @@ import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiNetworkSpecifier
 import androidx.annotation.RequiresPermission
-import com.leovp.lib_common_android.exts.connectivityManager
-import com.leovp.lib_common_android.exts.wifiManager
-import com.leovp.lib_common_kotlin.utils.SingletonHolder
+import com.leovp.android.exts.connectivityManager
+import com.leovp.android.exts.wifiManager
+import com.leovp.kotlin.utils.SingletonHolder
 
 /**
  * Author: Michael Leo

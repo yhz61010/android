@@ -20,7 +20,7 @@ import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityRoomBinding
 import com.leovp.demo.jetpack_components.examples.room.entity.Word
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.base.ITAG
 
 class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
 

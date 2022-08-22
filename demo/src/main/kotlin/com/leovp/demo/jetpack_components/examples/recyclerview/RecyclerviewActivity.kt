@@ -16,13 +16,13 @@ import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.leovp.androidbase.exts.android.action
 import com.leovp.androidbase.exts.android.snack
-import com.leovp.lib_common_android.exts.toast
+import com.leovp.android.exts.toast
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityRecyclerviewBinding
 import com.leovp.demo.jetpack_components.examples.recyclerview.base.SimpleAdapter
 import com.leovp.demo.jetpack_components.examples.recyclerview.base.SimpleItemTouchCallback
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.log.base.ITAG
 
 class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>() {
     override fun getTagName(): String = ITAG

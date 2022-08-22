@@ -11,7 +11,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.view.View
 import android.view.WindowManager
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LogContext
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field

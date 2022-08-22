@@ -13,8 +13,8 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.sdk.BuildConfig
-import com.leovp.lib_bytes.toShortArrayLE
-import com.leovp.log_sdk.LogContext
+import com.leovp.bytes.toShortArrayLE
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo

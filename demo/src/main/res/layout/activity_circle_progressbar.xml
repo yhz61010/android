@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".basic_components.examples.CircleProgressbarActivity">
+    tools:context=".basiccomponents.examples.CircleProgressbarActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,12 +25,12 @@
             android:layout_marginStart="8dp"
             android:orientation="horizontal">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar"
                 android:layout_width="48dp"
                 android:layout_height="48dp" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -38,7 +38,7 @@
                 app:progress="30"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -46,21 +46,21 @@
                 app:showProgressText="true"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar3"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:state="INDETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar4"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:state="FINISHED" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/circleProgressbar5"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -81,12 +81,12 @@
             android:layout_marginStart="8dp"
             android:orientation="horizontal">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 app:backgroundColor="@color/purple_500" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -94,7 +94,7 @@
                 app:progress="30"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -103,21 +103,21 @@
                 app:showProgressText="true"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:backgroundColor="@color/purple_500"
                 app:state="INDETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:backgroundColor="@color/purple_500"
                 app:state="FINISHED" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -138,12 +138,12 @@
             android:layout_marginStart="8dp"
             android:orientation="horizontal">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 app:backgroundColor="#F8C4B1" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -151,7 +151,7 @@
                 app:progress="30"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -160,21 +160,21 @@
                 app:showProgressText="true"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:backgroundColor="#D0B1F8"
                 app:state="INDETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 app:backgroundColor="#B1BDF8"
                 app:state="FINISHED" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -195,7 +195,7 @@
             android:layout_marginStart="8dp"
             android:orientation="horizontal">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vCustomIdle"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -206,7 +206,7 @@
                 app:idleIconTintColor="#A663FB"
                 app:idleIconWidth="36dp" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -220,7 +220,7 @@
                 app:progressWidth="2dp"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -236,7 +236,7 @@
                 app:showProgressText="true"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -251,7 +251,7 @@
                 app:progressWidth="2dp"
                 app:state="INDETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -261,7 +261,7 @@
                 app:finishIconWidth="36dp"
                 app:state="FINISHED" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
@@ -278,7 +278,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vDownload"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -313,7 +313,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vUpload"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -345,7 +345,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp">
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vCustomInd"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -354,7 +354,7 @@
                 app:progressColor="@color/design_default_color_secondary"
                 app:state="INDETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vCustomInd2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -366,7 +366,7 @@
                 app:progressIndeterminateSweepAngle="45"
                 app:progressMargin="8dp" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vCustomDe"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -377,7 +377,7 @@
                 app:progressColor="#ffff00"
                 app:state="DETERMINATE" />
 
-            <com.leovp.circle_progressbar.CircleProgressbar
+            <com.leovp.circleprogressbar.CircleProgressbar
                 android:id="@+id/vCustomDe2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"

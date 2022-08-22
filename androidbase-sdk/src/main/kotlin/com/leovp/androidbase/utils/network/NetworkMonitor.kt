@@ -7,8 +7,8 @@ import android.os.Handler
 import android.os.HandlerThread
 import androidx.annotation.Keep
 import androidx.annotation.RequiresPermission
-import com.leovp.lib_common_android.utils.NetworkUtil
-import com.leovp.log_sdk.LogContext
+import com.leovp.android.utils.NetworkUtil
+import com.leovp.log.LogContext
 import java.util.concurrent.TimeUnit
 
 /**

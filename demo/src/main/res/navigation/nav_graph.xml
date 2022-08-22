@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/navigation_common"
-        android:name="com.leovp.demo.basic_components.BasicFragment"
+        android:name="com.leovp.demo.basiccomponents.BasicFragment"
         android:label="@string/title_common"
         tools:layout="@layout/fragment_basic" />
 

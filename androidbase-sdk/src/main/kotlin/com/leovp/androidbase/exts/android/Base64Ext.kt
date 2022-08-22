@@ -7,8 +7,8 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.annotation.RequiresApi
-import com.leovp.lib_common_android.utils.API
-import com.leovp.lib_image.getBitmap
+import com.leovp.android.utils.API
+import com.leovp.image.getBitmap
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 

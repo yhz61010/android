@@ -12,8 +12,8 @@ import android.os.HandlerThread
 import android.util.Size
 import android.view.Surface
 import androidx.annotation.RequiresApi
-import com.leovp.lib_image.compressBitmap
-import com.leovp.log_sdk.LogContext
+import com.leovp.image.compressBitmap
+import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer

@@ -2,7 +2,7 @@ package com.leovp.androidbase
 
 import android.util.Log
 import com.leovp.androidbase.utils.media.H264Util
-import com.leovp.lib_json.toJsonString
+import com.leovp.json.toJsonString
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

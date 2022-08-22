@@ -10,8 +10,8 @@ import androidx.navigation.fragment.navArgs
 import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentForNavSecondBinding
-import com.leovp.lib_common_android.exts.setOnSingleClickListener
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.log.base.ITAG
 
 class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.fragment_for_nav_second) {
     override fun getTagName(): String = ITAG

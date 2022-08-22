@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.leovp.camerax_sdk.ui.AutoFocusView
+        <com.leovp.camerax.ui.AutoFocusView
             android:id="@+id/focus_view"
             android:layout_width="75dp"
             android:layout_height="75dp"

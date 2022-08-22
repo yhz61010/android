@@ -4,8 +4,8 @@ package com.leovp.androidbase.utils.media
 
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.lib_bytes.toHexString
-import com.leovp.log_sdk.LogContext
+import com.leovp.bytes.toHexString
+import com.leovp.log.LogContext
 
 /**
  * NALU类型，将其转为二进制数据后，解读顺序为从左往右，如下:

@@ -11,15 +11,15 @@ import androidx.navigation.ui.setupWithNavController
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.lib_common_android.exts.toast
+import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityMainBinding
-import com.leovp.lib_bytes.toHexString
-import com.leovp.lib_common_android.exts.*
-import com.leovp.lib_json.toJsonString
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.bytes.toHexString
+import com.leovp.android.exts.*
+import com.leovp.json.toJsonString
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {

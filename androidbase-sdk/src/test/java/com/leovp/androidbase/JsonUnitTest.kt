@@ -2,7 +2,7 @@ package com.leovp.androidbase
 
 import android.util.Log
 import com.google.gson.reflect.TypeToken
-import com.leovp.lib_json.*
+import com.leovp.json.*
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

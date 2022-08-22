@@ -13,7 +13,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
-import com.leovp.lib_common_android.utils.NetworkUtil
+import com.leovp.android.utils.NetworkUtil
 
 /**
  * Usage:

@@ -9,7 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.fragment.app.Fragment
-import com.leovp.lib_common_android.exts.packageUri
+import com.leovp.android.exts.packageUri
 import kotlin.reflect.KClass
 
 fun Activity.ignoreDuplicateStartSplash(): Boolean {

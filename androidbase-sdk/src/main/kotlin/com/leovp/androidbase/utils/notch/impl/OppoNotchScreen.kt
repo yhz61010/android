@@ -7,8 +7,8 @@ import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
-import com.leovp.lib_common_android.exts.isPortrait
-import com.leovp.lib_common_android.utils.DeviceProp
+import com.leovp.android.exts.isPortrait
+import com.leovp.android.utils.DeviceProp
 
 @RequiresApi(Build.VERSION_CODES.O)
 class OppoNotchScreen : INotchScreen {

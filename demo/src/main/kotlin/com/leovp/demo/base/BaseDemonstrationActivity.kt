@@ -3,8 +3,8 @@ package com.leovp.demo.base
 import android.os.Bundle
 import androidx.viewbinding.ViewBinding
 import com.leovp.androidbase.framework.BaseActivity
-import com.leovp.lib_common_android.utils.LangUtil
-import com.leovp.log_sdk.LogContext
+import com.leovp.android.utils.LangUtil
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo

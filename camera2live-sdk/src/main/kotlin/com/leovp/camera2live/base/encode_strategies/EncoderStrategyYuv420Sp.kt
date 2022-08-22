@@ -34,8 +34,8 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
             // com.leovp.yuv_sdk.YuvUtil.i420ToNv21(rotateI420, height, width)
 
             // or Step 2.3
-            val rotateI420 = com.leovp.yuv_sdk.YuvUtil.rotateI420(i420Bytes, width, height, com.leovp.yuv_sdk.YuvUtil.Rotate_90)
-            com.leovp.yuv_sdk.YuvUtil.i420ToNv12(rotateI420, height, width)
+            val rotateI420 = com.leovp.yuv.YuvUtil.rotateI420(i420Bytes, width, height, com.leovp.yuv.YuvUtil.Rotate_90)
+            com.leovp.yuv.YuvUtil.i420ToNv12(rotateI420, height, width)
         } else {
             // Front lens
             return when (cameraSensorOrientation) {

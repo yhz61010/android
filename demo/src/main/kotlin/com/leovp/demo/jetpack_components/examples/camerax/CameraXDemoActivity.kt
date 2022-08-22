@@ -1,15 +1,15 @@
 package com.leovp.demo.jetpack_components.examples.camerax
 
 import android.graphics.Bitmap
-import com.leovp.camerax_sdk.CameraXActivity
-import com.leovp.camerax_sdk.bean.CaptureImage
-import com.leovp.camerax_sdk.enums.CapturedImageStrategy
-import com.leovp.camerax_sdk.listeners.CaptureImageListener
-import com.leovp.lib_common_android.exts.getBaseDirString
-import com.leovp.lib_image.toBitmapFromBytes
-import com.leovp.lib_image.writeToFile
-import com.leovp.log_sdk.LogContext
-import com.leovp.log_sdk.base.ITAG
+import com.leovp.camerax.CameraXActivity
+import com.leovp.camerax.bean.CaptureImage
+import com.leovp.camerax.enums.CapturedImageStrategy
+import com.leovp.camerax.listeners.CaptureImageListener
+import com.leovp.android.exts.getBaseDirString
+import com.leovp.image.toBitmapFromBytes
+import com.leovp.image.writeToFile
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*

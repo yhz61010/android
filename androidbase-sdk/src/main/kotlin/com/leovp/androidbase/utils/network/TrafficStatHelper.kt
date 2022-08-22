@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.TrafficStats
-import com.leovp.lib_common_android.exts.getCompatContextInfo
-import com.leovp.lib_common_kotlin.utils.SingletonHolder
+import com.leovp.android.exts.getCompatContextInfo
+import com.leovp.kotlin.utils.SingletonHolder
 import java.io.RandomAccessFile
 
 /**

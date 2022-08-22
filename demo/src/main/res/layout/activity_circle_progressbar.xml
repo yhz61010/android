@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".basiccomponents.examples.CircleProgressbarActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="All attributes with default value for different states." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/circleProgressbar"
+                android:layout_width="48dp"
+                android:layout_height="48dp" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/circleProgressbar2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:progress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:progress="30"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/circleProgressbar3"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:state="INDETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/circleProgressbar4"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:state="FINISHED" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/circleProgressbar5"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:state="ERROR" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Only set default background color." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:backgroundColor="@color/purple_500" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:progress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:progress="30"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:state="INDETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:state="FINISHED" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="@color/purple_500"
+                app:state="ERROR" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Set background colors for different states." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:backgroundColor="#F8C4B1" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#F8B1D0"
+                app:progress="30"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#F8B1D0"
+                app:progress="30"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#D0B1F8"
+                app:state="INDETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#B1BDF8"
+                app:state="FINISHED" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:backgroundColor="#B1D6F8"
+                app:state="ERROR" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Set custom attributes for different states." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vCustomIdle"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:enableClickListener="false"
+                app:idleBackgroundColor="#B8FB63"
+                app:idleIconDrawable="@drawable/ic_default_upload"
+                app:idleIconHeight="36dp"
+                app:idleIconTintColor="#A663FB"
+                app:idleIconWidth="36dp" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:cancelBackgroundColor="#ff0000"
+                app:cancelIconHeight="36dp"
+                app:cancelIconTintColor="#B1F8C4"
+                app:cancelIconWidth="36dp"
+                app:progress="30"
+                app:progressColor="#CEDB3A"
+                app:progressMargin="5dp"
+                app:progressWidth="2dp"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:cancelBackgroundColor="#C1D022"
+                app:cancelIconHeight="36dp"
+                app:cancelIconWidth="36dp"
+                app:progress="30"
+                app:progressColor="#3122D0"
+                app:progressMargin="5dp"
+                app:progressTextColor="@color/purple_500"
+                app:progressTextSize="12sp"
+                app:progressWidth="2dp"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:cancelBackgroundColor="#63EEFB"
+                app:cancelIconHeight="36dp"
+                app:cancelIconTintColor="#ffff00"
+                app:cancelIconWidth="36dp"
+                app:progressAnimDuration="1500"
+                app:progressColor="#FB3D5D"
+                app:progressIndeterminateSweepAngle="40"
+                app:progressMargin="5dp"
+                app:progressWidth="2dp"
+                app:state="INDETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:finishBackgroundColor="#6370FB"
+                app:finishIconHeight="36dp"
+                app:finishIconTintColor="#FBEE63"
+                app:finishIconWidth="36dp"
+                app:state="FINISHED" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                app:errorBackgroundColor="#FE71B1"
+                app:errorIconHeight="36dp"
+                app:errorIconTintColor="#FFD4FC"
+                app:errorIconWidth="36dp"
+                app:state="ERROR" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vDownload"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:backgroundColor="@color/cardview_dark_background"
+                app:finishBackgroundColor="@color/cardview_dark_background"
+                app:idleBackgroundColor="@color/cardview_dark_background"
+                app:idleIconTintColor="#ff0000"
+                app:showProgressText="true" />
+
+            <Button
+                android:id="@+id/btnDownload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Download"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView27"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="You can click above progressbar." />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vUpload"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:backgroundColor="@color/purple_200"
+                app:cancelBackgroundColor="#63EEFB"
+                app:cancelIconTintColor="#ffff00"
+                app:errorBackgroundColor="#ff0000"
+                app:errorIconTintColor="#ffff00"
+                app:finishBackgroundColor="@color/design_default_color_secondary"
+                app:finishIconDrawable="@drawable/ic_default_finish"
+                app:idleBackgroundColor="@color/purple_700"
+                app:idleIconDrawable="@drawable/ic_default_upload"
+                app:progressColor="@color/white"
+                app:progressMargin="6dp" />
+
+            <Button
+                android:id="@+id/btnUpload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Upload"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp">
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vCustomInd"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:backgroundColor="@color/purple_500"
+                app:cancelIconTintColor="#ffff00"
+                app:progressColor="@color/design_default_color_secondary"
+                app:state="INDETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vCustomInd2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                app:backgroundColor="@color/purple_200"
+                app:cancelable="false"
+                app:progressColor="@color/white"
+                app:progressAnimDuration="1400"
+                app:progressIndeterminateSweepAngle="45"
+                app:progressMargin="8dp" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vCustomDe"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                app:backgroundColor="@color/purple_700"
+                app:cancelIconTintColor="#00ffff"
+                app:progress="25"
+                app:progressColor="#ffff00"
+                app:state="DETERMINATE" />
+
+            <com.leovp.circleprogressbar.CircleProgressbar
+                android:id="@+id/vCustomDe2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                app:backgroundColor="@color/design_default_color_primary"
+                app:progress="45"
+                app:progressColor="@color/white"
+                app:progressMargin="4dp"
+                app:progressWidth="1dp"
+                app:showProgressText="true"
+                app:state="DETERMINATE" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView26"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="     ↑ Click this button" />
+    </LinearLayout>
+</ScrollView>

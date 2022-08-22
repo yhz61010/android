@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircleProgressbar">
+        <attr name="state" format="enum">
+            <enum name="IDLE" value="1" />
+            <enum name="INDETERMINATE" value="2" />
+            <enum name="DETERMINATE" value="3" />
+            <enum name="FINISHED" value="4" />
+            <enum name="ERROR" value="5" />
+        </attr>
+        <attr name="cancelable" format="boolean" />
+        <attr name="enableClickListener" format="boolean" />
+
+        <attr name="progressWidth" format="dimension" />
+        <attr name="progressMargin" format="dimension" />
+        <attr name="progressColor" format="color" />
+        <attr name="progressIndeterminateSweepAngle" format="integer" />
+        <attr name="progressAnimDuration" format="integer" />
+
+        <attr name="progress" format="integer" />
+        <attr name="maxProgress" format="integer" />
+
+        <!-- If you enable showing progress text, the cancelable and cancelIcon related attributes will be ignored. -->
+        <attr name="showProgressText" format="boolean" />
+        <attr name="progressTextColor" format="color" />
+        <attr name="progressTextSize" format="dimension" />
+
+        <attr name="backgroundDrawable" format="reference" />
+        <attr name="backgroundColor" format="color" />
+
+        <attr name="idleIconDrawable" format="reference" />
+        <attr name="idleIconTintColor" format="color" />
+        <attr name="idleIconWidth" format="dimension" />
+        <attr name="idleIconHeight" format="dimension" />
+        <attr name="idleBackgroundDrawable" format="reference" />
+        <attr name="idleBackgroundColor" format="color" />
+
+        <attr name="finishIconDrawable" format="reference" />
+        <attr name="finishIconTintColor" format="color" />
+        <attr name="finishIconWidth" format="dimension" />
+        <attr name="finishIconHeight" format="dimension" />
+        <attr name="finishBackgroundDrawable" format="reference" />
+        <attr name="finishBackgroundColor" format="color" />
+
+        <attr name="errorIconDrawable" format="reference" />
+        <attr name="errorIconTintColor" format="color" />
+        <attr name="errorIconWidth" format="dimension" />
+        <attr name="errorIconHeight" format="dimension" />
+        <attr name="errorBackgroundDrawable" format="reference" />
+        <attr name="errorBackgroundColor" format="color" />
+
+        <!-- The cancel background color/drawable is just same as indeterminate/determinate background color/drawable(backgroundDrawable/backgroundColor). -->
+        <attr name="cancelIconDrawable" format="reference" />
+        <attr name="cancelIconTintColor" format="color" />
+        <attr name="cancelIconWidth" format="dimension" />
+        <attr name="cancelIconHeight" format="dimension" />
+        <attr name="cancelBackgroundDrawable" format="reference" />
+        <attr name="cancelBackgroundColor" format="color" />
+    </declare-styleable>
+</resources>

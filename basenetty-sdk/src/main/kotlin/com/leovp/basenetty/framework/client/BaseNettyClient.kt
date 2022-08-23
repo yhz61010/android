@@ -167,7 +167,7 @@ abstract class BaseNettyClient protected constructor(
         if (certificateInputStream == null) {
             return null
         }
-        return try {
+        return runCatching {
             val baos = ByteArrayOutputStream()
             val buffer = ByteArray(8 shl 10)
             var len: Int
@@ -176,10 +176,7 @@ abstract class BaseNettyClient protected constructor(
             }
             baos.flush() // DO NOT close certificateInputStream stream or else we can not clone it anymore
             ByteArrayInputStream(baos.toByteArray())
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        }.getOrNull()
     }
 
     private val retryScope = CoroutineScope(Dispatchers.IO + Job())

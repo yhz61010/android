@@ -119,7 +119,7 @@ object CameraUtil {
         data?.data?.let { url ->
             FileDocumentUtil.getFileRealPath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) }
         }
-        data?.clipData?.let { it ->
+        data?.clipData?.let {
             for (i in 0 until it.itemCount) {
                 FileDocumentUtil.getFileRealPath(ctx, it.getItemAt(i).uri)
                     ?.let { realPath -> selectedImage.add(realPath) }

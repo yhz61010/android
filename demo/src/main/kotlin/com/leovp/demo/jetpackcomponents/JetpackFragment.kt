@@ -83,6 +83,6 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
             Color.parseColor("#FFCC80"),
             Color.parseColor("#FFE082"),
             Color.parseColor("#FFF59D")
-        )
+        ).toIntArray()
     }
 }

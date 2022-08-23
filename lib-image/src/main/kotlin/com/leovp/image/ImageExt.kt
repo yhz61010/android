@@ -26,42 +26,6 @@ import java.nio.ByteBuffer
  * Date: 2021/7/30 10:10
  */
 
-// ====================
-@Keep
-data class ImageInfo(val width: Int, val height: Int, val type: String)
-
-// https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
-fun getImageInfo(resources: Resources, @DrawableRes resId: Int): ImageInfo {
-    val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = true
-    }
-    BitmapFactory.decodeResource(resources, resId, options)
-    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
-}
-
-/**
- * @param t Supported following type:
- * - String: File path name
- * - ByteArray: Image bytes
- * - InputStream: Image input stream
- *
- * https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
- */
-inline fun <reified T> getImageInfo(t: T & Any): ImageInfo {
-    val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = true
-    }
-    when (t) {
-        is String -> BitmapFactory.decodeFile(t, options) // t is pathName
-        is ByteArray -> BitmapFactory.decodeByteArray(t, 0, t.size, options)
-        is InputStream -> BitmapFactory.decodeStream(t, null, options)
-        else -> throw IllegalArgumentException("Unsupported type ${t::class.java}")
-    }
-    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
-}
-
-// ====================
-
 fun Bitmap?.recycledSafety() {
     if (this != null && !this.isRecycled) this.recycle()
 }
@@ -237,3 +201,39 @@ fun Bitmap.flipRotate(
     }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
+
+// ====================
+@Keep
+data class ImageInfo(val width: Int, val height: Int, val type: String)
+
+// https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
+fun getImageInfo(resources: Resources, @DrawableRes resId: Int): ImageInfo {
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+    BitmapFactory.decodeResource(resources, resId, options)
+    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
+}
+
+/**
+ * @param t Supported following type:
+ * - String: File path name
+ * - ByteArray: Image bytes
+ * - InputStream: Image input stream
+ *
+ * https://developer.android.com/topic/performance/graphics/load-bitmap#read-bitmap
+ */
+inline fun <reified T> getImageInfo(t: T & Any): ImageInfo {
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+    when (t) {
+        is String -> BitmapFactory.decodeFile(t, options) // t is pathName
+        is ByteArray -> BitmapFactory.decodeByteArray(t, 0, t.size, options)
+        is InputStream -> BitmapFactory.decodeStream(t, null, options)
+        else -> throw IllegalArgumentException("Unsupported type ${t::class.java}")
+    }
+    return ImageInfo(options.outWidth, options.outHeight, options.outMimeType)
+}
+
+// ====================

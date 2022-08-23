@@ -16,7 +16,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.camera.core.CameraInfoUnavailableException
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
@@ -749,10 +748,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Enabled or disabled a button to switch cameras depending on the available cameras */
     private fun updateCameraSwitchButton() {
-        try {
+        runCatching {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled =
                 hasBackCamera() && hasFrontCamera()
-        } catch (exception: CameraInfoUnavailableException) {
+        }.onFailure {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = false
         }
     }

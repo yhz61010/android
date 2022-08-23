@@ -722,7 +722,10 @@ object YuvUtil {
     //        LogContext.log.d(TAG, "image: " + imgYUV420.getWidth() + "x" + imgYUV420.getHeight() + " " + imgYUV420.getFormat());
     //        LogContext.log.d(TAG, "planes: " + imgYUV420.getPlanes().length);
     //        for (int nPlane = 0; nPlane < imgYUV420.getPlanes().length; nPlane++) {
-    //            LogContext.log.d(TAG, "plane[" + nPlane + "]: length " + imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " + imgYUV420.getPlanes()[nPlane].getPixelStride() + " " + imgYUV420.getPlanes()[nPlane].getRowStride());
+    //            LogContext.log.d(TAG, "plane[" + nPlane + "]: length " +
+    //            imgYUV420.getPlanes()[nPlane].getBuffer().remaining() + ", strides: " +
+    //            imgYUV420.getPlanes()[nPlane].getPixelStride() + " " +
+    //            imgYUV420.getPlanes()[nPlane].getRowStride());
     //        }
     //
     //        byte[] rez = new byte[imgYUV420.getWidth() * imgYUV420.getHeight() * 3 / 2];

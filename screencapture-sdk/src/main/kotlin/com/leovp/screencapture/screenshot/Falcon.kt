@@ -12,7 +12,12 @@ import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import com.leovp.log.LogContext
-import java.io.*
+import java.io.BufferedOutputStream
+import java.io.Closeable
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
@@ -71,7 +76,7 @@ object Falcon {
         } catch (e: Exception) {
             val message = ("Unable to take screenshot to bitmap of activity " + activity.javaClass.name)
             LogContext.log.e(TAG, message, e)
-//            throw UnableToTakeScreenshotException(message, e)
+            //            throw UnableToTakeScreenshotException(message, e)
             null
         }
     }
@@ -157,11 +162,7 @@ object Falcon {
 
     private fun closeQuietly(closable: Closeable?) {
         if (closable != null) {
-            try {
-                closable.close()
-            } catch (e: IOException) {
-                // Do nothing
-            }
+            runCatching { closable.close() }
         }
     }
 
@@ -199,11 +200,11 @@ object Falcon {
             val rootView = getFieldValue("mView", root) as? View
 
             // fixes https://github.com/jraska/Falcon/issues/10
-            if (rootView == null) {
-                LogContext.log.e(TAG, "null View stored as root in Global window manager, skipping")
-                continue
-            }
-            if (!rootView.isShown) {
+            if (rootView == null || !rootView.isShown) {
+                LogContext.log.e(
+                    TAG,
+                    "rootView=$rootView. rootView is null or not being shown. View stored as root in Global window manager, skipping"
+                )
                 continue
             }
             val location = IntArray(2)

@@ -189,6 +189,6 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Color.parseColor("#FFCC80"),
             Color.parseColor("#FFE082"),
             Color.parseColor("#FFF59D")
-        )
+        ).toIntArray()
     }
 }

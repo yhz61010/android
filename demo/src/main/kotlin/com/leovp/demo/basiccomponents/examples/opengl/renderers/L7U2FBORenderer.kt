@@ -100,11 +100,25 @@ class L7U2FBORenderer(@Suppress("unused") private val ctx: Context) : L7BaseRend
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexData
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
+        GLES20.glVertexAttribPointer(
+            aTexCoordLocation,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            texVertexBuffer
+        )
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 
         // 纹理数据

@@ -14,6 +14,7 @@ import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import java.util.*
 
 /**
  * Author: Michael Leo
@@ -60,6 +61,7 @@ class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorB
                         else -> null
                     }
                     val infoStr = String.format(
+                        Locale.ENGLISH,
                         "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr,
                         uploadSpeedStr,

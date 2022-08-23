@@ -355,10 +355,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
                 provider.unbindAll()
                 for (
-                camSelector in arrayOf(
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    CameraSelector.DEFAULT_FRONT_CAMERA
-                )
+                    camSelector in arrayOf(
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        CameraSelector.DEFAULT_FRONT_CAMERA
+                    )
                 ) {
                     runCatching {
                         // just get the camera.cameraInfo to query capabilities

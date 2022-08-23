@@ -89,7 +89,7 @@ complexity:
   active: true
   ComplexCondition:
     active: true
-    threshold: 6 # 4
+    threshold: 7 # 4
   ComplexInterface:
     active: false
     threshold: 10
@@ -116,14 +116,14 @@ complexity:
     ignoredLabels: []
   LargeClass:
     active: true
-    threshold: 600 # 600
+    threshold: 1300 # 600
   LongMethod:
     active: true
     threshold: 150 # 120
   LongParameterList:
     active: true
-    functionThreshold: 7 # 6
-    constructorThreshold: 7
+    functionThreshold: 9 # 6
+    constructorThreshold: 9
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
@@ -158,11 +158,11 @@ complexity:
   TooManyFunctions:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
-    thresholdInFiles: 32 # 11
-    thresholdInClasses: 32 # 11
-    thresholdInInterfaces: 32 # 11
-    thresholdInObjects: 32 # 11
-    thresholdInEnums: 32 # 11
+    thresholdInFiles: 33 # 11
+    thresholdInClasses: 33 # 11
+    thresholdInInterfaces: 33 # 11
+    thresholdInObjects: 33 # 11
+    thresholdInEnums: 33 # 11
     ignoreDeprecated: false
     ignorePrivate: false
     ignoreOverridden: false
@@ -219,7 +219,7 @@ empty-blocks:
   EmptyWhenBlock:
     active: true
   EmptyWhileBlock:
-    active: true
+    active: false # true
 
 exceptions:
   active: true
@@ -385,7 +385,7 @@ performance:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
   SpreadOperator:
-    active: true
+    active: false # true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
   UnnecessaryTemporaryInstantiation:
     active: true
@@ -560,7 +560,7 @@ style:
     excludes: ['**']
   LoopWithTooManyJumpStatements:
     active: true
-    maxJumpCount: 1
+    maxJumpCount: 3 # 1
   MagicNumber:
     active: false # false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**', '**/*.kts']
@@ -639,7 +639,7 @@ style:
     active: false
   ThrowsCount:
     active: true
-    max: 3 # 2
+    max: 6 # 2
     excludeGuardClauses: false
   TrailingWhitespace:
     active: false

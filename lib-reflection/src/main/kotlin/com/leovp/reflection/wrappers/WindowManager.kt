@@ -21,14 +21,17 @@ class WindowManager(private val manager: IInterface) {
     private fun getGetRotationMethod(): Method? {
         if (getRotationMethod == null) {
             val cls: Class<*> = manager.javaClass
-            getRotationMethod = try {
+            getRotationMethod = runCatching {
                 // method changed since this commit:
                 // https://android.googlesource.com/platform/frameworks/base/+/8ee7285128c3843401d4c4d0412cd66e86ba49e3%5E%21/#F2
                 cls.getMethod("getDefaultDisplayRotation")
-            } catch (e: NoSuchMethodException) {
+            }.getOrDefault(
+                // NoSuchMethodException
                 // old version
-                cls.getMethod("getRotation")
-            }
+                runCatching {
+                    cls.getMethod("getRotation")
+                }.getOrNull()
+            )
         }
         return getRotationMethod
     }
@@ -99,7 +102,7 @@ class WindowManager(private val manager: IInterface) {
     ) {
         try {
             val cls: Class<*> = manager.javaClass
-            try {
+            runCatching {
                 // display parameter added since this commit:
                 // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
                 // API 26 or above
@@ -108,7 +111,8 @@ class WindowManager(private val manager: IInterface) {
                     IRotationWatcher::class.java,
                     Int::class.javaPrimitiveType
                 ).invoke(manager, rotationWatcher, displayId)
-            } catch (e: NoSuchMethodException) {
+            }.onFailure {
+                // NoSuchMethodException
                 // old version
                 cls.getMethod("watchRotation", IRotationWatcher::class.java)
                     .invoke(manager, rotationWatcher)

@@ -5,7 +5,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.math.BigInteger
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.util.*
 
 /**
@@ -23,9 +22,8 @@ object MD5Util {
         if (str.isBlank()) {
             return ""
         }
-        val md5: MessageDigest
-        try {
-            md5 = MessageDigest.getInstance("MD5")
+        return runCatching {
+            val md5: MessageDigest = MessageDigest.getInstance("MD5")
             val bytes = md5.digest(str.toByteArray())
             val result = StringBuilder()
             for (b in bytes) {
@@ -35,11 +33,8 @@ object MD5Util {
                 }
                 result.append(temp)
             }
-            return result.toString().uppercase(Locale.getDefault())
-        } catch (e: NoSuchAlgorithmException) {
-            e.printStackTrace()
-        }
-        return ""
+            result.toString().uppercase(Locale.getDefault())
+        }.getOrDefault("")
     }
 
     fun checkMd5(md5: String, targetFile: File, bufferSize: Int = 256 shl 10) = calculateFileMd5(targetFile, bufferSize).let {

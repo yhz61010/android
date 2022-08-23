@@ -28,6 +28,8 @@ import kotlin.system.exitProcess
  * Date: 20-11-30 下午2:54
  */
 
+private const val TAG = "AppExt"
+
 /**
  * Get meta data in Activity or Application.<br></br>
  * Notice that, if you want to get meta data in Service or Broadcast using [.getMetaData] instead.
@@ -52,35 +54,28 @@ fun getMetaData(ctx: Context, key: String): String? {
  * @return The value of meta data
  */
 fun <T> getMetaData(ctx: Context, key: String, clazz: Class<T>?): String? {
-    var metaData: String? = ""
-    try {
-        if (ctx is Activity) {
-            val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
-            metaData = info.metaData.getString(key)
-            return metaData
+    return runCatching {
+        when {
+            ctx is Activity -> {
+                val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
+                info.metaData.getString(key)
+            }
+            ctx is Application -> {
+                val info: ApplicationInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
+                info.metaData.getString(key)
+            }
+            (clazz != null && ctx is Service) -> {
+                val info: ServiceInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
+                info.metaData.getString(key)
+            }
+            // BroadcastReceiver
+            (clazz != null && "android.content.BroadcastReceiver" == clazz.simpleName) -> {
+                val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
+                info.metaData.getString(key)
+            }
+            else -> ""
         }
-        if (ctx is Application) {
-            val info: ApplicationInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA)
-            metaData = info.metaData.getString(key)
-            return metaData
-        }
-        if (clazz != null && ctx is Service) {
-            val info: ServiceInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
-            metaData = info.metaData.getString(key)
-            return metaData
-        }
-
-        // BroadcastReceiver
-        if (clazz != null && "android.content.BroadcastReceiver" == clazz.simpleName) {
-            val info: ActivityInfo = getCompatContextInfo(ctx, PackageManager.GET_META_DATA, clazz)
-            metaData = info.metaData.getString(key)
-            return metaData
-        }
-    } catch (e: Exception) {
-        metaData = ""
-        return metaData
-    }
-    return metaData
+    }.getOrDefault("")
 }
 
 // https://stackoverflow.com/questions/4604239/install-application-programmatically-on-android
@@ -98,7 +93,7 @@ fun Context.installApk(file: File) {
         }
         startActivity(intent)
     } catch (e: Exception) {
-        e.printStackTrace()
+        LogContext.log.e(TAG, "installApk exception.")
     }
 }
 
@@ -109,7 +104,7 @@ fun ActivityManager.exitApp() {
         }
         exitProcess(0)
     } catch (e: Exception) {
-        e.printStackTrace()
+        LogContext.log.e(TAG, "exitApp exception.")
     }
 }
 
@@ -136,16 +131,16 @@ fun Context.restartApp(targetIntent: Intent) {
 @SuppressLint("PrivateApi", "DiscouragedPrivateApi", "SoonBlockedPrivateApi")
 fun closeAndroidPDialog() {
     if (Build.VERSION.SDK_INT != Build.VERSION_CODES.P) {
-        LogContext.log.w("AppExt", "Not Android 9. Do not closeAndroidPDialog")
+        LogContext.log.w(TAG, "Not Android 9. Do not closeAndroidPDialog")
         return
     }
-    LogContext.log.w("AppExt", "closeAndroidPDialog on Android 9")
+    LogContext.log.w(TAG, "closeAndroidPDialog on Android 9")
     try {
         val aClass = Class.forName("android.content.pm.PackageParser\$Package")
         val declaredConstructor = aClass.getDeclaredConstructor(String::class.java)
         declaredConstructor.isAccessible = true
     } catch (e: Exception) {
-        e.printStackTrace()
+        LogContext.log.e(TAG, "1 closeAndroidPDialog exception.")
     }
     try {
         val cls = Class.forName("android.app.ActivityThread")
@@ -156,7 +151,7 @@ fun closeAndroidPDialog() {
         mHiddenApiWarningShown.isAccessible = true
         mHiddenApiWarningShown.setBoolean(activityThread, true)
     } catch (e: Exception) {
-        e.printStackTrace()
+        LogContext.log.e(TAG, "2 closeAndroidPDialog exception.")
     }
 }
 

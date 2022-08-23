@@ -1,7 +1,7 @@
 package com.leovp.camera2live.base
 
-import com.leovp.camera2live.base.encode_strategies.EncoderStrategyYuv420P
-import com.leovp.camera2live.base.encode_strategies.EncoderStrategyYuv420Sp
+import com.leovp.camera2live.base.encodestrategies.EncoderStrategyYuv420P
+import com.leovp.camera2live.base.encodestrategies.EncoderStrategyYuv420Sp
 
 /**
  * Author: Michael Leo

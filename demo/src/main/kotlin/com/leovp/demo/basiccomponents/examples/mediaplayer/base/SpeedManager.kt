@@ -88,7 +88,7 @@ class SpeedManager {
                 if (sleepTimeUsec > 500000) {
                     sleepTimeUsec = 500000
                 }
-                try {
+                runCatching {
                     if (CHECK_SLEEP_TIME) {
                         Thread.sleep(sleepTimeUsec / 1000, (sleepTimeUsec % 1000).toInt() * 1000)
                     } else {
@@ -96,7 +96,6 @@ class SpeedManager {
                         LogContext.log.d(TAG, "time: $time")
                         Thread.sleep(time, (sleepTimeUsec % 1000).toInt() * 1000)
                     }
-                } catch (ie: InterruptedException) {
                 }
                 nowUs = System.nanoTime() / 1000
             }
@@ -109,7 +108,8 @@ class SpeedManager {
     }
 
     // runs on decode thread
-    fun postRender() {}
+    // fun postRender() {}
+
     fun loopReset() {
         mLoopReset = true
     }

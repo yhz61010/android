@@ -4,7 +4,11 @@ package com.leovp.android.utils.shell
 
 import android.util.Log
 import androidx.annotation.Keep
-import java.io.*
+import java.io.BufferedReader
+import java.io.DataOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -158,10 +162,10 @@ object ShellUtil {
 
     fun killProcessByName(processName: String, isRoot: Boolean = false) {
         // As of API level 24: java.lang.Iterable#forEach
-//        findProcessByName(
-//            processName,
-//            isRoot
-//        ).forEach { (pid) -> killProcessByPid(pid, isRoot) }
+        //        findProcessByName(
+        //            processName,
+        //            isRoot
+        //        ).forEach { (pid) -> killProcessByPid(pid, isRoot) }
         val processList = findProcessByName(
             processName,
             isRoot
@@ -174,7 +178,7 @@ object ShellUtil {
     fun killProcessByPid(pid: Int, isRoot: Boolean = false) {
         val process = findProcessByPid(pid, isRoot)
         if (process != null) {
-            execCmd(String.format("kill -9 %s", pid), isRoot)
+            execCmd("kill -9 $pid", isRoot)
         }
     }
 
@@ -186,7 +190,7 @@ object ShellUtil {
 
     // unverified
     fun uninstallApk(pkgName: String) {
-        execCmd(String.format("pm uninstall %s", pkgName), true)
+        execCmd("pm uninstall $pkgName", true)
     }
 
     // unverified
@@ -231,6 +235,7 @@ object ShellUtil {
                 // mount -o remount,rw -t yaffs2 /dev/block/mmcblk1p10 /system
                 if (params.size > 2) {
                     val remountCommand = String.format(
+                        Locale.ENGLISH,
                         "%s -o %s,remount -t %s %s %s", CMD_MOUNT,
                         if (write) "rw" else "ro", params[2], params[0], params[1]
                     )

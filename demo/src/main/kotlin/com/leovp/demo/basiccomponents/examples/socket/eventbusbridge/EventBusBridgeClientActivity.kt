@@ -4,10 +4,6 @@ import android.os.Bundle
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.databinding.ActivityEventBusBridgeClientBinding
-import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 import com.leovp.basenetty.eventbus.handler.EventBusHandler
 import com.leovp.basenetty.eventbus.util.EventBus
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
@@ -15,6 +11,10 @@ import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityEventBusBridgeClientBinding
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import de.undercouch.bson4jackson.BsonFactory
 import de.undercouch.bson4jackson.BsonModule
 import io.netty.buffer.ByteBufUtil
@@ -164,13 +164,13 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
         }
 
         fun sendTest(netty: BaseNettyClient) {
-            val msg = EventBus.send {
-                address = "your send address"
+            val msg = EventBus.send(
+                address = "your send address",
                 handler = object : EventBusHandler {
                     override fun handle(message: Any?) {
                     }
                 }
-            }
+            )
             netty.executeCommand(serializeData(msg), "send test")
         }
 

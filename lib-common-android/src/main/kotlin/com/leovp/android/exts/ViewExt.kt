@@ -6,13 +6,23 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
-import android.view.*
+import android.view.DisplayCutout
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewAnimationUtils
+import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
-import androidx.core.view.*
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updateLayoutParams
 
 /**
  * Author: Michael Leo
@@ -98,7 +108,11 @@ fun ViewGroup.circularClose(button: ImageButton, action: () -> Unit = {}) {
         this,
         button.x.toInt() + button.width / 2,
         button.y.toInt() + button.height / 2,
-        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) this.width.toFloat() else this.height.toFloat(),
+        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            this.width.toFloat()
+        } else {
+            this.height.toFloat()
+        },
         0f
     ).apply {
         duration = 500

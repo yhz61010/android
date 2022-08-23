@@ -6,6 +6,7 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Log
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -105,7 +106,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                     listener.onBecameForeground()
                 } catch (e: Exception) {
                     //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
-                    e.printStackTrace()
+                    Log.e(TAG, "onActivityResumed() exception")
                 }
             }
         } /*else {
@@ -161,7 +162,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     }
 
     companion object {
-        //        private const val TAG = "FC"
+        private const val TAG = "FC"
         private const val CHECK_DELAY: Long = 500
 
         @Volatile

@@ -95,4 +95,4 @@ build_one
 #export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
 #build_one
 
-sh ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec
+sh ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec.sh

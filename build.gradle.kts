@@ -180,15 +180,10 @@ fun Project.configureBase(): BaseExtension {
         }
         buildTypes {
             getByName("release") {
-                isMinifyEnabled = true
                 proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
                 )
-            }
-
-            getByName("debug") {
-                isMinifyEnabled = false
             }
         }
         buildFeatures.viewBinding = true
@@ -244,10 +239,12 @@ fun Project.configureApplication(ns: String): BaseExtension = configureBase().ap
     buildTypes {
         getByName("release") {
             isShrinkResources = true
+            isMinifyEnabled = true
         }
 
         getByName("debug") {
             isShrinkResources = false
+            isMinifyEnabled = false
         }
     }
 }
@@ -264,6 +261,15 @@ fun Project.configureLibrary(): BaseExtension = configureBase().apply {
     namespace = "$group.${name.replace('-', '.').replace('_', '.')}"
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+
+        getByName("debug") {
+            isMinifyEnabled = false
+        }
     }
 }
 

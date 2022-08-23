@@ -82,9 +82,9 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
                 webSocketClient = createSocket()
                 LogContext.log.i(tag, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
                 webSocketClient?.connect()
-                //                webSocketClient?.disconnectManually()
-                //                webSocketClient?.release()
-                //                LogContext.log.i(tag, "= released ================================================================================")
+                // webSocketClient?.disconnectManually()
+                // webSocketClient?.release()
+                // LogContext.log.i(tag, "= released ================================================================================")
 
                 // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
@@ -129,7 +129,7 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
             LogContext.log.w(tag, "onDisconnected byRemote=$byRemote")
-            LogContext.log.i(tag, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            LogContext.log.i(tag, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             toast("onDisconnected byRemote=$byRemote", debug = true)
         }
 
@@ -149,13 +149,20 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
                     // Reset retry counter
                     retryTimes.set(0)
                 } else {
-                    LogContext.log.w(tag, "Reconnect(${retryTimes.get()}) in ${constantRetry.getDelayInMillSec(retryTimes.get())}ms")
+                    LogContext.log.w(
+                        tag,
+                        "Reconnect(${retryTimes.get()}) in " +
+                            "${constantRetry.getDelayInMillSec(retryTimes.get())}ms"
+                    )
                     cs.launch {
                         runCatching {
                             delay(constantRetry.getDelayInMillSec(retryTimes.get()))
                             ensureActive()
                             netty.release()
-                            LogContext.log.w(tag, "= Start Reconnecting ===============================================================")
+                            LogContext.log.w(
+                                tag,
+                                "= Start Reconnecting ========================================================"
+                            )
                             webSocketClient = createSocket().apply { connect() }
                         }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
                     } // launch
@@ -213,11 +220,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
             if (::webSocketClientHandler.isInitialized) {
                 val result = webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
                 withContext(Dispatchers.Main) {
-                    binding.editText.text.clear(); if (!result) toast(
-                        "Send command error",
-                        debug = true,
-                        error = true
-                    )
+                    binding.editText.text.clear()
+                    if (!result) toast("Send command error", debug = true, error = true)
                 }
             }
         }

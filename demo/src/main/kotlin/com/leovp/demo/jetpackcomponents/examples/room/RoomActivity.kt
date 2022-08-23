@@ -41,7 +41,10 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
             @SuppressLint("CheckResult")
             override fun onItemLongClick(view: View, position: Int) {
                 MaterialDialog(this@RoomActivity).show {
-                    input(hint = "Input your word", prefill = view.findViewById<TextView>(R.id.textView).text.toString()) { _, text ->
+                    input(
+                        hint = "Input your word",
+                        prefill = view.findViewById<TextView>(R.id.textView).text.toString()
+                    ) { _, text ->
                         val updatedWorld = Word(text.toString())
                         updatedWorld.id = view.getTag(R.id.word_id) as Int
                         wordViewModel.update(updatedWorld)

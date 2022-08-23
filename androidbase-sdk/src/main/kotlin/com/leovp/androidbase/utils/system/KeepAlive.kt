@@ -55,7 +55,7 @@ class KeepAlive(
         }
     }
 
-    fun keepAlive() {
+    fun start() {
         release()
         if (LogContext.enableLog) LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
         runCatching {

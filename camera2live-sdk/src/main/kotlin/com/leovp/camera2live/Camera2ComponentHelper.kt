@@ -213,8 +213,7 @@ class Camera2ComponentHelper(
         //            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
         //        }
 
-        cameraEncoder.setDataUpdateCallback(object :
-            CallbackListener {
+        cameraEncoder.setDataUpdateCallback(object : CallbackListener {
             override fun onCallback(h264Data: ByteArray) {
                 encodeListener?.onUpdate(h264Data)
                 if (outputH264ForDebug) videoH264OsForDebug?.write(h264Data)
@@ -994,7 +993,7 @@ class Camera2ComponentHelper(
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
         //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
-        torchOn = try {
+        torchOn = runCatching {
             val captureRequest = capturePreviewRequestBuilder.build()
             session.setRepeatingRequest(captureRequest, null, cameraHandler)
 
@@ -1003,9 +1002,7 @@ class Camera2ComponentHelper(
             //                    }
             LogContext.log.w(TAG, "Flash OFF")
             false
-        } catch (e: Exception) {
-            false
-        }
+        }.getOrDefault(false)
     }
 
     fun switchFlash() = if (torchOn) turnOffFlash() else turnOnFlash()

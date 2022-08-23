@@ -17,7 +17,6 @@ import com.leovp.android.exts.connectivityManager
 import com.leovp.android.exts.telephonyManager
 import com.leovp.android.exts.wifiManager
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
@@ -160,41 +159,40 @@ object NetworkUtil {
         if (isOffline(ctx)) {
             return (-2).toDouble()
         }
-        var inputLine: String?
-        try {
+        var inputLine: String? = null
+        runCatching {
             val pingCommand =
                 String.format(
                     Locale.getDefault(),
                     "/system/bin/ping -c %d %s",
                     numberOfPackages,
                     ipAddress
-                ) // Execute the command on the environment interface
-            val process =
-                Runtime.getRuntime()
-                    .exec(pingCommand) // Gets the input stream to get the output of the executed command
+                )
+            // Execute the command on the environment interface
+            val process = Runtime.getRuntime().exec(pingCommand)
+            // Gets the input stream to get the output of the executed command
             BufferedReader(InputStreamReader(process.inputStream)).use {
                 inputLine = it.readLine()
                 while (inputLine != null) {
-                    if (inputLine!!.isNotEmpty() && inputLine!!.contains("avg")) { // when we get to the last line of executed ping command
+                    if (inputLine!!.isNotEmpty() && inputLine!!.contains("avg")) {
+                        // when we get to the last line of executed ping command
                         break
                     }
                     inputLine = it.readLine()
                 }
             }
-        } catch (e: IOException) {
+        }.onFailure {
             return (-1).toDouble()
         }
 
         // Extracting the average round trip time from the inputLine string
-        return try {
+        return runCatching {
             val afterEqual = inputLine!!.substring(inputLine!!.indexOf("=")).trim { it <= ' ' }
             val afterFirstSlash =
                 afterEqual.substring(afterEqual.indexOf('/') + 1).trim { it <= ' ' }
             val strAvgRtt = afterFirstSlash.substring(0, afterFirstSlash.indexOf('/'))
             strAvgRtt.toDouble()
-        } catch (e: Exception) {
-            (-1).toDouble()
-        }
+        }.getOrDefault((-1).toDouble())
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -362,7 +360,7 @@ object NetworkUtil {
                 }
                 val builder = StringBuilder()
                 for (b in macAddr) {
-                    builder.append(String.format("%02X:", b))
+                    builder.append(String.format(Locale.ENGLISH, "%02X:", b))
                 }
                 if (builder.isNotEmpty()) {
                     builder.deleteCharAt(builder.length - 1)

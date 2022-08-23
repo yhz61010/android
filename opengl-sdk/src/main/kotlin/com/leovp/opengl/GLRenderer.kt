@@ -23,7 +23,12 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * GLSurfaceView.Renderer 渲染类
  *
- * @see [Android OpenGL处理YUV数据（I420、NV12、NV21）](https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6)
+ * Android OpenGL处理YUV数据（I420、NV12、NV21）
+ * https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&
+ * utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu
+ * %7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.
+ * none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.
+ * pc_relevant_paycolumn_v3&utm_relevant_index=6
  */
 class GLRenderer(private val context: Context) : BaseRenderer() {
     override fun getTagName() = "GLRenderer"

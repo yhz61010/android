@@ -8,7 +8,12 @@ import com.leovp.android.exts.ToastConfig
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseApplication
-import com.leovp.demo.basiccomponents.examples.koin.*
+import com.leovp.demo.basiccomponents.examples.koin.Car
+import com.leovp.demo.basiccomponents.examples.koin.Engine
+import com.leovp.demo.basiccomponents.examples.koin.HelloRepository
+import com.leovp.demo.basiccomponents.examples.koin.HelloRepositoryImpl
+import com.leovp.demo.basiccomponents.examples.koin.MySimplePresenter
+import com.leovp.demo.basiccomponents.examples.koin.Wheel
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
 import com.leovp.pref.LPref

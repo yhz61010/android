@@ -108,7 +108,15 @@ class L4U2BetterGradientRenderer(@Suppress("unused") private val ctx: Context) :
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, POINT_DATA.size / (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT))
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT))
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_STRIP,
+            0,
+            POINT_DATA.size / (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT)
+        )
+        GLES20.glDrawArrays(
+            GLES20.GL_POINTS,
+            0,
+            POINT_DATA.size / (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT)
+        )
     }
 }

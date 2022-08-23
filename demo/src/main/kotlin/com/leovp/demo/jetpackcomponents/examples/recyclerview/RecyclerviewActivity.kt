@@ -121,7 +121,9 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
         } else {
             listItem.isVisible = true
             gridItem.isVisible = false
-            itemTouchHandler.setDefaultDragDirs(ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
+            itemTouchHandler.setDefaultDragDirs(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+            )
         }
         return super.onPrepareOptionsMenu(menu)
     }

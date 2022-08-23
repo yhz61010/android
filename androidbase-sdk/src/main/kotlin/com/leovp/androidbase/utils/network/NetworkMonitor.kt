@@ -49,7 +49,7 @@ class NetworkMonitor(
 
         @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
         override fun run() {
-            try {
+            runCatching {
                 showPingLatencyStatus = -1
                 showWifiSignalStatus = -1
 
@@ -110,8 +110,6 @@ class NetworkMonitor(
                     )
                 )
                 monitorHandler.postDelayed(this, TimeUnit.SECONDS.toMillis(freq.toLong()))
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }

@@ -51,6 +51,7 @@ import okhttp3.internal.closeQuietly
 class MediaProjectionService : Service() {
 
     companion object {
+        private const val TAG = "MPS"
         val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265
     }
 
@@ -116,7 +117,7 @@ class MediaProjectionService : Service() {
                 )
                 videoH26xOs = BufferedOutputStream(FileOutputStream(videoH26xFile))
             } catch (e: Exception) {
-                e.printStackTrace()
+                LogContext.log.e(TAG, "setDebugInfo() exception.")
             }
         }
     }
@@ -237,7 +238,7 @@ class MediaProjectionService : Service() {
                 videoH26xOs.flush()
                 videoH26xOs.closeQuietly()
             } catch (e: java.lang.Exception) {
-                e.printStackTrace()
+                LogContext.log.e(TAG, "stopScreenShare() exception.")
             }
         }
 

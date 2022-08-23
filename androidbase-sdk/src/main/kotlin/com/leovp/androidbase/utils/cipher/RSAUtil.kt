@@ -38,7 +38,7 @@ object RSAUtil {
 
     // The RSA key MUST BE 2048 bits or higher.
     fun decrypt(pubKey: String, encryptedData: ByteArray?): String? {
-        return try {
+        return runCatching {
             val keyBytes = Base64.decode(pubKey.toByteArray(), Base64.NO_WRAP)
             val spec = X509EncodedKeySpec(keyBytes)
             val keyFactory = KeyFactory.getInstance(CIPHER_ALGORITHM)
@@ -46,10 +46,7 @@ object RSAUtil {
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, key)
             String(cipher.doFinal(encryptedData))
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        }.getOrNull()
     }
 
     // The RSA key MUST BE 2048 bits or higher.

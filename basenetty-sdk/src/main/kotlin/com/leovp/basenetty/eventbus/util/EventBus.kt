@@ -3,7 +3,6 @@
 package com.leovp.basenetty.eventbus.util
 
 import com.leovp.basenetty.eventbus.base.EventBusAttributes
-import com.leovp.basenetty.eventbus.base.ParameterHolder
 import com.leovp.basenetty.eventbus.handler.EventBusHandler
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -20,23 +19,32 @@ object EventBus {
     private val replyHandlers: ConcurrentMap<String, EventBusHandler> = ConcurrentHashMap()
 
     /** same as `request` */
-    fun send(init: ParameterHolder.() -> Unit): Map<String, Any> {
-        return constructData(ParameterHolder(EventBusAttributes.TYPE_SEND).apply { init() })
+    fun send(
+        address: String,
+        message: Any? = null,
+        headers: Map<String, Any>? = null,
+        handler: EventBusHandler? = null
+    ): Map<String, Any> {
+        return constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
     }
 
-    fun publish(init: ParameterHolder.() -> Unit): Map<String, Any> {
-        return constructData(ParameterHolder(EventBusAttributes.TYPE_PUBLISH).apply { init() })
+    fun publish(address: String, message: Any? = null, headers: Map<String, Any>? = null): Map<String, Any> {
+        return constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
     }
 
     /** same as `consumer` */
-    fun register(init: ParameterHolder.() -> Unit): Map<String, Any> {
-        return constructData(ParameterHolder(EventBusAttributes.TYPE_REGISTER).apply { init() })
+    fun register(
+        address: String,
+        headers: Map<String, Any>? = null,
+        customFields: Map<String, Any?>? = null,
+        handler: EventBusHandler
+    ): Map<String, Any> {
+        return constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
     }
 
-    fun unregister(init: ParameterHolder.() -> Unit): Map<String, Any> {
-        val param = ParameterHolder(EventBusAttributes.TYPE_UNREGISTER).apply { init() }
-        handlers.remove(param.address)
-        return constructData(param)
+    fun unregister(address: String, headers: Map<String, Any>? = null): Map<String, Any> {
+        handlers.remove(address)
+        return constructData(EventBusAttributes.TYPE_UNREGISTER, address, null, headers)
     }
 
     // =============================================
@@ -68,51 +76,58 @@ object EventBus {
     private fun addHandler(address: String, handler: EventBusHandler) {
         val handlerList: MutableList<EventBusHandler>? = handlers[address]
         if (handlerList == null) {
-            //            LogContext.log.i(TAG, "[$address] Add handler to EventBus.")
+            // LogContext.log.i(TAG, "[$address] Add handler to EventBus.")
             handlers[address] = mutableListOf<EventBusHandler>().apply { add(handler) }
         } else {
             if (handlers.containsKey(address)) {
                 handlers[address] = handlerList.apply { add(handler) }
-                //                LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler size: ${handlers.size}")
+                // LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler size: ${handlers.size}")
             }
         }
     }
 
     private fun addReplyHandler(address: String, handler: EventBusHandler) {
         if (!replyHandlers.containsKey(address)) {
-            //            LogContext.log.i(TAG, "[$address] Add reply handler to EventBus.")
+            // LogContext.log.i(TAG, "[$address] Add reply handler to EventBus.")
             replyHandlers[address] = handler
-            //            LogContext.log.i(TAG, "[$address] Reply handler added.")
+            // LogContext.log.i(TAG, "[$address] Reply handler added.")
         }
     }
 
     // =============================================
 
-    private fun constructData(param: ParameterHolder): Map<String, Any> {
-        //        LogContext.log.i("constructData", "[$type][$address]")
+    private fun constructData(
+        type: String,
+        address: String,
+        message: Any? = null,
+        headers: Map<String, Any>? = null,
+        customFields: Map<String, Any?>? = null,
+        handler: EventBusHandler? = null
+    ): Map<String, Any> {
+        // LogContext.log.i("constructData", "[$type][$address]")
 
         val eventBusObj = mutableMapOf<String, Any>()
-        eventBusObj[EventBusAttributes.TYPE] = param.type
-        eventBusObj[EventBusAttributes.ADDRESS] = param.address
-        param.headers?.let { eventBusObj[EventBusAttributes.HEADERS] = it }
-        param.message?.let { eventBusObj[EventBusAttributes.BODY] = it }
+        eventBusObj[EventBusAttributes.TYPE] = type
+        eventBusObj[EventBusAttributes.ADDRESS] = address
+        headers?.let { eventBusObj[EventBusAttributes.HEADERS] = it }
+        message?.let { eventBusObj[EventBusAttributes.BODY] = it }
 
-        when (param.type) {
+        when (type) {
             EventBusAttributes.TYPE_SEND -> {
-                param.handler?.let {
+                handler?.let {
                     val replyAddress = UUID.randomUUID().toString()
-                    //                    LogContext.log.i("serializeData", "replyAddress=$replyAddress")
+                    // LogContext.log.i("serializeData", "replyAddress=$replyAddress")
                     eventBusObj[EventBusAttributes.REPLY_ADDRESS] = replyAddress
                     addReplyHandler(replyAddress, it)
                 }
             }
             EventBusAttributes.TYPE_REGISTER -> {
-                param.customFields?.let { map ->
+                customFields?.let { map ->
                     for ((key, value) in map) {
                         if (null != value) eventBusObj[key] = value
                     }
                 }
-                param.handler?.let { addHandler(param.address, it) }
+                handler?.let { addHandler(address, it) }
             }
             else -> Unit
         }

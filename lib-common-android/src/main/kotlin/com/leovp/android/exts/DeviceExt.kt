@@ -6,7 +6,10 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Service
 import android.content.Context
-import android.content.pm.ActivityInfo.*
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
@@ -330,14 +333,11 @@ fun getImei(ctx: Context): String? {
 }
 
 fun getImei(ctx: Context, slotId: Int): String? {
-    return try {
+    return runCatching {
         val manager = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
         method.invoke(manager, slotId) as String
-    } catch (e: Exception) {
-        //        e.printStackTrace()
-        return null
-    }
+    }.getOrNull()
 }
 
 @SuppressLint("DiscouragedApi")

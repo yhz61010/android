@@ -175,7 +175,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
         try {
             h264Encoder.stop()
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogContext.log.e(TAG, "stop() exception.")
         }
     }
 

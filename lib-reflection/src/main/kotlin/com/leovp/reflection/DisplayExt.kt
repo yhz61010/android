@@ -22,7 +22,7 @@ private lateinit var screenRotationChanged: IRotationWatcher.Stub
  */
 @SuppressLint("PrivateApi")
 fun watchRotationByReflection(onRotationChanged: (rotation: Int) -> Unit) {
-    try {
+    runCatching {
         val serviceManager = Class.forName("android.os.ServiceManager")
         val serviceBinder =
             serviceManager.getMethod("getService", String::class.java)
@@ -41,14 +41,12 @@ fun watchRotationByReflection(onRotationChanged: (rotation: Int) -> Unit) {
                 IRotationWatcher::class.java
             )
 
-        try {
+        runCatching {
             removeRotationWatcher =
                 windowManagerService.javaClass.getMethod(
                     "removeRotationWatcher",
                     IRotationWatcher::class.java
                 )
-        } catch (ignored: NoSuchMethodException) {
-            ignored.printStackTrace()
         }
 
         screenRotationChanged = object : IRotationWatcher.Stub() {
@@ -66,16 +64,12 @@ fun watchRotationByReflection(onRotationChanged: (rotation: Int) -> Unit) {
             )
         else
             watchRotation.invoke(windowManagerService, screenRotationChanged)
-    } catch (ignored: Exception) {
-        ignored.printStackTrace()
     }
 }
 
 fun unwatchReflectionRotation() {
-    try {
+    runCatching {
         // Stop monitoring for changes when you're done
         removeRotationWatcher?.invoke(windowManagerService, screenRotationChanged)
-    } catch (ignored: Exception) {
-        ignored.printStackTrace()
     }
 }

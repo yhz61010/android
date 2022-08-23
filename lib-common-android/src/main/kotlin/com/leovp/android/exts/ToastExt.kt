@@ -194,12 +194,12 @@ private fun showToast(
     when {
         origin -> Toast.makeText(ctx, message, duration).show()
         API.ABOVE_R -> {
-            try {
+            runCatching {
                 if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
                     Toast.makeText(ctx, message, duration).show()
                     return
                 }
-            } catch (e: Exception) {
+            }.onFailure {
                 Toast.makeText(ctx, message, duration).show()
                 return
             }

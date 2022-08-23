@@ -5,15 +5,17 @@ package com.leovp.androidbase.utils.notch
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
-import com.leovp.androidbase.utils.notch.INotchScreen.*
-import com.leovp.androidbase.utils.notch.impl.AndroidPNotchScreen
-import com.leovp.androidbase.utils.notch.impl.HuaweiNotchScreen
-import com.leovp.androidbase.utils.notch.impl.MiNotchScreen
-import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
 import com.leovp.android.exts.isHuaWei
 import com.leovp.android.exts.isOppo
 import com.leovp.android.exts.isVivo
 import com.leovp.android.exts.isXiaoMi
+import com.leovp.androidbase.utils.notch.INotchScreen.NotchScreenCallback
+import com.leovp.androidbase.utils.notch.INotchScreen.NotchScreenInfo
+import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
+import com.leovp.androidbase.utils.notch.impl.AndroidPNotchScreen
+import com.leovp.androidbase.utils.notch.impl.HuaweiNotchScreen
+import com.leovp.androidbase.utils.notch.impl.MiNotchScreen
+import com.leovp.androidbase.utils.notch.impl.OppoNotchScreen
 import com.leovp.kotlin.utils.SingletonHolder
 
 /**

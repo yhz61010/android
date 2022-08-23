@@ -1,5 +1,6 @@
 package com.leovp.androidbase.framework
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -8,19 +9,20 @@ import android.view.MotionEvent
 import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
 import androidx.viewbinding.ViewBinding
-import com.leovp.androidbase.exts.android.closeSoftKeyboard
-import com.leovp.androidbase.utils.network.InternetUtil
-import com.leovp.androidbase.utils.network.NetworkMonitor
-import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.android.exts.hideNavigationBar
 import com.leovp.android.exts.requestFullScreenAfterVisible
 import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.LangUtil
 import com.leovp.android.utils.NetworkUtil
+import com.leovp.androidbase.exts.android.closeSoftKeyboard
+import com.leovp.androidbase.utils.network.InternetUtil
+import com.leovp.androidbase.utils.network.NetworkMonitor
+import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
@@ -220,6 +222,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         networkMonitor = null
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
     fun startTrafficNetwork(
         domain: String,
         callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null

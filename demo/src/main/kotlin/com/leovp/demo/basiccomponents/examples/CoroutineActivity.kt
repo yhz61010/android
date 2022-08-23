@@ -159,6 +159,7 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>() 
         LogContext.log.e(ITAG, "The answer for v1=${v1.await()} v2=${v2.await()}")
     }
 
+    @Suppress("unused")
     private fun normalMethod() {
         LogContext.log.w(ITAG, "normalMethod")
     }

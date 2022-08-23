@@ -129,7 +129,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
             private set
 
-        // FIXME: Seems does not work. Check bellow setKeyFrameRate
+        // FIXME Seems does not work. Check bellow setKeyFrameRate
         var fps = 20F
             private set
         var quality = 100

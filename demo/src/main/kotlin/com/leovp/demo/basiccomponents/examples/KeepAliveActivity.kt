@@ -26,7 +26,7 @@ class KeepAliveActivity : BaseDemonstrationActivity<ActivityKeepAliveBinding>() 
 
     fun onKeepAliveClick(@Suppress("UNUSED_PARAMETER") view: View) {
         toast("Start KeepAlive")
-        keepAlive.keepAlive()
+        keepAlive.start()
     }
 
     fun onStopClick(@Suppress("UNUSED_PARAMETER") view: View) {

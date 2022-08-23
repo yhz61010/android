@@ -250,7 +250,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
             } catch (e: Exception) {
-                e.printStackTrace()
+                LogContext.log.e(tag, "onInputBufferAvailable() exception.")
             }
         }
 

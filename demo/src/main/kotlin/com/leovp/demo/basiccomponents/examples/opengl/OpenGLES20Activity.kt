@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples.opengl
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -19,16 +20,16 @@ import com.leovp.demo.basiccomponents.examples.opengl.renderers.L3U2RefactorOrth
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L4U1BasicGradientRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L4U2BetterGradientRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L5IndexRenderer
+import com.leovp.demo.basiccomponents.examples.opengl.renderers.L62U2TextureRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L6U1TextureRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L6U2Sub1TextureRenderer
-import com.leovp.demo.basiccomponents.examples.opengl.renderers.L62U2TextureRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L6U2Sub3TextureRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L7U1FBORenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L7U2FBORenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L8U1FilterRenderer
 import com.leovp.demo.databinding.ActivityOpenGles20Binding
 import com.leovp.log.base.ITAG
-import java.io.Serializable
+import kotlinx.parcelize.Parcelize
 
 class OpenGLES20Activity :
     BaseDemonstrationActivity<ActivityOpenGles20Binding>(),
@@ -41,7 +42,8 @@ class OpenGLES20Activity :
 
     private lateinit var simpleAdapter: ArrayAdapter<Item>
 
-    class Item(val title: String, val clazz: Class<*>) : Serializable {
+    @Parcelize
+    data class Item(val title: String, val clazz: Class<*>) : Parcelable {
         override fun toString(): String {
             return title
         }
@@ -82,13 +84,10 @@ class OpenGLES20Activity :
 
     companion object {
         fun getRenderer(className: Class<*>, context: Context): GLSurfaceView.Renderer? {
-            try {
+            return runCatching {
                 val constructor = className.getConstructor(Context::class.java)
-                return constructor.newInstance(context) as GLSurfaceView.Renderer
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            return null
+                constructor.newInstance(context) as GLSurfaceView.Renderer
+            }.getOrNull()
         }
     }
 }

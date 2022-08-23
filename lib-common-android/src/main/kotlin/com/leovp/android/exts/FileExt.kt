@@ -43,7 +43,10 @@ fun Context.createTmpFile(suffix: String?, type: String? = null): File {
     return this.createFile("tmp", "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}", type)
 }
 
-@Deprecated("Alternatives such as Context.getExternalFilesDir(String), MediaStore, or Intent.ACTION_OPEN_DOCUMENT offer better performance.")
+@Deprecated(
+    "Alternatives such as Context.getExternalFilesDir(String), " +
+        "MediaStore, or Intent.ACTION_OPEN_DOCUMENT offer better performance."
+)
 fun getExternalFolder(baseFolder: String): File {
     val dir = File(Environment.getExternalStorageDirectory().absolutePath, baseFolder)
     if (!dir.exists()) dir.mkdirs()

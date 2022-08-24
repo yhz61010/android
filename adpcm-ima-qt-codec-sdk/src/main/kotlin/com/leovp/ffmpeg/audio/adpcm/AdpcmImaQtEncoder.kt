@@ -1,7 +1,7 @@
-package com.leovp.ffmpeg.javacpp.audio.adpcm
+package com.leovp.ffmpeg.audio.adpcm
 
 import androidx.annotation.Keep
-import com.leovp.ffmpeg.javacpp.audio.base.EncodeAudioCallback
+import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
 
 /**
  * Author: Michael Leo

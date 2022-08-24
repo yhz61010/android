@@ -1,4 +1,4 @@
-package com.leovp.ffmpeg.javacpp.audio.base
+package com.leovp.ffmpeg.audio.base
 
 /**
  * Author: Michael Leo

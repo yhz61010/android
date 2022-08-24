@@ -20,7 +20,7 @@ android {
     }
 
     sourceSets {
-        getByName("main").jniLibs.srcDirs("src/main/libs")
+        getByName("main").jniLibs.srcDirs("libs")
     }
 
     publishing {

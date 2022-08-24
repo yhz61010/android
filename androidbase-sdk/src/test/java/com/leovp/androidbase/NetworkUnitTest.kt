@@ -2,8 +2,8 @@ package com.leovp.androidbase
 
 import android.util.Log
 import com.leovp.androidbase.utils.network.InternetUtil
-import com.leovp.log_sdk.LLog
-import com.leovp.log_sdk.LogContext
+import com.leovp.log.LLog
+import com.leovp.log.LogContext
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.accessibility.AccessibilityActivity">
+    tools:context=".basiccomponents.examples.accessibility.AccessibilityActivity">
 
     <EditText
         android:id="@+id/etDemo1"

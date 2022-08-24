@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.ffmpeg.FFMpegH265Activity">
+    tools:context=".basiccomponents.examples.ffmpeg.FFMpegH265Activity">
 
-    <com.leovp.opengl_sdk.ui.LeoGLSurfaceView
+    <com.leovp.opengl.ui.LeoGLSurfaceView
         android:id="@+id/glSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

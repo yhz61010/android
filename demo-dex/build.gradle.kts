@@ -11,6 +11,19 @@ android {
         versionName = "1.0"
     }
 
+    buildTypes {
+        // Due to dex project, we can't obfuscate the `release` build type.
+        getByName("release") {
+            isShrinkResources = false
+            isMinifyEnabled = false
+        }
+
+        getByName("debug") {
+            isShrinkResources = false
+            isMinifyEnabled = false
+        }
+    }
+
     applicationVariants.all {
         val variant = this
         variant.outputs

@@ -1,4 +1,4 @@
-package com.leovp.ffmpeg.javacpp.audio.adpcm
+package com.leovp.ffmpeg.audio.adpcm
 
 import androidx.annotation.Keep
 

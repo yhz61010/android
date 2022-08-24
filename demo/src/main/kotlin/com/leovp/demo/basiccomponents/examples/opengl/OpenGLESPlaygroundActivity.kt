@@ -5,13 +5,13 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ImageView
+import com.leovp.android.exts.createFile
+import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L8U1FilterRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.baseL7.L7BaseRenderer
 import com.leovp.demo.databinding.ActivityOpenGlesplaygroundBinding
-import com.leovp.android.exts.createFile
-import com.leovp.android.exts.getSerializableExtraOrNull
 import com.leovp.image.writeToFile
 import com.leovp.log.base.ITAG
 import com.leovp.opengl.BaseRenderer
@@ -28,7 +28,7 @@ class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlespla
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val item: OpenGLES20Activity.Item = intent.getSerializableExtraOrNull("item")!!
+        val item: OpenGLES20Activity.Item = intent.getParcelableExtraOrNull("item")!!
         title = item.title
 
         binding.glSurfaceView.setEGLContextClientVersion(2)

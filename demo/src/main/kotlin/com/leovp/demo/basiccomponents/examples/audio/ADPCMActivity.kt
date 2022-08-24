@@ -12,9 +12,9 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityADPCMBinding
-import com.leovp.ffmpeg.javacpp.audio.adpcm.AdpcmImaQtDecoder
-import com.leovp.ffmpeg.javacpp.audio.adpcm.AdpcmImaQtEncoder
-import com.leovp.ffmpeg.javacpp.audio.base.EncodeAudioCallback
+import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtDecoder
+import com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder
+import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.io.BufferedOutputStream

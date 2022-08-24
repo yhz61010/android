@@ -49,15 +49,16 @@ h264_mp4toannexb: Convert an H.264 bitstream from length prefixed mode to start 
 
 ### Download
 Download `libyuv` sources and move all files into `jni` folder.
-or use the downloaded sources `libyuv-20220324.tar.gz`
-(This is the original official version just excludes `.git` folder. Downloaded date: 2022/03/24)
+or use the downloaded sources `libyuv-20220824.tar.gz`
+(This is the original official version just excludes `.git` folder. Downloaded date: 2022/08/24)
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
+$ rm -rf libyuv/jni libyuv/libs libyuv/obj
 $ mkdir -p libyuv/jni
 $ cd libyuv/jni
 $ git clone https://chromium.googlesource.com/libyuv/libyuv .
 # or unzip `libyuv-20220324.tar.gz` file
-$ tar xvzf ../../yuv-sdk/libyuv-20220324.tar.gz --strip-components 1
+$ tar xvzf ../../yuv-sdk/libyuv-20220824.tar.gz --strip-components 1
 ```
 
 ### Modify `./libyuv/jni/Android.mk` file
@@ -82,11 +83,14 @@ endif
 ```
 
 ### Compile
+
+
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/jni
 $ ndk-build
 ```
-You'll get the `so` files in the generated folder `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
+You'll get the `so` files in the generated folder 
+`/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
 
 ## How to compile `yuv-sdk`
 First, copy `include` folder from `libyuv/jni` to `yuv-sdk/main/cpp`.
@@ -94,7 +98,7 @@ Then, you have three ways to compile `yuv-sdk` module:
 - Compile with `gradlew` command.
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
-$ ./gradlew yuv-sdk:assemble
+$ ./gradlew :yuv-sdk:assemble
 ```
 - Compile from `Gradle` sidebar.
 Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> yuv-sdk -> build -> assemble **.

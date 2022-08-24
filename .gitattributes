@@ -17,11 +17,11 @@
 *.h265 binary
 *.raw binary
 *.pcm binary
-*.zip
-*.rar
-*.tar
-*.tar.gz
-*.tar.xz
-*.tar.bz2
-*.so
-*.a
+*.zip binary
+*.rar binary
+*.tar binary
+*.tar.gz binary
+*.tar.xz binary
+*.tar.bz2 binary
+*.so binary
+*.a binary

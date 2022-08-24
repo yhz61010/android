@@ -385,7 +385,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         startAngle: Float,
         sweepAngle: Float
     ) {
-        require(State.Type.STATE_INDETERMINATE != currState && State.Type.STATE_DETERMINATE != currState) {
+        require(State.Type.STATE_INDETERMINATE == currState || State.Type.STATE_DETERMINATE == currState) {
             "Illegal state. Current state=$currState"
         }
         if (_cancelable) {

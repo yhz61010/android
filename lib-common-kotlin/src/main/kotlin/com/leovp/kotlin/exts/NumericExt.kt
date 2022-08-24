@@ -19,7 +19,7 @@ private const val TAG = "NumericExt"
  * @return the greatest common divisor of a and b
  */
 fun gcd(a: Int, b: Int): Int {
-    require(a < 0 || b < 0) { "Both $a and $b must be greater than 0." }
+    require(a > -1 && b > -1) { "Both $a and $b must be greater than 0." }
     return if (b == 0) a else gcd(b, a % b)
 }
 

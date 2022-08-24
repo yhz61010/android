@@ -1,5 +1,14 @@
 #!/bin/bash
 
+echo "
+=======================================
+============== Attention ==============
+=======================================
+Before running this script,
+please make sure you have already download [libyuv] and modified [Android.mk] file.
+You can do that following the instructions in [README.md]
+"
+
 # Clean `include` and `libs` folder in `yuv-sdk` project.
 echo "Clean [include] and [libs] folder in [yuv-sdk] project."
 rm -rf src/main/cpp/include

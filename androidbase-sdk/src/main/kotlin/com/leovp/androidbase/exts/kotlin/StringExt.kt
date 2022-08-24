@@ -16,7 +16,7 @@ fun String.toAsciiByteArray() = this.toByteArray(Charsets.US_ASCII)
  * Transform each 2 hex chars to one byte
  */
 fun String.hexToByteArray(): ByteArray {
-    require(this.length % 2 != 0) {
+    require(this.length % 2 == 0) {
         "The length of string must be an even number."
     }
     val binary = ByteArray(this.length / 2)

@@ -1,13 +1,13 @@
 **DO NOT** add this module to project if you want to push sources to `github`.
-This means, do not include `ffmpeg-sdk` module in `settings.gradle` if you push sources to `github`.
+This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you push sources to `github`.
 
 **This module can no be imported by other projects.**
 If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
 
 ### Compile Environment：
-- OS：macOS 12.4
+- OS：macOS 12.5
 - NDK：21.1.6352462
-- FFmpeg 5.0.1 "Lorentz"(5.0.1 was released on 2022-04-04)
+- FFmpeg 5.1 "Riemann"(5.1 was released on 2022-07-22)
 - cmake: 3.23.0
 - gcc:
   Apple clang version 13.1.6 (clang-1316.0.21.2.5)
@@ -20,14 +20,14 @@ You can download from official website and scroll to the **Releases** section:
 1. Get ffmpeg source
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% wget -c https://www.ffmpeg.org/releases/ffmpeg-5.0.1.tar.xz
+% wget -c https://www.ffmpeg.org/releases/ffmpeg-5.1.tar.xz
 ```
 Unzip it into the following folder:
 > # -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
 
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% tar xvJf ffmpeg-5.0.1.tar.xz
+% tar xvJf ffmpeg-5.1.tar.xz
 ```
 
 2. Compile and get static library
@@ -35,6 +35,12 @@ Unzip it into the following folder:
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
 ```
+
+Modify the ffmpeg version in `config.sh` file:
+```shell
+FFMPEG_FOLDER=ffmpeg-<ffmepg version>
+```
+
 Run any one of the following scripts as you want:
 ```shell
 % ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
@@ -42,7 +48,9 @@ Run any one of the following scripts as you want:
 % ./build_ffmpeg_h264_hevc_decoder.sh
 ```
 
-3. Generate `so` files with jni file In Android Studio, just build project, you will get `so` files.
+3. Generate `so` files.
+   The above shell script in `Step 2` has already generated `so` files. However, if you want to generate it again,
+   in Android Studio, just build project, you will get `so` files.
    Or execute the following command under
    `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni`
    folder:

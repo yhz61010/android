@@ -227,13 +227,6 @@
         android:visibility="invisible">
 
         <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textColor="#FFFFFF" />
-
-        <TextView
             android:id="@+id/close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -241,6 +234,13 @@
             android:layout_margin="8dp"
             android:background="?attr/selectableItemBackground"
             android:text="Close"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:textColor="#FFFFFF" />
 
         <ImageView

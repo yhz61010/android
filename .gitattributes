@@ -1,0 +1,27 @@
+* text eol=lf
+
+*.bat text eol=crlf
+
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.so binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.caf binary
+*.ima4 binary
+*.h264 binary
+*.h265 binary
+*.raw binary
+*.pcm binary
+*.zip binary
+*.rar binary
+*.tar binary
+*.tar.gz binary
+*.tar.xz binary
+*.tar.bz2 binary
+*.so binary
+*.a binary

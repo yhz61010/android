@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# NDK build
-#ndk-build clean
-#ndk-build
-
 # Delete existed so files in [h264-hevc-decoder-sdk] module.
 rm -f ../../../../h264-hevc-decoder-sdk/src/main/libs/armeabi-v7a/*.so
 rm -f ../../../../h264-hevc-decoder-sdk/src/main/libs/arm64-v8a/*.so
+
+# NDK build
+ndk-build clean
+ndk-build
 
 # Copy new so files to [adpcm-ima-qt-codec-h264-hevc-decoder-sdk] module.
 cp ../libs/armeabi-v7a/libh264-hevc-decoder.so ../../../../h264-hevc-decoder-sdk/src/main/libs/armeabi-v7a/

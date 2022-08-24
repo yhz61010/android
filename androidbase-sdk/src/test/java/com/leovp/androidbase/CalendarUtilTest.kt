@@ -10,7 +10,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
 import java.util.*
 
-
 /**
  * Author: Michael Leo
  * Date: 20-8-3 上午11:37
@@ -30,5 +29,4 @@ class CalendarUtilTest {
         dateString = Date(staticDate.timeInMillis).formatToNormalFullDateTime()
         Assert.assertEquals("2021/10/13 16:28:46 (CST)", dateString)
     }
-
 }

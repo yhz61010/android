@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.camera2.Camera2WithoutPreviewActivity">
+    tools:context=".basiccomponents.examples.camera2.Camera2WithoutPreviewActivity">
 
     <ToggleButton
         android:id="@+id/btnCameraRecord"

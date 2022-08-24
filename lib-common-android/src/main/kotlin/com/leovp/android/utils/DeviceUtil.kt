@@ -211,6 +211,14 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val statusBarHeight = ctx.statusBarHeight
             val navBarHeight = ctx.navigationBarHeight
             val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo
+            val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
+                "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
+            val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
+            val screenInfo = "${screenSize.width}x${screenSize.height}" +
+                "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
+                "(${ctx.densityDpi}:${ctx.density})  " +
+                "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
+                "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
             """
             Device basic information:
             App version      : ${ctx.versionName}(${ctx.versionCode})
@@ -227,18 +235,13 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Product          : $product
             Host             : $host
             Hardware         : $hardware
-            CPU              : $cpuQualifiedName($cpuCoreCount cores @ ${cpuMinFreq / 1000}MHz~${
-            "%.2f".format(cpuMaxFreq / 1000_000F)
-            }GHz)
+            CPU              : $cpuInfo
             CPU Arch         : $cpuArch
             OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]
             Supported ABIS   : ${supportedCpuArchs.contentToString()}
             Display          : $display
-            Screen           : ${screenSize.width}x${screenSize.height}(${getRatio(screenSize.toSmartSize())}=
-            ${ctx.screenRatio.round()})  (${ctx.densityDpi}:${ctx.density})
-            (${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)
-            (${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})
-            MemoryUsage      : ${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}
+            Screen           : $screenInfo
+            MemoryUsage      : $memUsage
             ${memInfo.third.round()}% Used
             External Storage : $externalStorageBytesInReadable
             Fingerprint      : ${Build.FINGERPRINT}

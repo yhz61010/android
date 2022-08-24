@@ -86,3 +86,5 @@ lint/tmp/
 /.idea/other.xml
 /**/detekt-baseline.xml
 /.idea/shelf/
+
+**/.DS_Store

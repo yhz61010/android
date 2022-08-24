@@ -83,8 +83,12 @@ endif
 ```
 
 ### Compile
+You can run the handy shell script to compile `libyuv` and `yuv-sdk`:
+```shell
+sh compile_all_in_one.sh
+```
 
-
+Or you can do that step by step:
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/jni
 $ ndk-build
@@ -93,8 +97,19 @@ You'll get the `so` files in the generated folder
 `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
 
 ## How to compile `yuv-sdk`
-First, copy `include` folder from `libyuv/jni` to `yuv-sdk/main/cpp`.
-Then, you have three ways to compile `yuv-sdk` module:
+First, copy `include` folder from `libyuv/jni` to `yuv-sdk/src/main/cpp`.
+```shell
+$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
+$ cp -R jni/include/ ../yuv-sdk/src/main/cpp/include
+```
+Then Copy `so` files from `libyuv/libs` to `yuv-sdk/libs`.
+```shell
+$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
+$ cp -R libs/armeabi-v7a/ ../yuv-sdk/libs/armeabi-v7a/
+$ cp -R libs/arm64-v8a/ ../yuv-sdk/libs/arm64-v8a/
+```
+
+Finally, you have three ways to compile `yuv-sdk` module:
 - Compile with `gradlew` command.
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/

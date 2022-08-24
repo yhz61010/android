@@ -23,7 +23,7 @@ cp -R include/ ../../yuv-sdk/src/main/cpp/include
 echo "Copy [libs] folder"
 mkdir -p ../../yuv-sdk/libs/armeabi-v7a
 mkdir -p ../../yuv-sdk/libs/arm64-v8a
-cp -R ../libs/armeabi-v7a ../../yuv-sdk/libs/
-cp -R ../libs/arm64-v8a   ../../yuv-sdk/libs/
+cp -R ../libs/armeabi-v7a/ ../../yuv-sdk/libs/armeabi-v7a/
+cp -R ../libs/arm64-v8a/   ../../yuv-sdk/libs/arm64-v8a/
 
 echo "All done."

@@ -83,7 +83,6 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 
-/debug.keystore
 /libyuv/
 /**/detekt-baseline.xml
 

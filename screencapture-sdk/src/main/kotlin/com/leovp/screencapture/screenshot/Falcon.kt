@@ -200,11 +200,11 @@ object Falcon {
             val rootView = getFieldValue("mView", root) as? View
 
             // fixes https://github.com/jraska/Falcon/issues/10
-            if (rootView == null || !rootView.isShown) {
-                LogContext.log.e(
-                    TAG,
-                    "rootView=$rootView. rootView is null or not being shown. View stored as root in Global window manager, skipping"
-                )
+            if (rootView == null) {
+                LogContext.log.e(TAG, "null View stored as root in Global window manager, skipping")
+                continue
+            }
+            if (!rootView.isShown) {
                 continue
             }
             val location = IntArray(2)

@@ -1,5 +1,5 @@
 **Attention:**
-`libjpeg-turbo-main-20220325.tar.gz` This file is downloaded at 2022/03/25.
+`libjpeg-turbo-v2.1.4-202200823.tar.gz` This file is downloaded at 2022/08/23.
 
 ## How to compile `ibjpeg-turbo`
 
@@ -9,11 +9,12 @@ Download `libjpeg-turbo` sources or use the downloaded sources `libjpeg-turbo-ma
 
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libjpeg-turbo-main
+$ rm -rf source
 $ mkdir source
 $ cd source
 $ git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git .
-# or unzip `libjpeg-turbo-main-20220325.tar.gz` file
-$ tar xvzf ../libjpeg-turbo-main-20220325.tar.gz --strip-components 1
+# or unzip `libjpeg-turbo-v2.1.4-202200823.tar.gz` file
+$ tar xvzf ../libjpeg-turbo-v2.1.4-202200823.tar.gz --strip-components 1
 ```
 
 ### Compile

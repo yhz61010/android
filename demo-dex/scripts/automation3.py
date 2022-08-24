@@ -40,7 +40,7 @@ def run_adb(args, pipeOutput=True):
     if (pipeOutput):
         out = subprocess.PIPE
 
-    p = subprocess.Popen([str(arg) for arg in args], stdout=out)
+    p = subprocess.Popen([str(arg) for arg in args], stdout=out, encoding='utf-8')
     stdout, stderr = p.communicate()
     return (p.returncode, stdout, stderr)
 
@@ -74,8 +74,10 @@ def identify_device():
         # Output as following:
         # List of devices attached
         # 6466eb0c	device
+        print("adb command result:\n")
         print(out)
         device_serial_no = args_in.device_serial
+        print(device_serial_no)
 
         devicesInfo = str(out)
         deviceCnt = devicesInfo.count('device') - 1

@@ -20,7 +20,7 @@
     app:startDestination="@id/camera_fragment">
 
     <fragment android:id="@+id/permissions_fragment"
-        android:name="com.leovp.camerax_sdk.fragments.PermissionsFragment"
+        android:name="com.leovp.camerax.fragments.PermissionsFragment"
         android:label="PermissionsFragment">
 
         <action android:id="@+id/action_permissions_to_camera"
@@ -31,7 +31,7 @@
     </fragment>
 
     <fragment android:id="@+id/camera_fragment"
-        android:name="com.leovp.camerax_sdk.fragments.CameraFragment"
+        android:name="com.leovp.camerax.fragments.CameraFragment"
         android:label="CameraFragment"
         tools:layout="@layout/fragment_camera">
 
@@ -46,14 +46,14 @@
     </fragment>
 
     <fragment android:id="@+id/gallery_fragment"
-        android:name="com.leovp.camerax_sdk.fragments.GalleryFragment"
+        android:name="com.leovp.camerax.fragments.GalleryFragment"
         android:label="GalleryFragment"
         tools:layout="@layout/fragment_gallery">
         <argument android:name="root_directory" app:argType="string" />
     </fragment>
 
     <fragment android:id="@+id/video_fragment"
-        android:name="com.leovp.camerax_sdk.fragments.VideoFragment"
+        android:name="com.leovp.camerax.fragments.VideoFragment"
         android:label="fragment_video"
         tools:layout="@layout/fragment_video">
         <action android:id="@+id/action_video_fragment_to_camera_fragment" app:destination="@id/camera_fragment" />

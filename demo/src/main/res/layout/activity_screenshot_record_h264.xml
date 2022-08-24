@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.RecordSingleAppScreenActivity">
+    tools:context=".basiccomponents.examples.RecordSingleAppScreenActivity">
 
     <ToggleButton
         android:id="@+id/toggleBtn"

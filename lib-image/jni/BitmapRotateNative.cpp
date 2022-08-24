@@ -1,6 +1,6 @@
 #include "BitmapRotateNative.h"
 
-#define IMAGE_PACKAGE_BASE "com/leovp/lib_image/"
+#define IMAGE_PACKAGE_BASE "com/leovp/image/"
 
 int32_t convertArgbToInt(ARGB argb)
 {

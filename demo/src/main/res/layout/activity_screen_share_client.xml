@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/purple_200"
-    tools:context=".basic_components.examples.sharescreen.client.ScreenShareClientActivity">
+    tools:context=".basiccomponents.examples.sharescreen.client.ScreenShareClientActivity">
 
     <ToggleButton
         android:id="@+id/toggleButton"

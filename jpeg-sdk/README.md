@@ -35,7 +35,7 @@ You have three ways to compile `jpeg-sdk` module:
 
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
-$ ./gradlew jpeg-sdk:assemble
+$ ./gradlew :jpeg-sdk:assemble
 ```
 
 - Compile from `Gradle` sidebar. Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> jpeg-sdk

@@ -18,7 +18,7 @@ extern "C" {
 #define LOG_TAG "LEO-JPEG"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-#define JPEG_PACKAGE_BASE "com/leovp/jpeg_sdk/"
+#define JPEG_PACKAGE_BASE "com/leovp/jpeg/"
 
 typedef uint8_t BYTE;
 

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".basic_components.examples.opengl.OpenGLES20Activity">
+    tools:context=".basiccomponents.examples.opengl.OpenGLES20Activity">
 
     <ListView
         android:id="@+id/list"

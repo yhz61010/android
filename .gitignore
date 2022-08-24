@@ -45,6 +45,10 @@ captures/
 .idea/deploymentTargetDropDown.xml
 .idea/misc.xml
 .idea/kotlinScripting.xml
+/.idea/copyright/profiles_settings.xml
+/.idea/modules/
+/.idea/other.xml
+/.idea/shelf/
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
@@ -79,9 +83,7 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 
-/.idea/copyright/profiles_settings.xml
-/.idea/modules/
-
-/debug.keystore
 /libyuv/
-/.idea/other.xml
+/**/detekt-baseline.xml
+
+**/.DS_Store

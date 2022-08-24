@@ -254,7 +254,6 @@ dependencies {
     implementation(projects.audioSdk)
     implementation(projects.prefSdk)
     implementation(projects.libJson)
-    implementation(projects.adpcmImaQtCodecH264HevcDecoderSdk)
     implementation(projects.basenettySdk)
     implementation(projects.camera2liveSdk)
     implementation(projects.screencaptureSdk)
@@ -271,13 +270,15 @@ dependencies {
     implementation(projects.libBytes)
     implementation(projects.libImage)
     implementation(projects.libReflection)
+
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
     // implementation(projects.ffmpegSdk)
     // implementation(projects.ffmpegJavacppSdk)
+
     // You can enable only one of the following three modules.
     // implementation(projects.adpcmImaQtCodecSdk)
     // implementation(projects.h264HevcDecoderSdk)
-    // implementation(projects.adpcmImaQtCodecH264HevcDecoderSdk)
+    implementation(projects.adpcmImaQtCodecH264HevcDecoderSdk)
 
     implementation(libs.glide)
     kapt(libs.glide.compiler)

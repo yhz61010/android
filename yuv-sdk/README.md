@@ -100,11 +100,16 @@ You'll get the `so` files in the generated folder
 First, copy `include` folder from `libyuv/jni` to `yuv-sdk/src/main/cpp`.
 ```shell
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
+$ rm -rf ../yuv-sdk/src/main/cpp/include
+$ mkdir -p ../yuv-sdk/src/main/cpp/include
 $ cp -R jni/include/ ../yuv-sdk/src/main/cpp/include
 ```
 Then Copy `so` files from `libyuv/libs` to `yuv-sdk/libs`.
 ```shell
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
+$ rm -rf ../yuv-sdk/libs/
+$ mkdir -p ../yuv-sdk/libs/armeabi-v7a
+$ mkdir -p ../yuv-sdk/libs/arm64-v8a
 $ cp -R libs/armeabi-v7a/ ../yuv-sdk/libs/armeabi-v7a/
 $ cp -R libs/arm64-v8a/ ../yuv-sdk/libs/arm64-v8a/
 ```

@@ -20,8 +20,8 @@ class H264HevcDecoder {
         vpsBytes: ByteArray?,
         spsBytes: ByteArray,
         ppsBytes: ByteArray,
-        prefixSei: ByteArray?,
-        suffixSei: ByteArray?
+        prefixSei: ByteArray? = null,
+        suffixSei: ByteArray? = null
     ): DecodeVideoInfo
     external fun release()
 

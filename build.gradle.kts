@@ -325,9 +325,7 @@ fun isNonStable(version: String): Boolean {
 
 // --------------------------------------
 
-/*
-Takes value from Gradle project property and sets it as build config property
- */
+/** Takes value from Gradle project property and sets it as build config property. */
 fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
     val propertyValue = project.properties[gradlePropertyName] as? String
     checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
@@ -338,7 +336,7 @@ fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
 
 fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.toLowerCase() }
 
-/* Adds a new field to the generated BuildConfig class */
+/** Adds a new field to the generated BuildConfig class. */
 fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
     // Create String that holds Java String Array code
     val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })

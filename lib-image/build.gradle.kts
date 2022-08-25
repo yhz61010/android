@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.image"
+
     defaultConfig {
         // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
         externalNativeBuild {

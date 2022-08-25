@@ -6,7 +6,6 @@ android {
     namespace = "com.leovp.dexdemo"
 
     defaultConfig {
-        applicationId = namespace
         versionCode = 1
         versionName = "1.0"
     }

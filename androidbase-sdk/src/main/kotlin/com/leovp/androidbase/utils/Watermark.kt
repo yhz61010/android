@@ -14,8 +14,8 @@ import androidx.annotation.IntRange
 import androidx.annotation.Keep
 import com.leovp.android.exts.sp2px
 import com.leovp.androidbase.exts.kotlin.getToday
-import com.leovp.androidbase.sdk.BuildConfig
-import com.leovp.androidbase.sdk.R
+import com.leovp.androidbase.BuildConfig
+import com.leovp.androidbase.R
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.*

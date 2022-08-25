@@ -8,7 +8,6 @@ android {
     namespace = "com.leovp.aidl.client"
 
     defaultConfig {
-        applicationId = namespace
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true

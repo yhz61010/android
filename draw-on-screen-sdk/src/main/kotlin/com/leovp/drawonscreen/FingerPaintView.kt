@@ -16,7 +16,6 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
-import com.leovp.drawOnScreen.sdk.R
 import kotlin.math.abs
 
 /**
@@ -115,7 +114,7 @@ class FingerPaintView @JvmOverloads constructor(
             }
         }
         if (drawable == null) setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.onebyone, null))
-        scaleType = ImageView.ScaleType.CENTER_CROP
+        scaleType = ScaleType.CENTER_CROP
     }
 
     /**

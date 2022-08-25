@@ -8,6 +8,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.camerax"
+
     publishing {
         // Publishes "release" build variant with "release" component created by
         // Android Gradle plugin

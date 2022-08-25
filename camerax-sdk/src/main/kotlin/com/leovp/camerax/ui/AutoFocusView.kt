@@ -6,7 +6,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.FrameLayout
 import androidx.appcompat.widget.AppCompatImageView
-import com.leovp.camerax.sdk.R
+import com.leovp.camerax.R
 
 /**
  * 对焦动图显示

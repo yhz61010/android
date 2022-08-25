@@ -10,7 +10,7 @@ ndk-sdk = "21.1.6352462" # 22.1.7171670
 versionCode = "1"
 versionName = "1.0.0"
 
-leo-version = "5.10.3"
+leo-version = "5.10.4"
 
 #===================
 #===== Compile =====
@@ -182,6 +182,7 @@ lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmo
 #===== Android Room ========
 #===========================
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+# kapt
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 # optional - Kotlin Extensions and Coroutines support for Room
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }

@@ -84,7 +84,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "yuv-sdk"
+                artifactId = "yuv"
                 version = libs.versions.leo.version.get()
             }
         }

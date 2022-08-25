@@ -34,7 +34,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "http-sdk"
+                artifactId = "http"
                 version = libs.versions.leo.version.get()
             }
         }

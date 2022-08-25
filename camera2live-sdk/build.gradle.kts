@@ -42,7 +42,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "camera2live-sdk"
+                artifactId = "camera2live"
                 version = libs.versions.leo.version.get()
             }
         }

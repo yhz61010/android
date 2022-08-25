@@ -42,7 +42,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "basenetty-sdk"
+                artifactId = "basenetty"
                 version = libs.versions.leo.version.get()
             }
         }

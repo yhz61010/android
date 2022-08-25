@@ -28,7 +28,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "pref-sdk"
+                artifactId = "pref"
                 version = libs.versions.leo.version.get()
             }
         }

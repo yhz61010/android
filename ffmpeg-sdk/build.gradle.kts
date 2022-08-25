@@ -68,7 +68,7 @@ dependencies {
 //            create<MavenPublication>("release") {
 //                from(components["release"])
 //                groupId = "${rootProject.group}"
-//                artifactId = "ffmpeg-sdk"
+//                artifactId = "ffmpeg"
 //                version = libs.versions.leo.version.get()
 //            }
 //        }

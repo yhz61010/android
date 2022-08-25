@@ -191,9 +191,11 @@ fun Project.configureBase(): BaseExtension {
             "RtlCompat",
             "RtlEnabled"
         )
+        packagingOptions.resources.pickFirsts += setOf(
+            "META-INF/atomicfu.kotlin_module",
+        )
         packagingOptions.resources.excludes += setOf(
             "META-INF/licenses/**",
-            "META-INF/atomicfu.kotlin_module",
             "META-INF/NOTICE*",
             "META-INF/LICENSE*",
             "META-INF/DEPENDENCIES*",

@@ -59,7 +59,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "ffmpeg-javacpp-sdk"
+                artifactId = "ffmpeg-javacpp"
                 version = libs.versions.leo.version.get()
             }
         }

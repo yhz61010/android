@@ -27,7 +27,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "floatview-sdk"
+                artifactId = "floatview"
                 version = libs.versions.leo.version.get()
             }
         }

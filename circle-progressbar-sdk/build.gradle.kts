@@ -27,7 +27,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "circle-progressbar-sdk"
+                artifactId = "circleprogressbar"
                 version = libs.versions.leo.version.get()
             }
         }

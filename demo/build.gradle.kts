@@ -248,6 +248,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.bundles.lifecycle.simple)
     implementation(libs.bundles.room)
+    kapt(libs.room.compiler)
 
     implementation(projects.androidbaseSdk)
     implementation(projects.logSdk)

@@ -7,6 +7,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.androidbase"
+
     defaultConfig {
         multiDexEnabled = true
     }

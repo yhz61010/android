@@ -9,8 +9,9 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.demo"
+
     defaultConfig {
-        applicationId = namespace
         versionCode = 14
         versionName = "1.4"
         multiDexEnabled = true

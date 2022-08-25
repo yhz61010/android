@@ -6,7 +6,6 @@ import android.content.Context
 import android.opengl.GLES20
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
-import com.leovp.opengl.sdk.R
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_STRIDE_IN_FLOAT
 import com.leovp.opengl.util.VerticesUtil

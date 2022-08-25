@@ -7,6 +7,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.opengl"
+
     publishing {
         // Publishes "release" build variant with "release" component created by
         // Android Gradle plugin

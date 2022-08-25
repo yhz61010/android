@@ -20,12 +20,12 @@ import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import com.leovp.android.R
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
 import com.leovp.floatview.FloatView
 import com.leovp.kotlin.exts.fail
 import com.leovp.kotlin.utils.SingletonHolder
-import com.leovp.lib.common.android.R
 import com.leovp.reflection.wrappers.ServiceManager
 import kotlin.math.max
 

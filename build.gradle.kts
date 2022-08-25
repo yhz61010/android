@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 val customGroup = "com.leovp"
-val appPkg = "com.leovp.demo"
 val jdkVersion = JavaVersion.VERSION_11
 val useResourcePrefix = false
 
@@ -38,7 +37,6 @@ val detektFormatting = libs.detekt.formatting
 
 // all projects = root project + sub projects
 allprojects {
-    // The group name is also the prefix of application package name as well as the prefix of submodules package name.
     group = customGroup
 
     // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
@@ -109,9 +107,7 @@ subprojects {
 
     plugins.withId(rootProject.libs.plugins.android.application.get().pluginId) {
         // println("displayName=$displayName, name=$name, group=$group")
-        // You can use `group` which is the value that is set in `allprojects`.
-        // The `ns` parameter just means the application namespace aka app package name.
-        configureApplication(appPkg)
+        configureApplication()
     }
 
     plugins.withId(rootProject.libs.plugins.android.library.get().pluginId) { configureLibrary() }
@@ -164,9 +160,9 @@ fun Project.configureBase(): BaseExtension {
             // This `name` is just the name for each `source` in `sourceSets`.
             java.srcDirs("src/$name/kotlin", "src/$name/java")
         }
-        //        sourceSets {
-        //            map { it.java.srcDir("src/${it.name}/kotlin") }
-        //        }
+        // sourceSets {
+        //     map { it.java.srcDir("src/${it.name}/kotlin") }
+        // }
         testOptions {
             unitTests {
                 isReturnDefaultValues = true
@@ -227,13 +223,11 @@ fun Project.configureBase(): BaseExtension {
  * You just need to add your custom properties as you wish.
  *
  * **Attention**:
- * All the occurrences `-` dash or `_` underline will be replaced with `.` dot.
- *
- * @param ns The application namespace aka app package name.
+ * The default value of `applicationId` is `namespace`.
  */
-fun Project.configureApplication(ns: String): BaseExtension = configureBase().apply {
-    namespace = ns.replace('-', '.').replace('_', '.')
+fun Project.configureApplication(): BaseExtension = configureBase().apply {
     defaultConfig {
+        applicationId = namespace
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
@@ -252,13 +246,8 @@ fun Project.configureApplication(ns: String): BaseExtension = configureBase().ap
 /**
  * All the submodules will have the hierarchy configurations.
  * You just need to add your custom properties as you wish.
- *
- * **Attention**:
- * All the occurrences `-` dash or `_` underline will be replaced with `.` dot.
  */
 fun Project.configureLibrary(): BaseExtension = configureBase().apply {
-    // The `group` is the value that is set in `allprojects`.
-    namespace = "$group.$name".replace('-', '.').replace('_', '.')
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
     }

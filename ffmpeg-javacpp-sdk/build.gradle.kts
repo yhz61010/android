@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.ffmpeg.javacpp"
+
     defaultConfig {
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"

@@ -19,7 +19,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.ColorInt
-import com.leovp.circle.progressbar.sdk.R
 import com.leovp.circleprogressbar.base.State
 import com.leovp.circleprogressbar.state.CancelState
 import com.leovp.circleprogressbar.state.ErrorState

@@ -9,7 +9,7 @@ import android.widget.VideoView
 import androidx.fragment.app.Fragment
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.leovp.camerax.sdk.R
+import com.leovp.camerax.R
 import com.leovp.camerax.fragments.base.BaseCameraXFragment.Companion.VIDEO_EXTENSION
 import java.io.File
 

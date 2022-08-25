@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.pref"
+
     publishing {
         // Publishes "release" build variant with "release" component created by
         // Android Gradle plugin

@@ -61,8 +61,8 @@ import com.leovp.camerax.adapter.Media
 import com.leovp.camerax.bean.CaptureImage
 import com.leovp.camerax.enums.CameraRatio
 import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.sdk.R
-import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
+import com.leovp.camerax.R
+import com.leovp.camerax.databinding.IncRatioOptionsBinding
 import com.leovp.camerax.utils.SharedPrefsManager
 import com.leovp.camerax.utils.SoundManager
 import com.leovp.camerax.utils.cameraSensorOrientation

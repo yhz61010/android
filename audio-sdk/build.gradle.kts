@@ -7,6 +7,8 @@ plugins {
 }
 
 android {
+    namespace = "com.leovp.audio"
+
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }

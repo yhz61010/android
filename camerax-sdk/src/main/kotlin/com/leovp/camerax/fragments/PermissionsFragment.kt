@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
-import com.leovp.camerax.sdk.R
+import com.leovp.camerax.R
 
 /**
  * The sole purpose of this fragment is to request permissions and, once granted, display the

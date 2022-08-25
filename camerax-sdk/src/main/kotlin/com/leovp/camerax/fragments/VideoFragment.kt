@@ -50,10 +50,10 @@ import com.leovp.camerax.enums.CameraRatio
 import com.leovp.camerax.enums.RecordUiState
 import com.leovp.camerax.fragments.base.BaseCameraXFragment
 import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.sdk.R
-import com.leovp.camerax.sdk.databinding.FragmentVideoBinding
-import com.leovp.camerax.sdk.databinding.IncPreviewGridBinding
-import com.leovp.camerax.sdk.databinding.IncRatioOptionsBinding
+import com.leovp.camerax.R
+import com.leovp.camerax.databinding.FragmentVideoBinding
+import com.leovp.camerax.databinding.IncPreviewGridBinding
+import com.leovp.camerax.databinding.IncRatioOptionsBinding
 import com.leovp.camerax.utils.getAspectRatio
 import com.leovp.camerax.utils.getAspectRatioString
 import com.leovp.camerax.utils.getNameString

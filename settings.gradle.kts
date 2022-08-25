@@ -61,7 +61,7 @@ include(
     "adpcm-ima-qt-codec-sdk",
     "h264-hevc-decoder-sdk",
     "adpcm-ima-qt-codec-h264-hevc-decoder-sdk",
-    "drawOnScreen-sdk",
+    "draw-on-screen-sdk",
     "aidl-client",
     "ffmpeg-javacpp-sdk",
     "circle-progressbar-sdk",

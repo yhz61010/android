@@ -58,7 +58,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "camerax-sdk"
+                artifactId = "camerax"
                 version = libs.versions.leo.version.get()
             }
         }

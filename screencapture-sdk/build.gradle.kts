@@ -34,7 +34,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "screencapture-sdk"
+                artifactId = "screencapture"
                 version = libs.versions.leo.version.get()
             }
         }

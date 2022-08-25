@@ -31,7 +31,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "opengl-sdk"
+                artifactId = "opengl"
                 version = libs.versions.leo.version.get()
             }
         }

@@ -60,7 +60,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "adpcm-ima-qt-codec-h264-hevc-decoder-sdk"
+                artifactId = "adpcm-ima-qt-codec-h264-hevc-decoder"
                 version = libs.versions.leo.version.get()
             }
         }

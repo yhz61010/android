@@ -26,7 +26,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "${rootProject.group}"
-                artifactId = "lib_reflection"
+                artifactId = "lib-reflection"
                 version = libs.versions.leo.version.get()
             }
         }

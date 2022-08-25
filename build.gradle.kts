@@ -258,7 +258,7 @@ fun Project.configureApplication(ns: String): BaseExtension = configureBase().ap
  */
 fun Project.configureLibrary(): BaseExtension = configureBase().apply {
     // The `group` is the value that is set in `allprojects`.
-    namespace = "$group.${name.replace('-', '.').replace('_', '.')}"
+    namespace = "$group.$name".replace('-', '.').replace('_', '.')
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
     }

@@ -10,7 +10,7 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.audio.sdk.BuildConfig
+import com.leovp.audio.BuildConfig
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 import java.io.File

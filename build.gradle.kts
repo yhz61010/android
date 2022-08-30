@@ -24,6 +24,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint.gradle)
     alias(libs.plugins.benmanes.versions)
+    alias(libs.plugins.vcu)
     jacoco
 
     alias(libs.plugins.kotlin.kapt) apply false

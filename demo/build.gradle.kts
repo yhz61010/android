@@ -150,7 +150,6 @@ android {
         variant.outputs
             .mapNotNull { it as? com.android.build.gradle.internal.api.ApkVariantOutputImpl }
             .forEach { output ->
-                variant.packageApplicationProvider.get().outputDirectory
                 output.outputFileName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-${buildType.name}" +
                     "-v$versionName($versionCode)" +
                     "-${gitVersionTag()}-${gitCommitCount()}" +

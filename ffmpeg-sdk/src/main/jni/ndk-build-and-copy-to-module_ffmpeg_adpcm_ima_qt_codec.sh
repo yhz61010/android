@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Delete existed so files in [adpcm-ima-qt-codec-sdk] module.
-rm -rf ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/armeabi-v7a/
-rm -rf ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/arm64-v8a/
-rm -rf ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/x86/
-rm -rf ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/x86_64/
+rm -rf   ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/armeabi-v7a/
+rm -rf   ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/arm64-v8a/
+rm -rf   ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/x86/
+rm -rf   ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/x86_64/
 
 mkdir -p ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/armeabi-v7a/
 mkdir -p ../../../../adpcm-ima-qt-codec-sdk/src/main/libs/arm64-v8a/

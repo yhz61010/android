@@ -26,8 +26,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
 
 # 找到 Android 专有的日志支持库，并将其路径存储在 log-lib 中。
 find_library(log-lib # Defines the name of the path variable that stores the location of the NDK library.
-        # Specifies the name of the NDK library that CMake needs to locate.
-        log )
+             # Specifies the name of the NDK library that CMake needs to locate.
+             log)
 
 target_link_libraries(leo-yuv
                       yuv

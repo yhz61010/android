@@ -16,3 +16,5 @@ SYSROOT=${TOOLCHAINS}/sysroot
 rm -rf prebuilt
 rm -rf ../libs
 rm -rf ../obj
+
+ndk-build clean

@@ -83,20 +83,20 @@ export CC=$TOOLCHAINS/bin/aarch64-linux-android$MIN_SDK_VER-clang
 export CXX=$TOOLCHAINS/bin/aarch64-linux-android$MIN_SDK_VER-clang++
 build_one
 
-##x86_32
-#ARCH=x86_32
-#OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=i686-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
-#PREFIX=`pwd`/prebuilt/x86
-#export CC=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang
-#export CXX=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang++
-#build_one
-#
-##x86_64
-#ARCH=x86_64
-#OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=x86_64-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
-#PREFIX=`pwd`/prebuilt/x86_64
-#export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
-#export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
-#build_one
+#x86_32
+ARCH=x86_32
+OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=i686-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
+PREFIX=`pwd`/prebuilt/x86
+export CC=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang
+export CXX=$TOOLCHAINS/bin/i686-linux-android$MIN_SDK_VER-clang++
+build_one
+
+#x86_64
+ARCH=x86_64
+OPTIMIZE_CFLAGS="-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC --target=x86_64-none-linux-android$MIN_SDK_VER --gcc-toolchain=$TOOLCHAINS"
+PREFIX=`pwd`/prebuilt/x86_64
+export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
+export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
+build_one
 
 sh ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh

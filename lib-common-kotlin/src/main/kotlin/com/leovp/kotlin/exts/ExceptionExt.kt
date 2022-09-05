@@ -12,7 +12,11 @@ fun exception(message: String): Nothing {
     throw Exception(message)
 }
 
-inline fun multiCatch(runBlock: () -> Unit, vararg exceptions: KClass<out Throwable>, catchBlock: (Throwable) -> Unit) {
+inline fun multiCatch(
+    runBlock: () -> Unit,
+    vararg exceptions: KClass<out Throwable>,
+    catchBlock: (Throwable) -> Unit
+) {
     try {
         runBlock()
     } catch (e: Throwable) {

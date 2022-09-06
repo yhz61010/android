@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import com.leovp.android.utils.NetworkUtil
+import com.leovp.log.LogContext
 
 /**
  * Usage:
@@ -29,6 +30,10 @@ import com.leovp.android.utils.NetworkUtil
  * https://stackoverflow.com/a/52718543
  */
 class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
+    companion object {
+        private const val TAG = "Connection"
+    }
+
     private var connectivityManager: ConnectivityManager =
         context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -96,9 +101,21 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
                     if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                         networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     ) {
+                        if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                            LogContext.log.w(TAG, "Network Type: WIFI")
+                        } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            LogContext.log.w(TAG, "Network Type: Cellular")
+                        } else {
+                            LogContext.log.w(TAG, "Network Type: Other")
+                        }
+
                         postValue(true)
                     }
                 }
+
+                // override fun onAvailable(network: Network) {
+                //     super.onAvailable(network)
+                // }
 
                 override fun onLost(network: Network) {
                     postValue(false)

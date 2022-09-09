@@ -13,6 +13,7 @@ import android.net.wifi.WifiInfo
 import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresPermission
+import androidx.annotation.WorkerThread
 import com.leovp.android.exts.connectivityManager
 import com.leovp.android.exts.telephonyManager
 import com.leovp.android.exts.wifiManager
@@ -20,6 +21,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
+import java.net.Proxy
 import java.net.Socket
 import java.net.SocketAddress
 import java.util.*
@@ -37,6 +39,8 @@ object NetworkUtil {
     const val TYPE_ETHERNET = "Ethernet"
     const val TYPE_VPN = "VPN"
     const val TYPE_BLUETOOTH = "Bluetooth"
+    const val TYPE_OTHER = "Other"
+    const val TYPE_OFFLINE = "Offline"
 
     const val NETWORK_PING_DELAY_NORMAL = 80
     const val NETWORK_PING_DELAY_HIGH = 130
@@ -47,6 +51,8 @@ object NetworkUtil {
 
     private const val MIN_RSSI = -100
     private const val MAX_RSSI = -55
+
+    data class ProxyInfo(val type: Proxy.Type, val url: String, val port: Int)
 
     /**
      * Need following permission:
@@ -298,18 +304,30 @@ object NetworkUtil {
         return WifiSignal(linkSpeed, rssi, wifiScoreIn5, wifiScore)
     }
 
-    fun isHostReachable(hostname: String?, port: Int, timeoutInMillis: Int): Boolean {
+    @WorkerThread
+    fun isHostReachable(
+        hostname: String?,
+        port: Int,
+        timeoutInMillis: Int,
+        proxyInfo: ProxyInfo? = null
+    ): Boolean {
         var connected = false
         runCatching {
-            val socket = Socket()
-            val socketAddress: SocketAddress = InetSocketAddress(hostname, port)
-            socket.connect(socketAddress, timeoutInMillis)
-            if (socket.isConnected) {
-                connected = true
-                socket.close()
+            val proxy = if (proxyInfo == null) {
+                Proxy.NO_PROXY
+            } else {
+                val proxyAddr: SocketAddress = InetSocketAddress(proxyInfo.url, proxyInfo.port)
+                Proxy(proxyInfo.type, proxyAddr)
+            }
+            Socket(proxy).use { socket ->
+                val socketAddress: SocketAddress = InetSocketAddress(hostname, port)
+                socket.connect(socketAddress, timeoutInMillis)
+                if (socket.isConnected) {
+                    connected = true
+                }
             }
         }.onFailure {
-            it.printStackTrace()
+            connected = false
         }
         return connected
     }

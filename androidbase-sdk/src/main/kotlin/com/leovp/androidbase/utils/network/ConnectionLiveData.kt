@@ -14,13 +14,13 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import com.leovp.android.utils.NetworkUtil
-import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Usage:
  * ```kotlin
  * val connectionLiveData = ConnectionLiveData(context)
- * connectionLiveData.observe(this) { isConnected ->
+ * connectionLiveData.observe(this) { (online, type) ->
  *     // Add your codes here.
  * }
  * ```
@@ -29,12 +29,20 @@ import com.leovp.log.LogContext
  *
  * https://stackoverflow.com/a/52718543
  */
-class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
+class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLiveData.ConnectionStatus>() {
     companion object {
         private const val TAG = "Connection"
     }
 
-    private var connectivityManager: ConnectivityManager =
+    private val lastNetworkType: AtomicReference<String> = AtomicReference(NetworkUtil.TYPE_OFFLINE)
+
+    data class ConnectionStatus(
+        val online: Boolean,
+        val changed: Boolean,
+        val type: String
+    )
+
+    private val connectivityManager: ConnectivityManager =
         context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private lateinit var connectivityManagerCallback: ConnectivityManager.NetworkCallback
@@ -48,16 +56,19 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         super.onActive()
         updateConnection()
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(
-                getConnectivityMarshmallowManagerCallback()
-            )
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> marshmallowNetworkAvailableRequest()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ->
+                connectivityManager.registerDefaultNetworkCallback(
+                    getConnectivityMarshmallowManagerCallback()
+                )
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ->
+                marshmallowNetworkAvailableRequest()
             else -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
         }
     }
 
     override fun onInactive() {
         super.onInactive()
+        lastNetworkType.set(NetworkUtil.TYPE_OFFLINE)
         connectivityManager.unregisterNetworkCallback(connectivityManagerCallback)
     }
 
@@ -80,12 +91,27 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
 
     private fun getConnectivityLollipopManagerCallback(): ConnectivityManager.NetworkCallback {
         connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
+            @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
             override fun onAvailable(network: Network) {
-                postValue(true)
+                val networkType = getNetworkType()
+                postValue(
+                    ConnectionStatus(
+                        online = true,
+                        changed = lastNetworkType.get() != networkType,
+                        type = NetworkUtil.TYPE_OFFLINE
+                    )
+                )
+                lastNetworkType.set(networkType)
             }
 
             override fun onLost(network: Network) {
-                postValue(false)
+                postValue(
+                    ConnectionStatus(
+                        online = false,
+                        changed = true,
+                        type = NetworkUtil.TYPE_OFFLINE
+                    )
+                )
             }
         }
         return connectivityManagerCallback
@@ -101,15 +127,22 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
                     if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                         networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     ) {
-                        if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                            LogContext.log.w(TAG, "Network Type: WIFI")
-                        } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                            LogContext.log.w(TAG, "Network Type: Cellular")
-                        } else {
-                            LogContext.log.w(TAG, "Network Type: Other")
+                        val connectionType = when {
+                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
+                                NetworkUtil.TYPE_WIFI
+                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                                NetworkUtil.TYPE_CELLULAR
+                            else -> NetworkUtil.TYPE_OTHER
                         }
 
-                        postValue(true)
+                        postValue(
+                            ConnectionStatus(
+                                online = true,
+                                changed = lastNetworkType.get() != connectionType,
+                                type = connectionType
+                            )
+                        )
+                        lastNetworkType.set(connectionType)
                     }
                 }
 
@@ -118,7 +151,13 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
                 // }
 
                 override fun onLost(network: Network) {
-                    postValue(false)
+                    postValue(
+                        ConnectionStatus(
+                            online = false,
+                            changed = true,
+                            type = NetworkUtil.TYPE_OFFLINE
+                        )
+                    )
                 }
             }
             return connectivityManagerCallback
@@ -128,7 +167,14 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    private fun getNetworkType(): String =
+        NetworkUtil.getNetworkTypeName(context) ?: NetworkUtil.TYPE_OTHER
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun updateConnection() {
-        postValue(NetworkUtil.isOnline(context))
+        val isOnline = NetworkUtil.isOnline(context)
+        val networkType = getNetworkType()
+        lastNetworkType.set(networkType)
+        postValue(ConnectionStatus(isOnline, true, networkType))
     }
 }

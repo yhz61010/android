@@ -1,8 +1,10 @@
 package com.leovp.demo
 
+import android.Manifest
 import android.content.pm.ConfigurationInfo
 import android.content.pm.ServiceInfo
 import android.os.Bundle
+import androidx.annotation.RequiresPermission
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -18,6 +20,7 @@ import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
+import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
 import com.leovp.demo.base.BaseDemonstrationActivity
@@ -25,6 +28,8 @@ import com.leovp.demo.databinding.ActivityMainBinding
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import java.net.Proxy
+import kotlin.concurrent.thread
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {
@@ -157,12 +162,24 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         LogContext.log.i(ITAG, "versionName: $versionName")
         LogContext.log.i(ITAG, "===================================")
 
-        connectionLiveData.observe(this) { isConnected ->
-            LogContext.log.w(ITAG, "online=$isConnected")
-            toast("online=$isConnected")
+        connectionLiveData.observe(this) { (online, changed, type) ->
+            LogContext.log.w(ITAG, "online=$online $type changed=$changed")
+            toast("online=$online $type changed=$changed")
+        }
+
+        thread {
+            val proxyInfo = NetworkUtil.ProxyInfo(Proxy.Type.SOCKS, "10.10.10.142", 8889)
+            val reachable = NetworkUtil.isHostReachable("172.217.175.238", 443, 3000, proxyInfo)
+            LogContext.log.e(ITAG, "Reachable=$reachable")
         }
     }
 
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
     override fun onResume() {
         super.onResume()
         startTrafficNetwork("leovp.com")

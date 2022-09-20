@@ -185,34 +185,38 @@ abstract class BaseNettyServer protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmdTypeAndId: String, cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmdTag: String, cmd: Any?): Boolean {
         if (cmd == null) {
-            LogContext.log.e(cmdTypeAndId, "The command is null. Stop processing.")
+            LogContext.log.e(cmdTag, "The command is null. Stop processing.")
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
-            throw IllegalArgumentException("Command must be either String or ByteArray.")
+            throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray.")
         }
         return if (!clientChannel.isActive) {
-            LogContext.log.e(cmdTypeAndId, "Client channel is not active. Can not send command.")
+            LogContext.log.e(cmdTag, "Client channel is not active. Can not send command.")
             false
         } else true
     }
 
     /**
-     * @param isPing Only works in WebSocket mode
+     * For general socket(NOT WebSocket), when send string to server,
+     * the `\n` will be appended automatically.
+     *
+     * @param isPing Only works in WebSocket mode.
      */
     private fun executeUnifiedCommand(
         clientChannel: Channel,
-        cmdTypeAndId: String,
+        cmdTag: String,
         cmdDesc: String?,
         cmd: Any?,
         isPing: Boolean,
         showContent: Boolean,
         showLog: Boolean,
+        fullOutput: Boolean,
         byteOrder: ByteOrder
     ): Boolean {
-        if (!isValidExecuteCommandEnv(clientChannel, cmdTypeAndId, cmd)) {
+        if (!isValidExecuteCommandEnv(clientChannel, cmdTag, cmd)) {
             return false
         }
         val stringCmd: String?
@@ -225,8 +229,8 @@ abstract class BaseNettyServer protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]=$cmd")
-                    else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
+                    val cmdMsg = "$logPrefix[${cmd.length}]"
+                    LogContext.log.i(cmdTag, if (showContent) "$cmdMsg=$cmd" else cmdMsg, fullOutput = fullOutput)
                 }
             }
             is ByteArray -> {
@@ -234,52 +238,63 @@ abstract class BaseNettyServer protected constructor(
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
-                    if (showContent) {
-                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
-                        LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]=HEX[$bytesContent]")
-                    } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
+                    val cmdMsg = "$logPrefix[${cmd.size}]"
+                    val hex: String? = if (showContent) {
+                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                    } else null
+                    LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
-            else -> throw IllegalArgumentException("Command must be either String or ByteArray")
+            else -> throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray")
         }
 
         if (isWebSocket) {
-            if (isPing) clientChannel.writeAndFlush(
-                PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd)
-            ) else clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            if (isPing) {
+                val pingByteBuf = if (isStringCmd) {
+                    requireNotNull(stringCmd)
+                    Unpooled.wrappedBuffer(stringCmd.toByteArray())
+                } else bytesCmd
+                clientChannel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
+            } else clientChannel.writeAndFlush(
+                if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd)
+            )
         } else {
             clientChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }
         return true
     }
 
+    /** For general socket(NOT WebSocket), when send string to server, the `\n` will be appended automatically. */
     @JvmOverloads
     fun executeCommand(
         clientChannel: Channel,
         cmd: Any?,
         cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
+        cmdTag: String = tag,
         showContent: Boolean = true,
         showLog: Boolean = true,
+        fullOutput: Boolean = false,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(
-        clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = false,
-        showContent = showContent, showLog = showLog, byteOrder = byteOrder
+        clientChannel, cmdTag, cmdDesc, cmd, isPing = false,
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
     )
 
+    /** This method only works in WebSocket mode. */
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
         clientChannel: Channel,
         cmd: Any?,
         cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
+        cmdTag: String = tag,
         showContent: Boolean = true,
         showLog: Boolean = true,
+        fullOutput: Boolean = false,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(
-        clientChannel, cmdTypeAndId, cmdDesc, cmd, isPing = true,
-        showContent = showContent, showLog = showLog, byteOrder = byteOrder
+        clientChannel, cmdTag, cmdDesc, cmd, isPing = true,
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
     )
 
     // ================================================

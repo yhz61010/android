@@ -564,25 +564,25 @@ abstract class BaseNettyClient protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(cmdTypeAndId: String, cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(cmdTag: String, cmd: Any?): Boolean {
         if (!::channel.isInitialized) {
-            LogContext.log.e(cmdTypeAndId, "Channel is not initialized. Stop processing.")
+            LogContext.log.e(cmdTag, "Channel is not initialized. Stop processing.")
             return false
         }
         if (cmd == null) {
             LogContext.log.e(
-                cmdTypeAndId,
+                cmdTag,
                 "The command is null. Stop processing.",
                 outputType = OUTPUT_TYPE_CLIENT_COMMAND
             )
             return false
         }
         if (cmd !is String && cmd !is ByteArray) {
-            throw IllegalArgumentException("$cmdTypeAndId: Command must be either String or ByteArray.")
+            throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray.")
         }
         if (ClientConnectStatus.CONNECTED != connectStatus.get()) {
             LogContext.log.e(
-                cmdTypeAndId,
+                cmdTag,
                 "Socket is not connected. Can not send command.",
                 outputType = OUTPUT_TYPE_CLIENT_COMMAND
             )
@@ -590,7 +590,7 @@ abstract class BaseNettyClient protected constructor(
         }
         if (::channel.isInitialized && !channel.isActive) {
             LogContext.log.e(
-                cmdTypeAndId,
+                cmdTag,
                 "Can not execute cmd because of Channel is not active.",
                 outputType = OUTPUT_TYPE_CLIENT_COMMAND
             )
@@ -600,10 +600,13 @@ abstract class BaseNettyClient protected constructor(
     }
 
     /**
-     * @param isPing Only works in WebSocket mode
+     * For general socket(NOT WebSocket), when send string to server,
+     * the `\n` will be appended automatically.
+     *
+     * @param isPing Only works in WebSocket mode.
      */
     private fun executeUnifiedCommand(
-        cmdTypeAndId: String,
+        cmdTag: String,
         cmdDesc: String?,
         cmd: Any?,
         isPing: Boolean,
@@ -612,7 +615,7 @@ abstract class BaseNettyClient protected constructor(
         fullOutput: Boolean = false,
         byteOrder: ByteOrder
     ): Boolean {
-        if (!isValidExecuteCommandEnv(cmdTypeAndId, cmd)) {
+        if (!isValidExecuteCommandEnv(cmdTag, cmd)) {
             return false
         }
         val logPrefix = if (cmdDesc.isNullOrBlank()) "exe" else "exe[$cmdDesc]"
@@ -625,12 +628,8 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = cmd
                 bytesCmd = null
                 if (showLog) {
-                    if (showContent) LogContext.log.i(
-                        cmdTypeAndId,
-                        "$logPrefix[${cmd.length}]=$cmd",
-                        fullOutput = fullOutput
-                    )
-                    else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.length}]")
+                    val cmdMsg = "$logPrefix[${cmd.length}]"
+                    LogContext.log.i(cmdTag, if (showContent) "$cmdMsg=$cmd" else cmdMsg, fullOutput = fullOutput)
                 }
             }
             is ByteArray -> {
@@ -638,37 +637,29 @@ abstract class BaseNettyClient protected constructor(
                 stringCmd = null
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
-                    if (showContent) {
-                        val bytesContent = if (ByteOrder.BIG_ENDIAN == byteOrder) {
-                            cmd.toHexString()
-                        } else {
-                            cmd.toHexStringLE()
-                        }
-                        LogContext.log.i(
-                            cmdTypeAndId,
-                            "$logPrefix[${cmd.size}]=HEX[$bytesContent]",
-                            fullOutput = fullOutput
-                        )
-                    } else LogContext.log.i(cmdTypeAndId, "$logPrefix[${cmd.size}]")
+                    val cmdMsg = "$logPrefix[${cmd.size}]"
+                    val hex: String? = if (showContent) {
+                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                    } else null
+                    LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 
         if (!::channel.isInitialized) {
-            LogContext.log.e(tag, "Property 'channel' is not initialized.")
+            LogContext.log.e(cmdTag, "Property 'channel' is not initialized.")
             return false
         }
         if (isWebSocket) {
-            if (isPing) channel.writeAndFlush(
-                PingWebSocketFrame(if (isStringCmd) Unpooled.wrappedBuffer(stringCmd!!.toByteArray()) else bytesCmd)
-            )
-            else channel.writeAndFlush(
-                if (isStringCmd) {
-                    TextWebSocketFrame(stringCmd)
-                } else {
-                    BinaryWebSocketFrame(bytesCmd)
-                }
+            if (isPing) {
+                val pingByteBuf = if (isStringCmd) {
+                    requireNotNull(stringCmd)
+                    Unpooled.wrappedBuffer(stringCmd.toByteArray())
+                } else bytesCmd
+                channel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
+            } else channel.writeAndFlush(
+                if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd)
             )
         } else {
             channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
@@ -676,40 +667,46 @@ abstract class BaseNettyClient protected constructor(
         return true
     }
 
+    /** For general socket(NOT WebSocket), when send string to server, the `\n` will be appended automatically. */
     @JvmOverloads
     fun executeCommand(
         cmd: Any?,
         cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
+        cmdTag: String = tag,
         showContent: Boolean = true,
         showLog: Boolean = true,
+        fullOutput: Boolean = false,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(
-        cmdTypeAndId,
+        cmdTag,
         cmdDesc,
         cmd,
         isPing = false,
         showContent = showContent,
         showLog = showLog,
+        fullOutput = fullOutput,
         byteOrder = byteOrder
     )
 
+    /** This method only works in WebSocket mode. */
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
         cmd: Any?,
         cmdDesc: String? = null,
-        cmdTypeAndId: String = tag,
+        cmdTag: String = tag,
         showContent: Boolean = true,
         showLog: Boolean = true,
+        fullOutput: Boolean = false,
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
     ) = executeUnifiedCommand(
-        cmdTypeAndId,
+        cmdTag,
         cmdDesc,
         cmd,
         isPing = true,
         showContent = showContent,
         showLog = showLog,
+        fullOutput = fullOutput,
         byteOrder = byteOrder
     )
 

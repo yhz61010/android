@@ -477,16 +477,16 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 )
             }
 
-            //            Log.e("LEO-float-view", "1 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
+            // Log.e("LEO-float-view", "1 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             remove(true)
-            //            Log.e("LEO-float-view", "1.2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
+            // Log.e("LEO-float-view", "1.2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
             init()
-            //            Log.e("LEO-float-view", "2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
+            // Log.e("LEO-float-view", "2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
             visible(true)
-            //            Log.e("LEO-float-view", "3 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
+            // Log.e("LEO-float-view", "3 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
         }.onFailure {

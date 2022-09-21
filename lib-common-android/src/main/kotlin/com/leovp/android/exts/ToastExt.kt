@@ -74,16 +74,18 @@ class LeoToast private constructor(private val ctx: Context) {
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            if (FloatView.with(FLOAT_VIEW_TAG).exist() &&
-                FloatView.with(FLOAT_VIEW_TAG).isDisplaying()
-            ) {
+            if (FloatView.with(FLOAT_VIEW_TAG).exist() && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()) {
                 mainHandler.post {
-                    FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
-                    val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
-                    val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
-                    //                Log.e("LEO-float-view",
-                    //                    "toast onRotationChanged rotation=$rotation scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$viewWidth x=$x y=$y")
-                    FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
+                    runCatching {
+                        FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
+                        val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
+                        val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
+                        // Log.e(
+                        //     "LEO-float-view",
+                        //     "toast onRotationChanged rotation=$rotation viewWidth=$viewWidth vw=$viewWidth"
+                        // )
+                        FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
+                    }.onFailure { it.printStackTrace() }
                 }
             }
         }
@@ -191,67 +193,66 @@ private fun showToast(
 
     val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
-    when {
-        origin -> Toast.makeText(ctx, message, duration).show()
-        API.ABOVE_R -> {
-            runCatching {
-                if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
+    runCatching {
+        when {
+            origin -> Toast.makeText(ctx, message, duration).show()
+            API.ABOVE_R -> {
+                runCatching {
+                    if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
+                        Toast.makeText(ctx, message, duration).show()
+                        return
+                    }
+                }.onFailure {
                     Toast.makeText(ctx, message, duration).show()
                     return
                 }
-            }.onFailure {
-                Toast.makeText(ctx, message, duration).show()
-                return
+                // if (error || bgColor != null) {
+                //     val errorMsgColor = bgColor ?: ERROR_BG_COLOR
+                //     Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
+                //         HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
+                // } else {
+                //     Toast.makeText(ctx, message, duration).show()
+                // }
+                mainHandler.removeCallbacksAndMessages(null)
+                // Log.e("LEO-float-view", "ctx.screenSurfaceRotation=${ctx.screenSurfaceRotation} ctx.screenWidth=${ctx.screenWidth}")
+                FloatView.with(FLOAT_VIEW_TAG).remove(true)
+                val currentScreenOrientation = ctx.screenSurfaceRotation
+                FloatView.with(ctx)
+                    .layout(R.layout.toast_layout) { v ->
+                        decorateToast(ctx, v, message, bgColor, error)
+                    }
+                    .meta { viewWidth, _ ->
+                        tag = FLOAT_VIEW_TAG
+                        enableAlphaAnimation = true
+                        enableDrag = false
+                        systemWindow = ctx.canDrawOverlays
+                        val toastPos = calculateToastPosition(ctx, currentScreenOrientation, viewWidth)
+                        x = toastPos.x
+                        y = toastPos.y
+                        screenOrientation = currentScreenOrientation
+                    }
+                    .show()
+                mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() }, if (longDuration) 3500 else 2000)
             }
-            //        if (error || bgColor != null) {
-            //            val errorMsgColor = bgColor ?: ERROR_BG_COLOR
-            //            Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
-            //                HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
-            //        } else {
-            //            Toast.makeText(ctx, message, duration).show()
-            //        }
-            mainHandler.removeCallbacksAndMessages(null)
-            //            Log.e("LEO-float-view", "ctx.screenSurfaceRotation=${ctx.screenSurfaceRotation} ctx.screenWidth=${ctx.screenWidth}")
-            FloatView.with(FLOAT_VIEW_TAG).remove(true)
-            val currentScreenOrientation = ctx.screenSurfaceRotation
-            FloatView.with(ctx)
-                .layout(R.layout.toast_layout) { v ->
-                    decorateToast(ctx, v, message, bgColor, error)
-                }
-                .meta { viewWidth, _ ->
-                    tag = FLOAT_VIEW_TAG
-                    enableAlphaAnimation = true
-                    enableDrag = false
-                    systemWindow = ctx.canDrawOverlays
-                    val toastPos = calculateToastPosition(ctx, currentScreenOrientation, viewWidth)
-                    x = toastPos.x
-                    y = toastPos.y
-                    screenOrientation = currentScreenOrientation
-                }
-                .show()
-            mainHandler.postDelayed(
-                { FloatView.with(FLOAT_VIEW_TAG).remove() },
-                if (longDuration) 3500 else 2000
-            )
-        }
-        else -> {
-            toast?.cancel()
+            else -> {
+                toast?.cancel()
 
-            val view = LayoutInflater.from(ctx)
-                .inflate(R.layout.toast_layout, null)
-                .also { v ->
-                    decorateToast(ctx, v, message, bgColor, error)
-                }
+                val view = LayoutInflater.from(ctx)
+                    .inflate(R.layout.toast_layout, null)
+                    .also { v ->
+                        decorateToast(ctx, v, message, bgColor, error)
+                    }
 
-            toast = Toast(ctx).apply {
-                @Suppress("DEPRECATION")
-                this.view = view
-                setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, 64.px)
-                this.duration = duration
-                show()
+                toast = Toast(ctx).apply {
+                    @Suppress("DEPRECATION")
+                    this.view = view
+                    setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, 64.px)
+                    this.duration = duration
+                    show()
+                }
             }
         }
-    }
+    }.onFailure { it.printStackTrace() }
 }
 
 /**

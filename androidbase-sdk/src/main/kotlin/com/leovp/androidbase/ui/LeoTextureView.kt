@@ -13,10 +13,10 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.ViewGroup
-import com.leovp.androidbase.utils.media.VideoUtil
-import com.leovp.bytes.toHexStringLE
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.TouchHelper
+import com.leovp.androidbase.utils.media.VideoUtil
+import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -129,43 +129,38 @@ class LeoTextureView @JvmOverloads constructor(
                 "sps[${sps.size}]=${sps.toHexStringLE()}\npps[${pps.size}]=${pps.toHexStringLE()}"
         )
         isH265 = vps != null
-        runCatching {
-            val format =
-                MediaFormat.createVideoFormat(
-                    if (isH265) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC,
-                    screenInfo.width,
-                    screenInfo.height
-                )
-            videoDecoder = if (isH265) {
-                val csd0 = vps!! + sps + pps
-                format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
-                // avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
-                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
-                //     MediaCodec.createByCodecName("c2.android.hevc.decoder")
-                // } else {
-                //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-                // }
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-            } else {
-                format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
-                format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
-                //                avcDecoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
-                //                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
-                //                    MediaCodec.createByCodecName("c2.android.avc.decoder")
-                //                } else {
-                //                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-                //                }
-                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            }
+        val format = MediaFormat.createVideoFormat(
+            if (isH265) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC,
+            screenInfo.width,
+            screenInfo.height
+        )
+        videoDecoder = if (isH265) {
+            val csd0 = vps!! + sps + pps
+            format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+            // avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
+            // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+            //     MediaCodec.createByCodecName("c2.android.hevc.decoder")
+            // } else {
+            //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+            // }
+            MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+        } else {
+            format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
+            format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
+            //                avcDecoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
+            //                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+            //                    MediaCodec.createByCodecName("c2.android.avc.decoder")
+            //                } else {
+            //                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            //                }
+            MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        }
 
-            videoDecoder?.let {
-                it.configure(format, this.surface, null, 0)
-                outputFormat = it.outputFormat // option B
-                it.setCallback(mediaCodecCallback)
-                it.start()
-            }
-        }.onFailure {
-            LogContext.log.e(TAG, "initDecoder error. msg=${it.message}", it)
+        videoDecoder?.let {
+            it.configure(format, this.surface, null, 0)
+            outputFormat = it.outputFormat // option B
+            it.setCallback(mediaCodecCallback)
+            it.start()
         }
     }
 

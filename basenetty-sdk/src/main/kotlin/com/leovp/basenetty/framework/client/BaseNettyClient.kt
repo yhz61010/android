@@ -200,7 +200,8 @@ abstract class BaseNettyClient protected constructor(
         protected set
 
     @Volatile
-    internal var connectStatus: AtomicReference<ClientConnectStatus> = AtomicReference(ClientConnectStatus.UNINITIALIZED)
+    var connectStatus: AtomicReference<ClientConnectStatus> = AtomicReference(ClientConnectStatus.UNINITIALIZED)
+        private set
 
     private var retryTimes = AtomicInteger(0)
 

@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.navigation)
+
+    alias(libs.plugins.android.junit5)
+
     alias(libs.plugins.sonarqube)
     jacoco
 }
@@ -20,6 +23,9 @@ android {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
             abiFilters += setOf("arm64-v8a")
         }
+
+        // Connect JUnit 5 to the runner
+        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"
     }
 
     val releaseSigning = signingConfigs.create("releaseSigning") {
@@ -307,7 +313,13 @@ dependencies {
     implementation(libs.net)
     // Net - dependencies - End
 
+    testRuntimeOnly(libs.bundles.test.runtime.only)
+    androidTestImplementation(libs.bundles.test)
     androidTestImplementation(libs.bundles.android.test)
     androidTestImplementation(libs.bundles.powermock)
-    androidTestImplementation(libs.bundles.test)
+    // ==============================
+    // The instrumentation test companion libraries
+    androidTestImplementation(libs.mannodermaus.junit5.core)
+    androidTestRuntimeOnly(libs.mannodermaus.junit5.runner)
+    // ==============================
 }

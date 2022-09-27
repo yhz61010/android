@@ -1,11 +1,11 @@
 package com.leovp.reflection
 
-import org.junit.jupiter.api.Test
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.primaryConstructor
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import org.junit.jupiter.api.Test
 
 /**
  * https://www.baeldung.com/kotlin/kclass-new-instance

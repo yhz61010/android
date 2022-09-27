@@ -104,15 +104,16 @@ jzlib = "1.1.3"
 androidasync = "3.1.0"
 net = "3.5.1"
 subsampling-scale-image-view = "3.10.0"
+mannodermaus-android-junit5 = "1.8.2.1"
+mannodermaus-junit5 = "1.3.0"
 
 #================
 #===== Test =====
 #================
-junit = "4.13.2"
+jupiter = "5.9.0" # JUnit 5
 androidx-test = "1.4.0"
 androidx-test-ext = "1.1.3"
 espresso-core = "3.4.0"
-jupiter = "5.9.0"
 kluent = "1.68"
 mockk = "1.12.8"
 arch = "2.1.0"
@@ -295,7 +296,15 @@ subsampling-scale-image-view = { module = "com.davemorrissey.labs:subsampling-sc
 #================
 #===== Test =====
 #================
-junit = { module = "junit:junit", version.ref = "junit" }
+# testImplementation
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
+# testRuntimeOnly
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
+# (Optional) If you need "Parameterized Tests"
+# testImplementation
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "jupiter" }
+# testRuntimeOnly
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "jupiter" }
 kotlin-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
@@ -308,9 +317,6 @@ test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 kluent-android = { module = "org.amshove.kluent:kluent-android", version.ref = "kluent" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 arch = { module = "androidx.arch.core:core-testing", version.ref = "arch" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
-junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "jupiter" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose" }
 square-okhttp-mockjunit5 = { module = "com.squareup.okhttp3:mockwebserver3-junit5", version.ref = "square-okhttp" }
@@ -319,6 +325,10 @@ powermock-core = { module = "org.powermock:powermock-core", version.ref = "power
 powermock-api = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermock-version" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric-version" }
 mars-xlog = { module = "com.tencent.mars:mars-xlog", version.ref = "mars-xlog" }
+# androidTestImplementation
+mannodermaus-junit5-core = { module = "de.mannodermaus.junit5:android-test-core", version.ref = "mannodermaus-junit5" }
+# androidTestRuntimeOnly
+mannodermaus-junit5-runner = { module = "de.mannodermaus.junit5:android-test-runner", version.ref = "mannodermaus-junit5" }
 
 #===================#===================#===================#===================
 #===================#===================#===================#===================
@@ -396,9 +406,9 @@ camerax = [
     "androidx-camera-ext"
 ]
 test = [
-    "junit",
-    "kotlin-junit5",
     "junit-jupiter-api",
+    "junit-jupiter-params",
+    "kotlin-junit5",
     "mockk",
     "test-coroutines",
     "kluent-android",
@@ -435,3 +445,4 @@ ktlint-gradle = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gr
 benmanes-versions = { id = "com.github.ben-manes.versions", version.ref = "benmanes" }
 vcu = { id = "nl.littlerobots.version-catalog-update", version.ref = "vcu" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+android-junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "mannodermaus-android-junit5" }

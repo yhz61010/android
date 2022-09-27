@@ -1,26 +1,24 @@
 package com.leovp.demo;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.koin.core.context.DefaultContextExtKt.stopKoin;
-
 import android.app.Application;
 import android.util.Log;
-
 import androidx.test.core.app.ApplicationProvider;
 import com.leovp.log.LLog;
 import com.leovp.log.LogContext;
 import com.leovp.pref.LPref;
 import com.leovp.pref.PrefContext;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,20 +31,20 @@ import java.util.Map;
 @RunWith(RobolectricTestRunner.class)
 @PrepareForTest(Log.class)
 @Config(sdk = {32}, shadows = {ShadowLog.class})
-public class Pref4Java {
+public class Pref4JavaTest {
     private final Application context = ApplicationProvider.getApplicationContext();
 
     static class NullObject {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         stopKoin(); // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out;
         LogContext.INSTANCE.setLogImp(new LLog("LEO"));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         stopKoin();
     }
@@ -77,38 +75,38 @@ public class Pref4Java {
             }
         });
 
-        Assert.assertEquals("this is a string", PrefContext.INSTANCE.getPref().getString("string", null));
-        Assert.assertTrue(PrefContext.INSTANCE.getPref().get4Java("boolean", false, boolean.class));
-        Assert.assertEquals(1234567L, PrefContext.INSTANCE.getPref().get4Java("long", 0L, long.class).longValue());
-        Assert.assertEquals(10, PrefContext.INSTANCE.getPref().get4Java("int", 0, int.class).intValue());
-        Assert.assertEquals(3.14d, PrefContext.INSTANCE.getPref().get4Java("float", 0f, float.class).doubleValue(), 0.001d);
+        assertEquals("this is a string", PrefContext.INSTANCE.getPref().getString("string", null));
+        assertTrue(PrefContext.INSTANCE.getPref().get4Java("boolean", false, boolean.class));
+        assertEquals(1234567L, PrefContext.INSTANCE.getPref().get4Java("long", 0L, long.class).longValue());
+        assertEquals(10, PrefContext.INSTANCE.getPref().get4Java("int", 0, int.class).intValue());
+        assertEquals(3.14d, PrefContext.INSTANCE.getPref().get4Java("float", 0f, float.class).doubleValue(), 0.001d);
         Map<?, ?> mapIntObj = PrefContext.INSTANCE.getPref().getObject4Java("object_int");
-        Assert.assertEquals(new HashMap<>() {
+        assertEquals(new HashMap<>() {
             {
                 put("k_int1", 1.0);
                 put("k_int2", 2.0);
             }
         }, mapIntObj);
         Map<?, ?> mapFloatObj = PrefContext.INSTANCE.getPref().getObject4Java("object_float");
-        Assert.assertEquals(new HashMap<>() {
+        assertEquals(new HashMap<>() {
             {
                 put("k_float1", 11.1);
                 put("k_float2", 22.2);
             }
         }, mapFloatObj);
-        Assert.assertEquals("<null string>", PrefContext.INSTANCE.getPref().getString("null_str", "<null string>"));
-        Assert.assertNull(PrefContext.INSTANCE.getPref().getString("null_str", null));
-        Assert.assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_str"));
-        Assert.assertEquals("null", PrefContext.INSTANCE.getPref().getString("null_obj", null));
-        Assert.assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_obj"));
-        Assert.assertNull(PrefContext.INSTANCE.getPref().getString("pure_null", null));
-        Assert.assertEquals(new HashSet<>() {
+        assertEquals("<null string>", PrefContext.INSTANCE.getPref().getString("null_str", "<null string>"));
+        assertNull(PrefContext.INSTANCE.getPref().getString("null_str", null));
+        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_str"));
+        assertEquals("null", PrefContext.INSTANCE.getPref().getString("null_obj", null));
+        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_obj"));
+        assertNull(PrefContext.INSTANCE.getPref().getString("pure_null", null));
+        assertEquals(new HashSet<>() {
             {
                 add("s1");
                 add("s2");
             }
         }, PrefContext.INSTANCE.getPref().getStringSet("set", Collections.emptySet()));
-        Assert.assertEquals(new HashSet<>() {
+        assertEquals(new HashSet<>() {
             {
                 add("s1");
                 add("s2");

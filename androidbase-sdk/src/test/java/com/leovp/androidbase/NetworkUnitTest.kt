@@ -4,23 +4,24 @@ import android.util.Log
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
-import org.powermock.api.mockito.PowerMockito
 import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 
-@RunWith(PowerMockRunner::class)
+@RunWith(RobolectricTestRunner::class)
 @PrepareForTest(Log::class)
+@Config(sdk = [32], shadows = [ShadowLog::class])
 class NetworkUnitTest {
 
-    @Before
-    fun preTest() {
+    @BeforeEach
+    fun setUp() {
+        ShadowLog.stream = System.out
         LogContext.setLogImp(LLog("LEO"))
     }
 
@@ -30,7 +31,7 @@ class NetworkUnitTest {
         assertArrayEquals(arrayOf("142.11.215.254"), ips)
 
         ips = InternetUtil.getIpsByHost("barcode.50d.win").toTypedArray()
-//        InternetUtil.getIpsByName("lib.leovp.com").toTypedArray().forEach { println(it) }
+        // InternetUtil.getIpsByName("lib.leovp.com").toTypedArray().forEach { println(it) }
         assertEquals("142.11.215.254", ips[0])
 
         ips = InternetUtil.getIpsByHost("leo vp.com").toTypedArray()
@@ -89,30 +90,5 @@ class NetworkUnitTest {
 
         ips = InternetUtil.getIpsByHost("abc.b").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
-    }
-
-    @Before
-    fun beforeTest() {
-        PowerMockito.mockStatic(Log::class.java)
-        Mockito.`when`(Log.e(any(), any())).then {
-            println(it.arguments[1] as String)
-            1
-        }
-        Mockito.`when`(Log.w(any(String::class.java), any(String::class.java))).then {
-            println(it.arguments[1])
-            1
-        }
-        Mockito.`when`(Log.w(any(String::class.java), any(Throwable::class.java))).then {
-            println((it.arguments[1] as Throwable).message)
-            1
-        }
-        Mockito.`when`(Log.i(any(), any())).then {
-            println(it.arguments[1] as String)
-            1
-        }
-        Mockito.`when`(Log.d(any(), any())).then {
-            println(it.arguments[1] as String)
-            1
-        }
     }
 }

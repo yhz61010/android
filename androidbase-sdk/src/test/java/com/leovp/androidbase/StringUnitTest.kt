@@ -6,9 +6,9 @@ import com.leovp.androidbase.exts.kotlin.toAsciiByteArray
 import com.leovp.androidbase.exts.kotlin.truncate
 import com.leovp.kotlin.exts.autoFormatByte
 import com.leovp.kotlin.exts.humanReadableByteCount
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner

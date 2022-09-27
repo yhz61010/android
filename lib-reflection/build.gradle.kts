@@ -17,6 +17,10 @@ android {
 
 dependencies {
     api(libs.free.reflection)
+    // api(projects.libCommonKotlin)
+
+    testImplementation(libs.kotlin.reflect)
+    testImplementation(libs.bundles.test)
 }
 
 afterEvaluate {

@@ -3,12 +3,12 @@ package com.leovp.androidbase
 import android.util.Log
 import com.leovp.androidbase.exts.kotlin.formatToNormalFullDateTime
 import com.leovp.androidbase.exts.kotlin.formatToNormalServerFullDateTime
-import org.junit.Assert
-import org.junit.Test
+import java.util.*
+import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
-import java.util.*
 
 /**
  * Author: Michael Leo
@@ -24,9 +24,9 @@ class CalendarUtilTest {
             set(2021, 9, 13, 16, 28, 46)
         }
         var dateString = Date(staticDate.timeInMillis).formatToNormalServerFullDateTime()
-        Assert.assertEquals("2021-10-13 16:28:46 (CST)", dateString)
+        assertEquals("2021-10-13 16:28:46 (CST)", dateString)
 
         dateString = Date(staticDate.timeInMillis).formatToNormalFullDateTime()
-        Assert.assertEquals("2021/10/13 16:28:46 (CST)", dateString)
+        assertEquals("2021/10/13 16:28:46 (CST)", dateString)
     }
 }

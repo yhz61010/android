@@ -1,11 +1,11 @@
 package com.leovp.reflection
 
+import org.junit.jupiter.api.Test
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.primaryConstructor
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import org.junit.jupiter.api.Test
 
 /**
  * https://www.baeldung.com/kotlin/kclass-new-instance
@@ -15,15 +15,30 @@ import org.junit.jupiter.api.Test
  */
 class ReflectManagerTest {
 
-    class Student(var classNo: Int, var num: String, val p: Person) {
+    class Student(
+        @Suppress("WeakerAccess")
+        var classNo: Int,
+        @Suppress("WeakerAccess")
+        var num: String,
+        @Suppress("WeakerAccess")
+        val p: Person
+    ) : Person(p.userName, p.age) {
+        @Suppress("unused")
         constructor(p: Person) : this(0, "", p)
+
+        @Suppress("unused")
         constructor(num: String, p: Person) : this(0, num, p)
+
+        @Suppress("unused")
         constructor(classNo: Int, p: Person) : this(classNo, "", p)
+
+        @Suppress("unused")
+        constructor(userName: String, age: Int, classNo: Int, num: String) : this(classNo, num, Person(userName, age))
 
         override fun toString(): String = "Student ($p) In class $classNo with No. $num"
     }
 
-    class Person(var userName: String, var age: Int) : Human() {
+    open class Person(var userName: String, var age: Int) : Human() {
         override fun toString(): String = "$userName is $age years old."
     }
 
@@ -37,16 +52,16 @@ class ReflectManagerTest {
         assertIs<Human>(human)
         assertEquals("Get a human.", human.toString())
 
-        val person: Person? = Person::class.primaryConstructor?.call("Daming", 9)
+        val person: Person? = Person::class.primaryConstructor?.call("Putao", 9)
         assertNotNull(person)
         assertIs<Person>(person)
-        assertEquals("Daming is 9 years old.", person.toString())
+        assertEquals("Putao is 9 years old.", person.toString())
 
         // Primary Constructor
         val student: Student? = Student::class.primaryConstructor?.call(5, "2020010525", person)
         assertNotNull(student)
         assertIs<Student>(student)
-        assertEquals("Student (Daming is 9 years old.) In class 5 with No. 2020010525", student.toString())
+        assertEquals("Student (Putao is 9 years old.) In class 5 with No. 2020010525", student.toString())
 
         // Secondary Constructor
         val personAmy = Person("Amy", 8)

@@ -1,11 +1,13 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.reflection
 
+import org.junit.jupiter.api.Test
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.primaryConstructor
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import org.junit.jupiter.api.Test
 
 /**
  * https://www.baeldung.com/kotlin/kclass-new-instance
@@ -15,66 +17,118 @@ import org.junit.jupiter.api.Test
  */
 class ReflectManagerTest {
 
-    class Student(
-        @Suppress("WeakerAccess")
-        var classNo: Int,
-        @Suppress("WeakerAccess")
-        var num: String,
-        @Suppress("WeakerAccess")
-        val p: Person
-    ) : Person(p.userName, p.age) {
-        @Suppress("unused")
-        constructor(p: Person) : this(0, "", p)
-
-        @Suppress("unused")
-        constructor(num: String, p: Person) : this(0, num, p)
-
-        @Suppress("unused")
-        constructor(classNo: Int, p: Person) : this(classNo, "", p)
-
-        @Suppress("unused")
-        constructor(userName: String, age: Int, classNo: Int, num: String) : this(classNo, num, Person(userName, age))
-
-        override fun toString(): String = "Student ($p) In class $classNo with No. $num"
+    companion object {
+        const val DEPT_ID_HR = 100
+        const val DEPT_ID_DEV = 1000
     }
 
-    open class Person(var userName: String, var age: Int) : Human() {
-        override fun toString(): String = "$userName is $age years old."
+    class HR(employeeId: String, p: Person) : Employee(employeeId, DEPT_ID_HR, p) {
+        fun hirePerson(p: Person) {
+            println("HR $name hires $p.")
+        }
     }
 
-    open class Human {
-        override fun toString(): String = "Get a human."
+    open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.name, p.sex, p.age) {
+        constructor(p: Person) : this("", 0, p)
+        constructor(employeeId: String, p: Person) : this(employeeId, 0, p)
+        constructor(deptId: Int, p: Person) : this("", deptId, p)
+        constructor(userName: String, sex: Char, age: Int, employeeId: String, deptId: Int) : this(employeeId,
+            deptId,
+            Person(userName, sex, age))
+
+        var employeeId: String = employeeId
+            private set
+
+        var deptId: Int = deptId
+            private set
+
+        fun assignEmployeeId(newId: String) {
+            employeeId = newId
+        }
+
+        fun assignDeptId(newDeptId: Int) {
+            deptId = newDeptId
+        }
+
+        fun startWorking() {
+            action("${p.name}[$employeeId] starts working.")
+        }
+
+        fun stopWorking() {
+            action("${p.name}[$employeeId] stops working.")
+        }
+
+        override fun toString(): String = "Employee($p) with ID $employeeId works in $deptId departure."
+    }
+
+    open class Person(name: String, sex: Char, age: Int) : Creature() {
+        var name: String = name
+            private set
+        var sex: Char = sex
+            private set
+        var age: Int = age
+            private set
+
+        fun say(content: String) {
+            println("$name says: $content")
+        }
+
+        fun action(action: String) {
+            println("$name do $action.")
+        }
+
+        fun changeName(newName: String) {
+            name = newName
+        }
+
+        fun setAge(newAge: Int) {
+            age = newAge
+        }
+
+        fun increaseAge() {
+            age++
+        }
+
+        override fun alive(): Boolean = true
+
+        override fun toString(): String = "$name[$sex] is $age years old."
+    }
+
+    open class Creature {
+        open fun alive(): Boolean = true
+
+        override fun toString(): String = "Get a new creature."
     }
 
     @Test
     fun newInstance() {
-        val human: Human = Human::class.createInstance()
-        assertIs<Human>(human)
-        assertEquals("Get a human.", human.toString())
+        val newCreature: Creature = Creature::class.createInstance()
+        assertIs<Creature>(newCreature)
+        assertEquals("Get a new creature.", newCreature.toString())
 
-        val person: Person? = Person::class.primaryConstructor?.call("Putao", 9)
-        assertNotNull(person)
-        assertIs<Person>(person)
-        assertEquals("Putao is 9 years old.", person.toString())
+        val harry: Person? = Person::class.primaryConstructor?.call("Harry", 'M', 21)
+        assertNotNull(harry)
+        assertIs<Person>(harry)
+        assertEquals("Harry[M] is 21 years old.", harry.toString())
 
         // Primary Constructor
-        val student: Student? = Student::class.primaryConstructor?.call(5, "2020010525", person)
-        assertNotNull(student)
-        assertIs<Student>(student)
-        assertEquals("Student (Putao is 9 years old.) In class 5 with No. 2020010525", student.toString())
+        val employeeHarry: Employee? = Employee::class.primaryConstructor?.call("e0000001", DEPT_ID_DEV, harry)
+        assertNotNull(employeeHarry)
+        assertIs<Employee>(employeeHarry)
+        assertEquals("Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure.", employeeHarry.toString())
 
         // Secondary Constructor
-        val personAmy = Person("Amy", 8)
-        val studentAmyConstructors = Student::class.constructors
-        val studentAmy = studentAmyConstructors.first { constructor ->
+        val amy = Person("Amy", 'F', 19)
+        val employeeAmyConstructors = Employee::class.constructors
+        val employeeAmy = employeeAmyConstructors.first { constructor ->
             constructor.parameters.size == 2 &&
                 constructor.parameters[0].type.classifier == String::class &&
                 constructor.parameters[1].type.classifier == Person::class
-        }.call("20200105ab", personAmy)
-        assertIs<Student>(studentAmy)
-        assertEquals("Student (Amy is 8 years old.) In class 0 with No. 20200105ab", studentAmy.toString())
+        }.call("e0000002", amy)
+        assertIs<Employee>(employeeAmy)
+        assertEquals("Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure.", employeeAmy.toString())
 
-        // studentAmyConstructors.forEach { constructor ->
+        // employeeAmyConstructors.forEach { constructor ->
         //     println("constructor param size=${constructor.parameters.size} " +
         //         "${constructor.typeParameters.map { tp -> "typeParameters name=${tp.name}" }}")
         // }
@@ -82,25 +136,28 @@ class ReflectManagerTest {
         // constructor param size=1 []
         // constructor param size=2 []
         // constructor param size=2 []
+        // constructor param size=5 []
         // constructor param size=3 []
 
-        // studentAmyConstructors.forEach { constructor ->
+        // employeeAmyConstructors.forEach { constructor ->
         //     println("constructor param size=${constructor.parameters.size} name=${constructor.name}")
         // }
         // Result:
         // constructor param size=1 name=<init>
         // constructor param size=2 name=<init>
         // constructor param size=2 name=<init>
+        // constructor param size=5 name=<init>
         // constructor param size=3 name=<init>
 
-        // studentAmyConstructors.forEach { constructor ->
+        // employeeAmyConstructors.forEach { constructor ->
         //     println("constructor param size=${constructor.parameters.size} " +
         //         "${constructor.parameters.map { p -> "property type=${p.type} -> property name=${p.name}" }}")
         // }
         // Result:
         // constructor param size=1 [property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.String -> property name=num, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.Int -> property name=classNo, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=3 [property type=kotlin.Int -> property name=classNo, property type=kotlin.String -> property name=num, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=2 [property type=kotlin.String -> property name=employeeId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=2 [property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=5 [property type=kotlin.String -> property name=userName, property type=kotlin.Char -> property name=sex, property type=kotlin.Int -> property name=age, property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId]
+        // constructor param size=3 [property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
     }
 }

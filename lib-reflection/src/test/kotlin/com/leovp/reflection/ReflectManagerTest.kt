@@ -3,7 +3,13 @@
 package com.leovp.reflection
 
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.isAccessible
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -16,6 +22,156 @@ import org.junit.jupiter.api.Test
  * Date: 2022/9/26 16:52
  */
 class ReflectManagerTest {
+
+    @Test
+    fun newInstance() {
+        val rfltCreature1: Creature = ReflectManager.reflect(Creature::class.java).newInstance().get()
+        println("rfltCreature1=$rfltCreature1")
+
+        val rfltCreature2: Creature = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get()
+        println("rfltCreature2=$rfltCreature2")
+
+        val rfltCreature3: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
+        println("rfltCreature3=$rfltCreature3")
+
+        val rfltPerson1: Person = ReflectManager.reflect(Person::class.java).newInstance("Man1", 'M', 38).get()
+        println("rfltPerson1=$rfltPerson1")
+
+        val rfltPerson2: Person = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Person").newInstance("Woman1", 'F', 20).get()
+        println("rfltPerson2=$rfltPerson2")
+
+        val rfltPerson3: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
+        println("rfltPerson3=$rfltPerson3")
+
+        //  ==============================
+
+        val newCreature: Creature = Creature::class.createInstance()
+        assertIs<Creature>(newCreature)
+        assertEquals("Get a new creature.", newCreature.toString())
+
+        val harry: Person? = Person::class.primaryConstructor?.call("Harry", 'M', 21)
+        assertNotNull(harry)
+        assertIs<Person>(harry)
+        assertEquals("Harry[M] is 21 years old.", harry.toString())
+
+        // Primary Constructor
+        val employeeHarry: Employee? = Employee::class.primaryConstructor?.call("e0000001", DEPT_ID_DEV, harry)
+        assertNotNull(employeeHarry)
+        assertIs<Employee>(employeeHarry)
+        assertEquals("[Leo Group] Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure.", employeeHarry.toString())
+
+        // Secondary Constructor
+        val amy = Person("Amy", 'F', 19)
+        val employeeAmyConstructors = Employee::class.constructors
+        val employeeAmy = employeeAmyConstructors.first { constructor ->
+            constructor.parameters.size == 2 &&
+                constructor.parameters[0].type.classifier == String::class &&
+                constructor.parameters[1].type.classifier == Person::class
+        }.call("e0000002", amy)
+        assertIs<Employee>(employeeAmy)
+        assertEquals("[Leo Group] Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure.", employeeAmy.toString())
+
+        // employeeAmyConstructors.forEach { constructor ->
+        //     println("constructor param size=${constructor.parameters.size} " +
+        //         "${constructor.typeParameters.map { tp -> "typeParameters name=${tp.name}" }}")
+        // }
+        // Result:
+        // constructor param size=1 []
+        // constructor param size=2 []
+        // constructor param size=2 []
+        // constructor param size=5 []
+        // constructor param size=3 []
+
+        // employeeAmyConstructors.forEach { constructor ->
+        //     println("constructor param size=${constructor.parameters.size} name=${constructor.name}")
+        // }
+        // Result:
+        // constructor param size=1 name=<init>
+        // constructor param size=2 name=<init>
+        // constructor param size=2 name=<init>
+        // constructor param size=5 name=<init>
+        // constructor param size=3 name=<init>
+
+        // employeeAmyConstructors.forEach { constructor ->
+        //     println("constructor param size=${constructor.parameters.size} " +
+        //         "${constructor.parameters.map { p -> "property type=${p.type} -> property name=${p.name}" }}")
+        // }
+        // Result:
+        // constructor param size=1 [property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=2 [property type=kotlin.String -> property name=employeeId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=2 [property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=5 [property type=kotlin.String -> property name=userName, property type=kotlin.Char -> property name=sex, property type=kotlin.Int -> property name=age, property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId]
+        // constructor param size=3 [property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+    }
+
+    @Test
+    fun property() {
+        val hrPerson = Person("Chris", 'F', 20)
+        val hr = HR("e2021041910000", hrPerson)
+
+        val employee = Employee("e2021041910194", DEPT_ID_DEV, Person("Michael", 'M', 38))
+        employee.assignSalary(2200, hr)
+        println("employee=$employee")
+
+        // Returns non-extension properties declared in this class and all of its superclasses.
+        val employeeAllProperties = employee::class.memberProperties
+        employeeAllProperties.forEach { prop ->
+            // Allow to get private property value.
+            if (!prop.isAccessible) prop.isAccessible = true
+            println("${prop.visibility} ${prop.name}: ${prop.returnType} --> ${prop.getter.call(employee)}")
+        }
+        // How to change a kotlin private val property?
+        // https://stackoverflow.com/a/58361516/1685062
+        val companyPropery = Employee::class.java.getDeclaredField("company")
+        companyPropery.isAccessible = true
+        companyPropery.set(employee, "NEW Company")
+        println("Reflection employee=$employee")
+        // val salaryProp = employeeAllProperties.first { it.name == "salary" }
+
+        // Result:
+        // PUBLIC company: kotlin.String --> Leo Group
+        // PUBLIC deptId: kotlin.Int --> 1000
+        // PUBLIC employeeId: kotlin.String --> e2021041910194
+        // PUBLIC p: com.leovp.reflection.ReflectManagerTest.Person --> Michael[M] is 38 years old.
+        // PRIVATE salary: kotlin.Int --> 2200
+        // PUBLIC age: kotlin.Int --> 38
+        // PUBLIC name: kotlin.String --> Michael
+        // PUBLIC sex: kotlin.Char --> M
+
+        println("==============================")
+
+        // Returns non-extension properties declared in this class.
+        val employeeOnlySelfProperties = employee::class.declaredMemberProperties
+        employeeOnlySelfProperties.forEach { prop ->
+            // Allow to get private property value.
+            if (!prop.isAccessible) prop.isAccessible = true
+            println("${prop.visibility} ${prop.name}: ${prop.returnType} --> ${prop.getter.call(employee)}")
+        }
+        // Result:
+        // PUBLIC company: kotlin.String --> Leo Group
+        // PUBLIC deptId: kotlin.Int --> 1000
+        // PUBLIC employeeId: kotlin.String --> e2021041910194
+        // PUBLIC p: com.leovp.reflection.ReflectManagerTest.Person --> Michael[M] is 38 years old.
+        // PRIVATE salary: kotlin.Int --> 2200
+
+        println("==============================")
+
+        // Returns all functions and properties declared in this class. Does not include members declared in supertypes.
+        val employeeAllMembers = employee::class.declaredMembers
+        employeeAllMembers.forEach { callable ->
+            // Allow to get private property value.
+            if (!callable.isAccessible) callable.isAccessible = true
+            println("${callable.visibility} ${callable.name}: ${callable.returnType}\n" +
+                "\ninstanceParameter--> ${callable.instanceParameter}" +
+                "\nvalueParameters  -->${callable.valueParameters}" +
+                "\nparameters       -->${callable.parameters}")
+            println("--------------------")
+        }
+    }
+
+    // ==================================================
+    // ==================================================
+    // ==================================================
 
     companion object {
         const val DEPT_ID_HR = 100
@@ -36,6 +192,14 @@ class ReflectManagerTest {
             deptId,
             Person(userName, sex, age))
 
+        companion object {
+            const val COMPANY: String = "Leo Group"
+        }
+
+        val company: String = COMPANY
+
+        private var salary: Int = 0
+
         var employeeId: String = employeeId
             private set
 
@@ -50,15 +214,20 @@ class ReflectManagerTest {
             deptId = newDeptId
         }
 
+        fun assignSalary(newSalary: Int, assigner: Employee) {
+            salary = newSalary
+            println("The ${assigner.name} assigns salary $newSalary to $name.")
+        }
+
         fun startWorking() {
-            action("${p.name}[$employeeId] starts working.")
+            action("${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.")
         }
 
-        fun stopWorking() {
-            action("${p.name}[$employeeId] stops working.")
+        fun stopWorking(time: Long) {
+            action("${p.name}[$employeeId] stops working at $time.")
         }
 
-        override fun toString(): String = "Employee($p) with ID $employeeId works in $deptId departure."
+        override fun toString(): String = "[$company] Employee($p) with ID $employeeId works in $deptId departure."
     }
 
     open class Person(name: String, sex: Char, age: Int) : Creature() {
@@ -98,66 +267,5 @@ class ReflectManagerTest {
         open fun alive(): Boolean = true
 
         override fun toString(): String = "Get a new creature."
-    }
-
-    @Test
-    fun newInstance() {
-        val newCreature: Creature = Creature::class.createInstance()
-        assertIs<Creature>(newCreature)
-        assertEquals("Get a new creature.", newCreature.toString())
-
-        val harry: Person? = Person::class.primaryConstructor?.call("Harry", 'M', 21)
-        assertNotNull(harry)
-        assertIs<Person>(harry)
-        assertEquals("Harry[M] is 21 years old.", harry.toString())
-
-        // Primary Constructor
-        val employeeHarry: Employee? = Employee::class.primaryConstructor?.call("e0000001", DEPT_ID_DEV, harry)
-        assertNotNull(employeeHarry)
-        assertIs<Employee>(employeeHarry)
-        assertEquals("Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure.", employeeHarry.toString())
-
-        // Secondary Constructor
-        val amy = Person("Amy", 'F', 19)
-        val employeeAmyConstructors = Employee::class.constructors
-        val employeeAmy = employeeAmyConstructors.first { constructor ->
-            constructor.parameters.size == 2 &&
-                constructor.parameters[0].type.classifier == String::class &&
-                constructor.parameters[1].type.classifier == Person::class
-        }.call("e0000002", amy)
-        assertIs<Employee>(employeeAmy)
-        assertEquals("Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure.", employeeAmy.toString())
-
-        // employeeAmyConstructors.forEach { constructor ->
-        //     println("constructor param size=${constructor.parameters.size} " +
-        //         "${constructor.typeParameters.map { tp -> "typeParameters name=${tp.name}" }}")
-        // }
-        // Result:
-        // constructor param size=1 []
-        // constructor param size=2 []
-        // constructor param size=2 []
-        // constructor param size=5 []
-        // constructor param size=3 []
-
-        // employeeAmyConstructors.forEach { constructor ->
-        //     println("constructor param size=${constructor.parameters.size} name=${constructor.name}")
-        // }
-        // Result:
-        // constructor param size=1 name=<init>
-        // constructor param size=2 name=<init>
-        // constructor param size=2 name=<init>
-        // constructor param size=5 name=<init>
-        // constructor param size=3 name=<init>
-
-        // employeeAmyConstructors.forEach { constructor ->
-        //     println("constructor param size=${constructor.parameters.size} " +
-        //         "${constructor.parameters.map { p -> "property type=${p.type} -> property name=${p.name}" }}")
-        // }
-        // Result:
-        // constructor param size=1 [property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.String -> property name=employeeId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=5 [property type=kotlin.String -> property name=userName, property type=kotlin.Char -> property name=sex, property type=kotlin.Int -> property name=age, property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId]
-        // constructor param size=3 [property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
     }
 }

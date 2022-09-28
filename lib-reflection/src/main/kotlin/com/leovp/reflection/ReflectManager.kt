@@ -206,7 +206,7 @@ class ReflectManager private constructor() {
      *
      * @param <T> The value type.
      * @return the result
-    </T> */
+     */
     fun <T> get(): T {
         @Suppress("UNCHECKED_CAST")
         return obj as T

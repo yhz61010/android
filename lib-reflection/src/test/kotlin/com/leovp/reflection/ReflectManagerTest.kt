@@ -20,6 +20,7 @@ import org.junit.jupiter.api.TestMethodOrder
 
 /**
  * https://www.baeldung.com/kotlin/kclass-new-instance
+ * https://dwz.win/azW6
  *
  * Author: Michael Leo
  * Date: 2022/9/26 16:52

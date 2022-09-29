@@ -88,7 +88,7 @@ class ReflectManager private constructor() {
         } catch (e: NoSuchMethodException) {
             val constructors = mutableListOf<Constructor<*>>()
             for (constructor in type.java.declaredConstructors) {
-                if (matchParamterTypes(constructor.parameterTypes, types)) {
+                if (matchParameterTypes(constructor.parameterTypes, types)) {
                     constructors.add(constructor)
                 }
             }
@@ -149,7 +149,7 @@ class ReflectManager private constructor() {
         return accessible
     }
 
-    private fun matchParamterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
+    private fun matchParameterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = wrapper(actualTypes[i])

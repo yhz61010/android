@@ -206,7 +206,10 @@ class ReflectManagerTest {
 
         val employee = Employee("e2021041910194", DEPT_ID_DEV, Person("Michael", 'M', 38))
         employee.assignSalary(2200, hr)
-        println("employee=$employee")
+        assertEquals(
+            "[Leo Group] Employee(Michael[M] is 38 years old.) with ID e2021041910194 works in 1000 departure. Salary: 2200.",
+            employee.toString()
+        )
 
         // Returns non-extension properties declared in this class and all of its superclasses.
         val employeeAllProperties = employee::class.memberProperties
@@ -217,10 +220,13 @@ class ReflectManagerTest {
         }
         // How to change a kotlin private val property?
         // https://stackoverflow.com/a/58361516/1685062
-        val companyPropery = Employee::class.java.getDeclaredField("company")
-        companyPropery.isAccessible = true
-        companyPropery.set(employee, "NEW Company")
-        println("Reflection employee=$employee")
+        val companyProperty = Employee::class.java.getDeclaredField("company")
+        companyProperty.isAccessible = true
+        companyProperty.set(employee, "NEW Company")
+        assertEquals(
+            "[NEW Company] Employee(Michael[M] is 38 years old.) with ID e2021041910194 works in 1000 departure. Salary: 2200.",
+            employee.toString()
+        )
         // val salaryProp = employeeAllProperties.first { it.name == "salary" }
 
         // Result:

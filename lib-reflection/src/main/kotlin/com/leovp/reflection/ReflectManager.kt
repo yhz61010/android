@@ -3,6 +3,8 @@
 package com.leovp.reflection
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
@@ -118,13 +120,23 @@ class ReflectManager private constructor() {
      * @return The single {@link ReflectManager} instance.
      */
     fun property(name: String): ReflectManager {
-        // Returns non-extension properties declared in this class and all of its superclasses.
-        val allProperties = type.memberProperties
-        val prop = allProperties.firstOrNull { prop -> prop.name == name }
-        requireNotNull(prop) { "Can't find property $name." }
-        // Allow to get private property value.
-        if (!prop.isAccessible) prop.isAccessible = true
+        val prop = getProperty(name)
         return ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+    }
+
+    /**
+     * Set the property.
+     *
+     * @param name The name of property.
+     * @param value The value.
+     * @return The single {@link ReflectManager} instance.
+     */
+    fun property(name: String, value: Any?): ReflectManager {
+        val prop = getProperty(name)
+        if (prop is KMutableProperty<*>) {
+            prop.setter.call(obj, value)
+        }
+        return this
     }
 
     // ==================================
@@ -169,6 +181,15 @@ class ReflectManager private constructor() {
         } else {
             false
         }
+    }
+
+    private fun getProperty(name: String): KProperty1<out Any, *> {
+        // Returns non-extension properties declared in this class and all of its superclasses.
+        val prop = type.memberProperties.firstOrNull { prop -> prop.name == name }
+        requireNotNull(prop) { "Can't find property $name." }
+        // Allow to get private property value.
+        if (!prop.isAccessible) prop.isAccessible = true
+        return prop
     }
 
     // =================================

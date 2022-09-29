@@ -85,6 +85,9 @@ class ReflectManagerTest {
 
     @Test
     fun property() {
+        // ====================
+        // ===== get
+        // ====================
         val privateClass = PrivateClass.of(10, "Hello")
         val paramA: Int = ReflectManager.reflect(privateClass).property("paramA").get()
         assertEquals(10, paramA)
@@ -102,6 +105,26 @@ class ReflectManagerTest {
             .property("age")
             .get()
         assertEquals(18, age)
+
+        // ====================
+        // ===== set
+        // ====================
+        ReflectManager.reflect(privateClass).property("paramA", 666)
+        // Change `val` value.
+        assertEquals(666, ReflectManager.reflect(privateClass).property("paramA").get())
+
+        ReflectManager.reflect(person).property("age", 24)
+        assertEquals(24, person.age)
+
+        val reflectedPerson: Person = ReflectManager.reflect(Person::class).newInstance("Jim", 'M', 23).get()
+        val employee: Employee = ReflectManager
+            .reflect(Employee::class)
+            .newInstance("e2003241067", reflectedPerson)
+            .property("salary", 3500).get()
+        assertEquals(
+            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 0 departure. Salary: 3500.",
+            employee.toString()
+        )
     }
 
     @Test
@@ -124,7 +147,10 @@ class ReflectManagerTest {
         val employeeHarry: Employee? = Employee::class.primaryConstructor?.call("e0000001", DEPT_ID_DEV, harry)
         assertNotNull(employeeHarry)
         assertIs<Employee>(employeeHarry)
-        assertEquals("[Leo Group] Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure.", employeeHarry.toString())
+        assertEquals(
+            "[Leo Group] Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure. Salary: 0.",
+            employeeHarry.toString()
+        )
 
         // Secondary Constructor
         val amy = Person("Amy", 'F', 19)
@@ -135,7 +161,10 @@ class ReflectManagerTest {
                 constructor.parameters[1].type.classifier == Person::class
         }.call("e0000002", amy)
         assertIs<Employee>(employeeAmy)
-        assertEquals("[Leo Group] Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure.", employeeAmy.toString())
+        assertEquals(
+            "[Leo Group] Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure. Salary: 0.",
+            employeeAmy.toString()
+        )
 
         // employeeAmyConstructors.forEach { constructor ->
         //     println("constructor param size=${constructor.parameters.size} " +
@@ -307,7 +336,8 @@ class ReflectManagerTest {
             action("${p.name}[$employeeId] stops working at $time.")
         }
 
-        override fun toString(): String = "[$company] Employee($p) with ID $employeeId works in $deptId departure."
+        override fun toString(): String =
+            "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
     }
 
     open class Person(name: String, sex: Char, age: Int) : Creature() {

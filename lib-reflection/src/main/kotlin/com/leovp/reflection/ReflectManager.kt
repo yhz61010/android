@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Member
 import java.lang.reflect.Modifier
 import java.util.*
+import kotlin.reflect.KClass
 
 /**
  * Author: Michael Leo
@@ -15,12 +16,12 @@ import java.util.*
 class ReflectManager private constructor() {
 
     // https://stackoverflow.com/a/41905907/1685062
-    private lateinit var type: Class<*>
+    private lateinit var type: KClass<*>
 
     // https://stackoverflow.com/a/41905907/1685062
     private lateinit var obj: Any
 
-    private constructor(type: Class<*>, obj: Any? = null) : this() {
+    private constructor(type: KClass<*>, obj: Any? = null) : this() {
         this.type = type
         this.obj = obj ?: type
     }
@@ -36,7 +37,7 @@ class ReflectManager private constructor() {
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectManager {
             try {
                 val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
-                return reflect(clazz)
+                return reflect(clazz.kotlin)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
             } catch (ee: ExceptionInInitializerError) {
@@ -49,12 +50,12 @@ class ReflectManager private constructor() {
         /**
          * Reflect the class.
          *
-         * @param clazz The class.
+         * @param kclass The KClass.
          * @return The single [ReflectManager] instance.
          */
         @Suppress("WeakerAccess")
-        fun reflect(clazz: Class<*>): ReflectManager {
-            return ReflectManager(clazz)
+        fun reflect(kclass: KClass<*>): ReflectManager {
+            return ReflectManager(kclass)
         }
 
         /**
@@ -64,7 +65,7 @@ class ReflectManager private constructor() {
          * @return The single [ReflectManager] instance.
          */
         fun reflect(obj: Any?): ReflectManager {
-            return ReflectManager((if (obj == null) Any::class else obj::class).java, obj)
+            return ReflectManager(if (obj == null) Any::class else obj::class, obj)
         }
     }
 
@@ -82,11 +83,11 @@ class ReflectManager private constructor() {
     fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         val types = getArgsType(*args)
         return try {
-            val constructor = type.getDeclaredConstructor(*types)
+            val constructor = type.java.getDeclaredConstructor(*types)
             newInstance(constructor, *args)
         } catch (e: NoSuchMethodException) {
             val constructors = mutableListOf<Constructor<*>>()
-            for (constructor in type.declaredConstructors) {
+            for (constructor in type.java.declaredConstructors) {
                 if (matchParamterTypes(constructor.parameterTypes, types)) {
                     constructors.add(constructor)
                 }
@@ -128,16 +129,15 @@ class ReflectManager private constructor() {
     private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectManager {
         return try {
             ReflectManager(
-                constructor.declaringClass,
-                accessible(constructor)!!.newInstance(*args)
+                constructor::class,
+                accessible(constructor).newInstance(*args)
             )
         } catch (e: Exception) {
             throw ReflectException(e)
         }
     }
 
-    private fun <T : AccessibleObject?> accessible(accessible: T?): T? {
-        if (accessible == null) return null
+    private fun <T : AccessibleObject> accessible(accessible: T): T {
         if (accessible is Member) {
             val member = accessible as Member
             if (Modifier.isPublic(member.modifiers)

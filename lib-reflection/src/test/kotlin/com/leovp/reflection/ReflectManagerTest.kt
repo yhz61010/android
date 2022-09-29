@@ -84,6 +84,27 @@ class ReflectManagerTest {
     }
 
     @Test
+    fun property() {
+        val privateClass = PrivateClass.of(10, "Hello")
+        val paramA: Int = ReflectManager.reflect(privateClass).property("paramA").get()
+        assertEquals(10, paramA)
+        val paramB = ReflectManager.reflect(privateClass).property("paramB").get<String>()
+        assertEquals("Hello", paramB)
+
+        val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
+        val name: String = ReflectManager.reflect(person).property("name").get()
+        assertEquals("Michael", name)
+        val sex: Char = ReflectManager.reflect(person).property("sex").get()
+        assertEquals('M', sex)
+        val age: Int = ReflectManager
+            .reflect(Person::class)
+            .newInstance("World", 'F', 18)
+            .property("age")
+            .get()
+        assertEquals(18, age)
+    }
+
+    @Test
     fun newInstanceByKotlinReflect() {
         //  ==============================
 
@@ -150,7 +171,7 @@ class ReflectManagerTest {
     }
 
     @Test
-    fun property() {
+    fun propertyByKotlinReflection() {
         val hrPerson = Person("Chris", 'F', 20)
         val hr = HR("e2021041910000", hrPerson)
 
@@ -227,8 +248,8 @@ class ReflectManagerTest {
         private constructor() : this(-1, "NA")
 
         companion object {
-            fun of(): PrivateClass {
-                return PrivateClass()
+            fun of(paramA: Int, paramB: String): PrivateClass {
+                return PrivateClass(paramA, paramB)
             }
         }
 

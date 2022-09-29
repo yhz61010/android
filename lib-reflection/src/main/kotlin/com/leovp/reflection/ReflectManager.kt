@@ -14,8 +14,10 @@ import java.util.*
  */
 class ReflectManager private constructor() {
 
-    private lateinit var type: Class<*>
-    private lateinit var obj: Any
+    lateinit var type: Class<*>
+        private set
+    lateinit var obj: Any
+        private set
 
     private constructor(type: Class<*>, obj: Any? = null) : this() {
         this.type = type
@@ -207,8 +209,7 @@ class ReflectManager private constructor() {
      * @param <T> The value type.
      * @return the result
      */
-    fun <T> get(): T {
-        @Suppress("UNCHECKED_CAST")
+    inline fun <reified T: Any> get(): T {
         return obj as T
     }
 

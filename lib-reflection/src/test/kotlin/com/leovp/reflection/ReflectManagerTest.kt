@@ -25,14 +25,17 @@ class ReflectManagerTest {
 
     @Test
     fun newInstance() {
+
         val rfltCreature1: Creature = ReflectManager.reflect(Creature::class.java).newInstance().get()
         println("rfltCreature1=$rfltCreature1")
 
-        val rfltCreature2: Creature = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get()
+        val rfltCreature2 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
         println("rfltCreature2=$rfltCreature2")
 
         val rfltCreature3: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
         println("rfltCreature3=$rfltCreature3")
+
+        // ----------
 
         val rfltPerson1: Person = ReflectManager.reflect(Person::class.java).newInstance("Man1", 'M', 38).get()
         println("rfltPerson1=$rfltPerson1")

@@ -2,6 +2,7 @@
 
 package com.leovp.reflection
 
+import java.lang.reflect.Field
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
@@ -135,6 +136,8 @@ class ReflectManager private constructor() {
         val prop = getProperty(name)
         if (prop is KMutableProperty<*>) {
             prop.setter.call(obj, value)
+        } else {
+            getFinalField(name).set(obj, value)
         }
         return this
     }
@@ -190,6 +193,13 @@ class ReflectManager private constructor() {
         // Allow to get private property value.
         if (!prop.isAccessible) prop.isAccessible = true
         return prop
+    }
+
+    private fun getFinalField(name: String): Field {
+        val finalField = type.java.getDeclaredField(name)
+        // Allow to get private property value.
+        if (!finalField.isAccessible) finalField.isAccessible = true
+        return finalField
     }
 
     // =================================

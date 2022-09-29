@@ -117,8 +117,8 @@ class ReflectManager private constructor() {
     private fun matchParameterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<KClass<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
-                val actualType: Class<*>? = wrapper(actualTypes[i]?.java)
-                val declaredType: Class<*>? = wrapper(declaredTypes[i])
+                val actualType: Class<*>? = actualTypes[i]?.javaObjectType
+                val declaredType: Class<*>? = declaredTypes[i]?.kotlin?.javaObjectType
                 if (actualTypes[i] == Unit::class.java ||
                     (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
                     continue
@@ -129,26 +129,6 @@ class ReflectManager private constructor() {
         } else {
             false
         }
-    }
-
-    private fun wrapper(type: Class<*>?): Class<*>? {
-        if (type == null) {
-            return null
-        }
-        return if (type.isPrimitive) {
-            when (type) {
-                Boolean::class.javaPrimitiveType -> Boolean::class.javaObjectType
-                Char::class.javaPrimitiveType -> Char::class.javaObjectType
-                Byte::class.javaPrimitiveType -> Byte::class.javaObjectType
-                Short::class.javaPrimitiveType -> Short::class.javaObjectType
-                Int::class.javaPrimitiveType -> Int::class.javaObjectType
-                Float::class.javaPrimitiveType -> Float::class.javaObjectType
-                Long::class.javaPrimitiveType -> Long::class.javaObjectType
-                Double::class.javaPrimitiveType -> Double::class.javaObjectType
-                Void.TYPE -> Void::class.javaObjectType
-                else -> throw IllegalArgumentException("Unknown primitive type: $type")
-            }
-        } else type
     }
 
     /**

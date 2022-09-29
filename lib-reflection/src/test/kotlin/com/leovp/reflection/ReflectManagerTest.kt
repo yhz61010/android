@@ -43,28 +43,36 @@ class ReflectManagerTest {
         println("=====>Nothing: ${Nothing::class.javaPrimitiveType}") // void
         println("=====>Nothing: ${Nothing::class.javaObjectType}") // class java.lang.Void
 
+        // ----------
+
         val rfltCreature1: Creature = ReflectManager.reflect(Creature::class).newInstance().get()
         assertEquals("Get a new creature.", rfltCreature1.toString())
 
-        val rfltCreature2 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
+        val rfltCreature2 = ReflectManager.reflect(Creature::class.java).newInstance().get<Creature>()
         assertEquals("Get a new creature.", rfltCreature2.toString())
 
-        val rfltCreature3: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
+        val rfltCreature3 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
         assertEquals("Get a new creature.", rfltCreature3.toString())
+
+        val rfltCreature4: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
+        assertEquals("Get a new creature.", rfltCreature4.toString())
 
         // ----------
 
         val rfltPerson1: Person = ReflectManager.reflect(Person::class).newInstance("Man1", 'M', 38).get()
         assertEquals("Man1[M] is 38 years old.", rfltPerson1.toString())
 
-        val rfltPerson2: Person = ReflectManager
+        val rfltPerson2 = ReflectManager.reflect(Person::class.java).newInstance("Man2", 'M', 28).get<Person>()
+        assertEquals("Man2[M] is 28 years old.", rfltPerson2.toString())
+
+        val rfltPerson3: Person = ReflectManager
             .reflect("com.leovp.reflection.ReflectManagerTest\$Person")
             .newInstance("Woman1", 'F', 20)
             .get()
-        assertEquals("Woman1[F] is 20 years old.", rfltPerson2.toString())
+        assertEquals("Woman1[F] is 20 years old.", rfltPerson3.toString())
 
-        val rfltPerson3: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
-        assertEquals("Woman2[F] is 19 years old.", rfltPerson3.toString())
+        val rfltPerson4: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
+        assertEquals("Woman2[F] is 19 years old.", rfltPerson4.toString())
     }
 
     @Test

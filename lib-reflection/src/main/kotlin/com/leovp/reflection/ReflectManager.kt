@@ -95,7 +95,7 @@ class ReflectManager private constructor() {
         val types = getArgsType(*args)
         try {
             for (constructor in type.constructors) {
-                if (matchParameterTypes(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+                if (matchArgsType(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
                     if (!constructor.isAccessible) constructor.isAccessible = true
                     return ReflectManager(type, constructor.call(*args))
                 }
@@ -114,7 +114,7 @@ class ReflectManager private constructor() {
         return result
     }
 
-    private fun matchParameterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<KClass<*>?>): Boolean {
+    private fun matchArgsType(declaredTypes: Array<Class<*>?>, actualTypes: Array<KClass<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = actualTypes[i]?.javaObjectType

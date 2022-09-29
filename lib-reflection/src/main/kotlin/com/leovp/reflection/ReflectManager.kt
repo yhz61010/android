@@ -14,12 +14,11 @@ import java.util.*
  */
 class ReflectManager private constructor() {
 
-    @PublishedApi
-    internal lateinit var type: Class<*>
-        private set
-    @PublishedApi
-    internal lateinit var obj: Any
-        private set
+    // https://stackoverflow.com/a/41905907/1685062
+    private lateinit var type: Class<*>
+
+    // https://stackoverflow.com/a/41905907/1685062
+    private lateinit var obj: Any
 
     private constructor(type: Class<*>, obj: Any? = null) : this() {
         this.type = type
@@ -104,7 +103,7 @@ class ReflectManager private constructor() {
     private fun getArgsType(vararg args: Any?): Array<Class<*>?> {
         val result: Array<Class<*>?> = arrayOfNulls(args.size)
         for ((i, value) in args.withIndex()) {
-            result[i] = value?.javaClass ?: NULL::class.java
+            result[i] = value?.javaClass ?: Unit::class.java
         }
         return result
     }
@@ -156,7 +155,7 @@ class ReflectManager private constructor() {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = wrapper(actualTypes[i])
                 val declaredType: Class<*>? = wrapper(declaredTypes[i])
-                if (actualTypes[i] == NULL::class.java ||
+                if (actualTypes[i] == Unit::class.java ||
                     (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
                     continue
                 }
@@ -171,28 +170,21 @@ class ReflectManager private constructor() {
     private fun wrapper(type: Class<*>?): Class<*>? {
         if (type == null) {
             return null
-        } else if (type.isPrimitive) {
-            if (Boolean::class.javaPrimitiveType == type) {
-                return Boolean::class.javaObjectType
-            } else if (Int::class.javaPrimitiveType == type) {
-                return Int::class.javaObjectType
-            } else if (Long::class.javaPrimitiveType == type) {
-                return Long::class.javaObjectType
-            } else if (Short::class.javaPrimitiveType == type) {
-                return Short::class.javaObjectType
-            } else if (Byte::class.javaPrimitiveType == type) {
-                return Byte::class.javaObjectType
-            } else if (Double::class.javaPrimitiveType == type) {
-                return Double::class.javaObjectType
-            } else if (Float::class.javaPrimitiveType == type) {
-                return Float::class.javaObjectType
-            } else if (Char::class.javaPrimitiveType == type) {
-                return Char::class.javaObjectType
-            } else if (Void.TYPE == type) {
-                return Void::class.javaObjectType
-            }
         }
-        return type
+        return if (type.isPrimitive) {
+            when (type) {
+                Boolean::class.javaPrimitiveType -> Boolean::class.javaObjectType
+                Char::class.javaPrimitiveType -> Char::class.javaObjectType
+                Byte::class.javaPrimitiveType -> Byte::class.javaObjectType
+                Short::class.javaPrimitiveType -> Short::class.javaObjectType
+                Int::class.javaPrimitiveType -> Int::class.javaObjectType
+                Float::class.javaPrimitiveType -> Float::class.javaObjectType
+                Long::class.javaPrimitiveType -> Long::class.javaObjectType
+                Double::class.javaPrimitiveType -> Double::class.javaObjectType
+                Void.TYPE -> Void::class.javaObjectType
+                else -> throw IllegalArgumentException("Unknown primitive type: $type")
+            }
+        } else type
     }
 
     /**
@@ -201,11 +193,10 @@ class ReflectManager private constructor() {
      * @param <T> The value type.
      * @return the result
      */
-    inline fun <reified T : Any> get(): T {
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> get(): T {
         return obj as T
     }
-
-    private class NULL
 
     // =================================
     // ========== Exception ==========

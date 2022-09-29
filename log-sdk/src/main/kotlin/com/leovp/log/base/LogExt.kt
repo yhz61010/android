@@ -7,10 +7,6 @@ import com.leovp.log.LogContext
  * Date: 20-5-13 下午3:39
  */
 
-fun exceptionLog(message: String): Nothing {
-    error(message)
-}
-
 val Any.ITAG: String
     get() {
         val tag = javaClass.simpleName
@@ -36,5 +32,5 @@ fun String.wLog() {
 }
 
 fun String.fLog() {
-    LogContext.log.e(this)
+    LogContext.log.e(ITAG, this)
 }

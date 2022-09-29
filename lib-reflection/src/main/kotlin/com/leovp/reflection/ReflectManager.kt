@@ -3,6 +3,7 @@
 package com.leovp.reflection
 
 import kotlin.reflect.KClass
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
 
@@ -106,6 +107,45 @@ class ReflectManager private constructor() {
         }
     }
 
+    // ==================================
+    // ============ property ============
+    // ==================================
+
+    /**
+     * Get the property.
+     *
+     * @param name The name of property.
+     * @return The single {@link ReflectManager} instance.
+     */
+    fun property(name: String): ReflectManager {
+        // Returns non-extension properties declared in this class and all of its superclasses.
+        val allProperties = type.memberProperties
+        val prop = allProperties.firstOrNull { prop -> prop.name == name }
+        requireNotNull(prop) { "Can't find property $name." }
+        // Allow to get private property value.
+        if (!prop.isAccessible) prop.isAccessible = true
+        return ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+    }
+
+    // ==================================
+    // ====== Get reflected object ======
+    // ==================================
+
+    /**
+     * Get the result.
+     *
+     * @param <T> The value type.
+     * @return the result
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> get(): T {
+        return obj as T
+    }
+
+    // ==================================
+    // ======== Internal methods ========
+    // ==================================
+
     private fun getArgsType(vararg args: Any?): Array<KClass<*>?> {
         val result: Array<KClass<*>?> = arrayOfNulls(args.size)
         for ((i, value) in args.withIndex()) {
@@ -131,19 +171,8 @@ class ReflectManager private constructor() {
         }
     }
 
-    /**
-     * Get the result.
-     *
-     * @param <T> The value type.
-     * @return the result
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(): T {
-        return obj as T
-    }
-
     // =================================
-    // ========== Exception ==========
+    // =========== Exception ===========
     // =================================
 
     class ReflectException : RuntimeException {

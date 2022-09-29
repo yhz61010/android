@@ -61,11 +61,22 @@ class ReflectManager private constructor() {
         /**
          * Reflect the class.
          *
+         * @param clazz The class.
+         * @return The single [ReflectManager] instance.
+         */
+        @Suppress("WeakerAccess")
+        fun reflect(clazz: Class<*>): ReflectManager {
+            return ReflectManager(clazz.kotlin)
+        }
+
+        /**
+         * Reflect the class.
+         *
          * @param obj The object.
          * @return The single [ReflectManager] instance.
          */
-        fun reflect(obj: Any?): ReflectManager {
-            return ReflectManager(if (obj == null) Any::class else obj::class, obj)
+        fun <T: Any> reflect(obj: T): ReflectManager {
+            return ReflectManager(obj::class, obj)
         }
     }
 

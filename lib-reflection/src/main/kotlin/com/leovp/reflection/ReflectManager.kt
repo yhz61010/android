@@ -14,9 +14,11 @@ import java.util.*
  */
 class ReflectManager private constructor() {
 
-    lateinit var type: Class<*>
+    @PublishedApi
+    internal lateinit var type: Class<*>
         private set
-    lateinit var obj: Any
+    @PublishedApi
+    internal lateinit var obj: Any
         private set
 
     private constructor(type: Class<*>, obj: Any? = null) : this() {
@@ -74,21 +76,11 @@ class ReflectManager private constructor() {
     /**
      * Create and initialize a new instance.
      *
-     * @return the single [ReflectManager] instance
-     */
-    @Suppress("unused")
-    fun newInstance(): ReflectManager {
-        return newInstance(*arrayOfNulls<Any>(0))
-    }
-
-    /**
-     * Create and initialize a new instance.
-     *
      * @param args The args.
      * @return the single [ReflectManager] instance
      */
     @Suppress("WeakerAccess")
-    fun newInstance(vararg args: Any?): ReflectManager {
+    fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         val types = getArgsType(*args)
         return try {
             val constructor = type.getDeclaredConstructor(*types)
@@ -209,7 +201,7 @@ class ReflectManager private constructor() {
      * @param <T> The value type.
      * @return the result
      */
-    inline fun <reified T: Any> get(): T {
+    inline fun <reified T : Any> get(): T {
         return obj as T
     }
 

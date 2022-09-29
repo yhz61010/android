@@ -85,17 +85,17 @@ class ReflectManager private constructor() {
             val constructor = type.getDeclaredConstructor(*types)
             newInstance(constructor, *args)
         } catch (e: NoSuchMethodException) {
-            val list: MutableList<Constructor<*>> = ArrayList()
+            val constructors = mutableListOf<Constructor<*>>()
             for (constructor in type.declaredConstructors) {
-                if (match(constructor.parameterTypes, types)) {
-                    list.add(constructor)
+                if (matchParamterTypes(constructor.parameterTypes, types)) {
+                    constructors.add(constructor)
                 }
             }
-            if (list.isEmpty()) {
+            if (constructors.isEmpty()) {
                 throw ReflectException(e)
             } else {
-                sortConstructors(list)
-                newInstance(list[0], *args)
+                sortConstructors(constructors)
+                newInstance(constructors[0], *args)
             }
         }
     }
@@ -113,8 +113,7 @@ class ReflectManager private constructor() {
             override fun compare(o1: Constructor<*>, o2: Constructor<*>): Int {
                 val types1 = o1.parameterTypes
                 val types2 = o2.parameterTypes
-                val len = types1.size
-                for (i in 0 until len) {
+                for (i in types1.indices) {
                     if (types1[i] != types2[i]) {
                         val cls1: Class<*>? = wrapper(types1[i])
                         val cls2: Class<*>? = wrapper(types2[i])
@@ -150,7 +149,7 @@ class ReflectManager private constructor() {
         return accessible
     }
 
-    private fun match(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
+    private fun matchParamterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = wrapper(actualTypes[i])

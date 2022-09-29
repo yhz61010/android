@@ -47,7 +47,6 @@ import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.floatview.FloatView
 import com.leovp.json.toJsonString
 import com.leovp.json.toObject
-import com.leovp.kotlin.exts.exception
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
@@ -147,7 +146,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                     mediaProjectService?.setData(
                         result.resultCode,
                         result.data
-                            ?: exception("Intent data is null. Can not capture screen!")
+                            ?: error("Intent data is null. Can not capture screen!")
                     )
                     val screenInfo = screenAvailableResolution
                     val setting = ScreenShareSetting(

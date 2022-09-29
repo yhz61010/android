@@ -48,7 +48,6 @@ import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.camera2live.utils.getPreviewOutputSize
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.exif.computeExifOrientation
-import com.leovp.kotlin.exts.fail
 import com.leovp.log.LogContext
 import java.io.BufferedOutputStream
 import java.io.File
@@ -645,7 +644,7 @@ class Camera2ComponentHelper(
 
     fun stopRecording() {
         LogContext.log.w(TAG, "stopRecording()")
-        if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        if (!::imageReader.isInitialized) error("initializeCamera must be called first")
         isRecording = false
         cameraView?.run {
             post {
@@ -674,7 +673,7 @@ class Camera2ComponentHelper(
 
     fun startRecording() {
         LogContext.log.w(TAG, "startRecording()")
-        if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        if (!::imageReader.isInitialized) error("initializeCamera must be called first")
         isRecording = true
         cameraView?.run {
             post {
@@ -821,7 +820,7 @@ class Camera2ComponentHelper(
      */
     suspend fun takePhoto(): CombinedCaptureResult = suspendCoroutine { cont ->
         val st = SystemClock.elapsedRealtime()
-        if (!::imageReader.isInitialized) fail("initializeCamera must be called first")
+        if (!::imageReader.isInitialized) error("initializeCamera must be called first")
         // Flush any images left in the image reader
         @Suppress("ControlFlowWithEmptyBody")
         while (imageReader.acquireNextImage() != null) {

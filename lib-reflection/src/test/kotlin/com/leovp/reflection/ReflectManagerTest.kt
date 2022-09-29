@@ -2,6 +2,7 @@
 
 package com.leovp.reflection
 
+import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.declaredMembers
@@ -41,7 +42,7 @@ class ReflectManagerTest {
         println("=====>Nothing: ${Nothing::class.javaPrimitiveType}") // void
         println("=====>Nothing: ${Nothing::class.javaObjectType}") // class java.lang.Void
 
-        val rfltCreature1: Creature = ReflectManager.reflect(Creature::class.java).newInstance().get()
+        val rfltCreature1: Creature = ReflectManager.reflect(Creature::class).newInstance().get()
         assertEquals("Get a new creature.", rfltCreature1.toString())
 
         val rfltCreature2 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
@@ -52,7 +53,7 @@ class ReflectManagerTest {
 
         // ----------
 
-        val rfltPerson1: Person = ReflectManager.reflect(Person::class.java).newInstance("Man1", 'M', 38).get()
+        val rfltPerson1: Person = ReflectManager.reflect(Person::class).newInstance("Man1", 'M', 38).get()
         assertEquals("Man1[M] is 38 years old.", rfltPerson1.toString())
 
         val rfltPerson2: Person = ReflectManager
@@ -68,6 +69,9 @@ class ReflectManagerTest {
     @Test
     fun newInstanceByKotlinReflect() {
         //  ==============================
+
+        val kclass: KClass<*> = Creature::class
+        kclass.primaryConstructor
 
         val newCreature: Creature = Creature::class.createInstance()
         assertIs<Creature>(newCreature)

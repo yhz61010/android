@@ -45,6 +45,12 @@ class ReflectManagerTest {
 
         // ----------
 
+        val rfltPrivateCls1: PrivateClass = ReflectManager.reflect(PrivateClass::class).newInstance().get()
+        assertEquals("Got a PrivateClass with paramA=-1 paramB=NA.", rfltPrivateCls1.toString())
+
+        val rfltPrivateCls2 = ReflectManager.reflect(PrivateClass::class).newInstance(1, "HM").get<PrivateClass>()
+        assertEquals("Got a PrivateClass with paramA=1 paramB=HM.", rfltPrivateCls2.toString())
+
         val rfltCreature1: Creature = ReflectManager.reflect(Creature::class).newInstance().get()
         assertEquals("Get a new creature.", rfltCreature1.toString())
 
@@ -213,6 +219,20 @@ class ReflectManagerTest {
     companion object {
         const val DEPT_ID_HR = 100
         const val DEPT_ID_DEV = 1000
+    }
+
+    class PrivateClass private constructor(private val paramA: Int, private var paramB: String) {
+        private constructor() : this(-1, "NA")
+
+        companion object {
+            fun of(): PrivateClass {
+                return PrivateClass()
+            }
+        }
+
+        override fun toString(): String {
+            return "Got a PrivateClass with paramA=$paramA paramB=$paramB."
+        }
     }
 
     class HR(employeeId: String, p: Person) : Employee(employeeId, DEPT_ID_HR, p) {

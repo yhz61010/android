@@ -2,12 +2,9 @@
 
 package com.leovp.reflection
 
-import java.lang.reflect.AccessibleObject
-import java.lang.reflect.Constructor
-import java.lang.reflect.Member
-import java.lang.reflect.Modifier
-import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.jvmErasure
 
 /**
  * Author: Michael Leo
@@ -36,7 +33,10 @@ class ReflectManager private constructor() {
         @Suppress("unused")
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectManager {
             try {
-                val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
+                val clazz = if (classLoader == null)
+                    Class.forName(className)
+                else
+                    Class.forName(className, true, classLoader)
                 return reflect(clazz.kotlin)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
@@ -75,7 +75,7 @@ class ReflectManager private constructor() {
          * @param obj The object.
          * @return The single [ReflectManager] instance.
          */
-        fun <T: Any> reflect(obj: T): ReflectManager {
+        fun <T : Any> reflect(obj: T): ReflectManager {
             return ReflectManager(obj::class, obj)
         }
     }
@@ -93,77 +93,31 @@ class ReflectManager private constructor() {
     @Suppress("WeakerAccess")
     fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         val types = getArgsType(*args)
-        return try {
-            val constructor = type.java.getDeclaredConstructor(*types)
-            newInstance(constructor, *args)
+        try {
+            for (constructor in type.constructors) {
+                if (matchParameterTypes(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+                    if (!constructor.isAccessible) constructor.isAccessible = true
+                    return ReflectManager(type, constructor.call(*args))
+                }
+            }
+            throw ReflectException("Not found any constructor.")
         } catch (e: NoSuchMethodException) {
-            val constructors = mutableListOf<Constructor<*>>()
-            for (constructor in type.java.declaredConstructors) {
-                if (matchParameterTypes(constructor.parameterTypes, types)) {
-                    constructors.add(constructor)
-                }
-            }
-            if (constructors.isEmpty()) {
-                throw ReflectException(e)
-            } else {
-                sortConstructors(constructors)
-                newInstance(constructors[0], *args)
-            }
-        }
-    }
-
-    private fun getArgsType(vararg args: Any?): Array<Class<*>?> {
-        val result: Array<Class<*>?> = arrayOfNulls(args.size)
-        for ((i, value) in args.withIndex()) {
-            result[i] = value?.javaClass ?: Unit::class.java
-        }
-        return result
-    }
-
-    private fun sortConstructors(list: List<Constructor<*>>) {
-        Collections.sort(list, object : Comparator<Constructor<*>> {
-            override fun compare(o1: Constructor<*>, o2: Constructor<*>): Int {
-                val types1 = o1.parameterTypes
-                val types2 = o2.parameterTypes
-                for (i in types1.indices) {
-                    if (types1[i] != types2[i]) {
-                        val cls1: Class<*>? = wrapper(types1[i])
-                        val cls2: Class<*>? = wrapper(types2[i])
-                        return if (cls2 != null && cls1?.isAssignableFrom(cls2) == true) 1 else -1
-                    }
-                }
-                return 0
-            }
-        })
-    }
-
-    private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectManager {
-        return try {
-            ReflectManager(
-                constructor::class,
-                accessible(constructor).newInstance(*args)
-            )
-        } catch (e: Exception) {
             throw ReflectException(e)
         }
     }
 
-    private fun <T : AccessibleObject> accessible(accessible: T): T {
-        if (accessible is Member) {
-            val member = accessible as Member
-            if (Modifier.isPublic(member.modifiers)
-                && Modifier.isPublic(member.declaringClass.modifiers)) {
-                return accessible
-            }
+    private fun getArgsType(vararg args: Any?): Array<KClass<*>?> {
+        val result: Array<KClass<*>?> = arrayOfNulls(args.size)
+        for ((i, value) in args.withIndex()) {
+            result[i] = (value?.javaClass ?: Unit::class.java).kotlin
         }
-        if (!accessible.isAccessible) accessible.isAccessible = true
-        return accessible
+        return result
     }
 
-    private fun matchParameterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
+    private fun matchParameterTypes(declaredTypes: Array<Class<*>?>, actualTypes: Array<KClass<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
-                val actualType: Class<*>? = wrapper(actualTypes[i])
+                val actualType: Class<*>? = wrapper(actualTypes[i]?.java)
                 val declaredType: Class<*>? = wrapper(declaredTypes[i])
                 if (actualTypes[i] == Unit::class.java ||
                     (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {

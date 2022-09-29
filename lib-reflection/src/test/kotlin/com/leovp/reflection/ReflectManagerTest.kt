@@ -13,7 +13,9 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
 
 /**
  * https://www.baeldung.com/kotlin/kclass-new-instance
@@ -21,31 +23,50 @@ import org.junit.jupiter.api.Test
  * Author: Michael Leo
  * Date: 2022/9/26 16:52
  */
+// https://www.baeldung.com/junit-5-test-order
+@TestMethodOrder(MethodOrderer.MethodName::class)
 class ReflectManagerTest {
 
     @Test
     fun newInstance() {
+        // https://stackoverflow.com/a/64742576/1685062
+        println("=====>Unit: ${Unit::class.javaPrimitiveType}") // null
+        println("=====>Unit: ${Unit::class.javaObjectType}") // class kotlin.Unit
+
+        // https://stackoverflow.com/a/64742576/1685062
+        println("=====>Void: ${Void::class.javaPrimitiveType}") // void
+        println("=====>Void: ${Void::class.javaObjectType}") // class java.lang.Void
+
+        // https://stackoverflow.com/a/64742576/1685062
+        println("=====>Nothing: ${Nothing::class.javaPrimitiveType}") // void
+        println("=====>Nothing: ${Nothing::class.javaObjectType}") // class java.lang.Void
 
         val rfltCreature1: Creature = ReflectManager.reflect(Creature::class.java).newInstance().get()
-        println("rfltCreature1=$rfltCreature1")
+        assertEquals("Get a new creature.", rfltCreature1.toString())
 
         val rfltCreature2 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
-        println("rfltCreature2=$rfltCreature2")
+        assertEquals("Get a new creature.", rfltCreature2.toString())
 
         val rfltCreature3: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
-        println("rfltCreature3=$rfltCreature3")
+        assertEquals("Get a new creature.", rfltCreature3.toString())
 
         // ----------
 
         val rfltPerson1: Person = ReflectManager.reflect(Person::class.java).newInstance("Man1", 'M', 38).get()
-        println("rfltPerson1=$rfltPerson1")
+        assertEquals("Man1[M] is 38 years old.", rfltPerson1.toString())
 
-        val rfltPerson2: Person = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Person").newInstance("Woman1", 'F', 20).get()
-        println("rfltPerson2=$rfltPerson2")
+        val rfltPerson2: Person = ReflectManager
+            .reflect("com.leovp.reflection.ReflectManagerTest\$Person")
+            .newInstance("Woman1", 'F', 20)
+            .get()
+        assertEquals("Woman1[F] is 20 years old.", rfltPerson2.toString())
 
         val rfltPerson3: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
-        println("rfltPerson3=$rfltPerson3")
+        assertEquals("Woman2[F] is 19 years old.", rfltPerson3.toString())
+    }
 
+    @Test
+    fun newInstanceByKotlinReflect() {
         //  ==============================
 
         val newCreature: Creature = Creature::class.createInstance()

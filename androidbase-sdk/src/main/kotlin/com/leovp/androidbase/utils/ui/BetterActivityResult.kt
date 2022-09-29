@@ -3,7 +3,6 @@ package com.leovp.androidbase.utils.ui
 import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
-import com.leovp.kotlin.exts.fail
 
 /**
  * Author: Michael Leo
@@ -28,7 +27,7 @@ class BetterActivityResult<I, O> private constructor(
     private var internalResult: ((O) -> Unit)? = null
 
     private val launcher: ActivityResultLauncher<I> = caller.registerForActivityResult(contract) { re: O ->
-        val finalResult = (this.internalResult ?: this.defaultResult) ?: fail("The [Result] can not be null.")
+        val finalResult = (this.internalResult ?: this.defaultResult) ?: error("The [Result] can not be null.")
         finalResult(re)
     }
 

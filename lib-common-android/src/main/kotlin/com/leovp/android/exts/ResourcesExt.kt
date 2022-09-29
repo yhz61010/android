@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.TypedValue
 import androidx.annotation.RawRes
-import com.leovp.kotlin.exts.fail
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -80,7 +79,7 @@ inline fun <reified T : Number> Resources.px2dp(pxValue: Int): T {
     return when (T::class) {
         Float::class -> result as T
         Int::class -> result.toInt() as T
-        else -> fail("Type not supported")
+        else -> error("Type not supported")
     }
 }
 
@@ -116,6 +115,6 @@ inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT
     return when (T::class) {
         Float::class -> result as T
         Int::class -> result.toInt() as T
-        else -> fail("Type not supported")
+        else -> error("Type not supported")
     }
 }

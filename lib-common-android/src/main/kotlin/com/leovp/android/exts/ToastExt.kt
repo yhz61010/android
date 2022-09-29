@@ -24,7 +24,6 @@ import com.leovp.android.R
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
 import com.leovp.floatview.FloatView
-import com.leovp.kotlin.exts.fail
 import com.leovp.kotlin.utils.SingletonHolder
 import com.leovp.reflection.wrappers.ServiceManager
 import kotlin.math.max
@@ -160,8 +159,9 @@ fun Context.toast(
 
 // ==========
 
-private const val NORMAL_BG_COLOR = "#646464"
-private const val ERROR_BG_COLOR = "#F16C4C"
+@Suppress("unused")
+const val TOAST_NORMAL_BG_COLOR = "#646464"
+const val TOAST_ERROR_BG_COLOR = "#F16C4C"
 
 private var toast: Toast? = null
 private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
@@ -184,7 +184,7 @@ private fun showToast(
     error: Boolean
 ) {
     if (ctx == null) return
-    val toastCfg = LeoToast.getInstance(ctx).config ?: fail("Toast config can't be null.")
+    val toastCfg = LeoToast.getInstance(ctx).config ?: error("Toast config can't be null.")
 
     if ((debug && !toastCfg.buildConfigInDebug)) {
         // Debug log only be shown in DEBUG flavor
@@ -264,7 +264,7 @@ fun cancelToast() {
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {
-    val toastCfg = LeoToast.getInstance(ctx).config ?: fail("Toast config can't be null.")
+    val toastCfg = LeoToast.getInstance(ctx).config ?: error("Toast config can't be null.")
     toastCfg.toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
@@ -290,12 +290,15 @@ private fun decorateToast(
         ctx.resources,
         R.drawable.toast_bg_normal, null
     )!!
-    if (!error && bgColor == null) {
+    if (!error && bgColor == null) { // without error and without bgColor
         rootView.background = defaultBgDrawable
-    } else { // with error or with bgColor
+    } else {
+        // - with error and with bgColor
+        // - with error but without bgColor
+        // - without error but with bgColor
         val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
         rootView.background = customDrawableWrapper
-        val defBgColor = bgColor ?: if (error) ERROR_BG_COLOR else NORMAL_BG_COLOR
+        val defBgColor = bgColor ?: TOAST_ERROR_BG_COLOR
         DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
     }
 }

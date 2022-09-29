@@ -23,7 +23,6 @@ import android.view.WindowInsets
 import androidx.annotation.IntRange
 import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
-import com.leovp.kotlin.exts.fail
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -188,7 +187,7 @@ fun Context.getScreenSize(surfaceRotation: Int, screenSize: Size = screenRealRes
 }
 
 val Context.statusBarHeight
-    @SuppressLint("DiscouragedApi") get(): Int {
+    @SuppressLint("DiscouragedApi", "InternalInsetResource") get(): Int {
         var result = 0
         val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {
@@ -584,7 +583,7 @@ fun Context.getDeviceOrientation(
 val Context.screenSurfaceRotation: Int
     @Suppress("DEPRECATION")
     get() {
-        if (this !is Activity && this !is Service) fail("Context can be either Activity(Fragment) or Service.")
+        if (this !is Activity && this !is Service) error("Context can be either Activity(Fragment) or Service.")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (this is Service) {
                 // On Android 11+, we can't get `display` directly from Service, it will cause

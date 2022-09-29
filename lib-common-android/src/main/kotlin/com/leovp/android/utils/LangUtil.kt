@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.RequiresApi
 import com.leovp.android.exts.sharedPrefs
-import com.leovp.kotlin.exts.fail
 import com.leovp.kotlin.utils.SingletonHolder
 import java.util.*
 
@@ -227,6 +226,6 @@ class LangUtil private constructor(private val ctx: Context) {
         if (currentAppLang == null) {
             currentAppLang = getLocale(pref.getString(PREF_KEY_LANGUAGE, "en") ?: "en")
         }
-        return currentAppLang ?: fail("Unexpected exception on getLanguageFromPreference()")
+        return currentAppLang ?: error("Unexpected exception on getLanguageFromPreference()")
     }
 }

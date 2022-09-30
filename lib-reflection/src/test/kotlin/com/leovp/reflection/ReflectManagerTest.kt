@@ -122,11 +122,15 @@ class ReflectManagerTest {
             .newInstance("e2003241067", reflectedPerson)
             .property("salary", 3500)
             .property("deptId", DEPT_ID_DEV)
+            .property("comment", "No comment.")
             .get()
         assertEquals(
             "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 departure. Salary: 3500.",
             employee.toString()
         )
+        assertEquals("No comment.", employee.comment)
+        ReflectManager.reflect(employee).property("comment", null)
+        assertEquals(null, employee.comment)
 
         val company: String = ReflectManager.reflect(employee).property("company").get()
         assertEquals("Leo Group", company)
@@ -312,6 +316,8 @@ class ReflectManagerTest {
         val company: String = COMPANY
 
         private var salary: Int = 0
+
+        var comment: String? = null
 
         var employeeId: String = employeeId
             private set

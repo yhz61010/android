@@ -126,7 +126,8 @@ class ReflectManager private constructor() {
     }
 
     /**
-     * Set the property.
+     * Set the property with specified value.
+     * This method can also set `val` value.
      *
      * @param name The name of property.
      * @param value The value.

@@ -120,11 +120,16 @@ class ReflectManagerTest {
         val employee: Employee = ReflectManager
             .reflect(Employee::class)
             .newInstance("e2003241067", reflectedPerson)
-            .property("salary", 3500).get()
+            .property("salary", 3500)
+            .property("deptId", DEPT_ID_DEV)
+            .get()
         assertEquals(
-            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 0 departure. Salary: 3500.",
+            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 departure. Salary: 3500.",
             employee.toString()
         )
+
+        val company: String = ReflectManager.reflect(employee).property("company").get()
+        assertEquals("Leo Group", company)
     }
 
     @Test

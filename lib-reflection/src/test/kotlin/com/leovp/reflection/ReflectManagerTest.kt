@@ -159,6 +159,15 @@ class ReflectManagerTest {
             .get()
         assertEquals("Michael do [Count Number] with exceptResult: 888.", actionMethodResult)
 
+        ReflectManager.reflect(person).method("increaseAge")
+        assertEquals(25, person.age)
+
+        val privateMethod: String = ReflectManager
+            .reflect(Person::class)
+            .newInstance("Tom", 'M', 26)
+            .method("secretMethod", "<SECRET>").get()
+        assertEquals("Tom does [secret method](<SECRET>).", privateMethod)
+
         // val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
         // val name: String = ReflectManager.reflect(person).property("name").get()
         // assertEquals("Michael", name)
@@ -540,6 +549,10 @@ class ReflectManagerTest {
             private set
         var age: Int = age
             private set
+
+        private fun secretMethod(content: String): String {
+            return "$name does [secret method]($content)."
+        }
 
         fun say(content: String): String {
             return "$name says: $content"

@@ -3,12 +3,23 @@
 package com.leovp.reflection
 
 import kotlin.reflect.KClass
+import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.declaredMemberExtensionFunctions
+import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.full.functions
 import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.memberExtensionFunctions
+import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.staticFunctions
+import kotlin.reflect.full.staticProperties
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
 import kotlin.test.assertEquals
@@ -137,6 +148,23 @@ class ReflectManagerTest {
     }
 
     @Test
+    fun function() {
+        val person = Person("Michael", 'M', 24)
+        val sayResult: String = ReflectManager.reflect(person).method("say", "Hello World.").get()
+        assertEquals("Michael says: Hello World.", sayResult)
+
+        val actionMethodResult: String = ReflectManager
+            .reflect(person)
+            .method("action", "Count Number", 888)
+            .get()
+        assertEquals("Michael do [Count Number] with exceptResult: 888.", actionMethodResult)
+
+        // val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
+        // val name: String = ReflectManager.reflect(person).property("name").get()
+        // assertEquals("Michael", name)
+    }
+
+    @Test
     fun newInstanceByKotlinReflect() {
         //  ==============================
 
@@ -241,7 +269,91 @@ class ReflectManagerTest {
         // PUBLIC name: kotlin.String --> Michael
         // PUBLIC sex: kotlin.Char --> M
 
-        println("==============================")
+        println("====================")
+        println("= staticProperties =")
+        println("====================")
+
+        Person::class.staticProperties.forEach { prop ->
+            // Allow to get private property value.
+            if (!prop.isAccessible) prop.isAccessible = true
+            println("${prop.visibility} ${prop.name}: ${prop.returnType}")
+        }
+    }
+
+    @Test
+    fun memberByKotlinReflection() {
+        // Returns a Method object that reflects the specified public member method of the class or interface represented
+        // by this Class object. The name parameter is a String specifying the simple name of the desired method.
+        // The parameterTypes parameter is an array of Class objects that identify the method's formal parameter types,
+        // in declared order. If parameterTypes is null, it is treated as if it were an empty array.
+        // If the name is " " or " " a NoSuchMethodException is raised. Otherwise,
+        // the method to be reflected is determined by the algorithm that follows.
+        // Let C be the class or interface represented by this object:
+        Person::class.java.getMethod("say", String::class.java)
+        // Returns a Method object that reflects the specified declared method of the class or
+        // interface represented by this Class object.
+        // The name parameter is a String that specifies the simple name of the desired method,
+        // and the parameterTypes parameter is an array of Class objects that identify the method's formal parameter types,
+        // in declared order. If more than one method with the same parameter types is declared in a class,
+        // and one of these methods has a return type that is more specific than any of the others,
+        // that method is returned; otherwise one of the methods is chosen arbitrarily.
+        // If the name is "<init>"or "<clinit>" a NoSuchMethodException is raised.
+        // If this Class object represents an array type, then this method does not find the clone() method.
+        Person::class.java.getDeclaredMethod("say", String::class.java)
+
+        // All functions and properties accessible in this class,
+        // including those declared in this class and all of its superclasses.
+        // Does not include constructors.
+        Person::class.members
+        // Returns all functions and properties declared in this class.
+        // Does not include members declared in supertypes.
+        Person::class.declaredMembers
+
+        // Returns all functions declared in this class,
+        // including all non-static methods declared in the class and the superclasses,
+        // as well as static methods declared in the class.
+        Person::class.functions
+        // Returns all functions declared in this class. If this is a Java class,
+        // it includes all non-static methods (both extensions and non-extensions) declared
+        // in the class and the superclasses, as well as static methods declared in the class.
+        Person::class.declaredFunctions
+
+        // Returns non-extension non-static functions declared in this class and all of its superclasses.
+        Person::class.memberFunctions
+        // Returns non-extension non-static functions declared in this class.
+        Person::class.declaredMemberFunctions
+
+        // Returns extension functions declared in this class and all of its superclasses.
+        Person::class.memberExtensionFunctions
+        Person::class.declaredMemberExtensionFunctions
+
+        // Returns static functions declared in this class.
+        Person::class.staticFunctions
+
+        // Returns a KClass instance representing the companion object of a given class,
+        // or null if the class doesn't have a companion object.
+        Person::class.companionObject
+
+        // Returns an instance of the companion object of a given class,
+        // or null if the class doesn't have a companion object.
+        Person::class.companionObjectInstance
+
+        println("====================")
+        println("= staticFunctions ==")
+        println("====================")
+
+        Employee::class.staticFunctions.forEach { func ->
+            if (!func.isAccessible) func.isAccessible = true
+            println("${func.visibility} ${func.name}: ${func.returnType}")
+        }
+
+        println("=== End of staticFunctions ===")
+
+        val hrPerson = Person("Chris", 'F', 20)
+        val hr = HR("e2021041910000", hrPerson)
+
+        val employee = Employee("e2021041910194", DEPT_ID_DEV, Person("Michael", 'M', 38))
+        employee.assignSalary(2200, hr)
 
         // Returns non-extension properties declared in this class.
         val employeeOnlySelfProperties = employee::class.declaredMemberProperties
@@ -258,17 +370,88 @@ class ReflectManagerTest {
         // PRIVATE salary: kotlin.Int --> 2200
 
         println("==============================")
+        println("===== declaredMembers ========")
+        println("==============================")
 
         // Returns all functions and properties declared in this class. Does not include members declared in supertypes.
-        val employeeAllMembers = employee::class.declaredMembers
+        val employeeAllMembers = Employee::class.declaredMembers
         employeeAllMembers.forEach { callable ->
             // Allow to get private property value.
             if (!callable.isAccessible) callable.isAccessible = true
-            println("${callable.visibility} ${callable.name}: ${callable.returnType}\n" +
+            println("${callable.visibility} ${callable.name}: ${callable.returnType} -> Unit: ${callable.returnType == Unit::class.createType()}" +
                 "\ninstanceParameter--> ${callable.instanceParameter}" +
                 "\nvalueParameters  -->${callable.valueParameters}" +
                 "\nparameters       -->${callable.parameters}")
-            println("--------------------")
+            println("--------------------\n")
+        }
+
+        println("==============================")
+        println("========== members ===========")
+        println("==============================")
+
+        // All functions and properties accessible in this class,
+        // including those declared in this class and all of its superclasses.
+        // Does not include constructors.
+        val employeeMembers = Employee::class.members
+        employeeMembers.forEach { member ->
+            if (!member.isAccessible) member.isAccessible = true
+            println("${member.visibility} ${member.name}: ${member.returnType}" +
+                "\ninstanceParameter--> ${member.instanceParameter}" +
+                "\nvalueParameters  -->${member.valueParameters}" +
+                "\nparameters       -->${member.parameters}")
+            println("--------------------\n")
+        }
+
+        println("==============================")
+        println("==== declaredFunctions =======")
+        println("==============================")
+
+        // Returns all functions and properties declared in this class. Does not include members declared in supertypes.
+        val employeeDeclaredFunctions = Employee::class.declaredFunctions
+        employeeDeclaredFunctions.forEach { callable ->
+            // Allow to get private property value.
+            if (!callable.isAccessible) callable.isAccessible = true
+            println("${callable.visibility} ${callable.name}: ${callable.returnType}" +
+                "\ninstanceParameter--> ${callable.instanceParameter}" +
+                "\nvalueParameters  -->${callable.valueParameters}" +
+                "\nparameters       -->${callable.parameters}")
+            println("--------------------\n")
+        }
+
+        println("==============================")
+        println("======== functions ===========")
+        println("==============================")
+
+        // Returns all functions declared in this class,
+        // including all non-static methods declared in the class and the superclasses,
+        // as well as static methods declared in the class.
+        val employeeFunctions = Employee::class.functions
+        employeeFunctions.forEach { function ->
+            if (!function.isAccessible) function.isAccessible = true
+            println("${function.visibility} ${function.name}: ${function.returnType}" +
+                "\ntypeParameters--> ${function.typeParameters}" +
+                "\ninstanceParameter--> ${function.instanceParameter}" +
+                "\nvalueParameters  -->${function.valueParameters}" +
+                "\nparameters       -->${function.parameters}")
+            println("--------------------\n")
+        }
+
+        println("==============================")
+        println("== companionObjectInstance ===")
+        println("==============================")
+
+        // Returns an instance of the companion object of a given class,
+        // or null if the class doesn't have a companion object.
+        val companionObjectInstance: Person.Companion = Person::class.companionObjectInstance as Person.Companion
+        println("companionObjectInstance=$companionObjectInstance")
+        companionObjectInstance.sayHi()
+        companionObjectInstance.showClothes(true)
+
+        val companionObject: KClass<*>? = Person::class.companionObject
+        companionObject?.let { companion ->
+            val func = companion.functions.first { it.name == "showClothes" }
+            val companionInstance = Person::class.companionObjectInstance
+            func.call(companionInstance, false)
         }
     }
 
@@ -339,11 +522,11 @@ class ReflectManagerTest {
         }
 
         fun startWorking() {
-            action("${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.")
+            action("${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.", 10)
         }
 
         fun stopWorking(time: Long) {
-            action("${p.name}[$employeeId] stops working at $time.")
+            action("${p.name}[$employeeId] stops working at $time.", -10)
         }
 
         override fun toString(): String =
@@ -358,12 +541,12 @@ class ReflectManagerTest {
         var age: Int = age
             private set
 
-        fun say(content: String) {
-            println("$name says: $content")
+        fun say(content: String): String {
+            return "$name says: $content"
         }
 
-        fun action(action: String) {
-            println("$name do $action.")
+        fun action(action: String, exceptResult: Int): String {
+            return "$name do [$action] with exceptResult: $exceptResult."
         }
 
         fun changeName(newName: String) {
@@ -381,6 +564,20 @@ class ReflectManagerTest {
         override fun alive(): Boolean = true
 
         override fun toString(): String = "$name[$sex] is $age years old."
+
+        companion object {
+            const val NATION = "China"
+
+            private const val SECRET_ID = "Secret ID"
+
+            fun showClothes(all: Boolean) {
+                println("Someone shows all($all) clothes.")
+            }
+
+            fun sayHi() {
+                println("Someone says hi.")
+            }
+        }
     }
 
     open class Creature {

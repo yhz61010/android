@@ -177,26 +177,19 @@ class ReflectManagerTest {
         // constructor param size=5 []
         // constructor param size=3 []
 
-        // employeeAmyConstructors.forEach { constructor ->
-        //     println("constructor param size=${constructor.parameters.size} name=${constructor.name}")
-        // }
+        employeeAmyConstructors.forEach { constructor ->
+            println(
+                "constructor param size=${constructor.parameters.size} " +
+                    "name=${constructor.name} " +
+                    "${constructor.parameters.map { p -> "argument type=${p.type} -> argument name=${p.name}" }}"
+            )
+        }
         // Result:
-        // constructor param size=1 name=<init>
-        // constructor param size=2 name=<init>
-        // constructor param size=2 name=<init>
-        // constructor param size=5 name=<init>
-        // constructor param size=3 name=<init>
-
-        // employeeAmyConstructors.forEach { constructor ->
-        //     println("constructor param size=${constructor.parameters.size} " +
-        //         "${constructor.parameters.map { p -> "property type=${p.type} -> property name=${p.name}" }}")
-        // }
-        // Result:
-        // constructor param size=1 [property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.String -> property name=employeeId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=2 [property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
-        // constructor param size=5 [property type=kotlin.String -> property name=userName, property type=kotlin.Char -> property name=sex, property type=kotlin.Int -> property name=age, property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId]
-        // constructor param size=3 [property type=kotlin.String -> property name=employeeId, property type=kotlin.Int -> property name=deptId, property type=com.leovp.reflection.ReflectManagerTest.Person -> property name=p]
+        // constructor param size=1 name=<init> [argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
+        // constructor param size=2 name=<init> [argument type=kotlin.String -> argument name=employeeId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
+        // constructor param size=2 name=<init> [argument type=kotlin.Int -> argument name=deptId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
+        // constructor param size=5 name=<init> [argument type=kotlin.String -> argument name=userName, argument type=kotlin.Char -> argument name=sex, argument type=kotlin.Int -> argument name=age, argument type=kotlin.String -> argument name=employeeId, argument type=kotlin.Int -> argument name=deptId]
+        // constructor param size=3 name=<init> [argument type=kotlin.String -> argument name=employeeId, argument type=kotlin.Int -> argument name=deptId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
     }
 
     @Test

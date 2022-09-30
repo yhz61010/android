@@ -6,7 +6,10 @@ import java.lang.reflect.Field
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
 
@@ -79,8 +82,8 @@ class ReflectManager private constructor() {
          * @param obj The object.
          * @return The single [ReflectManager] instance.
          */
-        fun <T : Any> reflect(obj: T): ReflectManager {
-            return ReflectManager(obj::class, obj)
+        fun <T : Any> reflect(obj: T?): ReflectManager {
+            return ReflectManager(if (obj == null) Any::class else obj::class, obj)
         }
     }
 
@@ -104,7 +107,7 @@ class ReflectManager private constructor() {
                     return ReflectManager(type, constructor.call(*args))
                 }
             }
-            throw ReflectException("Not found any constructor.")
+            throw ReflectException("Not found any constructor with arguments: $types")
         } catch (e: NoSuchMethodException) {
             throw ReflectException(e)
         }
@@ -141,6 +144,39 @@ class ReflectManager private constructor() {
             getFinalField(name).set(obj, value)
         }
         return this
+    }
+
+    // ==================================
+    // ============= method =============
+    // ==================================
+
+    /**
+     * Invoke the method.
+     *
+     * @param name The name of method.
+     * @param args The args.
+     * @return The single {@link ReflectManager} instance.
+     * @throws ReflectException If reflect unsuccessfully.
+     */
+    fun method(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
+        val types = getArgsType(*args)
+        try {
+            val unitType = Unit::class.createType()
+            for (func in type.functions) {
+                if (func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+                    if (!func.isAccessible) func.isAccessible = true
+                    return if (func.returnType == unitType) {
+                        func.call(obj, *args)
+                        reflect(obj)
+                    } else {
+                        reflect(func.call(obj, *args))
+                    }
+                }
+            }
+            throw ReflectException("Not found any method named [$name].")
+        } catch (e: NoSuchMethodException) {
+            throw ReflectException(e)
+        }
     }
 
     // ==================================

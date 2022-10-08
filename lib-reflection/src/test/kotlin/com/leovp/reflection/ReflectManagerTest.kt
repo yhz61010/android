@@ -168,9 +168,16 @@ class ReflectManagerTest {
             .method("secretMethod", "<SECRET>").get()
         assertEquals("Tom does [secret method](<SECRET>).", privateMethod)
 
-        // val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
-        // val name: String = ReflectManager.reflect(person).property("name").get()
-        // assertEquals("Michael", name)
+        val showClothesResult: String = ReflectManager
+            .reflect(Person::class)
+            .newInstance("Michael", 'M', 22)
+            .method("showClothes", true).get()
+        assertEquals("Someone shows all(true) clothes.", showClothesResult)
+
+        ReflectManager
+            .reflect(Person::class)
+            .newInstance("Michael", 'M', 22)
+            .method("sayHi")
     }
 
     @Test
@@ -339,19 +346,48 @@ class ReflectManagerTest {
         // Returns static functions declared in this class.
         Person::class.staticFunctions
 
+        println("=====================")
+        println("== companionObject ==")
+        println("=====================")
+
         // Returns a KClass instance representing the companion object of a given class,
         // or null if the class doesn't have a companion object.
-        Person::class.companionObject
+        val co: KClass<*>? = Person::class.companionObject
+        co?.let {
+            co.declaredFunctions.forEach { func ->
+                if (!func.isAccessible) func.isAccessible = true
+                println("declaredFunctions-> ${func.visibility} ${func.name}: ${func.returnType}")
+            }
+            println(">>>>>=====================<<<<<")
+
+            co.functions.forEach { func ->
+                if (!func.isAccessible) func.isAccessible = true
+                println("functions-> ${func.visibility} ${func.name}: ${func.returnType}")
+            }
+            println(">>>>>=====================<<<<<")
+
+            co.declaredMembers.forEach { func ->
+                if (!func.isAccessible) func.isAccessible = true
+                println("declaredMembers-> ${func.visibility} ${func.name}: ${func.returnType}")
+            }
+            println(">>>>>=====================<<<<<")
+
+            co.members.forEach { func ->
+                if (!func.isAccessible) func.isAccessible = true
+                println("members-> ${func.visibility} ${func.name}: ${func.returnType}")
+            }
+            println(">>>>>=====================<<<<<")
+        }
 
         // Returns an instance of the companion object of a given class,
         // or null if the class doesn't have a companion object.
         Person::class.companionObjectInstance
 
-        println("====================")
-        println("= staticFunctions ==")
-        println("====================")
+        println("=====================")
+        println("== staticFunctions ==")
+        println("=====================")
 
-        Employee::class.staticFunctions.forEach { func ->
+        Person::class.staticFunctions.forEach { func ->
             if (!func.isAccessible) func.isAccessible = true
             println("${func.visibility} ${func.name}: ${func.returnType}")
         }
@@ -435,13 +471,28 @@ class ReflectManagerTest {
         // including all non-static methods declared in the class and the superclasses,
         // as well as static methods declared in the class.
         val employeeFunctions = Employee::class.functions
-        employeeFunctions.forEach { function ->
-            if (!function.isAccessible) function.isAccessible = true
-            println("${function.visibility} ${function.name}: ${function.returnType}" +
-                "\ntypeParameters--> ${function.typeParameters}" +
-                "\ninstanceParameter--> ${function.instanceParameter}" +
-                "\nvalueParameters  -->${function.valueParameters}" +
-                "\nparameters       -->${function.parameters}")
+        employeeFunctions.forEach { func ->
+            if (!func.isAccessible) func.isAccessible = true
+            println("${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Employee::class.isCompanion}" +
+                "\ntypeParameters--> ${func.typeParameters}" +
+                "\ninstanceParameter--> ${func.instanceParameter}" +
+                "\nvalueParameters  -->${func.valueParameters}" +
+                "\nparameters       -->${func.parameters}")
+            println("--------------------\n")
+        }
+
+        println("===============================")
+        println("===== Person functions ========")
+        println("===============================")
+
+        val personFunctions = Person::class.functions
+        personFunctions.forEach { func ->
+            if (!func.isAccessible) func.isAccessible = true
+            println("${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Person::class.isCompanion}" +
+                "\ntypeParameters--> ${func.typeParameters}" +
+                "\ninstanceParameter--> ${func.instanceParameter}" +
+                "\nvalueParameters  -->${func.valueParameters}" +
+                "\nparameters       -->${func.parameters}")
             println("--------------------\n")
         }
 
@@ -583,9 +634,7 @@ class ReflectManagerTest {
 
             private const val SECRET_ID = "Secret ID"
 
-            fun showClothes(all: Boolean) {
-                println("Someone shows all($all) clothes.")
-            }
+            fun showClothes(all: Boolean): String = "Someone shows all($all) clothes."
 
             fun sayHi() {
                 println("Someone says hi.")

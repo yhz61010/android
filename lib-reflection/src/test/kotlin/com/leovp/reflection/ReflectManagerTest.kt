@@ -2,6 +2,12 @@
 
 package com.leovp.reflection
 
+import com.leovp.reflection.testclass.Creature
+import com.leovp.reflection.testclass.DEPT_ID_DEV
+import com.leovp.reflection.testclass.Employee
+import com.leovp.reflection.testclass.HR
+import com.leovp.reflection.testclass.Person
+import com.leovp.reflection.testclass.PrivateClass
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
@@ -70,7 +76,10 @@ class ReflectManagerTest {
         val rfltCreature2 = ReflectManager.reflect(Creature::class.java).newInstance().get<Creature>()
         assertEquals("Get a new creature.", rfltCreature2.toString())
 
-        val rfltCreature3 = ReflectManager.reflect("com.leovp.reflection.ReflectManagerTest\$Creature").newInstance().get<Creature>()
+        val rfltCreature3 = ReflectManager
+            .reflect("com.leovp.reflection.testclass.Creature")
+            .newInstance()
+            .get<Creature>()
         assertEquals("Get a new creature.", rfltCreature3.toString())
 
         val rfltCreature4: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
@@ -85,7 +94,7 @@ class ReflectManagerTest {
         assertEquals("Man2[M] is 28 years old.", rfltPerson2.toString())
 
         val rfltPerson3: Person = ReflectManager
-            .reflect("com.leovp.reflection.ReflectManagerTest\$Person")
+            .reflect("com.leovp.reflection.testclass.Person")
             .newInstance("Woman1", 'F', 20)
             .get()
         assertEquals("Woman1[F] is 20 years old.", rfltPerson3.toString())
@@ -225,7 +234,8 @@ class ReflectManagerTest {
         assertNotNull(employeeHarry)
         assertIs<Employee>(employeeHarry)
         assertEquals(
-            "[Leo Group] Employee(Harry[M] is 21 years old.) with ID e0000001 works in 1000 departure. Salary: 0.",
+            "[Leo Group] Employee(Harry[M] is 21 years old.) " +
+                "with ID e0000001 works in 1000 departure. Salary: 0.",
             employeeHarry.toString()
         )
 
@@ -322,8 +332,9 @@ class ReflectManagerTest {
 
     @Test
     fun memberByKotlinReflection() {
-        // Returns a Method object that reflects the specified public member method of the class or interface represented
-        // by this Class object. The name parameter is a String specifying the simple name of the desired method.
+        // Returns a Method object that reflects the specified public member method of the class or
+        // interface represented by this Class object.
+        // The name parameter is a String specifying the simple name of the desired method.
         // The parameterTypes parameter is an array of Class objects that identify the method's formal parameter types,
         // in declared order. If parameterTypes is null, it is treated as if it were an empty array.
         // If the name is " " or " " a NoSuchMethodException is raised. Otherwise,
@@ -333,7 +344,8 @@ class ReflectManagerTest {
         // Returns a Method object that reflects the specified declared method of the class or
         // interface represented by this Class object.
         // The name parameter is a String that specifies the simple name of the desired method,
-        // and the parameterTypes parameter is an array of Class objects that identify the method's formal parameter types,
+        // and the parameterTypes parameter is an array of Class objects that
+        // identify the method's formal parameter types,
         // in declared order. If more than one method with the same parameter types is declared in a class,
         // and one of these methods has a return type that is more specific than any of the others,
         // that method is returned; otherwise one of the methods is chosen arbitrarily.
@@ -447,7 +459,8 @@ class ReflectManagerTest {
         employeeAllMembers.forEach { callable ->
             // Allow to get private property value.
             if (!callable.isAccessible) callable.isAccessible = true
-            println("${callable.visibility} ${callable.name}: ${callable.returnType} -> Unit: ${callable.returnType == Unit::class.createType()}" +
+            println("${callable.visibility} ${callable.name}: ${callable.returnType} " +
+                "-> Unit: ${callable.returnType == Unit::class.createType()}" +
                 "\ninstanceParameter--> ${callable.instanceParameter}" +
                 "\nvalueParameters  -->${callable.valueParameters}" +
                 "\nparameters       -->${callable.parameters}")
@@ -537,149 +550,5 @@ class ReflectManagerTest {
             val companionInstance = Person::class.companionObjectInstance
             func.call(companionInstance, false)
         }
-    }
-
-    // ==================================================
-    // ==================================================
-    // ==================================================
-
-    companion object {
-        const val DEPT_ID_HR = 100
-        const val DEPT_ID_DEV = 1000
-    }
-
-    class PrivateClass private constructor(private val paramA: Int, private var paramB: String) {
-        private constructor() : this(-1, "NA")
-
-        companion object {
-            fun of(paramA: Int, paramB: String): PrivateClass {
-                return PrivateClass(paramA, paramB)
-            }
-        }
-
-        override fun toString(): String {
-            return "Get a PrivateClass with paramA=$paramA paramB=$paramB."
-        }
-    }
-
-    class HR(employeeId: String, p: Person) : Employee(employeeId, DEPT_ID_HR, p) {
-        fun hirePerson(p: Person) {
-            println("HR $name hires $p.")
-        }
-    }
-
-    open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.name, p.sex, p.age) {
-        constructor(p: Person) : this("", 0, p)
-        constructor(employeeId: String, p: Person) : this(employeeId, 0, p)
-        constructor(deptId: Int, p: Person) : this("", deptId, p)
-        constructor(userName: String, sex: Char, age: Int, employeeId: String, deptId: Int) : this(employeeId,
-            deptId,
-            Person(userName, sex, age))
-
-        companion object {
-            const val COMPANY: String = "Leo Group"
-
-            fun sayHi(): String {
-                return "Employee said: Hi."
-            }
-
-            fun globalSay(content: String): String {
-                return "Employee said to global: $content"
-            }
-        }
-
-        val company: String = COMPANY
-
-        private var salary: Int = 0
-
-        var comment: String? = null
-
-        var employeeId: String = employeeId
-            private set
-
-        var deptId: Int = deptId
-            private set
-
-        fun assignEmployeeId(newId: String) {
-            employeeId = newId
-        }
-
-        fun assignDeptId(newDeptId: Int) {
-            deptId = newDeptId
-        }
-
-        fun assignSalary(newSalary: Int, assigner: Employee) {
-            salary = newSalary
-            println("The ${assigner.name} assigns salary $newSalary to $name.")
-        }
-
-        fun startWorking(): String {
-            return action(
-                "${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.",
-                10
-            )
-        }
-
-        fun stopWorking(time: Long): String {
-            return action("${p.name}[$employeeId] stops working at $time.", -10)
-        }
-
-        override fun toString(): String =
-            "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
-    }
-
-    open class Person(name: String, sex: Char, age: Int) : Creature() {
-        var name: String = name
-            private set
-        var sex: Char = sex
-            private set
-        var age: Int = age
-            private set
-
-        private fun secretMethod(content: String): String {
-            return "$name does [secret method]($content)."
-        }
-
-        fun say(content: String): String {
-            return "$name says: $content"
-        }
-
-        fun action(action: String, exceptResult: Int): String {
-            return "$name do [$action] with exceptResult: $exceptResult."
-        }
-
-        fun changeName(newName: String) {
-            name = newName
-        }
-
-        fun setAge(newAge: Int) {
-            age = newAge
-        }
-
-        fun increaseAge() {
-            age++
-        }
-
-        override fun alive(): Boolean = true
-
-        override fun toString(): String = "$name[$sex] is $age years old."
-
-        companion object {
-            const val NATION = "China"
-
-            private const val SECRET_ID = "Secret ID"
-
-            fun showClothes(all: Boolean): String = "Someone shows all($all) clothes."
-
-            fun sayHi() {
-                println("Someone says hi.")
-            }
-        }
-    }
-
-    open class Creature {
-        open fun alive(): Boolean = true
-
-        override fun toString(): String = "Get a new creature."
     }
 }

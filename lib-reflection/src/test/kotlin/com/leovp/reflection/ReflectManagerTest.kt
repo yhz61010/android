@@ -7,6 +7,7 @@ import com.leovp.reflection.testclass.DEPT_ID_DEV
 import com.leovp.reflection.testclass.DataClassOneArg
 import com.leovp.reflection.testclass.Employee
 import com.leovp.reflection.testclass.HR
+import com.leovp.reflection.testclass.JavaTestClass
 import com.leovp.reflection.testclass.Person
 import com.leovp.reflection.testclass.PrivateClass
 import kotlin.reflect.KClass
@@ -222,6 +223,41 @@ class ReflectManagerTest {
             .reflect(Employee::class)
             .method("globalSay", "New World").get()
         assertEquals("Employee said to global: New World", employeeInstanceGlobalSay)
+    }
+
+    // ========================================
+    // ========================================
+    // ========================================
+
+    @Test
+    fun javaNewInstance() {
+        val javaPerson1: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Java", 'M', 24)
+            .get()
+        assertEquals("""{name: "Java", sex: "M", age: 24}""", javaPerson1.toString())
+    }
+
+    @Test
+    fun javaFunction() {
+        val javaPerson1: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Java", 'M', 24)
+            .get()
+
+        val getSexInString1: String = ReflectManager
+            .reflect(javaPerson1)
+            .newInstance("JavaGirl", 'F', 18)
+            .method("getSexInString")
+            .get()
+        assertEquals("Female", getSexInString1)
+
+        val getSexInString2: String = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Java", 'M', 24)
+            .method("getSexInString")
+            .get()
+        assertEquals("Male", getSexInString2)
     }
 
     // ========================================

@@ -6,8 +6,10 @@ import java.lang.reflect.Field
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createType
-import kotlin.reflect.full.functions
+import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
@@ -31,6 +33,8 @@ class ReflectManager private constructor() {
     }
 
     companion object {
+        private val unitType = Unit::class.createType()
+
         /**
          * @param className The name of class.
          * @param classLoader The loader of class.
@@ -159,11 +163,26 @@ class ReflectManager private constructor() {
      * @throws ReflectException If reflect unsuccessfully.
      */
     fun method(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
-        val types = getArgsType(*args)
         try {
-            val unitType = Unit::class.createType()
-            for (func in type.functions) {
-                if (func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+            val types = getArgsType(*args)
+            type.companionObject?.let { companion ->
+                companion.declaredFunctions.firstOrNull { func ->
+                    func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)
+                }?.let { func ->
+                    if (!func.isAccessible) func.isAccessible = true
+                    val companionInstance = type.companionObjectInstance
+                    return if (func.returnType == unitType) {
+                        func.call(companionInstance, *args)
+                        reflect(companionInstance)
+                    } else {
+                        reflect(func.call(companionInstance, *args))
+                    }
+                }
+            }
+
+            for (func in type.declaredFunctions) {
+                if (func.name == name &&
+                    matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
                     if (!func.isAccessible) func.isAccessible = true
                     return if (func.returnType == unitType) {
                         func.call(obj, *args)
@@ -238,6 +257,20 @@ class ReflectManager private constructor() {
         if (!finalField.isAccessible) finalField.isAccessible = true
         return finalField
     }
+
+    // private fun getFunctions(func: KFunction<*>, name: String, vararg args: Any? = arrayOfNulls<Any>(0)) {
+    //     val types = getArgsType(*args)
+    //     if (func.name == name &&
+    //         matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+    //         if (!func.isAccessible) func.isAccessible = true
+    //         return if (func.returnType == unitType) {
+    //             func.call(obj, *args)
+    //             reflect(obj)
+    //         } else {
+    //             reflect(func.call(obj, *args))
+    //         }
+    //     }
+    // }
 
     // =================================
     // =========== Exception ===========

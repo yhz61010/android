@@ -4,6 +4,7 @@ package com.leovp.reflection
 
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.companionObject
@@ -164,35 +165,11 @@ class ReflectManager private constructor() {
      */
     fun method(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         try {
-            val types = getArgsType(*args)
             type.companionObject?.let { companion ->
-                companion.declaredFunctions.firstOrNull { func ->
-                    func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)
-                }?.let { func ->
-                    if (!func.isAccessible) func.isAccessible = true
-                    val companionInstance = type.companionObjectInstance
-                    return if (func.returnType == unitType) {
-                        func.call(companionInstance, *args)
-                        reflect(companionInstance)
-                    } else {
-                        reflect(func.call(companionInstance, *args))
-                    }
-                }
+                val result = getFunctions(type.companionObjectInstance, companion.declaredFunctions, name, *args)
+                if (result != null) return result
             }
-
-            for (func in type.declaredFunctions) {
-                if (func.name == name &&
-                    matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
-                    if (!func.isAccessible) func.isAccessible = true
-                    return if (func.returnType == unitType) {
-                        func.call(obj, *args)
-                        reflect(obj)
-                    } else {
-                        reflect(func.call(obj, *args))
-                    }
-                }
-            }
-            throw ReflectException("Not found any method named [$name].")
+            return getFunctions(obj, type.declaredFunctions, name, *args) ?: throw ReflectException("Not found any method named [$name].")
         } catch (e: NoSuchMethodException) {
             throw ReflectException(e)
         }
@@ -258,19 +235,26 @@ class ReflectManager private constructor() {
         return finalField
     }
 
-    // private fun getFunctions(func: KFunction<*>, name: String, vararg args: Any? = arrayOfNulls<Any>(0)) {
-    //     val types = getArgsType(*args)
-    //     if (func.name == name &&
-    //         matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
-    //         if (!func.isAccessible) func.isAccessible = true
-    //         return if (func.returnType == unitType) {
-    //             func.call(obj, *args)
-    //             reflect(obj)
-    //         } else {
-    //             reflect(func.call(obj, *args))
-    //         }
-    //     }
-    // }
+    private fun getFunctions(
+        `object`: Any?,
+        functions: Collection<KFunction<*>>,
+        name: String,
+        vararg args: Any? = arrayOfNulls<Any>(0)
+    ): ReflectManager? {
+        val types = getArgsType(*args)
+        functions.firstOrNull { func ->
+            func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)
+        }?.let { func ->
+            if (!func.isAccessible) func.isAccessible = true
+            return if (func.returnType == unitType) {
+                func.call(`object`, *args)
+                reflect(`object`)
+            } else {
+                reflect(func.call(`object`, *args))
+            }
+        }
+        return null
+    }
 
     // =================================
     // =========== Exception ===========

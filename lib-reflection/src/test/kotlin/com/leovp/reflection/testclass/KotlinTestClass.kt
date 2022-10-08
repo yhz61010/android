@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.reflection.testclass
 
 /**
@@ -6,6 +8,9 @@ package com.leovp.reflection.testclass
  */
 internal const val DEPT_ID_HR = 100
 internal const val DEPT_ID_DEV = 1000
+
+data class DataClassOneArg(val arg1: String)
+data class DataClassTwoArg(val arg1: String, private val num: Int)
 
 class PrivateClass private constructor(private val paramA: Int, private var paramB: String) {
     private constructor() : this(-1, "NA")

@@ -4,6 +4,7 @@ package com.leovp.reflection
 
 import com.leovp.reflection.testclass.Creature
 import com.leovp.reflection.testclass.DEPT_ID_DEV
+import com.leovp.reflection.testclass.DataClassOneArg
 import com.leovp.reflection.testclass.Employee
 import com.leovp.reflection.testclass.HR
 import com.leovp.reflection.testclass.Person
@@ -76,10 +77,10 @@ class ReflectManagerTest {
         val rfltCreature2 = ReflectManager.reflect(Creature::class.java).newInstance().get<Creature>()
         assertEquals("Get a new creature.", rfltCreature2.toString())
 
-        val rfltCreature3 = ReflectManager
+        val rfltCreature3: Any = ReflectManager
             .reflect("com.leovp.reflection.testclass.Creature")
             .newInstance()
-            .get<Creature>()
+            .get()
         assertEquals("Get a new creature.", rfltCreature3.toString())
 
         val rfltCreature4: Creature = ReflectManager.reflect(rfltCreature1).newInstance().get()
@@ -93,7 +94,7 @@ class ReflectManagerTest {
         val rfltPerson2 = ReflectManager.reflect(Person::class.java).newInstance("Man2", 'M', 28).get<Person>()
         assertEquals("Man2[M] is 28 years old.", rfltPerson2.toString())
 
-        val rfltPerson3: Person = ReflectManager
+        val rfltPerson3: Any = ReflectManager
             .reflect("com.leovp.reflection.testclass.Person")
             .newInstance("Woman1", 'F', 20)
             .get()
@@ -101,6 +102,16 @@ class ReflectManagerTest {
 
         val rfltPerson4: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
         assertEquals("Woman2[F] is 19 years old.", rfltPerson4.toString())
+
+        val dataClass1: DataClassOneArg = ReflectManager.reflect(DataClassOneArg::class).newInstance("DC1").get()
+        assertEquals("DataClassOneArg(arg1=DC1)", dataClass1.toString())
+
+        val dataClass2: Any = ReflectManager
+            .reflect("com.leovp.reflection.testclass.DataClassTwoArg")
+            .newInstance("DC2", 20021008)
+            .get()
+        println("dataClass2=${dataClass2::class.java}")
+        assertEquals("DataClassTwoArg(arg1=DC2, num=20021008)", dataClass2.toString())
     }
 
     @Test
@@ -212,6 +223,10 @@ class ReflectManagerTest {
             .method("globalSay", "New World").get()
         assertEquals("Employee said to global: New World", employeeInstanceGlobalSay)
     }
+
+    // ========================================
+    // ========================================
+    // ========================================
 
     @Test
     fun newInstanceByKotlinReflect() {

@@ -162,6 +162,15 @@ class ReflectManagerTest {
         ReflectManager.reflect(person).method("increaseAge")
         assertEquals(25, person.age)
 
+        val stopWorkingResult: String = ReflectManager
+            .reflect(Employee::class)
+            .newInstance("e00000001", DEPT_ID_DEV, person)
+            .method("stopWorking", 20221008100549).get()
+        assertEquals(
+            "Michael do [Michael[e00000001] stops working at 20221008100549.] with exceptResult: -10.",
+            stopWorkingResult
+        )
+
         val privateMethod: String = ReflectManager
             .reflect(Person::class)
             .newInstance("Tom", 'M', 26)
@@ -176,8 +185,23 @@ class ReflectManagerTest {
 
         ReflectManager
             .reflect(Person::class)
-            .newInstance("Michael", 'M', 22)
+            .newInstance("John", 'M', 24)
             .method("sayHi")
+
+        val objInstanceShowClothesResult: String = ReflectManager
+            .reflect(Person::class)
+            .method("showClothes", false).get()
+        assertEquals("Someone shows all(false) clothes.", objInstanceShowClothesResult)
+
+        val employeeInstanceSayHi: String = ReflectManager
+            .reflect(Employee::class)
+            .method("sayHi").get()
+        assertEquals("Employee said: Hi.", employeeInstanceSayHi)
+
+        val employeeInstanceGlobalSay: String = ReflectManager
+            .reflect(Employee::class)
+            .method("globalSay", "New World").get()
+        assertEquals("Employee said to global: New World", employeeInstanceGlobalSay)
     }
 
     @Test
@@ -554,6 +578,14 @@ class ReflectManagerTest {
 
         companion object {
             const val COMPANY: String = "Leo Group"
+
+            fun sayHi(): String {
+                return "Employee said: Hi."
+            }
+
+            fun globalSay(content: String): String {
+                return "Employee said to global: $content"
+            }
         }
 
         val company: String = COMPANY
@@ -581,12 +613,15 @@ class ReflectManagerTest {
             println("The ${assigner.name} assigns salary $newSalary to $name.")
         }
 
-        fun startWorking() {
-            action("${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.", 10)
+        fun startWorking(): String {
+            return action(
+                "${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.",
+                10
+            )
         }
 
-        fun stopWorking(time: Long) {
-            action("${p.name}[$employeeId] stops working at $time.", -10)
+        fun stopWorking(time: Long): String {
+            return action("${p.name}[$employeeId] stops working at $time.", -10)
         }
 
         override fun toString(): String =

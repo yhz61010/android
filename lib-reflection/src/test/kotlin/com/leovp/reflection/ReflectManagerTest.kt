@@ -8,6 +8,7 @@ import com.leovp.reflection.testclass.DataClassOneArg
 import com.leovp.reflection.testclass.Employee
 import com.leovp.reflection.testclass.HR
 import com.leovp.reflection.testclass.JavaTestClass
+import com.leovp.reflection.testclass.JavaTestClass.NoArgClass
 import com.leovp.reflection.testclass.Person
 import com.leovp.reflection.testclass.PrivateClass
 import kotlin.reflect.KClass
@@ -236,6 +237,15 @@ class ReflectManagerTest {
             .newInstance("Java", 'M', 24)
             .get()
         assertEquals("""{name: "Java", sex: "M", age: 24}""", javaPerson1.toString())
+
+        val javaPerson2: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Girl", 'F')
+            .get()
+        assertEquals("""{name: "Girl", sex: "F", age: -1}""", javaPerson2.toString())
+
+        val noArgClass: NoArgClass = ReflectManager.reflect(NoArgClass::class).newInstance().get()
+        assertEquals("Got a NoArgClass.", noArgClass.toString())
     }
 
     @Test
@@ -258,6 +268,21 @@ class ReflectManagerTest {
             .method("getSexInString")
             .get()
         assertEquals("Male", getSexInString2)
+
+        val noArgClass: NoArgClass = ReflectManager.reflect(NoArgClass::class).newInstance().get()
+        noArgClass.secret = 10010
+        assertEquals(10010, noArgClass.secret)
+
+        val fixedCode = ReflectManager.reflect(NoArgClass::class).newInstance().method("getFixedCode").get<Int>()
+        assertEquals(10086, fixedCode)
+
+        val javaPerson2: JavaTestClass.JavaPerson =  ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Man", 'M', 23)
+            .method("setSex", 'F')
+            .get()
+        assertEquals('F', javaPerson2.sex)
+        assertEquals("""{name: "Man", sex: "F", age: 23}""", javaPerson2.toString())
     }
 
     // ========================================

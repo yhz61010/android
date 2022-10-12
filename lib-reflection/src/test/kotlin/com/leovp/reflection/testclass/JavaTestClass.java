@@ -51,7 +51,10 @@ public class JavaTestClass {
         @SuppressWarnings("FieldCanBeLocal")
         private int onlyPrivate = 1234;
 
+        private static final String NO_NAME = "No Name";
+        public static final String PUBLIC_NAME = "Public Name";
 
+        public String openField = "Open Field";
 
         public String getSexInString() {
             switch (sex) {

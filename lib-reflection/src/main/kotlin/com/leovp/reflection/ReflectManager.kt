@@ -193,7 +193,7 @@ class ReflectManager private constructor() {
      * Get the result.
      *
      * @param <T> The value type.
-     * @return the result
+     * @return The result.
      */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> get(): T {

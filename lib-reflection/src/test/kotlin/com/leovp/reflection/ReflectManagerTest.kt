@@ -250,7 +250,23 @@ class ReflectManagerTest {
 
     @Test
     fun javaField() {
+        val javaPerson1: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Kotlin", 'M', 23)
+            .get()
+        assertEquals("""{name: "Kotlin", sex: "M", age: 23}""", javaPerson1.toString())
 
+        val javaPerson1Name: String = ReflectManager.reflect(javaPerson1).property("name").get()
+        assertEquals("Kotlin", javaPerson1Name)
+
+        val javaPerson1OpenField: String = ReflectManager.reflect(javaPerson1).property("openField").get()
+        assertEquals("Open Field", javaPerson1OpenField)
+
+        val javaPerson1PublicStatic: String = ReflectManager.reflect(javaPerson1).property("PUBLIC_NAME").get()
+        assertEquals("Public Name", javaPerson1PublicStatic)
+
+        val javaPerson1PrivateStatic: String = ReflectManager.reflect(javaPerson1).property("NO_NAME").get()
+        assertEquals("No Name", javaPerson1PrivateStatic)
     }
 
     @Test

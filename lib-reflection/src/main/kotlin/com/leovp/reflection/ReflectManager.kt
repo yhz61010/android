@@ -153,20 +153,27 @@ class ReflectManager private constructor() {
 
     /**
      * Set the property with specified value.
-     * This method can also set `val` value.
+     * This method can also set `val` value or `final` filed for Java.
+     *
+     * However, `static final` field in Java can't be modified.
      *
      * @param name The name of property.
      * @param value The value.
      * @return The single {@link ReflectManager} instance.
      */
     fun property(name: String, value: Any?): ReflectManager {
-        val prop = getProperty(name)
+        var prop: KProperty1<out Any, *>? = null
+        try {
+            prop = getProperty(name)
+        } catch (e: IllegalArgumentException) {
+            setFinalField(name, value)
+            return this
+        }
         if (prop is KMutableProperty<*>) {
             prop.setter.call(obj, value)
         } else {
-            val finalField = getFinalField(name)
-            requireNotNull(finalField) { "Can't find field $finalField." }
-            finalField.set(obj, value)
+            // Allow to change `val` property value.
+            setFinalField(name, value)
         }
         return this
     }
@@ -265,6 +272,13 @@ class ReflectManager private constructor() {
             return finalField
         }
         return null
+    }
+
+    private fun setFinalField(name: String, value: Any?) {
+        // Allow to change `val` property value.
+        val finalField = getFinalField(name)
+        requireNotNull(finalField) { "Can't find field $finalField." }
+        finalField.set(obj, value)
     }
 
     private fun callJavaStaticFunction(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager? {

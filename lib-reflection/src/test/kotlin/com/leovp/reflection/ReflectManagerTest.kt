@@ -262,14 +262,46 @@ class ReflectManagerTest {
         val javaPerson1OpenField: String = ReflectManager.reflect(javaPerson1).property("openField").get()
         assertEquals("Open Field", javaPerson1OpenField)
 
-        val javaPerson1PublicStatic: String = ReflectManager.reflect(javaPerson1).property("PUBLIC_NAME").get()
+
+        val rfltPerson1: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Reflected Person", 'F', 18)
+            .get()
+        val javaPerson1PublicStatic: String = ReflectManager.reflect(rfltPerson1).property("PUBLIC_NAME").get()
         assertEquals("Public Name", javaPerson1PublicStatic)
 
-        val javaPerson1PrivateStatic: String = ReflectManager.reflect(javaPerson1).property("NO_NAME").get()
+        val javaPerson1PrivateStatic: String = ReflectManager.reflect(rfltPerson1).property("NO_NAME").get()
         assertEquals("No Name", javaPerson1PrivateStatic)
 
-        ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_NAME", "Modified PUBLIC NAME")
-        assertEquals("Modified PUBLIC NAME", JavaTestClass.JavaPerson.PUBLIC_NAME)
+        val rfltPersonName: String = ReflectManager.reflect(rfltPerson1).property("name").get()
+        assertEquals("Reflected Person", rfltPersonName)
+
+        val javaPerson1PublicFinal: String = ReflectManager.reflect(rfltPerson1).property("PUBLIC_FINAL").get()
+        assertEquals("Public Final", javaPerson1PublicFinal)
+
+        val javaPerson1PrivateFinal: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
+        assertEquals("Private Final", javaPerson1PrivateFinal)
+
+        // ReflectManager.reflect(javaPerson1).property("PUBLIC_NAME", "Modified PUBLIC NAME")
+        // assertEquals("Modified PUBLIC NAME", JavaTestClass.JavaPerson.PUBLIC_NAME)
+        // will cause the following exception:
+        // Can not set static final java.lang.String field com.leovp.reflection.testclass.JavaTestClass$JavaPerson.PUBLIC_NAME to java.lang.String
+        // java.lang.IllegalAccessException: Can not set static final java.lang.String field com.leovp.reflection.testclass.JavaTestClass$JavaPerson.PUBLIC_NAME to java.lang.String
+        // 	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwFinalFieldIllegalAccessException(UnsafeFieldAccessorImpl.java:76)
+        // 	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwFinalFieldIllegalAccessException(UnsafeFieldAccessorImpl.java:80)
+        // 	at java.base/jdk.internal.reflect.UnsafeQualifiedStaticObjectFieldAccessorImpl.set(UnsafeQualifiedStaticObjectFieldAccessorImpl.java:77)
+
+        val rfltPerson2: JavaTestClass.JavaPerson = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Reflected Person", 'F', 18)
+            .get()
+
+        ReflectManager.reflect(rfltPerson2).property("PUBLIC_FINAL", "Modified public final")
+        assertEquals("Modified public final", rfltPerson2.PUBLIC_FINAL)
+
+        ReflectManager.reflect(rfltPerson2).property("PRIVATE_FINAL", "Modified private final")
+        val privateFinal: String = ReflectManager.reflect(rfltPerson2).property("PRIVATE_FINAL").get()
+        assertEquals("Modified private final", privateFinal)
     }
 
     @Test

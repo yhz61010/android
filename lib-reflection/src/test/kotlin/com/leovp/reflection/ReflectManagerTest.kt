@@ -249,6 +249,11 @@ class ReflectManagerTest {
     }
 
     @Test
+    fun javaField() {
+
+    }
+
+    @Test
     fun javaFunction() {
         val javaPerson1: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)
@@ -276,13 +281,34 @@ class ReflectManagerTest {
         val fixedCode = ReflectManager.reflect(NoArgClass::class).newInstance().method("getFixedCode").get<Int>()
         assertEquals(10086, fixedCode)
 
-        val javaPerson2: JavaTestClass.JavaPerson =  ReflectManager
+        val javaPerson2: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)
             .newInstance("Man", 'M', 23)
             .method("setSex", 'F')
             .get()
         assertEquals('F', javaPerson2.sex)
         assertEquals("""{name: "Man", sex: "F", age: 23}""", javaPerson2.toString())
+
+        val newPrivateVal: Int = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .newInstance("Man", 'M')
+            .method("changeOnlyPrivate", 6789)
+            .get()
+        assertEquals(6789, newPrivateVal)
+
+        ReflectManager.reflect(NoArgClass::class.java).method("print", "Hello World.")
+
+        val javaStaticMethodResult: String = ReflectManager
+            .reflect(NoArgClass::class.java)
+            .method("say", "I'm sorry.")
+            .get()
+        assertEquals("NoArgClass say: I'm sorry.", javaStaticMethodResult)
+
+        val javaPrivateStaticMethodResult: String = ReflectManager
+            .reflect(NoArgClass::class.java)
+            .method("privateMessage", "Phone me later.")
+            .get()
+        assertEquals("PM: Phone me later.", javaPrivateStaticMethodResult)
     }
 
     // ========================================

@@ -3,6 +3,7 @@
 package com.leovp.reflection
 
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty
@@ -165,11 +166,20 @@ class ReflectManager private constructor() {
      */
     fun method(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         try {
+            // Call Kotlin class companion object method.
             type.companionObject?.let { companion ->
-                val result = getFunctions(type.companionObjectInstance, companion.declaredFunctions, name, *args)
+                val result = callFunctions(type.companionObjectInstance, companion.declaredFunctions, name, *args)
                 if (result != null) return result
             }
-            return getFunctions(obj, type.declaredFunctions, name, *args) ?: throw ReflectException("Not found any method named [$name].")
+            // Only call Java static method.
+            return try {
+                callJavaStaticFunction(name, *args)
+                    ?: throw NoSuchMethodException("Not found any Java static method [$name]")
+            } catch (e: NoSuchMethodException) {
+                // Call Kotlin class instance normal method.
+                callFunctions(obj, type.declaredFunctions, name, *args)
+                    ?: throw ReflectException("Not found any method named [$name].")
+            }
         } catch (e: NoSuchMethodException) {
             throw ReflectException(e)
         }
@@ -235,7 +245,28 @@ class ReflectManager private constructor() {
         return finalField
     }
 
-    private fun getFunctions(
+    private fun callJavaStaticFunction(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager? {
+        type.java.declaredMethods
+            .filter { method ->
+                if (!method.isAccessible) method.isAccessible = true
+                method.name == name && Modifier.isStatic(method.modifiers)
+            }
+            .firstOrNull { method ->
+                val types = getArgsType(*args)
+                matchArgsType(method.parameterTypes, types)
+            }?.let { javaMethod ->
+                return if (javaMethod.returnType == Void::class.java) {
+                    javaMethod.invoke(obj, *args)
+                    reflect(obj)
+                } else {
+                    reflect(javaMethod.invoke(obj, *args))
+                }
+            }
+
+        return null
+    }
+
+    private fun callFunctions(
         `object`: Any?,
         functions: Collection<KFunction<*>>,
         name: String,
@@ -255,6 +286,7 @@ class ReflectManager private constructor() {
         }
         return null
     }
+
 
     // =================================
     // =========== Exception ===========

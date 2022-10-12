@@ -262,7 +262,6 @@ class ReflectManagerTest {
         val javaPerson1OpenField: String = ReflectManager.reflect(javaPerson1).property("openField").get()
         assertEquals("Open Field", javaPerson1OpenField)
 
-
         val rfltPerson1: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)
             .newInstance("Reflected Person", 'F', 18)
@@ -282,14 +281,9 @@ class ReflectManagerTest {
         val javaPerson1PrivateFinal: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
         assertEquals("Private Final", javaPerson1PrivateFinal)
 
-        // ReflectManager.reflect(javaPerson1).property("PUBLIC_NAME", "Modified PUBLIC NAME")
+        // Attention: We can't modified `static final` field for Java.
+        // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_NAME", "Modified PUBLIC NAME")
         // assertEquals("Modified PUBLIC NAME", JavaTestClass.JavaPerson.PUBLIC_NAME)
-        // will cause the following exception:
-        // Can not set static final java.lang.String field com.leovp.reflection.testclass.JavaTestClass$JavaPerson.PUBLIC_NAME to java.lang.String
-        // java.lang.IllegalAccessException: Can not set static final java.lang.String field com.leovp.reflection.testclass.JavaTestClass$JavaPerson.PUBLIC_NAME to java.lang.String
-        // 	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwFinalFieldIllegalAccessException(UnsafeFieldAccessorImpl.java:76)
-        // 	at java.base/jdk.internal.reflect.UnsafeFieldAccessorImpl.throwFinalFieldIllegalAccessException(UnsafeFieldAccessorImpl.java:80)
-        // 	at java.base/jdk.internal.reflect.UnsafeQualifiedStaticObjectFieldAccessorImpl.set(UnsafeQualifiedStaticObjectFieldAccessorImpl.java:77)
 
         val rfltPerson2: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)

@@ -53,6 +53,7 @@ public class JavaTestClass {
 
         private static final String NO_NAME = "No Name";
         public static final String PUBLIC_NAME = "Public Name";
+        public static final Integer PUBLIC_STATIC_FINAL_INT = new Integer(10); // 10
 
         private final String PRIVATE_FINAL = "Private Final";
         public final String PUBLIC_FINAL = "Public Final";

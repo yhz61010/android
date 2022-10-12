@@ -137,32 +137,24 @@ class ReflectManager private constructor() {
             // Get java static field
             val staticField = getFinalField(name)
             requireNotNull(staticField) { "Can't find field $name." }
-            // if ((staticField.modifiers and Modifier.FINAL) == Modifier.FINAL) {
-            //     try {
-            //         val modifiersField = Field::class.java.getDeclaredField("modifiers")
-            //         modifiersField.isAccessible = true
-            //         modifiersField.setInt(staticField, staticField.modifiers and Modifier.FINAL.inv())
-            //     } catch (ignore: NoSuchFieldException) {
-            //         // runs in android will happen
-            //         staticField.isAccessible = true
-            //     }
-            // }
             return ReflectManager(staticField.type.kotlin, staticField.get(obj))
         }
     }
 
     /**
      * Set the property with specified value.
-     * This method can also set `val` value or `final` filed for Java.
+     * This method can also set `val` value or `final` filed field for Java.
      *
-     * However, `static final` field in Java can't be modified.
+     * **Attention:**
+     *
+     * We can't modified `static final` field for Java.
      *
      * @param name The name of property.
      * @param value The value.
      * @return The single {@link ReflectManager} instance.
      */
     fun property(name: String, value: Any?): ReflectManager {
-        var prop: KProperty1<out Any, *>? = null
+        val prop: KProperty1<out Any, *>?
         try {
             prop = getProperty(name)
         } catch (e: IllegalArgumentException) {
@@ -276,8 +268,16 @@ class ReflectManager private constructor() {
 
     private fun setFinalField(name: String, value: Any?) {
         // Allow to change `val` property value.
-        val finalField = getFinalField(name)
+        val finalField: Field? = getFinalField(name)
         requireNotNull(finalField) { "Can't find field $finalField." }
+        // try {
+        //     val modifiersField = Field::class.java.getDeclaredField("modifiers")
+        //     modifiersField.isAccessible = true
+        //     modifiersField.setInt(finalField, finalField.modifiers and Modifier.FINAL.inv())
+        // } catch (ignore: NoSuchFieldException) {
+        //     // runs in android will happen
+        //     finalField.isAccessible = true
+        // }
         finalField.set(obj, value)
     }
 

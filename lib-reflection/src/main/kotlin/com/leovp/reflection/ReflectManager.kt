@@ -130,8 +130,25 @@ class ReflectManager private constructor() {
      * @return The single {@link ReflectManager} instance.
      */
     fun property(name: String): ReflectManager {
-        val prop = getProperty(name)
-        return ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+        try {
+            val prop = getProperty(name)
+            return ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+        } catch (e: IllegalArgumentException) {
+            // Get java static field
+            val staticField = getFinalField(name)
+            requireNotNull(staticField) { "Can't find field $name." }
+            // if ((staticField.modifiers and Modifier.FINAL) == Modifier.FINAL) {
+            //     try {
+            //         val modifiersField = Field::class.java.getDeclaredField("modifiers")
+            //         modifiersField.isAccessible = true
+            //         modifiersField.setInt(staticField, staticField.modifiers and Modifier.FINAL.inv())
+            //     } catch (ignore: NoSuchFieldException) {
+            //         // runs in android will happen
+            //         staticField.isAccessible = true
+            //     }
+            // }
+            return ReflectManager(staticField.type.kotlin, staticField.get(obj))
+        }
     }
 
     /**
@@ -147,7 +164,9 @@ class ReflectManager private constructor() {
         if (prop is KMutableProperty<*>) {
             prop.setter.call(obj, value)
         } else {
-            getFinalField(name).set(obj, value)
+            val finalField = getFinalField(name)
+            requireNotNull(finalField) { "Can't find property $finalField." }
+            finalField.set(obj, value)
         }
         return this
     }
@@ -238,11 +257,14 @@ class ReflectManager private constructor() {
         return prop
     }
 
-    private fun getFinalField(name: String): Field {
+    private fun getFinalField(name: String): Field? {
         val finalField = type.java.getDeclaredField(name)
-        // Allow to get private property value.
-        if (!finalField.isAccessible) finalField.isAccessible = true
-        return finalField
+        if ((finalField.modifiers and Modifier.FINAL) == Modifier.FINAL) {
+            // Allow to get private property value.
+            if (!finalField.isAccessible) finalField.isAccessible = true
+            return finalField
+        }
+        return null
     }
 
     private fun callJavaStaticFunction(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager? {

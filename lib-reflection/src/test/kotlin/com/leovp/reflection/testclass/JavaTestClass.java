@@ -6,8 +6,21 @@ import androidx.annotation.NonNull;
  * Author: Michael Leo
  * Date: 2022/10/8 10:38
  */
+@SuppressWarnings({"unused", "MemberVisibilityCanBePrivate"})
 public class JavaTestClass {
     public static class NoArgClass {
+
+        public static void print(String content) {
+            System.out.println("NoArgClass print: " + content);
+        }
+
+        public static String say(String content) {
+            return "NoArgClass say: " + content;
+        }
+
+        private static String privateMessage(String content) {
+            return "PM: " + content;
+        }
 
         private Integer getFixedCode() {
             return 10086;
@@ -35,6 +48,11 @@ public class JavaTestClass {
         private char sex;
         private int age;
 
+        @SuppressWarnings("FieldCanBeLocal")
+        private int onlyPrivate = 1234;
+
+
+
         public String getSexInString() {
             switch (sex) {
                 case 'M':
@@ -54,6 +72,11 @@ public class JavaTestClass {
             this.name = name;
             this.sex = sex;
             this.age = age;
+        }
+
+        private int changeOnlyPrivate(int newVal) {
+            onlyPrivate = newVal;
+            return onlyPrivate;
         }
 
         public String getName() {

@@ -267,6 +267,9 @@ class ReflectManagerTest {
 
         val javaPerson1PrivateStatic: String = ReflectManager.reflect(javaPerson1).property("NO_NAME").get()
         assertEquals("No Name", javaPerson1PrivateStatic)
+
+        ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_NAME", "Modified PUBLIC NAME")
+        assertEquals("Modified PUBLIC NAME", JavaTestClass.JavaPerson.PUBLIC_NAME)
     }
 
     @Test

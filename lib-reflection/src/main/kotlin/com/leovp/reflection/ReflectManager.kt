@@ -165,7 +165,7 @@ class ReflectManager private constructor() {
             prop.setter.call(obj, value)
         } else {
             val finalField = getFinalField(name)
-            requireNotNull(finalField) { "Can't find property $finalField." }
+            requireNotNull(finalField) { "Can't find field $finalField." }
             finalField.set(obj, value)
         }
         return this

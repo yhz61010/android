@@ -106,17 +106,13 @@ class ReflectManager private constructor() {
     @Suppress("WeakerAccess")
     fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         val types = getArgsType(*args)
-        try {
-            for (constructor in type.constructors) {
-                if (matchArgsType(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
-                    if (!constructor.isAccessible) constructor.isAccessible = true
-                    return ReflectManager(type, constructor.call(*args))
-                }
+        for (constructor in type.constructors) {
+            if (matchArgsType(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+                if (!constructor.isAccessible) constructor.isAccessible = true
+                return ReflectManager(type, constructor.call(*args))
             }
-            throw ReflectException("Not found any constructor with arguments: $types")
-        } catch (e: NoSuchMethodException) {
-            throw ReflectException(e)
         }
+        throw ReflectException("Not found any constructor with arguments: $types")
     }
 
     // ==================================

@@ -101,7 +101,7 @@ class ReflectManager private constructor() {
      * Create and initialize a new instance.
      *
      * @param args The args.
-     * @return the single [ReflectManager] instance
+     * @return The single [ReflectManager] instance.
      */
     @Suppress("WeakerAccess")
     fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
@@ -127,7 +127,7 @@ class ReflectManager private constructor() {
      * Get the property.
      *
      * @param name The name of property.
-     * @return The single {@link ReflectManager} instance.
+     * @return The single [ReflectManager] instance.
      */
     fun property(name: String): ReflectManager {
         try {
@@ -145,9 +145,14 @@ class ReflectManager private constructor() {
      * Set the property with specified value.
      * This method can also set `val` value or `final` filed field for Java.
      *
+     * **Attention:**
+     *
+     * This [post](https://stackoverflow.com/a/14102192/1685062)
+     * gives you the reason that why only specified Java Static Field can be modified.
+     *
      * @param name The name of property.
      * @param value The value.
-     * @return The single {@link ReflectManager} instance.
+     * @return The single [ReflectManager] instance.
      */
     fun property(name: String, value: Any?): ReflectManager {
         val prop: KProperty1<out Any, *>?
@@ -175,7 +180,7 @@ class ReflectManager private constructor() {
      *
      * @param name The name of method.
      * @param args The args.
-     * @return The single {@link ReflectManager} instance.
+     * @return The single [ReflectManager] instance.
      * @throws ReflectException If reflect unsuccessfully.
      */
     fun method(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {

@@ -20,6 +20,8 @@ import kotlin.reflect.jvm.jvmErasure
 
 
 /**
+ * https://dwz.win/azW6
+ *
  * Author: Michael Leo
  * Date: 2022/7/28 09:49
  */
@@ -126,15 +128,26 @@ class ReflectManager private constructor() {
      *
      * @param name The name of property.
      * @return The single [ReflectManager] instance.
+     * @throws ReflectException If name of property doesn't exist.
      */
     fun property(name: String): ReflectManager {
+        val prop = getProperty(name)
         return try {
-            val prop = getProperty(name)
-            ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+            if (prop != null) {
+                ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+            } else {
+                // Get field by Java reflection.
+                val javaField = getFieldByJavaReflection(name)
+                ReflectManager(javaField.type.kotlin, javaField.get(obj))
+            }
+        } catch (e: IllegalAccessException) {
+            throw ReflectException(e)
         } catch (e: IllegalArgumentException) {
-            // Get field by Java reflection.
-            val javaField = getFieldByJavaReflection(name)
-            ReflectManager(javaField.type.kotlin, javaField.get(obj))
+            throw ReflectException(e)
+        } catch (e: NullPointerException) {
+            throw ReflectException(e)
+        } catch (e: ExceptionInInitializerError) {
+            throw ReflectException(e)
         }
     }
 
@@ -153,20 +166,26 @@ class ReflectManager private constructor() {
      * @return The single [ReflectManager] instance.
      */
     fun property(name: String, value: Any?): ReflectManager {
-        val prop: KProperty1<out Any, *>?
+        val prop: KProperty1<out Any, *>? = getProperty(name)
         try {
-            prop = getProperty(name)
-        } catch (e: IllegalArgumentException) {
-            getFieldByJavaReflection(name).set(obj, value)
-            return this
-        }
-        if (prop is KMutableProperty<*>) {
+            if (prop == null || prop !is KMutableProperty<*>) {
+                // If property not found in that class, try to find it in its all super classes.
+                // Note that, we can also change the `val` property value.
+                getFieldByJavaReflection(name).set(obj, value)
+                return this
+            }
+            // Set property if its type is KMutableProperty
             prop.setter.call(obj, value)
-        } else {
-            // Allow to change `val` property value.
-            getFieldByJavaReflection(name).set(obj, value)
+            return this
+        } catch (e: IllegalAccessException) {
+            throw ReflectException(e)
+        } catch (e: IllegalArgumentException) {
+            throw ReflectException(e)
+        } catch (e: NullPointerException) {
+            throw ReflectException(e)
+        } catch (e: ExceptionInInitializerError) {
+            throw ReflectException(e)
         }
-        return this
     }
 
     // ==================================
@@ -246,10 +265,9 @@ class ReflectManager private constructor() {
         }
     }
 
-    private fun getProperty(name: String): KProperty1<out Any, *> {
+    private fun getProperty(name: String): KProperty1<out Any, *>? {
         // Returns non-extension properties declared in this class and all of its superclasses.
-        val prop = type.memberProperties.firstOrNull { prop -> prop.name == name }
-        requireNotNull(prop) { "Can't find property $name." }
+        val prop = type.memberProperties.firstOrNull { prop -> prop.name == name } ?: return null
         // Allow to get private property value.
         if (!prop.isAccessible) prop.isAccessible = true
         return prop

@@ -53,6 +53,7 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
     }
 
     val company: String = COMPANY
+    private val privateValProp: String = "Private Val Prop"
 
     private var salary: Int = 0
 
@@ -103,6 +104,10 @@ open class Person(name: String, sex: Char, age: Int) : Creature() {
         private set
     var age: Int = age
         private set
+
+    val publicValPropForBaseClass: Int = 10010
+
+    private val privateValPropForBaseClass: Int = 20020
 
     private fun secretMethod(content: String): String {
         return "$name does [secret method]($content)."

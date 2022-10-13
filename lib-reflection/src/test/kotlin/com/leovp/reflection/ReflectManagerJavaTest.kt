@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
 /**
-  * Author: Michael Leo
-  * Date: 2022/10/13 09:52
-  */
+ * Author: Michael Leo
+ * Date: 2022/10/13 09:52
+ */
 // https://www.baeldung.com/junit-5-test-order
 @TestMethodOrder(MethodOrderer.MethodName::class)
 class ReflectManagerJavaTest {
@@ -68,9 +68,12 @@ class ReflectManagerJavaTest {
         val javaPerson1PrivateFinal: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
         assertEquals("Private Final", javaPerson1PrivateFinal)
 
-        println("1 PUBLIC_STATIC_FINAL_INT=${JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT}")
+        val publicStaticFinalInt: Int = ReflectManager
+            .reflect(JavaTestClass.JavaPerson::class)
+            .property("PUBLIC_STATIC_FINAL_INT")
+            .get()
+        assertEquals(10, publicStaticFinalInt)
         ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
-        println("2 PUBLIC_STATIC_FINAL_INT=${JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT}")
         assertEquals(10086, JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT)
 
         val rfltPerson2: JavaTestClass.JavaPerson = ReflectManager

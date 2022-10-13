@@ -2,6 +2,7 @@
 
 package com.leovp.reflection
 
+import java.lang.reflect.AccessibleObject
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
@@ -16,6 +17,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
+
 
 /**
  * Author: Michael Leo
@@ -130,10 +132,9 @@ class ReflectManager private constructor() {
             val prop = getProperty(name)
             ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
         } catch (e: IllegalArgumentException) {
-            // Get java static field
-            val staticField = getFinalField(name)
-            requireNotNull(staticField) { "Can't find field $name." }
-            ReflectManager(staticField.type.kotlin, staticField.get(obj))
+            // Get field by Java reflection.
+            val javaField = getFieldByJavaReflection(name)
+            ReflectManager(javaField.type.kotlin, javaField.get(obj))
         }
     }
 
@@ -148,6 +149,7 @@ class ReflectManager private constructor() {
      *
      * @param name The name of property.
      * @param value The value.
+     * @throws ReflectException If name of property doesn't exist.
      * @return The single [ReflectManager] instance.
      */
     fun property(name: String, value: Any?): ReflectManager {
@@ -155,14 +157,14 @@ class ReflectManager private constructor() {
         try {
             prop = getProperty(name)
         } catch (e: IllegalArgumentException) {
-            setJavaFinalField(name, value, true)
+            getFieldByJavaReflection(name).set(obj, value)
             return this
         }
         if (prop is KMutableProperty<*>) {
             prop.setter.call(obj, value)
         } else {
             // Allow to change `val` property value.
-            setJavaFinalField(name, value, false)
+            getFieldByJavaReflection(name).set(obj, value)
         }
         return this
     }
@@ -253,32 +255,65 @@ class ReflectManager private constructor() {
         return prop
     }
 
-    private fun getFinalField(name: String): Field? {
-        val finalField = type.java.getDeclaredField(name)
-        if ((finalField.modifiers and Modifier.FINAL) == Modifier.FINAL) {
-            // Allow to get private property value.
-            if (!finalField.isAccessible) finalField.isAccessible = true
-            return finalField
+    /**
+     * @param name The field name.
+     * @throws ReflectException If [name] doesn't exist.
+     */
+    private fun getFieldByJavaReflection(name: String): Field {
+        val field: Field = getAccessibleFieldByJavaReflection(name)
+        if ((field.modifiers and Modifier.FINAL) == Modifier.FINAL) {
+            runCatching {
+                val modifiersField = field.javaClass.getDeclaredField("modifiers")
+                modifiersField.isAccessible = true
+                modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
+            }/*.onFailure {
+                // runs in android will happen
+                field.isAccessible = true
+            }*/
         }
-        return null
+        return field
     }
 
-    private fun setJavaFinalField(name: String, value: Any?, forJava: Boolean) {
-        // Allow to change `val` property value.
-        val finalField: Field? = getFinalField(name)
-        requireNotNull(finalField) { "Can't find field $finalField." }
-        if (forJava) {
-            runCatching {
-                val modifiersField = finalField.javaClass.getDeclaredField("modifiers")
-                modifiersField.isAccessible = true
-                modifiersField.setInt(finalField, finalField.modifiers and Modifier.FINAL.inv())
-            }
-            // .onFailure {
-            //     // runs in android will happen
-            //     finalField.isAccessible = true
-            // }
+    /**
+     * Allow to get field in this class or all super classes.
+     *
+     * @param name The field name.
+     * @throws ReflectException If [name] doesn't exist.
+     */
+    private fun getAccessibleFieldByJavaReflection(name: String): Field {
+        return try {
+            accessibleForJava(type.java.getField(name))
+        } catch (e: NoSuchFieldException) {
+            var objTypeInJava: Class<*>? = type.java
+            do {
+                requireNotNull(objTypeInJava)
+                try {
+                    return accessibleForJava(objTypeInJava.getDeclaredField(name))
+                } catch (ignore: NoSuchFieldException) {
+                }
+                objTypeInJava = objTypeInJava.superclass
+            } while (objTypeInJava != null)
+            throw ReflectException("Can't find field $name.", e)
         }
-        finalField.set(obj, value)
+    }
+
+    /** Allow to access private field. */
+    private fun <T : AccessibleObject> accessibleForJava(accessible: T): T {
+        // if (accessible == null) return null
+        // if (accessible is Member) {
+        //     if (Modifier.isPublic(accessible.modifiers)
+        //         && Modifier.isPublic(accessible.declaringClass.modifiers)) {
+        //         // Check the following case:
+        //         // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
+        //         // If you set Java Public Static Final field as above, when run into here,
+        //         // although its a public filed, its `accessible` is still `false`.
+        //         // So I need to set `accessible` to `true` anyway.
+        //         return accessible
+        //     }
+        // }
+        // Allow to access private field.
+        if (!accessible.isAccessible) accessible.isAccessible = true
+        return accessible
     }
 
     private fun callJavaStaticFunction(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager? {
@@ -322,7 +357,6 @@ class ReflectManager private constructor() {
         }
         return null
     }
-
 
     // =================================
     // =========== Exception ===========

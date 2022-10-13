@@ -12,17 +12,17 @@ internal const val DEPT_ID_DEV = 1000
 data class DataClassOneArg(val arg1: String)
 data class DataClassTwoArg(val arg1: String, private val num: Int)
 
-class PrivateClass private constructor(private val paramA: Int, private var paramB: String) {
+class PrivateConstructor private constructor(private val paramA: Int, private var paramB: String) {
     private constructor() : this(-1, "NA")
 
     companion object {
-        fun of(paramA: Int, paramB: String): PrivateClass {
-            return PrivateClass(paramA, paramB)
+        fun of(paramA: Int, paramB: String): PrivateConstructor {
+            return PrivateConstructor(paramA, paramB)
         }
     }
 
     override fun toString(): String {
-        return "Get a PrivateClass with paramA=$paramA paramB=$paramB."
+        return "Get a PrivateConstructor with paramA=$paramA paramB=$paramB."
     }
 }
 
@@ -88,6 +88,10 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
         return action("${p.name}[$employeeId] stops working at $time.", -10)
     }
 
+    private fun privateTalk(content: String): String {
+        return "$name private talk: $content"
+    }
+
     override fun toString(): String =
         "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
 }
@@ -106,6 +110,10 @@ open class Person(name: String, sex: Char, age: Int) : Creature() {
 
     fun say(content: String): String {
         return "$name says: $content"
+    }
+
+    private fun privateSay(content: String): String {
+        return "$name private says: $content"
     }
 
     fun action(action: String, exceptResult: Int): String {
@@ -145,4 +153,12 @@ open class Creature {
     open fun alive(): Boolean = true
 
     override fun toString(): String = "Get a new creature."
+}
+
+class TestClass(var arg1: Int, val arg2: String, private var arg3: String, private val arg4: Int) {
+    constructor(arg1: Int, arg3: String) : this(arg1, "-2", arg3, 0)
+
+    override fun toString(): String {
+        return "$arg1 $arg2 $arg3 $arg4"
+    }
 }

@@ -51,8 +51,8 @@ public class JavaTestClass {
         @SuppressWarnings("FieldCanBeLocal")
         private int onlyPrivate = 1234;
 
-        private static final String NO_NAME = "No Name";
-        public static final String PUBLIC_NAME = "Public Name";
+        private static final String NO_NAME = new String("No Name");
+        public static final String PUBLIC_NAME = new String("Public Name");
         // https://stackoverflow.com/a/14102192/1685062
         public static final Integer PUBLIC_STATIC_FINAL_INT = new Integer(10); // 10
 

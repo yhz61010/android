@@ -215,6 +215,19 @@ class ReflectManagerKotlinTest {
             .property("age")
             .get()
         assertEquals(18, age)
+
+        val employeeRM: ReflectManager = ReflectManager
+            .reflect(Employee::class)
+            .newInstance("e202210131111", DEPT_ID_DEV, person)
+        val publicValProp: String = employeeRM.property("company").get()
+        assertEquals("Leo Group", publicValProp)
+        val privateValProp: String = employeeRM.property("privateValProp").get()
+        assertEquals("Private Val Prop", privateValProp)
+
+        val publicValPropForBase: Int = employeeRM.property("publicValPropForBaseClass").get()
+        assertEquals(10010, publicValPropForBase)
+        val privateValPropForBase: Int = employeeRM.property("privateValPropForBaseClass").get()
+        assertEquals(20020, privateValPropForBase)
     }
 
     @Test

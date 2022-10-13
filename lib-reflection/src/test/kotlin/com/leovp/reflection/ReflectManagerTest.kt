@@ -281,9 +281,10 @@ class ReflectManagerTest {
         val javaPerson1PrivateFinal: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
         assertEquals("Private Final", javaPerson1PrivateFinal)
 
-        // Attention: We can't modified `static final` field for Java.
-        // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_NAME", "Modified PUBLIC NAME")
-        // assertEquals("Modified PUBLIC NAME", JavaTestClass.JavaPerson.PUBLIC_NAME)
+        println("1 PUBLIC_STATIC_FINAL_INT=${JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT}")
+        ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
+        println("2 PUBLIC_STATIC_FINAL_INT=${JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT}")
+        assertEquals(10086, JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT)
 
         val rfltPerson2: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)

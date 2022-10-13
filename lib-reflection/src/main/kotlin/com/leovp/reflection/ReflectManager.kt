@@ -145,10 +145,6 @@ class ReflectManager private constructor() {
      * Set the property with specified value.
      * This method can also set `val` value or `final` filed field for Java.
      *
-     * **Attention:**
-     *
-     * We can't modified `static final` field for Java.
-     *
      * @param name The name of property.
      * @param value The value.
      * @return The single {@link ReflectManager} instance.
@@ -158,14 +154,14 @@ class ReflectManager private constructor() {
         try {
             prop = getProperty(name)
         } catch (e: IllegalArgumentException) {
-            setFinalField(name, value)
+            setJavaFinalField(name, value, true)
             return this
         }
         if (prop is KMutableProperty<*>) {
             prop.setter.call(obj, value)
         } else {
             // Allow to change `val` property value.
-            setFinalField(name, value)
+            setJavaFinalField(name, value, false)
         }
         return this
     }
@@ -266,18 +262,21 @@ class ReflectManager private constructor() {
         return null
     }
 
-    private fun setFinalField(name: String, value: Any?) {
+    private fun setJavaFinalField(name: String, value: Any?, forJava: Boolean) {
         // Allow to change `val` property value.
         val finalField: Field? = getFinalField(name)
         requireNotNull(finalField) { "Can't find field $finalField." }
-        // try {
-        //     val modifiersField = Field::class.java.getDeclaredField("modifiers")
-        //     modifiersField.isAccessible = true
-        //     modifiersField.setInt(finalField, finalField.modifiers and Modifier.FINAL.inv())
-        // } catch (ignore: NoSuchFieldException) {
-        //     // runs in android will happen
-        //     finalField.isAccessible = true
-        // }
+        if (forJava) {
+            runCatching {
+                val modifiersField = finalField.javaClass.getDeclaredField("modifiers")
+                modifiersField.isAccessible = true
+                modifiersField.setInt(finalField, finalField.modifiers and Modifier.FINAL.inv())
+            }
+            // .onFailure {
+            //     // runs in android will happen
+            //     finalField.isAccessible = true
+            // }
+        }
         finalField.set(obj, value)
     }
 

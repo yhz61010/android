@@ -343,7 +343,36 @@ class ReflectManagerKotlinTest {
 
     @Test
     fun propertyDataClassSet() {
+        ReflectManager.reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL", "abc")
+        assertEquals("abc", ReflectManager.reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL").get())
 
+        ReflectManager.reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL", "ABC123")
+        assertEquals("ABC123", ReflectManager.reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL").get())
+
+        val dcOneArg: DataClassOneArg = ReflectManager.reflect(DataClassOneArg::class).newInstance("xyz").get()
+        ReflectManager.reflect(dcOneArg).property("arg1", "ag1")
+        assertEquals("ag1", ReflectManager.reflect(dcOneArg).property("arg1").get())
+
+        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(DataClassOneArg::class).property("param_dummy", 123)
+        }
+        assertIs<ReflectManager.ReflectException>(exception1)
+
+        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(DataClassOneArg::class).property("argument1", 123)
+        }
+        assertIs<ReflectManager.ReflectException>(exception2)
+
+        val exception3 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(dcOneArg).property("arg1", 123)
+        }
+        assertIs<ReflectManager.ReflectException>(exception3)
+
+        val dcTwoArg: DataClassTwoArg = ReflectManager.reflect(DataClassTwoArg::class).newInstance("argument11", 1010).get()
+        ReflectManager.reflect(dcTwoArg).property("arg1", "aagg1")
+        assertEquals("aagg1", ReflectManager.reflect(dcTwoArg).property("arg1").get())
+        ReflectManager.reflect(dcTwoArg).property("num", 8080)
+        assertEquals(8080, ReflectManager.reflect(dcTwoArg).property("num").get())
     }
 
     // ==============================

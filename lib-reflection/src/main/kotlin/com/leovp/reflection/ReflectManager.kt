@@ -126,14 +126,14 @@ class ReflectManager private constructor() {
      * @return The single [ReflectManager] instance.
      */
     fun property(name: String): ReflectManager {
-        try {
+        return try {
             val prop = getProperty(name)
-            return ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
+            ReflectManager(prop.returnType.jvmErasure, prop.getter.call(obj))
         } catch (e: IllegalArgumentException) {
             // Get java static field
             val staticField = getFinalField(name)
             requireNotNull(staticField) { "Can't find field $name." }
-            return ReflectManager(staticField.type.kotlin, staticField.get(obj))
+            ReflectManager(staticField.type.kotlin, staticField.get(obj))
         }
     }
 

@@ -9,7 +9,12 @@ package com.leovp.reflection.testclass
 internal const val DEPT_ID_HR = 100
 internal const val DEPT_ID_DEV = 1000
 
-data class DataClassOneArg(val arg1: String)
+data class DataClassOneArg(val arg1: String) {
+    companion object {
+        private const val PRIVATE_CONST_VAL = "private_const_val"
+        const val PUBLIC_CONST_VAL = "public_const_val"
+    }
+}
 data class DataClassTwoArg(val arg1: String, private val num: Int)
 
 class PrivateConstructor private constructor(private val paramA: Int, private var paramB: String) {

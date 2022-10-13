@@ -5,6 +5,7 @@ package com.leovp.reflection
 import com.leovp.reflection.testclass.Creature
 import com.leovp.reflection.testclass.DEPT_ID_DEV
 import com.leovp.reflection.testclass.DataClassOneArg
+import com.leovp.reflection.testclass.DataClassTwoArg
 import com.leovp.reflection.testclass.Employee
 import com.leovp.reflection.testclass.Person
 import com.leovp.reflection.testclass.PrivateConstructor
@@ -165,6 +166,20 @@ class ReflectManagerKotlinTest {
 
         val tc2: TestClass = ReflectManager.reflect(TestClass::class).newInstance(11, "str33").get()
         assertEquals("11 -2 str33 0", tc2.toString())
+
+        val reflectedPerson: Person = ReflectManager.reflect(Person::class).newInstance("Jim", 'M', 23).get()
+        val employee: Employee = ReflectManager
+            .reflect(Employee::class)
+            .newInstance("e2003241067", reflectedPerson)
+            .property("salary", 3500)
+            .property("deptId", DEPT_ID_DEV)
+            .property("comment", "No comment.")
+            .get()
+        assertEquals(
+            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 departure. Salary: 3500.",
+            employee.toString()
+        )
+        assertEquals("No comment.", employee.comment)
     }
 
     @Test
@@ -204,6 +219,11 @@ class ReflectManagerKotlinTest {
         val privateParamB = ReflectManager.reflect(privateConstructor).property("paramB").get<String>()
         assertEquals("Hello", privateParamB)
 
+        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(privateConstructor).property("param_dummy").get()
+        }
+        assertIs<ReflectManager.ReflectException>(exception1)
+
         val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
         val name: String = ReflectManager.reflect(person).property("name").get()
         assertEquals("Michael", name)
@@ -224,42 +244,106 @@ class ReflectManagerKotlinTest {
         val privateValProp: String = employeeRM.property("privateValProp").get()
         assertEquals("Private Val Prop", privateValProp)
 
+        assertEquals("Michael", employeeRM.property("name").get())
+        assertEquals('M', employeeRM.property("sex").get())
+        assertEquals(22, employeeRM.property("age").get())
+
         val publicValPropForBase: Int = employeeRM.property("publicValPropForBaseClass").get()
         assertEquals(10010, publicValPropForBase)
         val privateValPropForBase: Int = employeeRM.property("privateValPropForBaseClass").get()
         assertEquals(20020, privateValPropForBase)
+
+        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(Employee::class).property("param_dummy").get()
+        }
+        assertIs<ReflectManager.ReflectException>(exception2)
     }
 
     @Test
     fun propertySet() {
-        val privateClass = PrivateConstructor.of(10, "Hello")
+        val privateConstructor = PrivateConstructor.of(10, "Hello")
+        ReflectManager.reflect(privateConstructor).property("paramA", 666)
+        assertEquals(666, ReflectManager.reflect(privateConstructor).property("paramA").get())
+
+        ReflectManager.reflect(privateConstructor).property("paramB", "World")
+        assertEquals("World", ReflectManager.reflect(privateConstructor).property("paramB").get())
+
+        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(privateConstructor).property("param_dummy", "123").get()
+        }
+        assertIs<ReflectManager.ReflectException>(exception1)
+
+        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(privateConstructor).property("paramA", "123").get()
+        }
+        assertIs<ReflectManager.ReflectException>(exception2)
+
         val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
-
-        ReflectManager.reflect(privateClass).property("paramA", 666)
-        // Change `val` value.
-        assertEquals(666, ReflectManager.reflect(privateClass).property("paramA").get())
-
-        ReflectManager.reflect(person).property("age", 24)
-        assertEquals(24, person.age)
-
-        val reflectedPerson: Person = ReflectManager.reflect(Person::class).newInstance("Jim", 'M', 23).get()
-        val employee: Employee = ReflectManager
-            .reflect(Employee::class)
-            .newInstance("e2003241067", reflectedPerson)
-            .property("salary", 3500)
-            .property("deptId", DEPT_ID_DEV)
-            .property("comment", "No comment.")
+        ReflectManager.reflect(person).property("name", "Leo")
+        assertEquals("Leo", ReflectManager.reflect(person).property("name").get())
+        ReflectManager.reflect(person).property("sex", '-')
+        assertEquals('-', ReflectManager.reflect(person).property("sex").get())
+        val personInAny: Any = ReflectManager
+            .reflect(Person::class)
+            .newInstance("World", 'F', 18)
+            .property("age", 22)
             .get()
-        assertEquals(
-            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 departure. Salary: 3500.",
-            employee.toString()
-        )
-        assertEquals("No comment.", employee.comment)
-        ReflectManager.reflect(employee).property("comment", null)
-        assertEquals(null, employee.comment)
+        assertEquals(22, ReflectManager.reflect(personInAny).property("age").get())
 
-        val company: String = ReflectManager.reflect(employee).property("company").get()
-        assertEquals("Leo Group", company)
+        val employeeRM: ReflectManager = ReflectManager
+            .reflect(Employee::class)
+            .newInstance("e202210131111", DEPT_ID_DEV, person)
+        employeeRM.property("company", "LeoVP Group")
+        assertEquals("LeoVP Group", employeeRM.property("company").get())
+        employeeRM.property("privateValProp", "New privateValProp")
+        assertEquals("New privateValProp", employeeRM.property("privateValProp").get())
+
+        employeeRM.property("name", "New Name")
+        assertEquals("New Name", employeeRM.property("name").get())
+        employeeRM.property("sex", 'M')
+        assertEquals('M', employeeRM.property("sex").get())
+        employeeRM.property("age", 38)
+        assertEquals(38, employeeRM.property("age").get())
+
+        employeeRM.property("publicValPropForBaseClass", 6060)
+        assertEquals(6060, employeeRM.property("publicValPropForBaseClass").get())
+        employeeRM.property("privateValPropForBaseClass", 8888)
+        assertEquals(8888, employeeRM.property("privateValPropForBaseClass").get())
+
+        val exceptionFinal = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(Employee::class).property("sex", 4).get()
+        }
+        assertIs<ReflectManager.ReflectException>(exceptionFinal)
+    }
+
+    @Test
+    fun propertyDataClassGet() {
+        val dataClassPrivateConstVal: String = ReflectManager
+            .reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL").get()
+        assertEquals("private_const_val", dataClassPrivateConstVal)
+
+        val dataClassPublicConstVal: String = ReflectManager
+            .reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL").get()
+        assertEquals("public_const_val", dataClassPublicConstVal)
+
+        val dcArg1 = ReflectManager.reflect(DataClassOneArg::class)
+            .newInstance("argument1").property("arg1").get<String>()
+        assertEquals("argument1", dcArg1)
+
+        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+            ReflectManager.reflect(DataClassOneArg::class).property("param_dummy").get()
+        }
+        assertIs<ReflectManager.ReflectException>(exception1)
+
+        val rmReflectManager: ReflectManager = ReflectManager.reflect(DataClassTwoArg::class)
+            .newInstance("argument11", 1010)
+        assertEquals("argument11", rmReflectManager.property("arg1").get())
+        assertEquals(1010, rmReflectManager.property("num").get())
+    }
+
+    @Test
+    fun propertyDataClassSet() {
+
     }
 
     // ==============================

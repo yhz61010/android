@@ -22,12 +22,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        LeoToast.getInstance(this).apply {
-            config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
-            initForegroundComponentForToast(application)
-        }
+        LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
 
-        LogContext.setLogImp(LLog("LEO-AIDL-CLIENT"))
+        LogContext.setLogImpl(LLog("LEO-AIDL-CLIENT"))
 
         val serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -45,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        LeoToast.getInstance(this).removeToastRotationWatcher()
+        LeoToast.removeToastRotationWatcher()
         super.onDestroy()
     }
 

@@ -19,7 +19,7 @@ object PrefContext {
     lateinit var pref: AbsPref
         private set
 
-    fun setPrefImp(pref: AbsPref) {
+    fun setPrefImpl(pref: AbsPref) {
         this.pref = pref
     }
 

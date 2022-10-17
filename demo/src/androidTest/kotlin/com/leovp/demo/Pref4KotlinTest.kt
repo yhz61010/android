@@ -37,7 +37,7 @@ class Pref4KotlinTest {
     fun setUp() {
         stopKoin() // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out
-        LogContext.setLogImp(LLog("LEO"))
+        LogContext.setLogImpl(LLog("LEO"))
     }
 
     @AfterEach
@@ -47,7 +47,7 @@ class Pref4KotlinTest {
 
     @Test
     fun defaultPref() {
-        PrefContext.setPrefImp(LPref(context))
+        PrefContext.setPrefImpl(LPref(context))
 
         PrefContext.pref.put("string", "this is a string")
         PrefContext.pref.put("boolean", true)

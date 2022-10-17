@@ -22,7 +22,7 @@ class NetworkUnitTest {
     @BeforeEach
     fun setUp() {
         ShadowLog.stream = System.out
-        LogContext.setLogImp(LLog("LEO"))
+        LogContext.setLogImpl(LLog("LEO"))
     }
 
     @Test

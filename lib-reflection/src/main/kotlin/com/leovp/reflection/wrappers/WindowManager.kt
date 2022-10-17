@@ -58,43 +58,17 @@ class WindowManager(private val manager: IInterface) {
         return thawRotationMethod
     }
 
-    fun getRotation(): Int {
-        return try {
-            val method = getGetRotationMethod()
-            method!!.invoke(manager) as Int
-        } catch (e: Exception) {
-            Log.e(TAG, "getRotation exception.")
-            0
-        }
-    }
+    fun getRotation(): Int =
+        runCatching { (getGetRotationMethod()?.invoke(manager) as? Int) ?: 0 }.getOrDefault(0)
 
-    fun freezeRotation(rotation: Int) {
-        try {
-            val method = freezeRotationMethod
-            method!!.invoke(manager, rotation)
-        } catch (e: Exception) {
-            Log.e(TAG, "freezeRotation exception.")
-        }
-    }
+    fun freezeRotation(rotation: Int) = runCatching { freezeRotationMethod?.invoke(manager, rotation) }
 
     fun isRotationFrozen(): Boolean {
-        return try {
-            val method = getIsRotationFrozenMethod()
-            method!!.invoke(manager) as Boolean
-        } catch (e: Exception) {
-            Log.e(TAG, "isRotationFrozen exception.")
-            false
-        }
+        return runCatching { (getIsRotationFrozenMethod()?.invoke(manager) as? Boolean) ?: false }
+            .getOrDefault(false)
     }
 
-    fun thawRotation() {
-        try {
-            val method = getThawRotationMethod()
-            method!!.invoke(manager)
-        } catch (e: Exception) {
-            Log.e(TAG, "thawRotation exception.")
-        }
-    }
+    fun thawRotation() = runCatching { getThawRotationMethod()?.invoke(manager) }
 
     fun registerRotationWatcher(
         rotationWatcher: IRotationWatcher,

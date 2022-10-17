@@ -58,6 +58,13 @@ class WindowManager(private val manager: IInterface) {
         return thawRotationMethod
     }
 
+    /**
+     * Available result:
+     * - Surface.ROTATION_0
+     * - Surface.ROTATION_90
+     * - Surface.ROTATION_180
+     * - Surface.ROTATION_270
+     */
     fun getRotation(): Int =
         runCatching { (getGetRotationMethod()?.invoke(manager) as? Int) ?: 0 }.getOrDefault(0)
 

@@ -56,16 +56,12 @@ data class ToastConfig(
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
  *
  * ```
- * LeoToast.getInstance(ctx).apply {
- *      config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
- *      // DO NOT forget to call the following method on Android 11 or above.
- *      initForegroundComponentForToast(application)
- * }
+ * LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
  * ```
  *
  * Don't forget to call `removeToastRotationWatcher()` when you don't need custom toast anymore.
  * ```
- * LeoToast.getInstance(this).removeToastRotationWatcher()
+ * LeoToast.removeToastRotationWatcher()
  * ```
  */
 object LeoToast {

@@ -41,7 +41,7 @@ public class Pref4JavaTest {
     public void setUp() {
         stopKoin(); // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out;
-        LogContext.INSTANCE.setLogImp(new LLog("LEO"));
+        LogContext.INSTANCE.setLogImpl(new LLog("LEO"));
     }
 
     @AfterEach
@@ -51,7 +51,7 @@ public class Pref4JavaTest {
 
     @Test
     public void defaultPref4Java() {
-        PrefContext.INSTANCE.setPrefImp(new LPref(context, context.getPackageName()));
+        PrefContext.INSTANCE.setPrefImpl(new LPref(context, context.getPackageName()));
 
         PrefContext.INSTANCE.getPref().put4Java("string", "this is a string", String.class);
         PrefContext.INSTANCE.getPref().put4Java("boolean", true, boolean.class);

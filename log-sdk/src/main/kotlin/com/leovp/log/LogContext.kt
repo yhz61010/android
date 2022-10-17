@@ -32,7 +32,7 @@ object LogContext {
 
     fun isLogInitialized(): Boolean = ::log.isInitialized
 
-    fun setLogImp(log: ILog) {
+    fun setLogImpl(log: ILog) {
         LogContext.log = log
     }
 }

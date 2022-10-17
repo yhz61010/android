@@ -48,10 +48,9 @@ class CustomApplication : BaseApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        LeoToast.getInstance(this).apply {
-            config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
-            initForegroundComponentForToast(this@CustomApplication)
-        }
+        // ApplicationManager.init()
+
+        LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
 
         startKoin {
             //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)
@@ -69,8 +68,8 @@ class CustomApplication : BaseApplication() {
         RxJavaPlugins.setErrorHandler { }
 
         // LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
-        LogContext.setLogImp(LLog(TAG_PREFIX))
-        PrefContext.setPrefImp(LPref(this))
+        LogContext.setLogImpl(LLog(TAG_PREFIX))
+        PrefContext.setPrefImpl(LPref(this))
     }
 
     override fun attachBaseContext(base: Context) {

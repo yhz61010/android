@@ -20,7 +20,7 @@ class Pref4KotlinAndroidTest {
     @Test
     fun mmkvPref() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        PrefContext.setPrefImp(MMKVPref(appContext))
+        PrefContext.setPrefImpl(MMKVPref(appContext))
 
         PrefContext.pref.put("mmkv_string", "this is a string")
         PrefContext.pref.put("mmkv_boolean", true)

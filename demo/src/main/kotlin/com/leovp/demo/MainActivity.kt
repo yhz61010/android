@@ -1,6 +1,7 @@
 package com.leovp.demo
 
 import android.Manifest
+import android.app.Application
 import android.content.pm.ConfigurationInfo
 import android.content.pm.ServiceInfo
 import android.os.Bundle
@@ -20,6 +21,7 @@ import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
+import com.leovp.android.utils.ApplicationManager
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
@@ -183,6 +185,13 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     override fun onResume() {
         super.onResume()
         startTrafficNetwork("leovp.com")
+
+        val actApplication = application
+        val actApplicationCtx = applicationContext as Application
+        val amApplication = ApplicationManager.application
+        LogContext.log.e(ITAG, "actApplication=$actApplication")
+        LogContext.log.e(ITAG, "actApplicationCtx=$actApplicationCtx")
+        LogContext.log.e(ITAG, "amApplication=$amApplication")
     }
 
     override fun onPause() {

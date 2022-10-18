@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.IRotationWatcher
 import android.view.LayoutInflater
@@ -24,7 +25,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.leovp.android.R
-import com.leovp.android.exts.LeoToast.Companion.config
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
 import com.leovp.floatview.FloatView
@@ -41,7 +41,7 @@ import kotlin.math.max
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
  *
  * ```
- * LeoToast.config = LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+ * LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
  * ```
  *
  * Don't forget to call `removeToastRotationWatcher()` when you don't need custom toast anymore.
@@ -50,8 +50,18 @@ import kotlin.math.max
  * ```
  */
 class LeoToast private constructor(private val ctx: Context) {
-    companion object : SingletonHolder<LeoToast, Context>(::LeoToast) {
-        var config: ToastConfig? = null
+    companion object : SingletonHolder<LeoToast, Context>(::LeoToast)
+
+    lateinit var config: ToastConfig
+        private set
+
+    fun init(config: ToastConfig = ToastConfig()) {
+        Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
+        this.config = config
+        registerToastRotationWatcher()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            initForegroundComponentForToast(ctx.applicationContext as Application)
+        }
     }
 
     data class ToastConfig(
@@ -73,6 +83,10 @@ class LeoToast private constructor(private val ctx: Context) {
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
+            // Log.e(
+            //     "LEO-float-view",
+            //     "FloatView exist=${FloatView.with(FLOAT_VIEW_TAG).exist()} isDisplaying=${FloatView.with(FLOAT_VIEW_TAG).isDisplaying()}"
+            // )
             if (FloatView.with(FLOAT_VIEW_TAG).exist() && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()) {
                 mainHandler.post {
                     runCatching {
@@ -100,18 +114,12 @@ class LeoToast private constructor(private val ctx: Context) {
     }
 
     private fun registerToastRotationWatcher() {
+        Log.e("LEO-toast", "ServiceManager.windowManager=${ServiceManager.windowManager}")
         ServiceManager.windowManager?.registerRotationWatcher(toastRotationWatcher)
     }
 
     fun removeToastRotationWatcher() {
         ServiceManager.windowManager?.removeRotationWatcher(toastRotationWatcher)
-    }
-
-    init {
-        registerToastRotationWatcher()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            initForegroundComponentForToast(ctx.applicationContext as Application)
-        }
     }
 }
 
@@ -193,7 +201,7 @@ private fun showToast(
     error: Boolean
 ) {
     if (ctx == null) return
-    val toastCfg = config ?: error("Toast config can't be null.")
+    val toastCfg = LeoToast.getInstance(ctx).config
 
     if ((debug && !toastCfg.buildConfigInDebug)) {
         // Debug log only be shown in DEBUG flavor
@@ -273,7 +281,7 @@ fun cancelToast() {
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {
-    val toastCfg = config ?: error("Toast config can't be null.")
+    val toastCfg = LeoToast.getInstance(ctx).config
     toastCfg.toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)

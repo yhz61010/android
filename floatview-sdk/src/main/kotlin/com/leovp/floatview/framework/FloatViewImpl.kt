@@ -68,10 +68,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun getScreenOrientationSize(orientation: Int): Size {
         // val screenResolution = if (context.canDrawOverlays) context.screenRealResolution else context.screenAvailableResolution
         val screenResolution = context.screenRealResolution
-        //        val widthNecessaryOffset =
-        //                abs(min(context.screenRealResolution.width, context.screenRealResolution.height)
-        //                        - min(context.screenAvailableResolution.width,
-        //                    context.screenAvailableResolution.height))
+        // val widthNecessaryOffset =
+        //         abs(min(context.screenRealResolution.width, context.screenRealResolution.height)
+        //                 - min(context.screenAvailableResolution.width,
+        //             context.screenAvailableResolution.height))
         val heightNecessaryOffset = abs(
             max(context.screenRealResolution.width, context.screenRealResolution.height) -
                 max(context.screenAvailableResolution.width, context.screenAvailableResolution.height)
@@ -107,21 +107,21 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 firstX = lastX
                 firstY = lastY
                 isClickGesture = true
-                //                Log.e("LEO-FV",
-                //                    "ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
+                // Log.e("LEO-FV",
+                //     "ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
                 touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_CANCEL,
             MotionEvent.ACTION_OUTSIDE -> {
-                //                view.performClick()
-                //                Log.e("LEO-FV",
-                //                    "ACTION_UP isPressed=${view.isPressed} " +
-                //                            "consumeIsAlwaysFalse=$consumeIsAlwaysFalse " +
-                //                            "config.autoDock=${config.autoDock} " +
-                //                            "hasFocus=${view.hasFocus()} " +
-                //                            "isActivated=${view.isActivated} " +
-                //                            "isClickGesture=$isClickGesture $view")
+                // view.performClick()
+                // Log.e("LEO-FV",
+                //     "ACTION_UP isPressed=${view.isPressed} " +
+                //             "consumeIsAlwaysFalse=$consumeIsAlwaysFalse " +
+                //             "config.autoDock=${config.autoDock} " +
+                //             "hasFocus=${view.hasFocus()} " +
+                //             "isActivated=${view.isActivated} " +
+                //             "isClickGesture=$isClickGesture $view")
                 if (!consumeIsAlwaysFalse && config.dockEdge != DockEdge.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.dockEdge)
                 }
@@ -282,7 +282,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     }
                 }
                 runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { e ->
-                    e.printStackTrace()
                     it.cancel() // Cancel animation
                 }
             }
@@ -302,7 +301,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     layoutParams.y = finalY
                     config.y = finalY
                 }
-                //                Log.e("LEO-float-view", "updateFloatViewPosition x=$x y=$y layoutParams=${layoutParams.x}x${layoutParams.y}")
+                // Log.e("LEO-float-view", "updateFloatViewPosition x=$x y=$y layoutParams=${layoutParams.x}x${layoutParams.y}")
                 windowManager.updateViewLayout(v, layoutParams)
             }.onFailure { e ->
                 e.printStackTrace()
@@ -320,15 +319,15 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun init() {
         setWindowLayoutParams()
 
-        //        Log.e("LEO-float-view", "1 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
+        // Log.e("LEO-float-view", "1 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
         val finalX = adjustPosX(config.x, config.edgeMargin)
-        //        Log.e("LEO-float-view", "2 config.x=${config.x} config.y=${config.y} finalX=$finalX config.edgeMargin=${config.edgeMargin}")
+        // Log.e("LEO-float-view", "2 config.x=${config.x} config.y=${config.y} finalX=$finalX config.edgeMargin=${config.edgeMargin}")
         layoutParams.x = finalX
         config.x = finalX
 
-        //        Log.e("LEO-float-view", "3 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
+        // Log.e("LEO-float-view", "3 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
         val finalY = adjustPosY(config.y, config.edgeMargin)
-        //        Log.e("LEO-float-view", "4 config.x=${config.x} config.y=${config.y} finalY=$finalY config.edgeMargin=${config.edgeMargin}")
+        // Log.e("LEO-float-view", "4 config.x=${config.x} config.y=${config.y} finalY=$finalY config.edgeMargin=${config.edgeMargin}")
         layoutParams.y = finalY
         config.y = finalY
 
@@ -421,16 +420,16 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun addTouchListenerToView(view: View, touchListener: View.OnTouchListener) {
         if (view is ViewGroup) {
-            //                if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+            // if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-                //                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+                // if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
             view.children.forEach { child -> addTouchListenerToView(child, touchListener) }
         } else {
-            //                if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+            // if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-                //                    if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
+                // if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
         }
@@ -448,10 +447,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         config.stickyEdge = stickyEdge
         updateLayoutForSticky(0, 0)
         runCatching {
-            //            if (config.customView?.windowToken != null) {
-            //            Log.e("LEO-float-view", "${config.tag} updateStickyEdge=$stickyEdge x=${config.x} y=${config.y}")
+            // if (config.customView?.windowToken != null) {
+            // Log.e("LEO-float-view", "${config.tag} updateStickyEdge=$stickyEdge x=${config.x} y=${config.y}")
             windowManager.updateViewLayout(config.customView, layoutParams)
-            //            }
+            // }
         }.onFailure { e -> e.printStackTrace() }
     }
 
@@ -462,7 +461,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         screenOrientSz = getScreenOrientationSize(orientation)
         updateAutoDock(config.dockEdge)
         updateStickyEdge(config.stickyEdge)
-        //        Log.e("LEO-float-view", "lastScrOri=$lastScrOri config.screenOrientation=$orientation")
+        // Log.e("LEO-float-view", "lastScrOri=$lastScrOri config.screenOrientation=$orientation")
     }
 
     @Suppress("unused")
@@ -559,13 +558,13 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         config.isDisplaying = false
     }
 
-    //    private fun setCustomViewVisibility(show: Boolean) {
-    //        config.customView?.visibility = if (show) {
-    //            config.isDisplaying = true
-    //            View.VISIBLE
-    //        } else {
-    //            config.isDisplaying = false
-    //            View.GONE
-    //        }
-    //    }
+    // private fun setCustomViewVisibility(show: Boolean) {
+    //     config.customView?.visibility = if (show) {
+    //         config.isDisplaying = true
+    //         View.VISIBLE
+    //     } else {
+    //         config.isDisplaying = false
+    //         View.GONE
+    //     }
+    // }
 }

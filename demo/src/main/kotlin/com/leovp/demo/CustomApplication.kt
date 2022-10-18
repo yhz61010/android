@@ -47,7 +47,7 @@ class CustomApplication : BaseApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        LeoToast.config = LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+        LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
 
         startKoin {
             //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)

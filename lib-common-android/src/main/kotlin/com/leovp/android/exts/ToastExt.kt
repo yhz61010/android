@@ -326,12 +326,8 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
     val widthDiff = when {
         ctx.isGoogle -> {
             if (Surface.ROTATION_90 == orientation) {
-                (
-                    max(scrSz.width, scrSz.height) - max(
-                        scrAvailSz.width,
-                        scrAvailSz.height
-                    )
-                    ) / (if (ctx.navigationBarHeight > 0) 1 else 2)
+                (max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)) /
+                    (if (ctx.navigationBarHeight > 0) 1 else 2)
             } else 0
         }
         else -> 0

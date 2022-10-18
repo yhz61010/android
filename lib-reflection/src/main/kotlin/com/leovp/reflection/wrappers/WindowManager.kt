@@ -77,6 +77,14 @@ class WindowManager(private val manager: IInterface) {
 
     fun thawRotation() = runCatching { getThawRotationMethod()?.invoke(manager) }
 
+    /**
+     * private val rotationWatcher = object : IRotationWatcher.Stub() {
+     *      override fun onRotationChanged(rotation: Int) {
+     *          Log.d("onRotationChanged", "rotation=$rotation")
+     *      }
+     * }
+     * ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
+     */
     fun registerRotationWatcher(
         rotationWatcher: IRotationWatcher,
         displayId: Int = Display.DEFAULT_DISPLAY

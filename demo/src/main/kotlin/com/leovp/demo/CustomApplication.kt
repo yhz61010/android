@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
 import com.leovp.android.exts.LeoToast
-import com.leovp.android.exts.ToastConfig
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseApplication
@@ -48,9 +47,7 @@ class CustomApplication : BaseApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        // ApplicationManager.init()
-
-        LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+        LeoToast.config = LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
 
         startKoin {
             //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)

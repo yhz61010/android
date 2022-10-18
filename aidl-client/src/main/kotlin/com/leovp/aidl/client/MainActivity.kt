@@ -10,7 +10,6 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.leovp.aidl.client.model.LocalLog
 import com.leovp.android.exts.LeoToast
-import com.leovp.android.exts.ToastConfig
 import com.leovp.android.exts.toast
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
@@ -22,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+        LeoToast.config = LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
 
         LogContext.setLogImpl(LLog("LEO-AIDL-CLIENT"))
 
@@ -42,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        LeoToast.removeToastRotationWatcher()
+        LeoToast.getInstance(this).removeToastRotationWatcher()
         super.onDestroy()
     }
 

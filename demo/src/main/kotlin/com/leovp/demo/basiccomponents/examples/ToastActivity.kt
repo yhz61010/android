@@ -7,15 +7,17 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.view.View
-import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.android.exts.cancelToast
 import com.leovp.android.exts.toast
+import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
 class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     override fun getTagName(): String = ITAG
+
+    private lateinit var serviceIntent: Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +26,13 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
             toast("Custom toast in background test.", error = true)
         }, 2000)
 
-        startService(Intent(this, TestService::class.java))
+        serviceIntent = Intent(this, TestService::class.java)
+        startService(serviceIntent)
+    }
+
+    override fun onDestroy() {
+        stopService(serviceIntent)
+        super.onDestroy()
     }
 
     class TestService : Service() {

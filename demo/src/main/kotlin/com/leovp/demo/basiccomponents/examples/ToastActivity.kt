@@ -38,10 +38,15 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
     class TestService : Service() {
         override fun onBind(intent: Intent): IBinder? = null
 
+        private val mainHandler = Handler(Looper.getMainLooper())
+
         override fun onCreate() {
             super.onCreate()
             LogContext.log.e(ITAG, "=====>>>>> TestService created <<<<<=====")
-            toast("TestService created.")
+            mainHandler.post {
+                toast("TestService created.")
+                LogContext.log.e(ITAG, "=> TestService created")
+            }
         }
     }
 

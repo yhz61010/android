@@ -3,6 +3,7 @@
 package com.leovp.android.exts
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
@@ -23,10 +24,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.leovp.android.R
+import com.leovp.android.exts.LeoToast.Companion.config
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
-import com.leovp.android.utils.ApplicationManager
 import com.leovp.floatview.FloatView
+import com.leovp.kotlin.utils.SingletonHolder
 import com.leovp.reflection.wrappers.ServiceManager
 import kotlin.math.max
 
@@ -35,38 +37,39 @@ import kotlin.math.max
  * Date: 2020/9/29 上午11:52
  */
 
-data class ToastConfig(
-    /**
-     * Whether the host project is working in `DEBUG` mode.
-     *
-     * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
-     * For example in your custom Application.
-     * Otherwise, the `debug` feature doesn't work.
-     */
-    var buildConfigInDebug: Boolean = false,
-
-    @DrawableRes
-    var toastIcon: Int? = null,
-
-    /** Unit: px */
-    var toastIconSize: Int = 24.px,
-)
-
 /**
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
  *
  * ```
- * LeoToast.config = ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
+ * LeoToast.config = LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round)
  * ```
  *
  * Don't forget to call `removeToastRotationWatcher()` when you don't need custom toast anymore.
  * ```
- * LeoToast.removeToastRotationWatcher()
+ * LeoToast.getInstance(ctx).removeToastRotationWatcher()
  * ```
  */
-object LeoToast {
+class LeoToast private constructor(private val ctx: Context) {
+    companion object : SingletonHolder<LeoToast, Context>(::LeoToast) {
+        var config: ToastConfig? = null
+    }
 
-    var config: ToastConfig? = null
+    data class ToastConfig(
+        /**
+         * Whether the host project is working in `DEBUG` mode.
+         *
+         * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
+         * Otherwise, the `debug` feature doesn't work.
+         * For example in your custom Application.
+         */
+        var buildConfigInDebug: Boolean = false,
+
+        @DrawableRes
+        var toastIcon: Int? = null,
+
+        /** Unit: px */
+        var toastIconSize: Int = 24.px,
+    )
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
@@ -75,7 +78,7 @@ object LeoToast {
                     runCatching {
                         FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
                         val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
-                        val toastPos = calculateToastPosition(ApplicationManager.application, rotation, viewWidth)
+                        val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
                         // Log.e(
                         //     "LEO-float-view",
                         //     "toast onRotationChanged rotation=$rotation viewWidth=$viewWidth vw=$viewWidth"
@@ -91,11 +94,9 @@ object LeoToast {
      * **Attention:**
      * This method must be called for Android R(Android 11) or above.
      * Otherwise, the custom toast doesn't work when app in background.
-     *
-     * By default, this method will be called
      */
-    private fun initForegroundComponentForToast(delay: Long = 500) {
-        ForegroundComponent.init(ApplicationManager.application, delay)
+    private fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
+        ForegroundComponent.init(app, delay)
     }
 
     private fun registerToastRotationWatcher() {
@@ -109,7 +110,7 @@ object LeoToast {
     init {
         registerToastRotationWatcher()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            initForegroundComponentForToast()
+            initForegroundComponentForToast(ctx.applicationContext as Application)
         }
     }
 }
@@ -152,11 +153,11 @@ fun Context.toast(
     error: Boolean = false
 ) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(msg, longDuration, origin, debug, textColor, bgColor, error)
+        showToast(this, msg, longDuration, origin, debug, textColor, bgColor, error)
     } else {
         // Be sure toast can be shown in thread
         mainHandler.post {
-            showToast(msg, longDuration, origin, debug, textColor, bgColor, error)
+            showToast(this, msg, longDuration, origin, debug, textColor, bgColor, error)
         }
     }
 }
@@ -182,6 +183,7 @@ private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
  */
 @SuppressLint("InflateParams")
 private fun showToast(
+    ctx: Context?,
     msg: String?,
     longDuration: Boolean = false,
     origin: Boolean,
@@ -190,8 +192,8 @@ private fun showToast(
     bgColor: String?,
     error: Boolean
 ) {
-    val ctx = runCatching { ApplicationManager.application }.getOrNull() ?: return
-    val toastCfg = LeoToast.config ?: error("Toast config can't be null.")
+    if (ctx == null) return
+    val toastCfg = config ?: error("Toast config can't be null.")
 
     if ((debug && !toastCfg.buildConfigInDebug)) {
         // Debug log only be shown in DEBUG flavor
@@ -271,7 +273,7 @@ fun cancelToast() {
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {
-    val toastCfg = LeoToast.config ?: error("Toast config can't be null.")
+    val toastCfg = config ?: error("Toast config can't be null.")
     toastCfg.toastIcon?.let { iconRes ->
         // tv.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
         val iconDrawable = ContextCompat.getDrawable(ctx, iconRes)
@@ -324,8 +326,12 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
     val widthDiff = when {
         ctx.isGoogle -> {
             if (Surface.ROTATION_90 == orientation) {
-                (max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)) /
-                    (if (ctx.navigationBarHeight > 0) 1 else 2)
+                (
+                    max(scrSz.width, scrSz.height) - max(
+                        scrAvailSz.width,
+                        scrAvailSz.height
+                    )
+                    ) / (if (ctx.navigationBarHeight > 0) 1 else 2)
             } else 0
         }
         else -> 0

@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.Gravity
 import android.view.IRotationWatcher
 import android.view.LayoutInflater
@@ -56,7 +55,7 @@ class LeoToast private constructor(private val ctx: Context) {
         private set
 
     fun init(config: ToastConfig = ToastConfig()) {
-        Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
+        // Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
         this.config = config
         registerToastRotationWatcher()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -114,7 +113,7 @@ class LeoToast private constructor(private val ctx: Context) {
     }
 
     private fun registerToastRotationWatcher() {
-        Log.e("LEO-toast", "ServiceManager.windowManager=${ServiceManager.windowManager}")
+        // Log.e("LEO-toast", "ServiceManager.windowManager=${ServiceManager.windowManager}")
         ServiceManager.windowManager?.registerRotationWatcher(toastRotationWatcher)
     }
 

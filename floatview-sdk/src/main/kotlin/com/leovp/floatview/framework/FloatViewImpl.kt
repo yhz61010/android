@@ -281,7 +281,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         }
                     }
                 }
-                runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { e ->
+                runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { _ ->
                     it.cancel() // Cancel animation
                 }
             }

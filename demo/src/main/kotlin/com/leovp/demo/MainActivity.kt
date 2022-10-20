@@ -23,6 +23,7 @@ import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.ApplicationManager
 import com.leovp.android.utils.NetworkUtil
+import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
 import com.leovp.demo.base.BaseDemonstrationActivity
@@ -185,6 +186,17 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     override fun onResume() {
         super.onResume()
         startTrafficNetwork("leovp.com")
+
+        val actMetaData: String? = getMetaData("activity_meta_data")
+        LogContext.log.w(ITAG, "actMetaData=$actMetaData")
+        val actMetaDataInt: Int? = getMetaData("activity_meta_data_int")
+        LogContext.log.w(ITAG, "actMetaDataInt=$actMetaDataInt")
+
+        val appMetaData1: String? = getMetaData("app_meta_data")
+        LogContext.log.w(ITAG, "appMetaData1=$appMetaData1")
+
+        val appMetaData2: String? = application.getMetaData("app_meta_data")
+        LogContext.log.w(ITAG, "appMetaData2=$appMetaData2")
 
         val actApplication = application
         val actApplicationCtx = applicationContext as Application

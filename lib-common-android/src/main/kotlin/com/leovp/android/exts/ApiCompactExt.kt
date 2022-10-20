@@ -6,9 +6,11 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
@@ -68,71 +70,57 @@ inline fun <reified T : Parcelable> Intent.getParcelableExtraOrNull(key: String)
 /**
  * Example1:
  * ```
- * private val uid1 = getCompatContextInfo<Context, ApplicationInfo>(ctx, PackageManager.GET_META_DATA).uid
- * private val uid2 = getCompatContextInfo<Activity, ApplicationInfo>(activityCtx, PackageManager.GET_META_DATA).uid
+ * val uid = getCompatContextInfo<ApplicationInfo>(PackageManager.GET_META_DATA).uid
+ * val info1: ActivityInfo = getCompatContextInfo(PackageManager.GET_META_DATA)
+ * val info2: ServiceInfo = getCompatContextInfo(PackageManager.GET_META_DATA)
  * ```
- *
- * Example2:
- * ```
- * val info1: ActivityInfo = getCompatContextInfo(activityCtx, PackageManager.GET_META_DATA)
- * val info2: ServiceInfo = getCompatContextInfo(serviceCtx, PackageManager.GET_META_DATA, clazz)
- * ```
- *
- * @param clazz This parameter is only valid when [ctx] is either [Service] or [android.content.BroadcastReceiver].
  *
  * @return Return one of the following type:
- * - ActivityInfo for `Activity` and `BroadcastReceiver` context
+ * - ActivityInfo for `Activity` context
  * - ApplicationInfo for `Application` context
  * - ServiceInfo for `Service` context
  */
-inline fun <reified T : Context, reified O : PackageItemInfo> getCompatContextInfo(
-    ctx: T,
-    flags: Int,
-    clazz: Class<*>? = null
-): O {
-    when (ctx) {
+inline fun <reified O : PackageItemInfo> Context.getCompatContextInfo(flags: Int): O {
+    val pm = this.packageManager
+    when (this) {
         is Activity -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ctx.packageManager.getActivityInfo(
-                ctx.componentName,
-                PackageManager.ComponentInfoFlags.of(flags.toLong())
-            )
+            pm.getActivityInfo(this.componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
         } else {
             @Suppress("DEPRECATION")
-            ctx.packageManager.getActivityInfo(ctx.componentName, flags)
+            pm.getActivityInfo(this.componentName, flags)
         } as O // ActivityInfo
         is Application -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ctx.packageManager.getApplicationInfo(
-                ctx.getPackageName(),
-                PackageManager.ApplicationInfoFlags.of(flags.toLong())
-            )
+            pm.getApplicationInfo(this.getPackageName(), PackageManager.ApplicationInfoFlags.of(flags.toLong()))
         } else {
             @Suppress("DEPRECATION")
-            ctx.packageManager.getApplicationInfo(ctx.getPackageName(), flags)
+            pm.getApplicationInfo(this.getPackageName(), flags)
         } as O // ApplicationInfo
         is Service -> {
-            val cn = ComponentName(ctx, clazz!!)
+            val cn = ComponentName(this, this::class.java)
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.packageManager.getServiceInfo(
-                    cn,
-                    PackageManager.ComponentInfoFlags.of(flags.toLong())
-                )
+                pm.getServiceInfo(cn, PackageManager.ComponentInfoFlags.of(flags.toLong()))
             } else {
                 @Suppress("DEPRECATION")
-                ctx.packageManager.getServiceInfo(cn, flags)
+                pm.getServiceInfo(cn, flags)
             } as O // ServiceInfo
         }
-        else -> { // BroadcastReceiver
-            val cn = ComponentName(ctx, clazz!!)
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ctx.packageManager.getReceiverInfo(
-                    cn,
-                    PackageManager.ComponentInfoFlags.of(flags.toLong())
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                ctx.packageManager.getReceiverInfo(cn, flags)
-            } as O // ActivityInfo
-        }
+        else -> error("Invalid context. $this")
+    }
+}
+
+/**
+ * val ai: ActivityInfo = getCompatContextInfo(context, PackageManager.GET_META_DATA)
+ *
+ * @return Return `ActivityInfo` for `BroadcastReceiver`.
+ */
+fun BroadcastReceiver.getCompatContextInfo(ctx: Context, flags: Int): ActivityInfo {
+    val pm = ctx.packageManager
+    val cn = ComponentName(ctx, this::class.java)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        pm.getReceiverInfo(cn, PackageManager.ComponentInfoFlags.of(flags.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        pm.getReceiverInfo(cn, flags)
     }
 }
 

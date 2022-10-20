@@ -9,6 +9,7 @@ import android.os.Looper
 import android.view.View
 import com.leovp.android.exts.cancelToast
 import com.leovp.android.exts.toast
+import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.log.LogContext
@@ -43,6 +44,8 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
         override fun onCreate() {
             super.onCreate()
             LogContext.log.e(ITAG, "=====>>>>> TestService created <<<<<=====")
+            val metaData: String? = getMetaData("service_meta_data")
+            LogContext.log.e(ITAG, "metaData=$metaData")
             mainHandler.post {
                 toast("TestService created.")
                 LogContext.log.e(ITAG, "=> TestService created")

@@ -143,14 +143,7 @@ fun Window.hideNavigationBar(rootView: View = decorView) {
         // https://blog.csdn.net/lyabc123456/article/details/88683425
         // Always hide virtual navigation
         @Suppress("DEPRECATION")
-        this.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            )
+        this.decorView.systemUiVisibility = FLAGS_FULLSCREEN
     }
 
     // https://blog.csdn.net/qiyei2009/article/details/74435809

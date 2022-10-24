@@ -4,6 +4,7 @@ package com.leovp.reflection
 
 import com.leovp.reflection.testclass.JavaTestClass
 import com.leovp.reflection.testclass.JavaTestClass.NoArgClass
+import com.leovp.reflection.util.ReflectManager
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test

@@ -6,6 +6,24 @@
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 
+# How to import?
+## For TOML
+Add the library you need. For example:
+```
+[libraries]
+leo-androidbase = { module = "com.leovp.android:androidbase", version.ref = "<latest-version>" }
+```
+Import that library in your module `build.gradle.kts` file:
+```
+implementation(libs.leo.androidbase)
+```
+## For Gradle
+```
+dependencies {
+    implementation "com.leovp.android:androidbase:<latest>"
+}
+```
+
 # Upload to bintray(Maven and jcenter)
 
 ```sh

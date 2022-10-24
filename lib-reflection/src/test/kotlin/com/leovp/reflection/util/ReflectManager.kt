@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.reflection
+package com.leovp.reflection.util
 
 import java.lang.reflect.AccessibleObject
 import java.lang.reflect.Field

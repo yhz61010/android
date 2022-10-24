@@ -10,6 +10,7 @@ import com.leovp.reflection.testclass.Employee
 import com.leovp.reflection.testclass.Person
 import com.leovp.reflection.testclass.PrivateConstructor
 import com.leovp.reflection.testclass.TestClass
+import com.leovp.reflection.util.ReflectManager
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals

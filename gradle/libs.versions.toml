@@ -10,7 +10,7 @@ ndk-sdk = "21.1.6352462" # 22.1.7171670
 versionCode = "1"
 versionName = "1.0.0"
 
-leo-version = "5.11.15"
+leo-version = "5.11.16"
 
 #===================
 #===== Compile =====
@@ -24,15 +24,15 @@ kotlin = "1.7.20"
 coroutines = "1.6.4"
 material = "1.7.0"
 appcompat = "1.5.1"
-activity-ktx = "1.6.0"
-fragment-ktx = "1.5.3"
+activity-ktx = "1.6.1"
+fragment-ktx = "1.5.4"
 core-ktx = "1.9.0"
 multidex = "2.0.1"
 preference = "1.2.0"
 recyclerview = "1.2.1"
 constraintlayout = "2.1.4"
 coordinatorlayout = "1.2.0"
-navigation = "2.5.2"
+navigation = "2.5.3"
 concurrent-futures-ktx = "1.1.0"
 lifecycle = "2.5.1"
 annotation = "1.5.0"
@@ -40,8 +40,8 @@ cardview = "1.0.0"
 viewpager2 = "1.0.0"
 swiperefreshlayout = "1.1.0"
 room = "2.5.0-beta01" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.2.0-beta02"
-exifinterface = "1.3.4"
+camera = "1.2.0-rc01"
+exifinterface = "1.3.5"
 
 #===========================
 #===== Android Compose =====
@@ -67,10 +67,10 @@ dokka = "1.7.10"
 # Unable to load class 'com.pinterest.ktlint.core.KtLint$Params'.
 ktlint = "0.45.2" # 0.47.1 # 0.47.0 # 0.46.1 # 0.45.2
 ktlint-gradle = "11.0.0" # 10.3.0
-benmanes = "0.42.0"
-vcu = "0.6.1"
+benmanes = "0.43.0"
+vcu = "0.7.0"
 jacoco = "0.8.8"
-sonarqube = "3.4.0.2513"
+sonarqube = "3.5.0.2730"
 
 coil = "2.2.2"
 glide = "4.14.2"
@@ -82,7 +82,7 @@ rxjava2 = "2.2.21"
 rxjava2-android = "2.1.1"
 rxjava3 = "3.1.5"
 rxjava3-android = "3.0.0"
-gson = "2.9.1"
+gson = "2.10"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
@@ -94,15 +94,15 @@ free-reflection = "3.1.0"
 flyco-tablayout = "2.2.0"
 srl = "2.0.5"
 netty = "4.1.84.Final"
-koin = "3.2.3"
-bytedeco-ffmpeg = "5.0-1.5.7"
-bytedeco-javacpp = "1.5.7"
+koin = "3.3.0"
+bytedeco-ffmpeg = "5.1.2-1.5.8"
+bytedeco-javacpp = "1.5.8"
 material-dialogs = "3.3.0"
 android-animations = "2.4"
 java-mail = "1.6.7"
 jzlib = "1.1.3"
 androidasync = "3.1.0"
-net = "3.5.1"
+net = "3.5.2"
 subsampling-scale-image-view = "3.10.0"
 mannodermaus-android-junit5 = "1.8.2.1"
 mannodermaus-junit5 = "1.3.0"
@@ -443,6 +443,6 @@ navigation = { id = "androidx.navigation.safeargs.kotlin", version.ref = "naviga
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint-gradle = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
 benmanes-versions = { id = "com.github.ben-manes.versions", version.ref = "benmanes" }
-vcu = { id = "nl.littlerobots.version-catalog-update", version.ref = "vcu" }
+# vcu = { id = "nl.littlerobots.version-catalog-update", version.ref = "vcu" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
 android-junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "mannodermaus-android-junit5" }

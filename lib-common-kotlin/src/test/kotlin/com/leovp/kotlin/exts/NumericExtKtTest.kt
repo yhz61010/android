@@ -17,9 +17,9 @@ class NumericExtKtTest {
         assertEquals(0, gcd(0, 0))
 
         assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(-1, 1) })
-        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> {gcd(1, -1) })
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(1, -1) })
         assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(0, -1) })
-        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> {  gcd(-1, 0)  })
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(-1, 0) })
 
         assertEquals(1, gcd(0, 1))
         assertEquals(1, gcd(1, 0))

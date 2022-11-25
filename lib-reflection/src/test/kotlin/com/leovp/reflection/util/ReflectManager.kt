@@ -209,10 +209,10 @@ class ReflectManager private constructor() {
                 if (result != null) return result
             }
             // Only call Java static method.
-            return try {
+            return runCatching {
                 callJavaStaticFunction(name, *args)
                     ?: throw NoSuchMethodException("Not found any Java static method [$name]")
-            } catch (e: NoSuchMethodException) {
+            }.getOrElse {
                 // Call Kotlin class instance normal method.
                 callFunctions(obj, type.declaredFunctions, name, *args)
                     ?: throw ReflectException("Not found any method named [$name].")
@@ -356,7 +356,7 @@ class ReflectManager private constructor() {
     }
 
     private fun callFunctions(
-        `object`: Any?,
+        obj: Any?,
         functions: Collection<KFunction<*>>,
         name: String,
         vararg args: Any? = arrayOfNulls<Any>(0)
@@ -367,10 +367,10 @@ class ReflectManager private constructor() {
         }?.let { func ->
             if (!func.isAccessible) func.isAccessible = true
             return if (func.returnType == unitType) {
-                func.call(`object`, *args)
-                reflect(`object`)
+                func.call(obj, *args)
+                reflect(obj)
             } else {
-                reflect(func.call(`object`, *args))
+                reflect(func.call(obj, *args))
             }
         }
         return null

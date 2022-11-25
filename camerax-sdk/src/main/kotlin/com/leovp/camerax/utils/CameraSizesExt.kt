@@ -122,7 +122,7 @@ internal fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
 }
 
 internal fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
-    return getCameraSupportedSize().groupBy { getRatio(it) }
+    return getCameraSupportedSize().groupBy { getRatio(it)!! }
 }
 
 internal fun getSpecificPreviewOutputSize(

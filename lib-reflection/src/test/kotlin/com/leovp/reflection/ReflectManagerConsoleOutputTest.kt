@@ -297,11 +297,13 @@ class ReflectManagerConsoleOutputTest {
         employeeAllMembers.forEach { callable ->
             // Allow to get private property value.
             if (!callable.isAccessible) callable.isAccessible = true
-            println("${callable.visibility} ${callable.name}: ${callable.returnType} " +
-                "-> Unit: ${callable.returnType == Unit::class.createType()}" +
-                "\ninstanceParameter--> ${callable.instanceParameter}" +
-                "\nvalueParameters  -->${callable.valueParameters}" +
-                "\nparameters       -->${callable.parameters}")
+            println(
+                "${callable.visibility} ${callable.name}: ${callable.returnType} " +
+                    "-> Unit: ${callable.returnType == Unit::class.createType()}" +
+                    "\ninstanceParameter--> ${callable.instanceParameter}" +
+                    "\nvalueParameters  -->${callable.valueParameters}" +
+                    "\nparameters       -->${callable.parameters}"
+            )
             println("--------------------\n")
         }
 
@@ -315,10 +317,12 @@ class ReflectManagerConsoleOutputTest {
         val employeeMembers = Employee::class.members
         employeeMembers.forEach { member ->
             if (!member.isAccessible) member.isAccessible = true
-            println("${member.visibility} ${member.name}: ${member.returnType}" +
-                "\ninstanceParameter--> ${member.instanceParameter}" +
-                "\nvalueParameters  -->${member.valueParameters}" +
-                "\nparameters       -->${member.parameters}")
+            println(
+                "${member.visibility} ${member.name}: ${member.returnType}" +
+                    "\ninstanceParameter--> ${member.instanceParameter}" +
+                    "\nvalueParameters  -->${member.valueParameters}" +
+                    "\nparameters       -->${member.parameters}"
+            )
             println("--------------------\n")
         }
 
@@ -331,10 +335,12 @@ class ReflectManagerConsoleOutputTest {
         employeeDeclaredFunctions.forEach { callable ->
             // Allow to get private property value.
             if (!callable.isAccessible) callable.isAccessible = true
-            println("${callable.visibility} ${callable.name}: ${callable.returnType}" +
-                "\ninstanceParameter--> ${callable.instanceParameter}" +
-                "\nvalueParameters  -->${callable.valueParameters}" +
-                "\nparameters       -->${callable.parameters}")
+            println(
+                "${callable.visibility} ${callable.name}: ${callable.returnType}" +
+                    "\ninstanceParameter--> ${callable.instanceParameter}" +
+                    "\nvalueParameters  -->${callable.valueParameters}" +
+                    "\nparameters       -->${callable.parameters}"
+            )
             println("--------------------\n")
         }
 
@@ -348,11 +354,13 @@ class ReflectManagerConsoleOutputTest {
         val employeeFunctions = Employee::class.functions
         employeeFunctions.forEach { func ->
             if (!func.isAccessible) func.isAccessible = true
-            println("${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Employee::class.isCompanion}" +
-                "\ntypeParameters--> ${func.typeParameters}" +
-                "\ninstanceParameter--> ${func.instanceParameter}" +
-                "\nvalueParameters  -->${func.valueParameters}" +
-                "\nparameters       -->${func.parameters}")
+            println(
+                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Employee::class.isCompanion}" +
+                    "\ntypeParameters--> ${func.typeParameters}" +
+                    "\ninstanceParameter--> ${func.instanceParameter}" +
+                    "\nvalueParameters  -->${func.valueParameters}" +
+                    "\nparameters       -->${func.parameters}"
+            )
             println("--------------------\n")
         }
 
@@ -363,11 +371,13 @@ class ReflectManagerConsoleOutputTest {
         val personFunctions = Person::class.functions
         personFunctions.forEach { func ->
             if (!func.isAccessible) func.isAccessible = true
-            println("${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Person::class.isCompanion}" +
-                "\ntypeParameters--> ${func.typeParameters}" +
-                "\ninstanceParameter--> ${func.instanceParameter}" +
-                "\nvalueParameters  -->${func.valueParameters}" +
-                "\nparameters       -->${func.parameters}")
+            println(
+                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Person::class.isCompanion}" +
+                    "\ntypeParameters--> ${func.typeParameters}" +
+                    "\ninstanceParameter--> ${func.instanceParameter}" +
+                    "\nvalueParameters  -->${func.valueParameters}" +
+                    "\nparameters       -->${func.parameters}"
+            )
             println("--------------------\n")
         }
 

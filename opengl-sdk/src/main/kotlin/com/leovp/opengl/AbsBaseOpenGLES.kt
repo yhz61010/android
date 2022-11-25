@@ -62,20 +62,12 @@ abstract class AbsBaseOpenGLES {
     }
 
     protected fun getUniform(name: String): Int {
-        if (programObjId < 1) {
-            throw IllegalArgumentException(
-                "Program ID=$programObjId is not valid. Make sure to call makeProgram() first."
-            )
-        }
+        require(programObjId >= 1) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
         return GLES20.glGetUniformLocation(programObjId, name)
     }
 
     protected fun getAttrib(name: String): Int {
-        if (programObjId < 1) {
-            throw IllegalArgumentException(
-                "Program ID=$programObjId is not valid. Make sure to call makeProgram() first."
-            )
-        }
+        require(programObjId >= 1) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
         return GLES20.glGetAttribLocation(programObjId, name)
     }
 }

@@ -190,9 +190,7 @@ abstract class BaseNettyServer protected constructor(
             LogContext.log.e(cmdTag, "The command is null. Stop processing.")
             return false
         }
-        if (cmd !is String && cmd !is ByteArray) {
-            throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray.")
-        }
+        require(cmd is String || cmd is ByteArray) { "$cmdTag: Command must be either String or ByteArray." }
         return if (!clientChannel.isActive) {
             LogContext.log.e(cmdTag, "Client channel is not active. Can not send command.")
             false

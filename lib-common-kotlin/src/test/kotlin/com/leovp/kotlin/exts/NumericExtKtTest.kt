@@ -1,8 +1,10 @@
 package com.leovp.kotlin.exts
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import kotlin.test.assertIs
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Author: Michael Leo
@@ -14,10 +16,10 @@ class NumericExtKtTest {
     fun gcdTest() {
         assertEquals(0, gcd(0, 0))
 
-        assertThrows(IllegalArgumentException::class.java) { gcd(-1, 1) }
-        assertThrows(IllegalArgumentException::class.java) { gcd(1, -1) }
-        assertThrows(IllegalArgumentException::class.java) { gcd(0, -1) }
-        assertThrows(IllegalArgumentException::class.java) { gcd(-1, 0) }
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(-1, 1) })
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> {gcd(1, -1) })
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> { gcd(0, -1) })
+        assertIs<IllegalArgumentException>(assertThrows<IllegalArgumentException> {  gcd(-1, 0)  })
 
         assertEquals(1, gcd(0, 1))
         assertEquals(1, gcd(1, 0))
@@ -62,13 +64,13 @@ class NumericExtKtTest {
 
         assertEquals("37:18", getRatio(2960, 1440))
 
-        assertThrows(ArithmeticException::class.java) { getRatio(0, 0) }
+        assertNull(getRatio(0, 0))
 
-        assertThrows(ArithmeticException::class.java) { getRatio(0, -1) }
-        assertThrows(ArithmeticException::class.java) { getRatio(-1, 0) }
+        assertNull(getRatio(0, -1))
+        assertNull(getRatio(-1, 0))
 
-        assertThrows(ArithmeticException::class.java) { getRatio(1, -1) }
-        assertThrows(ArithmeticException::class.java) { getRatio(-1, 1) }
+        assertNull(getRatio(1, -1))
+        assertNull(getRatio(-1, 1))
 
         assertEquals("0:1", getRatio(0, 1))
         assertEquals("1:0", getRatio(1, 0))

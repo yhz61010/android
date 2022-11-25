@@ -578,9 +578,7 @@ abstract class BaseNettyClient protected constructor(
             )
             return false
         }
-        if (cmd !is String && cmd !is ByteArray) {
-            throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray.")
-        }
+        require(cmd is String || cmd is ByteArray) { "$cmdTag: Command must be either String or ByteArray." }
         if (ClientConnectStatus.CONNECTED != connectStatus.get()) {
             LogContext.log.e(
                 cmdTag,

@@ -18,7 +18,6 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
 
-
 /**
  * https://dwz.win/azW6
  *
@@ -255,8 +254,7 @@ class ReflectManager private constructor() {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = actualTypes[i]?.javaObjectType
                 val declaredType: Class<*>? = declaredTypes[i]?.kotlin?.javaObjectType
-                if (actualTypes[i] == Unit::class.java ||
-                    (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
+                if (actualTypes[i] == Unit::class.java || (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
                     continue
                 }
                 return false
@@ -286,7 +284,7 @@ class ReflectManager private constructor() {
                 val modifiersField = field.javaClass.getDeclaredField("modifiers")
                 modifiersField.isAccessible = true
                 modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
-            }/*.onFailure {
+            } /*.onFailure {
                 // runs in android will happen
                 field.isAccessible = true
             }*/

@@ -36,6 +36,8 @@ import kotlin.math.max
  * Date: 2020/9/29 上午11:52
  */
 
+private val mainHandler = Handler(Looper.getMainLooper())
+
 /**
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
  *
@@ -121,8 +123,6 @@ class LeoToast private constructor(private val ctx: Context) {
         ServiceManager.windowManager?.removeRotationWatcher(toastRotationWatcher)
     }
 }
-
-private val mainHandler = Handler(Looper.getMainLooper())
 
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.

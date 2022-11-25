@@ -111,10 +111,18 @@ class ReflectManagerConsoleOutputTest {
         }
         // Result:
         // constructor param size=1 name=<init> [argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
-        // constructor param size=2 name=<init> [argument type=kotlin.String -> argument name=employeeId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
-        // constructor param size=2 name=<init> [argument type=kotlin.Int -> argument name=deptId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
-        // constructor param size=5 name=<init> [argument type=kotlin.String -> argument name=userName, argument type=kotlin.Char -> argument name=sex, argument type=kotlin.Int -> argument name=age, argument type=kotlin.String -> argument name=employeeId, argument type=kotlin.Int -> argument name=deptId]
-        // constructor param size=3 name=<init> [argument type=kotlin.String -> argument name=employeeId, argument type=kotlin.Int -> argument name=deptId, argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
+        /* constructor param size=2 name=<init> [argument type=kotlin.String -> argument name=employeeId,
+                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
+        /* constructor param size=2 name=<init> [argument type=kotlin.Int -> argument name=deptId,
+                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
+        /* constructor param size=5 name=<init> [argument type=kotlin.String -> argument name=userName,
+                                    argument type=kotlin.Char -> argument name=sex,
+                                    argument type=kotlin.Int -> argument name=age,
+                                    argument type=kotlin.String -> argument name=employeeId,
+                                    argument type=kotlin.Int -> argument name=deptId] */
+        /* constructor param size=3 name=<init> [argument type=kotlin.String -> argument name=employeeId,
+                                    argument type=kotlin.Int -> argument name=deptId,
+                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
     }
 
     @Test

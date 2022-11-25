@@ -2,6 +2,8 @@
 
 package com.leovp.reflection.testclass
 
+import java.util.*
+
 /**
  * Author: Michael Leo
  * Date: 2022/10/8 10:23
@@ -15,6 +17,7 @@ data class DataClassOneArg(val arg1: String) {
         const val PUBLIC_CONST_VAL = "public_const_val"
     }
 }
+
 data class DataClassTwoArg(val arg1: String, private val num: Int)
 
 class PrivateConstructor private constructor(private val paramA: Int, private var paramB: String) {
@@ -50,9 +53,7 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
     companion object {
         const val COMPANY: String = "Leo Group"
 
-        fun sayHi(): String {
-            return "Employee said: Hi."
-        }
+        fun sayHi(): String = String.format(Locale.ENGLISH, "%s", "Employee said: Hi.")
 
         fun globalSay(content: String): String {
             return "Employee said to global: $content"

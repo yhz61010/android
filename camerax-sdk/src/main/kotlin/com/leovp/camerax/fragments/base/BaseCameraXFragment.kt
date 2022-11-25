@@ -57,12 +57,12 @@ import com.leovp.android.exts.dp2px
 import com.leovp.android.exts.isSamsung
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.topMargin
+import com.leovp.camerax.R
 import com.leovp.camerax.adapter.Media
 import com.leovp.camerax.bean.CaptureImage
+import com.leovp.camerax.databinding.IncRatioOptionsBinding
 import com.leovp.camerax.enums.CameraRatio
 import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.R
-import com.leovp.camerax.databinding.IncRatioOptionsBinding
 import com.leovp.camerax.utils.SharedPrefsManager
 import com.leovp.camerax.utils.SoundManager
 import com.leovp.camerax.utils.cameraSensorOrientation
@@ -671,10 +671,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             LogContext.log.i(
                 logTag,
                 "FACE RETOUCH: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing,
-                    ExtensionMode.FACE_RETOUCH
-                )
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing,
+                        ExtensionMode.FACE_RETOUCH
+                    )
                 }"
             )
             LogContext.log.i(
@@ -887,41 +887,35 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                        .joinToString(",")
                 }
  Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                        .joinToString(",")
                 }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") {
-                    "${it.width}x${it.height}(${
-                    getRatio(it.width, it.height)
-                    })"
-                }
+                    highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
                 }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
-                allCameraSupportSize?.joinToString(",") {
-                    "${it.width}x${it.height}" +
-                        "(${getCameraSizeTotalPixels(it)}-" +
-                        "${getRatio(it.width, it.height)})"
-                }
+                    allCameraSupportSize?.joinToString(",") {
+                        "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
+                    }
                 }
                 """.trimIndent()
                 LogContext.log.i(logTag, cameraParametersString)

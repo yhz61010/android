@@ -41,9 +41,11 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
     constructor(p: Person) : this("", 0, p)
     constructor(employeeId: String, p: Person) : this(employeeId, 0, p)
     constructor(deptId: Int, p: Person) : this("", deptId, p)
-    constructor(userName: String, sex: Char, age: Int, employeeId: String, deptId: Int) : this(employeeId,
+    constructor(userName: String, sex: Char, age: Int, employeeId: String, deptId: Int) : this(
+        employeeId,
         deptId,
-        Person(userName, sex, age))
+        Person(userName, sex, age)
+    )
 
     companion object {
         const val COMPANY: String = "Leo Group"

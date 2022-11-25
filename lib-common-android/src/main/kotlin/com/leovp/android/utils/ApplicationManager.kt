@@ -3,7 +3,6 @@ package com.leovp.android.utils
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import java.lang.reflect.InvocationTargetException
 
 /**
  * Author: Michael Leo
@@ -12,7 +11,7 @@ import java.lang.reflect.InvocationTargetException
 object ApplicationManager {
     private var app: Application? = null
 
-    val application: Application = app?: getApplicationByReflect()
+    val application: Application = app ?: getApplicationByReflect()
 
     /**
      * This method is NOT mandatory.
@@ -30,22 +29,11 @@ object ApplicationManager {
     }
 
     private fun getApplicationByReflect(): Application {
-        try {
-            @SuppressLint("PrivateApi")
-            val activityThread = Class.forName("android.app.ActivityThread")
-            val at = activityThread.getMethod("currentActivityThread").invoke(null)
-            val app = activityThread.getMethod("getApplication").invoke(at) ?: error("u should init first")
-            init(app as Application)
-            return app
-        } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        } catch (e: InvocationTargetException) {
-            e.printStackTrace()
-        } catch (e: ClassNotFoundException) {
-            e.printStackTrace()
-        }
-        throw NullPointerException("u should init first")
+        @SuppressLint("PrivateApi")
+        val activityThread = Class.forName("android.app.ActivityThread")
+        val at = activityThread.getMethod("currentActivityThread").invoke(null)
+        val app = activityThread.getMethod("getApplication").invoke(at) ?: error("u should init first")
+        init(app as Application)
+        return app
     }
 }

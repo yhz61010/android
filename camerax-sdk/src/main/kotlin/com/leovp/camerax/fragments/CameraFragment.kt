@@ -266,22 +266,16 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraId)
+        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
         val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val supportedSize: SmartSize? = when (selectedRatio) {
-            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize()
-                .firstOrNull { getRatio(it) == "16:9" }
-            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize()
-                .firstOrNull { getRatio(it) == "1:1" }
-            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize()
-                .firstOrNull { getRatio(it) == "4:3" }
+            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
+            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
+            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
             CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
-                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(
-                    1
-                )
+                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
             }
         }
         checkNotNull(supportedSize) { "Unknown camera size $supportedSize" }
@@ -289,9 +283,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         LogContext.log.w(
             logTag,
-            "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] | targetSize=$targetSize[${
-            getRatio(targetSize)
-            }] | deviceOrientation=${SURFACE_ROTATION_TO_DEGREE[deviceRotation]} | cameraOrientation=$cameraOrientation"
+            "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] " +
+                "targetSize=$targetSize[${getRatio(targetSize)}]" +
+                " deviceOrientation=${SURFACE_ROTATION_TO_DEGREE[deviceRotation]} cameraOrientation=$cameraOrientation"
         )
 
         //        characteristics.getCameraSupportedSizeMap().forEach { (ratio, sizeList) ->
@@ -388,10 +382,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     val lower: Float = exposureCompensationRange.lower.toFloat()
                     val upper: Float = exposureCompensationRange.upper.toFloat()
                     cameraUiContainerTopBinding.sliderExposure.run {
-                        LogContext.log.i(
-                            logTag,
-                            "Exposure[$lower, $upper]=$exposureCompensationIndex"
-                        )
+                        LogContext.log.i(logTag, "Exposure[$lower, $upper]=$exposureCompensationIndex")
                         valueFrom = lower
                         valueTo = upper
                         //                        stepSize = 1f / 10
@@ -502,18 +493,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
         _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
 
-        _cameraUiContainerTopBinding =
-            CameraUiContainerTopBinding.inflate(
-                requireContext().layoutInflater,
-                binding.root,
-                true
-            )
-        _cameraUiContainerBottomBinding =
-            CameraUiContainerBottomBinding.inflate(
-                requireContext().layoutInflater,
-                binding.root,
-                true
-            )
+        _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(requireContext().layoutInflater, binding.root, true)
+        _cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(requireContext().layoutInflater, binding.root, true)
 
         incRatioBinding = IncRatioOptionsBinding.bind(cameraUiContainerTopBinding.root)
 
@@ -557,11 +538,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
                 // Only navigate when the gallery has photos
                 if (true == outputPictureDirectory.listFiles()?.isNotEmpty()) {
-                    navController.navigate(
-                        CameraFragmentDirections.actionCameraToGallery(
-                            outputPictureDirectory.absolutePath
-                        )
-                    )
+                    navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputPictureDirectory.absolutePath))
                 }
             }
         } else {
@@ -622,13 +599,12 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // If the folder selected is an external media directory, this is
                             // unnecessary but otherwise other apps will not be able to access our
                             // images unless we scan them using [MediaScannerConnection]
-                            //                            val mimeType =
-                            //                                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
-                            //                            MediaScannerConnection.scanFile(context,
-                            //                                arrayOf(savedUri.toFile().absolutePath),
-                            //                                arrayOf(mimeType)) { path, uri ->
-                            //                                LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
-                            //                            }
+                            // val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
+                            // MediaScannerConnection.scanFile(context,
+                            //     arrayOf(savedUri.toFile().absolutePath),
+                            //     arrayOf(mimeType)) { path, uri ->
+                            //     LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
+                            // }
                             captureImageListener?.onSavedImageUri(savedImage, null)
                         }
                     } else {
@@ -659,7 +635,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
                             Handler(Looper.getMainLooper()).postDelayed({
-                                //                                it.isEnabled = true
+                                // it.isEnabled = true
                                 enableUI(true)
                             }, 500)
                         }
@@ -695,8 +671,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
     }
 
-    private fun showRatioLayer() =
-        incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
+    private fun showRatioLayer() = incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
 
     private suspend fun startCountdown() = withContext(Dispatchers.Main) {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())

@@ -122,20 +122,23 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
     }
 
     private fun sortConstructors(list: List<Constructor<*>>) {
-        Collections.sort(list, Comparator { o1, o2 ->
-            val types1: Array<out Class<*>> = o1.parameterTypes
-            val types2: Array<out Class<*>> = o2.parameterTypes
-            val type1: Class<*>?
-            val type2: Class<*>?
-            for (i in types1.indices) {
-                if (types1[i] == types2[i]) {
-                    type1 = wrapper(types1[i])
-                    type2 = wrapper(types2[i])
-                    return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+        Collections.sort(
+            list,
+            Comparator { o1, o2 ->
+                val types1: Array<out Class<*>> = o1.parameterTypes
+                val types2: Array<out Class<*>> = o2.parameterTypes
+                val type1: Class<*>?
+                val type2: Class<*>?
+                for (i in types1.indices) {
+                    if (types1[i] == types2[i]) {
+                        type1 = wrapper(types1[i])
+                        type2 = wrapper(types2[i])
+                        return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+                    }
                 }
+                0
             }
-            0
-        })
+        )
     }
 
     private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager {
@@ -307,27 +310,32 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
     }
 
     private fun sortMethods(methods: List<Method>) {
-        Collections.sort(methods, Comparator { o1, o2 ->
-            val types1: Array<out Class<*>> = o1.parameterTypes
-            val types2: Array<out Class<*>> = o2.parameterTypes
-            val type1: Class<*>?
-            val type2: Class<*>?
-            for (i in types1.indices) {
-                if (types1[i] != types2[i]) {
-                    type1 = wrapper(types1[i])
-                    type2 = wrapper(types2[i])
-                    return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+        Collections.sort(
+            methods,
+            Comparator { o1, o2 ->
+                val types1: Array<out Class<*>> = o1.parameterTypes
+                val types2: Array<out Class<*>> = o2.parameterTypes
+                val type1: Class<*>?
+                val type2: Class<*>?
+                for (i in types1.indices) {
+                    if (types1[i] != types2[i]) {
+                        type1 = wrapper(types1[i])
+                        type2 = wrapper(types2[i])
+                        return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+                    }
                 }
+                0
             }
-            0
-        })
+        )
     }
 
-    private fun isSimilarSignature(possiblyMatchingMethod: Method,
+    private fun isSimilarSignature(
+        possiblyMatchingMethod: Method,
         desiredMethodName: String,
-        desiredParamTypes: Array<Class<*>?>): Boolean {
-        return possiblyMatchingMethod.name == desiredMethodName
-            && match(possiblyMatchingMethod.parameterTypes, desiredParamTypes)
+        desiredParamTypes: Array<Class<*>?>
+    ): Boolean {
+        return possiblyMatchingMethod.name == desiredMethodName &&
+            match(possiblyMatchingMethod.parameterTypes, desiredParamTypes)
     }
 
     private fun match(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
@@ -337,8 +345,9 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
             for (i in actualTypes.indices) {
                 actualType = wrapper(actualTypes[i])?.kotlin?.javaObjectType
                 declaredType = wrapper(declaredTypes[i])?.kotlin?.javaObjectType
-                if (actualType == Unit::class.java
-                    || (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
+                if (actualType == Unit::class.java ||
+                    (actualType != null && declaredType?.isAssignableFrom(actualType) == true)
+                ) {
                     continue
                 }
                 return false
@@ -367,9 +376,9 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         if (!accessible.isAccessible) accessible.isAccessible = true
         return accessible
     }
-    ///////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
     // proxy
-    ///////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
     /**
      * Create a proxy for the wrapped object allowing to type safely invoke
      * methods on it using a custom interface.

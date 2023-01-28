@@ -3,6 +3,7 @@ package com.leovp.androidbase
 import android.util.Log
 import com.leovp.androidbase.utils.cipher.GZipUtil
 import com.leovp.bytes.toHexStringLE
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
@@ -17,8 +18,23 @@ import org.powermock.modules.junit4.PowerMockRunner
 @PrepareForTest(Log::class)
 class GZipUtilTest {
 
+    private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+
+    private fun randomStringByKotlinRandom(len: Int) = (1..len)
+        .map { Random.nextInt(0, charPool.size).let { charPool[it] } }
+        .joinToString("")
+
     @Test
     fun compress() {
+        for (i in 0 until 100) {
+            val randLen = 100 * 1024 // Random.nextInt(10_000, 500_000)
+            val randStr = randomStringByKotlinRandom(randLen)
+            val st = System.nanoTime()
+            GZipUtil.compress(randStr)
+            val ed = System.nanoTime()
+            println("cost[$randLen]=${(ed - st)/1000/1000}ms")
+        }
+
         val string = "I have a dream. A song to sing. To help me cope with anything."
         val compressedBytes: ByteArray = GZipUtil.compress(string)
         assertEquals(

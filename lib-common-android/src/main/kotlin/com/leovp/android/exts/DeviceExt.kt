@@ -117,10 +117,10 @@ val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 /**
  * @param surfaceRotation The value may be:
  *
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
  *
  * @return The screen width in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
@@ -138,10 +138,10 @@ fun Context.getScreenWidth(surfaceRotation: Int, screenSize: Size = screenRealRe
 /**
  * @param surfaceRotation The value may be:
  *
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
  *
  * @return The screen height in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
@@ -159,10 +159,10 @@ fun Context.getScreenHeight(surfaceRotation: Int, screenSize: Size = screenRealR
 /**
  * @param surfaceRotation The value may be:
  *
- * Surface.ROTATION_0 (no rotation),
- * Surface.ROTATION_90,
- * Surface.ROTATION_180,
- * or Surface.ROTATION_270.
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
  *
  * @return The screen size in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
@@ -576,9 +576,9 @@ fun Context.getDeviceOrientation(
  *         The result is one of the following value:
  *
  * - Surface.ROTATION_0 (no rotation)
- * - Surface.ROTATION_90
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
  * - Surface.ROTATION_180
- * - Surface.ROTATION_270
+ * - Surface.ROTATION_270 (90 degrees clockwise)
  */
 val Context.screenSurfaceRotation: Int
     @Suppress("DEPRECATION")
@@ -603,6 +603,12 @@ val Context.screenSurfaceRotation: Int
     }
 // =================
 
+/**
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
+ */
 val SURFACE_ROTATION_TO_DEGREE = mapOf(
     Surface.ROTATION_0 to 0,
     Surface.ROTATION_90 to 90,
@@ -610,6 +616,12 @@ val SURFACE_ROTATION_TO_DEGREE = mapOf(
     Surface.ROTATION_270 to 270
 )
 
+/**
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
+ */
 val DEGREE_TO_SURFACE_ROTATION = mapOf(
     0 to Surface.ROTATION_0,
     90 to Surface.ROTATION_90,
@@ -617,6 +629,12 @@ val DEGREE_TO_SURFACE_ROTATION = mapOf(
     270 to Surface.ROTATION_270
 )
 
+/**
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
+ */
 val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS = mapOf(
     SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
     SCREEN_ORIENTATION_LANDSCAPE to Surface.ROTATION_90,
@@ -633,6 +651,12 @@ val Int.screenOrientationName: String
         else -> "Unknown"
     }
 
+/**
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
+ */
 val Int.surfaceRotationLiteralName: String
     get() = when (this) {
         Surface.ROTATION_0 -> "ROTATION_0"
@@ -642,6 +666,12 @@ val Int.surfaceRotationLiteralName: String
         else -> "Unknown"
     }
 
+/**
+ * - Surface.ROTATION_0 (no rotation)
+ * - Surface.ROTATION_90 (90 degrees counter-clockwise)
+ * - Surface.ROTATION_180
+ * - Surface.ROTATION_270 (90 degrees clockwise)
+ */
 val Int.surfaceRotationName: String
     get() = when (this) {
         Surface.ROTATION_0 -> "Portrait"

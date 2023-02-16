@@ -1,9 +1,9 @@
 package com.leovp.androidbase
 
 import android.util.Log
+import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.GZipUtil
 import com.leovp.bytes.toHexStringLE
-import kotlin.random.Random
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
@@ -18,40 +18,43 @@ import org.powermock.modules.junit4.PowerMockRunner
 @PrepareForTest(Log::class)
 class GZipUtilTest {
 
-    private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    // private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    //
+    // private fun randomStringByKotlinRandom(len: Int) = (1..len)
+    //     .map { Random.nextInt(0, charPool.size).let { charPool[it] } }
+    //     .joinToString("")
 
-    private fun randomStringByKotlinRandom(len: Int) = (1..len)
-        .map { Random.nextInt(0, charPool.size).let { charPool[it] } }
-        .joinToString("")
+    private val constString = "I have a dream. A song to sing. To help me cope with anything."
 
     @Test
     fun compress() {
-        for (i in 0 until 100) {
-            val randLen = 100 * 1024 // Random.nextInt(10_000, 500_000)
-            val randStr = randomStringByKotlinRandom(randLen)
-            val st = System.nanoTime()
-            GZipUtil.compress(randStr)
-            val ed = System.nanoTime()
-            println("cost[$randLen]=${(ed - st)/1000/1000}ms")
-        }
+        // for (i in 0 until 100) {
+        //     val randLen = 100 * 1024 // Random.nextInt(10_000, 500_000)
+        //     val randStr = randomStringByKotlinRandom(randLen)
+        //     val st = System.nanoTime()
+        //     GZipUtil.compress(randStr)
+        //     val ed = System.nanoTime()
+        //     println("cost[$randLen]=${(ed - st)/1000}us")
+        // }
 
-        val string = "I have a dream. A song to sing. To help me cope with anything."
-        val compressedBytes: ByteArray = GZipUtil.compress(string)
+        val compressedBytes: ByteArray = GZipUtil.compress(constString)
+        // println("=====")
+        // println(compressedBytes.toHexStringLE(true,""))
+        // println("=====")
         assertEquals(
-            "1F,8B,8,0,0,0,0,0,0,0,15,C9,C1,9,80,30,C,40,D1,55,FE,4,DD,C1,A3,77,17,8,1A,9A,82,4D,8A,D,8A," +
-                "DB,8B,EF,FA,56,4C,6E,45,38,2E,95,5E,58,98,E1,95,C,66,F3,5A,D8,2,D3,73,D0,95,3D,86,F2,B4,34,C4,DF," +
-                "B4,BF,3F,23,59,60,72,3E,0,0,0",
-            compressedBytes.toHexStringLE()
+            "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
+                "8E1950C66F35AD802D373D0953D86F2B434C4DFB4BF3F235960723E000000",
+            compressedBytes.toHexStringLE(true, "")
         )
         assertEquals(true, GZipUtil.isGzip(compressedBytes))
     }
 
     @Test
     fun decompress() {
-        val string = "I have a dream. A song to sing. To help me cope with anything."
-        val compressedBytes: ByteArray = GZipUtil.compress(string)
-        val decompressString: String = GZipUtil.decompress(compressedBytes)!!
-        assertEquals(string, decompressString)
+        val byteString = "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
+            "8E1950C66F35AD802D373D0953D86F2B434C4DFB4BF3F235960723E000000"
+        val decompressString: String = GZipUtil.decompress(byteString.hexToByteArray())!!
+        assertEquals(constString, decompressString)
 
         val errorBytes: ByteArray = byteArrayOf(0x1, 0x2, 0x3, 0x4)
         assertEquals(false, GZipUtil.isGzip(errorBytes))

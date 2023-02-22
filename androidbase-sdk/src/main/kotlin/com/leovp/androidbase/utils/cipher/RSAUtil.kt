@@ -89,7 +89,7 @@ object RSAUtil {
      * val priKey = keyPair.private.encoded
      * val pubKey = keyPair.public.encoded
      *
-     * val encrypted = RSAUtil.encrypt(pubKey, plainBytes)!!
+     * val encrypted = RSAUtil.encrypt(pubKey, plainData)!!
      * val encryptedStr = encrypted.toHexStringLE(true, "")
      *
      * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
@@ -129,6 +129,80 @@ object RSAUtil {
             cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
         }.getOrNull()
     }
+
+    // ----------
+
+    /**
+     * Signature will encrypt data by private key which can get from [getKeyPair] method.
+     *
+     * Example:
+     * ```
+     * val keyPair = RSAUtil.getKeyPair()
+     * val priKey = keyPair.private.encoded
+     * val pubKey = keyPair.public.encoded
+     *
+     * val encrypted = RSAUtil.sign(priKey, plainText)!!
+     * val encryptedStr = encrypted.toHexStringLE(true, "")
+     *
+     * val decryptBytes = RSAUtil.verify(pubKey, encrypted)
+     * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
+     * ```
+     */
+    fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? {
+        return sign(encodedPriKey, plainText.toByteArray())
+    }
+
+    /**
+     * Signature will encrypt data by private key which can get from [getKeyPair] method.
+     *
+     * Example:
+     * ```
+     * val keyPair = RSAUtil.getKeyPair()
+     * val priKey = keyPair.private.encoded
+     * val pubKey = keyPair.public.encoded
+     *
+     * val encrypted = RSAUtil.sign(priKey, plainData)!!
+     * val encryptedStr = encrypted.toHexStringLE(true, "")
+     *
+     * val decryptBytes = RSAUtil.verify(pubKey, encrypted)
+     * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
+     * ```
+     */
+    fun sign(encodedPriKey: ByteArray, plainData: ByteArray): ByteArray? {
+        return runCatching {
+            val spec = PKCS8EncodedKeySpec(encodedPriKey)
+            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+            val priKey = factory.generatePrivate(spec)
+            cipherDoFinal(Cipher.ENCRYPT_MODE, priKey, plainData)
+        }.getOrNull()
+    }
+
+    /**
+     * Signature will decrypt data by public key which can get from [getKeyPair] method.
+     *
+     * Example:
+     * ```
+     * val keyPair = RSAUtil.getKeyPair()
+     * val priKey = keyPair.private.encoded
+     * val pubKey = keyPair.public.encoded
+     *
+     * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
+     * val encryptedStr = encrypted.toHexStringLE(true, "")
+     *
+     * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
+     * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+     * ```
+     */
+    fun verify(encodedPubKey: ByteArray, encryptedData: ByteArray?): ByteArray? {
+        return runCatching {
+            val spec = X509EncodedKeySpec(encodedPubKey)
+            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+            val pubKey = factory.generatePublic(spec)
+            cipherDoFinal(Cipher.DECRYPT_MODE, pubKey, encryptedData)
+        }.getOrNull()
+    }
+
+    // =====
 
     private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? {
         return runCatching {

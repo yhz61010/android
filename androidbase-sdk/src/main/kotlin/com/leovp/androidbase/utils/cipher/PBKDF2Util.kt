@@ -200,14 +200,13 @@ object PBKDF2Util {
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3,
         algorithm: String
     ): SecretKey {
-        return runCatching { //            LogContext.log.w(ITAG, "salt=${salt.toHexStringLE()} iterations=$iterations outputKeyLengthInBits=$outputKeyLengthInBits")
+        // LogContext.log.w(ITAG, "salt=${salt.toHexStringLE()} iterations=$iterations outputKeyLengthInBits=$outputKeyLengthInBits")
 
-            // PBKDF2WithHmacSHA1
-            // PBKDF2WithHmacSHA512
-            val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
-            val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-            secretKeyFactory.generateSecret(keySpec)
-        }.getOrThrow()
+        // PBKDF2WithHmacSHA1
+        // PBKDF2WithHmacSHA512
+        val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
+        val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
+        return secretKeyFactory.generateSecret(keySpec)
     }
 
     // =====================================

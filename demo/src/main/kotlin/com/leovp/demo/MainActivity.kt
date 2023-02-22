@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.ConfigurationInfo
 import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresPermission
 import androidx.core.content.pm.PackageInfoCompat
@@ -14,8 +15,11 @@ import androidx.navigation.ui.setupWithNavController
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.android.exts.getAndroidId
 import com.leovp.android.exts.getApplicationSignatures
 import com.leovp.android.exts.getPackageInfo
+import com.leovp.android.exts.getUniqueID
+import com.leovp.android.exts.getUniqueIdByMediaDrm
 import com.leovp.android.exts.navigationBarHeight
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.screenRealResolution
@@ -26,6 +30,7 @@ import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
+import com.leovp.bytes.toHexStringLE
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityMainBinding
 import com.leovp.json.toJsonString
@@ -204,6 +209,13 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         LogContext.log.e(ITAG, "actApplication=$actApplication")
         LogContext.log.e(ITAG, "actApplicationCtx=$actApplicationCtx")
         LogContext.log.e(ITAG, "amApplication=$amApplication")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LogContext.log.e(ITAG, "Android ID=${getAndroidId()}")
+        }
+
+        LogContext.log.e(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
+        LogContext.log.e(ITAG, "uid=${getUniqueID()}")
     }
 
     override fun onPause() {

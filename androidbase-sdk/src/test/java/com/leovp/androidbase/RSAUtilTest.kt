@@ -4,6 +4,7 @@ import android.util.Log
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.RSAUtil
 import com.leovp.bytes.toHexStringLE
+import kotlin.test.assertContentEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,7 @@ import org.powermock.modules.junit4.PowerMockRunner
 @PrepareForTest(Log::class)
 class RSAUtilTest {
     private val plainText = "I have a dream."
+    private val plainBytes = "My auu-".toByteArray()
     private val longPlainText = "I have a dream. A song to sing. To help cope with anything. ".repeat(100)
 
     @Test
@@ -39,6 +41,8 @@ class RSAUtilTest {
 
         assertEquals(plainText, decryptedBytes?.decodeToString())
         assertEquals(plainText, decryptedString?.decodeToString())
+
+        assertContentEquals(plainBytes, RSAUtil.decrypt(priKey, RSAUtil.encrypt(pubKey, plainBytes)!!))
     }
 
     @Test fun fragment() {

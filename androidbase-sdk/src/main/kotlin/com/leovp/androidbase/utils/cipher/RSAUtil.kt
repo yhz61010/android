@@ -61,6 +61,38 @@ object RSAUtil {
     }
 
     /**
+     * Encrypt by public key which can get from [getKeyPair] method.
+     *
+     * Example:
+     * ```
+     * val keyPair = RSAUtil.getKeyPair()
+     * val priKey = keyPair.private.encoded
+     * val pubKey = keyPair.public.encoded
+     *
+     * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
+     * val encryptedStr = encrypted.toHexStringLE(true, "")
+     * println("encrypted=$encryptedStr")
+     *
+     * val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
+     * println("decrypted  bytes=${decryptedBytes?.decodeToString()}")
+     * val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+     * println("decrypted string=${decryptedString?.decodeToString()}")
+     * ```
+     */
+    fun encrypt(encodedPubKey: ByteArray, plainText: String): ByteArray? {
+        return runCatching {
+            val spec = X509EncodedKeySpec(encodedPubKey)
+            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+            val pubKey = factory.generatePublic(spec)
+            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
+            cipher.init(Cipher.ENCRYPT_MODE, pubKey)
+            cipher.doFinal(plainText.toByteArray())
+        }.getOrNull()
+    }
+
+    /**
+     * Decrypt by private key which can get from [getKeyPair] method.
+     *
      * Example:
      * ```
      * val keyPair = RSAUtil.getKeyPair()
@@ -89,33 +121,8 @@ object RSAUtil {
     }
 
     /**
-     * Example:
-     * ```
-     * val keyPair = RSAUtil.getKeyPair()
-     * val priKey = keyPair.private.encoded
-     * val pubKey = keyPair.public.encoded
-     *
-     * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
-     * val encryptedStr = encrypted.toHexStringLE(true, "")
-     * println("encrypted=$encryptedStr")
-     *
-     * val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
-     * println("decrypted  bytes=${decryptedBytes?.decodeToString()}")
-     * val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
-     * println("decrypted string=${decryptedString?.decodeToString()}")
-     * ```
+     * Encrypt by public key which can get from [getKeyPair] method.
      */
-    fun encrypt(encodedPubKey: ByteArray, plainText: String): ByteArray? {
-        return runCatching {
-            val spec = X509EncodedKeySpec(encodedPubKey)
-            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-            val pubKey = factory.generatePublic(spec)
-            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, pubKey)
-            cipher.doFinal(plainText.toByteArray())
-        }.getOrNull()
-    }
-
     fun encryptStringByFragment(pubKey: ByteArray, wholeText: String): String? {
         return if (wholeText.length > MAX_ENCRYPT_LEN) {
             val str1 = wholeText.substring(0, MAX_ENCRYPT_LEN)
@@ -129,10 +136,13 @@ object RSAUtil {
         }
     }
 
-    fun decryptStringByFragment(priKey: ByteArray, wholeText: String): String? {
+    /**
+     * Decrypt by private key which can get from [getKeyPair] method.
+     */
+    fun decryptStringByFragment(priKey: ByteArray, encryptedText: String): String? {
         return runCatching {
             val result = StringBuilder()
-            val configParts = wholeText.split('\n')
+            val configParts = encryptedText.split('\n')
             var decryptedStr: String?
             for (part in configParts) {
                 decryptedStr = decrypt(priKey, part.hexToByteArray())?.decodeToString()
@@ -144,4 +154,6 @@ object RSAUtil {
             result.toString()
         }.getOrNull()
     }
+
+    // ==========
 }

@@ -72,8 +72,8 @@ object RSAUtil {
      * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
      * val encryptedStr = encrypted.toHexStringLE(true, "")
      *
-     * val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
-     * val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+     * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
+     * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
     fun encrypt(encodedPubKey: ByteArray, plainText: String): ByteArray? {
@@ -92,8 +92,8 @@ object RSAUtil {
      * val encrypted = RSAUtil.encrypt(pubKey, plainBytes)!!
      * val encryptedStr = encrypted.toHexStringLE(true, "")
      *
-     * val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
-     * val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+     * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
+     * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
     fun encrypt(encodedPubKey: ByteArray, plainData: ByteArray): ByteArray? {
@@ -119,8 +119,8 @@ object RSAUtil {
      * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
      * val encryptedStr = encrypted.toHexStringLE(true, "")
      *
-     * val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
-     * val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+     * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
+     * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
     fun decrypt(encodedPriKey: ByteArray, encryptedData: ByteArray?): ByteArray? {
@@ -134,19 +134,21 @@ object RSAUtil {
         }.getOrNull()
     }
 
+    // ==========
+
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
      */
-    fun encryptStringByFragment(pubKey: ByteArray, wholeText: String): String? {
-        return if (wholeText.length > MAX_ENCRYPT_LEN) {
-            val str1 = wholeText.substring(0, MAX_ENCRYPT_LEN)
-            val str2 = wholeText.substring(MAX_ENCRYPT_LEN)
+    fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? {
+        return if (plainText.length > MAX_ENCRYPT_LEN) {
+            val str1 = plainText.substring(0, MAX_ENCRYPT_LEN)
+            val str2 = plainText.substring(MAX_ENCRYPT_LEN)
             """
      |${encrypt(pubKey, str1)?.toHexStringLE(true, "")}
      |${encryptStringByFragment(pubKey, str2)}
             """.trimMargin()
         } else {
-            encrypt(pubKey, wholeText)?.toHexStringLE(true, "")
+            encrypt(pubKey, plainText)?.toHexStringLE(true, "")
         }
     }
 
@@ -168,6 +170,4 @@ object RSAUtil {
             result.toString()
         }.getOrNull()
     }
-
-    // ==========
 }

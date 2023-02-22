@@ -12,7 +12,9 @@ import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
 import android.content.res.Configuration
 import android.graphics.Rect
+import android.media.MediaDrm
 import android.os.Build
+import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
@@ -21,11 +23,14 @@ import android.view.Display
 import android.view.Surface
 import android.view.WindowInsets
 import androidx.annotation.IntRange
+import androidx.annotation.RequiresApi
+import com.leovp.android.utils.API
 import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
+
 
 /**
  * Author: Michael Leo
@@ -324,6 +329,49 @@ val Context.screenRatio
     }
 
 fun getUuid(): String = UUID.randomUUID().toString()
+
+// https://beltran.work/blog/2018-03-27-device-unique-id-android/
+// The Problem
+// This ID is not only the same on all apps, but also it is the same for all users of the device.
+// So a guest account, for example, will also obtain the same ID, as opposed to the ANDROID_ID.
+// As well, no permissions are required to access this ID.
+// There’s not much you can do as the user to avoid this.
+// Only a factory reset will restart this provisioning profile.
+// While Google introduced ways to improve privacy around the ANDROID_ID on Android 8.0,
+// making it unique per app, the design of DRM systems does not allow much to do against it.
+// Maybe in the future apps should require permissions to access DRM services.
+fun getUniqueIdByMediaDrm(): ByteArray? {
+    // val COMMON_PSSH_UUID = UUID(0x1077EFECC0B24D02L, -0x531cc3e1ad1d04b5L)
+    // val CLEARKEY_UUID = UUID(-0x1d8e62a7567a4c37L, 0x781AB030AF78D30EL)
+    // val WIDEVINE_UUID = UUID(-0x121074568629b532L, -0x5c37d8232ae2de13L)
+    // val PLAYREADY_UUID = UUID(-0x65fb0f8667bfbd7aL, -0x546d19a41f77a06bL)
+    val wideVineUuid = UUID(-0x121074568629b532L, -0x5c37d8232ae2de13L)
+    return runCatching {
+        val wvDrm = MediaDrm(wideVineUuid)
+        val wideVineId = wvDrm.getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID)
+        wideVineId
+        // android.util.Base64.encodeToString(wideVineId, android.util.Base64.NO_WRAP)
+        // wideVineId.joinToString("") { "%02X".format(it) }
+    }.getOrNull()
+}
+
+@SuppressLint("HardwareIds")
+@RequiresApi(Build.VERSION_CODES.O)
+fun Context.getAndroidId(): String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+
+@SuppressLint("HardwareIds")
+fun Context.getUniqueID(): String {
+    return if (!API.ABOVE_O) {
+        val uid: ByteArray? = getUniqueIdByMediaDrm()
+        if (uid != null) {
+            android.util.Base64.encodeToString(uid, android.util.Base64.NO_WRAP)
+        } else {
+            getUuid()
+        }
+    } else {
+        Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+    }
+}
 
 fun getImei(ctx: Context): String? {
     val imei0 = getImei(ctx, 0)

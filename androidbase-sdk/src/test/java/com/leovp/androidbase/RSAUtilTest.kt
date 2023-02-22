@@ -34,13 +34,13 @@ class RSAUtilTest {
         val encryptedStr = encrypted.toHexStringLE(true, "")
         // println("encrypted=$encryptedStr")
 
-        val decryptedBytes = RSAUtil.decrypt(priKey, encrypted)
+        val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
         // println("decrypted  bytes=${decryptedBytes?.decodeToString()}")
-        val decryptedString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
+        val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
         // println("decrypted string=${decryptedString?.decodeToString()}")
 
-        assertEquals(plainText, decryptedBytes?.decodeToString())
-        assertEquals(plainText, decryptedString?.decodeToString())
+        assertEquals(plainText, decryptBytes?.decodeToString())
+        assertEquals(plainText, decryptString?.decodeToString())
 
         assertContentEquals(plainBytes, RSAUtil.decrypt(priKey, RSAUtil.encrypt(pubKey, plainBytes)!!))
     }
@@ -52,10 +52,10 @@ class RSAUtilTest {
         // println("private key=${priKey.toHexStringLE(true, "")}")
         // println("public  key=${pubKey.toHexStringLE(true, "")}")
 
-        val encrypted = RSAUtil.encryptStringByFragment(pubKey, longPlainText)
-        // println("encrypted=${encrypted}")
-        val decrypted = RSAUtil.decryptStringByFragment(priKey, encrypted!!)
-        // println("decrypted=${decrypted}")
-        assertEquals(longPlainText, decrypted)
+        val encryptedStr = RSAUtil.encryptStringByFragment(pubKey, longPlainText)
+        // println("encrypted=${encryptedStr}")
+        val decryptedStr = RSAUtil.decryptStringByFragment(priKey, encryptedStr!!)
+        // println("decrypted=${decryptedStr}")
+        assertEquals(longPlainText, decryptedStr)
     }
 }

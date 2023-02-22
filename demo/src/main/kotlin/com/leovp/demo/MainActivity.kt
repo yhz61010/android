@@ -37,6 +37,7 @@ import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.net.Proxy
+import java.security.Security
 import kotlin.concurrent.thread
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
@@ -216,6 +217,8 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
 
         LogContext.log.e(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
         LogContext.log.e(ITAG, "uid=${getUniqueID()}")
+
+        LogContext.log.e(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
     }
 
     override fun onPause() {

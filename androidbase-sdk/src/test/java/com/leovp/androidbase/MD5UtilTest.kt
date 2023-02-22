@@ -16,7 +16,6 @@ import org.powermock.modules.junit4.PowerMockRunner
 @RunWith(PowerMockRunner::class)
 @PrepareForTest(Log::class)
 class MD5UtilTest {
-
     @Test
     fun md5String() {
         assertEquals("E10ADC3949BA59ABBE56E057F20F883E", MD5Util.encrypt("123456"))

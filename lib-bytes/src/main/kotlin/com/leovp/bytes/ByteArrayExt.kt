@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.bytes
 
 import java.nio.ByteBuffer
@@ -11,7 +13,7 @@ private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
 fun Byte.toBytes(): ByteArray = byteArrayOf(this)
 
 /**
- * Force convert int value as byte array.
+ * Force convert int value to byte array.
  */
 fun Int.asByteAndForceToBytes(): ByteArray = this.toByte().toBytes()
 
@@ -23,23 +25,25 @@ fun ByteArray.readBytes(length: Int, srcPos: Int = 0): ByteArray {
     return bytes
 }
 
-fun ByteArray.readShort(index: Int = 0): Short =
-    (((this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort())
+fun ByteArray.readShort(index: Int = 0): Short = (
+    (this[index + 0].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)
+    ).toShort()
 
-fun ByteArray.readShortLE(index: Int = 0): Short =
-    (((this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)).toShort())
+fun ByteArray.readShortLE(index: Int = 0): Short = (
+    (this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)
+    ).toShort()
 
-fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or (
-    this[2 + index].toInt() and 0xFF shl 8
-    ) or
-    (this[1 + index].toInt() and 0xFF shl 16) or
-    (this[0 + index].toInt() and 0xFF shl 24)
+fun ByteArray.readInt(index: Int = 0): Int =
+    this[3 + index].toInt() and 0xFF or
+        (this[2 + index].toInt() and 0xFF shl 8) or
+        (this[1 + index].toInt() and 0xFF shl 16) or
+        (this[0 + index].toInt() and 0xFF shl 24)
 
-fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or (
-    this[index + 1].toInt() and 0xFF shl 8
-    ) or
-    (this[index + 2].toInt() and 0xFF shl 16) or
-    (this[index + 3].toInt() and 0xFF shl 24)
+fun ByteArray.readIntLE(index: Int = 0): Int =
+    this[index].toInt() and 0xFF or
+        (this[index + 1].toInt() and 0xFF shl 8) or
+        (this[index + 2].toInt() and 0xFF shl 16) or
+        (this[index + 3].toInt() and 0xFF shl 24)
 
 fun ByteArray.readLong(index: Int = 0): Long {
     var result: Long = 0

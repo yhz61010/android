@@ -58,4 +58,26 @@ class RSAUtilTest {
         // println("decrypted=${decryptedStr}")
         assertEquals(longPlainText, decryptedStr)
     }
+
+    @Test fun signAndVerify() {
+        val keyPair = RSAUtil.getKeyPair()
+        val priKey = keyPair.private.encoded
+        val pubKey = keyPair.public.encoded
+        // println("private key=${priKey.toHexStringLE(true, "")}")
+        // println("public  key=${pubKey.toHexStringLE(true, "")}")
+
+        val encrypted = RSAUtil.sign(priKey, plainText)!!
+        val encryptedStr = encrypted.toHexStringLE(true, "")
+        // println("encrypted=$encryptedStr")
+
+        val decryptBytes = RSAUtil.verify(pubKey, encrypted)
+        // println("decrypted  bytes=${decryptedBytes?.decodeToString()}")
+        val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
+        // println("decrypted string=${decryptedString?.decodeToString()}")
+
+        assertEquals(plainText, decryptBytes?.decodeToString())
+        assertEquals(plainText, decryptString?.decodeToString())
+
+        // assertContentEquals(plainBytes, RSAUtil.verify(priKey, RSAUtil.sign(pubKey, plainBytes)!!))
+    }
 }

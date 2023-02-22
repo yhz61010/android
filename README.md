@@ -6,6 +6,10 @@
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 
+# Attention
+Starting with Android 14, apps with a targetSdkVersion lower than 23 can't be installed.
+So the min sdk in this project is 23.
+
 # How to import?
 ## For TOML
 Add the library you need. For example:

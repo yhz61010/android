@@ -3,7 +3,7 @@
 #===== Project =====
 #===================
 compile-sdk = "33"
-min-sdk = "21"
+min-sdk = "23"
 target-sdk = "33"
 ndk-sdk = "21.1.6352462" # 22.1.7171670
 

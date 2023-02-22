@@ -101,9 +101,7 @@ object RSAUtil {
             val spec = X509EncodedKeySpec(encodedPubKey)
             val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
             val pubKey = factory.generatePublic(spec)
-            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, pubKey)
-            cipher.doFinal(plainData)
+            cipherDoFinal(Cipher.ENCRYPT_MODE, pubKey, plainData)
         }.getOrNull()
     }
 
@@ -128,9 +126,15 @@ object RSAUtil {
             val spec = PKCS8EncodedKeySpec(encodedPriKey)
             val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
             val priKey = factory.generatePrivate(spec)
+            cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
+        }.getOrNull()
+    }
+
+    private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? {
+        return runCatching {
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(Cipher.DECRYPT_MODE, priKey)
-            cipher.doFinal(encryptedData)
+            cipher.init(opmode, key)
+            cipher.doFinal(data)
         }.getOrNull()
     }
 

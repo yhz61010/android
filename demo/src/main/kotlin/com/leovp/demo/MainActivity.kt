@@ -79,10 +79,10 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
                 Permission.BLUETOOTH_CONNECT, Permission.BLUETOOTH_SCAN
             )
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                 }
             })
 
@@ -212,13 +212,13 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         LogContext.log.e(ITAG, "amApplication=$amApplication")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            LogContext.log.e(ITAG, "Android ID=${getAndroidId()}")
+            LogContext.log.i(ITAG, "Android ID=${getAndroidId()}")
         }
 
-        LogContext.log.e(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
-        LogContext.log.e(ITAG, "uid=${getUniqueID()}")
+        LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
+        LogContext.log.i(ITAG, "uid=${getUniqueID()}")
 
-        LogContext.log.e(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
+        LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
     }
 
     override fun onPause() {

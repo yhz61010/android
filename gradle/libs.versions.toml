@@ -7,7 +7,7 @@ min-sdk = "23"
 target-sdk = "33"
 ndk-sdk = "21.1.6352462" # 22.1.7171670
 
-leo-version = "5.11.18"
+leo-version = "5.11.19"
 
 #===================
 #===== Compile =====
@@ -52,17 +52,7 @@ compose-compilerextension = "1.2.0"
 #=======================
 detekt = "1.22.0"
 dokka = "1.7.10"
-# If the version of `ktlint` is above 0.46.0, it will cause the following error:
-#1: Task failed with an exception.
-#-----------
-#* What went wrong:
-#Execution failed for task ':app:runKtlintCheckOverAndroidTestSourceSet'.
-#> A failure occurred while executing org.jlleitschuh.gradle.ktlint.worker.KtLintWorkAction
-#> com/pinterest/ktlint/core/KtLint$Params
-#
-#
-# Unable to load class 'com.pinterest.ktlint.core.KtLint$Params'.
-ktlint = "0.48.2" # 0.48.2 # 0.47.1 # 0.47.0 # 0.46.1 # 0.45.2
+ktlint = "0.48.2"
 ktlint-gradle = "11.2.0" # 10.3.0
 benmanes = "0.46.0"
 vcu = "0.7.0"

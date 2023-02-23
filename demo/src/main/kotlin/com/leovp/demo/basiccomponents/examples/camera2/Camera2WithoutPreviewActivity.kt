@@ -41,11 +41,11 @@ class Camera2WithoutPreviewActivity : BaseDemonstrationActivity<ActivityCamera2W
         XXPermissions.with(this)
             .permission(Permission.CAMERA)
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     toast("Grant camera permission")
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     toast("Deny camera permission")
                     finish()
                 }

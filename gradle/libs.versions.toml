@@ -12,17 +12,17 @@ leo-version = "5.11.18"
 #===================
 #===== Compile =====
 #===================
-agp = "7.3.1"
-kotlin = "1.7.21"
+agp = "7.4.1"
+kotlin = "1.8.10"
 
 #=================================
 #===== Android dependencies ======
 #=================================
 coroutines = "1.6.4"
-material = "1.7.0"
-appcompat = "1.5.1"
+material = "1.8.0"
+appcompat = "1.6.1"
 activity-ktx = "1.6.1"
-fragment-ktx = "1.5.4"
+fragment-ktx = "1.5.5"
 core-ktx = "1.9.0"
 multidex = "2.0.1"
 preference = "1.2.0"
@@ -32,13 +32,13 @@ coordinatorlayout = "1.2.0"
 navigation = "2.5.3"
 concurrent-futures-ktx = "1.1.0"
 lifecycle = "2.5.1"
-annotation = "1.5.0"
+annotation = "1.6.0"
 cardview = "1.0.0"
 viewpager2 = "1.0.0"
 swiperefreshlayout = "1.1.0"
-room = "2.5.0-beta02" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.3.0-alpha01"
-exifinterface = "1.3.5"
+room = "2.5.0" # 2.4.2 has compilation error with Kotlin 1.7.0
+camera = "1.3.0-alpha04"
+exifinterface = "1.3.6"
 
 #===========================
 #===== Android Compose =====
@@ -62,12 +62,12 @@ dokka = "1.7.10"
 #
 #
 # Unable to load class 'com.pinterest.ktlint.core.KtLint$Params'.
-ktlint = "0.45.2" # 0.47.1 # 0.47.0 # 0.46.1 # 0.45.2
-ktlint-gradle = "11.0.0" # 10.3.0
-benmanes = "0.44.0"
+ktlint = "0.48.2" # 0.48.2 # 0.47.1 # 0.47.0 # 0.46.1 # 0.45.2
+ktlint-gradle = "11.2.0" # 10.3.0
+benmanes = "0.46.0"
 vcu = "0.7.0"
 jacoco = "0.8.8"
-sonarqube = "3.5.0.2730"
+sonarqube = "4.0.0.2929"
 
 coil = "2.2.2"
 glide = "4.14.2"
@@ -79,19 +79,19 @@ rxjava2 = "2.2.21"
 rxjava2-android = "2.1.1"
 rxjava3 = "3.1.5"
 rxjava3-android = "3.0.0"
-gson = "2.10"
+gson = "2.10.1"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
-mmkv = "1.2.14"
-fasterxml = "2.14.1"
-xx-permissions = "16.2"
+mmkv = "1.2.15"
+fasterxml = "2.14.2"
+xx-permissions = "16.6"
 bson = "2.13.1" # As of 2.13.0, you need to add fasterxml jackson manually.
 free-reflection = "3.1.0"
 flyco-tablayout = "2.2.0"
 srl = "2.0.5"
-netty = "4.1.85.Final"
-koin = "3.3.0"
+netty = "4.1.89.Final"
+koin = "3.3.3"
 bytedeco-ffmpeg = "5.1.2-1.5.8"
 bytedeco-javacpp = "1.5.8"
 material-dialogs = "3.3.0"
@@ -99,7 +99,7 @@ android-animations = "2.4"
 java-mail = "1.6.7"
 jzlib = "1.1.3"
 androidasync = "3.1.0"
-net = "3.5.2"
+net = "3.5.6"
 subsampling-scale-image-view = "3.10.0"
 mannodermaus-android-junit5 = "1.8.2.1"
 mannodermaus-junit5 = "1.3.0"
@@ -107,16 +107,16 @@ mannodermaus-junit5 = "1.3.0"
 #================
 #===== Test =====
 #================
-jupiter = "5.9.1" # JUnit 5
+jupiter = "5.9.2" # JUnit 5
 androidx-test = "1.5.0"
-androidx-test-runner = "1.5.1"
-androidx-test-ext = "1.1.4"
-espresso-core = "3.5.0"
+androidx-test-runner = "1.5.2"
+androidx-test-ext = "1.1.5"
+espresso-core = "3.5.1"
 kluent = "1.72"
-mockk = "1.13.2"
-arch = "2.1.0"
+mockk = "1.13.4"
+arch = "2.2.0"
 powermock-version = "2.0.9"
-robolectric-version = "4.9"
+robolectric-version = "4.9.2"
 
 #===================#===================#===================#===================
 #===================#===================#===================#===================

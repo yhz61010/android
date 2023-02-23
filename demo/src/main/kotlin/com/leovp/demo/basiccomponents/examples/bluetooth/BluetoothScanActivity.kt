@@ -64,11 +64,11 @@ class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBin
             .request(object : OnPermissionCallback {
                 @SuppressLint("InlinedApi")
                 @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     doDiscovery()
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     this@BluetoothScanActivity.toast("Please grant Location permissions.")
                 }
             })

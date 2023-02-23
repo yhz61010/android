@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.ffmpeg.javacpp.audio.adpcm
 
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext

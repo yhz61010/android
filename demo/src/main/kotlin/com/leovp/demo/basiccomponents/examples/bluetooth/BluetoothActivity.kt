@@ -8,12 +8,12 @@ import androidx.annotation.RequiresPermission
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
-import com.leovp.androidbase.exts.android.startActivity
+import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.toast
+import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBluetoothBinding
-import com.leovp.android.exts.bluetoothManager
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
@@ -48,11 +48,11 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>() 
                 Permission.BLUETOOTH_SCAN
             )
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     this@BluetoothActivity.toast("All permissions granted.")
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     this@BluetoothActivity.toast("Permissions denied.", error = true)
                 }
             })

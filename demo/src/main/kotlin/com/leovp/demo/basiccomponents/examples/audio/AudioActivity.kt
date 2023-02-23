@@ -6,6 +6,7 @@ import android.view.View
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.android.exts.createFile
 import com.leovp.android.exts.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
@@ -17,17 +18,16 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.audio.receiver.AudioReceiver
 import com.leovp.demo.basiccomponents.examples.audio.sender.AudioSender
 import com.leovp.demo.databinding.ActivityAudioBinding
-import com.leovp.android.exts.createFile
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
     override fun getTagName(): String = ITAG
@@ -75,11 +75,11 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     toast("Grand recording permission")
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     toast("Deny record permission"); finish()
                 }
             })
@@ -100,8 +100,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
             }
         }
 
+        var playPcmThread: Thread? = null
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
-            var playPcmThread: Thread? = null
             if (isChecked) {
                 audioPlayer = AudioPlayer(applicationContext, audioDecoderInfo, AudioType.PCM)
                 playPcmThread = Thread {
@@ -117,7 +117,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                         runOnUiThread { btn.isChecked = false }
                     }
                 }
-                playPcmThread.start()
+                playPcmThread?.start()
             } else {
                 playPcmThread?.interrupt()
                 audioPlayer?.release()
@@ -140,7 +140,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         XXPermissions.with(this)
             .permission(Permission.RECORD_AUDIO)
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
                         AudioType.AAC -> aacOs = BufferedOutputStream(FileOutputStream(aacFile))
@@ -181,7 +181,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                     micRecorder?.startRecord()
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     toast("Deny record permission")
                     finish()
                 }

@@ -28,13 +28,13 @@ class PermissionsFragment : Fragment() {
             XXPermissions.with(this)
                 .permission(PERMISSIONS_REQUIRED)
                 .request(object : OnPermissionCallback {
-                    override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                    override fun onGranted(granted: MutableList<String>, all: Boolean) {
                         // Take the user to the success fragment when permission is granted
                         Toast.makeText(context, "Permission request granted", Toast.LENGTH_LONG).show()
                         navigateToCamera()
                     }
 
-                    override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                    override fun onDenied(denied: MutableList<String>, never: Boolean) {
                         Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
                     }
                 })

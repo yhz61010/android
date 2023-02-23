@@ -62,12 +62,12 @@ class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding
             addFragment()
         } else {
             XXPermissions.with(this).permission(Permission.CAMERA).request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>?, all: Boolean) {
+                override fun onGranted(granted: MutableList<String>, all: Boolean) {
                     toast("Grant camera permission")
                     addFragment()
                 }
 
-                override fun onDenied(denied: MutableList<String>?, never: Boolean) {
+                override fun onDenied(denied: MutableList<String>, never: Boolean) {
                     toast("Deny camera permission")
                     finish()
                 }

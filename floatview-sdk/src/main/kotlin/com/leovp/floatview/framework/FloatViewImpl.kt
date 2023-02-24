@@ -340,8 +340,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun adjustPosX(x: Int, edgeMargin: Int): Int {
         if (x < edgeMargin || x <= 0) return edgeMargin
-        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= screenOrientSz.width)
-            screenOrientSz.width - (config.customView?.width ?: 0) - edgeMargin else x
+        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= screenOrientSz.width) {
+            screenOrientSz.width - (config.customView?.width ?: 0) - edgeMargin
+        } else {
+            x
+        }
     }
 
     /**
@@ -352,11 +355,15 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         val drawHeightOffset = getTopHeightOffset()
         // Log.e("LEO-float-view",
         //     "drawHeightOffset=$drawHeightOffset y=$y edgeMargin=$edgeMargin " +
-        //         "config.customView?.height=${config.customView?.height} screen.height=${screenOrientSz.height}")
-        if (y <= edgeMargin + drawHeightOffset) return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
-        return if ((y + (config.customView?.height ?: 0) + edgeMargin) >= screenOrientSz.height)
+        //     "config.customView?.height=${config.customView?.height} screen.height=${screenOrientSz.height}")
+        if (y <= edgeMargin + drawHeightOffset) {
+            return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
+        }
+        return if ((y + (config.customView?.height ?: 0) + edgeMargin) >= screenOrientSz.height) {
             screenOrientSz.height - (config.customView?.height ?: 0) - edgeMargin
-        else y
+        } else {
+            y
+        }
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
@@ -399,22 +406,19 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             if (config.systemWindow && context.canDrawOverlays) {
                 type = when {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    else -> @Suppress("DEPRECATION") {
+                    else -> {
+                        @Suppress("DEPRECATION")
                         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                        // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
+                        // android.view.WindowManager${WindowManager.BadTokenException}:
+                        // Unable to add window -- token null is not valid; is your activity running?
                     }
-                    // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                    // android.view.WindowManager${WindowManager.BadTokenException}:
-                    // Unable to add window -- token null is not valid; is your activity running?
                 }
             }
 
             gravity = Gravity.TOP or Gravity.START // Default value: Gravity.CENTER
-            width = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else {
-                WindowManager.LayoutParams.WRAP_CONTENT
-            }
-            height = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else {
-                WindowManager.LayoutParams.WRAP_CONTENT
-            }
+            width = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
+            height = if (config.fullScreenFloatView) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
 
@@ -501,9 +505,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 hideCustomView(v)
                 if (v.windowToken != null) windowManager.removeViewImmediate(v)
             }
-        } else visible(false) {
-            config.customView?.let { v ->
-                if (v.windowToken != null) windowManager.removeViewImmediate(v)
+        } else {
+            visible(false) {
+                config.customView?.let { v ->
+                    if (v.windowToken != null) windowManager.removeViewImmediate(v)
+                }
             }
         }
     }

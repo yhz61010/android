@@ -81,7 +81,8 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
         toast(
             "I have a dream. A song to sing. " +
                 "To help me cope with anything. If you see the wonder.",
-            debug = true, error = true
+            debug = true,
+            error = true
         )
     }
 

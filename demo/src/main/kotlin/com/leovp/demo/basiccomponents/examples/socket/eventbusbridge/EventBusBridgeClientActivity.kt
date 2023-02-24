@@ -137,10 +137,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
                         return
                     }
 
-                    if (LogContext.enableLog) LogContext.log.i(
-                        TAG,
-                        "totalByteArray=${totalByteArray.decodeToString()}"
-                    )
+                    if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
                     //   replyAddress?.let { replyAddress ->
@@ -156,10 +153,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
                     //       }
                     //   }
                 }
-                else -> if (LogContext.enableLog) LogContext.log.i(
-                    TAG,
-                    "Invalid message type=[${msg::class.simpleName}]"
-                )
+                else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }
         }
 

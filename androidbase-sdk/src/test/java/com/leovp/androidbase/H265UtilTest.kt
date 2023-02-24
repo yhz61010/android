@@ -137,7 +137,7 @@ class H265UtilTest {
 
         fullCsdByteArray = byteArrayOf(
             0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
-            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
+            0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10
         )
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
@@ -153,7 +153,7 @@ class H265UtilTest {
         fullCsdByteArray = byteArrayOf(
             0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
             0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
-            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
+            0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15
         )
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))
@@ -170,7 +170,7 @@ class H265UtilTest {
             0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5,
             0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10,
             0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15,
-            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24,
+            0, 0, 0, 1, 0x4E, 20, 21, 22, 23, 24
         )
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), H265Util.getVps(fullCsdByteArray))
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), H265Util.getSps(fullCsdByteArray))

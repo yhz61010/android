@@ -56,9 +56,9 @@ class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>() {
             @Part file: MultipartBody.Part
         ): Observable<String>
 
+        // Values are URL encoded by default. Disable with encoded=true.
         @Streaming
         @GET("/{urlPath}")
-        // Values are URL encoded by default. Disable with encoded=true.
         fun downloadFile(@Path("urlPath", encoded = true) urlPath: String): Observable<ResponseBody>
         //        fun downloadFile(@Url fileUrl: String): Observable<ResponseBody>
     }

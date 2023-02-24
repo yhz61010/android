@@ -12,7 +12,6 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 
-
 /**
  * The RSA key MUST BE 2048 bits or higher.
  *

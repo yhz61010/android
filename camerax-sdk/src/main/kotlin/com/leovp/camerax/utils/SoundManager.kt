@@ -4,8 +4,8 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
-import com.leovp.camerax.R
 import com.leovp.android.exts.audioManager
+import com.leovp.camerax.R
 import com.leovp.kotlin.utils.SingletonHolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

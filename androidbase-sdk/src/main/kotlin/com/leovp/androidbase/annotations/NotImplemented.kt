@@ -5,8 +5,10 @@ package com.leovp.androidbase.annotations
  * Date: 20-6-8 下午8:35
  */
 @Target(
-    AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-    AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.EXPRESSION
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.VALUE_PARAMETER,
+    AnnotationTarget.EXPRESSION
 )
 @Suppress("unused")
 @Retention(AnnotationRetention.SOURCE)

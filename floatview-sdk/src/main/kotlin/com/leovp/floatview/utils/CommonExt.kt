@@ -65,9 +65,8 @@ internal val Context.screenRealResolution: Size
             Size(bounds.width(), bounds.height())
         } else {
             val displayMetrics = DisplayMetrics()
-            @Suppress("DEPRECATION") (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.getRealMetrics(
-                displayMetrics
-            )
+            @Suppress("DEPRECATION")
+            (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.getRealMetrics(displayMetrics)
             Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
@@ -133,10 +132,12 @@ internal val Context.screenSurfaceRotation: Int
         } else {
             display!!.rotation
         }
-    } else (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+    } else {
+        (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+    }
 
 internal val Context.statusBarHeight
-    @SuppressLint("DiscouragedApi")
+    @SuppressLint("DiscouragedApi", "InternalInsetResource")
     get(): Int {
         var result = 0
         val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")

@@ -348,8 +348,7 @@ object NetworkUtil {
             val wifiInf = ctx.wifiManager.connectionInfo
             // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
             // Please check WifiInfo#DEFAULT_MAC_ADDRESS
-            if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) ""
-            else wifiInf.macAddress
+            if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress
         } else {
             ""
         }

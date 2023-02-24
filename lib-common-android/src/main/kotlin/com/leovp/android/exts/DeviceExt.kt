@@ -104,7 +104,8 @@ val Context.screenRealResolution: Size
             Size(bounds.width(), bounds.height())
         } else {
             val displayMetrics = DisplayMetrics()
-            @Suppress("DEPRECATION") windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
             Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
@@ -191,7 +192,8 @@ fun Context.getScreenSize(surfaceRotation: Int, screenSize: Size = screenRealRes
 }
 
 val Context.statusBarHeight
-    @SuppressLint("DiscouragedApi", "InternalInsetResource") get(): Int {
+    @SuppressLint("DiscouragedApi", "InternalInsetResource")
+    get(): Int {
         var result = 0
         val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {
@@ -493,8 +495,9 @@ fun Context.isNormalPortrait(
 
     return if (Surface.ROTATION_0 == screenSurfaceRotation || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
         (degree in 301..359) || (degree in 0 until 60) // wide range
-    } else
+    } else {
         (degree in 330..359) || (degree in 0..30) // narrow range
+    }
 
     //    val ssr = screenSurfaceRotation
     //    return if (Surface.ROTATION_0 == ssr || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
@@ -529,8 +532,9 @@ fun Context.isNormalLandscape(
 
     return if (Surface.ROTATION_90 == screenSurfaceRotation || SCREEN_ORIENTATION_LANDSCAPE == prevOrientation) {
         degree in 211 until 330 // wide range
-    } else
+    } else {
         degree in 240..300 // narrow range
+    }
 }
 
 /**
@@ -555,8 +559,9 @@ fun Context.isReverseLandscape(
 
     return if (Surface.ROTATION_270 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation) {
         degree in 31 until 150 // wide range
-    } else
+    } else {
         degree in 60..120 // narrow range
+    }
 }
 
 /**
@@ -581,8 +586,9 @@ fun Context.isReversePortrait(
 
     return if (Surface.ROTATION_180 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
         degree in 121 until 240 // wide range
-    } else
+    } else {
         degree in 150..210 // narrow range
+    }
 
     //    val ssr = screenSurfaceRotation
     //    return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
@@ -646,7 +652,9 @@ val Context.screenSurfaceRotation: Int
             } else {
                 display!!.rotation
             }
-        } else windowManager.defaultDisplay.rotation
+        } else {
+            windowManager.defaultDisplay.rotation
+        }
     }
 // =================
 

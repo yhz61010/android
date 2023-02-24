@@ -236,8 +236,12 @@ object ShellUtil {
                 if (params.size > 2) {
                     val remountCommand = String.format(
                         Locale.ENGLISH,
-                        "%s -o %s,remount -t %s %s %s", CMD_MOUNT,
-                        if (write) "rw" else "ro", params[2], params[0], params[1]
+                        "%s -o %s,remount -t %s %s %s",
+                        CMD_MOUNT,
+                        if (write) "rw" else "ro",
+                        params[2],
+                        params[0],
+                        params[1]
                     )
                     execCmd(remountCommand, true)
                 }

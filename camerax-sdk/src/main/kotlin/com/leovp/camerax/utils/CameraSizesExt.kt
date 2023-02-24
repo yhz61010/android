@@ -77,11 +77,11 @@ internal fun <T> getPreviewOutputSize(
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-    if (format == null) require(StreamConfigurationMap.isOutputSupportedFor(targetClass)) else require(
-        config.isOutputSupportedFor(
-            format
-        )
-    )
+    if (format == null) {
+        require(StreamConfigurationMap.isOutputSupportedFor(targetClass))
+    } else {
+        require(config.isOutputSupportedFor(format))
+    }
     val allSizes =
         if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
 
@@ -160,10 +160,8 @@ internal fun getSpecificPreviewOutputSize(
         cameraWidth = desiredVideoWidth
         cameraHeight = desiredVideoHeight
     }
-    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth =
-        context.getPreviewViewMaxHeight()
-    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight =
-        context.getPreviewViewMaxWidth()
+    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth = context.getPreviewViewMaxHeight()
+    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight = context.getPreviewViewMaxWidth()
 
     // Calculate ImageReader input preview size from supported size list by camera.
     // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.

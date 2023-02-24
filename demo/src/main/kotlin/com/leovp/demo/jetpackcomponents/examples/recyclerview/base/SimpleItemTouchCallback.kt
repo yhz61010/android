@@ -44,7 +44,9 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
                 "viewHolder.adapterPosition=${viewHolder.bindingAdapterPosition}"
             )
             super.getMovementFlags(recyclerView, viewHolder)
-        } else 0
+        } else {
+            0
+        }
     }
 
     override fun onMove(

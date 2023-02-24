@@ -14,9 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
+import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.action
 import com.leovp.androidbase.exts.android.snack
-import com.leovp.android.exts.toast
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityRecyclerviewBinding

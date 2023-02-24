@@ -8,10 +8,10 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.leovp.androidbase.utils.notch.INotchScreen
-import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.densityDpi
+import com.leovp.androidbase.utils.notch.INotchScreen
+import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
 
 /** vivo will not render on notch */
 @RequiresApi(Build.VERSION_CODES.O)
@@ -31,7 +31,8 @@ class VivoNotchScreen : INotchScreen {
 
     companion object {
         val isNotch: Boolean
-            @SuppressLint("PrivateApi") get() {
+            @SuppressLint("PrivateApi")
+            get() {
                 val mask = 0x00000020
                 return runCatching {
                     val cls = Class.forName("android.util.FtFeature")

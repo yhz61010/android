@@ -88,12 +88,15 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
     ): Session {
         return Session.getInstance(
             getServerProperties(protocol, mailHost, port, enableSsl),
-            if (userName.isNullOrBlank()) null else
+            if (userName.isNullOrBlank()) {
+                null
+            } else {
                 object : javax.mail.Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
                         return PasswordAuthentication(userName, pwd)
                     }
                 }
+            }
         )
     }
 
@@ -235,15 +238,11 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                     if (messageContent.isBlank()) messageContent = messageHtmlContent
 
                     // print out details of each message
-                    LogContext.log.i(
-                        ITAG,
-                        "Message(${
-                        contentType.substring(0, if (contentType.length > 15) 15 else contentType.length)
-                        }) #" + (i + 1) + ":"
-                    )
+                    val truncatedContentType = if (contentType.length > 15) 15 else contentType.length
+                    LogContext.log.i(ITAG, "Message(${contentType.substring(0, truncatedContentType)}) #" + (i + 1) + ":")
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")
-                    //                    LogContext.log.i(ITAG, "CC: $ccList")
+                    // LogContext.log.i(ITAG, "CC: $ccList")
                     LogContext.log.i(ITAG, "Subject: $subject")
                     LogContext.log.i(ITAG, "Sent Date: $sentDate")
                     LogContext.log.i(ITAG, "Message: $messageContent")

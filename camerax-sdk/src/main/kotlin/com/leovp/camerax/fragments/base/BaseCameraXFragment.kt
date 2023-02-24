@@ -395,7 +395,6 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         mirror: Boolean,
         cameraSensorOrientationDegree: Int
     ): Bitmap {
-
         return when (cameraSensorOrientationDegree) {
             0 -> { // by android
                 // Android method is the fastest.
@@ -671,10 +670,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             LogContext.log.i(
                 logTag,
                 "FACE RETOUCH: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing,
-                    ExtensionMode.FACE_RETOUCH
-                )
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing,
+                        ExtensionMode.FACE_RETOUCH
+                    )
                 }"
             )
             LogContext.log.i(
@@ -823,14 +822,17 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun switchCameraSelector() {
         lensFacing = when {
             hasBackCamera() && hasFrontCamera() -> {
-                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) CameraSelector.DEFAULT_BACK_CAMERA
-                else CameraSelector.DEFAULT_FRONT_CAMERA
+                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) {
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                } else {
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                }
             }
             hasBackCamera() -> CameraSelector.DEFAULT_BACK_CAMERA
             hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
             else -> {
                 LogContext.log.e(logTag, "Error: This device does not have any camera, bailing out")
-                //                requireActivity().finish()
+                // requireActivity().finish()
                 throw RuntimeException("This device does not have any camera")
             }
         }
@@ -887,35 +889,35 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                        .joinToString(",")
                 }
  Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                        .joinToString(",")
                 }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
+                    highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
                 }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
-                allCameraSupportSize?.joinToString(",") {
-                    "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
-                }
+                    allCameraSupportSize?.joinToString(",") {
+                        "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
+                    }
                 }
                 """.trimIndent()
                 LogContext.log.i(logTag, cameraParametersString)

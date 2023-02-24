@@ -61,7 +61,7 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
             Pair("Room", RoomActivity::class.java),
             Pair("Recyclerview", RecyclerviewActivity::class.java),
             Pair("Navigation", NavigationMainActivity::class.java),
-            Pair("CameraX", CameraXDemoActivity::class.java),
+            Pair("CameraX", CameraXDemoActivity::class.java)
         )
 
         val colors = arrayOf(

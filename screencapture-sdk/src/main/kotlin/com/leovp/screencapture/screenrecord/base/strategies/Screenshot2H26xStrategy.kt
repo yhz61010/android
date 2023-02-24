@@ -181,7 +181,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         renderer.draw(builder.width, builder.height, bitmap, mvp)
 
         EGLExt.eglPresentationTimeANDROID(
-            eglDisplay, eglSurface,
+            eglDisplay,
+            eglSurface,
             computePresentationTimeUs(frameCount, builder.fps) * 1000
         )
 
@@ -200,8 +201,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
 
         val version = IntArray(2)
-        if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1))
+        if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1)) {
             throw RuntimeException("eglInitialize(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+        }
 
         val attribList = intArrayOf(
             EGL14.EGL_RED_SIZE, 8,
@@ -217,29 +219,26 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         EGL14.eglChooseConfig(eglDisplay, attribList, 0, configs, 0, configs.size, nConfigs, 0)
 
         var err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS)
-            throw RuntimeException(GLUtils.getEGLErrorString(err))
+        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
         val ctxAttribs = intArrayOf(
-            EGL14.EGL_CONTEXT_CLIENT_VERSION, 2,
+            EGL14.EGL_CONTEXT_CLIENT_VERSION,
+            2,
             EGL14.EGL_NONE
         )
         eglContext = EGL14.eglCreateContext(eglDisplay, configs[0], EGL14.EGL_NO_CONTEXT, ctxAttribs, 0)
 
         err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS)
-            throw RuntimeException(GLUtils.getEGLErrorString(err))
+        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
-        val surfaceAttribs = intArrayOf(
-            EGL14.EGL_NONE
-        )
+        val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
         eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, configs[0], surface, surfaceAttribs, 0)
         err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS)
-            throw RuntimeException(GLUtils.getEGLErrorString(err))
+        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
-        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
             throw RuntimeException("eglMakeCurrent(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+        }
     }
 
     private fun releaseEgl() {
@@ -265,7 +264,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
             },
-            builder.width, builder.height
+            builder.width,
+            builder.height
         )
         with(format) {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)

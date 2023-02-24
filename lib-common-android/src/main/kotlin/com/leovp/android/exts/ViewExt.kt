@@ -93,10 +93,11 @@ fun ViewGroup.circularReveal(button: ImageButton) {
         button.x.toInt() + button.width / 2,
         button.y.toInt() + button.height / 2,
         0f,
-        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             this.width.toFloat()
-        else
+        } else {
             this.height.toFloat()
+        }
     ).apply {
         duration = 500
         doOnStart { visibility = View.VISIBLE }
@@ -208,7 +209,6 @@ fun View.simulateClick(reactivateDelay: Long = ANIMATION_FAST_MILLIS) {
 /** Pad this view with the insets provided by the device cutout (i.e. notch) */
 @RequiresApi(Build.VERSION_CODES.P)
 fun View.padWithDisplayCutout() {
-
     /** Helper method that applies padding from cutout's safe insets */
     fun doPadding(cutout: DisplayCutout) = setPadding(
         cutout.safeInsetLeft,

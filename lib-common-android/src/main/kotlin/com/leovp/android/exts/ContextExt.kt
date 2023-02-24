@@ -88,7 +88,8 @@ fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): Packa
         val infoFlags = PackageManager.PackageInfoFlags.of(value.toLong())
         packageManager.getPackageInfo(pkgName, infoFlags)
     } else {
-        @Suppress("DEPRECATION") packageManager.getPackageInfo(pkgName, value)
+        @Suppress("DEPRECATION")
+        packageManager.getPackageInfo(pkgName, value)
     }
 }
 
@@ -188,19 +189,34 @@ val Context.appWidgetManager get() = getSystemService(Context.APPWIDGET_SERVICE)
 val Context.restrictionsManager get() = getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
 val Context.mediaSessionManager get() = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
 val Context.mediaProjectionManager get() = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-val Context.usageStatsManager @RequiresApi(API.L_MR1) get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-val Context.midiManager @RequiresApi(API.M) get() = getSystemService(Context.MIDI_SERVICE) as MidiManager
-val Context.networkStatusManager @RequiresApi(API.M) get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
-val Context.carrierConfigManager @RequiresApi(API.M) get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
-val Context.systemHealthManager @RequiresApi(API.N) get() = getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
-val Context.hardwarePropertiesManager @RequiresApi(API.N) get() =
-    getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
-val Context.shortcutManager @RequiresApi(API.N_MR1) get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
-val Context.storageStatsManager @RequiresApi(API.O) get() = getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
-val Context.companionDeviceManager @RequiresApi(API.O) get() = getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
-val Context.textClassificationManager @RequiresApi(API.O) get() =
-    getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
-val Context.euiccManager @RequiresApi(API.P) get() = getSystemService(Context.EUICC_SERVICE) as EuiccManager
-val Context.ipSecManager @RequiresApi(API.P) get() = getSystemService(Context.IPSEC_SERVICE) as IpSecManager
-val Context.vibratorManager @RequiresApi(Build.VERSION_CODES.S) get() =
-    getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+val Context.usageStatsManager get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+val Context.midiManager get() = getSystemService(Context.MIDI_SERVICE) as MidiManager
+val Context.networkStatusManager get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+val Context.carrierConfigManager get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
+val Context.systemHealthManager
+    @RequiresApi(API.N)
+    get() = getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
+val Context.hardwarePropertiesManager
+    @RequiresApi(API.N)
+    get() = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
+val Context.shortcutManager
+    @RequiresApi(API.N_MR1)
+    get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
+val Context.storageStatsManager
+    @RequiresApi(API.O)
+    get() = getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
+val Context.companionDeviceManager
+    @RequiresApi(API.O)
+    get() = getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+val Context.textClassificationManager
+    @RequiresApi(API.O)
+    get() = getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
+val Context.euiccManager
+    @RequiresApi(API.P)
+    get() = getSystemService(Context.EUICC_SERVICE) as EuiccManager
+val Context.ipSecManager
+    @RequiresApi(API.P)
+    get() = getSystemService(Context.IPSEC_SERVICE) as IpSecManager
+val Context.vibratorManager
+    @RequiresApi(Build.VERSION_CODES.S)
+    get() = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager

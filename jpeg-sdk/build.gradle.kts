@@ -40,7 +40,7 @@ android {
 
                 "lib/arm64-v8a/libc++_shared.so",
                 "lib/arm64-v8a/libjpeg.so",
-                "lib/arm64-v8a/libturbojpeg.so",
+                "lib/arm64-v8a/libturbojpeg.so"
             )
         }
     }

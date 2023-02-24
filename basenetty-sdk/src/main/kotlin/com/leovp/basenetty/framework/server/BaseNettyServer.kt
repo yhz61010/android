@@ -194,7 +194,9 @@ abstract class BaseNettyServer protected constructor(
         return if (!clientChannel.isActive) {
             LogContext.log.e(cmdTag, "Client channel is not active. Can not send command.")
             false
-        } else true
+        } else {
+            true
+        }
     }
 
     /**
@@ -239,7 +241,9 @@ abstract class BaseNettyServer protected constructor(
                     val cmdMsg = "$logPrefix[${cmd.size}]"
                     val hex: String? = if (showContent) {
                         if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
-                    } else null
+                    } else {
+                        null
+                    }
                     LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
@@ -251,11 +255,13 @@ abstract class BaseNettyServer protected constructor(
                 val pingByteBuf = if (isStringCmd) {
                     requireNotNull(stringCmd)
                     Unpooled.wrappedBuffer(stringCmd.toByteArray())
-                } else bytesCmd
+                } else {
+                    bytesCmd
+                }
                 clientChannel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
-            } else clientChannel.writeAndFlush(
-                if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd)
-            )
+            } else {
+                clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            }
         } else {
             clientChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }

@@ -37,8 +37,11 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
-            else printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -55,7 +58,9 @@ interface ILog {
         if (enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
-            } else printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -70,8 +75,11 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
-            else printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -86,8 +94,11 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
-            else printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -102,8 +113,11 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
-            else printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -118,8 +132,11 @@ interface ILog {
         outputType: Int = -1
     ) {
         if (enableLog) {
-            if (fullOutput) splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
-            else printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -130,8 +147,8 @@ interface ILog {
         return Log.getStackTraceString(t)
     }
 
-    @Suppress("unused")
     // Usage: getStackTraceString(Thread.currentThread().getStackTrace())
+    @Suppress("unused")
     fun getStackTraceString(elements: Array<StackTraceElement>?): String {
         if (elements.isNullOrEmpty()) return ""
         val sb = StringBuilder()

@@ -221,8 +221,14 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         h26xEncoder?.setCallback(mediaCodecCallback)
         val surface = h26xEncoder!!.createInputSurface()
         virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
-            "screen-record", builder.width, builder.height, builder.dpi,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, surface, null, null
+            "screen-record",
+            builder.width,
+            builder.height,
+            builder.dpi,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
+            surface,
+            null,
+            null
         )
 
         initHandler()
@@ -368,8 +374,14 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             ImageReader.newInstance(finalWidth, finalHeight, PixelFormat.RGBA_8888, 3)
         val virtualDisplayForImageReader: VirtualDisplay? =
             builder.mediaProjection!!.createVirtualDisplay(
-                "screen-record", finalWidth, finalHeight, builder.dpi,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, imageReader.surface, null, null
+                "screen-record",
+                finalWidth,
+                finalHeight,
+                builder.dpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
+                imageReader.surface,
+                null,
+                null
             )
         imageReader.setOnImageAvailableListener({ reader ->
             //            LogContext.log.e(TAG, "takeScreenshotFlag=${takeScreenshotFlag.get()}")

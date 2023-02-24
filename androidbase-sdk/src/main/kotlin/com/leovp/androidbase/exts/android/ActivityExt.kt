@@ -16,7 +16,9 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean {
     return if (this.intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT > 0) {
         this.finish()
         true
-    } else false
+    } else {
+        false
+    }
 }
 
 // ============================================================================

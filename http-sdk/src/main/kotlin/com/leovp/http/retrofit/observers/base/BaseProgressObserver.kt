@@ -5,10 +5,10 @@ import com.leovp.http.retrofit.iter.ObserverOnNextListener
 import com.leovp.log.LogContext
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
-import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import retrofit2.HttpException
 
 /**
  * Author: Michael Leo
@@ -60,20 +60,20 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
             is HttpException -> {
                 statusCode = e.code()
                 LogContext.log.e(javaClass.simpleName, "Response status code: $statusCode")
-//                when (statusCode) {
-//                    in 400..499 -> {
-//                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
-//                    }
-//                    in 500..599 -> {
-//                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
-//                    }
-//                    else -> {
-//                        LogContext.log.e(
-//                            javaClass.simpleName,
-//                            "Response status code[neither 4xx nor 5xx]: $statusCode"
-//                        )
-//                    }
-//                }
+                //                when (statusCode) {
+                //                    in 400..499 -> {
+                //                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
+                //                    }
+                //                    in 500..599 -> {
+                //                        LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
+                //                    }
+                //                    else -> {
+                //                        LogContext.log.e(
+                //                            javaClass.simpleName,
+                //                            "Response status code[neither 4xx nor 5xx]: $statusCode"
+                //                        )
+                //                    }
+                //                }
             }
         }
         mListener.onError(statusCode, e.message ?: "", e)

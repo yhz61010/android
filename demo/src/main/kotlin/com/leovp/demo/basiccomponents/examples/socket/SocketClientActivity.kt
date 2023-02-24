@@ -4,16 +4,16 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import com.leovp.android.exts.toast
-import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.databinding.ActivitySocketClientBinding
-import com.leovp.json.toJsonString
-import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ExponentRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.databinding.ActivitySocketClientBinding
+import com.leovp.json.toJsonString
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.CoroutineScope
@@ -92,11 +92,8 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
             if (::socketClientHandler.isInitialized) {
                 val result = socketClientHandler.sendMsgToServer(binding.editText.text.toString())
                 withContext(Dispatchers.Main) {
-                    binding.editText.text.clear(); if (!result) toast(
-                        "Send command error",
-                        debug = true,
-                        error = true
-                    )
+                    binding.editText.text.clear()
+                    if (!result) toast("Send command error", debug = true, error = true)
                 }
             }
         }

@@ -175,10 +175,11 @@ fun Context.getCompactPackageInfo(packageName: String, flags: Int): PackageInfo 
 
 fun Service.stopCompactForeground(removeNotification: Boolean) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        if (removeNotification)
+        if (removeNotification) {
             stopForeground(Service.STOP_FOREGROUND_REMOVE)
-        else
+        } else {
             stopForeground(Service.STOP_FOREGROUND_DETACH)
+        }
     } else {
         @Suppress("DEPRECATION")
         stopForeground(removeNotification)

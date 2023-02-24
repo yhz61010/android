@@ -39,7 +39,6 @@ class AutoFitSurfaceView @JvmOverloads constructor(
         if (aspectRatio == 0f) {
             setMeasuredDimension(width, height)
         } else {
-
             // Performs center-crop transformation of the camera frames
             val newWidth: Int
             val newHeight: Int

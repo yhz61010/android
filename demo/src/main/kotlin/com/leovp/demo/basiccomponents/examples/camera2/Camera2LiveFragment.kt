@@ -111,7 +111,6 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
     }
 
     override suspend fun getCapturingImage(result: Camera2ComponentHelper.CombinedCaptureResult) {
-
         // Save the result to disk
         val output = camera2Helper.saveResult(result)
         LogContext.log.d(TAG, "Image saved: ${output.absolutePath}")

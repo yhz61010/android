@@ -90,20 +90,22 @@ object H264Util {
         val isSps = isSps(data)
         return if (!isSps) {
             null
-        } else try {
-            // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
-            // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
-            for (i in 5 until data.size) {
-                if (CodecUtil.findStartCode(data, i)) {
-                    val sps = ByteArray(i)
-                    System.arraycopy(data, 0, sps, 0, i)
-                    return sps
+        } else {
+            try {
+                // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+                // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
+                for (i in 5 until data.size) {
+                    if (CodecUtil.findStartCode(data, i)) {
+                        val sps = ByteArray(i)
+                        System.arraycopy(data, 0, sps, 0, i)
+                        return sps
+                    }
                 }
+                data
+            } catch (e: Exception) {
+                LogContext.log.e(TAG, "getSps error msg=${e.message}")
+                null
             }
-            data
-        } catch (e: Exception) {
-            LogContext.log.e(TAG, "getSps error msg=${e.message}")
-            null
         }
     }
 

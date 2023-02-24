@@ -27,10 +27,7 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
          */
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectJavaManager {
             try {
-                val clazz = if (classLoader == null)
-                    Class.forName(className)
-                else
-                    Class.forName(className, true, classLoader)
+                val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
                 return reflect(clazz)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
@@ -375,6 +372,7 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         if (!accessible.isAccessible) accessible.isAccessible = true
         return accessible
     }
+
     // /////////////////////////////////////////////////////////////////////////
     // proxy
     // /////////////////////////////////////////////////////////////////////////
@@ -437,7 +435,9 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
                 Char::class.java
             } else if (Void.TYPE == type) {
                 Void::class.java
-            } else type
+            } else {
+                type
+            }
         }
         return type
     }

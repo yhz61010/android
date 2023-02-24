@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.audio
 
 import android.content.Context
@@ -6,6 +8,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.SystemClock
+import androidx.viewbinding.BuildConfig
 import com.leovp.audio.aac.AacStreamPlayer
 import com.leovp.audio.base.AudioDecoderManager
 import com.leovp.audio.base.AudioType
@@ -38,7 +41,8 @@ class AudioPlayer(
     init {
         val minBufferSize = AudioTrack.getMinBufferSize(
             audioDecoderInfo.sampleRate,
-            audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat
+            audioDecoderInfo.channelConfig,
+            audioDecoderInfo.audioFormat
         ) * minPlayBufferSizeRatio
         LogContext.log.w(TAG, "PCM Codec=$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
@@ -66,7 +70,8 @@ class AudioPlayer(
             aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
         } else {
             decoderWrapper = AudioDecoderManager.getWrapper(
-                type, audioDecoderInfo,
+                type,
+                audioDecoderInfo,
                 object : OutputCallback {
                     override fun output(out: ByteArray) {
                         val st = SystemClock.elapsedRealtime()

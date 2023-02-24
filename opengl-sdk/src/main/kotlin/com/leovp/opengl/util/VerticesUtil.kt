@@ -163,18 +163,26 @@ object VerticesUtil {
             verticesArray[4], verticesArray[5],
             verticesArray[6], verticesArray[7]
         )
-        temp = if (isHorizontal) floatArrayOf(
-            temp[2], temp[3],
-            temp[0], temp[1],
-            temp[6], temp[7],
-            temp[4], temp[5]
-        ) else temp
-        temp = if (isVertical) floatArrayOf(
-            temp[6], temp[7],
-            temp[4], temp[5],
-            temp[2], temp[3],
-            temp[0], temp[1]
-        ) else temp
+        temp = if (isHorizontal) {
+            floatArrayOf(
+                temp[2], temp[3],
+                temp[0], temp[1],
+                temp[6], temp[7],
+                temp[4], temp[5]
+            )
+        } else {
+            temp
+        }
+        temp = if (isVertical) {
+            floatArrayOf(
+                temp[6], temp[7],
+                temp[4], temp[5],
+                temp[2], temp[3],
+                temp[0], temp[1]
+            )
+        } else {
+            temp
+        }
         return temp
     }
 }

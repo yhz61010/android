@@ -1,11 +1,11 @@
 package com.leovp.demo.jetpackcomponents.examples.camerax
 
 import android.graphics.Bitmap
+import com.leovp.android.exts.getBaseDirString
 import com.leovp.camerax.CameraXActivity
 import com.leovp.camerax.bean.CaptureImage
 import com.leovp.camerax.enums.CapturedImageStrategy
 import com.leovp.camerax.listeners.CaptureImageListener
-import com.leovp.android.exts.getBaseDirString
 import com.leovp.image.toBitmapFromBytes
 import com.leovp.image.writeToFile
 import com.leovp.log.LogContext
@@ -74,9 +74,7 @@ class CameraXDemoActivity : CameraXActivity() {
                 )?.apply {
                     val oriOutFile = File(
                         getBaseDirString("Leo"),
-                        "${
-                        SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())
-                        }.jpg"
+                        "${SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())}.jpg"
                     )
                     writeToFile(oriOutFile)
                     recycle()

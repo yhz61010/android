@@ -272,9 +272,11 @@ class DecodeH265RawFileByFFMpeg {
                                 val st2 = SystemClock.elapsedRealtimeNanos()
                                 decodeFrame?.let {
                                     val yuv420Type =
-                                        if (videoInfo.pixelFormatId < 0) BaseRenderer.Yuv420Type.I420 else BaseRenderer.Yuv420Type.getType(
-                                            videoInfo.pixelFormatId
-                                        )
+                                        if (videoInfo.pixelFormatId < 0) {
+                                            BaseRenderer.Yuv420Type.I420
+                                        } else {
+                                            BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
+                                        }
                                     glSurfaceView.render(it.yuvBytes, yuv420Type)
                                 }
                                 st3 = SystemClock.elapsedRealtimeNanos()

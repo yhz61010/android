@@ -9,8 +9,8 @@ import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
-import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.BuildConfig
+import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 import java.io.File
@@ -144,25 +144,15 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                                 } else {
                                     sampleData = ByteArray(it.remaining())
                                     it.get(sampleData!!)
-                                    if (BuildConfig.DEBUG) LogContext.log.d(
-                                        TAG,
-                                        "Sample aac data[${sampleData?.size}]"
-                                    )
+                                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
                                 }
                             }
                         } catch (e: Exception) {
-                            if (BuildConfig.DEBUG) LogContext.log.e(
-                                TAG,
-                                "inputIndex=$inputIndex sampleSize=$sampleSize"
-                            )
-                            e.printStackTrace()
+                            if (BuildConfig.DEBUG) LogContext.log.e(TAG, "inputIndex=$inputIndex sampleSize=$sampleSize", e)
                         }
                         if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
                         if (sampleSize < 0) {
-                            audioDecoder?.queueInputBuffer(
-                                inputIndex, 0, 0, 0,
-                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                            )
+                            audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             isFinish = true
                         } else {
                             audioDecoder?.queueInputBuffer(
@@ -196,7 +186,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (BuildConfig.DEBUG) LogContext.log.e(TAG, "playAac() error", e)
             } finally {
                 stop()
                 f.invoke()

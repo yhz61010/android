@@ -216,9 +216,7 @@ object FileDocumentUtil {
             return fullPath
         }
         fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
-        return if (fileExists(fullPath)) {
-            fullPath
-        } else fullPath
+        return if (fileExists(fullPath)) fullPath else fullPath
     }
 
     private fun getDriveFilePath(context: Context, uri: Uri): String {

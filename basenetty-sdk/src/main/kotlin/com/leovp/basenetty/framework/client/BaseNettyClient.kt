@@ -108,7 +108,9 @@ abstract class BaseNettyClient protected constructor(
                 "wss".equals(webSocketUri.scheme, true) -> 443
                 else -> -1
             }
-        } else webSocketUri.port,
+        } else {
+            webSocketUri.port
+        },
         connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
@@ -131,7 +133,9 @@ abstract class BaseNettyClient protected constructor(
                 "wss".equals(webSocketUri.scheme, true) -> 443
                 else -> -1
             }
-        } else webSocketUri.port,
+        } else {
+            webSocketUri.port
+        },
         connectionListener, retryStrategy, headers, timeout
     ) {
         this.webSocketUri = webSocketUri
@@ -419,21 +423,23 @@ abstract class BaseNettyClient protected constructor(
         runCatching {
             // Add sync() here to make sure
             // the listener of channel disconnect method will be triggered here.
-            if (::channel.isInitialized) channel.disconnect().sync().addListener { f ->
-                if (f.isSuccess) {
-                    LogContext.log.w(tag, "===== disconnectManually() done =====")
-                    connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                    connectionListener.onDisconnected(this, byRemote = false)
-                    cont.resume(connectStatus.get())
-                } else {
-                    LogContext.log.w(tag, "===== disconnectManually() failed =====")
-                    connectStatus.set(ClientConnectStatus.FAILED)
-                    connectionListener.onFailed(
-                        this,
-                        ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
-                        "Disconnect manually failed"
-                    )
-                    cont.resume(connectStatus.get())
+            if (::channel.isInitialized) {
+                channel.disconnect().sync().addListener { f ->
+                    if (f.isSuccess) {
+                        LogContext.log.w(tag, "===== disconnectManually() done =====")
+                        connectStatus.set(ClientConnectStatus.DISCONNECTED)
+                        connectionListener.onDisconnected(this, byRemote = false)
+                        cont.resume(connectStatus.get())
+                    } else {
+                        LogContext.log.w(tag, "===== disconnectManually() failed =====")
+                        connectStatus.set(ClientConnectStatus.FAILED)
+                        connectionListener.onFailed(
+                            this,
+                            ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
+                            "Disconnect manually failed"
+                        )
+                        cont.resume(connectStatus.get())
+                    }
                 }
             }
         }.onFailure {
@@ -639,7 +645,9 @@ abstract class BaseNettyClient protected constructor(
                     val cmdMsg = "$logPrefix[${cmd.size}]"
                     val hex: String? = if (showContent) {
                         if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
-                    } else null
+                    } else {
+                        null
+                    }
                     LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
@@ -655,11 +663,13 @@ abstract class BaseNettyClient protected constructor(
                 val pingByteBuf = if (isStringCmd) {
                     requireNotNull(stringCmd)
                     Unpooled.wrappedBuffer(stringCmd.toByteArray())
-                } else bytesCmd
+                } else {
+                    bytesCmd
+                }
                 channel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
-            } else channel.writeAndFlush(
-                if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd)
-            )
+            } else {
+                channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+            }
         } else {
             channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
         }

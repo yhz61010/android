@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.androidbase.exts.android
 
 import android.content.res.Resources
@@ -54,16 +56,24 @@ fun String.fromBase64(flag: Int = Base64.DEFAULT): String = Base64.decode(this, 
 fun String.fromBase64ToByteArray(flag: Int = Base64.DEFAULT): ByteArray = Base64.decode(this, flag)
 
 /** Convert String to URL and Filename safe type base64 String */
-val String.toUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlEncoder().encodeToString(this.toByteArray())
+val String.toUrlBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getUrlEncoder().encodeToString(this.toByteArray())
 
 /** Convert URL and Filename safe type base64 String to String */
-val String.fromUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlDecoder().decode(this).toString()
+val String.fromUrlBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getUrlDecoder().decode(this).toString()
 
 /** Convert String to Mime type base64 String */
-val String.toMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeEncoder().encodeToString(this.toByteArray())
+val String.toMimeBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getMimeEncoder().encodeToString(this.toByteArray())
 
 /** Convert Mime type base64 String to String */
-val String.fromMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeDecoder().decode(this).toString()
+val String.fromMimeBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getMimeDecoder().decode(this).toString()
 
 /**
  * Decode base64 ByteArray to ByteArray
@@ -108,36 +118,53 @@ fun ByteArray.toBase64ByteArray(flag: Int = Base64.DEFAULT): ByteArray = Base64.
 fun ByteArray.toBase64(flag: Int = Base64.DEFAULT): String = Base64.encodeToString(this, flag)
 
 /** Convert ByteArray to base64 ByteArray */
-val ByteArray.toBase64: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getEncoder().encode(this)
+val ByteArray.toBase64: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getEncoder().encode(this)
 
 /** Decode base64 ByteArray to ByteArray */
-val ByteArray.fromBase64: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getDecoder().decode(this)
+val ByteArray.fromBase64: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getDecoder().decode(this)
 
 /** Convert ByteArray to URL and Filename safe type base64 ByteArray */
-val ByteArray.toUrlBase64ByteArray: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getUrlEncoder().encode(this)
+val ByteArray.toUrlBase64ByteArray: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getUrlEncoder().encode(this)
 
 /** Convert ByteArray to URL and Filename safe type base64 String */
-val ByteArray.toUrlBase64: String @RequiresApi(API.O) get() = java.util.Base64.getUrlEncoder().encodeToString(this)
+val ByteArray.toUrlBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getUrlEncoder().encodeToString(this)
 
 /** Decode URL and Filename safe type base64 ByteArray to ByteArray */
-val ByteArray.fromUrlBase64: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getUrlDecoder().decode(this)
+val ByteArray.fromUrlBase64: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getUrlDecoder().decode(this)
 
 /** Convert ByteArray to Mime type base64 ByteArray */
-val ByteArray.toMimeBase64ByteArray: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getMimeEncoder().encode(this)
+val ByteArray.toMimeBase64ByteArray: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getMimeEncoder().encode(this)
 
 /** Convert ByteArray to Mime type base64 String */
-val ByteArray.toMimeBase64: String @RequiresApi(API.O) get() = java.util.Base64.getMimeEncoder().encodeToString(this)
+val ByteArray.toMimeBase64: String
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getMimeEncoder().encodeToString(this)
 
 /** Decode Mime type base64 ByteArray to ByteArray */
-val ByteArray.fromMimeBase64: ByteArray @RequiresApi(API.O) get() = java.util.Base64.getMimeDecoder().decode(this)
+val ByteArray.fromMimeBase64: ByteArray
+    @RequiresApi(API.O)
+    get() = java.util.Base64.getMimeDecoder().decode(this)
 
 /**
  * Convert Drawable to base64 String.
  */
 fun Drawable.toBase64(imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG): String? {
     val bmp = this.getBitmap()
-    return if (bmp == null) null
-    else {
+    return if (bmp == null) {
+        null
+    } else {
         val compressedBmpOS = ByteArrayOutputStream()
         bmp.compress(imgType, 100, compressedBmpOS)
         compressedBmpOS.toByteArray().toBase64()

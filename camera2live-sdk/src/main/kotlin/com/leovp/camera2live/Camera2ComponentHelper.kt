@@ -316,10 +316,8 @@ class Camera2ComponentHelper(
             cameraWidth = desiredVideoWidth
             cameraHeight = desiredVideoHeight
         }
-        if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth =
-            cameraSupportedMaxPreviewHeight
-        if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight =
-            cameraSupportedMaxPreviewWidth
+        if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
+        if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
         LogContext.log.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Calculate ImageReader input preview size from supported size list by camera.
@@ -338,10 +336,9 @@ class Camera2ComponentHelper(
         )
         // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
         previewSize =
-            if (swapDimension) Size(
-                selectedSizeFromCamera.height,
-                selectedSizeFromCamera.width
-            ) else {
+            if (swapDimension) {
+                Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width)
+            } else {
                 selectedSizeFromCamera
             }
         LogContext.log.w(
@@ -880,7 +877,9 @@ class Camera2ComponentHelper(
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                                 image.format != ImageFormat.DEPTH_JPEG &&
                                 image.timestamp != resultTimestamp
-                            ) continue
+                            ) {
+                                continue
+                            }
                             LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
 
                             // Unset the image reader listener

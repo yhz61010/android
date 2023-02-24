@@ -47,9 +47,12 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
 
         binding.btnRotate2.setOnSingleClickListener {
             val rotateAnim = RotateAnimation(
-                0f, 360f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f
+                0f,
+                360f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f
             ).apply { duration = 1000 }
             binding.ivBeauty.startAnimation(rotateAnim)
         }
@@ -63,9 +66,14 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
 
         binding.btnScale2.setOnSingleClickListener {
             val scaleAnim = ScaleAnimation(
-                0f, 1f, 0f, 1f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f
+                0f,
+                1f,
+                0f,
+                1f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f
             ).apply { duration = 2000 }
             binding.ivBeauty.startAnimation(scaleAnim)
         }
@@ -79,8 +87,10 @@ class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>() {
 
         binding.btnTranslate2.setOnSingleClickListener {
             val transAnim = TranslateAnimation(
-                10f, 100f,
-                10f, 100f
+                10f,
+                100f,
+                10f,
+                100f
             ).apply { duration = 1000 }
             binding.ivBeauty.startAnimation(transAnim)
         }

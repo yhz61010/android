@@ -79,7 +79,7 @@ class LeoToast private constructor(private val ctx: Context) {
         var toastIcon: Int? = null,
 
         /** Unit: px */
-        var toastIconSize: Int = 24.px,
+        var toastIconSize: Int = 24.px
     )
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
@@ -305,7 +305,8 @@ private fun decorateToast(
 
     val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(
         ctx.resources,
-        R.drawable.toast_bg_normal, null
+        R.drawable.toast_bg_normal,
+        null
     )!!
     if (!error && bgColor == null) { // without error and without bgColor
         rootView.background = defaultBgDrawable
@@ -335,7 +336,9 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
             if (Surface.ROTATION_90 == orientation) {
                 (max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)) /
                     (if (ctx.navigationBarHeight > 0) 1 else 2)
-            } else 0
+            } else {
+                0
+            }
         }
         else -> 0
     }

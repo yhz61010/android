@@ -93,12 +93,16 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         _progressTextPaint.style = Paint.Style.FILL
         _progressTextPaint.textAlign = Paint.Align.CENTER
 
-        val attr: TypedArray? = if (attrs != null) context.obtainStyledAttributes(
-            attrs,
-            R.styleable.CircleProgressbar,
-            0,
-            0
-        ) else null
+        val attr: TypedArray? = if (attrs != null) {
+            context.obtainStyledAttributes(
+                attrs,
+                R.styleable.CircleProgressbar,
+                0,
+                0
+            )
+        } else {
+            null
+        }
         if (attrs != null && attr != null) {
             val bgResId = attr.getResourceId(R.styleable.CircleProgressbar_backgroundDrawable, -1)
             if (bgResId != -1) _defaultBgDrawable = context.getDrawable(bgResId)

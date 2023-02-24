@@ -6,10 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.findNavController
+import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentForNavFirstBinding
-import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 

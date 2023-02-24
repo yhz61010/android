@@ -45,9 +45,7 @@ class TextureRenderer {
         1.0f, -1.0f, 0.0f, 1f, 0f
     )
 
-    private var indices = intArrayOf(
-        2, 1, 0, 0, 3, 2
-    )
+    private var indices = intArrayOf(2, 1, 0, 0, 3, 2)
 
     private var program: Int
     private var vertexHandle: Int = 0
@@ -109,7 +107,6 @@ class TextureRenderer {
     }
 
     private fun loadShader(type: Int, shaderCode: String): Int {
-
         return GLES20.glCreateShader(type).also { shader ->
             GLES20.glShaderSource(shader, shaderCode)
             GLES20.glCompileShader(shader)
@@ -117,7 +114,6 @@ class TextureRenderer {
     }
 
     fun draw(viewportWidth: Int, viewportHeight: Int, bitmap: Bitmap, mvpMatrix: FloatArray) {
-
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glClearColor(0f, 0f, 0f, 0f)
 

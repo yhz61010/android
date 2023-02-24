@@ -1,8 +1,8 @@
 package com.leovp.http.retrofit.base
 
 import com.leovp.http.okhttp.HttpLoggingInterceptor
-import com.leovp.network.SslUtils
 import com.leovp.log.LogContext
+import com.leovp.network.SslUtils
 import java.util.concurrent.TimeUnit
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

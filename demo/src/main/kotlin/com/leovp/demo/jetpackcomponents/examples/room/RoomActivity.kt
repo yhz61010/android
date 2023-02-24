@@ -64,7 +64,6 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
                     viewHolder: RecyclerView.ViewHolder,
                     target: RecyclerView.ViewHolder
                 ): Boolean {
-
                     return false
                 }
 
@@ -89,7 +88,8 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
     }
 
     private val newWordActivityLauncher = BetterActivityResult.registerForActivityResult(
-        this, ActivityResultContracts.StartActivityForResult()
+        this,
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getStringExtra(NewWordActivity.EXTRA_REPLY)?.let {

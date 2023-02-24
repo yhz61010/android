@@ -62,8 +62,14 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
             }, imageReaderHandler)
         }
         virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
-            "screen-record", builder.width, builder.height, builder.dpi,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, imageReader!!.surface, null, null
+            "screen-record",
+            builder.width,
+            builder.height,
+            builder.dpi,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
+            imageReader!!.surface,
+            null,
+            null
         )
     }
 

@@ -313,7 +313,9 @@ object Falcon {
             private fun extractException(ex: Throwable): Throwable? {
                 return if (ex is UnableToTakeScreenshotException) {
                     ex.cause
-                } else ex
+                } else {
+                    ex
+                }
             }
         }
     }

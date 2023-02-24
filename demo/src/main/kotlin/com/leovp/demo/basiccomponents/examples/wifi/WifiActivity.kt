@@ -13,12 +13,12 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.android.exts.toast
+import com.leovp.android.exts.wifiManager
 import com.leovp.androidbase.utils.device.WifiUtil
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.wifi.base.WifiAdapter
 import com.leovp.demo.basiccomponents.examples.wifi.base.WifiModel
 import com.leovp.demo.databinding.ActivityWifiBinding
-import com.leovp.android.exts.wifiManager
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG

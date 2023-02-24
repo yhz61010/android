@@ -29,7 +29,7 @@ enum class StickyEdge {
     LEFT,
     RIGHT,
     TOP,
-    BOTTOM,
+    BOTTOM
 }
 
 enum class DockEdge {

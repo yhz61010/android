@@ -75,8 +75,12 @@ class TouchHelper(private val touchListener: TouchListener) {
             val activePointerId: Int = event.getPointerId(event.actionIndex)
             //            if (trackingPointerId == activePointerId) {
             touchListener.onEvent(
-                MotionEvent.ACTION_UP, activePointerId, event.getX(event.actionIndex).roundToInt(),
-                event.getY(event.actionIndex).roundToInt(), -1, -1
+                MotionEvent.ACTION_UP,
+                activePointerId,
+                event.getX(event.actionIndex).roundToInt(),
+                event.getY(event.actionIndex).roundToInt(),
+                -1,
+                -1
             )
             //            }
         }.onFailure { it.printStackTrace() }
@@ -87,8 +91,12 @@ class TouchHelper(private val touchListener: TouchListener) {
             for (i in 0 until MAX_TOUCH_POINTS) {
                 val activePointerId: Int = event.getPointerId(i)
                 touchListener.onEvent(
-                    MotionEvent.ACTION_UP, activePointerId, event.getX(activePointerId).roundToInt(),
-                    event.getY(activePointerId).roundToInt(), -1, -1
+                    MotionEvent.ACTION_UP,
+                    activePointerId,
+                    event.getX(activePointerId).roundToInt(),
+                    event.getY(activePointerId).roundToInt(),
+                    -1,
+                    -1
                 )
             }
         }.onFailure { it.printStackTrace() }

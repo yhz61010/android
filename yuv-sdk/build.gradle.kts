@@ -60,7 +60,7 @@ android {
                 "lib/arm64-v8a/libadpcm-ima-qt-decoder.so",
                 "lib/arm64-v8a/libh264-hevc-decoder.so",
                 "lib/arm64-v8a/libyuv.so",
-                "lib/arm64-v8a/libjpeg.so",
+                "lib/arm64-v8a/libjpeg.so"
             )
         }
     }

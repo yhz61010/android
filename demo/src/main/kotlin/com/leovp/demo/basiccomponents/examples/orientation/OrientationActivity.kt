@@ -63,9 +63,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
     private fun getScreenOrientation(): Int {
         val dm: DisplayMetrics = resources.displayMetrics // Screen rotation effected
         //        LogContext.log.w(ITAG, "dm size: ${dm.widthPixels}x${dm.heightPixels}")
-        return if (dm.widthPixels > dm.heightPixels)
-            Configuration.ORIENTATION_LANDSCAPE
-        else Configuration.ORIENTATION_PORTRAIT
+        return if (dm.widthPixels > dm.heightPixels) Configuration.ORIENTATION_LANDSCAPE else Configuration.ORIENTATION_PORTRAIT
     }
 
     inner class DeviceOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
@@ -83,7 +81,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             binding.tvSurfaceRotation.text =
                 "${screenSurfaceRotation.surfaceRotationLiteralName}($screenSurfaceRotation) " +
-                screenSurfaceRotation.surfaceRotationName
+                    screenSurfaceRotation.surfaceRotationName
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
             val screenPortraitOrLandscape = getScreenOrientation()

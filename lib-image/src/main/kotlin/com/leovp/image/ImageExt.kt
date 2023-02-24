@@ -168,11 +168,7 @@ fun Bitmap.flip(
     y: Float = height / 2f
 ): Bitmap {
     val matrix = Matrix().apply {
-        postScale(
-            if (horizontal) -1f else 1f,
-            if (vertical) -1f else 1f,
-            x, y
-        )
+        postScale(if (horizontal) -1f else 1f, if (vertical) -1f else 1f, x, y)
     }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
@@ -190,12 +186,12 @@ fun Bitmap.flipRotate(
     x: Float = width / 2f,
     y: Float = height / 2f
 ): Bitmap {
-
     val matrix = Matrix().apply {
         postScale(
             if (horizontal) -1f else 1f,
             if (vertical) -1f else 1f,
-            x, y
+            x,
+            y
         )
         postRotate(degrees)
     }

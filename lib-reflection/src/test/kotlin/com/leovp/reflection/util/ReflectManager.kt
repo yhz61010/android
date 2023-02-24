@@ -51,10 +51,7 @@ class ReflectManager private constructor() {
         @Suppress("unused")
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectManager {
             try {
-                val clazz = if (classLoader == null)
-                    Class.forName(className)
-                else
-                    Class.forName(className, true, classLoader)
+                val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
                 return reflect(clazz.kotlin)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
@@ -351,7 +348,6 @@ class ReflectManager private constructor() {
                     reflect(javaMethod.invoke(obj, *args))
                 }
             }
-
         return null
     }
 

@@ -62,6 +62,8 @@ val Context.isGoogle: Boolean
 
 val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
 val Context.density get(): Float = this.resources.displayMetrics.density
+val Context.xdpi get(): Float = this.resources.displayMetrics.xdpi
+val Context.ydpi get(): Float = this.resources.displayMetrics.ydpi
 
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.

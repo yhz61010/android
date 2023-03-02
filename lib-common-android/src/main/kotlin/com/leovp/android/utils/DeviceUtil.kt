@@ -28,6 +28,8 @@ import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toSmartSize
 import com.leovp.android.exts.versionCode
 import com.leovp.android.exts.versionName
+import com.leovp.android.exts.xdpi
+import com.leovp.android.exts.ydpi
 import com.leovp.android.utils.shell.ShellUtil
 import com.leovp.kotlin.exts.outputFormatByte
 import com.leovp.kotlin.exts.round
@@ -97,24 +99,23 @@ class DeviceUtil private constructor(private val ctx: Context) {
     }
 
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
-        file?.name?.matches(Regex("cpu[0-9]+")) ?: false
+        file?.name?.matches(Regex("cpu\\d+")) ?: false
     }?.size ?: 0
 
     val cpuMinFreq = runCatching {
         File("/sys/devices/system/cpu/").listFiles { file: File? ->
-            file?.name?.matches(Regex("cpu[0-9]+")) ?: false
-        }?.map { file ->
+            file?.name?.matches(Regex("cpu\\d+")) ?: false
+        }?.maxOfOrNull { file ->
             ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_min_freq", false)
                 .successMsg.toInt()
-        }?.maxOrNull() ?: -1
+        } ?: -1
     }.getOrDefault(-2)
     val cpuMaxFreq = runCatching {
         File("/sys/devices/system/cpu/").listFiles { file: File? ->
-            file?.name?.matches(Regex("cpu[0-9]+")) ?: false
-        }?.map { file ->
-            ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false)
-                .successMsg.toInt()
-        }?.maxOrNull() ?: -1
+            file?.name?.matches(Regex("cpu\\d+")) ?: false
+        }?.maxOfOrNull { file ->
+            ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt()
+        } ?: -1
     }.getOrDefault(-2)
 
     fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? {
@@ -217,6 +218,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val screenInfo = "${screenSize.width}x${screenSize.height}" +
                 "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
                 "(${ctx.densityDpi}:${ctx.density})  " +
+                "(xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
                 "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
                 "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
             """

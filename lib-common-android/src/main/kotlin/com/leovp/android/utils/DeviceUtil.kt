@@ -9,6 +9,7 @@ import android.content.pm.ConfigurationInfo
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
+import android.view.Display
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
 import com.leovp.android.exts.activityManager
@@ -28,6 +29,7 @@ import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toSmartSize
 import com.leovp.android.exts.versionCode
 import com.leovp.android.exts.versionName
+import com.leovp.android.exts.windowManager
 import com.leovp.android.exts.xdpi
 import com.leovp.android.exts.ydpi
 import com.leovp.android.utils.shell.ShellUtil
@@ -205,6 +207,12 @@ class DeviceUtil private constructor(private val ctx: Context) {
     @SuppressLint("MissingPermission")
     fun getDeviceInfo(): String {
         return runCatching {
+            @Suppress("DEPRECATION")
+            val defaultDisplay: Display? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                ctx.display
+            } else {
+                ctx.windowManager.defaultDisplay
+            }
             val st = SystemClock.elapsedRealtime()
             val memInfo = getMemInfoInBytes()
             val screenSize = ctx.screenRealResolution
@@ -215,10 +223,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
                 "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
             val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
-            val screenInfo = "${screenSize.width}x${screenSize.height}" +
+            val screenInfo = "${screenSize.width}x${screenSize.height} RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
                 "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
-                "(${ctx.densityDpi}:${ctx.density})  " +
-                "(xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
+                "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
                 "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
                 "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
             """

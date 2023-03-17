@@ -37,7 +37,6 @@ import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.net.Proxy
-import java.security.Security
 import kotlin.concurrent.thread
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
@@ -218,7 +217,11 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
         LogContext.log.i(ITAG, "uid=${getUniqueID()}")
 
-        LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
+        // LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
+
+        @Suppress("DEPRECATION")
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay
+        LogContext.log.i(ITAG, "fps=${display?.refreshRate}")
     }
 
     override fun onPause() {

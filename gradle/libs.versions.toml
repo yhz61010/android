@@ -12,7 +12,7 @@ leo-version = "5.11.20"
 #===================
 #===== Compile =====
 #===================
-agp = "7.4.1"
+agp = "7.4.2"
 kotlin = "1.8.10"
 
 #=================================
@@ -31,7 +31,7 @@ constraintlayout = "2.1.4"
 coordinatorlayout = "1.2.0"
 navigation = "2.5.3"
 concurrent-futures-ktx = "1.1.0"
-lifecycle = "2.5.1"
+lifecycle = "2.6.0"
 annotation = "1.6.0"
 cardview = "1.0.0"
 viewpager2 = "1.0.0"
@@ -60,7 +60,7 @@ jacoco = "0.8.8"
 sonarqube = "4.0.0.2929"
 
 coil = "2.2.2"
-glide = "4.14.2"
+glide = "4.15.1"
 glide-transformations = "4.3.0"
 square-okhttp = "4.10.0"
 square-retrofit2 = "2.9.0"

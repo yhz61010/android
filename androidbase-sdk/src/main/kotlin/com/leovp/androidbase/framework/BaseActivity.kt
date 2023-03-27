@@ -85,10 +85,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         super.onCreate(savedInstanceState)
         binding = getViewBinding(savedInstanceState).apply { setContentView(root) }
         simpleActivityLauncher =
-            BetterActivityResult.registerForActivityResult(
-                this,
-                ActivityResultContracts.StartActivityForResult()
-            )
+            BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
         EventBus.getDefault().register(this)
 
         supportActionBar?.apply {

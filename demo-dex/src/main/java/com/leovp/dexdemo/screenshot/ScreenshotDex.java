@@ -8,7 +8,6 @@ import android.os.Process;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.IRotationWatcher;
-import android.view.Surface;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 import com.koushikdutta.async.http.Multimap;
@@ -19,7 +18,9 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.leovp.dex.SurfaceControl;
 import com.leovp.dex.util.CmnUtil;
+import com.leovp.reflection.models.DisplayInfo;
 import com.leovp.reflection.models.Size;
+import com.leovp.reflection.wrappers.DisplayManager;
 import com.leovp.reflection.wrappers.ServiceManager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * https://github.com/rayworks/DroidCast
+ * <a href="https://github.com/rayworks/DroidCast">DroidCast</a>
  * <p>
  * Author: Michael Leo
  * Date: 2022/1/19 09:01
@@ -53,7 +54,7 @@ public class ScreenshotDex {
 
     private static int httpPort = 53516;
 
-    private static DisplayUtil displayUtil;
+//    private static DisplayUtil displayUtil;
 
     public static void main(String[] args) {
         CmnUtil.println(TAG, ">>> main entry - Begin");
@@ -61,7 +62,7 @@ public class ScreenshotDex {
         resolveArgs(args);
 
         Looper.prepare();
-        displayUtil = new DisplayUtil();
+//        displayUtil = new DisplayUtil();
 
         AsyncHttpServer httpServer = new AsyncHttpServer();
         httpServer.get("/screenshot", new AnyRequestCallback());
@@ -107,7 +108,7 @@ public class ScreenshotDex {
 
     @NotNull
     private static Pair<Integer, Integer> getDimension() {
-        android.util.Size displaySize = ServiceManager.INSTANCE.getWindowManager().getCurrentDisplaySize();
+        android.util.Size displaySize = Objects.requireNonNull(ServiceManager.INSTANCE.getWindowManager()).getCurrentDisplaySize();
 
         int width = 1080;
         int height = 1920;
@@ -153,7 +154,14 @@ public class ScreenshotDex {
 
         int destWidth = w;
         int destHeight = h;
-        Bitmap bitmap = SurfaceControl.screenshot(destWidth, destHeight, Surface.ROTATION_0);
+        int screenRotation = Objects.requireNonNull(ServiceManager.INSTANCE.getWindowManager()).getRotation();
+        CmnUtil.println("screenRotation=" + screenRotation);
+        if (screenRotation == 1 || screenRotation == 3) {
+            int temp = destWidth;
+            destWidth = destHeight;
+            destHeight = temp;
+        }
+        Bitmap bitmap = SurfaceControl.screenshot(destWidth, destHeight, screenRotation);
 
         if (bitmap == null) {
             CmnUtil.println(TAG, String.format(Locale.ENGLISH,
@@ -164,7 +172,7 @@ public class ScreenshotDex {
             destWidth /= 2;
             destHeight /= 2;
 
-            bitmap = SurfaceControl.screenshot(destWidth, destHeight, Surface.ROTATION_0);
+            bitmap = SurfaceControl.screenshot(destWidth, destHeight, screenRotation);
         }
 
         CmnUtil.println(TAG, String.format(Locale.ENGLISH,
@@ -174,22 +182,21 @@ public class ScreenshotDex {
             Process.myPid(),
             Process.myTid()));
 
-        int screenRotation = ServiceManager.INSTANCE.getWindowManager().getRotation();
-
         if (screenRotation != 0) {
-            switch (screenRotation) {
-                case 1: // 90 degree rotation (counter-clockwise)
-                    bitmap = displayUtil.rotateBitmap(bitmap, -90f);
-                    break;
-                case 3: // 270 degree rotation
-                    bitmap = displayUtil.rotateBitmap(bitmap, 90f);
-                    break;
-                case 2: // 180 degree rotation
-                    bitmap = displayUtil.rotateBitmap(bitmap, 180f);
-                    break;
-                default:
-                    break;
-            }
+            assert bitmap != null;
+//            switch (screenRotation) {
+//                case 1: // 90 degree rotation (counter-clockwise)
+//                    bitmap = displayUtil.rotateBitmap(bitmap, -90f);
+//                    break;
+//                case 3: // 270 degree rotation
+//                    bitmap = displayUtil.rotateBitmap(bitmap, 90f);
+//                    break;
+//                case 2: // 180 degree rotation
+//                    bitmap = displayUtil.rotateBitmap(bitmap, 180f);
+//                    break;
+//                default:
+//                    break;
+//            }
         }
 
         assert bitmap != null;
@@ -284,10 +291,14 @@ public class ScreenshotDex {
 
                 if (ScreenshotDex.width == 0 || ScreenshotDex.height == 0) {
                     // dimension initialization
-                    Size sz = ServiceManager.INSTANCE.getDisplayManager().getDisplayInfo(Display.DEFAULT_DISPLAY).getSize();
+                    DisplayManager dm = ServiceManager.INSTANCE.getDisplayManager();
+                    assert dm != null;
+                    DisplayInfo di = dm.getDisplayInfo(Display.DEFAULT_DISPLAY);
+                    assert di != null;
+                    Size sz = di.getSize();
                     Point point = new Point(sz.getWidth(), sz.getHeight());
 
-                    if (point != null && point.x > 0 && point.y > 0) {
+                    if (point.x > 0 && point.y > 0) {
                         ScreenshotDex.width = point.x;
                         ScreenshotDex.height = point.y;
                     } else {

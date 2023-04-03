@@ -1,7 +1,6 @@
 package com.leovp.reflection.wrappers;
 
 import android.os.IInterface;
-
 import com.leovp.reflection.models.DisplayInfo;
 import com.leovp.reflection.models.Size;
 

@@ -3,6 +3,7 @@
 package com.leovp.androidbase.utils.network
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.net.ConnectivityManager
@@ -10,7 +11,6 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import com.leovp.android.utils.NetworkUtil
@@ -51,6 +51,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
         .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
         .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
 
+    @SuppressLint("ObsoleteSdkInt")
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun onActive() {
         super.onActive()
@@ -80,7 +81,6 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun marshmallowNetworkAvailableRequest() {
         connectivityManager.registerNetworkCallback(
@@ -117,6 +117,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
         return connectivityManagerCallback
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     private fun getConnectivityMarshmallowManagerCallback(): ConnectivityManager.NetworkCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {

@@ -6,28 +6,28 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.Process;
 import android.text.TextUtils;
+import android.view.Display;
+import android.view.IRotationWatcher;
 import android.view.Surface;
-
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
-
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.WebSocket;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
-import com.leovp.dex.DisplayUtil;
 import com.leovp.dex.SurfaceControl;
 import com.leovp.dex.util.CmnUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.leovp.reflection.models.Size;
+import com.leovp.reflection.wrappers.ServiceManager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * https://github.com/rayworks/DroidCast
@@ -68,13 +68,17 @@ public class ScreenshotDex {
 
         httpServer.websocket("/src", (webSocket, request) -> {
             Pair<Integer, Integer> pair = getDimension();
-            displayUtil.setRotateListener(rotate -> {
-                CmnUtil.println(TAG, ">>> rotate to " + rotate);
+            IRotationWatcher iw = new IRotationWatcher.Stub() {
+                @Override
+                public void onRotationChanged(int rotation) {
+                    CmnUtil.println(TAG, ">>> rotate to " + rotation);
 
-                // delay for the new rotated screen
-                Pair<Integer, Integer> dimen = getDimension();
-                sendScreenshotData(webSocket, dimen.first, dimen.second);
-            });
+                    // delay for the new rotated screen
+                    Pair<Integer, Integer> dimen = getDimension();
+                    sendScreenshotData(webSocket, dimen.first, dimen.second);
+                }
+            };
+            Objects.requireNonNull(ServiceManager.INSTANCE.getWindowManager()).registerRotationWatcher(iw, Display.DEFAULT_DISPLAY);
             new Thread(() -> {
                 while (true) {
                     sendScreenshotData(webSocket, pair.first, pair.second);
@@ -101,15 +105,15 @@ public class ScreenshotDex {
         }
     }
 
-    @NonNull
+    @NotNull
     private static Pair<Integer, Integer> getDimension() {
-        Point displaySize = displayUtil.getCurrentDisplaySize();
+        android.util.Size displaySize = ServiceManager.INSTANCE.getWindowManager().getCurrentDisplaySize();
 
         int width = 1080;
         int height = 1920;
         if (displaySize != null) {
-            width = (int) (displaySize.x * IMAGE_SCALE);
-            height = (int) (displaySize.y * IMAGE_SCALE);
+            width = (int) (displaySize.getWidth() * IMAGE_SCALE);
+            height = (int) (displaySize.getHeight() * IMAGE_SCALE);
         }
         return new Pair<>(width, height);
     }
@@ -117,22 +121,22 @@ public class ScreenshotDex {
     private static void sendScreenshotData(WebSocket webSocket, int width, int height) {
         try {
             byte[] inBytes =
-                    getScreenImageInBytes(
-                            Bitmap.CompressFormat.JPEG,
-                            width,
-                            height,
-                            (w, h, rotation) -> {
-                                JSONObject obj = new JSONObject();
-                                try {
-                                    obj.put("width", w);
-                                    obj.put("height", h);
-                                    obj.put("rotation", rotation);
+                getScreenImageInBytes(
+                    Bitmap.CompressFormat.JPEG,
+                    width,
+                    height,
+                    (w, h, rotation) -> {
+                        JSONObject obj = new JSONObject();
+                        try {
+                            obj.put("width", w);
+                            obj.put("height", h);
+                            obj.put("rotation", rotation);
 
-                                    webSocket.send(obj.toString());
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            });
+                            webSocket.send(obj.toString());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    });
             webSocket.send(inBytes);
 
         } catch (IOException e) {
@@ -141,11 +145,11 @@ public class ScreenshotDex {
     }
 
     private static byte[] getScreenImageInBytes(
-            Bitmap.CompressFormat compressFormat,
-            int w,
-            int h,
-            @Nullable ImageDimensionListener resolver)
-            throws IOException {
+        Bitmap.CompressFormat compressFormat,
+        int w,
+        int h,
+        @Nullable ImageDimensionListener resolver)
+        throws IOException {
 
         int destWidth = w;
         int destHeight = h;
@@ -153,9 +157,9 @@ public class ScreenshotDex {
 
         if (bitmap == null) {
             CmnUtil.println(TAG, String.format(Locale.ENGLISH,
-                    ">>> failed to generate image with resolution %d:%d%n",
-                    ScreenshotDex.width,
-                    ScreenshotDex.height));
+                ">>> failed to generate image with resolution %d:%d%n",
+                ScreenshotDex.width,
+                ScreenshotDex.height));
 
             destWidth /= 2;
             destHeight /= 2;
@@ -164,13 +168,13 @@ public class ScreenshotDex {
         }
 
         CmnUtil.println(TAG, String.format(Locale.ENGLISH,
-                "Bitmap generated with resolution %d:%d, process id %d | thread id %d%n",
-                destWidth,
-                destHeight,
-                Process.myPid(),
-                Process.myTid()));
+            "Bitmap generated with resolution %d:%d, process id %d | thread id %d%n",
+            destWidth,
+            destHeight,
+            Process.myPid(),
+            Process.myTid()));
 
-        int screenRotation = displayUtil.getScreenRotation();
+        int screenRotation = ServiceManager.INSTANCE.getWindowManager().getRotation();
 
         if (screenRotation != 0) {
             switch (screenRotation) {
@@ -273,14 +277,15 @@ public class ScreenshotDex {
                 }
 
                 if (!TextUtils.isEmpty(width) && !TextUtils.isEmpty(height) &&
-                        TextUtils.isDigitsOnly(width) && TextUtils.isDigitsOnly(height)) {
+                    TextUtils.isDigitsOnly(width) && TextUtils.isDigitsOnly(height)) {
                     ScreenshotDex.width = Integer.parseInt(width);
                     ScreenshotDex.height = Integer.parseInt(height);
                 }
 
                 if (ScreenshotDex.width == 0 || ScreenshotDex.height == 0) {
                     // dimension initialization
-                    Point point = displayUtil.getCurrentDisplaySize();
+                    Size sz = ServiceManager.INSTANCE.getDisplayManager().getDisplayInfo(Display.DEFAULT_DISPLAY).getSize();
+                    Point point = new Point(sz.getWidth(), sz.getHeight());
 
                     if (point != null && point.x > 0 && point.y > 0) {
                         ScreenshotDex.width = point.x;

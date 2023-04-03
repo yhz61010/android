@@ -34,13 +34,13 @@ public class NetworkMonitor {
     private Context context;
     private HashMap<String, String> networks;
 
-    @SuppressLint({"DiscouragedPrivateApi", "PrivateApi"})
-    public NetworkMonitor() {
+    @SuppressLint({"DiscouragedPrivateApi", "PrivateApi", "ObsoleteSdkInt"})
+    public NetworkMonitor(final String packageName) {
         Looper.prepare();
         try {
             networks = new HashMap<>();
             getServiceMethod = Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String.class);
-            context = DexHelper.getInstance().getContext();
+            context = DexHelper.getInstance().getContext(packageName);
 
             wifiManagerService = DexHelper.getInstance().getService("wifi", "android.net.wifi.IWifiManager");
             connectivityManagerService = DexHelper.getInstance().getService("connectivity", "android.net.IConnectivityManager");

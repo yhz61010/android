@@ -15,6 +15,7 @@ import com.leovp.reflection.wrappers.ServiceManager;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Usage:
@@ -66,7 +67,8 @@ public final class DexMain {
             Context ctx = dexHelper.getContext(packageName);
             CmnUtil.println("context=" + ctx);
 
-            Size displaySize = ServiceManager.INSTANCE.getWindowManager().getCurrentDisplaySize();
+            Size displaySize = Objects.requireNonNull(ServiceManager.INSTANCE.getWindowManager()).getCurrentDisplaySize();
+            assert displaySize != null;
             CmnUtil.println("width=" + displaySize.getWidth() + " height=" + displaySize.getHeight());
 
             int rotation = ServiceManager.INSTANCE.getWindowManager().getRotation();

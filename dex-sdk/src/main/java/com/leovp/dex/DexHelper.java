@@ -2,7 +2,10 @@ package com.leovp.dex;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.pm.ApplicationInfo;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -11,12 +14,9 @@ import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.IInterface;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
-
 import com.leovp.dex.util.CmnUtil;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,7 +55,6 @@ public class DexHelper {
 
     private DexHelper() {
         try {
-            context = getContext();
             getServiceMethod = Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String.class);
         } catch (Exception e) {
             CmnUtil.println(TAG, "DexHelper() constructor exception.", e);
@@ -63,36 +62,69 @@ public class DexHelper {
     }
 
     @Nullable
-    synchronized public Context getContext() {
-        if (context != null) return context;
+    synchronized public Context getContext(final String packageName) {
         try {
+//            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+//            Method getInstanceMethod = activityThreadClass.getDeclaredMethod("systemMain");
+//            Constructor<?> activityThreadConstructor = activityThreadClass.getDeclaredConstructor();
+//            activityThreadConstructor.setAccessible(true);
+//            Object activityThread;
+//            activityThread = getInstanceMethod.invoke(activityThreadClass);
             Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
-            Method getSystemContextMethod = activityThreadClass.getDeclaredMethod("getSystemContext");
-            Method getInstanceMethod = activityThreadClass.getDeclaredMethod("systemMain");
-
             Constructor<?> activityThreadConstructor = activityThreadClass.getDeclaredConstructor();
             activityThreadConstructor.setAccessible(true);
-            Object activityThread;
-            Object context;
-            activityThread = getInstanceMethod.invoke(activityThreadClass);
-            context = getSystemContextMethod.invoke(activityThread);
+            Object activityThread = activityThreadConstructor.newInstance();
 
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                try {
-                    // As of Android 11, we have to set mOpPackageName or else we can't access network state.
-                    Class<?> implClass = Class.forName("android.app.ContextImpl");
-                    Field field = implClass.getDeclaredField("mOpPackageName");
-                    field.setAccessible(true);
-                    field.set(context, "shell");
-                } catch (Exception e) {
-                    CmnUtil.println(TAG, "getContext()-1 exception.", e);
-                }
-            }
+            // ActivityThread.AppBindData appBindData = new ActivityThread.AppBindData();
+            Class<?> appBindDataClass = Class.forName("android.app.ActivityThread$AppBindData");
+            Constructor<?> appBindDataConstructor = appBindDataClass.getDeclaredConstructor();
+            appBindDataConstructor.setAccessible(true);
+            Object appBindData = appBindDataConstructor.newInstance();
 
-            this.context = (Context) getSystemContextMethod.invoke(activityThread);
+            ApplicationInfo applicationInfo = new ApplicationInfo();
+            applicationInfo.packageName = packageName;
+
+            // appBindData.appInfo = applicationInfo;
+            Field appInfoField = appBindDataClass.getDeclaredField("appInfo");
+            appInfoField.setAccessible(true);
+            appInfoField.set(appBindData, applicationInfo);
+
+            // activityThread.mBoundApplication = appBindData;
+            Field mBoundApplicationField = activityThreadClass.getDeclaredField("mBoundApplication");
+            mBoundApplicationField.setAccessible(true);
+            mBoundApplicationField.set(activityThread, appBindData);
+
+            Application app = Application.class.newInstance();
+            Field baseField = ContextWrapper.class.getDeclaredField("mBase");
+            baseField.setAccessible(true);
+            baseField.set(app, FakeContext.get());
+
+            // activityThread.mInitialApplication = app;
+            Field mInitialApplicationField = activityThreadClass.getDeclaredField("mInitialApplication");
+            mInitialApplicationField.setAccessible(true);
+            mInitialApplicationField.set(activityThread, app);
+
+//            Method getSystemContextMethod = activityThreadClass.getDeclaredMethod("getSystemContext");
+//            CmnUtil.println("getSystemContextMethod=" + getSystemContextMethod);
+//
+//            Object context = getSystemContextMethod.invoke(activityThread);
+//            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+//                try {
+//                    CmnUtil.println("---> context=" + context);
+//                    // As of Android 11, we have to set mOpPackageName or else we can't access network state.
+//                    Class<?> implClass = Class.forName("android.app.ContextImpl");
+//                    Field field = implClass.getDeclaredField("mOpPackageName");
+//                    field.setAccessible(true);
+//                    field.set(context, packageName);
+//                } catch (Exception e) {
+//                    CmnUtil.println(TAG, "getContext()-1 exception.", e);
+//                }
+//            }
+
+            this.context = app;
             return this.context;
         } catch (Exception e) {
-            CmnUtil.println(TAG, "getContext()-2 exception.", e);
+//            CmnUtil.println(TAG, "getContext()-2 exception.", e);
             return null;
         }
     }
@@ -123,8 +155,12 @@ public class DexHelper {
         return wifiManagerService;
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     @Nullable
     synchronized public ConnectivityManager getConnectivityManager() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // Android 10
+            return null;
+        }
         try {
             if (connectivityManager != null) return connectivityManager;
             Object connectivityManagerService = getService("connectivity", "android.net.IConnectivityManager");
@@ -152,16 +188,18 @@ public class DexHelper {
             Method method = wifiClass.getMethod("getConnectionInfo");
             return (WifiInfo) method.invoke(getWifiManagerService());
         } catch (Exception e) {
-            try {
+            try { // Android 10 or below
                 Class<?> wifiClass = Class.forName("android.net.wifi.IWifiManager");
                 Method method = wifiClass.getMethod("getConnectionInfo", String.class);
-                return (WifiInfo) method.invoke(getWifiManagerService(), "shell");
+                return (WifiInfo) method.invoke(getWifiManagerService(), FakeContext.PACKAGE_NAME);
             } catch (Exception ee) {
-                try {
+                try { // Android 11
                     Class<?> wifiClass = Class.forName("android.net.wifi.IWifiManager");
+                    // String callingPackage, String callingFeatureId
                     Method method = wifiClass.getMethod("getConnectionInfo", String.class, String.class);
-                    // As of Android, we have to set package name to "shell" just same as UID.
-                    return (WifiInfo) method.invoke(getWifiManagerService(), "shell", "shell");
+                    // As of Android 11, we have to set package name to "shell" just same as UID.
+                    // String callingPackage, String callingFeatureId
+                    return (WifiInfo) method.invoke(getWifiManagerService(), FakeContext.PACKAGE_NAME, "shell");
                 } catch (Exception eee) {
                     CmnUtil.println(TAG, "getWifiInfo() exception.", eee);
                 }
@@ -170,6 +208,7 @@ public class DexHelper {
         return null;
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     public boolean isWifiActive() {
         try {
@@ -184,6 +223,7 @@ public class DexHelper {
                 return ni.getType() == ConnectivityManager.TYPE_WIFI;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             CmnUtil.println(TAG, "isWifiActive() exception.", e);
             return false;
         }

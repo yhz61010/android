@@ -32,7 +32,9 @@ coordinatorlayout = "1.2.0"
 navigation = "2.5.3"
 concurrent-futures-ktx = "1.1.0"
 lifecycle = "2.6.0"
-annotation = "1.6.0"
+android-annotation = "4.1.1.4"
+androidx-annotation = "1.6.0"
+android-support-annotation = "28.0.0"
 cardview = "1.0.0"
 viewpager2 = "1.0.0"
 swiperefreshlayout = "1.1.0"
@@ -130,7 +132,9 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx
 androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity-ktx" }
 androidx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment-ktx" }
 androidx-multidex = { module = "androidx.multidex:multidex", version.ref = "multidex" }
-androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
+android-annotation = { module = "com.google.android:annotations", version.ref = "android-annotation" }
+android-support-annotation = { module = "com.android.support:support-annotations", version.ref = "android-support-annotation" }
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrent-futures-ktx" }

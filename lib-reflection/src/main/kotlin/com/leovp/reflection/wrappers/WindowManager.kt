@@ -2,10 +2,13 @@
 
 package com.leovp.reflection.wrappers
 
+import android.graphics.Point
 import android.os.IInterface
 import android.util.Log
+import android.util.Size
 import android.view.Display
 import android.view.IRotationWatcher
+import com.leovp.reflection.ReflectJavaManager
 import java.lang.reflect.Method
 
 class WindowManager(private val manager: IInterface) {
@@ -78,12 +81,14 @@ class WindowManager(private val manager: IInterface) {
     fun thawRotation() = runCatching { getThawRotationMethod()?.invoke(manager) }
 
     /**
+     * ```
      * private val rotationWatcher = object : IRotationWatcher.Stub() {
      *      override fun onRotationChanged(rotation: Int) {
      *          Log.d("onRotationChanged", "rotation=$rotation")
      *      }
      * }
      * ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
+     * ```
      */
     fun registerRotationWatcher(
         rotationWatcher: IRotationWatcher,
@@ -122,5 +127,15 @@ class WindowManager(private val manager: IInterface) {
         } catch (ignored: NoSuchMethodException) {
             Log.e(TAG, "removeRotationWatcher exception.")
         }
+    }
+
+    fun getCurrentDisplaySize(): Size? {
+        val out = Point()
+        try {
+            ReflectJavaManager.reflect(manager).method("getInitialDisplaySize", Display.DEFAULT_DISPLAY, out)
+        } catch (ignored: NoSuchMethodException) {
+            return null
+        }
+        return Size(out.x, out.y)
     }
 }

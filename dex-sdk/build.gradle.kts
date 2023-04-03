@@ -16,7 +16,8 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.annotation)
+    api(libs.free.reflection)
+    api(projects.libReflection)
 }
 
 afterEvaluate {

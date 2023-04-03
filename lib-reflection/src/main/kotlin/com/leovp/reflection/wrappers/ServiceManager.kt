@@ -3,8 +3,11 @@
 package com.leovp.reflection.wrappers
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Build
 import android.os.IBinder
 import android.os.IInterface
+import androidx.annotation.RequiresApi
 import java.lang.reflect.Method
 
 @SuppressLint("PrivateApi,DiscouragedPrivateApi")
@@ -26,7 +29,7 @@ object ServiceManager {
     var windowManager: WindowManager? = null
         get() {
             if (field == null) {
-                field = WindowManager(getService("window", "android.view.IWindowManager"))
+                field = WindowManager(getService(Context.WINDOW_SERVICE, "android.view.IWindowManager"))
             }
             return field
         }
@@ -38,7 +41,7 @@ object ServiceManager {
                 field =
                     DisplayManager(
                         getService(
-                            "display",
+                            Context.DISPLAY_SERVICE,
                             "android.hardware.display.IDisplayManager"
                         )
                     )
@@ -50,7 +53,7 @@ object ServiceManager {
     var inputManager: InputManager? = null
         get() {
             if (field == null) {
-                field = InputManager(getService("input", "android.hardware.input.IInputManager"))
+                field = InputManager(getService(Context.INPUT_SERVICE, "android.hardware.input.IInputManager"))
             }
             return field
         }
@@ -59,19 +62,20 @@ object ServiceManager {
     var powerManager: PowerManager? = null
         get() {
             if (field == null) {
-                field = PowerManager(getService("power", "android.os.IPowerManager"))
+                field = PowerManager(getService(Context.POWER_SERVICE, "android.os.IPowerManager"))
             }
             return field
         }
         private set
 
     var statusBarManager: StatusBarManager? = null
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         get() {
             if (field == null) {
                 field =
                     StatusBarManager(
                         getService(
-                            "statusbar",
+                            Context.STATUS_BAR_SERVICE,
                             "com.android.internal.statusbar.IStatusBarService"
                         )
                     )

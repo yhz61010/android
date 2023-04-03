@@ -12,7 +12,7 @@ $ adb exec-out CLASSPATH=/data/local/tmp/dexdemo.dex app_process / com.leovp.dex
 $ cd /<path>/LeoAndroidBaseUtilProject-Kotlin
 $ ./gradlew demo-dex:clean demo-dex:installDebug
 $ cd demo-dex
-$ python scripts/automation3.py
+$ python3 scripts/automation3.py
 ```
 
 2. After running script, the screenshot will be shown in browser.
@@ -29,7 +29,7 @@ Check more information for `automation3.py`
 ```shell
 $ cd /<path>/LeoAndroidBaseUtilProject-Kotlin
 $ cd demo-dex
-$ python scripts/automation3.py -h
+$ python3 scripts/automation3.py -h
 ```
 
 # Reference

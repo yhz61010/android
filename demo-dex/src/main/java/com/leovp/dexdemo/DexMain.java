@@ -3,17 +3,15 @@ package com.leovp.dexdemo;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.net.wifi.WifiInfo;
 import android.os.Looper;
 import android.os.SystemClock;
-
+import android.util.Size;
 import com.leovp.dex.DexHelper;
-import com.leovp.dex.DisplayUtil;
 import com.leovp.dex.SurfaceControl;
 import com.leovp.dex.network.IpUtil;
 import com.leovp.dex.util.CmnUtil;
-
+import com.leovp.reflection.wrappers.ServiceManager;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.util.List;
@@ -47,9 +45,10 @@ public final class DexMain {
 //            Looper.prepareMainLooper();
             Looper.prepare();
 
+            final String packageName = BuildConfig.APPLICATION_ID;
             final DexHelper dexHelper = DexHelper.getInstance();
 
-            Context context = dexHelper.getContext();
+            Context context = dexHelper.getContext(packageName);
             assert context != null;
             CmnUtil.println(context.toString());
 
@@ -59,15 +58,18 @@ public final class DexMain {
 
             @SuppressLint("MissingPermission")
             boolean isWifiActive = dexHelper.isWifiActive();
+            CmnUtil.println("isWifiActive=" + isWifiActive);
             WifiInfo wifiInfo = dexHelper.getWifiInfo();
             String ssid = wifiInfo == null ? "NA" : wifiInfo.getSSID().replaceAll("\"", "");
-            CmnUtil.println("isWifiActive=" + isWifiActive + " ssid=" + ssid);
+            CmnUtil.println("ssid=" + ssid);
 
-            DisplayUtil displayUtil = new DisplayUtil();
-            Point displaySize = displayUtil.getCurrentDisplaySize();
-            CmnUtil.println("width=" + displaySize.x + " height=" + displaySize.y);
+            Context ctx = dexHelper.getContext(packageName);
+            CmnUtil.println("context=" + ctx);
 
-            int rotation = displayUtil.getScreenRotation();
+            Size displaySize = ServiceManager.INSTANCE.getWindowManager().getCurrentDisplaySize();
+            CmnUtil.println("width=" + displaySize.getWidth() + " height=" + displaySize.getHeight());
+
+            int rotation = ServiceManager.INSTANCE.getWindowManager().getRotation();
             CmnUtil.println("rotation=" + rotation);
 
             CmnUtil.println("Prepare to take screenshot...");
@@ -75,7 +77,7 @@ public final class DexMain {
             long st;
             for (int i = 0; i < 1; i++) {
                 st = SystemClock.elapsedRealtime();
-                screenshot = SurfaceControl.screenshot(displaySize.x, displaySize.y, rotation);
+                screenshot = SurfaceControl.screenshot(displaySize.getWidth(), displaySize.getHeight(), rotation);
                 CmnUtil.println("Screenshot done. Cost=" + (SystemClock.elapsedRealtime() - st));
             }
 

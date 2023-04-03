@@ -12,21 +12,25 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import com.leovp.dex.DexHelper;
+import com.leovp.dex.FakeContext;
 import com.leovp.dex.util.CmnUtil;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class CustomConnectivityManager {
     private static final String TAG = "ConnMgr";
 
-    public void registerNetworkCallback(NetworkRequest request, NetworkCallback networkCallback) {
+    public void registerNetworkCallback(@NonNull NetworkRequest request,
+                                        @NonNull NetworkCallback networkCallback) {
         registerNetworkCallback(request, networkCallback, getDefaultHandler());
     }
 
-    public void registerNetworkCallback(NetworkRequest request,
-                                        NetworkCallback networkCallback, Handler handler) {
+    public void registerNetworkCallback(@NonNull NetworkRequest request,
+                                        @NonNull NetworkCallback networkCallback, @NonNull Handler handler) {
         CallbackHandler cbHandler = new CallbackHandler(handler);
         NetworkCapabilities nc = null;
         try {
@@ -40,6 +44,10 @@ public class CustomConnectivityManager {
         sendRequestForNetwork(nc, networkCallback, 0, LISTEN, TYPE_NONE, cbHandler);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    private @Nullable String getAttributionTag() {
+        return DexHelper.getInstance().getContext(FakeContext.PACKAGE_NAME).getAttributionTag();
+    }
     NetworkCallback callback;
 
     private NetworkRequest sendRequestForNetwork(NetworkCapabilities need, NetworkCallback callback,
@@ -51,13 +59,22 @@ public class CustomConnectivityManager {
             Messenger messenger = new Messenger(handler);
             Binder binder = new Binder();
             if (action == LISTEN) {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q)
-                    request = mService.listenForNetwork(need, messenger, binder);
-                else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12 or above
+                    // NetworkCapabilities networkCapabilities,
+                    // Messenger messenger, IBinder binder, int callbackFlags, String callingPackageName,
+                    // String callingAttributionTag
+                    Method method = IConnectivityManager.class.getMethod("listenForNetwork",
+                        NetworkCapabilities.class,
+                        Messenger.class, IBinder.class, Integer.class, String.class,
+                        String.class);
+                    method.setAccessible(true);
+                    method.invoke(mService, need, messenger, binder, callback.mFlags, FakeContext.PACKAGE_NAME, getAttributionTag());
+                } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) { // Android 11
                     Method method = IConnectivityManager.class.getMethod("listenForNetwork", NetworkCapabilities.class, Messenger.class, IBinder.class, String.class);
                     method.setAccessible(true);
-                    // As of Android, we have to set package name to "shell" just same as UID.
-                    method.invoke(mService, need, messenger, binder, "shell");
+                    method.invoke(mService, need, messenger, binder, FakeContext.PACKAGE_NAME);
+                } else { // Android 10 or below
+                    request = mService.listenForNetwork(need, messenger, binder);
                 }
 
             } else {
@@ -175,6 +192,21 @@ public class CustomConnectivityManager {
     }
 
     public static class NetworkCallback {
+        public static final int FLAG_NONE = 0;
+        public static final int FLAG_INCLUDE_LOCATION_INFO = 1 << 0;
+
+        public NetworkCallback() {
+            this(FLAG_NONE);
+        }
+
+        private static final int VALID_FLAGS = FLAG_INCLUDE_LOCATION_INFO;
+
+        public NetworkCallback(int flags) {
+            if ((flags & VALID_FLAGS) != flags) {
+                throw new IllegalArgumentException("Invalid flags");
+            }
+            mFlags = flags;
+        }
         public void onPreCheck(Network network) {
         }
 
@@ -219,5 +251,6 @@ public class CustomConnectivityManager {
         }
 
         private NetworkRequest networkRequest;
+        private final int mFlags;
     }
 }

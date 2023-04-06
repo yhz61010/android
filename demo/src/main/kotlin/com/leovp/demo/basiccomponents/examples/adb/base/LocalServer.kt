@@ -9,6 +9,8 @@ import kotlin.concurrent.thread
 /**
  * adb forward tcp:8888 tcp:8888
  *
+ * Forward port 8888 on PC to device 8888 port
+ *
  * Author: Michael Leo
  * Date: 2022/3/21 10:12
  */

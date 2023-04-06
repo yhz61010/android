@@ -12,6 +12,8 @@ import java.net.Socket
  * adb forward tcp:8888 tcp:8888
  * ```
  *
+ * Forward port 8888 on PC to device UNIX localabstract or port
+ *
  * Author: Michael Leo
  * Date: 2022/3/19 11:48
  */

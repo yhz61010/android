@@ -9,6 +9,7 @@ import java.io.InputStream
  * ```
  * adb forward tcp:8888 localabstract:local_name
  * ```
+ * Forward port 8888 on PC to device UNIX localabstract which name is _local_name_
  * Note that: the `local_name` must be the same value in `LocalServerSocket#startServer(name)` variable.
  *
  * Author: Michael Leo

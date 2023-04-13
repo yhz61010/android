@@ -10,6 +10,8 @@ import com.leovp.log.LogContext
 /**
  * [H265 NAL Unit Header](https://tools.ietf.org/html/rfc7798#page-13)
  *
+ * https://developer.android.com/reference/android/media/MediaCodec#CSD
+ *
  * ```plain
  * +---------------+---------------+
  * |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|

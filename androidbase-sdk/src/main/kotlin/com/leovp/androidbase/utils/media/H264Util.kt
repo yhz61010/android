@@ -8,6 +8,8 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 
 /**
+ * https://developer.android.com/reference/android/media/MediaCodec#CSD
+ *
  * NALU类型，将其转为二进制数据后，解读顺序为从左往右，如下:
  *
  * +---------------+

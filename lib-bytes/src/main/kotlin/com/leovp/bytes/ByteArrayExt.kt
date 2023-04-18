@@ -2,8 +2,6 @@
 
 package com.leovp.bytes
 
-import java.nio.ByteBuffer
-
 /**
  * Author: Michael Leo
  * Date: 20-3-18 下午2:17
@@ -162,13 +160,6 @@ fun ByteArray.toHexStringLE(addPadding: Boolean = false, delimiter: CharSequence
     }
     if (delimiter.isNotEmpty()) result.deleteCharAt(result.length - 1)
     return result.toString()
-}
-
-fun ByteBuffer.toByteArray(): ByteArray {
-    rewind() // Rewind the buffer to zero
-    val data = ByteArray(remaining())
-    get(data) // Copy the buffer into a byte array
-    return data // Return the byte array
 }
 
 /**

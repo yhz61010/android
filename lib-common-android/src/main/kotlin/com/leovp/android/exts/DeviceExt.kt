@@ -27,9 +27,12 @@ import androidx.annotation.RequiresApi
 import com.leovp.android.utils.API
 import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
+import com.leovp.kotlin.exts.round
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Author: Michael Leo
@@ -64,6 +67,15 @@ val Context.densityDpi get(): Int = this.resources.displayMetrics.densityDpi
 val Context.density get(): Float = this.resources.displayMetrics.density
 val Context.xdpi get(): Float = this.resources.displayMetrics.xdpi
 val Context.ydpi get(): Float = this.resources.displayMetrics.ydpi
+
+val Context.screenInch get(): Double {
+    val screenRealSize = screenAvailableResolution
+    val w = screenRealSize.width
+    val h = screenRealSize.height
+    val wInch = (w * 1.0 / xdpi).pow(2)
+    val hInch = (h * 1.0 / xdpi).pow(2)
+    return sqrt(wInch + hInch).round(2)
+}
 
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.

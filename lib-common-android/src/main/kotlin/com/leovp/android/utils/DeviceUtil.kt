@@ -23,6 +23,7 @@ import com.leovp.android.exts.isProbablyAnEmulator
 import com.leovp.android.exts.isTablet
 import com.leovp.android.exts.navigationBarHeight
 import com.leovp.android.exts.screenAvailableResolution
+import com.leovp.android.exts.screenInch
 import com.leovp.android.exts.screenRatio
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.statusBarHeight
@@ -223,7 +224,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
                 "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
             val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
-            val screenInfo = "${screenSize.width}x${screenSize.height} RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
+            val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
                 "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
                 "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
                 "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +

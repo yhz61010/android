@@ -32,3 +32,19 @@ fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = fal
         null
     }
 }
+
+fun Int.formatDecimalSeparator(): String {
+    return toString()
+        .reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
+}
+
+fun Long.formatDecimalSeparator(): String {
+    return toString()
+        .reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
+}

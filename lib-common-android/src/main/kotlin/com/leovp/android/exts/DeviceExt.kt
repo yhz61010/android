@@ -68,14 +68,15 @@ val Context.density get(): Float = this.resources.displayMetrics.density
 val Context.xdpi get(): Float = this.resources.displayMetrics.xdpi
 val Context.ydpi get(): Float = this.resources.displayMetrics.ydpi
 
-val Context.screenInch get(): Double {
-    val screenRealSize = screenAvailableResolution
-    val w = screenRealSize.width
-    val h = screenRealSize.height
-    val wInch = (w * 1.0 / xdpi).pow(2)
-    val hInch = (h * 1.0 / xdpi).pow(2)
-    return sqrt(wInch + hInch).round(2)
-}
+val Context.screenInch
+    get(): Double {
+        val screenRealSize = screenRealResolution
+        val w = screenRealSize.width
+        val h = screenRealSize.height
+        val wInch = w * 1.0 / xdpi
+        val hInch = h * 1.0 / xdpi
+        return sqrt(wInch.pow(2) + hInch.pow(2)).round(2)
+    }
 
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
@@ -148,8 +149,10 @@ fun Context.getScreenWidth(surfaceRotation: Int, screenSize: Size = screenRealRe
     return when (surfaceRotation) {
         Surface.ROTATION_0,
         Surface.ROTATION_180 -> min(screenSize.width, screenSize.height)
+
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> max(screenSize.width, screenSize.height)
+
         else -> screenSize.width
     }
 }
@@ -169,8 +172,10 @@ fun Context.getScreenHeight(surfaceRotation: Int, screenSize: Size = screenRealR
     return when (surfaceRotation) {
         Surface.ROTATION_0,
         Surface.ROTATION_180 -> max(screenSize.width, screenSize.height)
+
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> min(screenSize.width, screenSize.height)
+
         else -> screenSize.height
     }
 }
@@ -193,11 +198,13 @@ fun Context.getScreenSize(surfaceRotation: Int, screenSize: Size = screenRealRes
             min(screenSize.width, screenSize.height),
             max(screenSize.width, screenSize.height)
         )
+
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> Size(
             max(screenSize.width, screenSize.height),
             min(screenSize.width, screenSize.height)
         )
+
         else -> Size(
             min(screenSize.width, screenSize.height),
             max(screenSize.width, screenSize.height)

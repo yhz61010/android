@@ -10,8 +10,6 @@ import androidx.annotation.Keep
  * ```
  * sampleRate: 44100Hz
  * channelConfig:
- *              AudioFormat.CHANNEL_IN_MONO(16=0x10)
- *              AudioFormat.CHANNEL_IN_STEREO(12=0xc)
  *              AudioFormat.CHANNEL_OUT_STEREO(12=0xc)
  *              AudioFormat.CHANNEL_OUT_MONO (0x4)
  * channelCount: 1

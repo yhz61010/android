@@ -70,6 +70,7 @@ class AacEncoder(
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
+                    // LogContext.log.i(TAG, "inputBuffer[${inputBuffer?.remaining()}]  queue.poll[${it.size}]") // =${it.toHexStringLE()}
                     inputBuffer?.put(it)
                 }
 //                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
@@ -88,7 +89,7 @@ class AacEncoder(
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             csd0 = ByteArray(info.size)
-                            outputBuffer.get(csd0!!)
+                            it.get(csd0!!)
                             LogContext.log.i(TAG, "csd0=HEX[${csd0?.toHexStringLE()}]")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
@@ -110,7 +111,7 @@ class AacEncoder(
                     it.position(info.offset)
                     callback.onEncoded(aacDataWithAdts)
                 }
-                codec.releaseOutputBuffer(outputBufferId, true)
+                codec.releaseOutputBuffer(outputBufferId, false)
             }.onFailure { it.printStackTrace() }
         }
 

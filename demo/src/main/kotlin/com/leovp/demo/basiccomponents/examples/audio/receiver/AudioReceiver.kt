@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 class AudioReceiver {
     companion object {
         private const val TAG = "AudioReceiver"
-        val defaultAudioType = AudioType.PCM
+        val defaultAudioType = AudioType.OPUS
     }
 
     private var ctx: Context? = null
@@ -42,7 +42,7 @@ class AudioReceiver {
     //    private var rcvOs: BufferedOutputStream? = null
 
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
-    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(64)
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -50,14 +50,20 @@ class AudioReceiver {
         private var nettyServer: BaseNettyServer? = null
         private var clientChannel: Channel? = null
 
+        // private val opusFile by lazy { ctx!!.createFile("audio_rcv.opus") }
+        // private var opusOs: BufferedOutputStream? = null
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(TAG, "onStarted")
             ctx?.toast("onStarted", debug = true)
+            // opusOs = BufferedOutputStream(FileOutputStream(opusFile))
         }
 
         override fun onStopped() {
             LogContext.log.i(TAG, "onStop")
             ctx?.toast("onStop", debug = true)
+
+            // opusOs?.flush()
+            // opusOs?.close()
         }
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -72,7 +78,8 @@ class AudioReceiver {
 
         override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             val audioData = data as ByteArray
-            LogContext.log.i(TAG, "onReceivedData Length=${audioData.size} from ${clientChannel.remoteAddress()}")
+            // LogContext.log.i(TAG, "onReceivedData Length=${audioData.size} Queue=${receiveAudioQueue.size} from ${clientChannel.remoteAddress()}") // hex=${audioData.toHexStringLE()}
+            // runCatching { opusOs?.write(data) }.onFailure { it.printStackTrace() }
             receiveAudioQueue.offer(audioData)
         }
 
@@ -110,7 +117,7 @@ class AudioReceiver {
                 while (true) {
                     ensureActive()
                     runCatching {
-                        //                      LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
+                        // LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
                         recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it) }
                         delay(10)
                     }.onFailure { it.printStackTrace() }

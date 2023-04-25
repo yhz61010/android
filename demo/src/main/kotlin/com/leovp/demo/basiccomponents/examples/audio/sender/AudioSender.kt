@@ -42,7 +42,7 @@ class AudioSender {
     private var audioPlayer: AudioPlayer? = null
 
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
-    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(64)
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {

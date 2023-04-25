@@ -25,6 +25,8 @@ import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
+import com.leovp.android.exts.xdpi
+import com.leovp.android.exts.ydpi
 import com.leovp.android.utils.ApplicationManager
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.getMetaData
@@ -38,6 +40,8 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.net.Proxy
 import kotlin.concurrent.thread
+import kotlin.math.pow
+
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {
@@ -222,6 +226,14 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         @Suppress("DEPRECATION")
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay
         LogContext.log.i(ITAG, "fps=${display?.refreshRate}")
+
+        LogContext.log.i(ITAG, "xdpi=$xdpi")
+        LogContext.log.i(ITAG, "ydpi=$ydpi")
+        LogContext.log.i(ITAG, "width=${screenRealResolution.width}")
+        LogContext.log.i(ITAG, "height=${screenRealResolution.height}")
+        val xInch = screenRealResolution.width * 1.0 / xdpi
+        val yInch = screenRealResolution.height * 1.0 / ydpi
+        LogContext.log.i(ITAG, "inch=${kotlin.math.sqrt(xInch.pow(2) + yInch.pow(2))}")
     }
 
     override fun onPause() {

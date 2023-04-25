@@ -45,6 +45,9 @@ android {
             "RtlEnabled"
         )
     }
+    buildFeatures {
+        aidl = true
+    }
 }
 
 dependencies {

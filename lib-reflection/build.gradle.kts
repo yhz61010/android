@@ -7,6 +7,9 @@ plugins {
 
 android {
     namespace = "com.leovp.reflection"
+    buildFeatures {
+        aidl = true
+    }
 
     publishing {
         // Publishes "release" build variant with "release" component created by

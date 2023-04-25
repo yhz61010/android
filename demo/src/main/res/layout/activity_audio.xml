@@ -50,15 +50,13 @@
         android:id="@+id/etAudioReceiverIp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp" android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
         android:hint="Input receiver Websocket URI"
         android:inputType="text"
-        android:text="wss://50d.win:8087/client"
+        android:text="ws://192.168.1.111:10020"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/btnRecordOpus" />
 
     <Button
         android:id="@+id/btnAudioSender"
@@ -94,4 +92,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnAudioReceiver" />
+
+    <ToggleButton
+        android:id="@+id/btnRecordOpus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textOff="Record Opus"
+        android:textOn="Stop Recording"
+        app:layout_constraintStart_toStartOf="@+id/btnRecordAac" app:layout_constraintTop_toBottomOf="@+id/btnRecordAac" />
+
+    <TextView
+        android:id="@+id/tvIp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" app:layout_constraintEnd_toEndOf="@+id/textView6"
+        app:layout_constraintStart_toStartOf="@+id/textView6" app:layout_constraintTop_toBottomOf="@+id/textView6" />
 </androidx.constraintlayout.widget.ConstraintLayout>

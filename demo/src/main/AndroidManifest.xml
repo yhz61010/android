@@ -42,6 +42,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".basiccomponents.examples.opus.OpusActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.BitmapNativeActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.NetActivity" android:exported="false" />
         <activity android:name=".jetpackcomponents.examples.camerax.CameraXDemoActivity"

@@ -8,13 +8,13 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.SystemClock
-import androidx.viewbinding.BuildConfig
 import com.leovp.audio.aac.AacStreamPlayer
 import com.leovp.audio.base.AudioDecoderManager
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
+import com.leovp.audio.opus.OpusStreamPlayer
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 
@@ -34,6 +34,7 @@ class AudioPlayer(
 
     private var decoderWrapper: AudioDecoderWrapper? = null
     private var aacStreamPlayer: AacStreamPlayer? = null
+    private var opusStreamPlayer: OpusStreamPlayer? = null
 
     private var audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioTrack: AudioTrack
@@ -65,22 +66,32 @@ class AudioPlayer(
             LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
         }
 
-        if (type == AudioType.AAC) {
-            LogContext.log.w(TAG, "AAC Decoder")
-            aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
-        } else {
-            decoderWrapper = AudioDecoderManager.getWrapper(
-                type,
-                audioDecoderInfo,
-                object : OutputCallback {
-                    override fun output(out: ByteArray) {
-                        val st = SystemClock.elapsedRealtime()
-                        audioTrack.write(out.toShortArrayLE(), 0, out.size / 2)
-                        if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+        when (type) {
+            AudioType.AAC -> {
+                LogContext.log.w(TAG, "AAC Decoder")
+                aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
+            }
+
+            AudioType.OPUS -> {
+                LogContext.log.w(TAG, "OPUS Decoder")
+                opusStreamPlayer = OpusStreamPlayer(ctx, audioDecoderInfo)
+            }
+
+            else -> {
+                decoderWrapper = AudioDecoderManager.getWrapper(
+                    type,
+                    audioDecoderInfo,
+                    object : OutputCallback {
+                        override fun output(out: ByteArray) {
+                            val st = SystemClock.elapsedRealtime()
+                            audioTrack.write(out.toShortArrayLE(), 0, out.size / 2)
+                            if (BuildConfig.DEBUG) LogContext.log.d(TAG,
+                                "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+                        }
                     }
-                }
-            )
-            LogContext.log.w(TAG, "decoderWrapper=$decoderWrapper")
+                )
+                LogContext.log.w(TAG, "decoderWrapper=$decoderWrapper")
+            }
         }
     }
 
@@ -88,7 +99,7 @@ class AudioPlayer(
         runCatching {
             if (AudioTrack.STATE_UNINITIALIZED == audioTrack.state) return
             if (AudioTrack.PLAYSTATE_PLAYING == audioTrack.playState) {
-                //                val st = SystemClock.elapsedRealtime()
+                // val st = SystemClock.elapsedRealtime()
                 when (type) {
                     AudioType.PCM -> {
                         // Play decoded audio data in PCM
@@ -96,9 +107,14 @@ class AudioPlayer(
                         audioTrack.write(playData, 0, playData.size)
                         if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Play PCM[${chunkAudioData.size}]")
                     }
+
                     AudioType.COMPRESSED_PCM -> decoderWrapper?.decode(chunkAudioData)
                     AudioType.AAC -> aacStreamPlayer?.startPlayingStream(chunkAudioData) {
-                        LogContext.log.w(TAG, "Drop audio frame")
+                        LogContext.log.w(TAG, "AAC Drop audio frame")
+                    }
+
+                    AudioType.OPUS -> opusStreamPlayer?.startPlayingStream(chunkAudioData) {
+                        LogContext.log.w(TAG, "Opus Drop audio frame")
                     }
                 }
             }
@@ -167,6 +183,7 @@ class AudioPlayer(
         runCatching { if (audioTrack.state == AudioTrack.STATE_INITIALIZED) audioTrack.release() }.onFailure { it.printStackTrace() }
         decoderWrapper?.release()
         aacStreamPlayer?.stopPlaying()
+        opusStreamPlayer?.stopPlaying()
     }
 
     fun getPlayState() = audioTrack.playState

@@ -1,9 +1,9 @@
-package com.leovp.audio.aac
+package com.leovp.audio.opus
 
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicLong
@@ -14,13 +14,12 @@ import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
- * Date: 20-8-20 下午5:18
+ * Date: 2023/4/14 17:10
  */
 @Suppress("unused")
-class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val callback: AacDecodeCallback) {
+class OpusDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val callback: OpusDecodeCallback) {
     companion object {
-        private const val TAG = "AacDecoder"
-        private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
+        private const val TAG = "OpusDecoder"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -32,88 +31,74 @@ class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val cal
     @Suppress("WeakerAccess")
     var csd0: ByteArray? = null
         private set
+    var csd1: ByteArray? = null
+        private set
+    var csd2: ByteArray? = null
+        private set
 
-    // ByteBuffer key
-    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-    // Convert them to binary value: 0b10, 0b100, 0b1
-    // According to AAC required, convert theirs values to binary bits:
-    // 00010 0100 0001 000
-    // The corresponding hex value：
-    // 0001 0010 0000 1000
-    // So the csd_0 value is 0x12,0x08
-    // https://developer.android.com/reference/android/media/MediaCodec
-    // AAC CSD: Decoder-specific information from ESDS
-    //
-    // ByteBuffer key
-    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
-    // Convert them to binary value: 0b10, 0b100, 0b1
-    // According to AAC required, convert theirs values to binary bits:
-    // 00010 0100 0001 000
-    // The corresponding hex value：
-    // 0001 0010 0000 1000
-    // So the csd_0 value is 0x12,0x08
-    // https://developer.android.com/reference/android/media/MediaCodec
-    // AAC CSD: Decoder-specific information from ESDS
+    /**
+     * https://developer.android.com/reference/android/media/MediaCodec#CSD
+     */
     @Suppress("unused")
-    fun initAudioDecoder(csd0: ByteArray) {
+    fun initAudioDecoder(csd0: ByteArray, csd1: ByteArray, csd2: ByteArray) {
         runCatching {
             this.csd0 = csd0
+            this.csd1 = csd1
+            this.csd2 = csd2
             LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
+            LogContext.log.i(TAG, "CSD0[${csd0.size}]=${csd0.toHexStringLE()}")
+            LogContext.log.i(TAG, "CSD1[${csd1.size}]=${csd1.toHexStringLE()}")
+            LogContext.log.i(TAG, "CSD2[${csd2.size}]=${csd2.toHexStringLE()}")
             val csd0BB = ByteBuffer.wrap(csd0)
-            audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-            val mediaFormat = MediaFormat.createAudioFormat(
-                MediaFormat.MIMETYPE_AUDIO_AAC,
-                audioDecoderInfo.sampleRate,
-                audioDecoderInfo.channelCount
-            ).apply {
-                setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
-                setInteger(MediaFormat.KEY_IS_ADTS, 1)
-                // Set ADTS decoder information.
-                setByteBuffer("csd-0", csd0BB)
+            val csd1BB = ByteBuffer.wrap(csd1)
+            val csd2BB = ByteBuffer.wrap(csd2)
+            val mediaFormat =
+                MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_OPUS, audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount)
+                    .apply { // Set Codec-specific Data
+                        setByteBuffer("csd-0", csd0BB)
+                        setByteBuffer("csd-1", csd1BB)
+                        setByteBuffer("csd-2", csd2BB)
+                    }
+            audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_OPUS).apply {
+                configure(mediaFormat, null, null, 0) // outputFormat = this.outputFormat // option B
+                // setCallback(mediaCodecCallback)
+                start()
             }
-            audioDecoder!!.configure(mediaFormat, null, null, 0)
-            //            outputFormat = audioDecoder?.outputFormat // option B
-            //            audioDecoder?.setCallback(mediaCodecCallback)
-            audioDecoder?.start()
         }.onFailure { LogContext.log.e(TAG, "initAudioDecoder error msg=${it.message}") }
     }
 
-    /**
-     * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
-     */
     @Suppress("unused")
     fun decode(audioData: ByteArray) {
         try {
+            val decoder: MediaCodec? = audioDecoder
+            requireNotNull(decoder) { "Opus decoder must not be null." }
+
             val bufferInfo = MediaCodec.BufferInfo()
 
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
-            val inputIndex: Int = audioDecoder?.dequeueInputBuffer(0) ?: -1
+            val inputIndex: Int = decoder.dequeueInputBuffer(0)
             if (inputIndex > -1) {
-                audioDecoder?.getInputBuffer(inputIndex)?.run {
-                    // Clear exist data.
-                    clear()
-                    // Put pcm audio data to encoder.
+                decoder.getInputBuffer(inputIndex)?.run { // Clear exist data.
+                    clear() // Put pcm audio data to encoder.
                     put(audioData)
                 }
                 val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-                audioDecoder?.queueInputBuffer(inputIndex, 0, audioData.size, pts, 0)
+                decoder.queueInputBuffer(inputIndex, 0, audioData.size, pts, 0)
             }
 
             // Start decoding and get output index
-            var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
-            val chunkPCM = ByteArray(bufferInfo.size)
-            // Get decoded data in bytes
+            var outputIndex: Int = decoder.dequeueOutputBuffer(bufferInfo, 0) // Get decoded data in bytes
             while (outputIndex > -1) {
-                audioDecoder?.getOutputBuffer(outputIndex)?.run { get(chunkPCM) }
-                // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
+                val chunkPCM = ByteArray(bufferInfo.size)
+                decoder.getOutputBuffer(outputIndex)?.run {
+                    get(chunkPCM)
+                    clear()
+                } // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
                 if (chunkPCM.isNotEmpty()) {
                     ioScope.launch { callback.onDecoded(chunkPCM) }
                 }
-                audioDecoder?.releaseOutputBuffer(outputIndex, false)
-                // Get data again.
-                outputIndex = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
+                decoder.releaseOutputBuffer(outputIndex, false) // Get data again.
+                outputIndex = decoder.dequeueOutputBuffer(bufferInfo, 0)
             }
         } catch (e: Exception) {
             LogContext.log.e(TAG, "You can ignore this message safely. decodeAndPlay error")
@@ -185,6 +170,8 @@ class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val cal
     fun release() {
         runCatching {
             csd0 = null
+            csd1 = null
+            csd2 = null
             ioScope.cancel()
             audioDecoder?.release()
         }.onFailure { it.printStackTrace() }
@@ -192,7 +179,7 @@ class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val cal
 
     private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
-    interface AacDecodeCallback {
+    interface OpusDecodeCallback {
         fun onDecoded(pcmData: ByteArray)
     }
 }

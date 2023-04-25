@@ -199,67 +199,68 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
         }
     }
 
-    //    private val mediaCodecCallback = object : MediaCodec.Callback() {
-    //        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-    //            try {
-    //                val inputBuffer = codec.getInputBuffer(inputBufferId)
-    //                // fill inputBuffer with valid data
-    //                inputBuffer?.clear()
-    //                val data = rcvAudioDataQueue.poll()?.also {
-    //                    inputBuffer?.put(it)
-    //                }
-    //                val dataSize = data?.size ?: 0
-    //                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-    // //                if (BuildConfig.DEBUG) {
-    // //                    LogContext.log.d(TAG, "Data len=$dataSize\t pts=$pts")
-    // //                }
-    //                codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
-    //            } catch (e: Exception) {
-    //                LogContext.log.e(TAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
-    //            }
-    //        }
+    // private val mediaCodecCallback = object : MediaCodec.Callback() {
+    //     override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
+    //         try {
+    //             val inputBuffer = codec.getInputBuffer(inputBufferId)
+    //             // fill inputBuffer with valid data
+    //             inputBuffer?.clear()
+    //             val data = rcvAudioDataQueue.poll()?.also {
+    //                 inputBuffer?.put(it)
+    //             }
+    //             val dataSize = data?.size ?: 0
+    //             val pts = computePresentationTimeUs(frameCount.incrementAndGet())
+    //             //                if (BuildConfig.DEBUG) {
+    //             //                    LogContext.log.d(TAG, "Data len=$dataSize\t pts=$pts")
+    //             //                }
+    //             codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
+    //         } catch (e: Exception) {
+    //             LogContext.log.e(TAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
+    //         }
+    //     }
     //
-    //        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-    //            try {
-    //                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-    //                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-    //                // bufferFormat is equivalent to member variable outputFormat
-    //                // outputBuffer is ready to be processed or rendered.
-    //                outputBuffer?.let {
-    //                    val decodedData = ByteArray(info.size)
-    //                    it.get(decodedData)
-    // //                LogContext.log.w(TAG, "PCM[${decodedData.size}]")
-    //                    when (info.flags) {
-    //                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-    //                            LogContext.log.w(TAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
-    //                        }
-    //                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
-    //                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-    //                        else -> Unit
-    //                    }
-    //                    if (decodedData.isNotEmpty()) {
-    //                        // Play decoded audio data in PCM
-    //                        audioTrack?.write(decodedData, 0, decodedData.size)
-    //                    }
-    //                }
-    //                codec.releaseOutputBuffer(outputBufferId, false)
-    //            } catch (e: Exception) {
-    //                LogContext.log.e(TAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
-    //            }
-    //        }
+    //     override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+    //         try {
+    //             val outputBuffer = codec.getOutputBuffer(outputBufferId)
+    //             // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
+    //             // bufferFormat is equivalent to member variable outputFormat
+    //             // outputBuffer is ready to be processed or rendered.
+    //             outputBuffer?.let {
+    //                 val decodedData = ByteArray(info.size)
+    //                 it.get(decodedData)
+    //                 //                LogContext.log.w(TAG, "PCM[${decodedData.size}]")
+    //                 when (info.flags) {
+    //                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+    //                         LogContext.log.w(TAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
+    //                     }
     //
-    //        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-    //            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
-    //            // Subsequent data will conform to new format.
-    //            // Can ignore if using getOutputFormat(outputBufferId)
-    //            outputFormat = format // option B
-    //        }
+    //                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
+    //                     MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
+    //                     else -> Unit
+    //                 }
+    //                 if (decodedData.isNotEmpty()) {
+    //                     // Play decoded audio data in PCM
+    //                     audioTrack?.write(decodedData, 0, decodedData.size)
+    //                 }
+    //             }
+    //             codec.releaseOutputBuffer(outputBufferId, false)
+    //         } catch (e: Exception) {
+    //             LogContext.log.e(TAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
+    //         }
+    //     }
     //
-    //        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-    //            e.printStackTrace()
-    //            LogContext.log.e(TAG, "onError e=${e.message}", e)
-    //        }
-    //    }
+    //     override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+    //         LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
+    //         // Subsequent data will conform to new format.
+    //         // Can ignore if using getOutputFormat(outputBufferId)
+    //         outputFormat = format // option B
+    //     }
+    //
+    //     override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+    //         e.printStackTrace()
+    //         LogContext.log.e(TAG, "onError e=${e.message}", e)
+    //     }
+    // }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
         // We should use a better way to check csd0 (Identification Header)
@@ -299,31 +300,31 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
             return
         }
         val latencyInMs = (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
-        // LogContext.log.d(
-        //     TAG,
-        //     "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
-        //         "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
-        // )
-        // if (rcvAudioDataQueue.size >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
-        //     dropFrameTimes.incrementAndGet()
-        //     LogContext.log.w(
-        //         TAG,
-        //         "Drop[${dropFrameTimes.get()}]|full[${rcvAudioDataQueue.size}] " +
-        //             "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
-        //     )
-        //     rcvAudioDataQueue.clear()
-        //     frameCount.set(0)
-        //     runCatching { audioDecoder?.flush() }.getOrNull()
-        //     runCatching { audioTrack?.pause() }.getOrNull()
-        //     runCatching { audioTrack?.flush() }.getOrNull()
-        //     runCatching { audioTrack?.play() }.getOrNull()
-        //     if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
-        //         // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
-        //         dropFrameTimes.set(0)
-        //         dropFrameCallback.invoke()
-        //     }
-        //     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
-        // }
+        LogContext.log.d(
+            TAG,
+            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
+                "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
+        )
+        if (rcvAudioDataQueue.size >= AUDIO_DATA_QUEUE_CAPACITY || kotlin.math.abs(latencyInMs) > audioLatencyThresholdInMs) {
+            dropFrameTimes.incrementAndGet()
+            LogContext.log.w(
+                TAG,
+                "Drop[${dropFrameTimes.get()}]|full[${rcvAudioDataQueue.size}] " +
+                    "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
+            )
+            rcvAudioDataQueue.clear()
+            frameCount.set(0)
+            runCatching { audioDecoder?.flush() }.getOrNull()
+            runCatching { audioTrack?.pause() }.getOrNull()
+            runCatching { audioTrack?.flush() }.getOrNull()
+            runCatching { audioTrack?.play() }.getOrNull()
+            if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
+                // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
+                dropFrameTimes.set(0)
+                dropFrameCallback.invoke()
+            }
+            playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
+        }
         if (frameCount.get() % 50 == 0L) {
             LogContext.log.i(TAG, "AU[${audioData.size}][$latencyInMs]")
         }

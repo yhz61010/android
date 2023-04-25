@@ -15,6 +15,7 @@ object AudioDecoderManager {
             AudioType.PCM -> null
             AudioType.COMPRESSED_PCM -> CompressedPcmDecoderWrapper(decoderInfo, outputCallback)
             AudioType.AAC -> null
+            AudioType.OPUS -> null
         }
     }
 }

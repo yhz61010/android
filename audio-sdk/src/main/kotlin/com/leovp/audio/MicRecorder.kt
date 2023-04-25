@@ -7,7 +7,6 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.SystemClock
-import androidx.viewbinding.BuildConfig
 import com.leovp.audio.base.AudioEncoderManager
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioEncoderInfo

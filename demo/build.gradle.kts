@@ -170,6 +170,7 @@ android {
     buildFeatures {
         dataBinding = true
         viewBinding = true
+        aidl = true
     }
 
     lint {

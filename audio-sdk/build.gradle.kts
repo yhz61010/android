@@ -29,6 +29,7 @@ dependencies {
     api(projects.logSdk)
     api(projects.libBytes)
     api(projects.libCompress)
+    api(projects.libCommonKotlin)
 }
 
 afterEvaluate {

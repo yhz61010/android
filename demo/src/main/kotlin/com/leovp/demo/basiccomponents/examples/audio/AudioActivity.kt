@@ -149,18 +149,12 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                 }.onFailure { it.printStackTrace() }
 
                 AudioType.AAC -> {
-                    LogContext.log.i(
-                        TAG,
-                        "Get encoded AAC Data[${data.size}]"
-                    )
+                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
                     runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 
                 AudioType.OPUS -> {
-                    LogContext.log.i(
-                        TAG,
-                        "Get encoded OPUS Data[${data.size}]"
-                    )
+                    LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}]")
                     runCatching { opusOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 

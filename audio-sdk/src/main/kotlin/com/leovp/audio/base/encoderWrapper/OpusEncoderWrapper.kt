@@ -2,6 +2,7 @@ package com.leovp.audio.base.encoderWrapper
 
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
+import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.opus.OpusEncoder
 
@@ -14,9 +15,9 @@ class OpusEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallba
         encoderInfo.sampleRate,
         encoderInfo.bitrate,
         encoderInfo.channelCount,
-        object : OpusEncoder.OpusEncodeCallback {
-            override fun onEncoded(aacData: ByteArray) {
-                outputCallback.output(aacData)
+        object : IEncodeCallback {
+            override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                outputCallback.output(encodedBytes)
             }
         }
     ).apply { start() }

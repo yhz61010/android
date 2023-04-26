@@ -2,7 +2,11 @@ package com.leovp.audio.opus
 
 import android.media.MediaCodec
 import android.media.MediaFormat
-import com.leovp.audio.BuildConfig
+import com.leovp.audio.base.iters.IEncodeCallback
+import com.leovp.audio.mediacodec.BaseMediaCodec
+import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.OPUS_AOPUSDLY
+import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.OPUS_AOPUSHDR
+import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.OPUS_AOPUSPRL
 import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toByteArray
 import com.leovp.bytes.toHexStringLE
@@ -104,25 +108,16 @@ import java.util.concurrent.ArrayBlockingQueue
  * Date: 2023/4/14 15:17
  */
 class OpusEncoder(
-    private val sampleRate: Int,
+    sampleRate: Int,
+    channelCount: Int,
     private val bitrate: Int,
-    private val channelCount: Int,
-    callback: OpusEncodeCallback
-) {
+    private val callback: IEncodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
     companion object {
         private const val TAG = "OpusEn"
-        private const val AOPUSHDR = 0x524448_5355504F41L // "AOPUSHDR" in ASCII (little-endian)
-        private const val AOPUSDLY = 0x594c44_5355504F41L // "AOPUSDLY" in ASCII (little-endian)
-        private const val AOPUSPRL = 0x4c5250_5355504F41L // "AOPUSPRL" in ASCII (little-endian)
     }
 
-    private var outputFormat: MediaFormat? = null
-    private lateinit var encoder: MediaCodec
-    private var frameCount: Long = 0
+    val queue = ArrayBlockingQueue<ByteArray>(64)
 
-    val queue = ArrayBlockingQueue<ByteArray>(10)
-
-    @Suppress("WeakerAccess")
     var csd0: ByteArray? = null
         private set
     var csd1: ByteArray? = null
@@ -130,139 +125,74 @@ class OpusEncoder(
     var csd2: ByteArray? = null
         private set
 
-    fun start() {
-        LogContext.log.w(TAG, "OpusEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
-        encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_OPUS)
-        val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
-        with(mediaFormat) {
-            setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
-            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024)
-        }
-        encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        encoder.setCallback(mediaCodecCallback)
-        encoder.start()
+    override fun setFormatOptions(format: MediaFormat) {
+        format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
     }
 
-    fun stop() {
-        runCatching { encoder.stop() }.onFailure { it.printStackTrace() }
+    override fun onInputData(): ByteArray? {
+        return queue.poll()
     }
 
-    /**
-     * Release sources.
-     */
-    fun release() {
-        stop()
-        runCatching { encoder.release() }.onFailure { it.printStackTrace() }
-    }
-
-    private val mediaCodecCallback = object : MediaCodec.Callback() {
-        override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
-            runCatching {
-                val inputBuffer = codec.getInputBuffer(index)
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = queue.poll()?.also {
-                    // LogContext.log.i(TAG, "inputBuffer[${inputBuffer?.remaining()}]  queue.poll[${it.size}]") // =${it.toHexStringLE()}
-                    inputBuffer?.put(it)
-                }
-                // if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
-                codec.queueInputBuffer(index, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount, sampleRate), 0)
-            }.onFailure { it.printStackTrace() }
+    override fun onOutputData(outData: ByteBuffer, isConfig: Boolean, isKeyFrame: Boolean) {
+        if (isConfig) {
+            val opusCsd = getOpusConfigPacket(outData) // little endian
+            csd0 = opusCsd.csd0
+            csd1 = opusCsd.csd1
+            csd2 = opusCsd.csd2
+            LogContext.log.i(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
+            LogContext.log.i(TAG,
+                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexStringLE()}]")
+            LogContext.log.i(TAG,
+                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexStringLE()}]")
+            outData.flip()
         }
-
-        override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-            runCatching {
-                val outputBuffer = codec.getOutputBuffer(index) // little endian
-                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                // bufferFormat is equivalent to member variable outputFormat
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
-                    // val copiedBuffer = it.copyAll()
-                    // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
-                    //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
-                    if ((info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-                        val opusCsd = getOpusConfigPacket(it) // little endian
-                        csd0 = opusCsd.csd0
-                        csd1 = opusCsd.csd1
-                        csd2 = opusCsd.csd2
-                        LogContext.log.i(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
-                        LogContext.log.i(TAG,
-                            "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexStringLE()}]")
-                        LogContext.log.i(TAG,
-                            "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexStringLE()}]")
-                        it.flip()
-                        it.toByteArray().let { csd ->
-                            callback.onEncoded(csd)
-                        }
-                    }
-                    // (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 -> Unit
-                    // (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> Unit
-                    // (info.flags and MediaCodec.BUFFER_FLAG_PARTIAL_FRAME) != 0 -> Unit
-                    else {
-                        val outBytes = it.toByteArray()
-                        // LogContext.log.i(TAG, "outBytes=HEX[${outBytes.toHexStringLE()}]")
-                        callback.onEncoded(outBytes)
-                    }
-                }
-                codec.releaseOutputBuffer(index, false)
-            }.onFailure { it.printStackTrace() }
-        }
-
-        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LogContext.log.i(TAG, "onOutputFormatChanged format=$format")
-            // Subsequent data will conform to new format.
-            // Can ignore if using getOutputFormat(outputBufferId)
-            outputFormat = format // option B
-        }
-
-        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LogContext.log.e(TAG, "onError e=${e.message}")
-        }
+        callback.onEncoded(outData.toByteArray(), isConfig, isKeyFrame)
     }
 
     private fun getOpusConfigPacket(buffer: ByteBuffer): OpusCsd {
-        // Here is an example of the config packet received for an OPUS stream (From MediaCodec):
-        //
-        // 00000000  41 4f 50 55 53 48 44 52  13 00 00 00 00 00 00 00  |AOPUSHDR........|
-        // -------------- BELOW IS THE PART WE MUST PUT AS EXTRADATA  -------------------
-        // 00000010  4f 70 75 73 48 65 61 64  01 02 38 01 80 bb 00 00  |OpusHead..8.....|  <- Identification header
-        // 00000020  00 00 00                                          |...             |  <- Identification header
-        // ------------------------------------------------------------------------------
-        // 00000020           41 4f 50 55 53  44 4c 59 08 00 00 00 00  |   AOPUSDLY.....|
-        // 00000030  00 00 00 a0 2e 63 00 00  00 00 00 41 4f 50 55 53  |.....c.....AOPUS|
-        // 00000040  50 52 4c 08 00 00 00 00  00 00 00 00 b4 c4 04 00  |PRL.............|
-        // 00000050  00 00 00                                          |...|
-        //
-        // The meaning of each part:
-        // 41 4f 50 55 53 48 44 52 -> AOPUSHDR
-        // 13 00 00 00 00 00 00 00 -> The length of identification header. Decimal value: 19
-        //
-        // The meaning of identification header (CSD-0):
-        // 4f 70 75 73 48 65 61 64  -> OpusHead
-        // 01                       -> Version
-        // 02                       -> Output Channel Count
-        // 38 01                    -> Pre-skip. Decimal value: 312
-        // 80 bb 00 00              -> Input Sample Rate (Hz). Decimal value: 48000
-        // 00 00                    -> Output Gain
-        // 00                       -> Channel Mapping Family
-        //
-        // 41 4f 50 55 53 44 4c 59 -> AOPUSDLY (Get the definition from chatGPT)
-        // 08 00 00 00 00 00 00 00 -> The length of "Pre-skip"
-        // a0 2e 63 00 00 00 00 00 -> Decimal value: 6,500,000 (CSD-1)
-        //
-        // 41 4f 50 55 53 50 52 4c -> AOPUSPRL (Get the definition from chatGPT)
-        // 08 00 00 00 00 00 00 00 -> The length of "Seek Pre-roll"
-        // 00 b4 c4 04 00 00 00 00 -> Decimal value: 80,000,000 (CSD-2)
-        //
-        // Each "section" is prefixed by a 64-bit ID and a 64-bit length.
-        //
-        // <https://developer.android.com/reference/android/media/MediaCodec#CSD>
+        /*
+        Here is an example of the config packet received for an OPUS stream (From MediaCodec):
+
+        00000000  41 4f 50 55 53 48 44 52  13 00 00 00 00 00 00 00  |AOPUSHDR........|
+        -------------- BELOW IS THE PART WE MUST PUT AS EXTRADATA  -------------------
+        00000010  4f 70 75 73 48 65 61 64  01 02 38 01 80 bb 00 00  |OpusHead..8.....|  <- Identification header
+        00000020  00 00 00                                          |...             |  <- Identification header
+        ------------------------------------------------------------------------------
+        00000020           41 4f 50 55 53  44 4c 59 08 00 00 00 00  |   AOPUSDLY.....|
+        00000030  00 00 00 a0 2e 63 00 00  00 00 00 41 4f 50 55 53  |.....c.....AOPUS|
+        00000040  50 52 4c 08 00 00 00 00  00 00 00 00 b4 c4 04 00  |PRL.............|
+        00000050  00 00 00                                          |...|
+
+        The meaning of each part:
+        41 4f 50 55 53 48 44 52 -> AOPUSHDR
+        13 00 00 00 00 00 00 00 -> The length of identification header. Decimal value: 19
+
+        The meaning of identification header (CSD-0):
+        4f 70 75 73 48 65 61 64  -> OpusHead
+        01                       -> Version
+        02                       -> Output Channel Count
+        38 01                    -> Pre-skip. Decimal value: 312
+        80 bb 00 00              -> Input Sample Rate (Hz). Decimal value: 48000
+        00 00                    -> Output Gain
+        00                       -> Channel Mapping Family
+
+        41 4f 50 55 53 44 4c 59 -> AOPUSDLY (Get the definition from chatGPT)
+        08 00 00 00 00 00 00 00 -> The length of "Pre-skip"
+        a0 2e 63 00 00 00 00 00 -> Decimal value: 6,500,000 (CSD-1)
+
+        41 4f 50 55 53 50 52 4c -> AOPUSPRL (Get the definition from chatGPT)
+        08 00 00 00 00 00 00 00 -> The length of "Seek Pre-roll"
+        00 b4 c4 04 00 00 00 00 -> Decimal value: 80,000,000 (CSD-2)
+
+        Each "section" is prefixed by a 64-bit ID and a 64-bit length.
+
+        <https://developer.android.com/reference/android/media/MediaCodec#CSD>
+        */
         if (buffer.remaining() < 16) {
             throw IOException("Not enough data in OPUS config packet")
         }
         val id = buffer.long // little endian
-        if (id != AOPUSHDR) {
+        if (id != OPUS_AOPUSHDR) {
             throw IOException("OPUS header not found")
         }
 
@@ -281,7 +211,7 @@ class OpusEncoder(
         var csd1: ByteArray? = null
         if (buffer.remaining() > 8) {
             val idDly = buffer.long
-            if (idDly == AOPUSDLY) {
+            if (idDly == OPUS_AOPUSDLY) {
                 val idDlyLength = buffer.long
                 if (idDlyLength < 0 || idDlyLength >= 0x7FFFFFFF) {
                     throw IOException("Invalid block size in OPUS DLY: $idDlyLength")
@@ -298,7 +228,7 @@ class OpusEncoder(
         var csd2: ByteArray? = null
         if (buffer.remaining() > 8) {
             val idPrl = buffer.long
-            if (idPrl == AOPUSPRL) {
+            if (idPrl == OPUS_AOPUSPRL) {
                 val idPrlLength = buffer.long
                 if (idPrlLength < 0 || idPrlLength >= 0x7FFFFFFF) {
                     throw IOException("Invalid block size in OPUS PRL: $idPrlLength")
@@ -315,19 +245,12 @@ class OpusEncoder(
         return OpusCsd(csd0, csd1 ?: byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0), csd2 ?: byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0))
     }
 
-    /**
-     * Calculate PTS.
-     * Actually, it doesn't make any error if you return 0 directly.
-     *
-     * @return The calculated presentation time in microseconds.
-     */
-    private fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
-        // LogContext.log.d(TAG, "computePresentationTimeUs=$result")
-        return frameIndex * 1_000_000L / sampleRate
+    override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+        LogContext.log.i(TAG, "onOutputFormatChanged format=$format")
     }
 
-    interface OpusEncodeCallback {
-        fun onEncoded(aacData: ByteArray)
+    override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+        LogContext.log.e(TAG, "onError e=${e.message}")
     }
 
     private data class OpusCsd(val csd0: ByteArray, val csd1: ByteArray, val csd2: ByteArray) {

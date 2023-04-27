@@ -37,8 +37,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(48000, 128000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(16000, 32000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding {

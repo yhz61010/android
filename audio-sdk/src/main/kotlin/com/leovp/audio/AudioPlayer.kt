@@ -204,7 +204,7 @@ class AudioPlayer(
         opusStreamPlayer?.stopPlaying()
     }
 
-    fun getPlayState() = audioTrack?.playState ?: AudioTrack.STATE_UNINITIALIZED
+    fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED
 
     fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 

@@ -100,10 +100,14 @@ abstract class BaseMediaCodec(
                     //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
                     // val outBytes = it.toByteArray()
                     when {
-                        (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 -> onOutputData(it, isConfig = true, isKeyFrame = false)
-                        (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 -> onOutputData(it, isConfig = false, isKeyFrame = true)
+                        (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
+                            onOutputData(it, info, isConfig = true, isKeyFrame = false)
+
+                        (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
+                            onOutputData(it, info, isConfig = false, isKeyFrame = true)
+
                         (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
-                        else -> onOutputData(it, isConfig = false, isKeyFrame = false)
+                        else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
                     }
                 }
                 codec.releaseOutputBuffer(index, false)

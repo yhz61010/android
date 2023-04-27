@@ -18,7 +18,7 @@ interface IAudioMediaCodec {
     // ==========
     fun onInputData(): ByteArray?
 
-    fun onOutputData(outData: ByteBuffer, isConfig: Boolean, isKeyFrame: Boolean)
+    fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean)
 
     fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {}
 

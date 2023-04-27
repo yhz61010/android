@@ -1,11 +1,8 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package com.leovp.audio
 
 import android.content.Context
-import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.SystemClock
 import com.leovp.audio.aac.AacStreamPlayer
@@ -15,7 +12,6 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.AudioDecoderWrapper
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.opus.OpusStreamPlayer
-import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 
 /**
@@ -26,8 +22,7 @@ class AudioPlayer(
     ctx: Context,
     private val audioDecoderInfo: AudioDecoderInfo,
     private val type: AudioType = AudioType.COMPRESSED_PCM,
-    minPlayBufferSizeRatio: Int = 1
-) {
+    minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "AudioPlayer"
     }
@@ -36,39 +31,10 @@ class AudioPlayer(
     private var aacStreamPlayer: AacStreamPlayer? = null
     private var opusStreamPlayer: OpusStreamPlayer? = null
 
-    private var audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private var audioTrack: AudioTrack? = null
+    private var audioTrackPlayer: AudioTrackPlayer? = null
+    private val audioTrackPlayerRef: AudioTrackPlayer by lazy { audioTrackPlayer!! }
 
     init {
-        if (type == AudioType.PCM || type == AudioType.COMPRESSED_PCM) {
-            val minBufferSize = AudioTrack.getMinBufferSize(
-                audioDecoderInfo.sampleRate,
-                audioDecoderInfo.channelConfig,
-                audioDecoderInfo.audioFormat
-            ) * minPlayBufferSizeRatio
-            LogContext.log.w(TAG, "PCM $audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
-            val sessionId = audioManager.generateAudioSessionId()
-            val audioAttributesBuilder = AudioAttributes.Builder().apply {
-                setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
-                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
-            }
-            val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
-                .setEncoding(audioDecoderInfo.audioFormat)
-                .setChannelMask(audioDecoderInfo.channelConfig)
-                .build()
-            // If buffer size is not insufficient, it will crash when you release it.
-            // Please check [AudioReceiver#stopServer]
-            audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, AudioTrack.MODE_STREAM, sessionId)
-            val audioTrackRef = audioTrack
-            requireNotNull(audioTrackRef)
-            if (AudioTrack.STATE_INITIALIZED == audioTrackRef.state) {
-                LogContext.log.i(TAG, "AudioTrack start playing...")
-                audioTrackRef.play()
-            } else {
-                LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
-            }
-        }
-
         when (type) {
             AudioType.AAC -> {
                 LogContext.log.w(TAG, "AAC Decoder")
@@ -81,15 +47,14 @@ class AudioPlayer(
             }
 
             else -> {
-                val audioTrackRef = audioTrack
-                requireNotNull(audioTrackRef)
+                audioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, minPlayBufferSizeRatio)
                 decoderWrapper = AudioDecoderManager.getWrapper(
                     type,
                     audioDecoderInfo,
                     object : OutputCallback {
                         override fun output(out: ByteArray) {
                             val st = SystemClock.elapsedRealtime()
-                            audioTrackRef.write(out.toShortArrayLE(), 0, out.size / 2)
+                            audioTrackPlayerRef.play(out)
                             if (BuildConfig.DEBUG) LogContext.log.d(TAG,
                                 "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
                         }
@@ -103,23 +68,16 @@ class AudioPlayer(
     fun play(chunkAudioData: ByteArray) {
         try {
             if (type == AudioType.PCM || type == AudioType.COMPRESSED_PCM) {
-                val audioTrackRef = audioTrack
-                requireNotNull(audioTrackRef)
-                if (AudioTrack.STATE_UNINITIALIZED == audioTrackRef.state) {
+                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayerRef.getPlayState()) {
                     return
                 }
-                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackRef.playState) {
-                    // val st = SystemClock.elapsedRealtime()
+                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayerRef.getPlayState()) {
                     if (type == AudioType.PCM) {
                         // Play decoded audio data in PCM
-                        val playData = chunkAudioData.toShortArrayLE()
-                        audioTrackRef.write(playData, 0, playData.size)
-                        if (BuildConfig.DEBUG) {
-                            LogContext.log.d(TAG, "Play PCM[${chunkAudioData.size}]")
-                        }
+                        audioTrackPlayerRef.play(chunkAudioData)
                     } else {
                         decoderWrapper?.decode(chunkAudioData)
-                    } // end when
+                    }
                 }
             } else {
                 when (type) {
@@ -150,10 +108,9 @@ class AudioPlayer(
      * pcmPlayer.play(pcmDataBytes)
      * ```
      */
-    @Suppress("WeakerAccess")
     fun resume() {
         LogContext.log.w(TAG, "resume()")
-        runCatching { audioTrack?.play() }.onFailure { it.printStackTrace() }
+        audioTrackPlayer?.resume()
     }
 
     /**
@@ -167,15 +124,9 @@ class AudioPlayer(
      * pcmPlayer.play(pcmDataBytes)
      * ```
      */
-    @Suppress("WeakerAccess")
     fun pause() {
         LogContext.log.w(TAG, "pause()")
-        runCatching {
-            if (audioTrack?.state == AudioTrack.STATE_INITIALIZED) {
-                audioTrack?.pause()
-                audioTrack?.flush()
-            }
-        }.onFailure { it.printStackTrace() }
+        audioTrackPlayer?.pause()
     }
 
     /**
@@ -191,25 +142,22 @@ class AudioPlayer(
      */
     fun stop() {
         LogContext.log.w(TAG, "stop()")
-        pause()
-        runCatching { if (audioTrack?.state == AudioTrack.STATE_INITIALIZED) audioTrack?.stop() }.onFailure { it.printStackTrace() }
+        audioTrackPlayer?.stop()
     }
 
     fun release() {
         LogContext.log.w(TAG, "release()")
-        stop()
-        runCatching { if (audioTrack?.state == AudioTrack.STATE_INITIALIZED) audioTrack?.release() }.onFailure { it.printStackTrace() }
+        audioTrackPlayer?.release()
+
         decoderWrapper?.release()
         aacStreamPlayer?.stopPlaying()
         opusStreamPlayer?.stopPlaying()
     }
 
-    fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED
-
     fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     fun getAudioTimeUs(): Long = runCatching {
-        val numFramesPlayed: Int = audioTrack?.playbackHeadPosition ?: 0
+        val numFramesPlayed: Int = audioTrackPlayer?.getPlaybackHeadPosition() ?: 0
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)
 }

@@ -154,7 +154,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                         ensureActive()
                         val audioData = rcvAudioDataQueue.poll()
                         //                        if (frameCount.get() % 30 == 0L) {
-                        LogContext.log.i(TAG, "Play AAC[${audioData?.size}]")
+                        LogContext.log.i(TAG, "Rcv AAC[${audioData?.size}]")
                         //                        }
                         if (audioData != null && audioData.isNotEmpty()) {
                             decodeAndPlay(audioData)

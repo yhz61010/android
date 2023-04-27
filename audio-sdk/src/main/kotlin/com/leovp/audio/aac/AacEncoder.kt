@@ -3,7 +3,8 @@ package com.leovp.audio.aac
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.audio.BuildConfig
+import com.leovp.audio.base.iters.IEncodeCallback
+import com.leovp.audio.mediacodec.BaseMediaCodec
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
@@ -14,117 +15,50 @@ import java.util.concurrent.ArrayBlockingQueue
  * Date: 20-6-18 下午2:05
  */
 class AacEncoder(
-    private val sampleRate: Int,
+    sampleRate: Int,
+    channelCount: Int,
     private val bitrate: Int,
-    private val channelCount: Int,
-    callback: AacEncodeCallback
-) {
+    private val callback: IEncodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "AacEn"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
     }
 
-    private var outputFormat: MediaFormat? = null
-    private lateinit var encoder: MediaCodec
-    private var frameCount: Long = 0
-
     val queue = ArrayBlockingQueue<ByteArray>(10)
 
-    @Suppress("WeakerAccess")
     var csd0: ByteArray? = null
         private set
 
-    fun start() {
-        LogContext.log.w(TAG, "AacEncoder sampleRate=$sampleRate bitrate=$bitrate channelCount=$channelCount")
-//        csd0 = getAudioEncodingCsd0(PROFILE_AAC_LC, sampleRate, channelCount)!!
-//        LogContext.log.w(TAG, "Audio csd0=${csd0.toHexStringLE()}")
-        encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-        val mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount)
-        with(mediaFormat) {
-            setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
-            setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
-            // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
-            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024)
-        }
-        encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        encoder.setCallback(mediaCodecCallback)
-        encoder.start()
+    override fun setFormatOptions(format: MediaFormat) {
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
+        format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
+        // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
     }
 
-    fun stop() {
-        runCatching { encoder.stop() }.onFailure { it.printStackTrace() }
+    override fun onInputData(): ByteArray? {
+        return queue.poll()
     }
 
-    /**
-     * Release sources.
-     */
-    fun release() {
-        stop()
-        runCatching { encoder.release() }.onFailure { it.printStackTrace() }
-    }
-
-    private val mediaCodecCallback = object : MediaCodec.Callback() {
-        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-            runCatching {
-                val inputBuffer = codec.getInputBuffer(inputBufferId)
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = queue.poll()?.also {
-                    // LogContext.log.i(TAG, "inputBuffer[${inputBuffer?.remaining()}]  queue.poll[${it.size}]") // =${it.toHexStringLE()}
-                    inputBuffer?.put(it)
-                }
-//                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount, sampleRate), 0)
-            }.onFailure { it.printStackTrace() }
+    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+        if (isConfig) {
+            LogContext.log.w(TAG, "Found config frame.")
+            val outBytes = ByteArray(outData.remaining())
+            outData.get(outBytes)
+            csd0 = outBytes
+            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
         }
+        val aacDataLength = info.size
+        // The length of ADTS header is 7.
+        val aacDataSizeWithAdtsLength = aacDataLength + 7
+        outData.position(info.offset)
+        outData.limit(info.offset + aacDataLength)
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-            runCatching {
-                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                // bufferFormat is equivalent to member variable outputFormat
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
-                    when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                            csd0 = ByteArray(info.size)
-                            it.get(csd0!!)
-                            LogContext.log.i(TAG, "csd0=HEX[${csd0?.toHexStringLE()}]")
-                        }
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> Unit
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
-                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-                        else -> Unit
-                    }
-
-                    val aacDataLength = info.size
-                    // The length of ADTS header is 7.
-                    val aacDataSizeWithAdtsLength = aacDataLength + 7
-                    it.position(info.offset)
-                    it.limit(info.offset + aacDataLength)
-
-                    // Add ADTS header to pcm data array which length is pcm data length plus 7.
-                    val aacDataWithAdts = ByteArray(aacDataSizeWithAdtsLength)
-                    addAdtsToDataWithoutCRC(aacDataWithAdts, aacDataSizeWithAdtsLength)
-                    it.get(aacDataWithAdts, 7, aacDataLength)
-                    it.position(info.offset)
-                    callback.onEncoded(aacDataWithAdts)
-                }
-                codec.releaseOutputBuffer(outputBufferId, false)
-            }.onFailure { it.printStackTrace() }
-        }
-
-        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            LogContext.log.i(TAG, "onOutputFormatChanged format=$format")
-            // Subsequent data will conform to new format.
-            // Can ignore if using getOutputFormat(outputBufferId)
-            outputFormat = format // option B
-        }
-
-        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LogContext.log.e(TAG, "onError e=${e.message}")
-        }
+        // Add ADTS header to pcm data array which length is pcm data length plus 7.
+        val aacDataWithAdts = ByteArray(aacDataSizeWithAdtsLength)
+        addAdtsToDataWithoutCRC(aacDataWithAdts, aacDataSizeWithAdtsLength)
+        outData.get(aacDataWithAdts, 7, aacDataLength)
+        outData.position(info.offset)
+        callback.onEncoded(aacDataWithAdts, isConfig, isKeyFrame)
     }
 
     /**
@@ -175,9 +109,9 @@ class AacEncoder(
      * @param outAacDataLenWithAdts The length of audio data with ADTS header.
      */
     private fun addAdtsToDataWithoutCRC(outAacDataWithAdts: ByteArray, outAacDataLenWithAdts: Int) {
-        if (BuildConfig.DEBUG) {
-            LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
-        }
+        // if (BuildConfig.DEBUG) {
+        //     LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        // }
 
         // ByteBuffer key
         // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -204,9 +138,9 @@ class AacEncoder(
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
             // 1: single_channel_element 2: CPE(channel_pair_element)
             val channelCfg: Int = (it[1].toInt() shr 3) and 0xF
-            if (BuildConfig.DEBUG) {
-                LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
-            }
+            // if (BuildConfig.DEBUG) {
+            //     LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
+            // }
 
             // https://www.jianshu.com/p/5c770a22e8f8
             outAacDataWithAdts[0] = 0xFF.toByte()
@@ -263,9 +197,5 @@ class AacEncoder(
             96000 -> 0
             else -> -1
         }
-    }
-
-    interface AacEncodeCallback {
-        fun onEncoded(aacData: ByteArray)
     }
 }

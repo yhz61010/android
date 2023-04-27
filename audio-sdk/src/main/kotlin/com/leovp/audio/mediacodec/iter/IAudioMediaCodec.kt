@@ -24,7 +24,7 @@ interface IAudioMediaCodec {
 
     fun getPresentationTimeUs(): Long
 
-    fun onError(codec: MediaCodec, e: MediaCodec.CodecException)
+    fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {}
 
     // ==========
     fun onEndOfStream() {}

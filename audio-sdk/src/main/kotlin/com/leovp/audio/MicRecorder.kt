@@ -101,11 +101,11 @@ class MicRecorder(
                     // please drop the first generated audio.
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
-                    //                    if (cost > 100) {
-                    //                        LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
-                    //                        continue
-                    //                    }
-                    ioScope.launch { encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(pcmData.toByteArrayLE()) }
+                    // if (cost > 100) {
+                    //     LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
+                    //     continue
+                    // }
+                    encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(pcmData.toByteArrayLE())
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -158,6 +158,9 @@ class MicRecorder(
     fun getRecordingState() = audioRecord.recordingState
 
     interface RecordCallback {
+        /**
+         * @param data The byte order of [data] is little endian.
+         */
         fun onRecording(data: ByteArray)
         fun onStop(stopResult: Boolean)
     }

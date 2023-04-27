@@ -11,10 +11,10 @@ import com.leovp.audio.opus.OpusEncoder
   * Date: 2023/4/14 17:10
   */
 class OpusEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
-    private var opusEncoder: OpusEncoder = OpusEncoder(
+    private val opusEncoder = OpusEncoder(
         encoderInfo.sampleRate,
-        encoderInfo.bitrate,
         encoderInfo.channelCount,
+        encoderInfo.bitrate,
         object : IEncodeCallback {
             override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                 outputCallback.output(encodedBytes)

@@ -41,7 +41,7 @@ class AudioSender {
     private var micRecorder: MicRecorder? = null
     private var audioPlayer: AudioPlayer? = null
 
-    private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
+    private var recAudioQueue = ArrayBlockingQueue<ByteArray>(64)
     private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(64)
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
@@ -103,7 +103,7 @@ class AudioSender {
             while (true) {
                 ensureActive()
                 runCatching {
-                    //                    LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
+                    // LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
                     recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it) }
                     delay(10)
                 }.onFailure { it.printStackTrace() }

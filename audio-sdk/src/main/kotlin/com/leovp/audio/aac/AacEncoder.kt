@@ -132,7 +132,7 @@ class AacEncoder(
             LogContext.log.e(TAG, "csd0 can not be null")
         }
         csd0?.let {
-            // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while config MediaCodec
+            // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while configuring MediaCodec
             val profile: Int = (it[0].toInt() shr 3) and 0x1F
             // 4: 44.1KHz 8: 16Khz 11: 8Khz
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
@@ -155,7 +155,7 @@ class AacEncoder(
 
     // https://cloud.tencent.com/developer/ask/61404
     // FIXME
-    // Has bugs!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
+    // Has bug!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
     @Suppress("SameParameterValue", "unused")
     private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
         val freqIdx = getSampleFrequencyIndex(sampleRate)
@@ -167,17 +167,6 @@ class AacEncoder(
         csd.get(csd0)
         csd.clear()
         return csd0
-    }
-
-    /**
-     * Calculate PTS.
-     * Actually, it doesn't make any error if you return 0 directly.
-     *
-     * @return The calculated presentation time in microseconds.
-     */
-    private fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
-        //        LogContext.log.d(TAG, "computePresentationTimeUs=$result")
-        return frameIndex * 1000000L / sampleRate
     }
 
     private fun getSampleFrequencyIndex(sampleRate: Int): Int {

@@ -1,5 +1,6 @@
 package com.leovp.audio.opus
 
+import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodec
@@ -42,7 +43,7 @@ class OpusDecoder(sampleRate: Int,
         return queue.poll()
     }
 
-    override fun onOutputData(outData: ByteBuffer, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         callback.onDecoded(outData.toByteArray())
     }
 

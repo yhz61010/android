@@ -1,5 +1,6 @@
 package com.leovp.audio.opus
 
+import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodec
@@ -107,11 +108,7 @@ class OpusEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
-    private val callback: IEncodeCallback) : BaseMediaCodec(
-    MediaFormat.MIMETYPE_AUDIO_OPUS,
-    sampleRate,
-    channelCount,
-    true) {
+    private val callback: IEncodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "OpusEn"
     }
@@ -133,7 +130,7 @@ class OpusEncoder(
         return queue.poll()
     }
 
-    override fun onOutputData(outData: ByteBuffer, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
             val opusCsd = AudioCodecUtil.parseOpusConfigFrame(outData) // little endian

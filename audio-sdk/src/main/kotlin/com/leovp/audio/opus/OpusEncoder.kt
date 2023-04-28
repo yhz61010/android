@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.audio.opus
 
 import android.media.MediaCodec

@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.audio.aac
 
 import android.media.MediaCodec
@@ -24,7 +26,7 @@ class AacEncoder(
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
     }
 
-    val queue = ArrayBlockingQueue<ByteArray>(10)
+    val queue = ArrayBlockingQueue<ByteArray>(64)
 
     var csd0: ByteArray? = null
         private set
@@ -156,7 +158,7 @@ class AacEncoder(
     // https://cloud.tencent.com/developer/ask/61404
     // FIXME
     // Has bug!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
-    @Suppress("SameParameterValue", "unused")
+    @Suppress("SameParameterValue")
     private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
         val freqIdx = getSampleFrequencyIndex(sampleRate)
         if (freqIdx == -1) return null

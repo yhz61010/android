@@ -36,6 +36,7 @@ class MicRecorder(
     encoderInfo: AudioEncoderInfo,
     val callback: RecordCallback,
     type: AudioType = AudioType.COMPRESSED_PCM,
+    audioSource: Int = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
     recordMinBufferRatio: Int = 1
 ) {
     companion object {
@@ -72,7 +73,8 @@ class MicRecorder(
             // MediaRecorder.AudioSource.MIC
             // MediaRecorder.AudioSource.VOICE_COMMUNICATION
             // MediaRecorder.AudioSource.CAMCORDER
-            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            // MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            audioSource,
             encoderInfo.sampleRate,
             encoderInfo.channelConfig,
             encoderInfo.audioFormat,

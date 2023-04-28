@@ -23,6 +23,9 @@ class AudioPlayer(
     ctx: Context,
     private val audioDecoderInfo: AudioDecoderInfo,
     private val type: AudioType = AudioType.COMPRESSED_PCM,
+    mode: Int = AudioTrack.MODE_STREAM,
+    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
     minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "AudioPlayer"
@@ -32,40 +35,29 @@ class AudioPlayer(
     private var aacStreamPlayer: AacStreamPlayer? = null
     private var opusStreamPlayer: OpusStreamPlayer? = null
 
-    private var audioTrackPlayer: AudioTrackPlayer? = null
-    private val audioTrackPlayerRef: AudioTrackPlayer by lazy { audioTrackPlayer!! }
+    private val audioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, mode, usage, contentType, minPlayBufferSizeRatio)
 
     init {
         when (type) {
             AudioType.AAC -> {
                 LogContext.log.w(TAG, "AAC Decoder")
-                aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
-                aacStreamPlayer?.useSpeaker(ctx, true)
+                aacStreamPlayer = AacStreamPlayer(audioDecoderInfo, audioTrackPlayer)
             }
 
             AudioType.OPUS -> {
                 LogContext.log.w(TAG, "OPUS Decoder")
                 opusStreamPlayer = OpusStreamPlayer(ctx, audioDecoderInfo)
-                opusStreamPlayer?.useSpeaker(ctx, true)
             }
 
             else -> {
-                audioTrackPlayer = AudioTrackPlayer(
-                    ctx,
-                    audioDecoderInfo,
-                    minPlayBufferSizeRatio,
-                    usage = AudioAttributes.USAGE_VOICE_COMMUNICATION,
-                    contentType = AudioAttributes.CONTENT_TYPE_SPEECH
-                ).apply {
-                    play()
-                }
+                audioTrackPlayer.play()
                 decoderWrapper = AudioDecoderManager.getWrapper(
                     type,
                     audioDecoderInfo,
                     object : OutputCallback {
                         override fun output(out: ByteArray) {
                             val st = SystemClock.elapsedRealtime()
-                            audioTrackPlayerRef.write(out)
+                            audioTrackPlayer.write(out)
                             if (BuildConfig.DEBUG) {
                                 LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
                             }
@@ -80,12 +72,12 @@ class AudioPlayer(
     fun play(chunkAudioData: ByteArray) {
         try {
             if (type == AudioType.PCM || type == AudioType.COMPRESSED_PCM) {
-                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayerRef.state) {
+                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) {
                     return
                 }
-                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayerRef.playState) {
+                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
                     if (type == AudioType.PCM) {
-                        audioTrackPlayerRef.write(chunkAudioData)
+                        audioTrackPlayer.write(chunkAudioData)
                     } else {
                         decoderWrapper?.decode(chunkAudioData)
                     }
@@ -121,7 +113,7 @@ class AudioPlayer(
      */
     fun resume() {
         LogContext.log.w(TAG, "resume()")
-        audioTrackPlayer?.resume()
+        audioTrackPlayer.resume()
     }
 
     /**
@@ -137,7 +129,7 @@ class AudioPlayer(
      */
     fun pause() {
         LogContext.log.w(TAG, "pause()")
-        audioTrackPlayer?.pause()
+        audioTrackPlayer.pause()
     }
 
     /**
@@ -153,12 +145,12 @@ class AudioPlayer(
      */
     fun stop() {
         LogContext.log.w(TAG, "stop()")
-        audioTrackPlayer?.stop()
+        audioTrackPlayer.stop()
     }
 
     fun release() {
         LogContext.log.w(TAG, "release()")
-        audioTrackPlayer?.release()
+        audioTrackPlayer.release()
 
         decoderWrapper?.release()
         aacStreamPlayer?.stopPlaying()
@@ -168,7 +160,7 @@ class AudioPlayer(
     fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     fun getAudioTimeUs(): Long = runCatching {
-        val numFramesPlayed: Int = audioTrackPlayer?.playbackHeadPosition ?: 0
+        val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)
 }

@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.audio.opus
 
 import android.media.MediaCodec
@@ -12,22 +14,17 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
-@Suppress("unused")
 class OpusDecoder(sampleRate: Int,
     channelCount: Int,
-    private val csd0: ByteArray,
-    private val csd1: ByteArray,
-    private val csd2: ByteArray,
+    val csd0: ByteArray,
+    val csd1: ByteArray,
+    val csd2: ByteArray,
     private val callback: IDecodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
     companion object {
         private const val TAG = "OpusDe"
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
-
-    fun getCsd0(): ByteArray = csd0
-    fun getCsd1(): ByteArray = csd1
-    fun getCsd2(): ByteArray = csd2
 
     override fun setFormatOptions(format: MediaFormat) {
         // https://developer.android.com/reference/android/media/MediaCodec#CSD

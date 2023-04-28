@@ -7,6 +7,11 @@ import android.media.MediaFormat
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -24,7 +29,7 @@ abstract class BaseMediaCodec(
     protected lateinit var format: MediaFormat
     protected lateinit var codec: MediaCodec
 
-    // private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
+    private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
     private var frameCount: Long = 0
 
     abstract fun setFormatOptions(format: MediaFormat)
@@ -44,7 +49,7 @@ abstract class BaseMediaCodec(
      * Release resource.
      */
     open fun release() {
-        // ioScope.cancel()
+        ioScope.cancel()
         require(::codec.isInitialized) { "Did you call start() before?" }
         stop()
         // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
@@ -65,7 +70,7 @@ abstract class BaseMediaCodec(
     }
 
     private fun createCodec() {
-        LogContext.log.i(TAG, "codec=$codecName isEncoding=$isEncoding")
+        LogContext.log.i(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
         val mediaCodec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
         codec = mediaCodec.apply {
             configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)
@@ -99,18 +104,20 @@ abstract class BaseMediaCodec(
                     // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
                     //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
                     // val outBytes = it.toByteArray()
-                    when {
-                        (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
-                            onOutputData(it, info, isConfig = true, isKeyFrame = false)
+                    ioScope.launch {
+                        when {
+                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
+                                onOutputData(it, info, isConfig = true, isKeyFrame = false)
 
-                        (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
-                            onOutputData(it, info, isConfig = false, isKeyFrame = true)
+                            (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
+                                onOutputData(it, info, isConfig = false, isKeyFrame = true)
 
-                        (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
-                        else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
+                            (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
+                            else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
+                        }
+                        codec.releaseOutputBuffer(index, false)
                     }
                 }
-                codec.releaseOutputBuffer(index, false)
             }.onFailure { it.printStackTrace() }
         }
 

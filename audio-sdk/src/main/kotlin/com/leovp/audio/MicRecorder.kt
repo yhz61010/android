@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.audio
 
 import android.annotation.SuppressLint
@@ -42,7 +44,7 @@ class MicRecorder(
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    private var audioRecord: AudioRecord
+    val audioRecord: AudioRecord
     private var bufferSizeInBytes = 0
 
     private var encodeWrapper: AudioEncoderWrapper?

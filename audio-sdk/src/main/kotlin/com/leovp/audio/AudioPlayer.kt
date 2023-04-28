@@ -39,11 +39,13 @@ class AudioPlayer(
             AudioType.AAC -> {
                 LogContext.log.w(TAG, "AAC Decoder")
                 aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
+                aacStreamPlayer?.useSpeaker(ctx, true)
             }
 
             AudioType.OPUS -> {
                 LogContext.log.w(TAG, "OPUS Decoder")
                 opusStreamPlayer = OpusStreamPlayer(ctx, audioDecoderInfo)
+                opusStreamPlayer?.useSpeaker(ctx, true)
             }
 
             else -> {

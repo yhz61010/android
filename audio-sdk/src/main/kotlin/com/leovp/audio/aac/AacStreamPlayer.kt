@@ -44,7 +44,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
     private var audioManager: AudioManager? = null
 
-    //    private var outputFormat: MediaFormat? = null
+    // private var outputFormat: MediaFormat? = null
     private var frameCount = AtomicLong(0)
     private var dropFrameTimes = AtomicLong(0)
     private var playStartTimeInUs: Long = 0

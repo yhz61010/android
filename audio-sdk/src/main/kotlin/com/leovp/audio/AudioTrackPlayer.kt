@@ -15,7 +15,11 @@ import com.leovp.log.LogContext
  * Author: Michael Leo
  * Date: 2023/4/27 15:59
  */
-class AudioTrackPlayer(ctx: Context, audioDecoderInfo: AudioDecoderInfo, minPlayBufferSizeRatio: Int = 1) {
+class AudioTrackPlayer(
+    ctx: Context,
+    audioDecoderInfo: AudioDecoderInfo,
+    minPlayBufferSizeRatio: Int = 1,
+) {
     companion object {
         private const val TAG = "AudioTrackPlayer"
     }
@@ -32,8 +36,12 @@ class AudioTrackPlayer(ctx: Context, audioDecoderInfo: AudioDecoderInfo, minPlay
         LogContext.log.w(TAG, "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder().apply {
-            setUsage(AudioAttributes.USAGE_MEDIA) // AudioAttributes.USAGE_MEDIA          AudioAttributes.USAGE_VOICE_COMMUNICATION
-            setContentType(AudioAttributes.CONTENT_TYPE_SPEECH) // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
+            // AudioAttributes.USAGE_MEDIA
+            // AudioAttributes.USAGE_VOICE_COMMUNICATION
+            setUsage(AudioAttributes.USAGE_MEDIA)
+            // AudioAttributes.CONTENT_TYPE_MUSIC
+            // AudioAttributes.CONTENT_TYPE_SPEECH
+            setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
         }
         val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
             .setEncoding(audioDecoderInfo.audioFormat)

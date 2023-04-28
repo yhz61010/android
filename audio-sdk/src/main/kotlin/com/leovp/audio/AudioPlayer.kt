@@ -3,6 +3,7 @@
 package com.leovp.audio
 
 import android.content.Context
+import android.media.AudioAttributes
 import android.media.AudioTrack
 import android.os.SystemClock
 import com.leovp.audio.aac.AacStreamPlayer
@@ -49,16 +50,25 @@ class AudioPlayer(
             }
 
             else -> {
-                audioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, minPlayBufferSizeRatio)
+                audioTrackPlayer = AudioTrackPlayer(
+                    ctx,
+                    audioDecoderInfo,
+                    minPlayBufferSizeRatio,
+                    usage = AudioAttributes.USAGE_VOICE_COMMUNICATION,
+                    contentType = AudioAttributes.CONTENT_TYPE_SPEECH
+                ).apply {
+                    play()
+                }
                 decoderWrapper = AudioDecoderManager.getWrapper(
                     type,
                     audioDecoderInfo,
                     object : OutputCallback {
                         override fun output(out: ByteArray) {
                             val st = SystemClock.elapsedRealtime()
-                            audioTrackPlayerRef.play(out)
-                            if (BuildConfig.DEBUG) LogContext.log.d(TAG,
-                                "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+                            audioTrackPlayerRef.write(out)
+                            if (BuildConfig.DEBUG) {
+                                LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+                            }
                         }
                     }
                 )
@@ -70,13 +80,12 @@ class AudioPlayer(
     fun play(chunkAudioData: ByteArray) {
         try {
             if (type == AudioType.PCM || type == AudioType.COMPRESSED_PCM) {
-                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayerRef.getPlayState()) {
+                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayerRef.state) {
                     return
                 }
-                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayerRef.getPlayState()) {
+                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayerRef.playState) {
                     if (type == AudioType.PCM) {
-                        // Play decoded audio data in PCM
-                        audioTrackPlayerRef.play(chunkAudioData)
+                        audioTrackPlayerRef.write(chunkAudioData)
                     } else {
                         decoderWrapper?.decode(chunkAudioData)
                     }
@@ -159,7 +168,7 @@ class AudioPlayer(
     fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     fun getAudioTimeUs(): Long = runCatching {
-        val numFramesPlayed: Int = audioTrackPlayer?.getPlaybackHeadPosition() ?: 0
+        val numFramesPlayed: Int = audioTrackPlayer?.playbackHeadPosition ?: 0
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)
 }

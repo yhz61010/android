@@ -1,37 +1,32 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.leovp.audio.aac
 
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.audio.base.iters.IDecodeCallback
+import com.leovp.audio.mediacodec.BaseMediaCodec
+import com.leovp.bytes.toByteArray
+import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
-import java.util.concurrent.atomic.AtomicLong
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import java.util.concurrent.ArrayBlockingQueue
 
 /**
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-@Suppress("unused")
-class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val callback: AacDecodeCallback) {
+class AacDecoder(sampleRate: Int,
+    channelCount: Int,
+    val csd0: ByteArray,
+    private val callback: IDecodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
     companion object {
-        private const val TAG = "AacDecoder"
+        private const val TAG = "AacDe"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
     }
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
-
-    //    private var outputFormat: MediaFormat? = null
-    private var frameCount = AtomicLong(0)
-    private var audioDecoder: MediaCodec? = null
-
-    @Suppress("WeakerAccess")
-    var csd0: ByteArray? = null
-        private set
+    private val queue = ArrayBlockingQueue<ByteArray>(64)
 
     // ByteBuffer key
     // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -56,143 +51,37 @@ class AacDecoder(private val audioDecoderInfo: AudioDecoderInfo, private val cal
     // So the csd_0 value is 0x12,0x08
     // https://developer.android.com/reference/android/media/MediaCodec
     // AAC CSD: Decoder-specific information from ESDS
-    @Suppress("unused")
-    fun initAudioDecoder(csd0: ByteArray) {
-        runCatching {
-            this.csd0 = csd0
-            LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
-            val csd0BB = ByteBuffer.wrap(csd0)
-            audioDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-            val mediaFormat = MediaFormat.createAudioFormat(
-                MediaFormat.MIMETYPE_AUDIO_AAC,
-                audioDecoderInfo.sampleRate,
-                audioDecoderInfo.channelCount
-            ).apply {
-                setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
-                setInteger(MediaFormat.KEY_IS_ADTS, 1)
-                // Set ADTS decoder information.
-                setByteBuffer("csd-0", csd0BB)
-            }
-            audioDecoder!!.configure(mediaFormat, null, null, 0)
-            //            outputFormat = audioDecoder?.outputFormat // option B
-            //            audioDecoder?.setCallback(mediaCodecCallback)
-            audioDecoder?.start()
-        }.onFailure { LogContext.log.e(TAG, "initAudioDecoder error msg=${it.message}") }
+    override fun setFormatOptions(format: MediaFormat) {
+        LogContext.log.w(TAG, "setFormatOptions csd0[${csd0.size}]=HEX[${csd0.toHexStringLE()}]")
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
+        // Set ADTS decoder information.
+        format.setInteger(MediaFormat.KEY_IS_ADTS, 1)
+        // https://developer.android.com/reference/android/media/MediaCodec#CSD
+        val csd0BB = ByteBuffer.wrap(csd0)
+        format.setByteBuffer("csd-0", csd0BB)
+    }
+
+    override fun onInputData(): ByteArray? {
+        val inBytes = queue.poll()
+        if (inBytes != null) LogContext.log.e(TAG, "--->>> onInputData[${inBytes.size}]")
+        return inBytes
+    }
+
+    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+        LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
+        callback.onDecoded(outData.toByteArray())
     }
 
     /**
      * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
      */
-    @Suppress("unused")
-    fun decode(audioData: ByteArray) {
-        try {
-            val bufferInfo = MediaCodec.BufferInfo()
-
-            // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
-            val inputIndex: Int = audioDecoder?.dequeueInputBuffer(0) ?: -1
-            if (inputIndex > -1) {
-                audioDecoder?.getInputBuffer(inputIndex)?.run {
-                    // Clear exist data.
-                    clear()
-                    // Put pcm audio data to encoder.
-                    put(audioData)
-                }
-                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-                audioDecoder?.queueInputBuffer(inputIndex, 0, audioData.size, pts, 0)
-            }
-
-            // Start decoding and get output index
-            var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
-            val chunkPCM = ByteArray(bufferInfo.size)
-            // Get decoded data in bytes
-            while (outputIndex > -1) {
-                audioDecoder?.getOutputBuffer(outputIndex)?.run { get(chunkPCM) }
-                // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
-                if (chunkPCM.isNotEmpty()) {
-                    ioScope.launch { callback.onDecoded(chunkPCM) }
-                }
-                audioDecoder?.releaseOutputBuffer(outputIndex, false)
-                // Get data again.
-                outputIndex = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
-            }
-        } catch (e: Exception) {
-            LogContext.log.e(TAG, "You can ignore this message safely. decodeAndPlay error")
-        }
+    fun decode(rawData: ByteArray) {
+        LogContext.log.e(TAG, "--->>> decode[${rawData.size}] queue[${queue.size}]")
+        queue.offer(rawData)
     }
 
-    //    private val mediaCodecCallback = object : MediaCodec.Callback() {
-    //        override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-    //            try {
-    //                val inputBuffer = codec.getInputBuffer(inputBufferId)
-    //                // fill inputBuffer with valid data
-    //                inputBuffer?.clear()
-    //                val data = rcvAudioDataQueue.poll()?.also {
-    //                    inputBuffer?.put(it)
-    //                }
-    //                val dataSize = data?.size ?: 0
-    //                val pts = computePresentationTimeUs(frameCount.incrementAndGet())
-    // //                if (BuildConfig.DEBUG) {
-    // //                    LogContext.log.d(TAG, "Data len=$dataSize\t pts=$pts")
-    // //                }
-    //                codec.queueInputBuffer(inputBufferId, 0, dataSize, pts, 0)
-    //            } catch (e: Exception) {
-    //                LogContext.log.e(TAG, "Audio Player onInputBufferAvailable error. msg=${e.message}")
-    //            }
-    //        }
-    //
-    //        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
-    //            try {
-    //                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-    //                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-    //                // bufferFormat is equivalent to member variable outputFormat
-    //                // outputBuffer is ready to be processed or rendered.
-    //                outputBuffer?.let {
-    //                    val decodedData = ByteArray(info.size)
-    //                    it.get(decodedData)
-    // //                LogContext.log.w(TAG, "PCM[${decodedData.size}]")
-    //                    when (info.flags) {
-    //                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-    //                            LogContext.log.w(TAG, "Found CSD0 frame: ${JsonUtil.toJsonString(decodedData)}")
-    //                        }
-    //                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
-    //                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
-    //                        else -> Unit
-    //                    }
-    //                    if (decodedData.isNotEmpty()) {
-    //                        // Play decoded audio data in PCM
-    //                        audioTrack?.write(decodedData, 0, decodedData.size)
-    //                    }
-    //                }
-    //                codec.releaseOutputBuffer(outputBufferId, false)
-    //            } catch (e: Exception) {
-    //                LogContext.log.e(TAG, "Audio Player onOutputBufferAvailable error. msg=${e.message}")
-    //            }
-    //        }
-    //
-    //        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-    //            LogContext.log.w(TAG, "onOutputFormatChanged format=$format")
-    //            // Subsequent data will conform to new format.
-    //            // Can ignore if using getOutputFormat(outputBufferId)
-    //            outputFormat = format // option B
-    //        }
-    //
-    //        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-    //            e.printStackTrace()
-    //            LogContext.log.e(TAG, "onError e=${e.message}", e)
-    //        }
-    //    }
-
-    fun release() {
-        runCatching {
-            csd0 = null
-            ioScope.cancel()
-            audioDecoder?.release()
-        }.onFailure { it.printStackTrace() }
-    }
-
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
-
-    interface AacDecodeCallback {
-        fun onDecoded(pcmData: ByteArray)
+    override fun stop() {
+        queue.clear()
+        super.stop()
     }
 }

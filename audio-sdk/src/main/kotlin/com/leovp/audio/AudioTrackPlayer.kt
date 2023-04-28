@@ -13,6 +13,7 @@ import android.media.AudioTrack.STATE_INITIALIZED
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.AudioTrack.getMinBufferSize
 import com.leovp.audio.base.bean.AudioDecoderInfo
+import com.leovp.audio.utils.AudioUtil
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 
@@ -23,10 +24,10 @@ import com.leovp.log.LogContext
 class AudioTrackPlayer(
     ctx: Context,
     audioDecoderInfo: AudioDecoderInfo,
-    minPlayBufferSizeRatio: Int = 1,
     mode: Int = MODE_STREAM,
-    usage: Int = AudioAttributes.USAGE_MEDIA,
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    minPlayBufferSizeRatio: Int = 1,
 ) {
     companion object {
         private const val TAG = "AudioTrackPlayer"
@@ -42,14 +43,15 @@ class AudioTrackPlayer(
             audioDecoderInfo.audioFormat
         ) * minPlayBufferSizeRatio
         LogContext.log.w(TAG, "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
-        val sessionId = audioManager.generateAudioSessionId()
+        // val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder()
-            // Earphone: AudioAttributes.USAGE_MEDIA
-            // Speaker : AudioAttributes.USAGE_VOICE_COMMUNICATION
+            // AudioAttributes.USAGE_MEDIA
+            // AudioAttributes.USAGE_VOICE_COMMUNICATION
             .setUsage(usage)
-            // Earphone: AudioAttributes.CONTENT_TYPE_MUSIC
-            // Speaker : AudioAttributes.CONTENT_TYPE_SPEECH
+            // AudioAttributes.CONTENT_TYPE_MUSIC
+            // AudioAttributes.CONTENT_TYPE_SPEECH
             .setContentType(contentType)
+            // .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
 
         val audioFormat = AudioFormat.Builder()
             .setSampleRate(audioDecoderInfo.sampleRate)
@@ -58,7 +60,9 @@ class AudioTrackPlayer(
             .build()
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
-        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, sessionId)
+        // audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, sessionId)
+        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, AudioManager.AUDIO_SESSION_ID_GENERATE)
+        LogContext.log.w(TAG, "Get audio manager mode: ${AudioUtil.getAudioManagerMode(ctx)}")
     }
 
     val playState: Int get() = audioTrack.playState

@@ -2,16 +2,12 @@ package com.leovp.audio.aac
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioManager
-import android.media.AudioTrack
-import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.BuildConfig
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -23,17 +19,21 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 2020/9/17 下午5:01
  */
-class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: AudioDecoderInfo) {
+class AacFilePlayer(
+    ctx: Context,
+    audioDecodeInfo: AudioDecoderInfo,
+    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+) {
     companion object {
         private const val TAG = "AacFilePlayer"
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
-    private var audioManager: AudioManager? = null
 
     private var isPlaying = false
 
-    private var audioTrack: AudioTrack? = null
+    private val audioTrackPlayer: AudioTrackPlayer = AudioTrackPlayer(ctx, audioDecodeInfo, usage = usage, contentType = contentType)
     private var audioDecoder: MediaCodec? = null
 
     private var mediaExtractor: MediaExtractor? = null
@@ -89,42 +89,10 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
         }.onFailure { it.printStackTrace() }
     }
 
-    private fun initAudioTrack(ctx: Context) {
-        runCatching {
-            audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize = AudioTrack.getMinBufferSize(
-                audioDecodeInfo.sampleRate,
-                audioDecodeInfo.channelConfig,
-                audioDecodeInfo.audioFormat
-            )
-            val sessionId = audioManager!!.generateAudioSessionId()
-            val audioAttributesBuilder = AudioAttributes.Builder().apply {
-                // Speaker
-                // AudioAttributes.USAGE_MEDIA AudioAttributes.USAGE_VOICE_COMMUNICATION
-                setUsage(AudioAttributes.USAGE_MEDIA)
-                // AudioAttributes.CONTENT_TYPE_MUSIC AudioAttributes.CONTENT_TYPE_SPEECH
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                setLegacyStreamType(AudioManager.STREAM_MUSIC)
-            }
-            val audioFormat = AudioFormat.Builder().setSampleRate(audioDecodeInfo.sampleRate)
-                .setEncoding(audioDecodeInfo.audioFormat)
-                .setChannelMask(audioDecodeInfo.channelConfig)
-                .build()
-            audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, bufferSize, AudioTrack.MODE_STREAM, sessionId)
-
-            if (AudioTrack.STATE_INITIALIZED == audioTrack!!.state) {
-                LogContext.log.i(TAG, "Start playing audio...")
-                audioTrack!!.play()
-            } else {
-                LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
-            }
-        }.onFailure { LogContext.log.e(TAG, "initAudioTrack error msg=${it.message}") }
-    }
-
     fun playAac(aacFile: File, f: () -> Unit) {
         isPlaying = true
         initAudioDecoder(aacFile)
-        initAudioTrack(ctx)
+        audioTrackPlayer.play()
         ioScope.launch {
             try {
                 var isFinish = false
@@ -155,10 +123,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                             audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             isFinish = true
                         } else {
-                            audioDecoder?.queueInputBuffer(
-                                inputIndex, 0, sampleSize,
-                                mediaExtractor?.sampleTime ?: 0, 0
-                            )
+                            audioDecoder?.queueInputBuffer(inputIndex, 0, sampleSize, mediaExtractor?.sampleTime ?: 0, 0)
                             mediaExtractor?.advance()
                         }
                     }
@@ -166,7 +131,6 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
                     if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var chunkPCM: ByteArray
-                    var shortPcmData: ShortArray
                     while (outputIndex >= 0) {
                         chunkPCM = ByteArray(decodeBufferInfo.size)
                         audioDecoder?.getOutputBuffer(outputIndex)?.apply {
@@ -176,10 +140,8 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
                             clear()
                         }
                         if (chunkPCM.isNotEmpty()) {
-                            // LogContext.log.i(TAG, "PCM data[" + chunkPCM.length + "]=" + Arrays.toString(chunkPCM));
-                            shortPcmData = chunkPCM.toShortArrayLE()
-                            LogContext.log.i(TAG, "Finally PCM data[${shortPcmData.size}]")
-                            audioTrack?.write(shortPcmData, 0, shortPcmData.size)
+                            LogContext.log.i(TAG, "PCM data[${chunkPCM.size}]")
+                            audioTrackPlayer.write(chunkPCM)
                         }
                         audioDecoder?.releaseOutputBuffer(outputIndex, false)
                         outputIndex = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
@@ -196,14 +158,7 @@ class AacFilePlayer(private val ctx: Context, private val audioDecodeInfo: Audio
 
     fun stop() {
         isPlaying = false
-        runCatching {
-            if (STATE_UNINITIALIZED != audioTrack!!.state) {
-                audioTrack?.pause()
-                audioTrack?.flush()
-                audioTrack?.stop()
-                audioTrack?.release()
-            }
-        }.onFailure { it.printStackTrace() }
+        audioTrackPlayer.release()
         runCatching {
             mediaExtractor?.release()
         }.onFailure { it.printStackTrace() }

@@ -37,8 +37,8 @@ class AacEncoder(
         // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
     }
 
-    override fun onInputData(): ByteArray? {
-        return queue.poll()
+    override fun onInputData(inBuf: ByteBuffer) {
+        queue.poll()?.let { inBuf.put(it) }
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {

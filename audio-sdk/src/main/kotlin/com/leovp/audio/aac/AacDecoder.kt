@@ -64,7 +64,9 @@ class AacDecoder(
         format.setByteBuffer("csd-0", csd0BB)
     }
 
-    override fun onInputData(): ByteArray? = queue.poll()
+    override fun onInputData(inBuf: ByteBuffer) {
+        queue.poll()?.let { inBuf.put(it) }
+    }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")

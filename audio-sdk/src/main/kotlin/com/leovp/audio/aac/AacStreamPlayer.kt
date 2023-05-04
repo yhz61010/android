@@ -1,14 +1,10 @@
 package com.leovp.audio.aac
 
-import android.content.Context
-import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioManager
-import android.media.AudioTrack
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.SystemClock
+import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
@@ -28,7 +24,7 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: AudioDecoderInfo) {
+internal class AacStreamPlayer(private val audioDecoderInfo: AudioDecoderInfo, private val audioTrackPlayer: AudioTrackPlayer) {
     companion object {
         private const val TAG = "AacStreamPlayer"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
@@ -42,7 +38,6 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     private var audioLatencyThresholdInMs = AUDIO_INIT_LATENCY_IN_MS
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
-    private var audioManager: AudioManager? = null
 
     // private var outputFormat: MediaFormat? = null
     private var frameCount = AtomicLong(0)
@@ -50,62 +45,9 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     private var playStartTimeInUs: Long = 0
     private val rcvAudioDataQueue = ArrayBlockingQueue<ByteArray>(AUDIO_DATA_QUEUE_CAPACITY)
 
-    private var audioTrack: AudioTrack? = null
     private var audioDecoder: MediaCodec? = null
 
     private var csd0: ByteArray? = null
-
-    private fun initAudioTrack(ctx: Context) {
-        runCatching {
-            audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val bufferSize =
-                AudioTrack.getMinBufferSize(audioDecoderInfo.sampleRate, audioDecoderInfo.channelConfig, audioDecoderInfo.audioFormat)
-            val sessionId = audioManager!!.generateAudioSessionId()
-            val audioAttributesBuilder = AudioAttributes.Builder().apply {
-                // Speaker
-                // AudioAttributes.USAGE_MEDIA  AudioAttributes.USAGE_VOICE_COMMUNICATION
-                setUsage(AudioAttributes.USAGE_MEDIA)
-                // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                setLegacyStreamType(AudioManager.STREAM_MUSIC)
-
-                // Earphone
-                // AudioAttributes.USAGE_MEDIA         AudioAttributes.USAGE_VOICE_COMMUNICATION
-                //                setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                // AudioAttributes.CONTENT_TYPE_MUSIC   AudioAttributes.CONTENT_TYPE_SPEECH
-                //                setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                //                setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
-            }
-            val audioFormat = AudioFormat.Builder().setSampleRate(audioDecoderInfo.sampleRate)
-                .setEncoding(audioDecoderInfo.audioFormat)
-                .setChannelMask(audioDecoderInfo.channelConfig)
-                .build()
-            audioTrack = AudioTrack(
-                audioAttributesBuilder.build(), audioFormat, bufferSize,
-                AudioTrack.MODE_STREAM, sessionId
-            )
-
-            if (AudioTrack.STATE_INITIALIZED == audioTrack!!.state) {
-                LogContext.log.i(TAG, "Start playing audio...")
-                audioTrack!!.play()
-            } else {
-                LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
-            }
-        }.onFailure { LogContext.log.e(TAG, "initAudioTrack error msg=${it.message}") }
-    }
-
-    @Suppress("unused")
-    fun useSpeaker(ctx: Context, on: Boolean) {
-        LogContext.log.w(TAG, "useSpeaker=$on")
-        val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        if (on) {
-            audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.isSpeakerphoneOn = true
-        } else {
-            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-            audioManager.isSpeakerphoneOn = false
-        }
-    }
 
     // ByteBuffer key
     // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
@@ -145,21 +87,22 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                 setByteBuffer("csd-0", csd0BB)
             }
             audioDecoder!!.configure(mediaFormat, null, null, 0)
-            //            outputFormat = audioDecoder?.outputFormat // option B
-            //            audioDecoder?.setCallback(mediaCodecCallback)
+            // outputFormat = audioDecoder?.outputFormat // option B
+            // audioDecoder?.setCallback(mediaCodecCallback)
             audioDecoder?.start()
             ioScope.launch {
                 runCatching {
                     while (true) {
                         ensureActive()
                         val audioData = rcvAudioDataQueue.poll()
-                        //                        if (frameCount.get() % 30 == 0L) {
+                        // if (frameCount.get() % 30 == 0L) {
                         LogContext.log.i(TAG, "Rcv AAC[${audioData?.size}]")
-                        //                        }
+                        // }
                         if (audioData != null && audioData.isNotEmpty()) {
                             decodeAndPlay(audioData)
+                        } else {
+                            delay(10)
                         }
-                        delay(10)
                     }
                 }.onFailure { it.printStackTrace() }
             }
@@ -172,6 +115,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
      */
     private fun decodeAndPlay(audioData: ByteArray) {
         try {
+            val st = System.currentTimeMillis()
             val bufferInfo = MediaCodec.BufferInfo()
 
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
@@ -193,19 +137,17 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
             // Get decoded data in bytes
             while (outputIndex >= 0) {
                 audioDecoder?.getOutputBuffer(outputIndex)?.run { get(chunkPCM) }
+
+                LogContext.log.i(TAG, "Play PCM[${chunkPCM.size}]")
+                // Play decoded audio data in PCM
+                audioTrackPlayer.write(chunkPCM)
+
                 // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
-                if (chunkPCM.isNotEmpty()) {
-                    if (audioTrack == null || AudioTrack.STATE_UNINITIALIZED == audioTrack?.state) return
-                    if (AudioTrack.PLAYSTATE_PLAYING == audioTrack?.playState) {
-                        LogContext.log.i(TAG, "Play PCM[${chunkPCM.size}]")
-                        // Play decoded audio data in PCM
-                        audioTrack?.write(chunkPCM, 0, chunkPCM.size)
-                    }
-                }
                 audioDecoder?.releaseOutputBuffer(outputIndex, false)
                 // Get data again.
                 outputIndex = audioDecoder?.dequeueOutputBuffer(bufferInfo, 0) ?: -1
             }
+            LogContext.log.e(TAG, "---> Decode aac cost: ${System.currentTimeMillis() - st}ms")
         } catch (e: Exception) {
             LogContext.log.e(TAG, "You can ignore this message safely. decodeAndPlay error")
         }
@@ -221,16 +163,16 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
                         stop()
                         release()
                     }
-                    audioTrack?.run {
-                        LogContext.log.w(TAG, "Found exist AudioTrack. Release it first")
-                        stop()
-                        release()
-                    }
+                    // audioTrackPlayer.run {
+                    //     LogContext.log.w(TAG, "Found exist AudioTrack. Release it first")
+                    //     stop()
+                    //     release()
+                    // }
                     frameCount.set(0)
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
                     LogContext.log.w(TAG, "Audio csd0=HEX[${csd0?.toHexStringLE()}]")
+                    audioTrackPlayer.play()
                     initAudioDecoder(csd0!!)
-                    initAudioTrack(ctx)
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
                     ioScope.launch {
                         delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
@@ -262,9 +204,7 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
             rcvAudioDataQueue.clear()
             frameCount.set(0)
             runCatching { audioDecoder?.flush() }.getOrNull()
-            runCatching { audioTrack?.pause() }.getOrNull()
-            runCatching { audioTrack?.flush() }.getOrNull()
-            runCatching { audioTrack?.play() }.getOrNull()
+            runCatching { audioTrackPlayer.release() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
                 // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
                 dropFrameTimes.set(0)
@@ -285,14 +225,9 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
             rcvAudioDataQueue.clear()
             frameCount.set(0)
             dropFrameTimes.set(0)
-            audioTrack?.pause()
-            audioTrack?.flush()
-            audioTrack?.stop()
-            audioTrack?.release()
+            audioTrackPlayer.release()
         }.onFailure {
             LogContext.log.e(TAG, "audioTrack stop or release error. msg=${it.message}")
-        }.also {
-            audioTrack = null
         }
 
         LogContext.log.w(TAG, "Releasing AudioDecoder...")
@@ -312,13 +247,12 @@ class AacStreamPlayer(private val ctx: Context, private val audioDecoderInfo: Au
     }
 
     @Suppress("unused")
-    fun getPlayState() = audioTrack?.playState ?: AudioTrack.PLAYSTATE_STOPPED
+    fun getPlayState() = audioTrackPlayer.playState
 
-    private fun computePresentationTimeUs(frameIndex: Long) =
-        frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
+    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     private fun getAudioTimeUs(): Long = runCatching {
-        val numFramesPlayed: Int = audioTrack?.playbackHeadPosition ?: 0
+        val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)
 }

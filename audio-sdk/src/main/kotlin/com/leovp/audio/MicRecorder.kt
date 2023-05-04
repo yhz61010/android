@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 class MicRecorder(
     encoderInfo: AudioEncoderInfo,
     val callback: RecordCallback,
-    type: AudioType = AudioType.COMPRESSED_PCM,
+    type: AudioType = AudioType.PCM,
     audioSource: Int = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
     recordMinBufferRatio: Int = 1
 ) {

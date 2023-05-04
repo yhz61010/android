@@ -22,10 +22,10 @@ import com.leovp.log.LogContext
 class AudioPlayer(
     ctx: Context,
     private val audioDecoderInfo: AudioDecoderInfo,
-    private val type: AudioType = AudioType.COMPRESSED_PCM,
+    private val type: AudioType = AudioType.PCM,
     mode: Int = AudioTrack.MODE_STREAM,
-    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    usage: Int = AudioAttributes.USAGE_MEDIA, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
     minPlayBufferSizeRatio: Int = 1) {
     companion object {
         private const val TAG = "AudioPlayer"

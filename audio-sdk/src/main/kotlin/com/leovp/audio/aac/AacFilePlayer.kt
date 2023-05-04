@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 class AacFilePlayer(
     ctx: Context,
     audioDecodeInfo: AudioDecoderInfo,
-    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    usage: Int = AudioAttributes.USAGE_MEDIA, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
 ) {
     companion object {
         private const val TAG = "AacFilePlayer"
@@ -99,7 +99,7 @@ class AacFilePlayer(
                 val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
-                    if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
+                    // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
                     if (inputIndex > -1) {
                         var sampleSize = -1
                         var sampleData: ByteArray?
@@ -112,13 +112,13 @@ class AacFilePlayer(
                                 } else {
                                     sampleData = ByteArray(it.remaining())
                                     it.get(sampleData!!)
-                                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
+                                    // if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Sample aac data[${sampleData?.size}]")
                                 }
                             }
                         } catch (e: Exception) {
                             if (BuildConfig.DEBUG) LogContext.log.e(TAG, "inputIndex=$inputIndex sampleSize=$sampleSize", e)
                         }
-                        if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
+                        // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
                         if (sampleSize < 0) {
                             audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             isFinish = true
@@ -129,7 +129,7 @@ class AacFilePlayer(
                     }
 
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
-                    if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
+                    // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {
                         chunkPCM = ByteArray(decodeBufferInfo.size)
@@ -159,9 +159,7 @@ class AacFilePlayer(
     fun stop() {
         isPlaying = false
         audioTrackPlayer.release()
-        runCatching {
-            mediaExtractor?.release()
-        }.onFailure { it.printStackTrace() }
+        runCatching { mediaExtractor?.release() }.onFailure { it.printStackTrace() }
         runCatching {
             audioDecoder?.stop()
             audioDecoder?.release()

@@ -5,7 +5,6 @@ package com.leovp.audio.mediacodec
 import android.media.MediaCodec
 import android.media.MediaFormat
 import java.nio.ByteBuffer
-import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -47,19 +46,17 @@ abstract class BaseMediaCodecAsynchronous(codecName: String, sampleRate: Int, ch
                     // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
                     //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
                     // val outBytes = it.toByteArray()
-                    ioScope.launch {
-                        when {
-                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
-                                onOutputData(it, info, isConfig = true, isKeyFrame = false)
+                    when {
+                        (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
+                            onOutputData(it, info, isConfig = true, isKeyFrame = false)
 
-                            (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
-                                onOutputData(it, info, isConfig = false, isKeyFrame = true)
+                        (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
+                            onOutputData(it, info, isConfig = false, isKeyFrame = true)
 
-                            (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
-                            else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
-                        }
-                        codec.releaseOutputBuffer(index, false)
+                        (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
+                        else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
                     }
+                    codec.releaseOutputBuffer(index, false)
                 }
             }.onFailure { it.printStackTrace() }
         }

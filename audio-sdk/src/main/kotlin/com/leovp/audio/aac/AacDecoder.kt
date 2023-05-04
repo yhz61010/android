@@ -6,7 +6,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.audio.mediacodec.BaseMediaCodec
+import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.bytes.toByteArray
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
@@ -20,7 +20,7 @@ import java.util.concurrent.ArrayBlockingQueue
 class AacDecoder(sampleRate: Int,
     channelCount: Int,
     val csd0: ByteArray,
-    private val callback: IDecodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
+    private val callback: IDecodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
     companion object {
         private const val TAG = "AacDe"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC

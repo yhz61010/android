@@ -41,7 +41,7 @@ class AudioPlayer(
         when (type) {
             AudioType.AAC -> {
                 LogContext.log.w(TAG, "AAC Decoder")
-                aacStreamPlayer = AacStreamPlayer(audioDecoderInfo, audioTrackPlayer)
+                aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
             }
 
             AudioType.OPUS -> {

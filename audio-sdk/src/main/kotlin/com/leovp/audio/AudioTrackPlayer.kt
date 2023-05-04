@@ -13,7 +13,6 @@ import android.media.AudioTrack.STATE_INITIALIZED
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.AudioTrack.getMinBufferSize
 import com.leovp.audio.base.bean.AudioDecoderInfo
-import com.leovp.audio.utils.AudioUtil
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
 
@@ -25,15 +24,15 @@ class AudioTrackPlayer(
     ctx: Context,
     audioDecoderInfo: AudioDecoderInfo,
     mode: Int = MODE_STREAM,
-    usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    contentType: Int = AudioAttributes.CONTENT_TYPE_SPEECH, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    usage: Int = AudioAttributes.USAGE_MEDIA, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
     minPlayBufferSizeRatio: Int = 1,
 ) {
     companion object {
         private const val TAG = "AudioTrackPlayer"
     }
 
-    private var audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val audioTrack: AudioTrack
 
     init {
@@ -51,7 +50,7 @@ class AudioTrackPlayer(
             // AudioAttributes.CONTENT_TYPE_MUSIC
             // AudioAttributes.CONTENT_TYPE_SPEECH
             .setContentType(contentType)
-            // .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+        // .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
 
         val audioFormat = AudioFormat.Builder()
             .setSampleRate(audioDecoderInfo.sampleRate)
@@ -62,7 +61,7 @@ class AudioTrackPlayer(
         // Please check [AudioReceiver#stopServer]
         // audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, sessionId)
         audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, AudioManager.AUDIO_SESSION_ID_GENERATE)
-        LogContext.log.w(TAG, "Get audio manager mode: ${AudioUtil.getAudioManagerMode(ctx)}")
+        // ctx.useBuildInSpeaker(true)
     }
 
     val playState: Int get() = audioTrack.playState

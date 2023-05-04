@@ -11,7 +11,7 @@ import com.leovp.audio.base.iters.OutputCallback
  * Date: 20-11-14 上午11:03
  */
 class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
-    private var aacEncoder: AacEncoder = AacEncoder(
+    private var aacEncoder = AacEncoder(
         encoderInfo.sampleRate,
         encoderInfo.bitrate,
         encoderInfo.channelCount,

@@ -29,6 +29,8 @@ class AacDecoder(
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
 
+    val queueSize: Int get() = queue.size
+
     // ByteBuffer key
     // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
     // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.

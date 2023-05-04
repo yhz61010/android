@@ -30,12 +30,6 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
 
     private fun process() {
         try {
-            val audioData = onInputData()
-            if (audioData == null || audioData.isEmpty()) {
-                return
-            }
-
-            val bufferInfo = MediaCodec.BufferInfo()
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
             val inputIndex: Int = codec.dequeueInputBuffer(0)
             if (inputIndex > -1) {
@@ -43,12 +37,14 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
                 // Clear exist data.
                 inputBuf.clear()
                 // Fill inputBuffer with valid data.
-                inputBuf.put(audioData)
-                codec.queueInputBuffer(inputIndex, 0, audioData.size, getPresentationTimeUs(), 0)
+                onInputData(inputBuf)
+                inputBuf.flip()
+                codec.queueInputBuffer(inputIndex, 0, inputBuf.remaining(), getPresentationTimeUs(), 0)
             }
 
-            val st = System.currentTimeMillis()
+            val bufferInfo = MediaCodec.BufferInfo()
             var buffer: ByteBuffer?
+            val st = System.currentTimeMillis()
             // Start decoding and get output index
             var outputIndex: Int = codec.dequeueOutputBuffer(bufferInfo, 0)
             while (outputIndex > -1) {

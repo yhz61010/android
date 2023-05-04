@@ -6,7 +6,7 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
+import com.leovp.audio.mediacodec.BaseMediaCodecSynchronous
 import com.leovp.bytes.toByteArray
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
@@ -17,10 +17,11 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacDecoder(sampleRate: Int,
+class AacDecoder(
+    sampleRate: Int,
     channelCount: Int,
-    val csd0: ByteArray,
-    private val callback: IDecodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
+    private val csd0: ByteArray,
+    private val callback: IDecodeCallback) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
     companion object {
         private const val TAG = "AacDe"
         private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
@@ -61,14 +62,10 @@ class AacDecoder(sampleRate: Int,
         format.setByteBuffer("csd-0", csd0BB)
     }
 
-    override fun onInputData(): ByteArray? {
-        val inBytes = queue.poll()
-        if (inBytes != null) LogContext.log.e(TAG, "--->>> onInputData[${inBytes.size}]")
-        return inBytes
-    }
+    override fun onInputData(): ByteArray? = queue.poll()
 
     override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
-        LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
+        // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
         callback.onDecoded(outData.toByteArray())
     }
 
@@ -76,7 +73,7 @@ class AacDecoder(sampleRate: Int,
      * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
      */
     fun decode(rawData: ByteArray) {
-        LogContext.log.e(TAG, "--->>> decode[${rawData.size}] queue[${queue.size}]")
+        // LogContext.log.e(TAG, "--->>> decode[${rawData.size}] queue[${queue.size}]")
         queue.offer(rawData)
     }
 
